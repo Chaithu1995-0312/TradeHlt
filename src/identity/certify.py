@@ -250,6 +250,9 @@ def run_certification(corpus_path: Path, store_root: Path) -> dict[str, Any]:
             f"instrument={crt_prov.instrument}"
         )
         engine = CRTEngine.from_production(crt_cfg, PROD_VERSION)
+        # [EPIC-84 A3b] the engine's per-bar canonical features (same FeaturePipeline layer)
+        from features.bar_feature_frame import BarFeatureFrame
+        _bar_frame = BarFeatureFrame.from_csv(str(corpus_path))
         bt_sec = get_prod_section("backtest")
         htf_n = int(bt_sec["htf_candles_per_range"])
         warmup_n = int(bt_sec["warmup_candles"])
@@ -303,6 +306,7 @@ def run_certification(corpus_path: Path, store_root: Path) -> dict[str, Any]:
                             htf.current_htf_id,
                             parent_state=parent_state,
                             parent_objective=parent_objective,
+                            bar_features=_bar_frame.for_candle(candle),
                         )
             except Exception as exc:
                 action = {}

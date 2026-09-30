@@ -104,7 +104,7 @@ class EngineTelemetry:
     Parameters
     ----------
     engine_name : str
-        Human-readable engine identifier (e.g. "gaussian", "zone_gate", "rr").
+        Human-readable engine identifier (e.g. "gaussian", "feature_cluster_similarity", "rr").
     emit_to_log : bool
         If True (default), append to logs/engine_telemetry.jsonl on each emit().
     """

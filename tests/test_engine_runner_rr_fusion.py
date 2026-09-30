@@ -76,9 +76,9 @@ class _DummyFusion:
             (),
             {
                 "weight_crt": 0.30,
-                "weight_gaussian": 0.25,
-                "weight_zone_gate": 0.25,
-                "weight_rr": 0.20,
+                "weight_ema_momentum_kernel": 0.25,
+                "weight_feature_cluster_similarity": 0.25,
+                "weight_candle_commitment": 0.20,
             },
         )()
 
@@ -95,7 +95,7 @@ class _DummyFusion:
             def to_dict(self):
                 return {
                     "final_score": self._score,
-                    "gaussian": 0.6,
+                    "ema_momentum_kernel": 0.6,
                     "neural": None,
                     "llm": None,
                     "llm_fired": False,
@@ -195,8 +195,8 @@ def test_rr_fusion_applies_score_before_fusion(monkeypatch):
     result = runner.run(_input_data(), {"symbol": "AUDUSD"})
 
     assert result["decision"] == "execute"
-    assert runner.fusion.last["rr"]["score"] == 0.77
-    assert runner.fusion.last["rr"]["rr_ratio"] == 1.8
+    assert runner.fusion.last["candle_commitment"]["score"] == 0.77
+    assert runner.fusion.last["candle_commitment"]["rr_ratio"] == 1.8
 
 
 def test_rr_fusion_failure_falls_back_to_base_rr(monkeypatch):
@@ -221,13 +221,13 @@ def test_rr_fusion_failure_falls_back_to_base_rr(monkeypatch):
     result = runner.run(_input_data(), {"symbol": "AUDUSD"})
 
     assert result["decision"] == "execute"
-    assert runner.fusion.last["rr"]["score"] == 0.3
-    assert runner.fusion.last["rr"]["rr_ratio"] == 1.8
+    assert runner.fusion.last["candle_commitment"]["score"] == 0.3
+    assert runner.fusion.last["candle_commitment"]["rr_ratio"] == 1.8
 
 
 def test_rr_fusion_disabled_is_base_rr_identity(monkeypatch):
     """F-038: rr_fusion.enabled=false (self.rr_fusion is None) must leave the `rr` engine
-    result byte-identical to the base RREngine output — no score mutation, no metadata
+    result byte-identical to the base CandleCommitment output — no score mutation, no metadata
     injection (e.g. an `rr_fusion` key), so a disabled layer can never reintroduce the
     Gaussian-duplicate behavior via a partial mutation."""
     monkeypatch.setattr(er, "crt_compute", lambda trade_id, features, context: {"score": 0.2})
@@ -248,8 +248,8 @@ def test_rr_fusion_disabled_is_base_rr_identity(monkeypatch):
 
     assert result["decision"] == "execute"
     assert runner.rr_fusion is None
-    assert runner.fusion.last["rr"] == base_rr
-    assert "rr_fusion" not in runner.fusion.last["rr"]
+    assert runner.fusion.last["candle_commitment"] == base_rr
+    assert "rr_fusion" not in runner.fusion.last["candle_commitment"]
 
 
 def test_weighted_vote_falls_back_when_fusion_cfg_missing():
@@ -262,9 +262,9 @@ def test_weighted_vote_falls_back_when_fusion_cfg_missing():
         runner._compute_weighted_vote(
             {
                 "crt": {"score": 0.7},
-                "gaussian": {"score": 0.6},
-                "zone_gate": {"score": 0.8},
-                "rr": {"score": 0.55},
+                "ema_momentum_kernel": {"score": 0.6},
+                "feature_cluster_similarity": {"score": 0.8},
+                "candle_commitment": {"score": 0.55},
             }
         )
 

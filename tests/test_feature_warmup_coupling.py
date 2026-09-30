@@ -127,11 +127,14 @@ def test_no_csv_path_is_a_legitimate_no_feature_mode() -> None:
     assert _runner()._features_expected is False
 
 
-def test_skip_features_is_a_legitimate_no_feature_mode(tmp_path) -> None:
-    """Tuner workers pass skip_features=True and never read feature columns."""
+def test_skip_features_is_refused(tmp_path) -> None:
+    """UPDATED 2026-09-28 (EPIC-84 A3b): was test_skip_features_is_a_legitimate_no_feature_mode.
+    The CRT engine now reads three canonical bar features at every RETEST, so a run without the
+    feature frame is refused at construction (tuners pass prebuilt_features instead)."""
     csv = tmp_path / "BNBUSDT_M15.csv"
     csv.write_text("timestamp,open,high,low,close,volume\n", encoding="utf-8")
-    assert _runner(csv_path=str(csv), skip_features=True)._features_expected is False
+    with pytest.raises(ValueError, match="skip_features"):
+        _runner(csv_path=str(csv), skip_features=True)
 
 
 def _live_production_configs() -> list:
@@ -241,6 +244,8 @@ def test_features_expected_only_when_a_frame_was_built() -> None:
     from runtime.backtest_v2 import BacktestRunner
     import inspect
     src = inspect.getsource(BacktestRunner.__init__)
-    assert "if self.csv_path and not skip_features:" in src, (
+    # EPIC-84 A3b: skip_features is refused before this guard; the frame is built from the
+    # csv_path unless a prebuilt frame for it was passed in.
+    assert "elif self.csv_path:" in src, (
         "__init__'s pipeline-build guard changed; _features_expected must be updated to match it."
     )

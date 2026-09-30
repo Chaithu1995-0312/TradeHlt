@@ -170,14 +170,14 @@ _KNOWN_DIVERGENCES: list[dict] = [
     # GD-008 / GD-009 RETIRED 2026-07-20 (T-15): candle_geometry locals renamed the same way
     # (return-dict keys kept for API stability). durable_keys gone from scan.
     {
-        "id": "GD-010", "feature_id": "FM-002", "file": "engines/rr_engine.py",
-        "enclosing_qualname": "RREngine.compute", "target_symbol": "candle_range",
-        "statement_kind": "Assign", "durable_key": "c090bd49a8872a77",
+        "id": "GD-010", "feature_id": "FM-002", "file": "engines/candle_commitment.py",
+        "enclosing_qualname": "CandleCommitment.compute", "target_symbol": "candle_range",
+        "statement_kind": "Assign", "durable_key": "d0c0f828c14df5f7",
         "semantic_class": "same_quantity", "formula_equivalence": "byte_identical",
         "execution_reachability": "conditional", "decision_reachability": "conditional",
         "observed_value_drift": "zero", "observed_score_drift": "zero",
         "observed_decision_flips": "zero", "owner": "claude", "opened": "2026-07-07",
-        "evidence": "candle_range = high-low == candle_math.candle_range (byte-identical). RREngine.compute "
+        "evidence": "candle_range = high-low == candle_math.candle_range (byte-identical). CandleCommitment.compute "
                     "called at EngineRunner.run:683 (conditional on BACKTEST_ENGINE_GATE=1 in backtest; "
                     "unconditional live); candle_range denominator feeds polarity→fusion:787.",
         "review_trigger": "route through candle_math.candle_range (Phase-B, parity-neutral/determinism-gated)",

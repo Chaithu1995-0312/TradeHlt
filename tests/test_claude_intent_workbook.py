@@ -136,7 +136,7 @@ def test_extractor_goldens(tmp_path: Path):
     assert l1["Intent"] == (
         "Through the live entry point the stale artifact BLOCKS, it does not score."
     )
-    assert l1["Source contract"].startswith("run_zone_gate_engine step 3")
+    assert l1["Source contract"].startswith("run_feature_cluster_similarity step 3")
 
     m1 = _find("test_crt_closure_surface_is_still_open")
     assert m1["Family"] == "M"

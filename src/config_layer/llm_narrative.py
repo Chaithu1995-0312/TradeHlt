@@ -38,7 +38,7 @@ _INSIGHT_PROMPTS: dict[str, str] = {
         "2-3 clear sentences explaining the decision to a trader. Be specific about which sub-scores "
         "are strong or weak and why the decision was made. No bullet points — prose only.\n\n"
         "Trade Data:\n"
-        "  Gaussian Score:     {gaussian_score}\n"
+        "  Gaussian Score:     {ema_momentum_kernel_score}\n"
         "  ML Expected RR:     {ml_expected_rr}\n"
         "  ML Win Probability: {ml_win_prob}\n"
         "  Sweep Score:        {sweep}\n"
@@ -221,7 +221,7 @@ def _fallback_insight(context: dict, report_type: str) -> str:
         return (
             f"Trade decision: {context.get('decision', 'N/A')} "
             f"(reason: {context.get('reason', 'N/A')}). "
-            f"Gaussian={context.get('gaussian_score', 'N/A')}, "
+            f"Gaussian={context.get('ema_momentum_kernel_score', 'N/A')}, "
             f"ML expected RR={context.get('ml_expected_rr', 'N/A')}, "
             f"win prob={context.get('ml_win_prob', 'N/A')}."
         )

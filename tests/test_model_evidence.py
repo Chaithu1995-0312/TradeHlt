@@ -38,9 +38,9 @@ def engine_results() -> dict:
     """The shape EngineRunner assembles (values arbitrary — this layer computes nothing)."""
     return {
         "crt": {"score": 0.4123},
-        "gaussian": {"score": 0.8825, "reason": "kernel"},
-        "zone_gate": {"score": 0.61, "passed": True, "valid": True},
-        "rr": {"score": 0.72, "candle_polarity": 0.72, "rr_ratio": 0.72,
+        "ema_momentum_kernel": {"score": 0.8825, "reason": "kernel"},
+        "feature_cluster_similarity": {"score": 0.61, "passed": True, "valid": True},
+        "candle_commitment": {"score": 0.72, "candle_polarity": 0.72, "rr_ratio": 0.72,
                "reason": "candle_polarity:0.72", "semantic": "candle_structure_quality"},
     }
 
@@ -63,7 +63,7 @@ def test_missing_binding_field_is_a_load_error(doc: dict, field: str) -> None:
 def test_duplicate_engine_key_is_a_load_error(doc: dict) -> None:
     """One slot, one owner — a second claimant is a registry conflict."""
     d = copy.deepcopy(doc)
-    _model_section(d, "gaussian")["runtime"]["engine_key"] = "crt"
+    _model_section(d, "ema_momentum_kernel")["runtime"]["engine_key"] = "crt"
     with pytest.raises(ValueError, match="one slot, one owner"):
         ModelEvidenceBuilder(d)
 
@@ -107,18 +107,18 @@ def test_undeclared_producer_raises(builder: ModelEvidenceBuilder, engine_result
 def test_absent_declared_producer_raises_listing_all(
     builder: ModelEvidenceBuilder, engine_results: dict
 ) -> None:
-    del engine_results["zone_gate"]
-    del engine_results["rr"]
+    del engine_results["feature_cluster_similarity"]
+    del engine_results["candle_commitment"]
     with pytest.raises(KeyError) as exc:
         builder.build(engine_results)
-    assert "zone_gate" in str(exc.value) and "rr" in str(exc.value)
+    assert "feature_cluster_similarity" in str(exc.value) and "candle_commitment" in str(exc.value)
 
 
 def test_declared_output_field_missing_raises(
     builder: ModelEvidenceBuilder, engine_results: dict
 ) -> None:
     """rr declares candle_polarity; a producer that stops emitting it is a shape change."""
-    del engine_results["rr"]["candle_polarity"]
+    del engine_results["candle_commitment"]["candle_polarity"]
     with pytest.raises(KeyError, match="changed shape"):
         builder.build(engine_results)
 
@@ -140,10 +140,10 @@ def test_rr_evidence_declares_polarity_not_economic_rr(
     """The whole point of the layer: polarity can never be read as reward:risk."""
     es = builder.build(engine_results)
     rr = es.evidence["rr_model"]
-    # Mirrors the engine's own self-declared semantic (rr_engine.py:81), not the legacy alias.
+    # Mirrors the engine's own self-declared semantic (candle_commitment.py:81), not the legacy alias.
     assert rr.semantic == "candle_structure_quality"
     assert "rr_ratio" not in rr.semantic
-    assert rr.engine_key == "rr"
+    assert rr.engine_key == "candle_commitment"
     assert rr.value == pytest.approx(0.72)
 
 
@@ -151,15 +151,15 @@ def test_producer_semantic_drift_raises(
     builder: ModelEvidenceBuilder, engine_results: dict
 ) -> None:
     """If the engine ever relabels its own output, the registry must not silently disagree."""
-    engine_results["rr"]["semantic"] = "forward_reward_risk"
+    engine_results["candle_commitment"]["semantic"] = "forward_reward_risk"
     with pytest.raises(ValueError, match="disagree about what the value MEANS"):
         builder.build(engine_results)
 
 
 def test_rr_engine_self_declared_semantic_matches_the_registry() -> None:
-    """Ties the declaration to live source: run the real RREngine and compare."""
-    from engines.rr_engine import RREngine
-    out = RREngine({}).compute({"high": 101.0, "low": 99.0, "close": 100.8})
+    """Ties the declaration to live source: run the real CandleCommitment and compare."""
+    from engines.candle_commitment import CandleCommitment
+    out = CandleCommitment({}).compute({"high": 101.0, "low": 99.0, "close": 100.8})
     assert out["semantic"] == ModelEvidenceBuilder().spec("rr_model").output_semantic
     # Domain check from source: the two fractions sum to 1, so polarity >= 0.5 when range > 0.
     assert 0.5 <= out["candle_polarity"] <= 1.0
@@ -176,7 +176,7 @@ def test_no_model_claims_an_economic_rr_semantic(builder: ModelEvidenceBuilder) 
 def test_semantic_of_slot_is_readable_without_the_spine(
     builder: ModelEvidenceBuilder,
 ) -> None:
-    assert builder.semantic_of("rr") == "candle_structure_quality"
+    assert builder.semantic_of("candle_commitment") == "candle_structure_quality"
     with pytest.raises(KeyError):
         builder.semantic_of("not_a_slot")
 
@@ -198,7 +198,7 @@ def test_boolean_output_is_refused_not_coerced(
     builder: ModelEvidenceBuilder, engine_results: dict
 ) -> None:
     """float(True)==1.0 — a gate flag must never be silently accepted as a score."""
-    engine_results["zone_gate"]["score"] = True
+    engine_results["feature_cluster_similarity"]["score"] = True
     with pytest.raises(TypeError, match="a flag is not a score"):
         builder.build(engine_results)
 
@@ -224,7 +224,7 @@ def test_reason_is_carried_verbatim_and_absence_is_recorded(
     builder: ModelEvidenceBuilder, engine_results: dict
 ) -> None:
     es = builder.build(engine_results)
-    assert es.evidence["gaussian"].reason == "kernel"
+    assert es.evidence["ema_momentum_kernel"].reason == "kernel"
     assert es.evidence["crt"].reason is None      # recorded, not filled
 
 
@@ -234,8 +234,8 @@ def test_layer_performs_no_arithmetic(
     """Combination is Layer 8's job — values pass through unmodified."""
     es = builder.build(engine_results)
     for model_id, key, field in (
-        ("crt", "crt", "score"), ("gaussian", "gaussian", "score"),
-        ("zone_gate", "zone_gate", "score"), ("rr_model", "rr", "candle_polarity"),
+        ("crt", "crt", "score"), ("ema_momentum_kernel", "ema_momentum_kernel", "score"),
+        ("feature_cluster_similarity", "feature_cluster_similarity", "score"), ("rr_model", "candle_commitment", "candle_polarity"),
     ):
         assert es.evidence[model_id].value == pytest.approx(engine_results[key][field])
 
@@ -290,9 +290,9 @@ def test_quality_score_never_becomes_direction(
     builder: ModelEvidenceBuilder, engine_results: dict
 ) -> None:
     """Gaussian 0.88 is quality testimony — direction stays UNKNOWN."""
-    engine_results["gaussian"]["score"] = 0.88
+    engine_results["ema_momentum_kernel"]["score"] = 0.88
     es = builder.build(engine_results)
-    g = es.evidence["gaussian"]
+    g = es.evidence["ema_momentum_kernel"]
     assert g.value == pytest.approx(0.88)
     assert g.direction == "UNKNOWN"
     assert g.relationship_to_story == "UNKNOWN"
@@ -329,13 +329,13 @@ def test_crt_story_and_crt_testimony_remain_separate(
 def test_high_gaussian_with_crt_story_stays_unknown_relationship(
     builder: ModelEvidenceBuilder, engine_results: dict
 ) -> None:
-    engine_results["gaussian"]["score"] = 0.99
+    engine_results["ema_momentum_kernel"]["score"] = 0.99
     engine_results["crt"]["score"] = 0.0
     es = builder.build(
         engine_results,
         story={"crt_state": "RETEST", "crt_direction": "SHORT"},
     )
-    assert es.evidence["gaussian"].relationship_to_story == "UNKNOWN"
+    assert es.evidence["ema_momentum_kernel"].relationship_to_story == "UNKNOWN"
     assert es.evidence["crt"].relationship_to_story == "NOT_APPLICABLE"
 
 
@@ -387,20 +387,20 @@ def test_producer_declared_direction_can_support_or_contradict(
 ) -> None:
     """Only explicit direction fields may SUPPORT/CONTRADICT — never score magnitude."""
     # Inject an explicit direction on gaussian (hypothetical producer extension)
-    engine_results["gaussian"]["direction"] = "LONG"
+    engine_results["ema_momentum_kernel"]["direction"] = "LONG"
     es_support = builder.build(
         engine_results,
         story={"crt_state": "RETEST", "crt_direction": "LONG", "context_direction": "Bullish"},
     )
-    assert es_support.evidence["gaussian"].direction == "LONG"
-    assert es_support.evidence["gaussian"].relationship_to_story == "SUPPORTS"
+    assert es_support.evidence["ema_momentum_kernel"].direction == "LONG"
+    assert es_support.evidence["ema_momentum_kernel"].relationship_to_story == "SUPPORTS"
 
-    engine_results["gaussian"]["direction"] = "SHORT"
+    engine_results["ema_momentum_kernel"]["direction"] = "SHORT"
     es_contra = builder.build(
         engine_results,
         story={"crt_state": "RETEST", "crt_direction": "LONG", "context_direction": "Bullish"},
     )
-    assert es_contra.evidence["gaussian"].relationship_to_story == "CONTRADICTS"
+    assert es_contra.evidence["ema_momentum_kernel"].relationship_to_story == "CONTRADICTS"
 
 
 def test_no_agreement_field_on_evidence_set(
@@ -444,7 +444,7 @@ def test_cross_layer_crt_score_relationship_not_direction_proxy(
         },
     )
     assert es.evidence["crt"].relationship_to_story == expect_crt_rel
-    assert es.evidence["gaussian"].relationship_to_story == "UNKNOWN"
+    assert es.evidence["ema_momentum_kernel"].relationship_to_story == "UNKNOWN"
     assert es.evidence["rr_model"].direction == "UNKNOWN"
     assert es.crt_story["direction"] == crt_dir
     assert es.crt_testimony["semantic"] == "structure_rule_score"

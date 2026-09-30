@@ -87,7 +87,7 @@ class TradeNetMetaEngine:
         ----------
         features            : canonical feature dict
         gaussian_result     : output from GaussianEngine.compute()
-        rr_result           : output from RREngine.compute()
+        rr_result           : output from CandleCommitment.compute()
         zone_result         : output from ZoneGateEngine.compute()
         replay_result       : output from ReplayMemoryEngine.query() (optional)
         market_state_result : MarketStateOutput dataclass (optional)

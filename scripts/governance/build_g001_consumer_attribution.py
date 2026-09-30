@@ -92,7 +92,7 @@ _CONSUMERS: list[dict] = [
         "consumer_id": "engine_runner_fusion",
         "path": "src/core/engine_runner.py",
         "description": "Four-engine fusion gate (CRT/Gaussian/Zone/RR)",
-        "features_or_signals": ["engine scores", "zone_gate", "rr", "gaussian"],
+        "features_or_signals": ["engine scores", "feature_cluster_similarity", "rr", "gaussian"],
         "semantic_status": "PARTIAL",
         "semantic_evidence": [
             "F-037", "F-038", "F-060",
@@ -111,8 +111,8 @@ _CONSUMERS: list[dict] = [
         "new_authority_from_parity": False,
     },
     {
-        "consumer_id": "zone_gate",
-        "path": "src/engines/zone_gate_engine.py",
+        "consumer_id": "feature_cluster_similarity",
+        "path": "src/engines/feature_cluster_similarity.py",
         "description": "Geometric HARD zone gate",
         "features_or_signals": ["zone registry geometry", "feature vectors for membership"],
         "semantic_status": "AUDITED",

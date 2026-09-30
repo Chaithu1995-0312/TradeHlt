@@ -20,7 +20,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
-from tests.helpers.crt_config import crt_config_for_test
+from tests.helpers.crt_config import bar_features_for_test, crt_config_for_test
 
 _ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(_ROOT / "src"))
@@ -317,6 +317,8 @@ def run_battery() -> dict:
     sm = StateMachine(cfg)
     st = EngineState()
     st.current_state = CRTState.EXPANSION
+    # EPIC-84 A3b: the RETEST needs the bar's canonical features (declared, not defaulted)
+    st.bar_features = bar_features_for_test()
     # PRE-EXISTING BUG FIXED 2026-08-01: EngineState has no field named `atr` (deliberately --
     # see crt_engine_v2.py:244-249). `st.atr` created an unused stray attribute; cache population
     # reads `state.atr_abs`, which stayed at its 0.0 default, leaving cached_features zeroed.

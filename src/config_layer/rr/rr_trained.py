@@ -1,5 +1,5 @@
 """
-rr_pattern_miner.py
+rr_trained.py
 Feature -> RR Pattern Miner trainer and pure-Python inference.
 Canonical contract: feature vectors matching the model’s trained n_features and
 the live CANONICAL_FEATURE_DIM (schema v4.0 = 39). Dimension mismatch is
@@ -456,7 +456,7 @@ class NanoInferenceEngine:
     def predict(
         self,
         features: List[float],
-        gaussian_score: float,
+        ema_momentum_kernel_score: float,
         gaussian_p_win: float,
         threshold: float = 0.5,
     ) -> Dict[str, Any]:
@@ -506,7 +506,7 @@ class NanoInferenceEngine:
         dof = n - len(self.zero_indices)       # rank of the Mahalanobis form (zeroed dims contribute 0)
         if _confidence_bypass(d_sq_raw, dof, confidence):
             return {
-                "final_score": float(gaussian_score),
+                "final_score": float(ema_momentum_kernel_score),
                 "expected_rr": 0.0,
                 "probability_of_win": float(gaussian_p_win),
                 "confidence": float(confidence),
@@ -528,11 +528,11 @@ class NanoInferenceEngine:
         p_win = exp_win / (exp_loss + exp_win)
 
         ml_score = _sigmoid(expected_rr / 3.0)
-        final_score = _W_GAUSSIAN * gaussian_score + _W_ML * ml_score + _W_CONFIDENCE * confidence
+        final_score = _W_GAUSSIAN * ema_momentum_kernel_score + _W_ML * ml_score + _W_CONFIDENCE * confidence
 
         status = "success"
-        if gaussian_score < threshold and final_score > gaussian_score:
-            final_score = gaussian_score
+        if ema_momentum_kernel_score < threshold and final_score > ema_momentum_kernel_score:
+            final_score = ema_momentum_kernel_score
             status = "capped_by_threshold"
 
         return {

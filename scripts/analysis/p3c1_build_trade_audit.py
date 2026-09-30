@@ -140,7 +140,8 @@ def _build_trade_audited(self, state, risk_engine=None):
     _intent = "n/a"
     if cached_feats:
         try:
-            _intent = ExecutionEngine._derive_trade_intent(cached_feats, crt_cfg.breakout_disp_threshold)
+            _intent = ExecutionEngine._derive_trade_intent(
+                cached_feats, crt_cfg.breakout_disp_threshold, direction)   # EPIC-84 A3b
         except Exception:
             _intent = "error"
 

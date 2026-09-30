@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Threshold sweep over zone_gate scores.jsonl (no re-score).
+"""Threshold sweep over feature_cluster_similarity scores.jsonl (no re-score).
 
 Usage:
   python scripts/research/zone_gate_threshold_sweep.py

@@ -3,7 +3,7 @@
 
 Observation-only. Mirrors the live spine scoring path:
   FeaturePipeline → filter_canonical_inputs → BitNetZoneGate.check
-  → compute_weighted_cluster_score(top_k) ≥ zone_cluster_threshold
+  → compute_weighted_cluster_score(top_k) ≥ feature_cluster_similarity_cluster_threshold
 
 Usage:
   python scripts/research/trace_zone_gate_xauusd.py
@@ -31,7 +31,7 @@ if str(_SRC) not in sys.path:
 
 from bitnet.zone_cosine_searcher import compute_gaussian_score  # noqa: E402
 from engines.live_engine import get_zone_gate  # noqa: E402
-from engines.zone_gate_engine import (  # noqa: E402
+from engines.feature_cluster_similarity import (  # noqa: E402
     compute_weighted_cluster_score,
     filter_canonical_inputs,
     _extract_vector,
@@ -272,11 +272,11 @@ def main(argv=None) -> int:
         "source": reg.get("source"),
         "n_zones": len(reg["zones"]),
         "config": {
-            "zone_cluster_threshold": thresh,
+            "feature_cluster_similarity_cluster_threshold": thresh,
             "top_k": top_k,
             "cluster_min_n": cluster_min_n,
             "cluster_spread_max": spread_max,
-            "zone_mode": "hard",
+            "feature_cluster_similarity_mode": "hard",
         },
         "raw_rows": int(len(raw)),
         "enriched_rows": int(len(df)),

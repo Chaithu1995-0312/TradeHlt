@@ -30,6 +30,7 @@ from config_layer.crt_engine_v2 import (
     Candle, CRTConfig, CRTEngine, CRTState, Direction, Range, SweepEvent,
 )
 from tests.helpers.crt_config import crt_engine_for_test, execution_engine_for_test, reset_logic_for_test  # noqa: F401
+from tests.helpers.crt_config import bar_features_for_test  # noqa: E402,F401
 
 _T0 = datetime(2026, 1, 1, tzinfo=timezone.utc)
 
@@ -83,7 +84,7 @@ def test_creating_bar_does_not_decrement_ttl():
     _seed_displacement(engine, htf_id="HTF-1")
 
     c1 = _flat_candle(1)
-    engine.process_candle(c1, "HTF-2")  # HTF changed -> should_reset -> reset_to_range(HTF...)
+    engine.process_candle(c1, "HTF-2", bar_features=bar_features_for_test())  # HTF changed -> should_reset -> reset_to_range(HTF...)
 
     assert engine.state.current_state == CRTState.RANGE
     assert engine.state.pending_displacement_candle is not None
@@ -114,13 +115,13 @@ def test_shadow_survives_configured_ttl_then_expires():
     _seed_displacement(engine, htf_id="HTF-1")
 
     c1 = _flat_candle(1)
-    engine.process_candle(c1, "HTF-2")  # creating bar
+    engine.process_candle(c1, "HTF-2", bar_features=bar_features_for_test())  # creating bar
     created_idx = engine.state.pending_displacement_created_idx
     assert engine.state.pending_displacement_ttl == ttl
 
     observed = []
     for i in range(2, 2 + ttl):
-        engine.process_candle(_flat_candle(i), "HTF-2")  # no further HTF change, no sweep
+        engine.process_candle(_flat_candle(i), "HTF-2", bar_features=bar_features_for_test())  # no further HTF change, no sweep
         observed.append(engine.state.pending_displacement_ttl)
 
     # Post-fix: 4 further RANGE bars each decrement once -> 3, 2, 1, 0 (expires on the 4th).
@@ -143,21 +144,21 @@ def test_matching_sweep_before_expiry_still_resumes_and_then_consumes():
     _seed_displacement(engine, htf_id="HTF-1", h_ref=110.0, l_ref=90.0,
                         direction=Direction.LONG)
 
-    engine.process_candle(_flat_candle(1), "HTF-2")   # creation; ttl stays 3
+    engine.process_candle(_flat_candle(1), "HTF-2", bar_features=bar_features_for_test())   # creation; ttl stays 3
     assert engine.state.pending_displacement_ttl == 3
     # ResetLogic.should_reset's HTF-change branch re-seeds active_range from the recent
     # candle_buffer (detect_htf_range) — it does NOT keep the manually-seeded Range above.
     # Read the REAL post-reset range for the sweep geometry below, rather than assume it.
     real_l_ref = engine.state.active_range.l_ref
 
-    engine.process_candle(_flat_candle(2), "HTF-2")   # ttl 3 -> 2, survives
+    engine.process_candle(_flat_candle(2), "HTF-2", bar_features=bar_features_for_test())   # ttl 3 -> 2, survives
     assert engine.state.pending_displacement_ttl == 2
     assert engine.state.current_state == CRTState.RANGE
 
     # This bar: ttl decrements 2 -> 1 (still > 0, does NOT hit the exhaustion-clear branch)
     # BEFORE sweep detection runs later in the same RANGE branch — proving resume still
     # works right up against the edge of expiry, not just immediately after creation.
-    engine.process_candle(_long_sweep_candle(3, l_ref=real_l_ref), "HTF-2")
+    engine.process_candle(_long_sweep_candle(3, l_ref=real_l_ref), "HTF-2", bar_features=bar_features_for_test())
 
     assert engine.state.current_state == CRTState.SHADOW_PENDING
     assert engine.state.pending_displacement_ttl == 1          # untouched by the RANGE->SHADOW_PENDING hop
@@ -166,7 +167,7 @@ def test_matching_sweep_before_expiry_still_resumes_and_then_consumes():
 
     # Next bar: SHADOW_PENDING branch collapses SHADOW_PENDING -> SWEEP -> EXPANSION and
     # clears ALL pending_* fields, including the new one (the "consumed" teardown path).
-    engine.process_candle(_flat_candle(4), "HTF-2")
+    engine.process_candle(_flat_candle(4), "HTF-2", bar_features=bar_features_for_test())
 
     assert engine.state.current_state == CRTState.EXPANSION
     assert engine.state.pending_displacement_ttl == 0
@@ -195,7 +196,7 @@ def test_shadow_leak_clears_created_idx():
         direction=Direction.SHORT, price=109.0, candle=mismatched_candle,
     )
 
-    engine.process_candle(mismatched_candle, "HTF-1")  # same htf id -> no should_reset trigger
+    engine.process_candle(mismatched_candle, "HTF-1", bar_features=bar_features_for_test())  # same htf id -> no should_reset trigger
 
     assert engine.state.pending_displacement_ttl == 0
     assert engine.state.pending_displacement_candle is None

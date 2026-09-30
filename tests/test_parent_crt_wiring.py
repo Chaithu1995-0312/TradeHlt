@@ -18,6 +18,7 @@ from config_layer.crt_engine_v2 import (
 )
 from runtime.backtest_v2 import BacktestRunner
 from tests.helpers.crt_config import crt_engine_for_test, execution_engine_for_test, reset_logic_for_test  # noqa: F401
+from tests.helpers.crt_config import bar_features_for_test  # noqa: E402,F401
 
 _T0 = datetime(2026, 1, 1, tzinfo=timezone.utc)
 
@@ -62,6 +63,7 @@ def test_opposing_parent_bias_rejects_at_execution_filter(monkeypatch):
         _candle(11, 102.3, 102.8, 102.0, 102.5),
         "HTF-1",
         parent_state=Direction.SHORT,
+        bar_features=bar_features_for_test(),
     )
     assert out["action"] == "FILTER_REJECTED"
     reasons = [getattr(e, "reason", "") for e in eng.state.event_log]
@@ -78,6 +80,7 @@ def test_agreeing_parent_bias_does_not_parent_veto(monkeypatch):
         _candle(11, 102.3, 102.8, 102.0, 102.5),
         "HTF-1",
         parent_state=Direction.LONG,
+        bar_features=bar_features_for_test(),
     )
     assert not any(
         "parent-timeframe bias" in str(getattr(e, "reason", ""))
@@ -95,6 +98,7 @@ def test_none_parent_state_does_not_parent_veto(monkeypatch):
         _candle(11, 102.3, 102.8, 102.0, 102.5),
         "HTF-1",
         parent_state=None,
+        bar_features=bar_features_for_test(),
     )
     assert not any(
         "parent-timeframe bias" in str(getattr(e, "reason", ""))

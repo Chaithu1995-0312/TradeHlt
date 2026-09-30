@@ -87,7 +87,7 @@ class RegimeWeightSearcher:
             logger.warning(f"Insufficient trades for {regime}: {len(regime_trades)} < 30. Returning baseline.")
             baseline_candidate = RegimeWeightCandidate(
                 regime=regime,
-                fusion_weights={"crt": 0.40, "gaussian": 0.30, "zone": 0.20, "rr": 0.10},
+                fusion_weights={"crt": 0.40, "ema_momentum_kernel": 0.30, "feature_cluster_similarity": 0.20, "candle_commitment": 0.10},
                 bitnet_threshold=0.50,
                 rationale=f"Insufficient trade data ({len(regime_trades)} samples)",
                 source="deterministic_fallback"
@@ -191,7 +191,7 @@ class RegimeWeightSearcher:
             # Fallback to baseline
             best_candidate = RegimeWeightCandidate(
                 regime=regime,
-                fusion_weights={"crt": 0.40, "gaussian": 0.30, "zone": 0.20, "rr": 0.10},
+                fusion_weights={"crt": 0.40, "ema_momentum_kernel": 0.30, "feature_cluster_similarity": 0.20, "candle_commitment": 0.10},
                 bitnet_threshold=0.50,
                 rationale="No candidates passed guardrails",
                 source="deterministic_fallback"
@@ -222,7 +222,7 @@ class RegimeWeightSearcher:
         
         # Loss cluster detection
         loss_clusters = []
-        zone_scores = [t.get("engine_scores", {}).get("zone", 0.0) for t in trades]
+        zone_scores = [t.get("engine_scores", {}).get("feature_cluster_similarity", 0.0) for t in trades]
         if sum(1 for s in zone_scores if s < 0.4) > total_trades * 0.4:
             loss_clusters.append("low_zone")
             
@@ -232,7 +232,7 @@ class RegimeWeightSearcher:
             
         # Engine performance averages
         engine_score_averages = {}
-        for engine in ("crt", "gaussian", "zone", "rr"):
+        for engine in ("crt", "ema_momentum_kernel", "feature_cluster_similarity", "candle_commitment"):
             scores = [t.get("engine_scores", {}).get(engine, 0.0) for t in trades]
             engine_score_averages[engine] = sum(scores) / len(scores) if scores else 0.5
             
@@ -261,7 +261,7 @@ Return format:
 {{
   "candidates": [
     {{
-      "fusion_weights": {{"crt": 0.30, "gaussian": 0.25, "zone": 0.35, "rr": 0.10}},
+      "fusion_weights": {{"crt": 0.30, "ema_momentum_kernel": 0.25, "feature_cluster_similarity": 0.35, "candle_commitment": 0.10}},
       "bitnet_threshold": 0.45,
       "rationale": "1 sentence explanation for this candidate"
     }}
@@ -292,12 +292,12 @@ Rules:
                 # Clamp to PARAM_BOUNDS
                 w_crt = max(PARAM_BOUNDS["fusion_weight_crt"][0], 
                            min(PARAM_BOUNDS["fusion_weight_crt"][1], rc["fusion_weights"]["crt"]))
-                w_gaussian = max(PARAM_BOUNDS["fusion_weight_gaussian"][0], 
-                                min(PARAM_BOUNDS["fusion_weight_gaussian"][1], rc["fusion_weights"]["gaussian"]))
+                w_gaussian = max(PARAM_BOUNDS["fusion_weight_ema_momentum_kernel"][0], 
+                                min(PARAM_BOUNDS["fusion_weight_ema_momentum_kernel"][1], rc["fusion_weights"]["ema_momentum_kernel"]))
                 w_zone = max(PARAM_BOUNDS["fusion_weight_zone"][0], 
-                            min(PARAM_BOUNDS["fusion_weight_zone"][1], rc["fusion_weights"]["zone"]))
-                w_rr = max(PARAM_BOUNDS["fusion_weight_rr"][0], 
-                          min(PARAM_BOUNDS["fusion_weight_rr"][1], rc["fusion_weights"]["rr"]))
+                            min(PARAM_BOUNDS["fusion_weight_zone"][1], rc["fusion_weights"]["feature_cluster_similarity"]))
+                w_rr = max(PARAM_BOUNDS["fusion_weight_candle_commitment"][0], 
+                          min(PARAM_BOUNDS["fusion_weight_candle_commitment"][1], rc["fusion_weights"]["candle_commitment"]))
                 
                 # Renormalize after clamping
                 total = w_crt + w_gaussian + w_zone + w_rr
@@ -311,7 +311,7 @@ Rules:
                 
                 validated.append(RegimeWeightCandidate(
                     regime=regime,
-                    fusion_weights={"crt": w_crt, "gaussian": w_gaussian, "zone": w_zone, "rr": w_rr},
+                    fusion_weights={"crt": w_crt, "ema_momentum_kernel": w_gaussian, "feature_cluster_similarity": w_zone, "candle_commitment": w_rr},
                     bitnet_threshold=bitnet,
                     rationale=rc.get("rationale", ""),
                     source="llm_suggested"
@@ -324,7 +324,7 @@ Rules:
             return [
                 RegimeWeightCandidate(
                     regime=regime,
-                    fusion_weights={"crt": 0.25, "gaussian": 0.25, "zone": 0.25, "rr": 0.25},
+                    fusion_weights={"crt": 0.25, "ema_momentum_kernel": 0.25, "feature_cluster_similarity": 0.25, "candle_commitment": 0.25},
                     bitnet_threshold=0.50,
                     rationale="LLM suggestion failed - equal weight fallback",
                     source="deterministic_fallback"
@@ -378,9 +378,9 @@ Return format:
             config["fusion_engine"] = {}
             
         config["fusion_engine"]["weight_crt"] = candidate.fusion_weights["crt"]
-        config["fusion_engine"]["weight_gaussian"] = candidate.fusion_weights["gaussian"]
-        config["fusion_engine"]["weight_zone_gate"] = candidate.fusion_weights["zone"]
-        config["fusion_engine"]["weight_rr"] = candidate.fusion_weights["rr"]
+        config["fusion_engine"]["weight_ema_momentum_kernel"] = candidate.fusion_weights["ema_momentum_kernel"]
+        config["fusion_engine"]["weight_feature_cluster_similarity"] = candidate.fusion_weights["feature_cluster_similarity"]
+        config["fusion_engine"]["weight_candle_commitment"] = candidate.fusion_weights["candle_commitment"]
         
         if "bitnet" not in config:
             config["bitnet"] = {}

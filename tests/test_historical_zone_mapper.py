@@ -37,7 +37,7 @@ _RECORD_KEYS = {
     "top_scores",
     "cluster_score",
     "passed_cluster_threshold",
-    "zone_cluster_threshold",
+    "feature_cluster_similarity_cluster_threshold",
     "registry_sha256",
     "feature_schema_dim",
     "schema_version",
@@ -84,7 +84,7 @@ def _prod_zone_config() -> ZoneMapConfig:
 
 def test_from_prod_config_knobs() -> None:
     cfg = _prod_zone_config()
-    assert cfg.zone_cluster_threshold == 0.25
+    assert cfg.feature_cluster_similarity_cluster_threshold == 0.25
     assert cfg.top_k == 3
     assert cfg.cluster_min_n == 2
     assert cfg.cluster_spread_max == 0.15
@@ -105,7 +105,7 @@ def test_map_frame_length_and_schema() -> None:
         assert rec["bar_index"] == i
         assert rec["timestamp"] == ts[i]
         assert rec["feature_schema_dim"] == len(CANONICAL_FEATURES)
-        assert rec["zone_cluster_threshold"] == cfg.zone_cluster_threshold
+        assert rec["feature_cluster_similarity_cluster_threshold"] == cfg.feature_cluster_similarity_cluster_threshold
         assert isinstance(rec["cluster_score"], float)
         assert isinstance(rec["passed_cluster_threshold"], bool)
         assert isinstance(rec["top_scores"], list)
@@ -154,7 +154,7 @@ def test_parity_vs_zone_cluster_helper() -> None:
     gate = BitNetZoneGate(
         zone_path=cfg.registry_path,
         config={
-            "zone_min_samples": cfg.zone_min_samples,
+            "feature_cluster_similarity_min_samples": cfg.feature_cluster_similarity_min_samples,
             "zone_gate_top_k": cfg.top_k,
         },
     )
@@ -164,7 +164,7 @@ def test_parity_vs_zone_cluster_helper() -> None:
         scored = score_zone_cluster(
             dict(row),
             gate,
-            zone_cluster_threshold=cfg.zone_cluster_threshold,
+            feature_cluster_similarity_cluster_threshold=cfg.feature_cluster_similarity_cluster_threshold,
             cluster_min_n=cfg.cluster_min_n,
             cluster_spread_max=cfg.cluster_spread_max,
             execution_mode=cfg.execution_mode,
@@ -172,7 +172,7 @@ def test_parity_vs_zone_cluster_helper() -> None:
         assert abs(rec["cluster_score"] - scored["cluster_score"]) < 1e-9
         assert rec["passed_cluster_threshold"] == bool(scored["passed"])
         assert rec["passed_cluster_threshold"] == (
-            scored["cluster_score"] >= cfg.zone_cluster_threshold
+            scored["cluster_score"] >= cfg.feature_cluster_similarity_cluster_threshold
         )
 
 
@@ -191,7 +191,7 @@ def test_parity_vs_engine_runner_zone_stage() -> None:
 
     er_gate = get_zone_gate(
         cfg.registry_path,
-        min_samples=cfg.zone_min_samples,
+        min_samples=cfg.feature_cluster_similarity_min_samples,
         top_n=cfg.top_k,
     )
     rows = _trade_opened_fixture_rows()
@@ -200,7 +200,7 @@ def test_parity_vs_engine_runner_zone_stage() -> None:
         er_scored = score_zone_cluster(
             dict(row),
             er_gate,
-            zone_cluster_threshold=cfg.zone_cluster_threshold,
+            feature_cluster_similarity_cluster_threshold=cfg.feature_cluster_similarity_cluster_threshold,
             cluster_min_n=cfg.cluster_min_n,
             cluster_spread_max=cfg.cluster_spread_max,
             execution_mode=cfg.execution_mode,

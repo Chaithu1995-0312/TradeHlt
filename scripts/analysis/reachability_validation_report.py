@@ -59,9 +59,8 @@ def build_evidence() -> dict:
         "tooling_only_keys": summary["tooling_only_keys"],
         "runtime_flags_verified": {
             "bitnet_enabled": cfg["crt_engine"]["use_bitnet"],
-            "zone_mode": er["zone_mode"],
-            "registry_file": er["zone_registry_path"],
-            "gaussian_impl": er["gaussian_impl"],
+            "feature_cluster_similarity_mode": er["feature_cluster_similarity_mode"],
+            "registry_file": er["feature_cluster_similarity_registry_path"],
             "rr_fusion_active": er["rr_fusion"]["enabled"],
         },
         "guard_suite": _GUARD_SUITE,   # observation: the guards that certify this state

@@ -16,7 +16,7 @@ cost / entry / control / M4 knobs. Do not retune after OOS.
   P6 M4 evaluate_pre_bh / finalize / BH (primary USD cost adapter)
   P7 manifests; economic_authority_granted=false always
 
-Authority: RESEARCH_ONLY. Grants no live wire / no gaussian_impl flip.
+Authority: RESEARCH_ONLY. Grants no live wire / no removed_selector flip.
 
 Usage:
   python scripts/research/run_xau_metals_protocol_v1.py
@@ -48,7 +48,7 @@ if hasattr(sys.stdout, "reconfigure"):
 INSTRUMENT = "XAUUSD"
 AUTHORITY = (
     "RESEARCH_ONLY — xau_metals_protocol_v1 measurement; "
-    "not production PromotionManager; not ΔG001; not gaussian_impl flip; "
+    "not production PromotionManager; not ΔG001; not removed_selector flip; "
     "economic_authority_granted=false unless separate human E3"
 )
 
@@ -206,6 +206,8 @@ def stream_retest_candidates(
     prev_state: Optional[str] = None
 
     try:
+        from features.bar_feature_frame import BarFeatureFrame  # [EPIC-84 A3b]
+        _bar_frame = BarFeatureFrame.from_csv(str(loader.filepath))
         for candle in loader.stream():
             n_streamed += 1
             htf.push(candle)
@@ -236,7 +238,7 @@ def stream_retest_candidates(
                     continue
 
             try:
-                out = engine.process_candle(candle, htf.current_htf_id)
+                out = engine.process_candle(candle, htf.current_htf_id, bar_features=_bar_frame.for_candle(candle))
             except Exception:
                 skips["crt_exception"] += 1
                 continue

@@ -33,7 +33,7 @@ if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
 from config_layer.rr.rr_dataset_builder import load_dataset
-from config_layer.rr.rr_pattern_miner import RRPatternTrainer
+from config_layer.rr.rr_trained import RRPatternTrainer
 from core.model_registry import (
     register_rr_model,
     promote_rr,

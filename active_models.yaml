@@ -53,9 +53,9 @@ meta:
     - src/config_layer/state_identity.py:35 · CRTState              # enum + transitions extracted here 2026-07-18
     - src/config_layer/state_identity.py:69 · VALID_TRANSITIONS     # re-exported by crt_engine_v2 for back-compat
     - src/config_layer/crt_engine_v2.py:2828 · process_candle       # SM entry point (transition defs span :847-:3230)
-    - src/engines/heuristic_gaussian_engine.py:316 · compute
-    - src/engines/zone_gate_engine.py:163 · filter_canonical_inputs
-    - src/engines/rr_engine.py:45 · compute
+    - src/engines/ema_momentum_kernel.py:316 · compute
+    - src/engines/feature_cluster_similarity.py:163 · filter_canonical_inputs
+    - src/engines/candle_commitment.py:45 · compute
     - src/engines/live_engine.py:278 · check
   related_docs:
     - docs/topics/model-intent-and-feature-ownership.md   # per-model feature ownership (Question A verified)
@@ -82,7 +82,7 @@ meta:
 # ───────────────────────────────────────────────────────────────────
 crt:
   semantic_ids: [M0_SPINE_CRT_FUSION_SCORER, M0_SPINE_CRT_STATE_MACHINE]  # Phase 0 join,
-    # 2026-09-23 -- src/research/model_runners/contracts.py MODEL_CATALOG rows crt_score /
+    # 2026-09-23 -- src/research/model_runners/contracts.py MODEL_CATALOG rows crt_structure_rule_score /
     # crt_state_machine. tests/test_model_registry_join.py. Grants no authority (§6.5).
   intent:
     question: "Is the market structure valid? (institutional liquidity events)"
@@ -483,9 +483,9 @@ crt:
 # ───────────────────────────────────────────────────────────────────
 # 2. GAUSSIAN — Directional-Momentum Scorer  (⚠ runtime ≠ trained model)
 # ───────────────────────────────────────────────────────────────────
-gaussian:
+ema_momentum_kernel:
   semantic_ids: [M0_SPINE_GAUSSIAN_HEURISTIC, M0_SPINE_GAUSSIAN_ML_NB]  # Phase 0 join,
-    # 2026-09-23 -- MODEL_CATALOG rows gaussian / gaussian_ml. Grants no authority (§6.5).
+    # 2026-09-23 -- MODEL_CATALOG rows gaussian / nb_outcome_classifier. Grants no authority (§6.5).
   intent:
     question: "Is this historically profitable? (probability-of-success match)"
     description: >
@@ -494,12 +494,12 @@ gaussian:
       trained NB model — see runtime vs trained_registry below.
 
   runtime:                       # what actually executes in the fusion path today
-    engine: HeuristicGaussianEngine
-    file: src/engines/heuristic_gaussian_engine.py:316 · compute   # class HeuristicGaussianEngine :191
+    engine: EmaMomentumKernel
+    file: src/engines/ema_momentum_kernel.py:316 · compute   # class EmaMomentumKernel :191
     active: true
-    engine_key: gaussian
+    engine_key: ema_momentum_kernel
     output_field: score
-    # Semantic read off the source, not off a finding (heuristic_gaussian_engine.py:358-366):
+    # Semantic read off the source, not off a finding (ema_momentum_kernel.py:358-366):
     #   x = ((ema_fast-ema_slow)/ema_slow + tanh(momentum_score)) / 2
     #   score = exp(-(x-mu)^2 / (2*sigma^2))
     # A Gaussian kernel over an EMA-spread + momentum composite. NOT a calibrated probability,
@@ -518,14 +518,14 @@ gaussian:
       trained_registry.
       CORRECTED 2026-07-22 (F-060): it is also not parameterized by ANY artifact.
       mu/sigma resolve through GaussianRegistry._normalize_registry_entry
-      (src/engines/heuristic_gaussian_engine.py:46 · _normalize_registry_entry, whose mu/sigma
+      (src/engines/ema_momentum_kernel.py:46 · _normalize_registry_entry, whose mu/sigma
       defaults sit at :53-54), which defaults mu=0.0/sigma=1.0 — and no
       entry in models/gaussian_registry.json carries either key (11/11 verified). The
       defaults therefore fire on a SUCCESSFUL load: the live score is byte-identical to
       the no-registry-at-all path. Floor: tests/test_gaussian_live_parameterization.py.
       Consequence of mu=0: the kernel is SYMMETRIC — it peaks when the market is flat and
       decays equally for moves in either direction — so calling it "directional" is a
-      misnomer, despite it entering fusion at weight_gaussian 0.2 beside directional
+      misnomer, despite it entering fusion at weight_ema_momentum_kernel 0.2 beside directional
       channels.
 
   trained_registry:             # historical / experimental artifacts — NOT the live scorer
@@ -571,10 +571,10 @@ gaussian:
     config_sections: [gaussian_scorer]   # NOTE (F-060): the `gaussian_scorer` block's only
                                          # consumer is src/config_layer/crt_gaussian_scorer.py,
                                          # which has ZERO production importers (grep-verified) —
-                                         # the live knobs are engine_runner.gaussian_impl and
-                                         # fusion_engine.weight_gaussian
+                                         # the live knobs are the fixed EmaMomentumKernel slot and
+                                         # fusion_engine.weight_ema_momentum_kernel
     telemetry: []               # no dedicated stream; scored inside the fusion path (see engine_runner)
-    tests: [tests/test_gaussian_impl_switch.py, tests/test_gaussian_update_pipeline.py,
+    tests: [tests/test_ema_momentum_kernel_slot.py, tests/test_gaussian_update_pipeline.py,
             tests/test_gaussian_live_parameterization.py]
     topics: [docs/topics/model-intent-and-feature-ownership.md]
     framework_ids: [IMPL-002, IMPL-003]   # heuristic runtime + trained ML artifact
@@ -594,7 +594,7 @@ gaussian:
   # WHO v2.3 — selected NB versions exist; execute path is heuristic (not the checkpoint)
   identity:
     authority: mirror_of_registry
-    family: gaussian
+    family: ema_momentum_kernel
     registry: models/gaussian_registry.json
     selection:
       by_instrument:
@@ -613,9 +613,9 @@ gaussian:
           trainer: phase5_calibration
           trained_at: "2026-05-24T06:35:48Z"
     execution:
-      runtime_enabled: true              # fusion gaussian slot is live
+      runtime_enabled: true              # fusion ema_momentum_kernel slot is live
       uses_trained_checkpoint: false     # F-060 — μ/σ defaults; NB artifact not the live score
-      live_impl: heuristic               # == engine_runner.gaussian_impl
+      live_impl: heuristic               # slot is EmaMomentumKernel; no implementation selector
       decision_reachable: true
     identity_status: enabled_without_checkpoint
     how_path_ref: null                   # live heuristic has no HOW model_path
@@ -673,7 +673,7 @@ bitnet:
       not exist); no economic claim, no authority change, use_bitnet stays false.
 
   reachability:
-    config_sections: [crt_engine, engine_runner]   # use_bitnet + bitnet_main_threshold / zone_cluster_threshold
+    config_sections: [crt_engine, engine_runner]   # use_bitnet + bitnet_main_threshold / feature_cluster_similarity_cluster_threshold
     telemetry: []
     tests: [tests/test_bitnet_inference.py, tests/test_bitnet_parity.py]
     topics: [docs/topics/model-intent-and-feature-ownership.md]
@@ -722,9 +722,9 @@ bitnet:
 # ───────────────────────────────────────────────────────────────────
 # 4. ZONE GATE — Historical Feature-Space Quality Estimator
 # ───────────────────────────────────────────────────────────────────
-zone_gate:
+feature_cluster_similarity:
   semantic_ids: [M0_SPINE_ZONE_GATE_CLUSTER]  # Phase 0 join, 2026-09-23 -- MODEL_CATALOG row
-    # "zone_gate". Grants no authority (§6.5).
+    # "feature_cluster_similarity". Grants no authority (§6.5).
   intent:
     question: "Is this feature-space neighbourhood historically good?"
     description: >
@@ -732,7 +732,7 @@ zone_gate:
       Learns which regions of feature space historically worked.
 
   runtime:
-    file: src/engines/zone_gate_engine.py:163 · filter_canonical_inputs   # + compute_weighted_cluster_score :106
+    file: src/engines/feature_cluster_similarity.py:163 · filter_canonical_inputs   # + compute_weighted_cluster_score :106
     input_contract: canonical_38_vector                    # CORRECTED: requires all 38 canonical keys (not [atr,rsi,volume,trend])
     # CORRECTED 2026-07-22: the mask is NOT learned. Every zone carries exactly 25 weights of 0.04
     # (uniform 1/25) with an IDENTICAL zero-set across all 8 zones — a hand-specified mask dropping
@@ -742,10 +742,10 @@ zone_gate:
     # FAIL-CLOSED at load on vector misalignment (ZoneFeatureOrderError) — distinct from the
     # fail_open above, which covers registry read/parse errors only.
     registry_file: models/zone_registry_v4_2026_07.json
-    zone_mode: hard
+    feature_cluster_similarity_mode: hard
     output: "market state quality score [0, 1]"
     active: true
-    engine_key: zone_gate
+    engine_key: feature_cluster_similarity
     output_field: score
     output_semantic: neighbourhood_quality_score
     pit_provenance: "models/zone_registry_v4_2026_07.provenance.json — PIT_UNCLEAN (centered_swings + global_batch_volatility_regime training era; F-051/FC1-A/FC1-D) CARRIED FORWARD: the v4 alignment remap relabels and zeroes one weight, it does NOT retrain, so it cannot clean PIT status; no promote/re-enable/economic use without causal revalidation"
@@ -770,7 +770,7 @@ zone_gate:
       Runtime↔label assignment parity only 0.414. Gate is geometric (labels unread) → no live risk.
 
   reachability:
-    config_sections: [engine_runner]               # engine_runner.zone_gate nested knobs + zone_registry_path
+    config_sections: [engine_runner]               # engine_runner.feature_cluster_similarity nested knobs + feature_cluster_similarity_registry_path
     telemetry: []
     tests: [tests/test_zone_gate.py, tests/test_zone_gate_top_k.py, tests/test_zone_label_audit.py]
     topics: [docs/topics/model-intent-and-feature-ownership.md]
@@ -791,11 +791,11 @@ zone_gate:
   # WHO v2.3 — selected + enabled (Exists≠Selected≠Enabled: here all three true)
   identity:
     authority: mirror_of_registry
-    family: zone_gate
+    family: feature_cluster_similarity
     registry: models/zone_gate_registry.json   # version selection (NOT the runtime file)
     selection:
       version: v4_gaussian_runtime_2026_07
-      registry_id: zone_gate:v4_gaussian_runtime_2026_07
+      registry_id: feature_cluster_similarity:v4_gaussian_runtime_2026_07
       # SCHEMA COMPATIBILITY, not the scored width. The artifact scores a 38-name SUBSET of the
       # 39-dim v4 vector (macd_hist_raw is deliberately absent — no trained statistics exist for
       # it). The name-anchored extractor supports any subset, so the two numbers legitimately
@@ -816,7 +816,7 @@ zone_gate:
     identity_status: selected_and_enabled
     how_path_ref:                              # parity pin only — HOW owns the real path
       config_section: engine_runner
-      config_key: zone_registry_path
+      config_key: feature_cluster_similarity_registry_path
       expected_value: models/zone_registry_v4_2026_07.json
     runtime_binding:
       config_version: v2_htfcrt_2026_08
@@ -837,15 +837,15 @@ rr_model:
       relative to required stop size.
 
   runtime:
-    engine: RREngine
-    file: src/engines/rr_engine.py:45 · compute            # class RREngine :37
+    engine: CandleCommitment
+    file: src/engines/candle_commitment.py:45 · compute            # class CandleCommitment :37
     type: geometric_filter                                 # NOT a learned predictor
     learning: false
     inputs: [close, high, low]                             # candle-polarity (directional commitment) index
-    min_rr: retained_but_unused                            # src/engines/rr_engine.py:43 · min_rr
+    min_rr: retained_but_unused                            # src/engines/candle_commitment.py:43 · min_rr
     output: "candle-polarity / structural-commitment index"
     active: true
-    # Source-verified 2026-07-24 (rr_engine.py:68-82), NOT taken from a finding:
+    # Source-verified 2026-07-24 (candle_commitment.py:68-82), NOT taken from a finding:
     #   polarity = max((high-close)/range, (close-low)/range)
     # The two fractions sum to 1, so the max is >= 0.5 => domain is {0.0} U [0.5, 1]
     # (0.0 only on the doji/missing-key/value-error paths, :60-66 and :84-89).
@@ -853,12 +853,12 @@ rr_model:
     # `rr_ratio` is a legacy field NAME carrying the same value; output_field names the honest one.
     # output_semantic MIRRORS the engine's own self-declared `semantic` field (:81) — the
     # Layer-7 build cross-checks the two and raises if they ever drift apart.
-    engine_key: rr
+    engine_key: candle_commitment
     output_field: candle_polarity
     output_semantic: candle_structure_quality
     rr_fusion_active: false      # machine-readable twin of the F-038 prose below;
                                  # == engine_runner.rr_fusion.enabled in the ACTIVE_VERSION config
-    pit_provenance: "models/rr_model.provenance.json — PIT_UNCLEAN (centered_swings + global_batch_volatility_regime training era; F-051/FC1-A/FC1-D); base RREngine geometry unaffected (close/high/low only)"
+    pit_provenance: "models/rr_model.provenance.json — PIT_UNCLEAN (centered_swings + global_batch_volatility_regime training era; F-051/FC1-A/FC1-D); base CandleCommitment geometry unaffected (close/high/low only)"
 
   evidence:
     findings: [F-038]
@@ -867,7 +867,7 @@ rr_model:
     validated: false
     notes: >
       The rr_fusion layer was a GAUSSIAN DUPLICATE (Mahalanobis conf ≪ 0.3 → 100% bypass);
-      rr_fusion is DISABLED in the active config so base RREngine.compute() flows through
+      rr_fusion is DISABLED in the active config so base CandleCommitment.compute() flows through
       unmutated (F-038). Not a movement-potential learner — a geometric filter.
 
   reachability:
@@ -901,13 +901,13 @@ rr_model:
                                       # registry, which was realigned to the artifact's own
                                       # n_features:38 / feature_schema:"canonical_38".
       trained_on: [BNBUSDT]
-      trainer: rr_pattern_miner
+      trainer: rr_trained
       trained_at: "2026-05-24T06:34:26Z"
       selected_at: null
     execution:
       runtime_enabled: false             # == engine_runner.rr_fusion.enabled (F-038)
       uses_trained_checkpoint: false     # not loaded on spine when disabled
-      polarity_engine_wired: true        # geometric RREngine still fusion-weighted
+      polarity_engine_wired: true        # geometric CandleCommitment still fusion-weighted
       decision_reachable: false
     identity_status: selected_not_enabled
     how_path_ref:
@@ -1153,7 +1153,7 @@ engine_runner:
 
   runtime:
     file: src/core/engine_runner.py:150 · detect_regime      # breakout_engine :165 / trap_engine :189
-    engines: [crt, gaussian, zone_gate, rr]
+    engines: [crt, ema_momentum_kernel, feature_cluster_similarity, rr]
     decision_authority: "DecisionEngine (sole emitter of 'execute' or 'reject')"
     pipeline: "EngineRunner → FusionEngine → DecisionEngine → ExecutionPlanner → UltronRiskGate"
     fusion_gate:
@@ -1239,8 +1239,8 @@ philosophy:
       originates. They decompose OHLCV into different questions.
     decomposition:
       crt:        "Is the market structure valid?"
-      gaussian:   "Is this historically profitable?"
-      zone_gate:  "Is this feature-space neighbourhood good?"
+      ema_momentum_kernel:   "Is this historically profitable?"
+      feature_cluster_similarity:  "Is this feature-space neighbourhood good?"
       rr:         "Is the reward-risk economically viable?"
       bitnet:     "Is this market state acceptable?"
       trap:       "Is this a deception pattern?"
@@ -1277,7 +1277,7 @@ feature_lineage:
   human_source: docs/topics/model-intent-and-feature-ownership.md
   canonical_schema: src/features/feature_schema.py   # CANONICAL_FEATURES order
   candle_geometry_primitive: src/features/candle_math.py
-  fusion_weights: {crt: 0.4, gaussian: 0.2, zone_gate: 0.2, rr: 0.2}   # active fusion_engine; LIVE-path only (fusion OFF in backtests, F-037)
+  fusion_weights: {crt: 0.4, ema_momentum_kernel: 0.2, feature_cluster_similarity: 0.2, rr: 0.2}   # active fusion_engine; LIVE-path only (fusion OFF in backtests, F-037)
   role_counts: {structural: 11, unused: 29, advisory: 8}   # +9 unused (CH-htfcrt-parent-candle-smc-v1, 2026-08-15)
   pit_note: >
     2026-07-11 (F-051 / FC1-A / FC1-D): production publication for the 10-dim structure closure
@@ -1289,55 +1289,55 @@ feature_lineage:
     ROLLING_CAUSAL N=200 (FC1-D); global rank is research-only volatility_regime_global_batch.
     rr_model/zone_registry were TRAINED pre-change: PIT_UNCLEAN (models/*.provenance.json).
   features:
-  - {index: 0, name: open, ohlcv: "o", formula: "RAW passthrough", provenance: {file: src/features/feature_pipeline.py, line: null}, crt_state: null, consumers: {crt: "body_size geometry", gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "crt:0.4", role: structural}
-  - {index: 1, name: high, ohlcv: "h", formula: "RAW passthrough", provenance: {file: src/features/feature_pipeline.py, line: null}, crt_state: null, consumers: {crt: "sweep/wick geometry", gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: "polarity"}, fusion_weight: "crt:0.4", role: structural}
-  - {index: 2, name: low, ohlcv: "l", formula: "RAW passthrough", provenance: {file: src/features/feature_pipeline.py, line: null}, crt_state: null, consumers: {crt: "sweep/wick geometry", gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: "polarity"}, fusion_weight: "crt:0.4", role: structural}
-  - {index: 3, name: close, ohlcv: "c", formula: "RAW passthrough", provenance: {file: src/features/feature_pipeline.py, line: null}, crt_state: null, consumers: {crt: "sweep/retest/disp", gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: "polarity"}, fusion_weight: "crt:0.4", role: structural}
-  - {index: 4, name: volume, ohlcv: "v", formula: "RAW passthrough", provenance: {file: src/features/feature_pipeline.py, line: null}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
-  - {index: 5, name: volume_ratio, ohlcv: "v", formula: "vol/vol_ma20 (FX range proxy)", provenance: {file: src/features/feature_pipeline.py, line: 202}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
-  - {index: 6, name: double_sweep, ohlcv: "h,l,c", formula: "both +/- liquidity_sweep in 5-bar window", provenance: {file: src/features/feature_pipeline.py, line: 537}, crt_state: "RETEST", consumers: {crt: "soft sweep-bonus", gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "crt:0.4", role: advisory}
-  - {index: 7, name: ema_fast, ohlcv: "c", formula: "EWM(close, span=9)", provenance: {file: src/features/feature_pipeline.py, line: 486}, crt_state: null, consumers: {crt: "CRT uses own EMA(2,5)", gaussian: "momentum vote", zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "gaussian:0.2", role: advisory}
-  - {index: 8, name: ema_slow, ohlcv: "c", formula: "EWM(close, span=21)", provenance: {file: src/features/feature_pipeline.py, line: 487}, crt_state: null, consumers: {crt: false, gaussian: "momentum vote", zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "gaussian:0.2", role: advisory}
-  - {index: 9, name: ema_spread, ohlcv: "c", formula: "(ema_fast-ema_slow)/atr", provenance: {file: src/features/feature_pipeline.py, line: 491}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "regime_routing", role: advisory}
-  - {index: 10, name: trend_bias, ohlcv: "c", formula: "sign(ema_fast-ema_slow)", provenance: {file: src/features/feature_pipeline.py, line: 506}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "regime_routing", role: advisory}
-  - {index: 11, name: trend_strength_z, ohlcv: "c", formula: "zscore(rollmean(slope(ma20),10),50)", provenance: {file: src/features/feature_pipeline.py, line: 296}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
-  - {index: 12, name: momentum_score, ohlcv: "c", formula: "close.diff()/atr", provenance: {file: src/features/feature_pipeline.py, line: 497}, crt_state: null, consumers: {crt: "intent-classification", gaussian: "momentum vote", zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "gaussian:0.2", role: advisory}
-  - {index: 13, name: atr, ohlcv: "h,l,c", formula: "ATR(14)/close", provenance: {file: src/features/feature_pipeline.py, line: 462}, crt_state: "+BitNet(off)", consumers: {crt: "disp/retest/SL-TP", gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "crt:0.4", role: structural}
-  - {index: 14, name: volatility_ratio, ohlcv: "h,l,c", formula: "(high-low)/(atr*close)", provenance: {file: src/features/feature_pipeline.py, line: 476}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "regime_routing", role: advisory}
-  - {index: 15, name: rsi_14, ohlcv: "c", formula: "Wilder 100-100/(1+RS)", provenance: {file: src/features/feature_pipeline.py, line: 251}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
-  - {index: 16, name: macd_line, ohlcv: "c", formula: "EMA12(close)-EMA26(close)", provenance: {file: src/features/feature_pipeline.py, line: 281}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
-  - {index: 17, name: macd_signal, ohlcv: "c", formula: "EMA9(macd_line)", provenance: {file: src/features/feature_pipeline.py, line: 282}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
-  - {index: 18, name: macd_hist_raw, ohlcv: "c", formula: "macd_line-macd_signal (v4.0: RAW, no longer overwritten in place)", provenance: {file: src/features/feature_pipeline.py, line: 283}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
-  - {index: 19, name: macd_hist_z, ohlcv: "c", formula: "rolling(zscore_window) z-score of macd_hist_raw — the value v3.0 emitted under the name macd_hist", provenance: {file: src/features/feature_pipeline.py, line: 283}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
-  - {index: 20, name: sweep_detected, ohlcv: "h,l,c", formula: "1 if liquidity_sweep != 0", provenance: {file: src/features/feature_pipeline.py, line: 515}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "regime_routing", role: advisory}
-  - {index: 21, name: liquidity_sweep, ohlcv: "h,l,c", formula: "+/-1 close vs ref swing (->double_sweep)", provenance: {file: src/features/feature_pipeline.py, line: 409}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
-  - {index: 22, name: break_of_structure, ohlcv: "c", formula: "+/-1 close vs ref swing (->liq_distance)", provenance: {file: src/features/feature_pipeline.py, line: 404}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
-  - {index: 23, name: swing_high, ohlcv: "h", formula: "CAUSAL DELAYED pivot flag (centered rollmax(5) shifted k=2; FC1-A/F-051 — F-029 gate-OFF ledger unchanged)", provenance: {file: src/features/feature_pipeline.py, line: 441}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
-  - {index: 24, name: swing_low, ohlcv: "l", formula: "CAUSAL DELAYED pivot flag (centered rollmin(5) shifted k=2; FC1-A)", provenance: {file: src/features/feature_pipeline.py, line: 442}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
-  - {index: 25, name: higher_high, ohlcv: "h", formula: "high>last_swing_high.shift(1)", provenance: {file: src/features/feature_pipeline.py, line: 393}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
-  - {index: 26, name: lower_low, ohlcv: "l", formula: "low<last_swing_low.shift(1)", provenance: {file: src/features/feature_pipeline.py, line: 395}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
-  - {index: 27, name: body_size, ohlcv: "o,c", formula: "abs(close-open) == candle_math.body_size", provenance: {file: src/features/feature_pipeline.py, line: 443}, crt_state: null, consumers: {crt: "->body_ratio", gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "crt:0.4", role: structural}
-  - {index: 28, name: candle_range, ohlcv: "h,l", formula: "high-low == candle_math.candle_range (v4.0 rename of wick_size — always was the range, never a wick)", provenance: {file: src/features/feature_pipeline.py, line: 444}, crt_state: null, consumers: {crt: "->body_ratio/disp", gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "crt:0.4", role: structural}
-  - {index: 29, name: body_ratio, ohlcv: "o,h,l,c", formula: "body_size/candle_range == candle_math.body_ratio", provenance: {file: src/features/feature_pipeline.py, line: 446}, crt_state: "RETEST", consumers: {crt: "displacement gate >=0.70", gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "crt:0.4", role: structural}
-  - {index: 30, name: volatility_regime, ohlcv: "h,l,c", formula: "ROLLING_CAUSAL ATR-percentile terciles {0,1,2}, N=200 (FC1-D; global rank research-only)", provenance: {file: src/features/feature_pipeline.py, line: 343}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
-  - {index: 31, name: session, ohlcv: "ts", formula: "v4.0 window model {ASIA,LONDON,NEWYORK,OVERLAP,CLOSED} — features/session_classifier.py", provenance: {file: src/features/feature_pipeline.py, line: 341}, crt_state: "RETEST", consumers: {crt: "session filter (binding lever)", gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "crt:0.4", role: structural}
-  - {index: 32, name: hour_of_day, ohlcv: "ts", formula: "timestamp.hour", provenance: {file: src/features/feature_pipeline.py, line: 338}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
-  - {index: 33, name: disp_strength, ohlcv: "h,l,c", formula: "body_size/(atr*close) clip[0,3]", provenance: {file: src/features/feature_pipeline.py, line: 559}, crt_state: "RETEST", consumers: {crt: "displacement ceiling", gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "crt:0.4", role: structural}
-  - {index: 34, name: retest_depth, ohlcv: "c", formula: "abs(close-ema_fast)/(atr*close) clip[0,1]", provenance: {file: src/features/feature_pipeline.py, line: 573}, crt_state: "RETEST", consumers: {crt: "retest gate (min/ceiling)", gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "crt:0.4", role: structural}
-  - {index: 35, name: candles_since_sweep, ohlcv: "-", formula: "bars since last sweep", provenance: {file: src/features/feature_pipeline.py, line: 588}, crt_state: "+BitNet(off)", consumers: {crt: "BitNet-only -> OFF", gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "inert:0", role: unused}
-  - {index: 36, name: liquidity_distance, ohlcv: "h,l,c", formula: "min dist to ref/BOS / atr", provenance: {file: src/features/feature_pipeline.py, line: 599}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
-  - {index: 37, name: liquidity_pressure_score, ohlcv: "h,l,c", formula: "exp(-0.5*liquidity_distance)", provenance: {file: src/features/feature_pipeline.py, line: 648}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
-  - {index: 38, name: volume_spike, ohlcv: "v", formula: "vol_ratio>rolling-75pctile(50)", provenance: {file: src/features/feature_pipeline.py, line: 654}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  - {index: 0, name: open, ohlcv: "o", formula: "RAW passthrough", provenance: {file: src/features/feature_pipeline.py, line: null}, crt_state: null, consumers: {crt: "body_size geometry", ema_momentum_kernel: false, feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "crt:0.4", role: structural}
+  - {index: 1, name: high, ohlcv: "h", formula: "RAW passthrough", provenance: {file: src/features/feature_pipeline.py, line: null}, crt_state: null, consumers: {crt: "sweep/wick geometry", ema_momentum_kernel: false, feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: "polarity"}, fusion_weight: "crt:0.4", role: structural}
+  - {index: 2, name: low, ohlcv: "l", formula: "RAW passthrough", provenance: {file: src/features/feature_pipeline.py, line: null}, crt_state: null, consumers: {crt: "sweep/wick geometry", ema_momentum_kernel: false, feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: "polarity"}, fusion_weight: "crt:0.4", role: structural}
+  - {index: 3, name: close, ohlcv: "c", formula: "RAW passthrough", provenance: {file: src/features/feature_pipeline.py, line: null}, crt_state: null, consumers: {crt: "sweep/retest/disp", ema_momentum_kernel: false, feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: "polarity"}, fusion_weight: "crt:0.4", role: structural}
+  - {index: 4, name: volume, ohlcv: "v", formula: "RAW passthrough", provenance: {file: src/features/feature_pipeline.py, line: null}, crt_state: null, consumers: {crt: false, ema_momentum_kernel: false, feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  - {index: 5, name: volume_ratio, ohlcv: "v", formula: "vol/vol_ma20 (FX range proxy)", provenance: {file: src/features/feature_pipeline.py, line: 202}, crt_state: null, consumers: {crt: false, ema_momentum_kernel: false, feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  - {index: 6, name: double_sweep, ohlcv: "h,l,c", formula: "both +/- liquidity_sweep in 5-bar window", provenance: {file: src/features/feature_pipeline.py, line: 537}, crt_state: "RETEST", consumers: {crt: "soft sweep-bonus", ema_momentum_kernel: false, feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "crt:0.4", role: advisory}
+  - {index: 7, name: ema_fast, ohlcv: "c", formula: "EWM(close, span=9)", provenance: {file: src/features/feature_pipeline.py, line: 486}, crt_state: null, consumers: {crt: "CRT uses own EMA(2,5)", ema_momentum_kernel: "momentum vote", feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "ema_momentum_kernel:0.2", role: advisory}
+  - {index: 8, name: ema_slow, ohlcv: "c", formula: "EWM(close, span=21)", provenance: {file: src/features/feature_pipeline.py, line: 487}, crt_state: null, consumers: {crt: false, ema_momentum_kernel: "momentum vote", feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "ema_momentum_kernel:0.2", role: advisory}
+  - {index: 9, name: ema_spread, ohlcv: "c", formula: "(ema_fast-ema_slow)/atr", provenance: {file: src/features/feature_pipeline.py, line: 491}, crt_state: null, consumers: {crt: false, ema_momentum_kernel: false, feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "regime_routing", role: advisory}
+  - {index: 10, name: trend_bias, ohlcv: "c", formula: "sign(ema_fast-ema_slow)", provenance: {file: src/features/feature_pipeline.py, line: 506}, crt_state: null, consumers: {crt: false, ema_momentum_kernel: false, feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "regime_routing", role: advisory}
+  - {index: 11, name: trend_strength_z, ohlcv: "c", formula: "zscore(rollmean(slope(ma20),10),50)", provenance: {file: src/features/feature_pipeline.py, line: 296}, crt_state: null, consumers: {crt: false, ema_momentum_kernel: false, feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  - {index: 12, name: momentum_score, ohlcv: "c", formula: "close.diff()/atr", provenance: {file: src/features/feature_pipeline.py, line: 497}, crt_state: null, consumers: {crt: "intent-classification", ema_momentum_kernel: "momentum vote", feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "ema_momentum_kernel:0.2", role: advisory}
+  - {index: 13, name: atr, ohlcv: "h,l,c", formula: "ATR(14)/close", provenance: {file: src/features/feature_pipeline.py, line: 462}, crt_state: "+BitNet(off)", consumers: {crt: "disp/retest/SL-TP", ema_momentum_kernel: false, feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "crt:0.4", role: structural}
+  - {index: 14, name: volatility_ratio, ohlcv: "h,l,c", formula: "(high-low)/(atr*close)", provenance: {file: src/features/feature_pipeline.py, line: 476}, crt_state: null, consumers: {crt: false, ema_momentum_kernel: false, feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "regime_routing", role: advisory}
+  - {index: 15, name: rsi_14, ohlcv: "c", formula: "Wilder 100-100/(1+RS)", provenance: {file: src/features/feature_pipeline.py, line: 251}, crt_state: null, consumers: {crt: false, ema_momentum_kernel: false, feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  - {index: 16, name: macd_line, ohlcv: "c", formula: "EMA12(close)-EMA26(close)", provenance: {file: src/features/feature_pipeline.py, line: 281}, crt_state: null, consumers: {crt: false, ema_momentum_kernel: false, feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  - {index: 17, name: macd_signal, ohlcv: "c", formula: "EMA9(macd_line)", provenance: {file: src/features/feature_pipeline.py, line: 282}, crt_state: null, consumers: {crt: false, ema_momentum_kernel: false, feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  - {index: 18, name: macd_hist_raw, ohlcv: "c", formula: "macd_line-macd_signal (v4.0: RAW, no longer overwritten in place)", provenance: {file: src/features/feature_pipeline.py, line: 283}, crt_state: null, consumers: {crt: false, ema_momentum_kernel: false, feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  - {index: 19, name: macd_hist_z, ohlcv: "c", formula: "rolling(zscore_window) z-score of macd_hist_raw — the value v3.0 emitted under the name macd_hist", provenance: {file: src/features/feature_pipeline.py, line: 283}, crt_state: null, consumers: {crt: false, ema_momentum_kernel: false, feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  - {index: 20, name: sweep_detected, ohlcv: "h,l,c", formula: "1 if liquidity_sweep != 0", provenance: {file: src/features/feature_pipeline.py, line: 515}, crt_state: null, consumers: {crt: false, ema_momentum_kernel: false, feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "regime_routing", role: advisory}
+  - {index: 21, name: liquidity_sweep, ohlcv: "h,l,c", formula: "+/-1 close vs ref swing (->double_sweep)", provenance: {file: src/features/feature_pipeline.py, line: 409}, crt_state: null, consumers: {crt: false, ema_momentum_kernel: false, feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  - {index: 22, name: break_of_structure, ohlcv: "c", formula: "+/-1 close vs ref swing (->liq_distance)", provenance: {file: src/features/feature_pipeline.py, line: 404}, crt_state: null, consumers: {crt: false, ema_momentum_kernel: false, feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  - {index: 23, name: swing_high, ohlcv: "h", formula: "CAUSAL DELAYED pivot flag (centered rollmax(5) shifted k=2; FC1-A/F-051 — F-029 gate-OFF ledger unchanged)", provenance: {file: src/features/feature_pipeline.py, line: 441}, crt_state: null, consumers: {crt: false, ema_momentum_kernel: false, feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  - {index: 24, name: swing_low, ohlcv: "l", formula: "CAUSAL DELAYED pivot flag (centered rollmin(5) shifted k=2; FC1-A)", provenance: {file: src/features/feature_pipeline.py, line: 442}, crt_state: null, consumers: {crt: false, ema_momentum_kernel: false, feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  - {index: 25, name: higher_high, ohlcv: "h", formula: "high>last_swing_high.shift(1)", provenance: {file: src/features/feature_pipeline.py, line: 393}, crt_state: null, consumers: {crt: false, ema_momentum_kernel: false, feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  - {index: 26, name: lower_low, ohlcv: "l", formula: "low<last_swing_low.shift(1)", provenance: {file: src/features/feature_pipeline.py, line: 395}, crt_state: null, consumers: {crt: false, ema_momentum_kernel: false, feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  - {index: 27, name: body_size, ohlcv: "o,c", formula: "abs(close-open) == candle_math.body_size", provenance: {file: src/features/feature_pipeline.py, line: 443}, crt_state: null, consumers: {crt: "->body_ratio", ema_momentum_kernel: false, feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "crt:0.4", role: structural}
+  - {index: 28, name: candle_range, ohlcv: "h,l", formula: "high-low == candle_math.candle_range (v4.0 rename of wick_size — always was the range, never a wick)", provenance: {file: src/features/feature_pipeline.py, line: 444}, crt_state: null, consumers: {crt: "->body_ratio/disp", ema_momentum_kernel: false, feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "crt:0.4", role: structural}
+  - {index: 29, name: body_ratio, ohlcv: "o,h,l,c", formula: "body_size/candle_range == candle_math.body_ratio", provenance: {file: src/features/feature_pipeline.py, line: 446}, crt_state: "RETEST", consumers: {crt: "displacement gate >=0.70", ema_momentum_kernel: false, feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "crt:0.4", role: structural}
+  - {index: 30, name: volatility_regime, ohlcv: "h,l,c", formula: "ROLLING_CAUSAL ATR-percentile terciles {0,1,2}, N=200 (FC1-D; global rank research-only)", provenance: {file: src/features/feature_pipeline.py, line: 343}, crt_state: null, consumers: {crt: false, ema_momentum_kernel: false, feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  - {index: 31, name: session, ohlcv: "ts", formula: "v4.0 window model {ASIA,LONDON,NEWYORK,OVERLAP,CLOSED} — features/session_classifier.py", provenance: {file: src/features/feature_pipeline.py, line: 341}, crt_state: "RETEST", consumers: {crt: "session filter (binding lever)", ema_momentum_kernel: false, feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "crt:0.4", role: structural}
+  - {index: 32, name: hour_of_day, ohlcv: "ts", formula: "timestamp.hour", provenance: {file: src/features/feature_pipeline.py, line: 338}, crt_state: null, consumers: {crt: false, ema_momentum_kernel: false, feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  - {index: 33, name: disp_strength, ohlcv: "h,l,c", formula: "body_size/(atr*close) clip[0,3]", provenance: {file: src/features/feature_pipeline.py, line: 559}, crt_state: "RETEST", consumers: {crt: "displacement ceiling", ema_momentum_kernel: false, feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "crt:0.4", role: structural}
+  - {index: 34, name: retest_depth, ohlcv: "c", formula: "abs(close-ema_fast)/(atr*close) clip[0,1]", provenance: {file: src/features/feature_pipeline.py, line: 573}, crt_state: "RETEST", consumers: {crt: "retest gate (min/ceiling)", ema_momentum_kernel: false, feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "crt:0.4", role: structural}
+  - {index: 35, name: candles_since_sweep, ohlcv: "-", formula: "bars since last sweep", provenance: {file: src/features/feature_pipeline.py, line: 588}, crt_state: "+BitNet(off)", consumers: {crt: "BitNet-only -> OFF", ema_momentum_kernel: false, feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "inert:0", role: unused}
+  - {index: 36, name: liquidity_distance, ohlcv: "h,l,c", formula: "min dist to ref/BOS / atr", provenance: {file: src/features/feature_pipeline.py, line: 599}, crt_state: null, consumers: {crt: false, ema_momentum_kernel: false, feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  - {index: 37, name: liquidity_pressure_score, ohlcv: "h,l,c", formula: "exp(-0.5*liquidity_distance)", provenance: {file: src/features/feature_pipeline.py, line: 648}, crt_state: null, consumers: {crt: false, ema_momentum_kernel: false, feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
+  - {index: 38, name: volume_spike, ohlcv: "v", formula: "vol_ratio>rolling-75pctile(50)", provenance: {file: src/features/feature_pipeline.py, line: 654}, crt_state: null, consumers: {crt: false, ema_momentum_kernel: false, feature_cluster_similarity: "full_vector (non-pivotal, F-036)", rr: false}, fusion_weight: "zone:0.2_nonpivotal", role: unused}
   # CH-htfcrt-parent-candle-smc-v1 (2026-08-15, user-authorized): 9 SMC primitives, FM-075..FM-083.
   # Not yet consumed by any engine (unused, same as most of indices 5-38 above) -- registered in
   # the ontology + DAG + this lineage for identity completeness; wiring an engine to actually READ
   # them (e.g. into the CRT fusion score or a gate) is a separate, unauthorized-by-this-turn step.
-  - {index: 39, name: order_block_distance, ohlcv: "o,h,l,c", formula: "tanh(sign*(close-ob_edge)/atr)", provenance: {file: src/features/smc/order_block.py, line: null}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: false, rr: false}, fusion_weight: "inert:0", role: unused}
-  - {index: 40, name: fvg_distance, ohlcv: "h,l", formula: "tanh(sign*(close-fvg_edge)/atr)", provenance: {file: src/features/smc/fvg.py, line: null}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: false, rr: false}, fusion_weight: "inert:0", role: unused}
-  - {index: 41, name: breaker_distance, ohlcv: "o,h,l,c", formula: "tanh(sign*(close-breaker_edge)/atr)", provenance: {file: src/features/smc/breaker.py, line: null}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: false, rr: false}, fusion_weight: "inert:0", role: unused}
-  - {index: 42, name: mitigation_block_distance, ohlcv: "o,h,l,c", formula: "tanh(sign*(close-mitig_edge)/atr)", provenance: {file: src/features/smc/mitigation.py, line: null}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: false, rr: false}, fusion_weight: "inert:0", role: unused}
-  - {index: 43, name: pdh_distance, ohlcv: "h", formula: "tanh(-(close-prev_day_high)/atr)", provenance: {file: src/features/smc/levels.py, line: null}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: false, rr: false}, fusion_weight: "inert:0", role: unused}
-  - {index: 44, name: pdl_distance, ohlcv: "l", formula: "tanh((close-prev_day_low)/atr)", provenance: {file: src/features/smc/levels.py, line: null}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: false, rr: false}, fusion_weight: "inert:0", role: unused}
-  - {index: 45, name: eqh_distance, ohlcv: "h", formula: "tanh(-(close-eqh_level)/atr)", provenance: {file: src/features/smc/levels.py, line: null}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: false, rr: false}, fusion_weight: "inert:0", role: unused}
-  - {index: 46, name: eql_distance, ohlcv: "l", formula: "tanh((close-eql_level)/atr)", provenance: {file: src/features/smc/levels.py, line: null}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: false, rr: false}, fusion_weight: "inert:0", role: unused}
-  - {index: 47, name: change_of_character, ohlcv: "derived", formula: "break_of_structure if sign differs from trend_bias, else 0", provenance: {file: src/features/smc/choch.py, line: null}, crt_state: null, consumers: {crt: false, gaussian: false, zone_gate: false, rr: false}, fusion_weight: "inert:0", role: unused}
+  - {index: 39, name: order_block_distance, ohlcv: "o,h,l,c", formula: "tanh(sign*(close-ob_edge)/atr)", provenance: {file: src/features/smc/order_block.py, line: null}, crt_state: null, consumers: {crt: false, ema_momentum_kernel: false, feature_cluster_similarity: false, rr: false}, fusion_weight: "inert:0", role: unused}
+  - {index: 40, name: fvg_distance, ohlcv: "h,l", formula: "tanh(sign*(close-fvg_edge)/atr)", provenance: {file: src/features/smc/fvg.py, line: null}, crt_state: null, consumers: {crt: false, ema_momentum_kernel: false, feature_cluster_similarity: false, rr: false}, fusion_weight: "inert:0", role: unused}
+  - {index: 41, name: breaker_distance, ohlcv: "o,h,l,c", formula: "tanh(sign*(close-breaker_edge)/atr)", provenance: {file: src/features/smc/breaker.py, line: null}, crt_state: null, consumers: {crt: false, ema_momentum_kernel: false, feature_cluster_similarity: false, rr: false}, fusion_weight: "inert:0", role: unused}
+  - {index: 42, name: mitigation_block_distance, ohlcv: "o,h,l,c", formula: "tanh(sign*(close-mitig_edge)/atr)", provenance: {file: src/features/smc/mitigation.py, line: null}, crt_state: null, consumers: {crt: false, ema_momentum_kernel: false, feature_cluster_similarity: false, rr: false}, fusion_weight: "inert:0", role: unused}
+  - {index: 43, name: pdh_distance, ohlcv: "h", formula: "tanh(-(close-prev_day_high)/atr)", provenance: {file: src/features/smc/levels.py, line: null}, crt_state: null, consumers: {crt: false, ema_momentum_kernel: false, feature_cluster_similarity: false, rr: false}, fusion_weight: "inert:0", role: unused}
+  - {index: 44, name: pdl_distance, ohlcv: "l", formula: "tanh((close-prev_day_low)/atr)", provenance: {file: src/features/smc/levels.py, line: null}, crt_state: null, consumers: {crt: false, ema_momentum_kernel: false, feature_cluster_similarity: false, rr: false}, fusion_weight: "inert:0", role: unused}
+  - {index: 45, name: eqh_distance, ohlcv: "h", formula: "tanh(-(close-eqh_level)/atr)", provenance: {file: src/features/smc/levels.py, line: null}, crt_state: null, consumers: {crt: false, ema_momentum_kernel: false, feature_cluster_similarity: false, rr: false}, fusion_weight: "inert:0", role: unused}
+  - {index: 46, name: eql_distance, ohlcv: "l", formula: "tanh((close-eql_level)/atr)", provenance: {file: src/features/smc/levels.py, line: null}, crt_state: null, consumers: {crt: false, ema_momentum_kernel: false, feature_cluster_similarity: false, rr: false}, fusion_weight: "inert:0", role: unused}
+  - {index: 47, name: change_of_character, ohlcv: "derived", formula: "break_of_structure if sign differs from trend_bias, else 0", provenance: {file: src/features/smc/choch.py, line: null}, crt_state: null, consumers: {crt: false, ema_momentum_kernel: false, feature_cluster_similarity: false, rr: false}, fusion_weight: "inert:0", role: unused}

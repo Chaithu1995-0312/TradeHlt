@@ -210,6 +210,8 @@ def build_panel() -> tuple[list[BarRec], dict[str, Any], dict[str, Any]]:
     ep_counter = 0
     cur_ep: int | None = None
 
+    from features.bar_feature_frame import BarFeatureFrame  # [EPIC-84 A3b]
+    _bar_frame = BarFeatureFrame.from_ohlcv_df(df)
     for i in range(n_raw):
         ts = timestamps[i]
         try:
@@ -248,7 +250,7 @@ def build_panel() -> tuple[list[BarRec], dict[str, Any], dict[str, Any]]:
                 crt_state[i] = "UNINIT"
                 continue
 
-        engine.process_candle(candle, htf.current_htf_id)
+        engine.process_candle(candle, htf.current_htf_id, bar_features=_bar_frame.for_candle(candle))
         name = engine.state.current_state.name
         crt_state[i] = name
         if name in ACTIVE_STATES:

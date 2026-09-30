@@ -53,7 +53,7 @@ DEFAULT_JOURNAL = (
 DEFAULT_MODEL_VERSION = "xauusd_nb_20260722T194904Z"
 PHASE = "E0_SCORED_UNITS"
 AUTHORITY = (
-    "RESEARCH_ONLY — no M4, no ΔG001, no gaussian_impl flip; "
+    "RESEARCH_ONLY — no M4, no ΔG001, no removed_selector flip; "
     "REGISTRY_ACTIVE ≠ ECONOMIC_AUTHORITY"
 )
 
@@ -492,7 +492,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         "not_in_scope": [
             "forward_walk economics / NET R arms (E1)",
             "M4 QualificationGate (E2)",
-            "gaussian_impl config change (E3)",
+            "removed_selector config change (E3)",
             "ΔG001 / economic authority",
         ],
         "next_phase": "E1 — economic ledger on these units (pre-registered arms)",

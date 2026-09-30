@@ -30,7 +30,7 @@ from sklearn.metrics import roc_auc_score
 
 ROOT = Path(__file__).resolve().parents[2]
 
-COMPONENTS = ["crt", "gaussian", "zone_gate", "rr_live_polarity", "rr_trained"]
+COMPONENTS = ["crt", "gaussian", "feature_cluster_similarity", "rr_live_polarity", "rr_trained"]
 HORIZONS = (1, 4)
 
 
@@ -110,7 +110,7 @@ def main() -> int:
     g = df["gaussian"].to_numpy()
     gaussian["moments"] = _moments(g)
     gaussian["corr_vs_fused"] = _pearson(g, df["fused_base_live_rr"].to_numpy())
-    gaussian["corr_vs_zone"] = _pearson(g, df["zone_gate"].to_numpy())
+    gaussian["corr_vs_zone"] = _pearson(g, df["feature_cluster_similarity"].to_numpy())
     gaussian["discrimination"] = {}
     for h in HORIZONS:
         col = f"fwd_ret_h{h}"
@@ -140,7 +140,7 @@ def main() -> int:
     # ── weight-sensitivity on the fused score (live rr slot) ───────────────
     crt = df["crt"].to_numpy()
     g = df["gaussian"].to_numpy()
-    zone = df["zone_gate"].to_numpy()
+    zone = df["feature_cluster_similarity"].to_numpy()
     rr = df["rr_live_polarity"].to_numpy()
     base = df["fused_base_live_rr"].to_numpy()
 

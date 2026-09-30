@@ -97,7 +97,7 @@ EVIDENCE_TYPE_ENUM = frozenset({"code", "config", "doc", "test", "finding"})
 
 # ── file_identity enums (Semantic File Identity Layer) ────────────────────────────────────────
 #: Filename vs actual meaning, per source-verified review — the classification this layer exists
-#: to make explicit rather than silently tolerated (e.g. src/engines/rr_engine.py is MISLEADING:
+#: to make explicit rather than silently tolerated (e.g. src/engines/candle_commitment.py is MISLEADING:
 #: it computes candle polarity bounded [0.5,1.0], not economic reward:risk).
 FILENAME_SEMANTIC_STATUS_ENUM = frozenset(
     {"ALIGNED", "HISTORICAL", "MISLEADING", "COMPATIBILITY", "SPLIT", "UNKNOWN"}

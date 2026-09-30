@@ -19,7 +19,7 @@ Contract
   transient registry-not-yet-promoted state).
 
 Used by the three runtime engines that hold long-lived registry state:
-- HeuristicGaussianEngine  (gaussian_registry.json)
+- EmaMomentumKernel  (gaussian_registry.json)
 - ReplayMemoryEngine       (zone_registry.json — replay's zone context)
 - BitNetZoneGate           (zone_registry.json — live zone gate)
 

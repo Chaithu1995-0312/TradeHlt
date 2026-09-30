@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 from tests.helpers.crt_config import crt_config_for_test
 from tests.helpers.crt_config import crt_engine_for_test, execution_engine_for_test, reset_logic_for_test  # noqa: F401
+from tests.helpers.crt_config import bar_features_for_test  # noqa: E402,F401
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -45,7 +46,7 @@ def test_fail_counters_default_off_no_attachment():
     cs = _candles(40, Candle, datetime)
     eng.initialise_range(cs[:14], "HTF-0", "LONDON")
     for c in cs[14:]:
-        eng.process_candle(c, "HTF-0")
+        eng.process_candle(c, "HTF-0", bar_features=bar_features_for_test())
 
 
 def test_fail_counters_on_off_action_parity_small():
@@ -63,9 +64,9 @@ def test_fail_counters_on_off_action_parity_small():
     acts_off, acts_on = [], []
     for c in cs[14:]:
         counters.enabled = False
-        r0 = eng_off.process_candle(c, "HTF-0")
+        r0 = eng_off.process_candle(c, "HTF-0", bar_features=bar_features_for_test())
         counters.enabled = True
-        r1 = eng_on.process_candle(c, "HTF-0")
+        r1 = eng_on.process_candle(c, "HTF-0", bar_features=bar_features_for_test())
         acts_off.append((r0.get("action"), eng_off.state.current_state.name))
         acts_on.append((r1.get("action"), eng_on.state.current_state.name))
 

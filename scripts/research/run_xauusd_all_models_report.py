@@ -103,21 +103,21 @@ FEATURE_FLOWS: dict[str, dict] = {
         "outputs": ["score", "reason", "meta{mu,sigma,x}"],
         "unused_from_pipeline": "direction ignored; full dict required by assert only",
     },
-    "zone_gate": {
+    "feature_cluster_similarity": {
         "inputs": "full CANONICAL_FEATURES (39) name-anchored vector",
         "derived": [
             "BitNetZoneGate.check(vector) → top_scores",
             "cluster_score if len(top_scores) >= cluster_min_n else best",
-            "passed = score >= zone_cluster_threshold",
+            "passed = score >= feature_cluster_similarity_cluster_threshold",
         ],
         "outputs": ["score", "passed", "best_zone_id", "top_scores", "cluster_score"],
         "config_keys": [
-            "engine_runner.zone_registry_path",
-            "engine_runner.zone_cluster_threshold",
-            "engine_runner.zone_gate.{top_k,cluster_min_n,cluster_spread_max}",
+            "engine_runner.feature_cluster_similarity_registry_path",
+            "engine_runner.feature_cluster_similarity_cluster_threshold",
+            "engine_runner.feature_cluster_similarity.{top_k,cluster_min_n,cluster_spread_max}",
         ],
     },
-    "crt_score": {
+    "crt_structure_rule_score": {
         "inputs": [
             "body_ratio",
             "disp_strength (as move)",
@@ -139,7 +139,7 @@ FEATURE_FLOWS: dict[str, dict] = {
         "note": "NOT UltronRiskEngine linear retest (audit MD-1 dual path)",
     },
     "fusion_compute": {
-        "inputs": "union of crt_score + gaussian + zone_gate + rr inputs",
+        "inputs": "union of crt_structure_rule_score + gaussian + feature_cluster_similarity + rr inputs",
         "derived": [
             "run four engines independently",
             "FusionEngine.compute weighted average with fusion_engine.weight_*",
@@ -195,7 +195,7 @@ FEATURE_FLOWS: dict[str, dict] = {
             "BitNet only if use_bitnet (false on active)",
         ],
         "outputs": ["state", "action", "trade fields on TRADE_OPENED"],
-        "note": "distinct from crt_score fusion path",
+        "note": "distinct from crt_structure_rule_score fusion path",
     },
     "envelope": {
         "inputs": "38-dim LEGACY_FEATURE_NAMES from live feature dict (drop macd_hist_raw)",
@@ -206,14 +206,14 @@ FEATURE_FLOWS: dict[str, dict] = {
         "outputs": ["mfe_r", "mae_r_heat", "holding_bars", "time_to_mfe"],
         "note": "requires --artifact bundle; XAUUSD train 20260728T062350Z SIGNAL_RETAINED",
     },
-    "gaussian_ml": {
+    "nb_outcome_classifier": {
         "inputs": "name-anchored feature_schema_resolved from artifact (typically 39)",
         "derived": [
-            "load_gaussian_model(artifact) — NOT engine_runner.gaussian_impl",
+            "load_gaussian_model(artifact) — NOT engine_runner.removed_selector",
             "scale + predict_expected_rr → logistic score",
         ],
         "outputs": ["score", "expected_rr", "confidence"],
-        "note": "offline model_id independent of prod gaussian_impl=heuristic",
+        "note": "offline model_id independent of prod removed_selector=heuristic",
     },
     "llm_gate": {
         "inputs": "gaussian/neural scores on evaluate() path",
@@ -306,11 +306,11 @@ def main() -> int:
                 results.append(entry)
                 continue
             kwargs["artifact"] = RR_TRAINED_ARTIFACT
-        if m.model_id == "gaussian_ml":
+        if m.model_id == "nb_outcome_classifier":
             if not GAUSSIAN_ML_ARTIFACT.is_file():
                 entry["status"] = "BLOCKED"
                 entry["block_reason"] = f"artifact missing: {GAUSSIAN_ML_ARTIFACT}"
-                print(f"[BLOCK] gaussian_ml: {entry['block_reason']}")
+                print(f"[BLOCK] nb_outcome_classifier: {entry['block_reason']}")
                 results.append(entry)
                 continue
             kwargs["artifact"] = GAUSSIAN_ML_ARTIFACT
@@ -405,7 +405,7 @@ def main() -> int:
     lines.append(f"**Created:** {created}")
     lines.append("")
     lines.append("**Refresh note:** includes post-unblock `envelope` (XAU train) and "
-                 "`gaussian_ml` (artifact offline, not gated by `gaussian_impl`); "
+                 "`nb_outcome_classifier` (artifact offline, not gated by `removed_selector`); "
                  "TradeNet 39-dim shadow envelope.")
     lines.append("")
     lines.append("## Executive scoreboard")

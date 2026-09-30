@@ -175,7 +175,6 @@ def main(argv: list[str] | None = None) -> int:
             limit=crt_limit,
             csv=crt_csv,
             instrument=instrument,
-            skip_features=True,
             source="paper_rail_sidecar",
             verify=True,
         )

@@ -10,14 +10,14 @@ over market evidence (fused score, p_win, zone validity, weak-component). It doe
 and MUST NOT gate on, economics: fees / taxes / slippage / brokerage / portfolio / capital, or
 reward:risk. Economic reward:risk is owned solely by ``UltronRiskGate`` (Check 2, cost-taxed
 ``min_rr_ratio``, after ``ExecutionPlanner`` derives SL/TP); concrete SL/TP + sizing by
-``ExecutionPlanner``. The prior RR gate here consumed RREngine candle polarity (∈[0.5,1]) against
+``ExecutionPlanner``. The prior RR gate here consumed CandleCommitment candle polarity (∈[0.5,1]) against
 a reward:risk threshold — a producer/consumer contract mismatch (F-048) that has been REMOVED, not
 shimmed. There is no RR term in ``evaluate`` anymore.
 
 FIX 1 — Dynamic Threshold Calibration: threshold = percentile(scores, 85),
          clamped [0.45, 0.65]. Falls back to 0.55 until history is available.
-FIX 3 — Dead Engine Neutralization: zone_gate_invalid check is bypassed when
-         the zone_gate engine is detected as dead across the scoring window.
+FIX 3 — Dead Engine Neutralization: feature_cluster_similarity_invalid check is bypassed when
+         the feature_cluster_similarity engine is detected as dead across the scoring window.
 FIX 4 — Minimum Acceptance Fallback: decide_batch() promotes top-N signals
          when zero pass, guaranteeing ACCEPT > 0 per batch.
 FIX 5 — Logging: threshold_used and reject_stage always present in output.
@@ -139,7 +139,7 @@ class DecisionEngine:
         self,
         score: float,
         p_win: float,
-        zone_gate: dict,
+        feature_cluster_similarity: dict,
         fusion: dict,
         config: Any,
     ) -> dict:
@@ -153,10 +153,10 @@ class DecisionEngine:
         # is decided against historical distribution, not itself
         threshold = self._dynamic_threshold.compute()
 
-        # FIX 3 — bypass zone_gate_invalid rejection when engine is dead
-        zone_gate_dead = bool(fusion.get("zone_gate_dead", False))
-        if not zone_gate_dead and not bool(zone_gate.get("valid", False)):
-            result = self._reject("zone_gate_invalid", threshold)
+        # FIX 3 — bypass feature_cluster_similarity_invalid rejection when engine is dead
+        feature_cluster_similarity_dead = bool(fusion.get("feature_cluster_similarity_dead", False))
+        if not feature_cluster_similarity_dead and not bool(feature_cluster_similarity.get("valid", False)):
+            result = self._reject("feature_cluster_similarity_invalid", threshold)
             self._dynamic_threshold.update(effective_score)
             return result
 
@@ -195,7 +195,7 @@ class DecisionEngine:
     def decide_batch(self, signals: list[dict]) -> list[dict]:
         """
         Decide on a batch of pre-scored signals.
-        Each signal dict must contain: score, p_win, zone_gate, fusion, config.
+        Each signal dict must contain: score, p_win, feature_cluster_similarity, fusion, config.
         FIX 4: if zero signals pass, promote top-N by score to ACCEPT.
 
         Returns list of evaluate() dicts with an added 'input_score' key.
@@ -208,7 +208,7 @@ class DecisionEngine:
             r = self.evaluate(
                 score     = s.get("score", 0.0),
                 p_win     = s.get("p_win", 0.0),
-                zone_gate = s.get("zone_gate", {}),
+                feature_cluster_similarity = s.get("feature_cluster_similarity", {}),
                 fusion    = s.get("fusion", {}),
                 config    = s.get("config", self.config),
             )

@@ -8,7 +8,7 @@ Supported targets:
   gaussian  → phase5_calibration.py --opportunities ... --feature-subset ...
               --class-weights ... --rr-buckets ...
   zone      → discover_zones.py with n_clusters / min_samples / feature_weights
-  rr        → rr_pattern_miner.py with ridge_alpha / confidence_bypass_threshold
+  rr        → rr_trained.py with ridge_alpha / confidence_bypass_threshold
               / drift_threshold
 
 Each branch parses the JSON, builds a subprocess command, and runs it.
@@ -100,13 +100,13 @@ def _dispatch_rr(sugg: dict, opportunities: str, version: str) -> int:
     confidence_bypass = sugg.get("confidence_bypass_threshold")
     drift_threshold = sugg.get("drift_threshold")
     script_candidates = [
-        _REPO_ROOT / "src" / "training" / "rr_pattern_miner.py",
-        _REPO_ROOT / "scripts" / "training" / "rr_pattern_miner.py",
+        _REPO_ROOT / "src" / "training" / "rr_trained.py",
+        _REPO_ROOT / "scripts" / "training" / "rr_trained.py",
     ]
     script = next((s for s in script_candidates if s.exists()), None)
     if script is None:
         print(
-            "ERROR: rr_pattern_miner.py not found in src/training or scripts/training. "
+            "ERROR: rr_trained.py not found in src/training or scripts/training. "
             "Wire the path explicitly in apply_llm_suggestions.py.",
             file=sys.stderr,
         )

@@ -137,7 +137,7 @@
       "explicit_non_goals": [
         "never estimate win probability",
         "never own economic RR",
-        "never classify statistical neighbourhood (zone_gate)",
+        "never classify statistical neighbourhood (feature_cluster_similarity)",
         "never decide whether to trade"
       ],
       "dependencies": [
@@ -160,7 +160,7 @@
       ]
     },
     {
-      "id": "gaussian",
+      "id": "ema_momentum_kernel",
       "intent": "How statistically conformant is this market state to previously observed market states (EMA/momentum axis)?",
       "hypothesis": "EMA-spread and momentum composite proximity tracks historical success.",
       "inputs": [
@@ -173,7 +173,7 @@
       ],
       "semantic_meaning": "Statistical conformity score (not calibrated probability; not entry permission)",
       "consumer": [
-        "fusion weight_gaussian",
+        "fusion weight_ema_momentum_kernel",
         "DecisionEngine p_win (reinterpretation)"
       ],
       "authority_boundary": "Advisory fusion vote only",
@@ -190,18 +190,17 @@
       "implementation_status": "EXECUTABLE",
       "alignment": "SEMANTIC_DRIFT",
       "primary_code": [
-        "src/engines/heuristic_gaussian_engine.py",
+        "src/engines/ema_momentum_kernel.py",
         "src/engines/ml_gaussian_engine.py"
       ],
       "stage": "market_understanding",
       "stage_order": 2,
       "semantic_ids": [
-        "M0_SPINE_GAUSSIAN_HEURISTIC",
-        "M0_SPINE_GAUSSIAN_ML_NB"
+        "M0_SPINE_GAUSSIAN_HEURISTIC"
       ]
     },
     {
-      "id": "zone_gate",
+      "id": "feature_cluster_similarity",
       "intent": "Is this state occurring in a structurally valid location (zone neighbourhood)?",
       "hypothesis": "Feature-space zones encode past good/bad regions.",
       "inputs": [
@@ -280,7 +279,7 @@
       ]
     },
     {
-      "id": "rr_engine",
+      "id": "candle_commitment",
       "intent": "How strong is the candle commitment and geometric quality?",
       "hypothesis": "Extreme closes signal commitment useful as a structural quality vote.",
       "inputs": [
@@ -309,7 +308,7 @@
       "implementation_status": "EXECUTABLE",
       "alignment": "SEMANTIC_DRIFT",
       "primary_code": [
-        "src/engines/rr_engine.py"
+        "src/engines/candle_commitment.py"
       ],
       "stage": "market_understanding",
       "stage_order": 4,
@@ -323,7 +322,7 @@
       "hypothesis": "Ridge+GNB improves on Gaussian when in-distribution.",
       "inputs": [
         "canonical feature vector",
-        "gaussian_score",
+        "ema_momentum_kernel_score",
         "gaussian_p_win"
       ],
       "outputs": [
@@ -346,13 +345,13 @@
       ],
       "dependencies": [
         "feature_pipeline",
-        "gaussian"
+        "ema_momentum_kernel"
       ],
       "falsification": "Gate always bypasses / no DeltaG001 (F-038, F-044)",
       "implementation_status": "PARTIAL",
       "alignment": "SEMANTIC_DRIFT",
       "primary_code": [
-        "src/config_layer/rr/rr_pattern_miner.py",
+        "src/config_layer/rr/rr_trained.py",
         "src/config_layer/rr/rr_fusion.py"
       ],
       "notes": "RRPatternMiner-as-historical-retrieval is DESIGN_ONLY (no class, no retrieval).",
@@ -555,8 +554,8 @@
       "hypothesis": "Explicit conflict resolution over specialized upstream evidence improves selection vs any single engine.",
       "inputs": [
         "crt",
-        "gaussian",
-        "zone_gate",
+        "ema_momentum_kernel",
+        "feature_cluster_similarity",
         "rr scores"
       ],
       "outputs": [
@@ -577,9 +576,9 @@
       ],
       "dependencies": [
         "crt",
-        "gaussian",
-        "zone_gate",
-        "rr_engine"
+        "ema_momentum_kernel",
+        "feature_cluster_similarity",
+        "candle_commitment"
       ],
       "falsification": "Fusion non-pivotal or engines information-inert",
       "implementation_status": "EXECUTABLE",
@@ -713,6 +712,44 @@
       "stage": "measurement",
       "stage_order": null,
       "semantic_ids": []
+    },
+    {
+      "id": "nb_outcome_classifier",
+      "intent": "What outcome does a naive-Bayes classifier trained on historical labels expect for this state?",
+      "hypothesis": "A naive-Bayes classifier on historical labels separates outcome classes for this state.",
+      "inputs": [
+        "canonical feature vector",
+        "historical outcome labels"
+      ],
+      "outputs": [
+        "class_posterior",
+        "nb_score"
+      ],
+      "semantic_meaning": "Offline naive-Bayes outcome expectation, not the live EMA/momentum kernel and not a calibrated probability",
+      "consumer": [
+        "offline model_runners only"
+      ],
+      "authority_boundary": "NONE",
+      "explicit_non_goals": [
+        "never enter EXPECTED_ENGINES",
+        "never vote in fusion",
+        "never decide whether to trade",
+        "never claim a calibrated probability"
+      ],
+      "dependencies": [
+        "feature_pipeline"
+      ],
+      "falsification": "No discrimination under clean labels, or any live fusion vote",
+      "implementation_status": "PARTIAL",
+      "alignment": "SEMANTIC_DRIFT",
+      "primary_code": [
+        "src/engines/ml_gaussian_engine.py"
+      ],
+      "stage": "opportunity_understanding",
+      "stage_order": null,
+      "semantic_ids": [
+        "M0_SPINE_GAUSSIAN_ML_NB"
+      ]
     }
   ],
   "sidecar_authority": {
@@ -728,10 +765,10 @@
       "intent": "How much capital would this opportunity deserve if every intelligence layer were weighed together?",
       "hypothesis": "A weighted blend of zone, liquidity, RR, replay, market-state and TradeNet-meta evidence separates high- from low-allocation-quality opportunities.",
       "inputs": [
-        "zone_gate score + passed flag",
+        "feature_cluster_similarity score + passed flag",
         "liquidity_pressure_score",
         "liquidity_distance",
-        "rr_engine score",
+        "candle_commitment score",
         "expected_rr",
         "replay historical_winrate / cluster_stability / replay_density",
         "market-state cluster_confidence / state_persistence / trap_probability",
@@ -756,8 +793,8 @@
         "never become the sole consumer path for specialist evidence without a qualification protocol"
       ],
       "dependencies": [
-        "zone_gate",
-        "rr_engine",
+        "feature_cluster_similarity",
+        "candle_commitment",
         "replay_memory",
         "tradenet_meta"
       ],
@@ -778,8 +815,8 @@
       "inputs": [
         "TradeNet base p_win (35-dim model)",
         "gaussian score",
-        "rr_engine score",
-        "zone_gate score",
+        "candle_commitment score",
+        "feature_cluster_similarity score",
         "replay meta-context",
         "regime",
         "liquidity"
@@ -897,28 +934,28 @@
       "question": "What structural state is the market in?",
       "owner": "crt",
       "secondary_consumers": [
-        "gaussian",
+        "ema_momentum_kernel",
         "tradenet",
         "decision_fusion"
       ]
     },
     {
       "question": "How statistically conformant is this state to previously observed states?",
-      "owner": "gaussian",
+      "owner": "ema_momentum_kernel",
       "secondary_consumers": [
         "decision_fusion"
       ]
     },
     {
       "question": "Is this inside a valid structural zone?",
-      "owner": "zone_gate",
+      "owner": "feature_cluster_similarity",
       "secondary_consumers": [
         "decision_fusion"
       ]
     },
     {
       "question": "What is the candle commitment geometry?",
-      "owner": "rr_engine",
+      "owner": "candle_commitment",
       "secondary_consumers": [
         "decision_fusion"
       ]
@@ -956,7 +993,7 @@
     {
       "name": "RRPatternMiner_historical_evidence_retrieval",
       "alignment": "DESIGN_ONLY",
-      "note": "No class RRPatternMiner; no neighbour retrieval. Module rr_pattern_miner.py is the parametric rr_trained stack only."
+      "note": "No class RRPatternMiner; no neighbour retrieval. Module rr_trained.py is the parametric rr_trained stack only."
     },
     {
       "name": "envelope_post_entry_continuous_bounds",
@@ -1317,9 +1354,9 @@
   "pipeline_sequence": {
     "stage_1_market_understanding": [
       "crt",
-      "gaussian",
-      "zone_gate",
-      "rr_engine",
+      "ema_momentum_kernel",
+      "feature_cluster_similarity",
+      "candle_commitment",
       "regime"
     ],
     "stage_2_opportunity_understanding": [
@@ -1346,9 +1383,9 @@
       "lock and advance"
     ],
     "recommended_order_after_crt": [
-      "gaussian",
-      "zone_gate",
-      "rr_engine",
+      "ema_momentum_kernel",
+      "feature_cluster_similarity",
+      "candle_commitment",
       "regime",
       "tradenet",
       "rr_trained",

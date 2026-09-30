@@ -386,6 +386,8 @@ def replay(candles: list[Candle], arm, instrument: str) -> tuple[list[dict[str, 
     engine.executor.build_trade = build_trade_traced  # type: ignore[method-assign]
 
     bars: list[dict[str, Any]] = []
+    from features.bar_feature_frame import BarFeatureFrame  # [EPIC-84 A3b]
+    _bar_frame = BarFeatureFrame.from_candles(candles)
     for candle in candles:
         completed = htf.push(candle)
         if not initialized:
@@ -399,7 +401,7 @@ def replay(candles: list[Candle], arm, instrument: str) -> tuple[list[dict[str, 
         pre_reset.clear()
         score_gate.clear()
         before = engine.state.current_state.name
-        result = engine.process_candle(candle, htf.current_htf_id)
+        result = engine.process_candle(candle, htf.current_htf_id, bar_features=_bar_frame.for_candle(candle))
         action = result.get("action") if isinstance(result, dict) else str(result)
 
         # Prefer the pre-reset snapshot when the bar rejected — see the record() comment.
@@ -422,7 +424,7 @@ def replay(candles: list[Candle], arm, instrument: str) -> tuple[list[dict[str, 
                 "reasons": [{"reason": r, "session_name": s} for r, s in bar_reasons],
                 "geometry": geom,
                 "score_gate": dict(score_gate[-1]) if score_gate else None,
-                "zone_gate": _zone_gate_eval(snap, bar_reasons),
+                "feature_cluster_similarity": _zone_gate_eval(snap, bar_reasons),
             }
         )
 
@@ -512,7 +514,7 @@ def build_journey(ep: dict[str, Any], arm_name: str, arm=None) -> list[dict[str,
     terminal = bars[-1]
     retest_bar = next((b for b in bars if b["action"] == "RETEST_CONFIRMED"), None)
     sg = next((b["score_gate"] for b in reversed(bars) if b.get("score_gate")), None)
-    zg = next((b["zone_gate"] for b in reversed(bars) if b.get("zone_gate")), None)
+    zg = next((b["feature_cluster_similarity"] for b in reversed(bars) if b.get("feature_cluster_similarity")), None)
     geom = terminal.get("geometry")
     sess_reject = next(
         (r for r in terminal["reasons"] if str(r["reason"]).startswith("off_session:")), None
@@ -639,7 +641,7 @@ def _build_geometry(engine: CRTEngine, state) -> dict[str, Any]:
     if not inverted:
         risk_dist = abs(entry - sl)
         intent = engine.executor._derive_trade_intent(
-            state.cached_features or {}, cfg.breakout_disp_threshold
+            state.cached_features, cfg.breakout_disp_threshold, direction   # EPIC-84 A3b
         )
         tp1_mult = getattr(cfg, f"tp1_atr_multiplier_{intent}", cfg.tp1_atr_multiplier)
         tp2_mult = cfg.tp2_atr_multiplier
@@ -789,7 +791,7 @@ def render_proof(ep: dict[str, Any], arm_name: str, ctx: dict[str, Any]) -> str:
     g = terminal.get("geometry")
     retest_bar = next((b for b in bars if b["action"] == "RETEST_CONFIRMED"), None)
     sg = next((b["score_gate"] for b in reversed(bars) if b.get("score_gate")), None)
-    zg = next((b["zone_gate"] for b in reversed(bars) if b.get("zone_gate")), None)
+    zg = next((b["feature_cluster_similarity"] for b in reversed(bars) if b.get("feature_cluster_similarity")), None)
     st = (retest_bar or terminal)["state"]
     sess = next((r for r in terminal["reasons"] if str(r["reason"]).startswith("off_session:")), None)
 

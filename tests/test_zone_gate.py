@@ -3,10 +3,10 @@ Tests for the ZoneGate scoring kernel and BitNetZoneGate.check() return contract
 
 SCOPE / HISTORY
 ---------------
-This file previously targeted a ``zone_gate.ZoneGate`` class that no longer exists.
+This file previously targeted a ``feature_cluster_similarity.ZoneGate`` class that no longer exists.
 Eight of its nine tests were inert — five behind an ``ImportError`` guard against the
 removed class, three behind hard ``@pytest.mark.skip`` for removed APIs
-(``runner.bitnet``, the old ``EngineRunner`` ctor, ``zone_gate_engine.compute``). The
+(``runner.bitnet``, the old ``EngineRunner`` ctor, ``feature_cluster_similarity.compute``). The
 only executing test exercised ``unified_replay_harness._derive_symbol_from_data_path``,
 which is not ZoneGate code at all; it now lives in
 ``tests/test_unified_replay_harness.py``. The file could therefore never go red.
@@ -155,7 +155,7 @@ class TestCheckReturnContract:
     def test_scoring_branch_emits_top_scores_capped_at_top_n(self):
         gate = BitNetZoneGate(
             zones=[_uniform_zone() for _ in range(5)],
-            config={"zone_min_samples": 50, "zone_gate_top_k": 3},
+            config={"feature_cluster_similarity_min_samples": 50, "zone_gate_top_k": 3},
         )
         result = gate.check([0.0] * 35)
         assert len(result["top_scores"]) == 3
@@ -172,7 +172,7 @@ class TestCheckReturnContract:
         """Empty list is falsy → falls through to score=1.0 → passes downstream."""
         gate = BitNetZoneGate(
             zones=[_uniform_zone(weight=10.0)],
-            config={"zone_min_samples": 50},
+            config={"feature_cluster_similarity_min_samples": 50},
         )
         result = gate.check([0.0] * 35)
         assert result["reason"] == "underpowered_zone_registry"
@@ -183,10 +183,10 @@ class TestCheckReturnContract:
         """The asymmetric branch: score 0.0, so it BLOCKS downstream.
 
         Regression pin. The other two bypass branches score 1.0 and pass; this one
-        scores 0.0, which fails ``zone_cluster_threshold`` (0.25 on the active
+        scores 0.0, which fails ``feature_cluster_similarity_cluster_threshold`` (0.25 on the active
         config) and blocks every candle. See the reason-string test below.
         """
-        result = BitNetZoneGate(zones=[], config={"zone_min_samples": 50}).check([0.0] * 35)
+        result = BitNetZoneGate(zones=[], config={"feature_cluster_similarity_min_samples": 50}).check([0.0] * 35)
         assert "top_scores" not in result
         assert result["score"] == 0.0
 
@@ -197,7 +197,7 @@ class TestCheckReturnContract:
         not advertise fail-open. Paired with the score assertion above so the two
         can never drift apart again.
         """
-        result = BitNetZoneGate(zones=[], config={"zone_min_samples": 50}).check([0.0] * 35)
+        result = BitNetZoneGate(zones=[], config={"feature_cluster_similarity_min_samples": 50}).check([0.0] * 35)
         assert result["score"] == 0.0, "precondition: this branch blocks"
         assert "fail_open" not in result["reason"], (
             f"reason {result['reason']!r} advertises fail-open but score "

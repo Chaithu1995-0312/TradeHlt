@@ -491,7 +491,7 @@ def get_prod_section(section: str, version: Optional[str] = None) -> dict:
     """
     Return a raw dict section from the production config JSON.
 
-    Used by subsystems (rr_pattern_miner, crt_gaussian_scorer, llama_gate, etc.)
+    Used by subsystems (rr_trained, crt_gaussian_scorer, llama_gate, etc.)
     to load their own config blocks without going through CRTConfig.
 
     Parameters

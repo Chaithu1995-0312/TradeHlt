@@ -18,7 +18,7 @@ GAUSS_OLD = '''class CRTGaussianScorer:
 GAUSS_NEW = '''class CRTGaussianScorer:
     """Default no-op scorer. Replaced by CRTCalibratedScorer after phase5 --integrate.
 
-    Signature matches CRTCalibratedScorer / HeuristicGaussianEngine duck-type:
+    Signature matches CRTCalibratedScorer / EmaMomentumKernel duck-type:
     ``compute(features, candle_idx, direction=...)`` so the Phase-5 call site
     (``direction=_p5_dir``) never TypeErrors. direction is intentionally ignored —
     this scorer always returns None (no gate).

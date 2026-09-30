@@ -3,7 +3,7 @@
 Five trained artifacts had to be accounted for when CANONICAL_FEATURES moved 38 -> 39. Exactly one
 of them is live, and it is the only one that could mis-decide:
 
-    zone_registry   LIVE HARD GATE (F-041, zone_mode=hard)  -> REMAPPED + promoted
+    zone_registry   LIVE HARD GATE (F-041, feature_cluster_similarity_mode=hard)  -> REMAPPED + promoted
     rr_model        inert, rr_fusion.enabled=false (F-038)  -> QUARANTINED (positional, unremappable)
     gaussian        inert, reads 3 features BY NAME (F-060) -> stamped, no change expected
     bitnet          inert, use_bitnet=false (F-004)         -> load-time guard
@@ -131,7 +131,7 @@ def test_zone_v4_loads_and_v3_does_not():
 def test_active_config_points_at_the_promoted_artifact():
     version = (ROOT / "configs" / "production" / "ACTIVE_VERSION").read_text(encoding="utf-8").strip()
     cfg = _load(ROOT / "configs" / "production" / f"{version}.json")
-    assert cfg["engine_runner"]["zone_registry_path"] == "models/zone_registry_v4_2026_07.json"
+    assert cfg["engine_runner"]["feature_cluster_similarity_registry_path"] == "models/zone_registry_v4_2026_07.json"
 
 
 # ── B6.2 RR: quarantined, not remapped ──────────────────────────────────────────────────────

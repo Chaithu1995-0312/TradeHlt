@@ -161,17 +161,17 @@ class ScoringEngine:
             },
         }
 
-    def score(self, features: dict, gaussian_score: float, sub_scores: Optional[Dict] = None) -> Dict:
+    def score(self, features: dict, ema_momentum_kernel_score: float, sub_scores: Optional[Dict] = None) -> Dict:
         """
         Score a trade setup by mode.
         """
         if self.mode == "deterministic":
             result = {
-                "final_score": gaussian_score,
-                "gaussian": gaussian_score,
+                "final_score": ema_momentum_kernel_score,
+                "ema_momentum_kernel": ema_momentum_kernel_score,
                 "neural": None,
                 "llm": None,
-                "decision": "EXECUTE" if gaussian_score >= self.threshold else "BLOCK",
+                "decision": "EXECUTE" if ema_momentum_kernel_score >= self.threshold else "BLOCK",
                 "reason": "deterministic_rule",
                 "override": False,
             }
@@ -190,23 +190,23 @@ class ScoringEngine:
             except Exception:
                 neural = 0.0
 
-        if self.llm_enabled and self._should_trigger_llm(gaussian_score, neural):
+        if self.llm_enabled and self._should_trigger_llm(ema_momentum_kernel_score, neural):
             try:
                 llm = float(llm_score_safe(features))
             except Exception:
                 llm = 1.0
 
-        final_score = 0.6 * gaussian_score + 0.3 * neural + 0.1 * llm
+        final_score = 0.6 * ema_momentum_kernel_score + 0.3 * neural + 0.1 * llm
 
         if llm < 0.2:
             decision = "BLOCK"
             reason = "LLM_low_confidence"
             override = True
-        elif neural > 0.8 and gaussian_score < self.threshold:
+        elif neural > 0.8 and ema_momentum_kernel_score < self.threshold:
             decision = "EXECUTE"
             reason = "neural_override_rescue"
             override = True
-        elif neural < 0.3 and gaussian_score < self.threshold:
+        elif neural < 0.3 and ema_momentum_kernel_score < self.threshold:
             decision = "BLOCK"
             reason = "weak_confluence"
             override = True
@@ -219,7 +219,7 @@ class ScoringEngine:
 
         result = {
             "final_score": round(final_score, 4),
-            "gaussian": round(gaussian_score, 4),
+            "ema_momentum_kernel": round(ema_momentum_kernel_score, 4),
             "neural": round(neural, 4),
             "llm": round(llm, 4),
             "decision": decision,

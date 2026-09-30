@@ -98,7 +98,7 @@ def map_corpus_frame(
         "csv_sha256": _file_sha256(csv_path) if Path(csv_path).is_file() else "",
         "registry_path": cfg.registry_path,
         "registry_sha256": mapper._registry_sha256,
-        "zone_cluster_threshold": cfg.zone_cluster_threshold,
+        "feature_cluster_similarity_cluster_threshold": cfg.feature_cluster_similarity_cluster_threshold,
         "top_k": cfg.top_k,
         "cluster_min_n": cfg.cluster_min_n,
         "cluster_spread_max": cfg.cluster_spread_max,

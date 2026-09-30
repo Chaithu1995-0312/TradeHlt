@@ -25,9 +25,9 @@ def test_audit_recorder_full_lifecycle(tmp_path):
     recorder.record_zone({"passed": True, "score": 0.72, "reason": "zone_passed"})
     recorder.record_engines({
         "crt":      {"score": 0.60},
-        "gaussian": {"score": 0.55},
-        "zone_gate":{"score": 0.72},
-        "rr":       {"score": 0.65},
+        "ema_momentum_kernel": {"score": 0.55},
+        "feature_cluster_similarity":{"score": 0.72},
+        "candle_commitment":       {"score": 0.65},
     })
     recorder.record_fusion({"final_score": 0.62, "variance": 0.02, "entropy": 1.1})
     recorder.record_risk({"decision": "approve", "risk_reason": "ok"})

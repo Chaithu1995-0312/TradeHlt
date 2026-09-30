@@ -130,7 +130,6 @@ def _resolve_model_pins(instrument: str) -> dict:
             return None
 
     return {
-        "gaussian_impl":     get_prod_section("engine_runner").get("gaussian_impl"),
         "gaussian_version":  _safe(_mr.get_active_version, instrument),
         "zone_gate_version": _safe(_mr.get_active_zone_gate),
         "rr_version":        _safe(_mr.get_active_rr),

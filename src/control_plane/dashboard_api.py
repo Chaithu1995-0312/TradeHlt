@@ -318,9 +318,9 @@ class TradingDashboardAPI:
     def model_versions_payload(self) -> dict[str, Any]:
         """
         Returns current-in-use version info for all 4 training models:
-          gaussian, zone_gate, rr_model, tradenet.
+          gaussian, feature_cluster_similarity, rr_model, tradenet.
 
-        Config-driven paths for zone_gate and rr_model are read from the
+        Config-driven paths for feature_cluster_similarity and rr_model are read from the
         active production config so the display always matches backtest reality.
         """
         active = ACTIVE_VERSION_FILE.read_text(encoding="utf-8").strip().split()[0]
@@ -331,7 +331,7 @@ class TradingDashboardAPI:
             )
         er = require_section(cfg, "engine_runner", consumer="dashboard_api")
         zone_path = REPO_ROOT / require(
-            er, "zone_registry_path",
+            er, "feature_cluster_similarity_registry_path",
             section_name="engine_runner", consumer="dashboard_api",
         )
         rrf = require_section(er, "rr_fusion", consumer="dashboard_api")
@@ -342,7 +342,7 @@ class TradingDashboardAPI:
 
         return {
             "gaussian":  self._gaussian_model_version(),
-            "zone_gate": self._zone_gate_version(zone_path),
+            "feature_cluster_similarity": self._zone_gate_version(zone_path),
             "rr_model":  self._rr_model_version(rr_path),
             "tradenet":  self._tradenet_version(),
         }
@@ -627,7 +627,7 @@ class TradingDashboardAPI:
         return {"models": models}
 
     def promote_zone_gate_payload(self, version: str) -> dict[str, Any]:
-        return self._promote_registry(MODELS_DIR / "zone_gate_registry.json", version, "zone_gate")
+        return self._promote_registry(MODELS_DIR / "zone_gate_registry.json", version, "feature_cluster_similarity")
 
     def promote_rr_payload(self, version: str) -> dict[str, Any]:
         return self._promote_registry(MODELS_DIR / "rr_registry.json", version, "rr")
@@ -1290,13 +1290,13 @@ class TradingDashboardAPI:
     def explain_model_payload(self, model_type: str, version: str) -> dict[str, Any]:
         """Call GroqClient to generate a plain-English explanation of model training results.
 
-        model_type: one of "gaussian", "zone_gate", "rr", "tradenet"
+        model_type: one of "gaussian", "feature_cluster_similarity", "rr", "tradenet"
         version:    registry key (e.g. "v5_auto_2026_06_eth")
         Returns:    {"ok": True, "explanation": str} or {"ok": False, "error": str}
         """
         REGISTRIES: dict[str, Path] = {
             "gaussian":  MODELS_DIR / "gaussian_registry.json",
-            "zone_gate": MODELS_DIR / "zone_gate_registry.json",
+            "feature_cluster_similarity": MODELS_DIR / "zone_gate_registry.json",
             "rr":        MODELS_DIR / "rr_registry.json",
             "tradenet":  MODELS_DIR / "tradenet_registry.json",
         }

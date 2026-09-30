@@ -32,7 +32,7 @@ if str(_SRC) not in sys.path:
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from config_layer.rr.rr_pattern_miner import (  # noqa: E402
+from config_layer.rr.rr_trained import (  # noqa: E402
     DEFAULT_MODEL_PATH,
     N_FEATURES,
     RRPatternTrainer,

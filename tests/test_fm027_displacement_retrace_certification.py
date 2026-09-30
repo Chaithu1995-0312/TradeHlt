@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pytest
 from tests.helpers.crt_config import crt_config_for_test
+from tests.helpers.crt_config import bar_features_for_test  # noqa: E402,F401
 
 _ROOT = Path(__file__).resolve().parents[1]
 _PROBE = _ROOT / "scripts" / "analysis" / "fm027_displacement_retrace_certification.py"
@@ -162,6 +163,7 @@ def test_crt_emission_parity(probe):
     )
     sm = StateMachine(cfg)
     st = EngineState()
+    st.bar_features = bar_features_for_test()  # EPIC-84 A3b: the RETEST bar's canonical features
     st.current_state = CRTState.EXPANSION
     # PRE-EXISTING BUG FIXED 2026-08-01: EngineState has no field named `atr` (deliberately --
     # see crt_engine_v2.py:244-249). `st.atr = 2.0` created an unused stray attribute; the

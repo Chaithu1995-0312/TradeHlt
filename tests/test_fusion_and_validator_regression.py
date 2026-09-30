@@ -7,7 +7,7 @@ _FUSION_FIXTURE = {
     "gaussian_weight": 0.6, "neural_weight": 0.4, "llm_weight": 0.2,
     "llm_lower_band": 0.45, "llm_upper_band": 0.65, "enable_llm": True,
     "tier_full": 0.75, "tier_half": 0.60, "tier_quarter": 0.50,
-    "weight_crt": 0.30, "weight_gaussian": 0.25, "weight_zone_gate": 0.25, "weight_rr": 0.20,
+    "weight_crt": 0.30, "weight_ema_momentum_kernel": 0.25, "weight_feature_cluster_similarity": 0.25, "weight_candle_commitment": 0.20,
     "weight_strategy_consensus": 0.0,
     "regime_fusion_weights": {
         "TRENDING": {"crt": 0.38, "gaussian": 0.20, "zone_gate": 0.12, "rr": 0.20, "strategy_consensus": 0.10},
@@ -28,9 +28,9 @@ def test_fusion_accepts_engine_results_without_canonical_validation():
     fusion = FusionEngine(gaussian_adapter=None, config=_fc())
     engine_results = {
         "crt": {"score": 0.4, "non_canonical": "x"},
-        "gaussian": {"score": 0.5},
-        "zone_gate": {"zone": 0.7},
-        "rr": {"score": 0.6},
+        "ema_momentum_kernel": {"score": 0.5},
+        "feature_cluster_similarity": {"zone": 0.7},
+        "candle_commitment": {"score": 0.6},
     }
     out = fusion.compute(engine_results)
     assert "final_score" in out
@@ -54,7 +54,7 @@ def test_convergence_layered_uses_weighted_score_not_flat_average():
     for _ in range(10):
         ctrl.record_outcome(accepted=True)
 
-    raw_scores = {"crt": 1.0, "gaussian": 0.0, "zone_gate": 0.0, "rr": 0.0}
+    raw_scores = {"crt": 1.0, "ema_momentum_kernel": 0.0, "feature_cluster_similarity": 0.0, "candle_commitment": 0.0}
 
     layered = ctrl.apply(raw_scores, weighted_score=1.0, debug=True)
     flat    = ctrl.apply(raw_scores)   # no weighted_score → flat average
@@ -82,23 +82,23 @@ def test_fusion_compute_passes_weighted_score_to_convergence():
     fusion_with_conv = FusionEngine(
         gaussian_adapter=None,
         config=_fc(
-            weight_crt=1.0, weight_gaussian=0.0,
-            weight_zone_gate=0.0, weight_rr=0.0,
+            weight_crt=1.0, weight_ema_momentum_kernel=0.0,
+            weight_feature_cluster_similarity=0.0, weight_candle_commitment=0.0,
         ),
         convergence_controller=ctrl,
     )
     fusion_no_conv = FusionEngine(
         gaussian_adapter=None,
         config=_fc(
-            weight_crt=1.0, weight_gaussian=0.0,
-            weight_zone_gate=0.0, weight_rr=0.0,
+            weight_crt=1.0, weight_ema_momentum_kernel=0.0,
+            weight_feature_cluster_similarity=0.0, weight_candle_commitment=0.0,
         ),
     )
     engine_results = {
         "crt":       {"score": 0.9},
-        "gaussian":  {"score": 0.1},
-        "zone_gate": {"score": 0.1},
-        "rr":        {"score": 0.1},
+        "ema_momentum_kernel":  {"score": 0.1},
+        "feature_cluster_similarity": {"score": 0.1},
+        "candle_commitment":        {"score": 0.1},
     }
     out_conv   = fusion_with_conv.compute(engine_results)
     out_noconv = fusion_no_conv.compute(engine_results)
@@ -121,15 +121,15 @@ def test_fusion_weighted_score_reflects_config_weights():
     fusion = FusionEngine(
         gaussian_adapter=None,
         config=_fc(
-            weight_crt=1.0, weight_gaussian=0.0,
-            weight_zone_gate=0.0, weight_rr=0.0,
+            weight_crt=1.0, weight_ema_momentum_kernel=0.0,
+            weight_feature_cluster_similarity=0.0, weight_candle_commitment=0.0,
         ),
     )
     engine_results = {
         "crt":       {"score": 1.0},
-        "gaussian":  {"score": 0.0},
-        "zone_gate": {"score": 0.0},
-        "rr":        {"score": 0.0},
+        "ema_momentum_kernel":  {"score": 0.0},
+        "feature_cluster_similarity": {"score": 0.0},
+        "candle_commitment":        {"score": 0.0},
     }
     out = fusion.compute(engine_results)
     assert out["final_score"] == 1.0, (
@@ -139,28 +139,28 @@ def test_fusion_weighted_score_reflects_config_weights():
 
 def test_fusion_weighted_score_is_not_flat_average():
     """GAP-011: weighted result must differ from flat average when weights differ."""
-    # crt=0.8, gaussian=0.2, zone_gate=0.2, rr=0.2
+    # crt=0.8, gaussian=0.2, feature_cluster_similarity=0.2, rr=0.2
     # flat average = (0.8+0.2+0.2+0.2)/4 = 0.35
     # weighted (crt=1.0, rest=0.0) = 0.8 / 1.0 = 0.8
     fusion_flat = FusionEngine(
         gaussian_adapter=None,
         config=_fc(
-            weight_crt=0.25, weight_gaussian=0.25,
-            weight_zone_gate=0.25, weight_rr=0.25,
+            weight_crt=0.25, weight_ema_momentum_kernel=0.25,
+            weight_feature_cluster_similarity=0.25, weight_candle_commitment=0.25,
         ),
     )
     fusion_biased = FusionEngine(
         gaussian_adapter=None,
         config=_fc(
-            weight_crt=1.0, weight_gaussian=0.0,
-            weight_zone_gate=0.0, weight_rr=0.0,
+            weight_crt=1.0, weight_ema_momentum_kernel=0.0,
+            weight_feature_cluster_similarity=0.0, weight_candle_commitment=0.0,
         ),
     )
     engine_results = {
         "crt":       {"score": 0.8},
-        "gaussian":  {"score": 0.2},
-        "zone_gate": {"score": 0.2},
-        "rr":        {"score": 0.2},
+        "ema_momentum_kernel":  {"score": 0.2},
+        "feature_cluster_similarity": {"score": 0.2},
+        "candle_commitment":        {"score": 0.2},
     }
     flat_score   = fusion_flat.compute(engine_results)["final_score"]
     biased_score = fusion_biased.compute(engine_results)["final_score"]
@@ -185,9 +185,9 @@ def test_fusion_config_defaults_match_production_config():
         FusionConfig.from_section({k: v for k, v in fe_cfg.items() if k != "weight_crt"})
     cfg = FusionConfig.from_section({**_FUSION_FIXTURE, **fe_cfg})
     assert cfg.weight_crt       == fe_cfg["weight_crt"]
-    assert cfg.weight_gaussian  == fe_cfg["weight_gaussian"]
-    assert cfg.weight_zone_gate == fe_cfg["weight_zone_gate"]
-    assert cfg.weight_rr        == fe_cfg["weight_rr"]
+    assert cfg.weight_ema_momentum_kernel  == fe_cfg["weight_ema_momentum_kernel"]
+    assert cfg.weight_feature_cluster_similarity == fe_cfg["weight_feature_cluster_similarity"]
+    assert cfg.weight_candle_commitment        == fe_cfg["weight_candle_commitment"]
 
 
 def test_fusion_conservative_rejects_directional_conflict():
@@ -198,9 +198,9 @@ def test_fusion_conservative_rejects_directional_conflict():
     )
     engine_results = {
         "crt":       {"score": 0.7, "direction":  1},   # BUY
-        "gaussian":  {"score": 0.7, "direction": -1},   # SELL — conflict
-        "zone_gate": {"score": 0.6, "direction":  0},   # no opinion
-        "rr":        {"score": 0.5, "direction":  0},
+        "ema_momentum_kernel":  {"score": 0.7, "direction": -1},   # SELL — conflict
+        "feature_cluster_similarity": {"score": 0.6, "direction":  0},   # no opinion
+        "candle_commitment":        {"score": 0.5, "direction":  0},
     }
     out = fusion.compute(engine_results)
     assert out["final_score"] == 0.0, "Conservative policy must zero score on conflict"
@@ -217,9 +217,9 @@ def test_fusion_majority_resolves_conflict():
     )
     engine_results = {
         "crt":       {"score": 0.7, "direction":  1},   # BUY
-        "gaussian":  {"score": 0.7, "direction":  1},   # BUY
-        "zone_gate": {"score": 0.6, "direction": -1},   # SELL (minority)
-        "rr":        {"score": 0.5, "direction":  1},   # BUY
+        "ema_momentum_kernel":  {"score": 0.7, "direction":  1},   # BUY
+        "feature_cluster_similarity": {"score": 0.6, "direction": -1},   # SELL (minority)
+        "candle_commitment":        {"score": 0.5, "direction":  1},   # BUY
     }
     out = fusion.compute(engine_results)
     # Majority BUY — conflict detected but majority wins → score is non-zero
@@ -235,9 +235,9 @@ def test_fusion_majority_tie_falls_back_to_conservative():
     )
     engine_results = {
         "crt":       {"score": 0.7, "direction":  1},
-        "gaussian":  {"score": 0.7, "direction": -1},
-        "zone_gate": {"score": 0.6, "direction":  0},
-        "rr":        {"score": 0.5, "direction":  0},
+        "ema_momentum_kernel":  {"score": 0.7, "direction": -1},
+        "feature_cluster_similarity": {"score": 0.6, "direction":  0},
+        "candle_commitment":        {"score": 0.5, "direction":  0},
     }
     out = fusion.compute(engine_results)
     assert out["final_score"] == 0.0
@@ -252,9 +252,9 @@ def test_fusion_no_conflict_when_directions_agree():
     )
     engine_results = {
         "crt":       {"score": 0.7, "direction": 1},
-        "gaussian":  {"score": 0.8, "direction": 1},
-        "zone_gate": {"score": 0.6, "direction": 1},
-        "rr":        {"score": 0.5, "direction": 0},   # no opinion is fine
+        "ema_momentum_kernel":  {"score": 0.8, "direction": 1},
+        "feature_cluster_similarity": {"score": 0.6, "direction": 1},
+        "candle_commitment":        {"score": 0.5, "direction": 0},   # no opinion is fine
     }
     out = fusion.compute(engine_results)
     assert out.get("reason") != "directional_conflict"

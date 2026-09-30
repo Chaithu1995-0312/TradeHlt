@@ -11,6 +11,7 @@ from dataclasses import replace
 
 from config_layer.crt_engine_v2 import CRTConfig, CRTEngine, EngineState, StateMachine
 from tests.helpers.crt_config import crt_config_for_test
+from tests.helpers.crt_config import bar_features_for_test  # noqa: E402,F401
 
 
 # ── Minimal helpers ──────────────────────────────────────────────────────────
@@ -53,6 +54,7 @@ class TestDispStrengthFilter:
             EngineState, CRTState, Direction, Range, SweepEvent
         )
         state = EngineState()
+        state.bar_features = bar_features_for_test()  # EPIC-84 A3b: the RETEST bar's canonical features
         state.current_state = CRTState.EXPANSION
         state.direction = Direction.LONG
         state.atr_abs = atr

@@ -168,7 +168,7 @@ def build_records() -> list[dict]:
         "The feature-pipeline center=True swing lookahead and volatility_regime global-rank are "
         "FATAL training contamination that invalidates the model corpus.",
         family="pipeline", status="falsified",
-        findings=["F-029"], models=["gaussian", "zone_gate"],
+        findings=["F-029"], models=["ema_momentum_kernel", "feature_cluster_similarity"],
         notes="Byte-identical A/B across crypto majors — the leakage path does not exist for "
               "trade generation; the adversarial verdict was DOC_DRIFT.",
     ))
@@ -177,7 +177,7 @@ def build_records() -> list[dict]:
         "ZoneGate feature-space neighborhood quality is a pivotal selection lever in gate-ON "
         "fusion.",
         family="zone", status="falsified",
-        findings=["F-036", "F-041"], models=["zone_gate"],
+        findings=["F-036", "F-041"], models=["feature_cluster_similarity"],
         notes="dG001 == 0 across weight x threshold; zone non-pivotal (redundant/decision-"
               "dominated, not weak). Label quality question stays open under F-041 Phase-5 gate.",
     ))

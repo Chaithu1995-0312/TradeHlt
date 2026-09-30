@@ -59,9 +59,9 @@ PARAM_BOUNDS: dict[str, tuple[float, float]] = {
     "body_ratio_min":      (0.45, 0.85),
     "min_rr_ratio":        (1.50, 3.00),
     "fusion_weight_crt":       (0.20, 0.60),
-    "fusion_weight_gaussian":  (0.15, 0.50),
+    "fusion_weight_ema_momentum_kernel":  (0.15, 0.50),
     "fusion_weight_zone":      (0.10, 0.40),
-    "fusion_weight_rr":        (0.05, 0.25),
+    "fusion_weight_candle_commitment":        (0.05, 0.25),
     "bitnet_threshold":        (0.30, 0.70),
 }
 
@@ -75,7 +75,7 @@ MAX_DRAWDOWN_RATIO = 1.50   # drawdown must stay <= 150% of baseline
 @dataclass(frozen=True)
 class RegimeWeightCandidate:
     regime: str                    # RANGING | TRENDING | HIGH_VOLATILITY
-    fusion_weights: dict           # {"crt": float, "gaussian": float, "zone": float, "rr": float}
+    fusion_weights: dict           # {"crt", "ema_momentum_kernel", "feature_cluster_similarity", "candle_commitment"}
     bitnet_threshold: float        # 0.30 - 0.70
     rationale: str                 # LLM explanation, stored for audit
     source: str                    # "llm_suggested" | "deterministic_fallback"

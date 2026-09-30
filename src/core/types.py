@@ -38,8 +38,8 @@ class EngineContext(TypedDict, total=False):
 
 class EngineScores(TypedDict, total=False):
     crt:                float
-    gaussian:           float
-    zone_gate:          float
+    ema_momentum_kernel: float
+    feature_cluster_similarity:          float
     rr:                 float
     strategy_consensus: float   # 5th engine — StrategyOrchestrator consensus
 
@@ -48,7 +48,7 @@ class FusionSummary(TypedDict, total=False):
     final_score:      float
     normalized_score: float
     missing_engines:  List[str]
-    zone_gate_dead:   bool
+    feature_cluster_similarity_dead:   bool
 
 
 class EngineRunnerOutput(TypedDict, total=False):

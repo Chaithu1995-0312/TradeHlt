@@ -87,7 +87,9 @@ class _StubCandleLoader:
     def stream(self): return iter(range(1000))
 
 class _StubBacktestRunner:
-    def __init__(self, cfg, csv_path=None, skip_features=False): pass
+    # EPIC-84 A3b: tuners build the feature frame once (export_features) and pass it on
+    def __init__(self, cfg, csv_path=None, prebuilt_features=None): pass
+    def export_features(self): return ("vectors", {}, None)
     def run(self, stream, count, output_dir="", write_reports=True): return _StubMetrics()
 
 bt_module.BacktestConfig = _StubBacktestConfig

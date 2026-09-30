@@ -54,7 +54,7 @@ def test_research_and_interpreters_are_research_side():
 def test_kernel_packages_are_kernel_side():
     for rel in (
         "src/core/engine_runner.py",
-        "src/engines/rr_engine.py",
+        "src/engines/candle_commitment.py",
         "src/config_layer/model_resolver.py",
         "src/features/feature_pipeline.py",
         "src/runtime/backtest_v2.py",

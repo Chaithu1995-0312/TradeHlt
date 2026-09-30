@@ -51,8 +51,7 @@ def main() -> int:
     cfg["engine_runner"]["allowed_sessions_overrides"] = {"BNBUSDT": list(BNB_ALL_SESSIONS)}
     params = cfg["params"]
     fp = _fp(params)
-    print(f"[1] candidate built from {SRC_CFG.name}; gaussian_impl="
-          f"{cfg['engine_runner'].get('gaussian_impl')!r}; params_fingerprint={fp[:16]}…")
+    print(f"[1] candidate built from {SRC_CFG.name}; params_fingerprint={fp[:16]}…")
 
     # ── GOVERNED GATE: validate the changed instrument with candidate sessions ──
     csv_paths = {"BNBUSDT": str(ROOT / "data" / "BNBUSDT_M15.csv")}

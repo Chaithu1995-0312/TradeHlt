@@ -42,7 +42,7 @@ if _SRC not in sys.path:
 
 import numpy as np
 
-from config_layer.rr.rr_pattern_miner import (
+from config_layer.rr.rr_trained import (
     RRPatternTrainer, N_FEATURES, RR_SCORE_MIN, RR_SCORE_MAX, DEFAULT_MODEL_PATH,
 )
 
@@ -56,7 +56,7 @@ _RRCORR_KILL = 0.03
 
 def _raw_model_outputs(state: dict, Xtest: np.ndarray):
     """Replicate predict()'s expected_rr / p_win / d_sq math but WITHOUT the confidence-gate short
-    circuit (rr_pattern_miner.py:351-363,327-334). Measures the model's raw signal."""
+    circuit (rr_trained.py:351-363,327-334). Measures the model's raw signal."""
     W = np.asarray(state["ridge_w"]); b = float(state["ridge_b"])
     smu = np.asarray(state["scale_mu"]); ssig = np.asarray(state["scale_sigma"])
     cmu = np.asarray(state["conf_mu"]); P = np.asarray(state["conf_P"])
@@ -212,10 +212,10 @@ def _gaussian_baseline_topdecile(X, y_rr, dec, zero_idx):
     Returns None if the engine can't be constructed cleanly (Tier-2 then uses random baseline only)."""
     try:
         from features.feature_schema import FEATURE_INDEX_MAP
-        from engines.heuristic_gaussian_engine import HeuristicGaussianEngine  # type: ignore
+        from engines.ema_momentum_kernel import EmaMomentumKernel  # type: ignore
         from config_layer.production_config import get_prod_section
         cfg = get_prod_section("gaussian_scorer")
-        eng = HeuristicGaussianEngine(cfg)
+        eng = EmaMomentumKernel(cfg)
         iff, ifs, im = (FEATURE_INDEX_MAP["ema_fast"], FEATURE_INDEX_MAP["ema_slow"],
                         FEATURE_INDEX_MAP["momentum_score"])
         scores = np.array([

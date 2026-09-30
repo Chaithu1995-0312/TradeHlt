@@ -22,14 +22,14 @@ import pytest
 from core import engine_runner
 
 _REPO = Path(__file__).resolve().parents[1]
-_WEIGHTS = ("weight_crt", "weight_gaussian", "weight_zone_gate", "weight_rr")
+_WEIGHTS = ("weight_crt", "weight_ema_momentum_kernel", "weight_feature_cluster_similarity", "weight_candle_commitment")
 
 
 def test_cfg_require_raises_on_missing_weight():
     """The strict accessor used by the fusion path fails fast on any absent key."""
-    partial = {"weight_crt": 0.4, "weight_gaussian": 0.2, "weight_zone_gate": 0.2}  # no weight_rr
+    partial = {"weight_crt": 0.4, "weight_ema_momentum_kernel": 0.2, "weight_feature_cluster_similarity": 0.2}  # no weight_candle_commitment
     with pytest.raises(KeyError):
-        engine_runner._cfg_require(partial, "weight_rr", "fusion_engine")
+        engine_runner._cfg_require(partial, "weight_candle_commitment", "fusion_engine")
 
 
 def test_runtime_reads_each_weight_via_cfg_require_not_get():

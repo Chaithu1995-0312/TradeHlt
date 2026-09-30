@@ -139,6 +139,8 @@ def main() -> int:
 
     runner_for_session = BacktestRunner(bt_cfg, csv_path=str(CSV))
 
+    from features.bar_feature_frame import BarFeatureFrame  # [EPIC-84 A3b]
+    _bar_frame = BarFeatureFrame.from_candles(candles)
     for candle in candles:
         candle_idx += 1
         htf.push(candle)
@@ -164,7 +166,7 @@ def main() -> int:
         hooks.enabled = True
         engine.baseline_trace = hooks
 
-        result = engine.process_candle(candle, htf.current_htf_id)
+        result = engine.process_candle(candle, htf.current_htf_id, bar_features=_bar_frame.for_candle(candle))
         state_after = engine.state.current_state.name
         action = result.get("action", "NONE")
         actions[action] += 1

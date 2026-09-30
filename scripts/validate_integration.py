@@ -205,10 +205,10 @@ try:
 
     # Build FusionEngine with weight_strategy_consensus = 0.10
     cfg_dict = {
-        "weight_crt": 0.30, "weight_gaussian": 0.25,
-        "weight_zone_gate": 0.20, "weight_rr": 0.15,
+        "weight_crt": 0.30, "weight_ema_momentum_kernel": 0.25,
+        "weight_feature_cluster_similarity": 0.20, "weight_candle_commitment": 0.15,
         "weight_strategy_consensus": 0.10,
-        "zone_gate_dead_if_missing": False,
+        "feature_cluster_similarity_dead_if_missing": False,
         "min_engines_required": 4,
     }
     fe = FusionEngine.from_prod_config(cfg_dict) if hasattr(FusionEngine, "from_prod_config") \
@@ -218,7 +218,7 @@ try:
     payload = {
         "crt":      {"score": 0.8},
         "gaussian": {"score": 0.7},
-        "zone_gate":{"score": 0.6, "passed": True},
+        "feature_cluster_similarity":{"score": 0.6, "passed": True},
         "rr":       {"score": 0.5},
         "strategy_consensus": {"score": 0.72, "direction": 1},
     }
@@ -251,7 +251,7 @@ try:
         def compute(self, p): return {"score": 0.5, "reason": "ok"}
 
     class _DummyDecision:
-        def evaluate(self, score, p_win, zone_gate, fusion, config):
+        def evaluate(self, score, p_win, feature_cluster_similarity, fusion, config):
             return {"decision": "Approved", "confidence": 0.8, "reason": "ok"}
 
     runner = er_mod.EngineRunner.__new__(er_mod.EngineRunner)
@@ -284,7 +284,7 @@ try:
     }
 
     with mock.patch.object(er_mod, "crt_compute", return_value={"score": 0.6}), \
-         mock.patch.object(er_mod, "run_zone_gate_engine",
+         mock.patch.object(er_mod, "run_feature_cluster_similarity",
                            return_value={"score": 0.5, "passed": True, "vector": [], "valid": True}):
         runner.run(features, context)
 

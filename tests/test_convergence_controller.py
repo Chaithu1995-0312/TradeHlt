@@ -47,14 +47,14 @@ def test_calibrate_score_clamped():
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Test 7: BitNet dampening reduces high zone_gate scores
+# Test 7: BitNet dampening reduces high feature_cluster_similarity scores
 # ──────────────────────────────────────────────────────────────────────────────
 
 def test_bitnet_dampening_reduces_inflated_scores():
     ctrl = ConvergenceController()
     _warm(ctrl, accepted=True)
 
-    scores = {"crt": 0.7, "gaussian": 0.7, "zone_gate": 0.9, "rr": 0.7}
+    scores = {"crt": 0.7, "ema_momentum_kernel": 0.7, "feature_cluster_similarity": 0.9, "candle_commitment": 0.7}
     result = ctrl.apply(scores)
 
     raw_avg = sum(scores.values()) / 4.0
@@ -63,20 +63,20 @@ def test_bitnet_dampening_reduces_inflated_scores():
 
 
 def test_bitnet_dampening_not_applied_to_low_zone_score():
-    """Low zone_gate score (< 0.5) must NOT be raised to the 4th power."""
+    """Low feature_cluster_similarity score (< 0.5) must NOT be raised to the 4th power."""
     ctrl = ConvergenceController()
     _warm(ctrl, accepted=False)
 
-    # zone_gate = 0.3 → if dampened: 0.3**4 = 0.0081 (destructive)
+    # feature_cluster_similarity = 0.3 → if dampened: 0.3**4 = 0.0081 (destructive)
     # The controller should preserve it approximately
-    scores_low  = {"crt": 0.5, "gaussian": 0.5, "zone_gate": 0.3, "rr": 0.5}
-    scores_high = {"crt": 0.5, "gaussian": 0.5, "zone_gate": 0.9, "rr": 0.5}
+    scores_low  = {"crt": 0.5, "ema_momentum_kernel": 0.5, "feature_cluster_similarity": 0.3, "candle_commitment": 0.5}
+    scores_high = {"crt": 0.5, "ema_momentum_kernel": 0.5, "feature_cluster_similarity": 0.9, "candle_commitment": 0.5}
 
     r_low  = ctrl.apply(scores_low)
     r_high = ctrl.apply(scores_high)
 
-    # Low zone_gate should produce a lower or similar final score, not collapsed
-    # The key invariant: low zone_gate score isn't inflated by dampening
+    # Low feature_cluster_similarity should produce a lower or similar final score, not collapsed
+    # The key invariant: low feature_cluster_similarity score isn't inflated by dampening
     assert r_low["final_score"] < r_high["final_score"]
 
 
@@ -89,7 +89,7 @@ def test_high_variance_penalty_reduces_score():
     _warm(ctrl, accepted=True)
 
     # Mixed signals → high variance
-    scores = {"crt": 0.9, "gaussian": 0.1, "zone_gate": 0.9, "rr": 0.1}
+    scores = {"crt": 0.9, "ema_momentum_kernel": 0.1, "feature_cluster_similarity": 0.9, "candle_commitment": 0.1}
     result = ctrl.apply(scores)
 
     assert result["variance"] > 0.05, f"Expected high variance, got {result['variance']}"
@@ -109,7 +109,7 @@ def test_adaptive_threshold_increases_on_high_accept_rate():
     for _ in range(100):
         ctrl.record_outcome(accepted=True)
 
-    scores = {"crt": 0.6, "gaussian": 0.6, "zone_gate": 0.6, "rr": 0.6}
+    scores = {"crt": 0.6, "ema_momentum_kernel": 0.6, "feature_cluster_similarity": 0.6, "candle_commitment": 0.6}
     result = ctrl.apply(scores)
 
     assert result["threshold"] > 0.5, \
@@ -123,7 +123,7 @@ def test_adaptive_threshold_decreases_on_low_accept_rate():
     for _ in range(100):
         ctrl.record_outcome(accepted=False)
 
-    scores = {"crt": 0.5, "gaussian": 0.5, "zone_gate": 0.5, "rr": 0.5}
+    scores = {"crt": 0.5, "ema_momentum_kernel": 0.5, "feature_cluster_similarity": 0.5, "candle_commitment": 0.5}
     result = ctrl.apply(scores)
 
     assert result["threshold"] < 0.7, \
@@ -137,7 +137,7 @@ def test_threshold_bounded_within_min_max():
     for _ in range(10000):
         ctrl.record_outcome(accepted=True)
 
-    scores = {"crt": 0.6, "gaussian": 0.6, "zone_gate": 0.6, "rr": 0.6}
+    scores = {"crt": 0.6, "ema_momentum_kernel": 0.6, "feature_cluster_similarity": 0.6, "candle_commitment": 0.6}
     result = ctrl.apply(scores)
     assert result["threshold"] <= 0.90, "Threshold must not exceed 0.90"
     assert result["threshold"] >= 0.30, "Threshold must not fall below 0.30"
@@ -152,7 +152,7 @@ def test_cold_start_returns_raw_average():
     # No outcomes recorded → cold start
     assert not ctrl.is_warm
 
-    scores = {"crt": 0.6, "gaussian": 0.4, "zone_gate": 0.5, "rr": 0.5}
+    scores = {"crt": 0.6, "ema_momentum_kernel": 0.4, "feature_cluster_similarity": 0.5, "candle_commitment": 0.5}
     result = ctrl.apply(scores)
 
     expected = sum(scores.values()) / 4.0
@@ -169,7 +169,7 @@ def test_entropy_non_negative_finite():
     ctrl = ConvergenceController()
     _warm(ctrl)
 
-    scores = {"crt": 0.6, "gaussian": 0.5, "zone_gate": 0.7, "rr": 0.4}
+    scores = {"crt": 0.6, "ema_momentum_kernel": 0.5, "feature_cluster_similarity": 0.7, "candle_commitment": 0.4}
     result = ctrl.apply(scores)
 
     assert result["entropy"] >= 0.0

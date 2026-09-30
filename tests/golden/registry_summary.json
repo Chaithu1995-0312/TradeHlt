@@ -8,13 +8,12 @@
     "gaussian",
     "rr_model",
     "strategies",
-    "zone_gate"
+    "feature_cluster_similarity"
   ],
   "runtime_flags": {
     "bitnet_enabled": false,
-    "zone_mode": "hard",
+    "feature_cluster_similarity_mode": "hard",
     "registry_file": "models/zone_registry.json",
-    "gaussian_impl": "heuristic",
     "rr_fusion_active": false
   }
 }

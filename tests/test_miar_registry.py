@@ -15,10 +15,10 @@ EXPECTED_IDS = [
     "market_ontology",
     "feature_pipeline",
     "crt",
-    "gaussian",
-    "zone_gate",
+    "ema_momentum_kernel",
+    "feature_cluster_similarity",
     "tradenet",
-    "rr_engine",
+    "candle_commitment",
     "rr_trained",
     "bitnet",
     "trap",
@@ -29,6 +29,7 @@ EXPECTED_IDS = [
     "qualification_gate",
     "backtest",
     "research_runner",
+    "nb_outcome_classifier",
 ]
 
 
@@ -56,7 +57,7 @@ def test_miar_charter_exists():
 def test_miar_has_exactly_seventeen_entries():
     data = _load()
     entries = data["entries"]
-    assert len(entries) == 17
+    assert len(entries) == 18
     ids = [e["id"] for e in entries]
     assert ids == EXPECTED_IDS
 
@@ -114,8 +115,8 @@ def test_miar_intents_unique_among_decision_owners():
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Advisory sidecar register (registered 2026-07-29) — zero spine authority.
-# Kept OUT of `entries` so the 17-entry spine register stays fixed (the same
-# invariant the envelope DESIGN_ONLY note protects).
+# Kept OUT of `entries`. The spine list is EXPECTED_IDS (nb_outcome_classifier
+# is an off-spine NONE row inside entries because the join test only scans entries[].id).
 # ─────────────────────────────────────────────────────────────────────────────
 
 

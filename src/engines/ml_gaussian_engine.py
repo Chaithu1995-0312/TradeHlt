@@ -3,10 +3,8 @@ ml_gaussian_engine.py
 =====================
 ML-based Gaussian engine using a trained GaussianNBModel (32-dim).
 
-Selected via config["gaussian_impl"] (Config-First §6.5 — config is the single
-source of truth; the GAUSSIAN_IMPL env var was removed):
-  gaussian_impl=ml        → MLGaussianEngine (this file)
-  gaussian_impl=heuristic → HeuristicGaussianEngine (default)
+The fusion slot is EmaMomentumKernel. EngineRunner does not construct this class.
+nb_outcome_classifier is the offline NB model, not a fusion slot.
 
 Fail-open doctrine:
   Any exception during model load or inference returns
@@ -85,7 +83,7 @@ class MLGaussianEngine:
             reg_data = registry._load()
             entry = reg_data.get(active_version, {})
             # EPIC-84 KEPT: legacy on-disk registry entry normalization (same
-            # pattern as heuristic_gaussian_engine's GaussianRegistry), not a
+            # pattern as ema_momentum_kernel's GaussianRegistry), not a
             # config-authoring fallback.
             model_file = entry.get("model_file", f"{active_version}.json")
 

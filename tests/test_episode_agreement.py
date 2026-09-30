@@ -45,7 +45,7 @@ def _ep_aligned(**overrides):
                     "semantic": "structure_rule_score",
                     "question": "structure valid?",
                 },
-                "gaussian": {"value": 0.88, "semantic": "ema_momentum_kernel_score"},
+                "ema_momentum_kernel": {"value": 0.88, "semantic": "ema_momentum_kernel_score"},
                 "rr_model": {"value": 0.7, "semantic": "candle_structure_quality"},
             },
             "absent": ["bitnet"],

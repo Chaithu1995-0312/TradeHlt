@@ -288,6 +288,8 @@ def replay_crt(
     engine.ev_log.record = record  # type: ignore[method-assign]
 
     records: list[dict[str, Any]] = []
+    from features.bar_feature_frame import BarFeatureFrame  # [EPIC-84 A3b]
+    _bar_frame = BarFeatureFrame.from_candles(candles)
     for candle in candles:
         current_index["i"] = candle.index
         completed = htf.push(candle)
@@ -300,7 +302,7 @@ def replay_crt(
             continue
 
         before = engine.state.current_state.name
-        result = engine.process_candle(candle, htf.current_htf_id)
+        result = engine.process_candle(candle, htf.current_htf_id, bar_features=_bar_frame.for_candle(candle))
         after = engine.state.current_state.name
         action = result.get("action") if isinstance(result, dict) else str(result)
         records.append(

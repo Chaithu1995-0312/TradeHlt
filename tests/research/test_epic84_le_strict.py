@@ -117,9 +117,9 @@ _COSTCAL = {
     "server_utc_offset_hours": None,
 }
 _ZONE = {
-    "registry_path": "models/zone_registry.json", "zone_cluster_threshold": 0.0,
+    "registry_path": "models/zone_registry.json", "feature_cluster_similarity_cluster_threshold": 0.0,
     "top_k": 3, "cluster_min_n": 1, "cluster_spread_max": 1.0,
-    "zone_min_samples": 50, "execution_mode": "normal",
+    "feature_cluster_similarity_min_samples": 50, "execution_mode": "normal",
 }
 _REGIME = {
     "regime": {

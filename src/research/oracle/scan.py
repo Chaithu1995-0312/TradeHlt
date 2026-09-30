@@ -441,7 +441,7 @@ _RETIRED_COLUMNS = {"crt_state_resolved": "ontology_state"}
 _REQUIRED_STATE_COLUMNS = (
     "ontology_state", "parent_track_state", "parent_bias", "htf_state",
     "objective_status", "candle_direction", "candle_vol", "candle_structure",
-    "candle_trend", "regime_label", "trade_intent",
+    "candle_trend", "regime_label", "trade_intent_long", "trade_intent_short",
 )
 
 

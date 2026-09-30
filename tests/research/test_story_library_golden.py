@@ -60,7 +60,7 @@ def test_parity_anchor_reproduces_erp_4h_pack():
     erp = json.loads(pack.read_text(encoding="utf-8"))["compare"]["engines_produced_scores"]
     r = build_story(stories_by_id()["liq_sweep_reversal_long"], _ONTO)
     prod = r["engines_produced"]
-    # erp uses key "zone_gate"; the library uses "zone" (same soft-zone callable).
+    # erp pack keeps its historical key "zone_gate"; the library uses "zone" (same soft-zone callable).
     assert prod["crt"] == pytest.approx(erp["crt"], abs=1e-4)
     assert prod["gaussian"] == pytest.approx(erp["gaussian"], abs=1e-4)
     assert prod["zone"] == pytest.approx(erp["zone_gate"], abs=1e-5)

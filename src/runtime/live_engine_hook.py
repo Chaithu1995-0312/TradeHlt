@@ -963,7 +963,7 @@ class HookedLiveEngine(LiveEngine):
         }
 
         context = {
-            "gaussian_score": float(result.get("confidence", 0.0)),
+            "ema_momentum_kernel_score": float(result.get("confidence", 0.0)),
             "gaussian_p_win": float(
                 max(result.get("probabilities") or [0.5]) if result.get("probabilities") else 0.5
             ),
@@ -1071,7 +1071,7 @@ class HookedLiveEngine(LiveEngine):
 
         # Instrument-aware Gaussian lookup (mirrors backtest_v2.py's
         # `_er_cfg["instrument"] = self.cfg.instrument`, ~:3352). Without this, EngineRunner ->
-        # HeuristicGaussianEngine fell through to its "EURUSD" default on every live symbol,
+        # EmaMomentumKernel fell through to its "EURUSD" default on every live symbol,
         # so e.g. XAUUSD silently scored against the EURUSD registry entry.
         engine_config["instrument"] = _orch_pair
         engine_outputs = EngineRunner(engine_config).run(engine_input, context)
@@ -1166,7 +1166,7 @@ class HookedLiveEngine(LiveEngine):
             trade_plan["stop_loss"]        = round(_crt["sl"],  _prec)
             trade_plan["take_profit_1"]    = round(_crt["tp1"], _prec)
             trade_plan["take_profit_2"]    = round(_crt["tp2"], _prec)
-            # Contract D — true economic RR from SL/TP geometry (not RREngine polarity).
+            # Contract D — true economic RR from SL/TP geometry (not CandleCommitment polarity).
             # Primary target = TP1; TP2 R stored for audit. UltronRiskGate.min_rr_ratio
             # consumes trade_plan["rr_ratio"] (post cost tax when configured).
             _entry_px = float(trade_plan["entry_price"])

@@ -97,7 +97,7 @@ def _build_input(row, body_ratio, wick_size):
 
 def _install_zone_bypass():
     """Replicate backtest_v2's BACKTEST_BYPASS_ZONE_INVALID in-process (read-only CLASS-level monkeypatch).
-    DecisionEngine:129 rejects with 'zone_gate_invalid' unless zone_gate['valid'] is True, but run()'s
+    DecisionEngine:129 rejects with 'feature_cluster_similarity_invalid' unless feature_cluster_similarity['valid'] is True, but run()'s
     zone_result never sets that flag → it rejects EVERY candle. That gate is ORTHOGONAL to body_ratio
     (identical for A and B); bypassing it (as the backtest does) lets candles reach the score/p_win/rr/weak
     gates where body_ratio actually acts. CLASS-level (not instance) so deepcopy(runner) probes resolve
@@ -109,8 +109,8 @@ def _install_zone_bypass():
     orig = DecisionEngine.evaluate
 
     def patched(self, *args, **kwargs):
-        if "zone_gate" in kwargs and isinstance(kwargs["zone_gate"], dict):
-            kwargs["zone_gate"] = {**kwargs["zone_gate"], "valid": True}
+        if "feature_cluster_similarity" in kwargs and isinstance(kwargs["feature_cluster_similarity"], dict):
+            kwargs["feature_cluster_similarity"] = {**kwargs["feature_cluster_similarity"], "valid": True}
         else:
             a = list(args)
             if len(a) >= 3 and isinstance(a[2], dict):

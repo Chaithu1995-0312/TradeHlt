@@ -4,7 +4,7 @@ hierarchical_meta_fusion.py
 6-layer hierarchical meta-fusion for capital allocation quality scoring.
 
 Layers (weighted):
-    1. Zone Intelligence     (zone_gate score, passed flag)
+    1. Zone Intelligence     (feature_cluster_similarity score, passed flag)
     2. Liquidity Intelligence (liquidity_pressure_score, liquidity_distance)
     3. RR Intelligence       (rr engine score + expected_rr)
     4. Replay Intelligence   (historical_winrate, cluster_stability, replay_density)

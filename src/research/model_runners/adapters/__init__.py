@@ -35,7 +35,7 @@ def build_adapter(
             f"({contract.audit_status}): {contract.description}"
         )
 
-    if model_id == "rr":
+    if model_id == "candle_commitment":
         from research.model_runners.adapters.rr_polarity import RRPolarityAdapter
 
         return RRPolarityAdapter(contract=contract, prod_config=prod_config)
@@ -65,20 +65,20 @@ def build_adapter(
             instrument=instrument,
             repo_root=repo_root,
         )
-    if model_id == "gaussian":
+    if model_id == "ema_momentum_kernel":
         from research.model_runners.adapters.gaussian import GaussianAdapter
 
         return GaussianAdapter(
             contract=contract, prod_config=prod_config, instrument=instrument
         )
-    if model_id == "zone_gate":
-        from research.model_runners.adapters.zone_gate import ZoneGateAdapter
+    if model_id == "feature_cluster_similarity":
+        from research.model_runners.adapters.feature_cluster_similarity import ZoneGateAdapter
 
         return ZoneGateAdapter(
             contract=contract, prod_config=prod_config, repo_root=repo_root
         )
-    if model_id == "crt_score":
-        from research.model_runners.adapters.crt_score import CrtScoreAdapter
+    if model_id == "crt_structure_rule_score":
+        from research.model_runners.adapters.crt_structure_rule_score import CrtScoreAdapter
 
         return CrtScoreAdapter(contract=contract, prod_config=prod_config)
     if model_id == "fusion_compute":
@@ -129,10 +129,10 @@ def build_adapter(
             ohlcv_csv=ohlcv_csv,
             emit=emit,
         )
-    if model_id == "gaussian_ml":
+    if model_id == "nb_outcome_classifier":
         if artifact is None:
             raise ValueError(
-                "gaussian_ml requires --artifact (trained GaussianNB json under models/)"
+                "nb_outcome_classifier requires --artifact (trained GaussianNB json under models/)"
             )
         from research.model_runners.adapters.gaussian_ml import GaussianMLAdapter
 

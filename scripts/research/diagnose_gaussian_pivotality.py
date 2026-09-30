@@ -5,15 +5,15 @@ CONTEXT. The live Gaussian channel is an UNPARAMETERIZED kernel: `exp(-x^2/2)` o
 features, with mu=0/sigma=1 forced because no `models/gaussian_registry.json` entry carries those
 keys (F-060; floor `tests/test_gaussian_live_parameterization.py`). With mu=0 the score peaks when
 the market is FLAT and decays symmetrically for moves in either direction — yet it enters fusion at
-`weight_gaussian: 0.2` alongside directional channels. This script asks the only question that can
+`weight_ema_momentum_kernel: 0.2` alongside directional channels. This script asks the only question that can
 be answered decisively: does that channel move the entry set at all?
 
 METHOD (F-036, reused verbatim). Pin the channel and compare the trade-ledger sha256 against the
 unpinned baseline. A byte-identical ledger proves NON-PIVOTAL — no statistics needed, because you
 cannot bootstrap a difference that is exactly zero.
 
-WHY THE SEAM IS `HeuristicGaussianEngine.compute` AND NOT THE WEIGHT OR THE ADAPTER:
-  * `weight_gaussian = 0` is REMOVAL WITH RENORMALIZATION over the remaining three channels
+WHY THE SEAM IS `EmaMomentumKernel.compute` AND NOT THE WEIGHT OR THE ADAPTER:
+  * `weight_ema_momentum_kernel = 0` is REMOVAL WITH RENORMALIZATION over the remaining three channels
     (fusion_engine.py:487) — a different intervention than a constant-0.5 vote, since it silently
     re-weights CRT/zone/rr too.
   * Patching `GaussianAdapter.score` (fusion_engine.py:231) covers fusion but MISSES
@@ -63,7 +63,7 @@ PRE-REGISTERED INTERPRETATION (fixed before these cells ran — E-001 discipline
         Its variation moves trades, but see the power ceiling below. NO authority.
     pinned_0p5 differs while pinned_at_saturation is identical
         -> the channel acts purely as a LEVEL/bias term on the fusion threshold. This is a
-        calibration fact about `weight_gaussian` + `tier_*`, NOT evidence the Gaussian model works.
+        calibration fact about `weight_ema_momentum_kernel` + `tier_*`, NOT evidence the Gaussian model works.
 
 The power ceiling is known IN ADVANCE and must not be laundered after the fact. Gate-ON trade counts
 (F-037) are BNB 11 / ETH 4 / BTC 5 / SOL 6 -> pooled n≈26, below the `min_samples: 30` floor. If the
@@ -105,7 +105,7 @@ os.environ["BACKTEST_ENGINE_GATE"] = "1"
 
 # Reuse the F-036 harness verbatim (keeps spine-run semantics byte-identical to qualify_zone_topk).
 import qualify_zone_topk as qz                                        # noqa: E402
-from engines.heuristic_gaussian_engine import HeuristicGaussianEngine  # noqa: E402
+from engines.ema_momentum_kernel import EmaMomentumKernel  # noqa: E402
 from governance.measurement_basis import TIE_BREAK_PRODUCTION  # noqa: E402
 from research.provenance import provenance_block, write_report       # noqa: E402
 from research.config import ResearchConfig                           # noqa: E402
@@ -132,7 +132,7 @@ CHANNEL_DISTRIBUTION = {
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Injection — wrap HeuristicGaussianEngine.compute. `value=None` is a pure passthrough, which is
+# Injection — wrap EmaMomentumKernel.compute. `value=None` is a pure passthrough, which is
 # what the self-check exercises: it proves the WRAPPING MECHANISM is neutral, so any ledger delta
 # in the real cell is attributable to the pinned value alone (single-variable isolation).
 # ─────────────────────────────────────────────────────────────────────────────
@@ -142,7 +142,7 @@ class _PinGaussian:
         self._orig = None
 
     def __enter__(self):
-        orig = HeuristicGaussianEngine.compute
+        orig = EmaMomentumKernel.compute
         val = self.value
 
         def patched(self_engine, input_data, candle_idx=0, direction="long"):
@@ -152,11 +152,11 @@ class _PinGaussian:
                     "meta": {"mu": None, "sigma": None, "x": None}}
 
         self._orig = orig
-        HeuristicGaussianEngine.compute = patched
+        EmaMomentumKernel.compute = patched
         return self
 
     def __exit__(self, *exc):
-        HeuristicGaussianEngine.compute = self._orig
+        EmaMomentumKernel.compute = self._orig
         return False
 
 
@@ -273,7 +273,7 @@ def main(argv: list[str] | None = None) -> int:
     body = {
         "experiment": "gaussian_channel_pivotality",
         "registers_finding": "F-060",
-        "method": "F-036 ledger-sha ablation; seam = HeuristicGaussianEngine.compute",
+        "method": "F-036 ledger-sha ablation; seam = EmaMomentumKernel.compute",
         "cells": {"baseline": "live kernel",
                   "pinned_at_saturation": SATURATION_SCORE,
                   "pinned_0p5": PINNED_SCORE},

@@ -45,16 +45,16 @@ ACCEPTANCE_SECTION = {
 ACCEPTANCE_CFG = {**ACCEPTANCE_SECTION, "score_threshold": 0.45}
 
 REGIME_FUSION_WEIGHTS = {
-    "TRENDING": {"crt": 0.38, "gaussian": 0.20, "zone_gate": 0.12, "rr": 0.20, "strategy_consensus": 0.10},
-    "RANGING":  {"crt": 0.18, "gaussian": 0.32, "zone_gate": 0.15, "rr": 0.25, "strategy_consensus": 0.10},
-    "VOLATILE": {"crt": 0.28, "gaussian": 0.14, "zone_gate": 0.12, "rr": 0.16, "strategy_consensus": 0.30},
-    "UNKNOWN":  {"crt": 0.30, "gaussian": 0.25, "zone_gate": 0.25, "rr": 0.20, "strategy_consensus": 0.00},
+    "TRENDING": {"crt": 0.38, "ema_momentum_kernel": 0.20, "feature_cluster_similarity": 0.12, "candle_commitment": 0.20, "strategy_consensus": 0.10},
+    "RANGING":  {"crt": 0.18, "ema_momentum_kernel": 0.32, "feature_cluster_similarity": 0.15, "candle_commitment": 0.25, "strategy_consensus": 0.10},
+    "VOLATILE": {"crt": 0.28, "ema_momentum_kernel": 0.14, "feature_cluster_similarity": 0.12, "candle_commitment": 0.16, "strategy_consensus": 0.30},
+    "UNKNOWN":  {"crt": 0.30, "ema_momentum_kernel": 0.25, "feature_cluster_similarity": 0.25, "candle_commitment": 0.20, "strategy_consensus": 0.00},
 }
 FUSION_SECTION = {
     "gaussian_weight": 0.6, "neural_weight": 0.4, "llm_weight": 0.2,
     "llm_lower_band": 0.45, "llm_upper_band": 0.65, "enable_llm": True,
     "tier_full": 0.75, "tier_half": 0.6, "tier_quarter": 0.5,
-    "weight_crt": 0.4, "weight_gaussian": 0.2, "weight_zone_gate": 0.2, "weight_rr": 0.2,
+    "weight_crt": 0.4, "weight_ema_momentum_kernel": 0.2, "weight_feature_cluster_similarity": 0.2, "weight_candle_commitment": 0.2,
     "weight_strategy_consensus": 0.0,
     "regime_fusion_weights": REGIME_FUSION_WEIGHTS,
     "min_consensus_signals": 2, "min_consensus_agreement": 0.6,
@@ -207,9 +207,9 @@ def _engine_runner_keys():
 
 
 @pytest.mark.parametrize("key", [
-    "gaussian_impl", "rr_fusion", "convergence_window", "fusion_engine", "dual_engine",
-    "fusion_use_evaluate", "fusion_compare_evaluate", "zone_registry_path", "zone_min_samples",
-    "zone_gate", "zone_cluster_threshold", "zone_gate_execution_mode", "zone_mode",
+    "rr_fusion", "convergence_window", "fusion_engine", "dual_engine",
+    "fusion_use_evaluate", "fusion_compare_evaluate", "feature_cluster_similarity_registry_path", "feature_cluster_similarity_min_samples",
+    "feature_cluster_similarity", "feature_cluster_similarity_cluster_threshold", "feature_cluster_similarity_execution_mode", "feature_cluster_similarity_mode",
     "debug_mode", "ultron_gate_enabled", "signal_belief", "cognitive_layer",
 ])
 def test_engine_runner_missing_key_raises(key):
@@ -222,21 +222,12 @@ def test_engine_runner_missing_key_raises(key):
     _assert_names(ei.value, key, "engine_runner")
 
 
-def test_engine_runner_gaussian_impl_has_no_default():
-    """Rewritten: gaussian_impl absent no longer means 'heuristic'."""
-    from core.engine_runner import EngineRunner
-    with pytest.raises(ConfigKeyMissingError):
-        EngineRunner._get_gaussian_engine({})
-    with pytest.raises(ConfigKeyMissingError):
-        EngineRunner._get_shadow_gaussian_engine({})
-
-
 def test_engine_runner_weighted_vote_reads_fusion_cfg_strictly():
     from core import engine_runner as er
     from core.fusion_engine import FusionConfig
     runner = er.EngineRunner.__new__(er.EngineRunner)
     runner.fusion = type("_F", (), {"cfg": FusionConfig.from_section(dict(FUSION_SECTION))})()
-    vote = runner._compute_weighted_vote({n: {"score": 0.5} for n in ("crt", "gaussian", "zone_gate", "rr")})
+    vote = runner._compute_weighted_vote({n: {"score": 0.5} for n in ("crt", "ema_momentum_kernel", "feature_cluster_similarity", "candle_commitment")})
     assert 0.0 <= vote <= 1.0
 
 

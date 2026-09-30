@@ -385,6 +385,8 @@ def validate_crt(enriched: pd.DataFrame, reports: List[ModelReport]) -> np.ndarr
         initialised = False
         warmup_n = int(getattr(bt_cfg, "warmup_candles", 64) or 64)
 
+        from features.bar_feature_frame import BarFeatureFrame  # [EPIC-84 A3b]
+        _bar_frame = BarFeatureFrame.from_csv(str(loader.filepath))
         for candle in loader.stream():
             n_streamed += 1
             htf.push(candle)
@@ -408,7 +410,7 @@ def validate_crt(enriched: pd.DataFrame, reports: List[ModelReport]) -> np.ndarr
                     continue
 
             try:
-                out = engine.process_candle(candle, htf.current_htf_id)
+                out = engine.process_candle(candle, htf.current_htf_id, bar_features=_bar_frame.for_candle(candle))
                 n_exec += 1
                 st = getattr(engine.state, "current_state", None)
                 idx = min(n_exec - 1, n_feat - 1)
@@ -474,22 +476,22 @@ def validate_crt(enriched: pd.DataFrame, reports: List[ModelReport]) -> np.ndarr
 def validate_gaussian_heuristic(
     records: List[dict], reports: List[ModelReport]
 ) -> np.ndarray:
-    from engines.heuristic_gaussian_engine import HeuristicGaussianEngine, GaussianRegistry
+    from engines.ema_momentum_kernel import EmaMomentumKernel, GaussianRegistry
     from features.feature_schema import CANONICAL_FEATURE_ORDER
 
     r = ModelReport(model="Gaussian_heuristic_live", kind="heuristic")
-    r.consumer = "fusion slot 'gaussian' (EngineRunner; gaussian_impl=heuristic)"
+    r.consumer = "fusion slot 'gaussian' (EngineRunner; removed_selector=heuristic)"
     r.wiring = {
         "documented_intent": "probability-of-success match via trained NB",
         "runtime_truth": "3-feature heuristic kernel; trained checkpoint NOT used (F-060)",
         "runtime_enabled": True,
         "active_models_status": "active / enabled_without_checkpoint",
-        "config": "engine_runner.gaussian_impl=heuristic",
+        "config": "engine_runner.removed_selector=heuristic",
     }
 
     scores = np.full(len(records), np.nan)
     try:
-        eng = HeuristicGaussianEngine({"instrument": INSTRUMENT}, instrument=INSTRUMENT, preload_registry=True)
+        eng = EmaMomentumKernel({"instrument": INSTRUMENT}, instrument=INSTRUMENT, preload_registry=True)
         r.loaded = True
         reg_detail = {
             "registry_path": "models/gaussian_registry.json",
@@ -587,13 +589,13 @@ def validate_gaussian_trained(
 
     scores = np.full(len(records), np.nan)
     r = ModelReport(model="Gaussian_trained_NB", kind="trained")
-    r.consumer = "NOT on live spine when gaussian_impl=heuristic (orphan vs selection)"
+    r.consumer = "NOT on live spine when removed_selector=heuristic (orphan vs selection)"
     r.wiring = {
         "documented_intent": "trained GaussianNB on registry-selected version",
-        "runtime_truth": "MLGaussianEngine only when gaussian_impl=ml|shadow_ml",
+        "runtime_truth": "MLGaussianEngine only when removed_selector=ml|shadow_ml",
         "runtime_enabled": False,
         "selection": "active_models.yaml gaussian.identity.selection.by_instrument (BNB/ETH only)",
-        "active_config_gaussian_impl": "heuristic",
+        "active_config_removed_selector": "heuristic",
     }
 
     # Prefer BNB 38-dim active entry; also try ETH 35-dim for schema contrast
@@ -728,7 +730,7 @@ def validate_gaussian_trained(
                 # Contract-OK when name-anchored and scores produced without exception
                 r.features_ok = bool(schema_resolved) and exceptions == 0 and fallback == 0
                 r.outputs_healthy = exceptions == 0 and not r.output_stats.get("is_constant")
-                # Not on live spine (gaussian_impl=heuristic) → ORPHAN even if contract-OK
+                # Not on live spine (removed_selector=heuristic) → ORPHAN even if contract-OK
                 r.status = "EXECUTED_ORPHAN" if r.features_ok else (
                     "EXECUTED_WITH_SCHEMA_DRIFT" if not r.features_ok else "DEGRADED"
                 )
@@ -753,7 +755,7 @@ def validate_zone_gate(records: List[dict], reports: List[ModelReport]) -> np.nd
     """Validate the LIVE ZoneGate path (v4 remapped artifact), not the retired v3 file.
 
     Production truth (SCHEMA-V4-VECTOR-MIGRATION B6):
-      engine_runner.zone_registry_path = models/zone_registry_v4_2026_07.json
+      engine_runner.feature_cluster_similarity_registry_path = models/zone_registry_v4_2026_07.json
       zone_gate_registry active = v4_gaussian_runtime_2026_07
       v3 models/zone_registry.json is retained and must still FAIL_CLOSED on load.
     """
@@ -765,13 +767,13 @@ def validate_zone_gate(records: List[dict], reports: List[ModelReport]) -> np.nd
     from pathlib import Path as P
 
     r = ModelReport(model="ZoneGate", kind="trained")
-    r.consumer = "fusion slot 'zone_gate' + hard gate (zone_mode=hard)"
+    r.consumer = "fusion slot 'feature_cluster_similarity' + hard gate (feature_cluster_similarity_mode=hard)"
     r.wiring = {
         "documented_intent": "feature-space neighbourhood historically good",
         "runtime_enabled": True,
         "active_models_status": "selected_and_enabled",
         "registry": "models/zone_gate_registry.json",
-        "config_key": "engine_runner.zone_registry_path",
+        "config_key": "engine_runner.feature_cluster_similarity_registry_path",
         "remap": "ALIGNMENT_REMAP v4 (macd_hist→macd_hist_z, wick_size→candle_range; session weight=0)",
     }
 
@@ -781,7 +783,7 @@ def validate_zone_gate(records: List[dict], reports: List[ModelReport]) -> np.nd
 
     # Resolve production path (HOW + WHO parity)
     er = get_prod_section("engine_runner")
-    how_path = str(er.get("zone_registry_path", ""))
+    how_path = str(er.get("feature_cluster_similarity_registry_path", ""))
     try:
         resolved = resolve_zone_gate_runtime(how_path=how_path)
         path = str(resolved.require_artifact()).replace("\\", "/")
@@ -885,18 +887,18 @@ def validate_zone_gate(records: List[dict], reports: List[ModelReport]) -> np.nd
 
     # Execute production scoring path (score_zone_cluster — same as EngineRunner)
     if r.loaded and records:
-        zcfg = er.get("zone_gate") or {}
-        thr = float(er.get("zone_cluster_threshold", zcfg.get("threshold", 0.25)) or 0.25)
+        zcfg = er.get("feature_cluster_similarity") or {}
+        thr = float(er.get("feature_cluster_similarity_cluster_threshold", zcfg.get("threshold", 0.25)) or 0.25)
         # knobs from engine_runner
         try:
-            thr = float(_cfg_thr) if (_cfg_thr := er.get("zone_cluster_threshold")) is not None else thr
+            thr = float(_cfg_thr) if (_cfg_thr := er.get("feature_cluster_similarity_cluster_threshold")) is not None else thr
         except Exception:
             pass
         cluster_min_n = int((zcfg.get("cluster_min_n") if isinstance(zcfg, dict) else None) or 2)
         cluster_spread_max = float((zcfg.get("cluster_spread_max") if isinstance(zcfg, dict) else None) or 0.15)
         # prefer strict keys if present under engine_runner
         for key, dest in (
-            ("zone_cluster_threshold", "thr"),
+            ("feature_cluster_similarity_cluster_threshold", "thr"),
         ):
             if key in er:
                 try:
@@ -910,15 +912,15 @@ def validate_zone_gate(records: List[dict], reports: List[ModelReport]) -> np.nd
             # Resolve knobs the way EngineRunner does when possible
             from config_layer.production_config import get_prod_section as _gps
             _er = _gps("engine_runner")
-            _zg = _er.get("zone_gate") or {}
+            _zg = _er.get("feature_cluster_similarity") or {}
             top_k = int(_zg.get("top_k", 3))
             cluster_min_n = int(_zg.get("cluster_min_n", cluster_min_n))
             cluster_spread_max = float(_zg.get("cluster_spread_max", cluster_spread_max))
-            # threshold: used by run_zone_gate_engine; hard mode historically 0.25-ish
-            if "zone_min_samples" in _er:
-                r.load_detail["zone_min_samples"] = _er["zone_min_samples"]
+            # threshold: used by run_feature_cluster_similarity; hard mode historically 0.25-ish
+            if "feature_cluster_similarity_min_samples" in _er:
+                r.load_detail["feature_cluster_similarity_min_samples"] = _er["feature_cluster_similarity_min_samples"]
             r.load_detail["score_knobs"] = {
-                "zone_cluster_threshold": thr,
+                "feature_cluster_similarity_cluster_threshold": thr,
                 "cluster_min_n": cluster_min_n,
                 "cluster_spread_max": cluster_spread_max,
                 "top_k": top_k,
@@ -931,7 +933,7 @@ def validate_zone_gate(records: List[dict], reports: List[ModelReport]) -> np.nd
                 out = score_zone_cluster(
                     feat,
                     zg,
-                    zone_cluster_threshold=thr,
+                    feature_cluster_similarity_cluster_threshold=thr,
                     cluster_min_n=cluster_min_n,
                     cluster_spread_max=cluster_spread_max,
                 )
@@ -984,22 +986,22 @@ def validate_zone_gate(records: List[dict], reports: List[ModelReport]) -> np.nd
 
 
 def validate_rr_polarity(records: List[dict], reports: List[ModelReport]) -> np.ndarray:
-    from engines.rr_engine import RREngine
+    from engines.candle_commitment import CandleCommitment
 
     r = ModelReport(model="RR_polarity_engine", kind="rule_based")
-    r.consumer = "fusion slot 'rr' ALWAYS (base RREngine); DecisionEngine low_rr gate (F-048)"
+    r.consumer = "fusion slot 'rr' ALWAYS (base CandleCommitment); DecisionEngine low_rr gate (F-048)"
     r.wiring = {
         "documented_intent": "true reward-risk (historical name)",
         "runtime_truth": "Candle Polarity Index; NOT forward RR (semantic:candle_structure_quality)",
         "runtime_enabled": True,
         "rr_fusion_enabled": False,
-        "file": "src/engines/rr_engine.py",
+        "file": "src/engines/candle_commitment.py",
     }
     scores = np.full(len(records), np.nan)
     try:
-        eng = RREngine({"min_rr": 1.5})
+        eng = CandleCommitment({"min_rr": 1.5})
         r.loaded = True
-        r.load_detail = {"engine": "RREngine", "checkpoint": None, "trained": False}
+        r.load_detail = {"engine": "CandleCommitment", "checkpoint": None, "trained": False}
         needed = ["open", "high", "low", "close"]
         r.feature_alignment = align_report(needed, list(records[0].keys()) if records else needed)
         r.features_ok = True
@@ -1023,7 +1025,7 @@ def validate_rr_polarity(records: List[dict], reports: List[ModelReport]) -> np.
         r.add_bug(
             "High",
             "RR_NAME_SEMANTIC_MISMATCH",
-            "RREngine emits candle polarity ∈[0.5,1], not forward RR; DecisionEngine threshold 1.5 → structural low_rr (F-048)",
+            "CandleCommitment emits candle polarity ∈[0.5,1], not forward RR; DecisionEngine threshold 1.5 → structural low_rr (F-048)",
             {"score_range": [r.output_stats.get("min"), r.output_stats.get("max")], "decision_threshold": 1.5},
         )
     except Exception as e:
@@ -1035,7 +1037,7 @@ def validate_rr_polarity(records: List[dict], reports: List[ModelReport]) -> np.
 
 def validate_rr_fusion(records: List[dict], reports: List[ModelReport]) -> np.ndarray:
     from config_layer.rr.rr_fusion import RRFusionLayer
-    from config_layer.rr.rr_pattern_miner import NanoInferenceEngine
+    from config_layer.rr.rr_trained import NanoInferenceEngine
     from features.feature_schema import (
         CANONICAL_FEATURE_ORDER,
         SCHEMA_V3_ALIASES,
@@ -1148,7 +1150,7 @@ def validate_rr_fusion(records: List[dict], reports: List[ModelReport]) -> np.nd
             r.notes.append("FAIL_CLOSED: load refused under schema v4 width mismatch (protective)")
             # Prove predict also refuses ambient 39 (no silent truncate)
             try:
-                from config_layer.rr.rr_pattern_miner import (
+                from config_layer.rr.rr_trained import (
                     NanoInferenceEngine,
                     FeatureDimensionError,
                 )
@@ -1156,7 +1158,7 @@ def validate_rr_fusion(records: List[dict], reports: List[ModelReport]) -> np.nd
                 try:
                     eng.predict(
                         list(map(float, extract_feature_vector(records[0]))),
-                        gaussian_score=0.5,
+                        ema_momentum_kernel_score=0.5,
                         gaussian_p_win=0.5,
                     )
                     r.add_bug(
@@ -1178,7 +1180,7 @@ def validate_rr_fusion(records: List[dict], reports: List[ModelReport]) -> np.nd
         for i, feat in enumerate(records):
             try:
                 vec = extract_feature_vector(feat)  # 39 floats in v4 order
-                out = engine.predict(list(map(float, vec)), gaussian_score=0.5, gaussian_p_win=0.5)
+                out = engine.predict(list(map(float, vec)), ema_momentum_kernel_score=0.5, gaussian_p_win=0.5)
                 scores[i] = float(out.get("final_score", out.get("ml_score", float("nan"))))
                 confidences[i] = float(out.get("confidence", float("nan")))
                 st = str(out.get("status", ""))
@@ -1783,14 +1785,14 @@ def main() -> int:
         "Runtime feature schema is v4.0 (39-dim): macd_hist split + wick_size→candle_range. "
         "All 38-dim trained artifacts (ZoneGate, RR fusion, Gaussian NB) predate this migration.",
         "Live Gaussian path is heuristic 3-feature kernel with mu/σ defaults — trained registry "
-        "checkpoints are selected for BNB/ETH only and are not consumed when gaussian_impl=heuristic (F-060).",
+        "checkpoints are selected for BNB/ETH only and are not consumed when removed_selector=heuristic (F-060).",
         "ZoneGate is documented selected_and_enabled, but load-time ZoneFeatureOrderError now blocks "
         "EngineRunner construction under v4 — production hard-gate is currently unstartable without remap.",
         "RR fusion checkpoint loads and scores, but engine_runner.rr_fusion.enabled=false (F-038); "
         "confidence gate saturates bypass (F-044); index truncation under v4 is a new misalignment class.",
         "TradeNet is orphaned (F-005) — registry has an active ETH checkpoint but no spine consumer.",
         "BitNet registry is empty {}; use_bitnet=false — dual schema (legacy 6 vs export 35) remains.",
-        "RREngine polarity vs DecisionEngine rr_threshold=1.5 is a structural consumer mismatch (F-048).",
+        "CandleCommitment polarity vs DecisionEngine rr_threshold=1.5 is a structural consumer mismatch (F-048).",
         "CRT remains the only fully reachable, schema-independent decision generator on the spine.",
     ]
 

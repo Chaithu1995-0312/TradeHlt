@@ -227,10 +227,6 @@ def test_framework_ids_resolve(models: dict) -> None:
     assert not problems, "\n".join(problems)
 
 
-# The heuristic Gaussian runtime class ↔ its config `gaussian_impl` selector string.
-_GAUSSIAN_ENGINE_IMPL = {"HeuristicGaussianEngine": "heuristic"}
-
-
 def test_runtime_flags_match_active_config(doc: dict) -> None:
     """Binary runtime CLAIMS in the registry match the ACTIVE_VERSION config's live values.
 
@@ -240,12 +236,12 @@ def test_runtime_flags_match_active_config(doc: dict) -> None:
     test_config_sections_are_active_config_keys (which checks SECTION presence, not these flags)."""
     cfg = _active_config()
     er = cfg["engine_runner"]
-    gaussian_engine = doc["gaussian"]["runtime"]["engine"]
+    gaussian_engine = doc["ema_momentum_kernel"]["runtime"]["engine"]
     checks = [
         ("bitnet.enabled", doc["bitnet"]["runtime"]["enabled"], cfg["crt_engine"]["use_bitnet"]),
-        ("zone_gate.zone_mode", doc["zone_gate"]["runtime"]["zone_mode"], er["zone_mode"]),
-        ("zone_gate.registry_file", doc["zone_gate"]["runtime"]["registry_file"], er["zone_registry_path"]),
-        ("gaussian.engine→impl", _GAUSSIAN_ENGINE_IMPL.get(gaussian_engine, gaussian_engine), er["gaussian_impl"]),
+        ("feature_cluster_similarity.feature_cluster_similarity_mode", doc["feature_cluster_similarity"]["runtime"]["feature_cluster_similarity_mode"], er["feature_cluster_similarity_mode"]),
+        ("feature_cluster_similarity.registry_file", doc["feature_cluster_similarity"]["runtime"]["registry_file"], er["feature_cluster_similarity_registry_path"]),
+        ("ema_momentum_kernel.engine", gaussian_engine, "EmaMomentumKernel"),
         ("rr_model.rr_fusion_active", doc["rr_model"]["runtime"]["rr_fusion_active"], er["rr_fusion"]["enabled"]),
     ]
     problems = [f"{label}: registry={yaml_v!r} != config={cfg_v!r}"
@@ -272,7 +268,7 @@ def test_yaml_config_keys_exist_in_schema(doc: dict) -> None:
 
 # ─── feature_lineage block (OHLCV → formula → state → consumer → fusion weight) ───────────
 _LINEAGE_ROLES = {"structural", "advisory", "unused"}
-_LINEAGE_FUSION_WEIGHTS = {"crt:0.4", "gaussian:0.2", "zone:0.2_nonpivotal", "regime_routing", "inert:0"}
+_LINEAGE_FUSION_WEIGHTS = {"crt:0.4", "ema_momentum_kernel:0.2", "zone:0.2_nonpivotal", "regime_routing", "inert:0"}
 
 
 def test_feature_lineage_covers_all_canonical_features_in_order(doc: dict) -> None:
@@ -318,7 +314,7 @@ def test_feature_lineage_is_branch_scoped_to_active_config(doc: dict) -> None:
 
 
 # ─── v2.3 identity (Exists ≠ Selected ≠ Enabled; mirror of registries; not loaders) ───────────
-_IDENTITY_FAMILIES = ("gaussian", "zone_gate", "rr_model", "bitnet", "tradenet")
+_IDENTITY_FAMILIES = ("ema_momentum_kernel", "feature_cluster_similarity", "rr_model", "bitnet", "tradenet")
 _IDENTITY_STATUS_ENUM = frozenset(
     {
         "absent",
@@ -480,13 +476,13 @@ def test_identity_r1_registry_selection_mirror(models: dict) -> None:
     """R1: identity.selection.version matches registry active (or by_instrument map)."""
     problems: list[str] = []
 
-    zg_id = models["zone_gate"]["identity"]
+    zg_id = models["feature_cluster_similarity"]["identity"]
     zg_reg = _load_json(zg_id["registry"])
     zg_actives = _registry_active_versions(zg_reg)
     zg_ver = _selection_version(zg_id)
     if zg_ver not in zg_actives:
         problems.append(
-            f"zone_gate: selection.version={zg_ver!r} not in registry actives {zg_actives}"
+            f"feature_cluster_similarity: selection.version={zg_ver!r} not in registry actives {zg_actives}"
         )
 
     rr_id = models["rr_model"]["identity"]
@@ -507,7 +503,7 @@ def test_identity_r1_registry_selection_mirror(models: dict) -> None:
             f"tradenet: selection.version={tn_ver!r} not in registry actives {tn_actives}"
         )
 
-    g_id = models["gaussian"]["identity"]
+    g_id = models["ema_momentum_kernel"]["identity"]
     g_reg = _load_json(g_id["registry"])
     g_map = _registry_active_versions(g_reg, per_instrument=True)
     assert isinstance(g_map, dict)
@@ -553,7 +549,7 @@ def test_identity_r2_how_path_ref_parity(models: dict) -> None:
         if not enabled:
             continue
         if not href:
-            if name == "gaussian":
+            if name == "ema_momentum_kernel":
                 continue
             problems.append(f"{name}: runtime_enabled but how_path_ref missing")
             continue
@@ -643,20 +639,20 @@ def test_identity_runtime_enabled_matches_how_flags(models: dict, doc: dict) -> 
     checks = [
         ("bitnet", _execution(models["bitnet"]["identity"]).get("runtime_enabled"), cfg["crt_engine"]["use_bitnet"]),
         ("rr_model", _execution(models["rr_model"]["identity"]).get("runtime_enabled"), er["rr_fusion"]["enabled"]),
-        ("zone_gate", _execution(models["zone_gate"]["identity"]).get("runtime_enabled"), True),
+        ("feature_cluster_similarity", _execution(models["feature_cluster_similarity"]["identity"]).get("runtime_enabled"), True),
         ("tradenet", _execution(models["tradenet"]["identity"]).get("runtime_enabled"), False),
         (
-            "gaussian.live_impl",
-            _execution(models["gaussian"]["identity"]).get("live_impl"),
-            er["gaussian_impl"],
+            "ema_momentum_kernel.live_impl",
+            _execution(models["ema_momentum_kernel"]["identity"]).get("live_impl"),
+            "heuristic",
         ),
     ]
     problems = [
         f"{label}: identity={iv!r} != expected={ev!r}" for label, iv, ev in checks if iv != ev
     ]
-    if er["gaussian_impl"] == "heuristic":
-        if _execution(models["gaussian"]["identity"]).get("uses_trained_checkpoint"):
-            problems.append("gaussian: heuristic impl requires uses_trained_checkpoint=false")
+    if _execution(models["ema_momentum_kernel"]["identity"]).get("live_impl") == "heuristic":
+        if _execution(models["ema_momentum_kernel"]["identity"]).get("uses_trained_checkpoint"):
+            problems.append("ema_momentum_kernel: heuristic slot requires uses_trained_checkpoint=false")
     # selected_not_enabled examples must not auto-enable
     if _execution(models["rr_model"]["identity"]).get("runtime_enabled"):
         problems.append("rr_model must remain runtime_enabled=false (selected ≠ enabled)")

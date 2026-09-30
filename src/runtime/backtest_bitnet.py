@@ -120,7 +120,7 @@ def _build_engine_runner_config(config: dict) -> dict:
     resolved["execution_planner"] = config["execution_planner"]
     resolved["ultron_risk_gate"]  = config["ultron_risk_gate"]
 
-    # Keep RR threshold consistent across DecisionEngine and RREngine.
+    # Keep RR threshold consistent across DecisionEngine and CandleCommitment.
     if "rr_threshold" in resolved and "min_rr" not in resolved:
         resolved["min_rr"] = resolved["rr_threshold"]
 

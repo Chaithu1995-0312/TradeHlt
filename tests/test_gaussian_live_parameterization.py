@@ -5,8 +5,8 @@ mis-stated: the live Gaussian channel is an UNPARAMETERIZED kernel. Not "trained
 unused" (the audit's original `TRAINED_ARTIFACT = INERT` framing) but the stronger fact that **no
 learned parameter reaches the scoring path at all**.
 
-Mechanism: `HeuristicGaussianEngine.mu`/`.sigma` fall through to `GaussianRegistry`, whose
-`_normalize_registry_entry` (heuristic_gaussian_engine.py:42-53) defaults `mu=0.0, sigma=1.0`.
+Mechanism: `EmaMomentumKernel.mu`/`.sigma` fall through to `GaussianRegistry`, whose
+`_normalize_registry_entry` (ema_momentum_kernel.py:42-53) defaults `mu=0.0, sigma=1.0`.
 No entry in `models/gaussian_registry.json` carries either key, so the defaults fire even on a
 SUCCESSFUL registry load — making the live score exactly `exp(-x^2/2)`, byte-identical to the
 no-registry-at-all path.
@@ -78,9 +78,9 @@ def test_registry_has_active_pointers_for_the_resolving_instruments():
 
 @pytest.mark.parametrize("instrument", RESOLVING_INSTRUMENTS)
 def test_successful_registry_load_still_yields_default_kernel(instrument):
-    from engines.heuristic_gaussian_engine import HeuristicGaussianEngine
+    from engines.ema_momentum_kernel import EmaMomentumKernel
 
-    eng = HeuristicGaussianEngine({}, instrument=instrument, preload_registry=True)
+    eng = EmaMomentumKernel({}, instrument=instrument, preload_registry=True)
 
     assert eng._registry is not None, (
         f"registry failed to load for {instrument} — this test must exercise the LOADED path"
@@ -91,7 +91,7 @@ def test_successful_registry_load_still_yields_default_kernel(instrument):
 
 def test_live_math_is_unparameterized_gaussian():
     """Pins the live scoring identity: score == exp(-x^2 / 2), x = (ema_diff + tanh(mom)) / 2."""
-    from engines.heuristic_gaussian_engine import HeuristicGaussianEngine
+    from engines.ema_momentum_kernel import EmaMomentumKernel
     from features.feature_schema import CANONICAL_FEATURES
 
     feats = {k: 0.0 for k in CANONICAL_FEATURES}
@@ -99,7 +99,7 @@ def test_live_math_is_unparameterized_gaussian():
     feats["ema_slow"] = 1.00
     feats["momentum_score"] = 0.1
 
-    eng = HeuristicGaussianEngine({}, instrument="BNBUSDT", preload_registry=True)
+    eng = EmaMomentumKernel({}, instrument="BNBUSDT", preload_registry=True)
     result = eng.compute(feats)
 
     ema_diff = (1.01 - 1.00) / 1.00
@@ -115,10 +115,10 @@ def test_live_math_is_unparameterized_gaussian():
 def test_kernel_is_symmetric_not_directional():
     """Consequence of mu=0: the score is a 'closeness to flat' measure, so a bullish and an
     equally-sized bearish state score IDENTICALLY — despite the channel entering fusion at
-    `weight_gaussian` alongside directional channels. Documented in F-060; measured for
+    `weight_ema_momentum_kernel` alongside directional channels. Documented in F-060; measured for
     pivotality by scripts/research/diagnose_gaussian_pivotality.py.
     """
-    from engines.heuristic_gaussian_engine import HeuristicGaussianEngine
+    from engines.ema_momentum_kernel import EmaMomentumKernel
     from features.feature_schema import CANONICAL_FEATURES
 
     def _score(ema_fast, momentum):
@@ -126,7 +126,7 @@ def test_kernel_is_symmetric_not_directional():
         feats["ema_fast"] = ema_fast
         feats["ema_slow"] = 1.00
         feats["momentum_score"] = momentum
-        return HeuristicGaussianEngine(
+        return EmaMomentumKernel(
             {}, instrument="BNBUSDT", preload_registry=True
         ).compute(feats)["score"]
 

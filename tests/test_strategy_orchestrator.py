@@ -41,7 +41,7 @@ _FUSION_FIXTURE = {
     "gaussian_weight": 0.6, "neural_weight": 0.4, "llm_weight": 0.2,
     "llm_lower_band": 0.45, "llm_upper_band": 0.65, "enable_llm": True,
     "tier_full": 0.75, "tier_half": 0.60, "tier_quarter": 0.50,
-    "weight_crt": 0.30, "weight_gaussian": 0.25, "weight_zone_gate": 0.25, "weight_rr": 0.20,
+    "weight_crt": 0.30, "weight_ema_momentum_kernel": 0.25, "weight_feature_cluster_similarity": 0.25, "weight_candle_commitment": 0.20,
     "weight_strategy_consensus": 0.0,
     "regime_fusion_weights": {
         "TRENDING": {"crt": 0.38, "gaussian": 0.20, "zone_gate": 0.12, "rr": 0.20, "strategy_consensus": 0.10},

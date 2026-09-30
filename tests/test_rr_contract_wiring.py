@@ -1,6 +1,6 @@
 """Contract split A/B/C/D — polarity vs true RR vs rr_fusion shadow.
 
-A — RREngine candle polarity (fusion score)
+A — CandleCommitment candle polarity (fusion score)
 B — trained rr_fusion (must stay non-mutating when disabled)
 C — DecisionEngine owns NO economic RR gate (F-048 RESOLVED — semantic approval only)
 D — Ultron true RR from SL/TP geometry (the sole economic-RR owner)
@@ -55,7 +55,7 @@ def test_decision_engine_ignores_polarity_rr():
     result = de.evaluate(
         score=0.8,
         p_win=0.6,
-        zone_gate={"valid": True},
+        feature_cluster_similarity={"valid": True},
         fusion={"normalized_score": 0.8, "candle_polarity": 0.9, "weak_component": 0.1},
         config=_DE_CFG,
     )
@@ -68,7 +68,7 @@ def test_decision_engine_does_not_gate_on_economic_rr():
     result = de.evaluate(
         score=0.8,
         p_win=0.6,
-        zone_gate={"valid": True},
+        feature_cluster_similarity={"valid": True},
         fusion={"normalized_score": 0.8, "true_rr": 1.0, "weak_component": 0.1},
         config=_DE_CFG,
     )
@@ -84,7 +84,7 @@ def test_low_rr_reason_is_never_emitted_by_decision_engine():
         {"normalized_score": 0.8, "rr": 0.5, "weak_component": 0.1},
         {"normalized_score": 0.8, "true_rr": 0.1, "weak_component": 0.1},
     ):
-        r = de.evaluate(score=0.8, p_win=0.6, zone_gate={"valid": True},
+        r = de.evaluate(score=0.8, p_win=0.6, feature_cluster_similarity={"valid": True},
                         fusion=fusion, config=_DE_CFG)
         assert r["reason"] != "low_rr", r
 

@@ -16,7 +16,7 @@ Measures
    - H_pass, ML_pass, agree_high, agree_low, disagree
    on a fixed candidate base (default: SWEEP bars + rare-zone entries)
 
-Uses the same dual-score contract as ``EngineRunner`` ``gaussian_impl=shadow_ml``:
+Uses the same dual-score contract as ``EngineRunner`` ``removed_selector=shadow_ml``:
   primary H score + shadow ML with delta + agreement.
 """
 from __future__ import annotations
@@ -34,7 +34,7 @@ import pandas as pd
 
 from config_layer.config_builder import ConfigBuilder
 from config_layer.crt_engine_v2 import CRTEngine, Candle
-from engines.heuristic_gaussian_engine import HeuristicGaussianEngine
+from engines.ema_momentum_kernel import EmaMomentumKernel
 from engines.ml_gaussian_engine import MLGaussianEngine
 from features.feature_pipeline import FeaturePipeline
 from features.feature_schema import CANONICAL_FEATURES
@@ -149,7 +149,6 @@ def _engine_config(instrument: str) -> dict:
     """Minimal engine_runner-shaped config for dual Gaussian load."""
     return {
         "instrument": instrument,
-        "gaussian_impl": "shadow_ml",
     }
 
 
@@ -183,6 +182,9 @@ def collect_gaussian_shadow_bars(
 
     pipeline = FeaturePipeline(raw)
     enriched, vectors = pipeline.run()
+
+    from features.bar_feature_frame import BarFeatureFrame  # [EPIC-84 A3b]
+    _bar_frame = BarFeatureFrame.from_enriched(enriched, vectors)
     ts_series = pd.to_datetime(enriched["timestamp"])
     ts_to_idx = {
         ts_series.iloc[i].strftime("%Y-%m-%d %H:%M:%S"): i
@@ -218,7 +220,7 @@ def collect_gaussian_shadow_bars(
     eng_cfg = _engine_config(instrument)
     # Ensure instrument-aware ML registry lookup (same as EngineRunner path).
     os.environ["GAUSSIAN_INSTRUMENT"] = instrument
-    h_engine = HeuristicGaussianEngine(eng_cfg)
+    h_engine = EmaMomentumKernel(eng_cfg)
     ml_engine = MLGaussianEngine(eng_cfg, preload=True)
 
     rare_set = set(rare_zones)
@@ -249,7 +251,8 @@ def collect_gaussian_shadow_bars(
                 initialised = True
             continue
 
-        result = engine.process_candle(candle, htf.current_htf_id)
+        result = engine.process_candle(candle, htf.current_htf_id,
+                                       bar_features=_bar_frame.for_candle(candle))
         action = str(result.get("action", "NONE"))
         state_name = engine.state.current_state.name
 
@@ -843,7 +846,7 @@ def evaluate_gaussian_family_shadow(
         "instrument": instrument,
         "authority": "research_only",
         "production_behavior_changed": False,
-        "gaussian_impl_contract": "shadow_ml",
+        "removed_selector_contract": "shadow_ml",
         "agree_threshold": AGREE_THR,
         "rare_zones": list(rare_zones),
         "n_bars": len(bars),
@@ -898,7 +901,7 @@ def report_to_markdown(rep: Mapping[str, Any], *, title: str = "") -> str:
         f"# {title}",
         "",
         f"**Schema:** `{rep.get('schema_version')}`  ·  **Authority:** research only",
-        f"**Contract:** `{rep.get('gaussian_impl_contract')}`  ·  thr={rep.get('agree_threshold')}",
+        f"**Contract:** `{rep.get('removed_selector_contract')}`  ·  thr={rep.get('agree_threshold')}",
         f"**Bars:** {rep.get('n_bars')}  ·  **CSV:** `{rep.get('csv_path', '')}`",
         "",
         "## Overall agreement",

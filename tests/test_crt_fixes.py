@@ -175,7 +175,7 @@ class TestDecisionEngineBatch:
         return {
             "score":     score,
             "p_win":     0.6,
-            "zone_gate": {"valid": True},
+            "feature_cluster_similarity": {"valid": True},
             "fusion":    {"normalized_score": score, "rr": 2.0, "weak_component": 0.1},
             "config":    _CFG,
         }
@@ -208,7 +208,7 @@ class TestDecisionEngineBatch:
 
 
 # ═════════════════════════════════════════════════════════════════
-# FIX 3 — Dead zone_gate bypass in evaluate()
+# FIX 3 — Dead feature_cluster_similarity bypass in evaluate()
 # ═════════════════════════════════════════════════════════════════
 
 class TestDeadZoneGatBypass:
@@ -220,17 +220,17 @@ class TestDeadZoneGatBypass:
         result = de.evaluate(
             score     = 0.8,
             p_win     = 0.6,
-            zone_gate = {"valid": False},
+            feature_cluster_similarity = {"valid": False},
             fusion    = {
                 "normalized_score": 0.8,
-                "zone_gate_dead":   True,   # FIX 3 signal
+                "feature_cluster_similarity_dead":   True,   # FIX 3 signal
                 "rr":               2.0,
                 "weak_component":   0.1,
             },
             config    = _CFG,
         )
         assert result["decision"] == "execute", (
-            f"Dead zone_gate should be bypassed, got: {result}"
+            f"Dead feature_cluster_similarity should be bypassed, got: {result}"
         )
 
     def test_live_invalid_zone_gate_still_blocks(self):
@@ -238,17 +238,17 @@ class TestDeadZoneGatBypass:
         result = de.evaluate(
             score     = 0.9,
             p_win     = 0.6,
-            zone_gate = {"valid": False},
+            feature_cluster_similarity = {"valid": False},
             fusion    = {
                 "normalized_score": 0.9,
-                "zone_gate_dead":   False,   # engine alive but gate invalid
+                "feature_cluster_similarity_dead":   False,   # engine alive but gate invalid
                 "rr":               2.0,
                 "weak_component":   0.1,
             },
             config    = _CFG,
         )
         assert result["decision"] == "reject"
-        assert result["reason"] == "zone_gate_invalid"
+        assert result["reason"] == "feature_cluster_similarity_invalid"
 
 
 # ═════════════════════════════════════════════════════════════════
@@ -282,7 +282,7 @@ class TestLoggingFields:
         de = DecisionEngine(config=_CFG)
         result = de.evaluate(
             score=0.8, p_win=0.6,
-            zone_gate={"valid": True},
+            feature_cluster_similarity={"valid": True},
             fusion={"normalized_score": 0.8, "rr": 2.0, "weak_component": 0.1},
             config=_CFG,
         )
@@ -315,7 +315,7 @@ class TestIntegration:
             result = de.evaluate(
                 score     = n,
                 p_win     = 0.6,
-                zone_gate = {"valid": True},
+                feature_cluster_similarity = {"valid": True},
                 fusion    = {"normalized_score": n, "rr": 2.0, "weak_component": 0.1},
                 config    = _CFG,
             )
@@ -335,7 +335,7 @@ class TestIntegration:
             n = sn.push_and_normalize(v)
             de.evaluate(
                 score=n, p_win=0.6,
-                zone_gate={"valid": True},
+                feature_cluster_similarity={"valid": True},
                 fusion={"normalized_score": n, "rr": 2.0, "weak_component": 0.1},
                 config=_CFG,
             )

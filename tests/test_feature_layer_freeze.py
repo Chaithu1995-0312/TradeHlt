@@ -169,7 +169,7 @@ def test_xauusd_coverage_metadata_scopes_false_green():
         "backtest_v2",
         "crt_state_machine",
         "session_filter",
-        "zone_gate",
+        "feature_cluster_similarity",
         "fusion_gate",
         "decision_engine",
         "execution_planner",

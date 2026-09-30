@@ -370,7 +370,9 @@ def build_bar_matrix(
 
     magnitude_window = int(fp_cfg["volatility_percentile_window"])
     htf_candles = int(bt_cfg["htf_candles_per_range"])
-    breakout_thr = float(crt_cfg["breakout_disp_threshold"])
+    # EPIC-84 O1: the same per-symbol resolution the CRT engine and planner use
+    from config_layer.production_config import resolve_breakout_disp_threshold
+    breakout_thr = resolve_breakout_disp_threshold(crt_cfg, instrument, get_prod_section("params"))
 
     # Admission BEFORE any content is read: identity (dataset_id + hash) -> sequence
     # (L3 validate_dataset) -> D-1..D-4 plausibility. Previously a bare `pd.read_csv`,
@@ -527,8 +529,29 @@ def build_bar_matrix(
     enriched["regime_label"] = [regime[p] for p in pos]
 
     # ── G. trade intent — selects tp1_atr_multiplier_<intent> downstream ────────
-    enriched["trade_intent"] = [
-        ExecutionEngine._derive_trade_intent(r, breakout_thr) for r in rows
+    # EPIC-84 A3b: one intent PER SIDE (pullback is direction-aware). The engine's strict
+    # intent contract is fed EXPLICITLY here: an every-bar matrix has no engine RETEST cache,
+    # so FM-027/FM-028 are proxied by the pipeline's FM-021 retest_depth / FM-020
+    # disp_strength -- the same quantities the removed engine-side aliases used to supply.
+    from config_layer.crt_engine_v2 import Direction as _Dir
+
+    def _intent_inputs(r):
+        return {
+            "displacement_retrace": r["retest_depth"],      # proxy (FM-021 for FM-027)
+            "displacement_atr_ratio": r["disp_strength"],   # proxy (FM-020 for FM-028)
+            "body_ratio": r["body_ratio"],
+            "double_sweep": r["double_sweep"],
+            "sweep_detected": r["sweep_detected"],
+            "candles_since_sweep": r["candles_since_sweep"],
+            "momentum_score": r["momentum_score"],
+        }
+
+    _inputs = [_intent_inputs(r) for r in rows]
+    enriched["trade_intent_long"] = [
+        ExecutionEngine._derive_trade_intent(x, breakout_thr, _Dir.LONG) for x in _inputs
+    ]
+    enriched["trade_intent_short"] = [
+        ExecutionEngine._derive_trade_intent(x, breakout_thr, _Dir.SHORT) for x in _inputs
     ]
 
     # ── H. join spine (CH-oracle-join-spine): lt_id/trace_id/bar_open_ts/
@@ -591,7 +614,10 @@ def build_bar_matrix(
         "parent_crt_enabled": parent_feed is not None,
         "state_families": sorted(fse.stateful_features) + sorted(mse.magnitude_features),
         "ontology_state_distribution": dict(Counter(enriched["ontology_state"])),
-        "trade_intent_distribution": dict(Counter(enriched["trade_intent"])),
+        "trade_intent_distribution": {
+            "long": dict(Counter(enriched["trade_intent_long"])),
+            "short": dict(Counter(enriched["trade_intent_short"])),
+        },
         "regime_distribution": dict(Counter(enriched["regime_label"])),
         "parent_bias_distribution": dict(Counter(enriched["parent_bias"])),
         "build_seconds": round(time.time() - t_start, 1),

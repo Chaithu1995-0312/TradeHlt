@@ -20,17 +20,16 @@
       "new_york",
       "overlap"
     ],
-    "zone_cluster_threshold": 0.25,
-    "zone_registry_path": "models/zone_registry_v4_2026_07.json",
-    "zone_gate_execution_mode": "normal",
-    "zone_mode": "hard",
-    "zone_gate": {
+    "feature_cluster_similarity_cluster_threshold": 0.25,
+    "feature_cluster_similarity_registry_path": "models/zone_registry_v4_2026_07.json",
+    "feature_cluster_similarity_execution_mode": "normal",
+    "feature_cluster_similarity_mode": "hard",
+    "feature_cluster_similarity": {
       "top_k": 3,
       "cluster_min_n": 2,
       "cluster_spread_max": 0.15
     },
     "debug_mode": false,
-    "gaussian_impl": "heuristic",
     "convergence_window": 500,
     "rr_fusion": {
       "enabled": false,
@@ -50,7 +49,7 @@
     "fusion_compare_evaluate": true,
     "fusion_use_evaluate": false,
     "ultron_gate_enabled": false,
-    "zone_min_samples": 50,
+    "feature_cluster_similarity_min_samples": 50,
     "signal_belief": {
       "_comment": "SignalBeliefTracker knobs (src/core/signal_belief_tracker.py). Restored 2026-09-18: the section was present in v1_multi_2026_03/v3_multi_2026_06 but absent here, so the code's .get(key, literal) fallbacks silently supplied it (the F-018 class). Values equal the class defaults byte-for-byte. enabled:false preserves current behavior -- the gate stays OFF; this declares the knobs, it does not arm anything.",
       "enabled": false,
@@ -175,9 +174,9 @@
   },
   "fusion_engine": {
     "weight_crt": 0.4,
-    "weight_gaussian": 0.2,
-    "weight_zone_gate": 0.2,
-    "weight_rr": 0.2,
+    "weight_ema_momentum_kernel": 0.2,
+    "weight_feature_cluster_similarity": 0.2,
+    "weight_candle_commitment": 0.2,
     "conflict_resolution_policy": "conservative",
     "gaussian_weight": 0.6,
     "neural_weight": 0.4,
@@ -192,7 +191,7 @@
     "min_consensus_signals": 2,
     "min_consensus_agreement": 0.6,
     "weight_strategy_consensus": 0.0,
-    "regime_fusion_weights": {"TRENDING": {"crt": 0.38, "gaussian": 0.20, "zone_gate": 0.12, "rr": 0.20, "strategy_consensus": 0.10}, "RANGING": {"crt": 0.18, "gaussian": 0.32, "zone_gate": 0.15, "rr": 0.25, "strategy_consensus": 0.10}, "VOLATILE": {"crt": 0.28, "gaussian": 0.14, "zone_gate": 0.12, "rr": 0.16, "strategy_consensus": 0.30}, "UNKNOWN": {"crt": 0.30, "gaussian": 0.25, "zone_gate": 0.25, "rr": 0.20, "strategy_consensus": 0.00}}
+    "regime_fusion_weights": {"TRENDING": {"crt": 0.38, "ema_momentum_kernel": 0.20, "feature_cluster_similarity": 0.12, "candle_commitment": 0.20, "strategy_consensus": 0.10}, "RANGING": {"crt": 0.18, "ema_momentum_kernel": 0.32, "feature_cluster_similarity": 0.15, "candle_commitment": 0.25, "strategy_consensus": 0.10}, "VOLATILE": {"crt": 0.28, "ema_momentum_kernel": 0.14, "feature_cluster_similarity": 0.12, "candle_commitment": 0.16, "strategy_consensus": 0.30}, "UNKNOWN": {"crt": 0.30, "ema_momentum_kernel": 0.25, "feature_cluster_similarity": 0.25, "candle_commitment": 0.20, "strategy_consensus": 0.00}}
   },
   "decision_engine": {
     "score_threshold": 0.45,
@@ -565,7 +564,7 @@
     "gap_reset_enabled": true,
     "gap_reset_minutes": 120,
     "event_flush_every": 100,
-    "_comment_bypass_zone_invalid": "F-058-class fix (2026-07-29, target-strategy-architecture.md sec13 item2). Backtest-mode bypass for the zone_gate_invalid EngineRunner rejection: that rule is production-only (requires a populated zone_registry.json; backtest sees <=5 zones, treated as \"no zones\"). Was os.getenv(\"BACKTEST_BYPASS_ZONE_INVALID\", \"1\"), declared in no config -- same undeclared-env-truth class as F-058's engine_gate_enabled. Declared here as the authority (true = current behavior, byte-identical); the env var remains an explicit override and logs at WARNING when it disagrees.",
+    "_comment_bypass_zone_invalid": "F-058-class fix (2026-07-29, target-strategy-architecture.md sec13 item2). Backtest-mode bypass for the feature_cluster_similarity_invalid EngineRunner rejection: that rule is production-only (requires a populated zone_registry.json; backtest sees <=5 zones, treated as \"no zones\"). Was os.getenv(\"BACKTEST_BYPASS_ZONE_INVALID\", \"1\"), declared in no config -- same undeclared-env-truth class as F-058's engine_gate_enabled. Declared here as the authority (true = current behavior, byte-identical); the env var remains an explicit override and logs at WARNING when it disagrees.",
     "bypass_zone_invalid": true,
     "per_trade_investment_inr": 10000.0,
     "sizing_mode": "fixed_investment_inr"

@@ -87,7 +87,7 @@ def build_manifest(root: Path, label: str) -> dict[str, Any]:
     # critically, hashes each family's ACTUAL resolved artifact_path rather than a
     # hand-picked filename. That fixes a real bug: this module used to hash
     # `models/zone_registry.json` (the v3 rollback artifact) unconditionally, while
-    # the active config's `zone_registry_path` has pointed at
+    # the active config's `feature_cluster_similarity_registry_path` has pointed at
     # `models/zone_registry_v4_2026_07.json` since promotion — so the old
     # `zone_registry_json_sha256` field pinned a file that was NOT what loaded.
     families: dict[str, Any] = {}
@@ -152,7 +152,7 @@ def build_manifest(root: Path, label: str) -> dict[str, Any]:
             "active_gaussian_model": get_active_gaussian(),
             "registry_entries": _count_entries(models_dir / "registry.json"),
             "gaussian_registry_entries": _count_entries(models_dir / "gaussian_registry.json"),
-            # All 6 families (zone_gate/rr/rr_fusion/gaussian/bitnet/tradenet), each
+            # All 6 families (feature_cluster_similarity/rr/rr_fusion/gaussian/bitnet/tradenet), each
             # hashed at its BUNDLE-RESOLVED artifact path — not a hardcoded filename.
             "families": families,
             "bundle_divergences": list(bundle_divergences),

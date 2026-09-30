@@ -15,7 +15,7 @@ import math
 from pathlib import Path
 from typing import Any
 
-from config_layer.rr.rr_pattern_miner import (
+from config_layer.rr.rr_trained import (
     RR_SCORE_MAX,
     RR_SCORE_MIN,
     NanoInferenceEngine,

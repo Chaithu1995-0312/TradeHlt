@@ -316,6 +316,8 @@ def main() -> int:
                 return False
         return True
 
+    from features.bar_feature_frame import BarFeatureFrame  # [EPIC-84 A3b]
+    _bar_frame = BarFeatureFrame.from_csv(str(loader.filepath))
     for candle in loader.stream():
         candle_idx += 1
         htf.push(candle)
@@ -330,7 +332,7 @@ def main() -> int:
             continue
 
         state_before = engine.state.current_state.name
-        result = engine.process_candle(candle, htf.current_htf_id)
+        result = engine.process_candle(candle, htf.current_htf_id, bar_features=_bar_frame.for_candle(candle))
         state_after = engine.state.current_state.name
         action = result.get("action", "NONE")
         ts_key = candle.timestamp.strftime("%Y-%m-%d %H:%M:%S")
@@ -410,6 +412,8 @@ def main() -> int:
     state_at_window_start = None
     state_at_window_end = None
 
+    from features.bar_feature_frame import BarFeatureFrame  # [EPIC-84 A3b]
+    _bar_frame2 = BarFeatureFrame.from_csv(str(loader2.filepath))
     for candle in loader2.stream():
         candle_idx += 1
         htf2.push(candle)
@@ -435,7 +439,7 @@ def main() -> int:
 
         events_before = len(engine2.state.event_log)
         state_before = engine2.state.current_state.name
-        result = engine2.process_candle(candle, htf2.current_htf_id)
+        result = engine2.process_candle(candle, htf2.current_htf_id, bar_features=_bar_frame2.for_candle(candle))
         state_after = engine2.state.current_state.name
         action = result.get("action", "NONE")
         events_after = list(engine2.state.event_log[events_before:])

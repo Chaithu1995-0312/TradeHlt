@@ -6,7 +6,7 @@ Reuses ONLY existing surfaces:
   - FeaturePipeline (39-dim CANONICAL_FEATURES)
   - FeatureStateEncoder / MarketContextBuilder / MarketShapeClassifier
   - CRT runtime (crt_engine_v2 + HTFBuilder htf=4)
-  - ModelEvidenceBuilder over engine_results (crt/gaussian/zone_gate/rr)
+  - ModelEvidenceBuilder over engine_results (crt/gaussian/feature_cluster_similarity/rr)
 
 No new indicators. No CPR. Observe-only.
 
@@ -35,8 +35,8 @@ sys.path.insert(0, str(ROOT / "src"))
 from config_layer.crt_engine_v2 import CRTEngine, Candle  # noqa: E402
 from config_layer.production_config import get_active_version, load_prod_config_from_registry  # noqa: E402
 from engines.crt_engine import compute as crt_compute  # noqa: E402
-from engines.heuristic_gaussian_engine import HeuristicGaussianEngine  # noqa: E402
-from engines.rr_engine import RREngine  # noqa: E402
+from engines.ema_momentum_kernel import EmaMomentumKernel  # noqa: E402
+from engines.candle_commitment import CandleCommitment  # noqa: E402
 from engines.zone_cluster_score import score_zone_cluster  # noqa: E402
 from engines.live_engine import get_zone_gate  # noqa: E402
 from features.feature_pipeline import FeaturePipeline  # noqa: E402
@@ -99,6 +99,8 @@ def _run_crt(df: pd.DataFrame) -> tuple[list[dict], list[str], dict[int, dict]]:
     events: list[dict] = []
     action_by_idx: dict[int, dict] = {}
 
+    from features.bar_feature_frame import BarFeatureFrame  # [EPIC-84 A3b]
+    _bar_frame = BarFeatureFrame.from_ohlcv_df(df)
     for i, row in df.iterrows():
         candle = Candle(
             timestamp=row["timestamp"].to_pydatetime()
@@ -120,7 +122,7 @@ def _run_crt(df: pd.DataFrame) -> tuple[list[dict], list[str], dict[int, dict]]:
                 state_by_idx[int(i)] = "WARMUP"
                 continue
         before = engine.state.current_state.name
-        action = engine.process_candle(candle, htf.current_htf_id)
+        action = engine.process_candle(candle, htf.current_htf_id, bar_features=_bar_frame.for_candle(candle))
         after = engine.state.current_state.name
         state_by_idx[int(i)] = after
         act = action.get("action") if isinstance(action, dict) else str(action)
@@ -144,7 +146,7 @@ def _run_crt(df: pd.DataFrame) -> tuple[list[dict], list[str], dict[int, dict]]:
     return events, state_by_idx, action_by_idx
 
 
-def _engine_results(feat: dict[str, float], direction: int, zone_gate, eng_cfg: dict) -> dict:
+def _engine_results(feat: dict[str, float], direction: int, feature_cluster_similarity, eng_cfg: dict) -> dict:
     """Build declared engine_results slots for ModelEvidenceBuilder (no fusion)."""
     # CRT score — PLAN-002 requires explicit tuple weights
     weights = eng_cfg.get("score_component_weights")
@@ -163,14 +165,14 @@ def _engine_results(feat: dict[str, float], direction: int, zone_gate, eng_cfg: 
         feat_crt["disp_strength"] = feat_crt["displacement_atr_ratio"]
     crt = crt_compute("ep", feat_crt, {"score_component_weights": weights})
     # Gaussian
-    g_eng = HeuristicGaussianEngine(eng_cfg if "gaussian_impl" in eng_cfg else {"gaussian_impl": "heuristic"})
+    g_eng = EmaMomentumKernel(eng_cfg if isinstance(eng_cfg, dict) else {})
     try:
         gauss = g_eng.compute(feat, direction="short" if direction < 0 else "long")
     except Exception as exc:
         gauss = {"score": 0.0, "reason": f"gaussian_error:{exc}"}
     # RR
     try:
-        rr = RREngine(eng_cfg).compute(feat)
+        rr = CandleCommitment(eng_cfg).compute(feat)
     except Exception as exc:
         rr = {"score": 0.0, "candle_polarity": 0.5, "reason": f"rr_error:{exc}", "semantic": "candle_structure_quality"}
     if "candle_polarity" not in rr and "score" in rr:
@@ -181,11 +183,11 @@ def _engine_results(feat: dict[str, float], direction: int, zone_gate, eng_cfg: 
     try:
         zg = score_zone_cluster(
             feat,
-            zone_gate,
-            zone_cluster_threshold=float(eng_cfg.get("zone_cluster_threshold", 0.25)),
-            cluster_min_n=int((eng_cfg.get("zone_gate") or {}).get("cluster_min_n", 1)),
-            cluster_spread_max=float((eng_cfg.get("zone_gate") or {}).get("cluster_spread_max", 1.0)),
-            execution_mode=str(eng_cfg.get("zone_gate_execution_mode", "normal")),
+            feature_cluster_similarity,
+            feature_cluster_similarity_cluster_threshold=float(eng_cfg.get("feature_cluster_similarity_cluster_threshold", 0.25)),
+            cluster_min_n=int((eng_cfg.get("feature_cluster_similarity") or {}).get("cluster_min_n", 1)),
+            cluster_spread_max=float((eng_cfg.get("feature_cluster_similarity") or {}).get("cluster_spread_max", 1.0)),
+            execution_mode=str(eng_cfg.get("feature_cluster_similarity_execution_mode", "normal")),
         )
         zone = {
             "score": float(zg.get("score", 0.0)),
@@ -201,7 +203,7 @@ def _engine_results(feat: dict[str, float], direction: int, zone_gate, eng_cfg: 
     return {
         "crt": crt if isinstance(crt, dict) else {"score": 0.0, "reason": "crt_bad"},
         "gaussian": gauss if isinstance(gauss, dict) else {"score": 0.0},
-        "zone_gate": zone,
+        "feature_cluster_similarity": zone,
         "rr": rr if isinstance(rr, dict) else {"score": 0.0, "candle_polarity": 0.5, "semantic": "candle_structure_quality"},
     }
 
@@ -341,7 +343,7 @@ def _reconstruct_one(
     ctx_builder: MarketContextBuilder,
     shape_clf: MarketShapeClassifier,
     evidence_builder: ModelEvidenceBuilder,
-    zone_gate,
+    feature_cluster_similarity,
     eng_cfg: dict,
 ) -> dict[str, Any]:
     i = ep["anchor_idx"]
@@ -469,7 +471,7 @@ def _reconstruct_one(
         direction = 1
         crt_dir_raw = "LONG"
     try:
-        er = _engine_results(feat, direction, zone_gate, eng_cfg)
+        er = _engine_results(feat, direction, feature_cluster_similarity, eng_cfg)
         # ensure rr has required fields
         if "candle_polarity" not in er["rr"]:
             er["rr"]["candle_polarity"] = float(er["rr"].get("score", 0.5))
@@ -702,15 +704,15 @@ def main() -> int:
     meta = get_prod_metadata()
     eng_cfg = dict(meta.get("engine_runner") or {})
     eng_cfg.update(meta.get("decision_engine") or {})
-    if "zone_gate" not in eng_cfg:
-        eng_cfg["zone_gate"] = meta.get("engine_runner", {}).get("zone_gate") or {
+    if "feature_cluster_similarity" not in eng_cfg:
+        eng_cfg["feature_cluster_similarity"] = meta.get("engine_runner", {}).get("feature_cluster_similarity") or {
             "cluster_min_n": 1,
             "cluster_spread_max": 1.0,
         }
     try:
-        zone_gate = get_zone_gate()
+        feature_cluster_similarity = get_zone_gate()
     except Exception:
-        zone_gate = None
+        feature_cluster_similarity = None
 
     episodes = _select_episodes(df, events, state_by_idx, arr, key_to_i)
     print(f"Selected episodes={len(episodes)}")
@@ -721,7 +723,7 @@ def main() -> int:
         rec = _reconstruct_one(
             ep, df, arr, key_to_i, state_by_idx, action_by_idx,
             encoder, mag_encoder, series_context,
-            ctx_builder, shape_clf, evidence_builder, zone_gate, eng_cfg,
+            ctx_builder, shape_clf, evidence_builder, feature_cluster_similarity, eng_cfg,
         )
         reconstructions.append(rec)
 
@@ -747,7 +749,7 @@ def main() -> int:
             "MarketContextBuilder",
             "MarketShapeClassifier",
             "CRTEngine+HTFBuilder(htf=4)",
-            "ModelEvidenceBuilder(crt,gaussian,zone_gate,rr)",
+            "ModelEvidenceBuilder(crt,gaussian,feature_cluster_similarity,rr)",
         ],
         "explicitly_not_used": ["CPR", "new_indicators", "fusion_weights", "risk_tables"],
         "episodes": reconstructions,

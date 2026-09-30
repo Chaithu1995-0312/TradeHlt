@@ -122,7 +122,7 @@ class InsightReporter:
         Parameters
         ----------
         score_result : output from ScoringEngine.score() or RRFusionLayer.score()
-                       Expected keys: gaussian, decision, reason,
+                       Expected keys: ema_momentum_kernel, decision, reason,
                        plus optional: expected_rr, probability_of_win, final_score
         sub_scores   : optional dict with keys sweep, breakout, retest, time
                        (from engines.scoring_engine.compute_scores())
@@ -133,7 +133,7 @@ class InsightReporter:
         """
         sub = sub_scores or {}
         context = {
-            "gaussian_score":  _safe_fmt(score_result.get("gaussian", score_result.get("final_score", 0.0))),
+            "ema_momentum_kernel_score":  _safe_fmt(score_result.get("ema_momentum_kernel", score_result.get("final_score", 0.0))),
             "ml_expected_rr":  _safe_fmt(score_result.get("expected_rr")),
             "ml_win_prob":     _safe_fmt(score_result.get("probability_of_win")),
             "sweep":           _safe_fmt(sub.get("sweep", "N/A")),
@@ -178,7 +178,7 @@ class InsightReporter:
                 "approved_trades": len(approved),
                 "win_rate":        len(wins) / len(approved) if approved else 0.0,
                 "net_rr":          sum(_pct(t.get("pnl_rr_net", 0)) for t in approved),
-                "avg_gaussian":    sum(_pct(t.get("gaussian", 0)) for t in approved) / max(len(approved), 1),
+                "avg_gaussian":    sum(_pct(t.get("ema_momentum_kernel", 0)) for t in approved) / max(len(approved), 1),
                 "avg_ml_rr":       sum(_pct(t.get("expected_rr", 0)) for t in approved) / max(len(approved), 1),
                 "max_drawdown":    0.0,
             }
@@ -408,7 +408,7 @@ if __name__ == "__main__":
 
     # Test 1: trade_decision
     score_result = {
-        "gaussian":           0.72,
+        "ema_momentum_kernel": 0.72,
         "final_score":        0.68,
         "expected_rr":        1.4,
         "probability_of_win": 0.63,

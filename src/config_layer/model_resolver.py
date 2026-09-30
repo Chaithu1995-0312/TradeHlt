@@ -30,20 +30,20 @@ _ACTIVE_MODELS_YAML = _REPO_ROOT / "active_models.yaml"
 
 # Resolver family name → active_models.yaml top-level key
 _IDENTITY_YAML_KEY: dict[str, str] = {
-    "zone_gate": "zone_gate",
+    "feature_cluster_similarity": "feature_cluster_similarity",
     "rr": "rr_model",
     "rr_fusion": "rr_model",
-    "gaussian": "gaussian",
+    "ema_momentum_kernel": "ema_momentum_kernel",
     "bitnet": "bitnet",
     "tradenet": "tradenet",
 }
 
 # Resolver family → version-registry path on ModelPaths
 _REGISTRY_PATH: dict[str, Path] = {
-    "zone_gate": ModelPaths.ZONE_GATE_VERSION_REGISTRY,
+    "feature_cluster_similarity": ModelPaths.ZONE_GATE_VERSION_REGISTRY,
     "rr": ModelPaths.RR_REGISTRY,
     "rr_fusion": ModelPaths.RR_REGISTRY,
-    "gaussian": ModelPaths.GAUSSIAN_REGISTRY,
+    "ema_momentum_kernel": ModelPaths.GAUSSIAN_REGISTRY,
     "bitnet": ModelPaths.BITNET_REGISTRY,
     "tradenet": ModelPaths.TRADENET_REGISTRY,
 }
@@ -259,9 +259,9 @@ def resolve_model(
     Parameters
     ----------
     family :
-        One of zone_gate | rr | rr_fusion | gaussian | bitnet | tradenet.
+        One of feature_cluster_similarity | rr | rr_fusion | ema_momentum_kernel | bitnet | tradenet.
     instrument :
-        Optional instrument key (gaussian ``__active__`` map).
+        Optional instrument key (ema_momentum_kernel ``__active__`` map).
     how_path :
         Production config path claim; when ``require_how_match`` and set, must
         equal the resolved artifact path (normalized).
@@ -286,7 +286,7 @@ def resolve_model(
     assert reg_path is not None
     reg = _load_json(reg_path)
 
-    per_inst = fam == "gaussian"
+    per_inst = fam == "ema_momentum_kernel"
     version = _registry_active_version(reg, instrument=instrument, per_instrument=per_inst)
 
     artifact: Optional[Path] = None
@@ -382,7 +382,7 @@ def resolve_zone_gate_runtime(
     default = _norm(ModelPaths.ZONE_GATE_RUNTIME_ALIAS, repo_root=root)
     path = how_path if how_path is not None else default
     return resolve_model(
-        "zone_gate",
+        "feature_cluster_similarity",
         how_path=path,
         require_artifact=True,
         require_how_match=True,
@@ -467,7 +467,7 @@ def enumerate_versions(
     """All versions in a family's registry, sorted by version (deterministic).
 
     `instrument` only affects which row is flagged `selected` for per-instrument
-    families (gaussian); it never filters the enumeration.
+    families (ema_momentum_kernel); it never filters the enumeration.
     """
     root = (repo_root or _REPO_ROOT).resolve()
     fam = family.strip().lower()
@@ -480,7 +480,7 @@ def enumerate_versions(
     assert reg_path is not None
     reg = _load_json(reg_path)
     active = _registry_active_version(
-        reg, instrument=instrument, per_instrument=(fam == "gaussian")
+        reg, instrument=instrument, per_instrument=(fam == "ema_momentum_kernel")
     )
 
     rows: list[RegistryEntry] = []

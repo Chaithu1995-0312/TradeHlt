@@ -1,6 +1,6 @@
 """
 Focused test for the config-first zone-gate aggregation knobs:
-``engine_runner.zone_gate = {top_k, cluster_min_n, cluster_spread_max}``.
+``engine_runner.feature_cluster_similarity = {top_k, cluster_min_n, cluster_spread_max}``.
 
 Asserts the knobs flow through and that the defaults {3, 2, 0.15} reproduce the
 incumbent behaviour (the byte-parity guarantee proven on BNBUSDT + SOLUSDT). See
@@ -9,7 +9,7 @@ the config-first migration of the zone-gate top-k cluster aggregation.
 from __future__ import annotations
 
 from engines.live_engine import BitNetZoneGate
-from engines.zone_gate_engine import compute_weighted_cluster_score
+from engines.feature_cluster_similarity import compute_weighted_cluster_score
 
 
 def _zone(zid: str, mu0: float, weight: float = 100.0) -> dict:
@@ -26,7 +26,7 @@ def _zone(zid: str, mu0: float, weight: float = 100.0) -> dict:
 
 def _gate(top_k: int | None, n_zones: int = 5) -> BitNetZoneGate:
     zones = [_zone(f"z{i}", mu0=0.1 * i) for i in range(n_zones)]
-    cfg: dict = {"zone_min_samples": 0}
+    cfg: dict = {"feature_cluster_similarity_min_samples": 0}
     if top_k is not None:
         cfg["zone_gate_top_k"] = top_k
     return BitNetZoneGate(zones=zones, config=cfg)

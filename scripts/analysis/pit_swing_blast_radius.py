@@ -813,11 +813,11 @@ def probe_B2b_zone(symbol: str, limit: int, live_contract: dict) -> dict:
     try:
         from config_layer.production_config import get_prod_section
         er = get_prod_section("engine_runner")
-        threshold = float(er.get("zone_cluster_threshold", 0.5))
-        zone_mode = str(er.get("zone_mode", "hard"))
+        threshold = float(er.get("feature_cluster_similarity_cluster_threshold", 0.5))
+        feature_cluster_similarity_mode = str(er.get("feature_cluster_similarity_mode", "hard"))
     except Exception:
         threshold = 0.5
-        zone_mode = "hard"
+        feature_cluster_similarity_mode = "hard"
 
     # ZONE_VALUE_EXPOSURE
     value_exposure = []
@@ -892,7 +892,7 @@ def probe_B2b_zone(symbol: str, limit: int, live_contract: dict) -> dict:
         "bars_scored": n_scored,
         "stride": stride,
         "threshold": threshold,
-        "zone_mode": zone_mode,
+        "feature_cluster_similarity_mode": feature_cluster_similarity_mode,
         "n_zones": len(zones),
         "ZONE_VALUE_EXPOSURE": {
             "definition": "per-zone feature_weights L1 mass on the 10 contaminated dims",
@@ -919,7 +919,7 @@ def probe_B2b_zone(symbol: str, limit: int, live_contract: dict) -> dict:
             },
         },
         "ZONE_GATE_EXPOSURE": {
-            "definition": "HARD pass/fail flip rate (score >= zone_cluster_threshold)",
+            "definition": "HARD pass/fail flip rate (score >= feature_cluster_similarity_cluster_threshold)",
             "centered_vs_causal_flip_rate": flip_cc / n_scored if n_scored else 0.0,
             "centered_vs_causal_flips": flip_cc,
             "centered_vs_live_flip_rate": flip_lc / n_scored if n_scored else 0.0,

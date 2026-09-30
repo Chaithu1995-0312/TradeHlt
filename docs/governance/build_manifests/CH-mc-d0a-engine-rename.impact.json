@@ -1,0 +1,48 @@
+{
+  "change_id": "CH-mc-d0a-engine-rename",
+  "objective": "MC-D0a pure label rename of the four fusion engines and two files. No numeric change, no behaviour change, no alias or fallback. Fusion slot keys become ema_momentum_kernel, feature_cluster_similarity, candle_commitment. Slot key crt stays. crt_score becomes crt_structure_rule_score. gaussian_ml becomes nb_outcome_classifier and is not a fusion slot. The engine_runner selector key is removed because the active value was heuristic, so the slot is fixed to EmaMomentumKernel. fusion_engine.gaussian_weight is unchanged: it is the evaluate() Gaussian-vs-neural blend, not the slot weight. Params block and ACTIVE_VERSION are untouched.",
+  "change_classes": [
+    "PRODUCTION_CONFIG_CHANGE",
+    "RUNTIME_DECISION_PATH_CHANGE",
+    "ACTIVE_MODEL_CHANGE"
+  ],
+  "affected_files": [
+    "src/core/engine_runner.py",
+    "src/core/fusion_engine.py",
+    "src/engines/ema_momentum_kernel.py",
+    "src/engines/feature_cluster_similarity.py",
+    "src/engines/candle_commitment.py",
+    "src/config_layer/rr/rr_trained.py",
+    "src/research/model_runners/contracts.py",
+    "src/research/model_runners/adapters/crt_structure_rule_score.py",
+    "src/research/model_runners/adapters/feature_cluster_similarity.py",
+    "configs/production/v2_htfcrt_2026_08.json",
+    "configs/production/v5_htfcrt_sot_dual_k23_2026_09.json",
+    "configs/production/v2_htfcrt_k23_shadow_2026_09.json",
+    "configs/production/v2_dispkill_shadow_2026_08.json",
+    "configs/production/v4_crt_sot_2026_08.json",
+    "active_models.yaml",
+    "docs/governance/miar_registry.json",
+    "docs/governance/MODEL_INTENT_AUTHORITY_REGISTER.md",
+    "docs/topics/model-intent-and-feature-ownership.md",
+    "docs/topics/scoring-engines.md",
+    "docs/current-findings.md",
+    "scripts/analysis/feature_math_lint.py",
+    "scripts/governance/seed_hypothesis_registry.py",
+    "docs/governance/build_manifests/CH-mc-d0a-engine-rename.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "Fusion slots relabeled. EXPECTED_ENGINES is crt, ema_momentum_kernel, feature_cluster_similarity, candle_commitment. nb_outcome_classifier shares the existing MIAR row ema_momentum_kernel. rr_model and rr_fusion are not fusion slots and keep their names. Resolver family id gaussian still reads the ema_momentum_kernel yaml block.",
+  "affected_production_config": "In-use production configs: engine_runner slot keys and fusion_engine weights renamed. Numeric values unchanged. Params block not edited. ACTIVE_VERSION not edited. gaussian_weight left in place.",
+  "required_checks_ack": [
+    "tests/test_config_reachability.py",
+    "tests/test_reachability_golden.py",
+    "tests/test_active_models_registry.py",
+    "tests/test_feature_math_lint.py",
+    "tests/test_geometry_census.py",
+    "tests/test_current_findings.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "single commit on lane/mc-d0a; revert restores the 50cef11 names. Params hash is not a rollback input because the params block is unchanged."
+}

@@ -7,7 +7,7 @@ trained on, and in what order?" independently:
 
   * ``rr_trained``   — a local ``_v3_order_from_v4()`` with hardcoded rename literals
   * ``envelope``     — ``research.clean_labels.builder.LEGACY_FEATURE_NAMES``
-  * ``gaussian_ml``  — ``meta['feature_schema_resolved']`` via ``gaussian_schema_contract``
+  * ``nb_outcome_classifier``  — ``meta['feature_schema_resolved']`` via ``gaussian_schema_contract``
 
 Two of those produce a **38-name** order that disagree on NAMING
 (``rr_trained`` renames ``macd_hist_z``->``macd_hist`` and

@@ -9,8 +9,8 @@ import math
 
 import pytest
 
-import config_layer.rr.rr_pattern_miner as rpm
-from config_layer.rr.rr_pattern_miner import (
+import config_layer.rr.rr_trained as rpm
+from config_layer.rr.rr_trained import (
     _confidence_bypass,
     _chi2_sf,
     _CONF_BYPASS,
@@ -113,7 +113,7 @@ def test_percentile_ignores_confidence(monkeypatch):
 def test_train_emits_training_distribution():
     np = pytest.importorskip("numpy")
     pytest.importorskip("sklearn")
-    from config_layer.rr.rr_pattern_miner import RRPatternTrainer, N_FEATURES
+    from config_layer.rr.rr_trained import RRPatternTrainer, N_FEATURES
     rng = np.random.default_rng(0)
     m = 60
     X = rng.normal(size=(m, N_FEATURES)).tolist()
@@ -131,8 +131,8 @@ def test_real_model_predict_deterministic_and_bypasses_under_legacy():
     engine = NanoInferenceEngine.load(DEFAULT_MODEL_PATH)
     n = len(engine.W)
     feats = [0.0] * n  # any vector; under legacy the model bypasses ~always (F-044)
-    a = engine.predict(features=feats, gaussian_score=0.42, gaussian_p_win=0.6, threshold=0.5)
-    b = engine.predict(features=feats, gaussian_score=0.42, gaussian_p_win=0.6, threshold=0.5)
+    a = engine.predict(features=feats, ema_momentum_kernel_score=0.42, gaussian_p_win=0.6, threshold=0.5)
+    b = engine.predict(features=feats, ema_momentum_kernel_score=0.42, gaussian_p_win=0.6, threshold=0.5)
     assert a == b                                   # determinism
     assert a["status"] == "bypassed_low_confidence" # legacy default gate fires
     assert a["final_score"] == pytest.approx(0.42)  # passthrough returns the gaussian score exactly

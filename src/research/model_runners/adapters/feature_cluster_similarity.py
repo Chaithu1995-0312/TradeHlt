@@ -23,31 +23,31 @@ class ZoneGateAdapter:
     ):
         self.contract = contract
         er = require_section(prod_config, "engine_runner")
-        zone_registry_path = str(
-            require_key(er, "zone_registry_path", path="engine_runner")
+        feature_cluster_similarity_registry_path = str(
+            require_key(er, "feature_cluster_similarity_registry_path", path="engine_runner")
         )
-        zone_min_samples = int(
-            require_key(er, "zone_min_samples", path="engine_runner")
+        feature_cluster_similarity_min_samples = int(
+            require_key(er, "feature_cluster_similarity_min_samples", path="engine_runner")
         )
-        zone_cluster_threshold = float(
-            require_key(er, "zone_cluster_threshold", path="engine_runner")
+        feature_cluster_similarity_cluster_threshold = float(
+            require_key(er, "feature_cluster_similarity_cluster_threshold", path="engine_runner")
         )
         execution_mode = str(
-            require_key(er, "zone_gate_execution_mode", path="engine_runner")
+            require_key(er, "feature_cluster_similarity_execution_mode", path="engine_runner")
         )
-        zone_gate_cfg = require_key(er, "zone_gate", path="engine_runner")
+        zone_gate_cfg = require_key(er, "feature_cluster_similarity", path="engine_runner")
         if not isinstance(zone_gate_cfg, dict):
             raise KeyError(
-                "engine_runner.zone_gate must be a mapping, "
+                "engine_runner.feature_cluster_similarity must be a mapping, "
                 f"got {type(zone_gate_cfg).__name__}"
             )
-        top_k = int(require_key(zone_gate_cfg, "top_k", path="engine_runner.zone_gate"))
+        top_k = int(require_key(zone_gate_cfg, "top_k", path="engine_runner.feature_cluster_similarity"))
         cluster_min_n = int(
-            require_key(zone_gate_cfg, "cluster_min_n", path="engine_runner.zone_gate")
+            require_key(zone_gate_cfg, "cluster_min_n", path="engine_runner.feature_cluster_similarity")
         )
         cluster_spread_max = float(
             require_key(
-                zone_gate_cfg, "cluster_spread_max", path="engine_runner.zone_gate"
+                zone_gate_cfg, "cluster_spread_max", path="engine_runner.feature_cluster_similarity"
             )
         )
 
@@ -58,7 +58,7 @@ class ZoneGateAdapter:
             require_key(mr, "emit_vectors", path="model_runners")
         )
 
-        resolved = resolve_zone_gate_runtime(how_path=zone_registry_path)
+        resolved = resolve_zone_gate_runtime(how_path=feature_cluster_similarity_registry_path)
         artifact_path = Path(resolved.require_artifact())
         if not artifact_path.is_file():
             # resolve may return relative path
@@ -75,31 +75,31 @@ class ZoneGateAdapter:
             zone_path=str(artifact_path),
             enabled=True,
             config={
-                "zone_min_samples": zone_min_samples,
+                "feature_cluster_similarity_min_samples": feature_cluster_similarity_min_samples,
                 "zone_gate_top_k": top_k,
             },
         )
-        self._zone_cluster_threshold = zone_cluster_threshold
+        self._feature_cluster_similarity_cluster_threshold = feature_cluster_similarity_cluster_threshold
         self._cluster_min_n = cluster_min_n
         self._cluster_spread_max = cluster_spread_max
         self._execution_mode = execution_mode
 
         self.config_sections_read = ["engine_runner", "model_runners"]
         self.config_keys_read = [
-            "engine_runner.zone_registry_path",
-            "engine_runner.zone_min_samples",
-            "engine_runner.zone_cluster_threshold",
-            "engine_runner.zone_gate_execution_mode",
-            "engine_runner.zone_gate",
-            "engine_runner.zone_gate.top_k",
-            "engine_runner.zone_gate.cluster_min_n",
-            "engine_runner.zone_gate.cluster_spread_max",
+            "engine_runner.feature_cluster_similarity_registry_path",
+            "engine_runner.feature_cluster_similarity_min_samples",
+            "engine_runner.feature_cluster_similarity_cluster_threshold",
+            "engine_runner.feature_cluster_similarity_execution_mode",
+            "engine_runner.feature_cluster_similarity",
+            "engine_runner.feature_cluster_similarity.top_k",
+            "engine_runner.feature_cluster_similarity.cluster_min_n",
+            "engine_runner.feature_cluster_similarity.cluster_spread_max",
             "model_runners.emit_vectors",
         ]
         self.artifact_info = {
             "path": str(artifact_path),
             "sha256": sha256_file(artifact_path),
-            "how_path": zone_registry_path,
+            "how_path": feature_cluster_similarity_registry_path,
             "emit_vectors": self._emit_vectors,
         }
 
@@ -107,13 +107,13 @@ class ZoneGateAdapter:
         missing = [k for k in CANONICAL_FEATURES if k not in bar.features]
         if missing:
             raise KeyError(
-                f"zone_gate requires full canonical features; missing={missing[:8]}..."
+                f"feature_cluster_similarity requires full canonical features; missing={missing[:8]}..."
             )
         feat = {k: float(bar.features[k]) for k in CANONICAL_FEATURES}
         native = score_zone_cluster(
             feat,
             self._gate,
-            zone_cluster_threshold=self._zone_cluster_threshold,
+            feature_cluster_similarity_cluster_threshold=self._feature_cluster_similarity_cluster_threshold,
             cluster_min_n=self._cluster_min_n,
             cluster_spread_max=self._cluster_spread_max,
             execution_mode=self._execution_mode,

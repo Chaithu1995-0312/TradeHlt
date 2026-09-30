@@ -260,6 +260,9 @@ class EngineState:
     evaluating_soft_conf: bool  = False
     soft_conf_candles:    int   = 0
     cached_features:      Optional[dict] = None   # [CACHE] scored at RETEST, read at EXECUTE
+    # [EPIC-84 A3b] the current bar's canonical feature mapping, set by process_candle every bar
+    # (None only before the first bar). The RETEST cache copies the intent keys from it.
+    bar_features:         Optional[dict] = None
     # EMA state for momentum smoothing (initialised on first candle)
     ema_fast_val:         float = 0.0
     ema_slow_val:         float = 0.0
@@ -1846,6 +1849,26 @@ class StateMachine:
                 ("sweep_event", state.sweep_event is not None),
             ) if not ok
         ]
+        # [EPIC-84 A3b] the intent keys the engine cannot compute itself come from this bar's
+        # canonical features; absent -> the retest is rejected (user rule D7).
+        _bf = state.bar_features
+        _bf_missing = (
+            ["bar_features"] if _bf is None else
+            [k for k in ("sweep_detected", "candles_since_sweep", "momentum_score") if k not in _bf]
+        )
+        if _bf_missing:
+            self.log.warning(f"Retest REJECTED: bar features missing {_bf_missing}")
+            self._trace_guard(
+                guard_id="G_EXP_RET_BAR_FEATURES",
+                guard_name="retest_bar_features_present",
+                source_location=_loc, from_state="EXPANSION", candidate_to_state="RETEST",
+                result=False, operator="ALL_PRESENT",
+                operands=[{"name": "missing", "runtime_value": _bf_missing,
+                           "source_class": "FEATURE_VECTOR", "source_name": "bar_features"}],
+                short_circuit_status="FAIL_RETURN",
+                failure_reason="bar_features_missing",
+            )
+            return False
         if _missing:
             self.log.warning(f"Retest REJECTED: cache inputs missing {_missing}")
             self._trace_guard(
@@ -1879,6 +1902,10 @@ class StateMachine:
             "retest_index":           state.current_candle_index,
             "session":                state.active_range.session,
             "double_sweep":           state.sweep_event.double_confirmed,
+            # [EPIC-84 A3b] canonical bar features of the RETEST bar (slots 20 / 35 / 12)
+            "sweep_detected":         bool(_bf["sweep_detected"]),
+            "candles_since_sweep":    int(_bf["candles_since_sweep"]),
+            "momentum_score":         float(_bf["momentum_score"]),
         }
         assert "displacement_atr_ratio" in state.cached_features, "Missing FM-028: displacement_atr_ratio"
         assert "displacement_retrace" in state.cached_features, "Missing FM-027: displacement_retrace"
@@ -2454,42 +2481,47 @@ class ExecutionEngine:
         raw = f"{instrument}|{ts_norm}|{direction}|{round(entry, 5):.5f}"
         return "CRT-" + hashlib.md5(raw.encode("utf-8")).hexdigest()[:16]
 
-    @staticmethod
-    def _derive_trade_intent(features: dict, breakout_disp_threshold: float) -> str:
-        """Classify trade intent from cached features for TP multiplier selection.
+    #: The explicit intent-input contract (EPIC-84 A3b). Every caller supplies all seven keys.
+    INTENT_INPUT_KEYS = (
+        "displacement_retrace",     # FM-027 (engine RETEST cache)
+        "displacement_atr_ratio",   # FM-028 (engine RETEST cache)
+        "body_ratio",               # displacement candle body/range
+        "double_sweep",             # engine sweep event
+        "sweep_detected",           # canonical slot 20 (pipeline sweep on the RETEST bar)
+        "candles_since_sweep",      # canonical slot 35, FM-065
+        "momentum_score",           # canonical slot 12 (signed close-to-close move / ATR)
+    )
 
-        breakout_disp_threshold is required (EPIC-84): the engine passes its per-symbol
-        resolved value (CRTConfig.breakout_disp_threshold, O1). The never-produced feature reads
-        below are replaced in A3b (engine supplies them); until then they are marked.
+    @staticmethod
+    def _derive_trade_intent(inputs: dict, breakout_disp_threshold: float,
+                             direction: "Direction") -> str:
+        """Classify trade intent for TP1 multiplier selection (EPIC-84 A3b).
+
+        All seven INTENT_INPUT_KEYS are read strictly (a missing key raises KeyError): the engine
+        supplies them from its RETEST cache, which now carries the three canonical bar features
+        it used to lack (sweep_detected / candles_since_sweep / momentum_score). The legacy
+        retest_depth / disp_strength / disp_str aliases are gone; a caller holding other
+        quantities (the oracle's pipeline proxies) maps them explicitly at its own call site.
+
+        Pullback is DIRECTION-AWARE (user decision 2026-09-28): the RETEST bar's momentum must
+        point in the trade's direction (LONG > 0, SHORT < 0). Before A3b the three keys were
+        never supplied, so pullback was unreachable and liq_sweep rested on double_sweep alone.
         """
-        if features.get("sweep_detected") or features.get("double_sweep"):
+        if direction == Direction.LONG:
+            sign = 1.0
+        elif direction == Direction.SHORT:
+            sign = -1.0
+        else:
+            raise ValueError(f"_derive_trade_intent needs LONG or SHORT, got {direction!r}")
+        if bool(inputs["sweep_detected"]) or bool(inputs["double_sweep"]):
             return "liq_sweep"
-        # CH-002: prefer FM-027/028 keys; accept legacy aliases for historical caches
-        rd = float(
-            features.get(
-                "displacement_retrace",
-                features.get("retest_depth", 0.0),
-            )
-        )
-        # NOTE (CH-schema-v6-normalization-identity + caller census, both 2026-09-16): renamed with
-        # the pipeline's FM-065 column. Behaviour-neutral here: `cached_features` has a fixed 6-key
-        # CRT-local shape, so `pullback` fails on TWO independent conditions — csr is always the 99
-        # default AND `momentum_score` is absent too, so mom is always 0.0. `sweep_detected` is also
-        # absent, leaving `liq_sweep` resting on `double_sweep` alone. Binding any ONE key would NOT
-        # make the branch reachable; the real object is a producer/consumer vocabulary mismatch.
-        # Deliberately NOT fixed: it would change intent -> TP multiplier, i.e. a ledger change.
-        # Full map: docs/analysis/trade-intent-caller-census-2026-09-16.md (TEST / CONTRACT GAP).
-        csr = int(features.get("candles_since_sweep", 99))
-        mom = float(features.get("momentum_score", 0.0))
-        if 0.3 <= rd <= 0.7 and csr <= 5 and mom > 0:
+        rd = float(inputs["displacement_retrace"])
+        csr = int(inputs["candles_since_sweep"])
+        mom = float(inputs["momentum_score"])
+        if 0.3 <= rd <= 0.7 and csr <= 5 and mom * sign > 0:
             return "pullback"
-        body = float(features.get("body_ratio", 0.0))
-        disp = float(
-            features.get(
-                "displacement_atr_ratio",
-                features.get("disp_strength", features.get("disp_str", 0.0)),
-            )
-        )
+        body = float(inputs["body_ratio"])
+        disp = float(inputs["displacement_atr_ratio"])
         if body > 0.6 and disp > breakout_disp_threshold:
             return "breakout"
         return "reversal"
@@ -2570,7 +2602,7 @@ class ExecutionEngine:
             self._remember_build("REJECTED", "missing_cached_features", None, entry, direction)
             return None
         _intent    = self._derive_trade_intent(
-            state.cached_features, self.config.breakout_disp_threshold
+            state.cached_features, self.config.breakout_disp_threshold, direction
         )
         _tp1_key   = f"tp1_atr_multiplier_{_intent}"
         _tp1_mult  = getattr(self.config, _tp1_key)   # every intent has a declared CRTConfig field
@@ -3270,7 +3302,7 @@ class CRTEngine:
                 # recorded "" on every RETEST_REPLAY row. The intent is the one build_trade
                 # derives from the RETEST cache.
                 intent=self.executor._derive_trade_intent(
-                    st.cached_features, self.config.breakout_disp_threshold),
+                    st.cached_features, self.config.breakout_disp_threshold, st.direction),
                 score=float(score),
                 accepted=accepted,
                 reject_reason=reject_reason,
@@ -3282,12 +3314,17 @@ class CRTEngine:
         self, candle: Candle, htf_candle_id: str,
         parent_state: Optional[Direction] = None,
         parent_objective=None,
+        *,
+        bar_features: Optional[dict],
     ) -> dict:
         """`parent_state`: ParentCRTTrack.bias (C3 direction or NONE).
         `parent_objective`: ObjectiveStatus from htf_state.resolve_objective.
         Both default None. Bias veto requires parent_crt.enabled.
         Objective activation requires parent_crt.objective_gate.enabled (default
         false — unused kwarg is ledger-neutral)."""
+        # [EPIC-84 A3b] this bar's canonical features (required argument; None = the caller has
+        # no feature row for this bar, which rejects any RETEST on it -- never a fallback value).
+        self.state.bar_features = bar_features
         # Drop the previous bar's build attempt before any early return.
         self.executor.last_build_attempt = None
         # Optional baseline trace: capture state_before (no behavior change when None/disabled).

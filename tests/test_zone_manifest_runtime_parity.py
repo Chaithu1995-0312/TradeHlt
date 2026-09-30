@@ -21,10 +21,10 @@ def _sha256(path: Path) -> str:
 
 
 def _config_loaded_zone_path() -> Path:
-    """The path the runtime scores through: engine_runner.zone_registry_path of ACTIVE_VERSION."""
+    """The path the runtime scores through: engine_runner.feature_cluster_similarity_registry_path of ACTIVE_VERSION."""
     version = (ROOT / "configs" / "production" / "ACTIVE_VERSION").read_text(encoding="utf-8").strip()
     cfg = json.loads((ROOT / "configs" / "production" / f"{version}.json").read_text(encoding="utf-8"))
-    rel = cfg["engine_runner"]["zone_registry_path"]
+    rel = cfg["engine_runner"]["feature_cluster_similarity_registry_path"]
     return ROOT / rel
 
 
@@ -44,7 +44,7 @@ def test_active_zone_manifest_matches_runtime():
     rt_sha, mf_sha = _sha256(runtime), _sha256(manifest)
     assert rt_sha == mf_sha, (
         "F-041A drift: zone_gate_registry.json active entry does not match the runtime-loaded file.\n"
-        f"  runtime  (config engine_runner.zone_registry_path): {runtime}  sha={rt_sha[:16]}\n"
+        f"  runtime  (config engine_runner.feature_cluster_similarity_registry_path): {runtime}  sha={rt_sha[:16]}\n"
         f"  manifest (active model_file):                        {manifest} sha={mf_sha[:16]}\n"
         "Fix: register+promote the runtime file (B1) so manifest.active == config-loaded path."
     )

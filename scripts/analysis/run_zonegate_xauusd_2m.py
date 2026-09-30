@@ -138,16 +138,16 @@ def main() -> int:
 
     # ── resolve production artifact + knobs ─────────────────────────────
     er = get_prod_section("engine_runner")
-    how_path = str(er.get("zone_registry_path") or ACTIVE_ARTIFACT_DEFAULT)
-    zcfg = er.get("zone_gate") or {}
+    how_path = str(er.get("feature_cluster_similarity_registry_path") or ACTIVE_ARTIFACT_DEFAULT)
+    zcfg = er.get("feature_cluster_similarity") or {}
     if not isinstance(zcfg, dict):
         zcfg = {}
 
-    thr = float(er.get("zone_cluster_threshold", zcfg.get("threshold", 0.25)) or 0.25)
+    thr = float(er.get("feature_cluster_similarity_cluster_threshold", zcfg.get("threshold", 0.25)) or 0.25)
     top_k = int(zcfg.get("top_k", 3))
     cluster_min_n = int(zcfg.get("cluster_min_n", 2))
     cluster_spread_max = float(zcfg.get("cluster_spread_max", 0.15))
-    zone_mode = str(er.get("zone_mode", "hard"))
+    feature_cluster_similarity_mode = str(er.get("feature_cluster_similarity_mode", "hard"))
 
     artifact_path = how_path.replace("\\", "/")
     # Prefer repo-relative
@@ -235,7 +235,7 @@ def main() -> int:
     )
     print(
         f"knobs thr={thr} top_k={top_k} cluster_min_n={cluster_min_n} "
-        f"cluster_spread_max={cluster_spread_max} zone_mode={zone_mode}"
+        f"cluster_spread_max={cluster_spread_max} feature_cluster_similarity_mode={feature_cluster_similarity_mode}"
     )
 
     scores = np.full(len(records), np.nan)
@@ -254,7 +254,7 @@ def main() -> int:
             out = score_zone_cluster(
                 feat,
                 zg,
-                zone_cluster_threshold=thr,
+                feature_cluster_similarity_cluster_threshold=thr,
                 cluster_min_n=cluster_min_n,
                 cluster_spread_max=cluster_spread_max,
             )
@@ -376,12 +376,12 @@ def main() -> int:
             ),
             "score_path": "score_zone_cluster (production EngineRunner path)",
             "knobs": {
-                "zone_mode": zone_mode,
-                "zone_cluster_threshold": thr,
+                "feature_cluster_similarity_mode": feature_cluster_similarity_mode,
+                "feature_cluster_similarity_cluster_threshold": thr,
                 "top_k": top_k,
                 "cluster_min_n": cluster_min_n,
                 "cluster_spread_max": cluster_spread_max,
-                "zone_registry_path_config": how_path,
+                "feature_cluster_similarity_registry_path_config": how_path,
             },
         },
         "runtime": {

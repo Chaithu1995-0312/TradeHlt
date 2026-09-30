@@ -1,5 +1,5 @@
 """
-RREngine — Candle Polarity Index (formerly misnamed "RR Engine").
+CandleCommitment — Candle Polarity Index (formerly misnamed "RR Engine").
 
 SEMANTIC NOTE (audit fix 2026-05-14):
   This engine does NOT compute forward-looking Risk:Reward. The entry is at the
@@ -34,7 +34,7 @@ _EPS = 1e-9
 logger = logging.getLogger(__name__)
 
 
-class RREngine:
+class CandleCommitment:
     """Candle Polarity Index engine. Scores candle structure for directional commitment."""
 
     def __init__(self, config: dict):
@@ -80,8 +80,8 @@ class RREngine:
             }
 
         except KeyError as e:
-            logger.error("RREngine missing key: %s", e)
+            logger.error("CandleCommitment missing key: %s", e)
             return {"score": 0.0, "candle_polarity": 0.0, "rr_ratio": 0.0, "reason": f"missing_key:{e}"}
         except (TypeError, ValueError) as e:
-            logger.error("RREngine value error: %s", e)
+            logger.error("CandleCommitment value error: %s", e)
             return {"score": 0.0, "candle_polarity": 0.0, "rr_ratio": 0.0, "reason": f"value_error:{e}"}

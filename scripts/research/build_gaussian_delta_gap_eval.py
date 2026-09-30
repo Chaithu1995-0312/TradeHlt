@@ -3,7 +3,7 @@
 
 Prereg: docs/research-readiness/h-gauss-delta-001-preregistration.md
 
-Does NOT build a coordinator, flip gaussian_impl, or write production config.
+Does NOT build a coordinator, flip removed_selector, or write production config.
 
 Usage
 -----

@@ -134,7 +134,7 @@ class AcceptanceController:
     ) -> None:
         """
         Record one bar's scores and acceptance outcome.
-        engine_scores: {"crt": float, "gaussian": float, ...}
+        engine_scores: {"crt": float, "ema_momentum_kernel": float, ...}
         """
         if engine_scores:
             values = [float(v) for v in engine_scores.values() if v is not None]

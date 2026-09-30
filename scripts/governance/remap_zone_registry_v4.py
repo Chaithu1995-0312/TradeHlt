@@ -27,7 +27,7 @@ Renames two entries in `feature_order` and zeroes one weight. That is all.
 `mu` and `sigma` are copied through UNCHANGED for every zone. `macd_hist_raw` is deliberately NOT
 added to `feature_order`: there are no trained statistics for it, and inventing some would fabricate
 provenance. A 38-name subset of the 39-dim schema is fully supported by the name-anchored extractor
-(`zone_gate_engine._extract_vector`).
+(`feature_cluster_similarity._extract_vector`).
 
 WHY ZERO-WEIGHT AND NOT RE-ESTIMATE
 ------------------------------------

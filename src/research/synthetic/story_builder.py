@@ -16,11 +16,11 @@ import pandas as pd
 
 from data_ingestion.ohlcv_schema import require_ohlcv_columns, validate_ohlcv_frame
 from engines.crt_engine import compute as crt_compute
-from engines.heuristic_gaussian_engine import HeuristicGaussianEngine
-from engines.rr_engine import RREngine
+from engines.ema_momentum_kernel import EmaMomentumKernel
+from engines.candle_commitment import CandleCommitment
 from config_layer.strict_config import require
 from engines.scoring_engine import compute_scores
-from engines.zone_gate_engine import _compute_soft_zone_score
+from engines.feature_cluster_similarity import _compute_soft_zone_score
 from features.candle_math import body_ratio as cm_body_ratio
 from features.feature_schema import CANONICAL_FEATURES
 from research.contracts import Signal
@@ -134,12 +134,12 @@ def _produced_scores(spec: StorySpec, feats: dict[str, Any], entry_bar: _Bar) ->
         "candles_since_sweep": feats["candles_since_sweep"],
         "sweep_detected": feats["sweep_detected"], "double_sweep": feats["double_sweep"],
     }, {"score_component_weights": list(c.score_component_weights)})
-    rr_out = RREngine({}).compute(
+    rr_out = CandleCommitment({}).compute(
         {"open": entry_bar.open, "high": entry_bar.high, "low": entry_bar.low, "close": entry_bar.close})
     zone = float(_compute_soft_zone_score(
         {"zone_distance": feats["zone_distance"], "zone_freshness": feats["zone_freshness"],
          "zone_strength": feats["zone_strength"]}))
-    g_engine = HeuristicGaussianEngine(
+    g_engine = EmaMomentumKernel(
         {"gaussian_mu": c.gauss_mu, "gaussian_sigma": c.gauss_sigma}, instrument=spec.instrument,
         preload_registry=False)
     g_input = {k: 0.0 for k in CANONICAL_FEATURES}

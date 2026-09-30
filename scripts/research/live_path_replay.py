@@ -418,22 +418,12 @@ def _disp_sweep(rows, planner_cfg, ultron_cfg, crt_cfg, regime, initial_balance,
 
 
 # ── FULL-BACKTEST disp sweep: re-run the real backtest per threshold (captures TP1-mult→exit) ──
-def _make_crt_intent(disp_thresh: float):
-    """Faithful copy of ExecutionEngine._derive_trade_intent (crt_engine_v2.py:1873-1886): lowercase
-    intents, fallback 'reversal' (NOT 'unknown'), breakout `disp_strength > X` parameterized."""
-    def _di(features, disp_threshold=1.5):  # accept the new 2nd arg; closure `disp_thresh` wins
-        if features.get("sweep_detected") or features.get("double_sweep"):
-            return "liq_sweep"
-        rd = float(features.get("retest_depth", 0.0))
-        csr = int(features.get("candles_since_sweep", 99))
-        mom = float(features.get("momentum_score", 0.0))
-        if 0.3 <= rd <= 0.7 and csr <= 5 and mom > 0:
-            return "pullback"
-        body = float(features.get("body_ratio", 0.0))
-        disp = float(features.get("disp_strength", 0.0))
-        if body > 0.6 and disp > disp_thresh:
-            return "breakout"
-        return "reversal"
+def _make_crt_intent(disp_thresh: float, real):
+    """The REAL ExecutionEngine._derive_trade_intent with the breakout threshold overridden to X
+    (EPIC-84 A3b: was a hand-copied rule that had drifted from the engine -- it read the legacy
+    retest_depth/disp_strength aliases and ignored direction)."""
+    def _di(inputs, _disp_threshold, direction):
+        return real(inputs, disp_thresh, direction)   # `real` = the unpatched engine function
     return _di
 
 
@@ -459,7 +449,7 @@ def _disp_sweep_full(instrument, csv, out, planner_cfg, ultron_cfg, crt_cfg, reg
     rows_out = []
     try:
         for x in thresholds:
-            ExecutionEngine._derive_trade_intent = staticmethod(_make_crt_intent(x))
+            ExecutionEngine._derive_trade_intent = staticmethod(_make_crt_intent(x, orig_crt))
             ExecutionPlannerV1_2._derive_intent = _make_derive_intent(x)
             tcsv, _m = _run_backtest(instrument, csv, out / "_sweep_full" / f"x{x:.2f}")
             book = _backtest_book(tcsv, initial_balance)

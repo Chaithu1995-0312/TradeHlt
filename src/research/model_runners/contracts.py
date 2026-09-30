@@ -5,7 +5,7 @@ docs/implementation_plan/dont-read-codebase-yet-lovely-clarke.md). MODEL_CATALOG
 the only surface bound to code (entry_point / required_feature_keys / spine_active). Seven new
 fields join it to the other two declarative surfaces (docs/governance/miar_registry.json,
 active_models.yaml) via one semantic_id, so the same model can no longer carry three different
-names across three files with nothing checking they agree (the rr / rr_engine / rr_model
+names across three files with nothing checking they agree (the rr / candle_commitment / rr_model
 collision that motivated this). Verified by tests/test_model_registry_join.py.
 
 This is a DATA-ONLY addition. No runner reads the seven new fields; runtime behaviour is
@@ -25,13 +25,13 @@ see the plan's "naming collision" section):
 
 `authority` derivation rule (mechanical, not per-row judgment):
     FUSION_VOTE — model_id's engine is one of core.engine_runner.EXPECTED_ENGINES
-                  ({"crt","gaussian","zone_gate","rr"}) — the four fusion-completeness votes.
+                  ({"crt","ema_momentum_kernel","feature_cluster_similarity","candle_commitment"}) — the four fusion-completeness votes.
     SPINE       — spine_active=True but not an EXPECTED_ENGINES vote (runs live, not a fusion
                   input/veto in its own right).
     SHADOW      — spine_active=False but historically measured via a shadow A/B (bitnet, F-055).
     NONE        — spine_active=False, no shadow measurement (dormant/experimental/dead).
     VETO        — reserved; no current catalog row is a standalone hard-veto distinct from its
-                  FUSION_VOTE/SPINE role (zone_gate's F-041 hard-gate behaviour is folded into
+                  FUSION_VOTE/SPINE role (feature_cluster_similarity's F-041 hard-gate behaviour is folded into
                   its FUSION_VOTE row, not split into a second row).
 
 `scale_type` — `"composite"` is for models whose return is a structured/multi-field object with
@@ -70,9 +70,9 @@ class ModelContract:
 
 
 MODEL_CATALOG: dict[str, ModelContract] = {
-    "rr": ModelContract(
-        model_id="rr",
-        entry_point="engines.rr_engine.RREngine.compute",
+    "candle_commitment": ModelContract(
+        model_id="candle_commitment",
+        entry_point="engines.candle_commitment.CandleCommitment.compute",
         input_mode="ohlc",
         spine_active=True,
         requires_artifact_cli=False,
@@ -83,7 +83,7 @@ MODEL_CATALOG: dict[str, ModelContract] = {
         runnable=True,
         semantic_id="M0_SPINE_RR_POLARITY",
         tier="M0",
-        miar_id="rr_engine",
+        miar_id="candle_commitment",
         miar_absent_reason=None,
         active_models_key="rr_model",
         active_models_absent_reason=None,
@@ -92,9 +92,9 @@ MODEL_CATALOG: dict[str, ModelContract] = {
         authority="FUSION_VOTE",  # EXPECTED_ENGINES member ("rr")
         trained_on_schema=None,  # untrained — pure OHLC arithmetic
     ),
-    "gaussian": ModelContract(
-        model_id="gaussian",
-        entry_point="engines.heuristic_gaussian_engine.HeuristicGaussianEngine.compute",
+    "ema_momentum_kernel": ModelContract(
+        model_id="ema_momentum_kernel",
+        entry_point="engines.ema_momentum_kernel.EmaMomentumKernel.compute",
         input_mode="features",
         spine_active=True,
         requires_artifact_cli=False,
@@ -107,17 +107,17 @@ MODEL_CATALOG: dict[str, ModelContract] = {
         runnable=True,
         semantic_id="M0_SPINE_GAUSSIAN_HEURISTIC",
         tier="M0",
-        miar_id="gaussian",
+        miar_id="ema_momentum_kernel",
         miar_absent_reason=None,
-        active_models_key="gaussian",
+        active_models_key="ema_momentum_kernel",
         active_models_absent_reason=None,
         serve_domain="ALL_BARS",
         scale_type="score",
-        authority="FUSION_VOTE",  # EXPECTED_ENGINES member ("gaussian")
+        authority="FUSION_VOTE",  # EXPECTED_ENGINES member ("ema_momentum_kernel")
         trained_on_schema=None,  # unparameterised kernel (F-060) — no mu/sigma ever loaded
     ),
-    "zone_gate": ModelContract(
-        model_id="zone_gate",
+    "feature_cluster_similarity": ModelContract(
+        model_id="feature_cluster_similarity",
         entry_point="engines.zone_cluster_score.score_zone_cluster",
         input_mode="features",
         spine_active=True,
@@ -129,18 +129,18 @@ MODEL_CATALOG: dict[str, ModelContract] = {
         runnable=True,
         semantic_id="M0_SPINE_ZONE_GATE_CLUSTER",
         tier="M0",
-        miar_id="zone_gate",
+        miar_id="feature_cluster_similarity",
         miar_absent_reason=None,
-        active_models_key="zone_gate",
+        active_models_key="feature_cluster_similarity",
         active_models_absent_reason=None,
         serve_domain="ALL_BARS",
         scale_type="score",
-        authority="FUSION_VOTE",  # EXPECTED_ENGINES member ("zone_gate"); F-041's hard-gate
-        # behaviour (zone_mode=hard) is this same row's production role, not a separate veto row.
+        authority="FUSION_VOTE",  # EXPECTED_ENGINES member ("feature_cluster_similarity"); F-041's hard-gate
+        # behaviour (feature_cluster_similarity_mode=hard) is this same row's production role, not a separate veto row.
         trained_on_schema=None,  # geometric zone registry, not a trained artifact
     ),
-    "crt_score": ModelContract(
-        model_id="crt_score",
+    "crt_structure_rule_score": ModelContract(
+        model_id="crt_structure_rule_score",
         entry_point="engines.crt_engine.compute",
         input_mode="features",
         spine_active=True,
@@ -189,7 +189,7 @@ MODEL_CATALOG: dict[str, ModelContract] = {
         active_models_key=None,
         active_models_absent_reason="fusion weights live under engine_runner/fusion_engine config sections, not a dedicated active_models.yaml top-level key",
         serve_domain="COMPOSE",
-        scale_type="composite",  # returns {final_score, scores, missing_engines, zone_gate_dead, ...}
+        scale_type="composite",  # returns {final_score, scores, missing_engines, feature_cluster_similarity_dead, ...}
         authority="SPINE",  # combines the 4 FUSION_VOTE rows; not itself one of them
         trained_on_schema=None,
     ),
@@ -250,7 +250,7 @@ MODEL_CATALOG: dict[str, ModelContract] = {
     ),
     "rr_trained": ModelContract(
         model_id="rr_trained",
-        entry_point="config_layer.rr.rr_pattern_miner.NanoInferenceEngine",
+        entry_point="config_layer.rr.rr_trained.NanoInferenceEngine",
         input_mode="features",
         spine_active=False,
         requires_artifact_cli=True,
@@ -285,9 +285,9 @@ MODEL_CATALOG: dict[str, ModelContract] = {
         runnable=True,
         semantic_id="M0_SPINE_CRT_STATE_MACHINE",
         tier="M0",
-        miar_id="crt",  # shared with crt_score
+        miar_id="crt",  # shared with crt_structure_rule_score
         miar_absent_reason=None,
-        active_models_key="crt",  # shared with crt_score
+        active_models_key="crt",  # shared with crt_structure_rule_score
         active_models_absent_reason=None,
         serve_domain="ALL_BARS",
         scale_type="categorical",  # drives CRTState, a 9(+3 parent-CRT)-member enum, not a scalar
@@ -318,8 +318,8 @@ MODEL_CATALOG: dict[str, ModelContract] = {
         authority="NONE",
         trained_on_schema="38dim_legacy",
     ),
-    "gaussian_ml": ModelContract(
-        model_id="gaussian_ml",
+    "nb_outcome_classifier": ModelContract(
+        model_id="nb_outcome_classifier",
         entry_point="training.trainer.load_gaussian_model + NB predict",
         input_mode="features",
         spine_active=False,
@@ -329,17 +329,17 @@ MODEL_CATALOG: dict[str, ModelContract] = {
         audit_status="EXPERIMENTAL",
         description=(
             "Offline GaussianNB — requires --artifact; "
-            "NOT gated by engine_runner.gaussian_impl"
+            "not a fusion slot (slot is EmaMomentumKernel)"
         ),
         runnable=True,
         semantic_id="M0_SPINE_GAUSSIAN_ML_NB",
         tier="M0",
-        miar_id="gaussian",  # shared with the heuristic row — one MIAR intent, two ARM variants
+        miar_id="nb_outcome_classifier",
         miar_absent_reason=None,
-        active_models_key="gaussian.trained_registry.entries.v4_mirrored",  # dotted path — nested key
+        active_models_key="ema_momentum_kernel.trained_registry.entries.v4_mirrored",  # dotted path — nested key
         active_models_absent_reason=None,
         serve_domain="ALL_BARS",
-        scale_type="score",  # NB posteriors are not reliably calibrated; MIAR gaussian intent
+        scale_type="score",  # NB posteriors are not reliably calibrated; MIAR nb_outcome_classifier intent
         # forbids probability framing regardless of variant
         authority="NONE",  # config-gated off; M4 (E0/E1/E2) returned 0 PROMOTE, REGISTRY_ACTIVE != ECONOMIC_AUTHORITY
         trained_on_schema="38dim_legacy",  # Gaussian_v4_mirrored_38dim, per the governance doc's own name

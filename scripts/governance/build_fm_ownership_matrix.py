@@ -160,7 +160,7 @@ _CONSUMERS: dict[str, dict] = {
     "engine_runner_fusion": {
         "path": "src/core/engine_runner.py",
         "fm_ids": [],
-        "role": "Fusion of crt/gaussian/zone_gate/rr scores (consumes scores, not raw FM math)",
+        "role": "Fusion of crt/gaussian/feature_cluster_similarity/rr scores (consumes scores, not raw FM math)",
     },
     "feature_state_encoder_shadow": {
         "path": "src/features/feature_states.py",

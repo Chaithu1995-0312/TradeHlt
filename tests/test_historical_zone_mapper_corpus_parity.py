@@ -76,11 +76,11 @@ def test_corpus_parity_mapper_vs_engine_runner_zone_stage(xau_trade_opened_sampl
     runner = _engine_runner_from_prod()
 
     er = get_prod_section("engine_runner")
-    zg = er["zone_gate"]
-    threshold = float(er["zone_cluster_threshold"])
+    zg = er["feature_cluster_similarity"]
+    threshold = float(er["feature_cluster_similarity_cluster_threshold"])
     cluster_min_n = int(zg["cluster_min_n"])
     cluster_spread_max = float(zg["cluster_spread_max"])
-    execution_mode = str(er["zone_gate_execution_mode"])
+    execution_mode = str(er["feature_cluster_similarity_execution_mode"])
 
     mismatches = []
     for i, sample in enumerate(samples):
@@ -95,7 +95,7 @@ def test_corpus_parity_mapper_vs_engine_runner_zone_stage(xau_trade_opened_sampl
         er_scored = score_zone_cluster(
             feat,
             runner._zone_gate,
-            zone_cluster_threshold=threshold,
+            feature_cluster_similarity_cluster_threshold=threshold,
             cluster_min_n=cluster_min_n,
             cluster_spread_max=cluster_spread_max,
             execution_mode=execution_mode,

@@ -61,9 +61,8 @@ def build_registry_summary() -> dict:
         "model_names": sorted(models),
         "runtime_flags": {
             "bitnet_enabled": cfg["crt_engine"]["use_bitnet"],
-            "zone_mode": er["zone_mode"],
-            "registry_file": er["zone_registry_path"],
-            "gaussian_impl": er["gaussian_impl"],
+            "feature_cluster_similarity_mode": er["feature_cluster_similarity_mode"],
+            "registry_file": er["feature_cluster_similarity_registry_path"],
             "rr_fusion_active": er["rr_fusion"]["enabled"],
         },
     }
