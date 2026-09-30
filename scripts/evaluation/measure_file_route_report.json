@@ -847,7 +847,7 @@
             "docs/analysis/ZONEGATE_AUDIT_REPORT.md"
           ],
           "top_files": [
-            "src/research/model_runners/adapters/zone_gate.py",
+            "src/research/model_runners/adapters/feature_cluster_similarity.py",
             "docs/architecture/services/_template.md",
             "docs/governance/EPISODE_SEMANTIC_INTEGRATION_PHASE2.md"
           ],
@@ -2279,7 +2279,7 @@
             "docs/analysis/ZONEGATE_AUDIT_REPORT.md"
           ],
           "top_files": [
-            "src/research/model_runners/adapters/zone_gate.py",
+            "src/research/model_runners/adapters/feature_cluster_similarity.py",
             "docs/architecture/services/_template.md",
             "docs/governance/EPISODE_SEMANTIC_INTEGRATION_PHASE2.md"
           ],

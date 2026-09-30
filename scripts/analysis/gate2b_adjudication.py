@@ -62,7 +62,7 @@ GATEI = RB("YES", "UNKNOWN", "NO", "NO", "NO", "NO",
            "unreachable -> gate NEVER evaluated in practice; decision contingent on F-048 remediation; "
            "G5-RESOLVED: no artifact path (gate scores not persisted)")
 RRE = RB("YES", "YES", "NO", "NO", "YES", "NO",
-         "RREngine.compute on EngineRunner.run():683 (gate-ON/live; F-037 gate-OFF research); F-048 ctx; "
+         "CandleCommitment.compute on EngineRunner.run():683 (gate-ON/live; F-037 gate-OFF research); F-048 ctx; "
          "G5-RESOLVED: engines_raw/fusion jsonl telemetry artifacts")
 
 # ── adjudication table: (file_suffix, line, symbol) -> row ───────────────────────────────
@@ -136,7 +136,7 @@ T = {
 ('encoder.py',177,'<return>'): row('INDEPENDENT_UNGOVERNED_QUANTITY', 'FAM-11-RANGE-EXPANSION', 'V-mean-prior', 'fallback_1.0', RESEARCH, 'cur/mean(prior) range-expansion ratio (F-040 core)'),
 ('encoder.py',190,'cur_tr'): row('SUBEXPRESSION_OF_GOVERNED_QUANTITY', 'FAM-12-F2-RANGE', 'V-exact', 'n/a', RESEARCH, 'F2 for vol norm'),
 ('encoder.py',191,'atr_ratio'): row('INDEPENDENT_UNGOVERNED_QUANTITY', 'FAM-06-RANGE-ATR-MULTIPLE', 'V-research', 'guard', RESEARCH, 'cur_tr/atr research'),
-('erp_synth_4h_trace.py',266,'rng'): row('SUBEXPRESSION_OF_GOVERNED_QUANTITY', 'FAM-21-POLARITY-FRACTIONS', 'V-exact', 'eps_reject_1e-9', RESEARCH, 'F2 denominator of the RREngine polarity replica (twin of rr_engine.py:59 with the same 1e-9 doji reject)'),
+('erp_synth_4h_trace.py',266,'rng'): row('SUBEXPRESSION_OF_GOVERNED_QUANTITY', 'FAM-21-POLARITY-FRACTIONS', 'V-exact', 'eps_reject_1e-9', RESEARCH, 'F2 denominator of the CandleCommitment polarity replica (twin of candle_commitment.py:59 with the same 1e-9 doji reject)'),
 ('erp_synth_4h_trace.py',514,'rng'): row('SUBEXPRESSION_OF_GOVERNED_QUANTITY', 'FAM-12-F2-RANGE', 'V-exact', 'zero_0.0', RESEARCH, 'F2 operand of the deliberate manual-vs-canonical body_ratio A/B on the entry bar'),
 ('erp_synth_4h_trace.py',515,'body'): row('SAME_MATH_DIFFERENT_NAME', 'FAM-01-F1-BODY', 'V-exact', 'n/a', RESEARCH, 'F1 operand of the same A/B'),
 ('erp_synth_4h_trace.py',516,'br_manual'): row('MATHEMATICALLY_EQUIVALENT_VARIANT', 'FAM-16-F6-BODY-RATIO', 'V-guard0-research', 'zero_0.0', RESEARCH, 'INTENTIONAL manual F6 replica emitted alongside cm_body_ratio(:517) in one record — the replica IS the measurement (manual-vs-registry divergence probe), not stray math'),
@@ -223,9 +223,9 @@ T = {
 ('p3b_gate_expired_counterfactual_rr.py',54,'tr'): row('SUBEXPRESSION_OF_GOVERNED_QUANTITY', 'FAM-05-TRUE-RANGE', 'V-wilder', 'n/a', TOOLING, 'TR kernel'),
 ('purge_delay_scan.py',83,'tr'): row('SUBEXPRESSION_OF_GOVERNED_QUANTITY', 'FAM-05-TRUE-RANGE', 'V-wilder', 'n/a', TOOLING, 'TR kernel'),
 ('reports/xauusd_retest_pathb_counterfactual_probe.py',174,'atr'): row('SUBEXPRESSION_OF_GOVERNED_QUANTITY', 'FAM-05-TRUE-RANGE', 'V-wilder', 'n/a', TOOLING, 'script/tooling derivation at reports/xauusd_retest_pathb_counterfactual_probe.py:174::atr (auto Gate-2B stub 2026-09-09; no new FM minted)'),
-('rr_engine.py',59,'candle_range'): row('CANONICAL_EQUIVALENT', 'FAM-12-F2-RANGE', 'V-exact', 'eps_reject_1e-9', RRE, 'GD-010: byte-identical F2; doji rejected below _EPS'),
-('rr_engine.py',69,'upper_body'): row('INDEPENDENT_UNGOVERNED_QUANTITY', 'FAM-21-POLARITY-FRACTIONS', 'V-plain', 'eps_reject', RRE, '(high-close)/range — close-position fraction (NOT F7: numerator is h-c, not h-max(o,c)); F-048 polarity'),
-('rr_engine.py',70,'lower_body'): row('INDEPENDENT_UNGOVERNED_QUANTITY', 'FAM-21-POLARITY-FRACTIONS', 'V-plain', 'eps_reject', RRE, '(close-low)/range twin'),
+('candle_commitment.py',59,'candle_range'): row('CANONICAL_EQUIVALENT', 'FAM-12-F2-RANGE', 'V-exact', 'eps_reject_1e-9', RRE, 'GD-010: byte-identical F2; doji rejected below _EPS'),
+('candle_commitment.py',69,'upper_body'): row('INDEPENDENT_UNGOVERNED_QUANTITY', 'FAM-21-POLARITY-FRACTIONS', 'V-plain', 'eps_reject', RRE, '(high-close)/range — close-position fraction (NOT F7: numerator is h-c, not h-max(o,c)); F-048 polarity'),
+('candle_commitment.py',70,'lower_body'): row('INDEPENDENT_UNGOVERNED_QUANTITY', 'FAM-21-POLARITY-FRACTIONS', 'V-plain', 'eps_reject', RRE, '(close-low)/range twin'),
 ('s09_pattern_recog.py',204,'prev_body'): row('SAME_MATH_DIFFERENT_NAME', 'FAM-01-F1-BODY', 'V-orphan', 'n/a', ORPHAN, 'engulfing pattern F1 (prev candle)'),
 ('s09_pattern_recog.py',205,'curr_body'): row('SAME_MATH_DIFFERENT_NAME', 'FAM-01-F1-BODY', 'V-orphan', 'n/a', ORPHAN, 'engulfing F1 (curr)'),
 ('s09_pattern_recog.py',242,'body'): row('SAME_MATH_DIFFERENT_NAME', 'FAM-01-F1-BODY', 'V-orphan', 'skip_none', ORPHAN, 'single-candle F1'),

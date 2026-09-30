@@ -42,7 +42,7 @@ Outputs
 
 Authority: OBSERVATION / research artifact only.
   - Does NOT promote into gaussian_registry active map
-  - Does NOT change engine_runner.gaussian_impl
+  - Does NOT change engine_runner.removed_selector
   - No economic claim / no live wiring
 """
 from __future__ import annotations
@@ -752,7 +752,7 @@ def main() -> int:
             reg[version]["active"] = False
             reg[version]["instrument"] = INSTRUMENT
             reg[version]["note"] = (
-                "XAUUSD research train; NOT promoted; gaussian_impl stays heuristic"
+                "XAUUSD research train; NOT promoted; removed_selector stays heuristic"
             )
             reg_path.write_text(json.dumps(reg, indent=2), encoding="utf-8")
         registry_note = f"registered inactive version={version}"
@@ -858,7 +858,7 @@ def main() -> int:
         "version": version,
         "task": "Train GaussianNB on frozen XAUUSD + eval trailing 2m",
         "authority": (
-            "RESEARCH ARTIFACT ONLY — not promoted; gaussian_impl stays heuristic; "
+            "RESEARCH ARTIFACT ONLY — not promoted; removed_selector stays heuristic; "
             "no economic claim"
         ),
         "instrument": INSTRUMENT,
@@ -947,7 +947,7 @@ def main() -> int:
             "results/rr_xauusd_2m/rr_xauusd_2m_LATEST.json",
         ],
         "interpretation_guardrails": [
-            "Not promoted; live gaussian_impl remains heuristic (F-060 path).",
+            "Not promoted; live removed_selector remains heuristic (F-060 path).",
             "Entry universe = CRT SWEEP (spine TRADE_OPENED starved on XAUUSD).",
             "Labels = forward_walk(intrabar_fixed)+12bps — governing research exit, "
             "not F-022 stream rr_achieved.",

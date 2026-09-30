@@ -580,13 +580,13 @@ def build_quantities_from_authorities() -> list[dict]:
     add(id="Q-HOUR", names=["hour_of_day"], source_fields=["timestamp"], formula="hour", parameters={}, temporal="calendar t", normalization=None, fallback=None, units="hour", impl=["FeaturePipeline"], class_="UNIQUE_CANONICAL_CANDIDATE", evidence=[])
 
     # Model-local
-    add(id="Q-GAUSS-3", names=["ema_fast", "ema_slow", "momentum_score"], source_fields=["close"], formula="live heuristic 3-feature vote", parameters={}, temporal="t", normalization=None, fallback=None, units="score", impl=["heuristic_gaussian_engine"], class_="MODEL_LOCAL_DUPLICATE", evidence=["active_models gaussian live"])
+    add(id="Q-GAUSS-3", names=["ema_fast", "ema_slow", "momentum_score"], source_fields=["close"], formula="live heuristic 3-feature vote", parameters={}, temporal="t", normalization=None, fallback=None, units="score", impl=["ema_momentum_kernel"], class_="MODEL_LOCAL_DUPLICATE", evidence=["active_models gaussian live"])
     add(id="Q-GAUSS-38", names=["CANONICAL_FEATURES"], source_fields=["pipeline vector"], formula="38-dim NB experimental", parameters={}, temporal="unknown train", normalization="artifact scaler", fallback=None, units="vector", impl=["gaussian registry"], class_="UNKNOWN", evidence=["train lineage not recovered in RUN1"])
     add(id="Q-BITNET-6", names=["body_ratio", "retest_depth", "disp_strength", "atr", "candles_since_sweep", "double_sweep"], source_fields=["mixed"], formula="BitNet hard-reject inputs; CRT may alias FM-027/028 into names", parameters={}, temporal="CRT", normalization=None, fallback=None, units="mixed", impl=["BitNetZoneGate", "crt bitnet map"], class_="UNINTENTIONAL_ALIAS", evidence=["use_bitnet false", "FC-0.5"])
-    add(id="Q-RR-POLARITY", names=["rr_ratio"], source_fields=["OHLC"], formula="candle polarity index misnamed RR", parameters={}, temporal="t", normalization=None, fallback=None, units="index_0_1", impl=["rr_engine"], class_="MODEL_LOCAL_DUPLICATE", evidence=["F-048"])
+    add(id="Q-RR-POLARITY", names=["rr_ratio"], source_fields=["OHLC"], formula="candle polarity index misnamed RR", parameters={}, temporal="t", normalization=None, fallback=None, units="index_0_1", impl=["candle_commitment"], class_="MODEL_LOCAL_DUPLICATE", evidence=["F-048"])
     add(id="Q-RR-FUSION-38", names=["CANONICAL_FEATURES"], source_fields=["pipeline"], formula="Mahalanobis 38-dim path historical", parameters={}, temporal="unknown train", normalization="model mean/cov", fallback="gaussian bypass F-044", units="vector", impl=["rr_fusion"], class_="UNKNOWN", evidence=["enabled:false", "F-044/045"])
     add(id="Q-TRADENET", names=["CANONICAL_FEATURES"], source_fields=["pipeline intended"], formula="TradeNet fusion slot", parameters={}, temporal="unknown train", normalization=None, fallback=None, units="vector", impl=["tradenet"], class_="UNKNOWN", evidence=["F-005 unwired"])
-    add(id="Q-ZONE-MEMBER", names=["zone membership"], source_fields=["price geometry"], formula="zone_registry hard membership", parameters={}, temporal="t", normalization=None, fallback=None, units="score", impl=["zone_gate_engine"], class_="MODEL_LOCAL_DUPLICATE", evidence=["F-041"])
+    add(id="Q-ZONE-MEMBER", names=["zone membership"], source_fields=["price geometry"], formula="zone_registry hard membership", parameters={}, temporal="t", normalization=None, fallback=None, units="score", impl=["feature_cluster_similarity"], class_="MODEL_LOCAL_DUPLICATE", evidence=["F-041"])
     add(id="Q-SCORING-DISP", names=["disp_strength"], source_fields=["move", "atr"], formula="move/atr local in scoring paths", parameters={}, temporal="unknown", normalization=None, fallback=None, units="ratio", impl=["scoring_engine residual"], class_="UNKNOWN", evidence=["FC-0.5 residual UNKNOWN"])
     add(id="Q-CRT-FEATURE-BUILDER", names=["body_ratio", "features"], source_fields=["OHLC"], formula="crt_feature_builder may recompute", parameters={}, temporal="unknown", normalization=None, fallback=None, units="mixed", impl=["crt_feature_builder.py"], class_="UNKNOWN", evidence=["git shows modified; call-site audit RUN1 partial"])
     add(id="Q-DATASET-BUILDER", names=["CANONICAL_FEATURES"], source_fields=["trade_data"], formula="dataset_builder.build_feature_vector", parameters={"lambda_decay": 0.05}, temporal="trade-event", normalization=None, fallback=None, units="vector", impl=["dataset_builder", "LiveEngine.process"], class_="TRAINING_LOCAL_DUPLICATE", evidence=["live_engine uses dataset_builder"])
@@ -613,9 +613,9 @@ def discover_producers_consumers(scan_results: list[dict]) -> dict:
         {"path": "src/features/dataset_builder.py", "role": "TRADE_EVENT_VECTOR", "status": "REACHABLE"},
         {"path": "src/features/crt_feature_builder.py", "role": "CRT_FEATURE_BUILDER", "status": "PARTIAL_UNKNOWN_CALLSITES"},
         {"path": "src/config_layer/crt_engine_v2.py", "role": "CRT_STATE_CACHED_FEATURES", "status": "REACHABLE"},
-        {"path": "src/engines/heuristic_gaussian_engine.py", "role": "GAUSSIAN_LIVE_3", "status": "REACHABLE"},
-        {"path": "src/engines/zone_gate_engine.py", "role": "ZONE_SCORE", "status": "REACHABLE"},
-        {"path": "src/engines/rr_engine.py", "role": "RR_POLARITY", "status": "REACHABLE"},
+        {"path": "src/engines/ema_momentum_kernel.py", "role": "GAUSSIAN_LIVE_3", "status": "REACHABLE"},
+        {"path": "src/engines/feature_cluster_similarity.py", "role": "ZONE_SCORE", "status": "REACHABLE"},
+        {"path": "src/engines/candle_commitment.py", "role": "RR_POLARITY", "status": "REACHABLE"},
         {"path": "src/runtime/backtest_v2.py", "role": "BACKTEST_PIPELINE_CONSUMER_PRODUCER", "status": "REACHABLE"},
         {"path": "src/runtime/live_engine_hook.py", "role": "LIVE_HOOK", "status": "REACHABLE_PARITY_UNKNOWN"},
         {"path": "src/engines/live_engine.py", "role": "LIVE_ENGINE", "status": "REACHABLE"},

@@ -35,9 +35,9 @@ rather than prediction. No feature is deleted; reclassification is documentation
 ## Code covered
 
 - [`src/config_layer/crt_engine_v2.py`](../../src/config_layer/crt_engine_v2.py) — `UltronRiskEngine.compute_score` (~:1604), `compute_soft_confirmation` (~:1639) — structural state machine; raw Candle + internal EMA(2,5) (~:292) + internal ATR(14) (~:1002).
-- [`src/engines/heuristic_gaussian_engine.py:305`](../../src/engines/heuristic_gaussian_engine.py) — `HeuristicGaussianEngine.compute` — directional-momentum Gaussian on 3 features.
-- [`src/engines/rr_engine.py:45`](../../src/engines/rr_engine.py) — `RREngine` — candle-polarity index on close/high/low; `min_rr` retained-but-unused (:43).
-- [`src/engines/zone_gate_engine.py:163`](../../src/engines/zone_gate_engine.py) — `filter_canonical_inputs` / `_extract_vector` — requires all 38 canonical keys; fail-open to 0.5/pass on registry error (:230).
+- [`src/engines/ema_momentum_kernel.py:305`](../../src/engines/ema_momentum_kernel.py) — `EmaMomentumKernel.compute` — directional-momentum Gaussian on 3 features.
+- [`src/engines/candle_commitment.py:45`](../../src/engines/candle_commitment.py) — `CandleCommitment` — candle-polarity index on close/high/low; `min_rr` retained-but-unused (:43).
+- [`src/engines/feature_cluster_similarity.py:163`](../../src/engines/feature_cluster_similarity.py) — `filter_canonical_inputs` / `_extract_vector` — requires all 38 canonical keys; fail-open to 0.5/pass on registry error (:230).
 - [`src/engines/live_engine.py:202`](../../src/engines/live_engine.py) — `BitNetZoneGate.check` — per-zone weighted-Gaussian over the 38-vector.
 - [`src/bitnet/zone_cosine_searcher.py:222`](../../src/bitnet/zone_cosine_searcher.py) — `compute_gaussian_score` — `score = Σ w_k·exp(-½((x_k-µ_k)/σ_k)²) / Σ w_k`.
 - [`src/bitnet/bitnet_inference.py:317`](../../src/bitnet/bitnet_inference.py) — `bitnet_score` — 6-feature hard-reject gate (off by default).
@@ -46,7 +46,7 @@ rather than prediction. No feature is deleted; reclassification is documentation
 
 ## Ins / Outs
 
-- **Ins:** the 38-dim `CANONICAL_FEATURES` vector ([`src/features/feature_schema.py:46`](../../src/features/feature_schema.py)); raw `Candle` (OHLCV) for CRT; config sections `engine_runner.*` (incl. `zone_registry_path`, `zone_mode`) and `fusion_engine.*`.
+- **Ins:** the 38-dim `CANONICAL_FEATURES` vector ([`src/features/feature_schema.py:46`](../../src/features/feature_schema.py)); raw `Candle` (OHLCV) for CRT; config sections `engine_runner.*` (incl. `feature_cluster_similarity_registry_path`, `feature_cluster_similarity_mode`) and `fusion_engine.*`.
 - **Outs:** per-engine scores → `FusionEngine` final score → `DecisionEngine` ACCEPT/REJECT/BLOCK.
 
 ## Per-model intent (Question A — verified)
@@ -144,7 +144,7 @@ Three state columns are UNUSABLE (all-null): `state__displacement_flag`,
 2. **Fusion scorer** (`engines.crt_engine.compute` → `scoring_engine.compute_scores`) —
    seven **values**: `body_ratio`, `disp_strength` (as `move`), `atr`, `retest_depth`,
    `candles_since_sweep`, `sweep_detected`, `double_sweep`, plus config
-   `score_component_weights` (not a parquet column). Bind id `crt_score`.
+   `score_component_weights` (not a parquet column). Bind id `crt_structure_rule_score`.
 3. **Resolver** (`CRTStateResolver`) — 13 **value** `when:` names, output
    `crt_state_resolved` on `bar_matrix`. Not the engine. F-069 /
    `CC-L3-FORBIDDEN-JOIN`. Bind ids `resolver` / `crt_resolver_occupancy`.
@@ -152,22 +152,22 @@ Three state columns are UNUSABLE (all-null): `state__displacement_flag`,
 **States:** none as CRT *inputs*. Do not treat `state__sweep_detected` as CRTState.
 `trade_intent` on `bar_matrix` is CRT-rail **output**, not an FSM input.
 
-### 2. Gaussian heuristic — live `gaussian_impl`
+### 2. Gaussian heuristic — live `removed_selector`
 
 **Intent:** narrow momentum vote (`ema_fast`, `ema_slow`, `momentum_score`). KEEP SPECIALIZED
 on structure.
 
-**How it runs:** `HeuristicGaussianEngine.compute` KeyError-fails on those 3, but also
+**How it runs:** `EmaMomentumKernel.compute` KeyError-fails on those 3, but also
 asserts `len(input_data) >= 48`. Query SELECT is the 3; feeding a 3-col frame back into
 `compute()` asserts. **Serve presence ≠ query columns.** States: none. F-060 inert
 (~0.8825); F-061/F-064 `momentum_score` saturates on XAUUSD.
 
 ### 3. Gaussian ML — same intent, different loader
 
-**Intent:** same conformity question. **CURRENT:** not the active `gaussian_impl`.
+**Intent:** same conformity question. **CURRENT:** not the active `removed_selector`.
 `MLGaussianEngine` extracts **by trained name order**; load remaps **V3 aliases only**
 (`wick_size`→`candle_range`, `macd_hist`→`macd_hist_z`). V5 aliases are **not** remapped.
-v1 CLI: always refuse (`gaussian_ml`). Do not pretend a 38-dim NB scores the 48-col Excel.
+v1 CLI: always refuse (`nb_outcome_classifier`). Do not pretend a 38-dim NB scores the 48-col Excel.
 
 ### 4. ZoneGate — full-vector contract, 38-name scoring order
 
@@ -183,7 +183,7 @@ F-036 non-pivotal.
 
 **Intent:** `close`, `high`, `low` only. KEEP SPECIALIZED.
 
-**How it runs:** `RREngine.compute` — candle polarity. `rr_fusion.enabled: false`, so this
+**How it runs:** `CandleCommitment.compute` — candle polarity. `rr_fusion.enabled: false`, so this
 **is** the live RR slot (F-038). Query = those 3. Serve = those 3. States: none. Economic
 min_rr is Ultron (F-048), not this engine.
 
@@ -225,7 +225,7 @@ States: none. Parquet values are pipeline FM-021/FM-020, not CRT-local FM-027/FM
 ### 10. Fusion + DecisionEngine — scores in, features out
 
 **Intent:** approve. Reads engine **scores**, not the Excel vector. Completeness set
-`{crt, gaussian, zone_gate, rr}`. No economic RR (F-048). `disp_str` is not a parquet
+`{crt, gaussian, feature_cluster_similarity, rr}`. No economic RR (F-048). `disp_str` is not a parquet
 column and not a V3/V5 alias — refuse. v1 bind: refuse (`decision_fusion`). Compose/
 `compute()` harness is not v1.
 
@@ -254,7 +254,7 @@ source-verifiable question: **where does each of the 38 features come from (form
 CRT state caches it, which engines consume it, and what fusion weight carries its influence** — every
 cell file:line-cited. **Branch-scoped to the active config `v2_multi_2026_04`** (§4.0/§6.2 r7).
 
-**Runtime scoping (active config):** live Gaussian = 3-feat heuristic (`gaussian_impl:heuristic`);
+**Runtime scoping (active config):** live Gaussian = 3-feat heuristic (`removed_selector:heuristic`);
 `rr_fusion.enabled:false` → RR = base geometric candle-polarity on close/high/low; `use_bitnet:false`
 → the BitNet 6-feat gate never fires; ZoneGate consumes the full 38-vector but is NON_PIVOTAL (F-036)
 / geometric (F-041). **Fusion weights** (config `fusion_engine`): crt **0.4** · gaussian **0.2** · zone
@@ -422,7 +422,7 @@ evidence only; per the §6.5 Authority Ladder it **grants no authority** and rev
 
 - **Reached via:** the live spine `EngineRunner.run()`; research measurement via
   `src/research/` (`forward_walk` + M4 `QualificationGate`). ZoneGate model path is config-driven
-  (`engine_runner.zone_registry_path`).
+  (`engine_runner.feature_cluster_similarity_registry_path`).
 - **Validated by:** Phase 3 static-weight introspection + `edge_attribution_study.py` (importance),
   Phase 4 decision-flip + ensemble-correlation harness, Phase 5 ZoneGate label verification, Phase 7
   G001/M4. Authority is earned only by demonstrated ΔG001 (`CLAUDE.md §6.5`).
@@ -450,12 +450,12 @@ Sits at the engine-scoring layer of [`docs/architecture/signal-flow.md`](../arch
 - **Ambiguities:** 2026-06-27 — `zone_gate_registry.json` manifest `active:true` points to a *different* file (hash mismatch) than the config-loaded `models/zone_registry.json`; surfaced as a TruthConflict (F-041), not auto-reconciled.
 - **Enhancements:** 2026-06-27 — Phase 3/4 will fill the (B)/(C) cells with measured decision-flip + correlation deltas.
 - **Need more info:** 2026-06-27 — which exact label/exit scheme produced the stored zone meta (Phase 5).
-- **Enhancements:** 2026-07-02 — reconciled [`active_models.yaml`](../../active_models.yaml) (the session-load registry) to this doc's verified engine truth and restructured it into a 3-truth-layer schema (v2.0: `intent | runtime | evidence | status`). Key corrections propagated: live Gaussian = `HeuristicGaussianEngine` (3 feats) not the 38-dim `v4_mirrored` trained model (now under `trained_registry`, active:false); RR = geometric candle-polarity filter (`learning:false`); ZoneGate = full 38-vector contract (not `[atr,rsi,volume,trend]`); S1–S10 flagged orphaned/sidecar; CRT `states: 10→9`; philosophy preserved with `authority:{validated:false}`. All DOC_DRIFT (code-authority); no finding reversed.
+- **Enhancements:** 2026-07-02 — reconciled [`active_models.yaml`](../../active_models.yaml) (the session-load registry) to this doc's verified engine truth and restructured it into a 3-truth-layer schema (v2.0: `intent | runtime | evidence | status`). Key corrections propagated: live Gaussian = `EmaMomentumKernel` (3 feats) not the 38-dim `v4_mirrored` trained model (now under `trained_registry`, active:false); RR = geometric candle-polarity filter (`learning:false`); ZoneGate = full 38-vector contract (not `[atr,rsi,volume,trend]`); S1–S10 flagged orphaned/sidecar; CRT `states: 10→9`; philosophy preserved with `authority:{validated:false}`. All DOC_DRIFT (code-authority); no finding reversed.
 - **Enhancements:** 2026-07-02 (batch A1–A3) — added the **Demonstrated-Edge Matrix** section above (designed vs implemented vs measured alpha, controlled edge-state vocabulary, E-001 guards: `corr 0.2066`=L1 info not alpha, BitNet labels `UNKNOWN`). Formalized the four layers as the **Truth-Layer Standard** in [`docs/reference/conventions.md`](../reference/conventions.md) §9 (scoped to knowledge/registry artifacts) + self-declared `meta.truth_schema` in the registry. Grants no authority; every measured row is `NONE`/`UNMEASURED` per the F-019…F-040 entry-null.
 - **Challenges/RESOLVED:** 2026-07-05 (F-041B Phase-5) — the "verified in Phase 5" ZoneGate label question (2026-06-27 Challenges entry) is now **answered**: the stored ~98% SL-hit labels are an **F-022 labeling artifact**. `scripts/research/zone_label_audit.py` re-derived all 139,942 source opportunities through `forward_walk(intrabar_fixed)` over the seeded-KMeans membership (`membership_verification=VERIFIED`; all 8 zones reproduce stored n+mean_rr+sl_hit to 4dp → contamination isolated from re-partition drift). Honest SL≈0.66 (Δ≈−0.33 ∀zone; zones 4/5/6 sign-flip); **0/8 zones clear honest E>0** (bootstrap CI all <0) → label-quality is NOT the rescuable defect, binding constraint stays the entry-info null (extends F-025/F-036; honest win≈0.34 re-confirms F-023). Artifact `docs/analysis/f041b-zone-label-audit-BNBUSDT.json`.
-- **Ambiguities/RESOLVED:** 2026-07-05 — the manifest TruthConflict (2026-06-27 Ambiguities entry) is **reconciled** (**F-041A**, B1, user-approved §6.2): registered+promoted `v2_gaussian_runtime_2026_07` so `zone_gate_registry.json.active` `model_file = models/zone_registry.json` (sha `e73e0893` == config-loaded); behavior-/hash-neutral. Permanent invariant `tests/test_zone_manifest_runtime_parity.py` now enforces manifest.active-sha == runtime-sha. Separate measured fact: runtime Gaussian *argmax* assignment agrees with the label partition only **41.4%**. — **2026-07-22 RESOLVED + CORRECTED.** The old gloss ("the live gate partitions differently than the labels describe") asserted something the code does not do. **The runtime SCORES; it never PARTITIONS**: the live decision is `top_scores` -> `compute_weighted_cluster_score` -> `>= zone_cluster_threshold` -> pass/block, and no record is assigned to a zone (`best_zone_id` is telemetry with no consumer). So assignment parity measures a partitioning the runtime does not perform. It is low for a mechanical reason: the 13 dims the runtime zero-weights carry **99.9983%** of the variance driving the KMeans objective (`volume` alone 97.58%), so KMeans partitioned by volume/price level while the runtime scores candle shape. Correct null is the majority-class baseline 0.3264 (not 1/8); kappa 0.238. Probe `scripts/analysis/zone_assignment_parity_probe.py`, artifact `docs/analysis/zone-assignment-parity.LATEST.json` (recorded 0.4140 reproduced exactly). Information only, no authority (§6.5).
+- **Ambiguities/RESOLVED:** 2026-07-05 — the manifest TruthConflict (2026-06-27 Ambiguities entry) is **reconciled** (**F-041A**, B1, user-approved §6.2): registered+promoted `v2_gaussian_runtime_2026_07` so `zone_gate_registry.json.active` `model_file = models/zone_registry.json` (sha `e73e0893` == config-loaded); behavior-/hash-neutral. Permanent invariant `tests/test_zone_manifest_runtime_parity.py` now enforces manifest.active-sha == runtime-sha. Separate measured fact: runtime Gaussian *argmax* assignment agrees with the label partition only **41.4%**. — **2026-07-22 RESOLVED + CORRECTED.** The old gloss ("the live gate partitions differently than the labels describe") asserted something the code does not do. **The runtime SCORES; it never PARTITIONS**: the live decision is `top_scores` -> `compute_weighted_cluster_score` -> `>= feature_cluster_similarity_cluster_threshold` -> pass/block, and no record is assigned to a zone (`best_zone_id` is telemetry with no consumer). So assignment parity measures a partitioning the runtime does not perform. It is low for a mechanical reason: the 13 dims the runtime zero-weights carry **99.9983%** of the variance driving the KMeans objective (`volume` alone 97.58%), so KMeans partitioned by volume/price level while the runtime scores candle shape. Correct null is the majority-class baseline 0.3264 (not 1/8); kappa 0.238. Probe `scripts/analysis/zone_assignment_parity_probe.py`, artifact `docs/analysis/zone-assignment-parity.LATEST.json` (recorded 0.4140 reproduced exactly). Information only, no authority (§6.5).
 - **Enhancements:** 2026-07-03 — [`active_models.yaml`](../../active_models.yaml) file-format **v2.1** (additive; truth-layer schema stays 2.0): each model entry now carries a `reachability` block (config sections, telemetry streams with descriptive `schema`/`purpose`/`llm_questions` semantic contract, tests, topics, framework-registry ids), a **descriptive-only** `optimization` block (`authority: none` — §6.5, promotion stays M4 gate + PromotionManager), and `evidence.conflicts`/`evidence.hypotheses` F-id/H-id reference lists. New sibling registries: `data/hypothesis_registry.jsonl` (H-001…H-016, seed-script pattern, schemas.md §9.6) + generated `data/findings.jsonl` (derived view of current-findings.md, §9.5). Guard: `tests/test_active_models_registry.py` (citation-class). Grants no authority; no finding changed.
-- **Enhancements:** 2026-07-22 — [`active_models.yaml`](../../active_models.yaml) file-format **v2.2** (additive): WHO `identity` blocks under `gaussian` / `zone_gate` / `rr_model` / `bitnet` / new thin `tradenet` entry. Each identity **mirrors registry actives** (`authority: mirror_of_registry` — promote stays on registries), documents `spine_binding` (wired vs uses_trained_checkpoint) and `how_path_ref` parity pins against production HOW keys (not loaders), plus `runtime_binding.config_version` == `ACTIVE_VERSION`. No `version_history` (registries remain the ledger). No thresholds/paths as authority. CI: `tests/test_active_models_registry.py` R1–R4. Grants no runtime authority; no EngineRunner/config behavior change.
+- **Enhancements:** 2026-07-22 — [`active_models.yaml`](../../active_models.yaml) file-format **v2.2** (additive): WHO `identity` blocks under `gaussian` / `feature_cluster_similarity` / `rr_model` / `bitnet` / new thin `tradenet` entry. Each identity **mirrors registry actives** (`authority: mirror_of_registry` — promote stays on registries), documents `spine_binding` (wired vs uses_trained_checkpoint) and `how_path_ref` parity pins against production HOW keys (not loaders), plus `runtime_binding.config_version` == `ACTIVE_VERSION`. No `version_history` (registries remain the ledger). No thresholds/paths as authority. CI: `tests/test_active_models_registry.py` R1–R4. Grants no runtime authority; no EngineRunner/config behavior change.
 - **Enhancements:** 2026-07-22 — identity **v2.3 vocabulary** (Exists ≠ Selected ≠ Enabled): `selection` (was `active`), `execution.runtime_enabled` (was `spine_binding.wired`), derived `identity_status` ∈ {absent, selected_not_enabled, selected_and_enabled, enabled_without_checkpoint}. RR/TradeNet stay `selected_not_enabled`; Gaussian `enabled_without_checkpoint` (F-060); ZoneGate `selected_and_enabled`. ModelResolver reads v2.3 with v2.2 fallback. No auto-enable of trained artifacts.
 - **Enhancements:** 2026-07-22 (Phase 0) — CODE layout authority [`src/config_layer/model_paths.py`](../../src/config_layer/model_paths.py) + [`src/config_layer/model_resolver.py`](../../src/config_layer/model_resolver.py). `resolve_zone_gate_runtime` fail-closes on registry/identity/HOW path mismatch; `EngineRunner` loads ZoneGate only through the resolver. RR/Gaussian/TradeNet/BitNet resolvable for parity; rr_fusion still loads HOW path when enabled (registry artifact may differ). Guard: `tests/test_model_paths_resolver.py`. No `models/` tree reorg.
 - **Enhancements:** 2026-07-22 — **models/ path-literal freeze** (governance, no loader migration): scanner [`scripts/governance/scan_model_paths_literals.py`](../../scripts/governance/scan_model_paths_literals.py) + debt [`docs/governance/model_paths_literal_debt.json`](../governance/model_paths_literal_debt.json) + floor [`tests/test_model_paths_literals.py`](../../tests/test_model_paths_literals.py) (on GREEN_FLOOR). Unauthorized `models/` AST string literals outside `model_paths.py` / `model_resolver.py` / migration tooling / `tests/**` are grandfathered and may only **shrink**. New pairs FAIL CI.
@@ -474,14 +474,14 @@ Sits at the engine-scoring layer of [`docs/architecture/signal-flow.md`](../arch
   independently named these models (`MODEL_CATALOG` in `src/research/model_runners/contracts.py`,
   `miar_registry.json` entries, `active_models.yaml` sections) now share one `semantic_id` per
   model, closing the exact defect this topic's own 2026-09-16 entry recorded and left open: the
-  same reward-risk engine was `rr` in the catalog, `rr_engine` in MIAR, and `rr_model` in
+  same reward-risk engine was `rr` in the catalog, `candle_commitment` in MIAR, and `rr_model` in
   active_models.yaml, with nothing checking they were the same model. `MODEL_CATALOG` is now the
   hub (19 rows, the only surface bound to code — `entry_point`/`required_feature_keys`/
   `spine_active`); MIAR and active_models.yaml carry `semantic_ids` back-refs. Seven new
   `ModelContract` fields (`semantic_id`, `tier`, `miar_id`, `active_models_key`, `serve_domain`,
   `scale_type`, `authority`) are declarative only — no runner reads them, runtime behaviour is
   byte-unchanged. `authority` is derived mechanically from `spine_active` + membership in
-  `core.engine_runner.EXPECTED_ENGINES` (`{"crt","gaussian","zone_gate","rr"}`), never a per-row
+  `core.engine_runner.EXPECTED_ENGINES` (`{"crt","gaussian","feature_cluster_similarity","rr"}`), never a per-row
   guess. `design_only_concepts` gained 21 rows for the Phase 3 19-block conditional-expectancy
   ensemble + temporal tracker + arbiter (not yet built in code) via the existing envelope
   precedent, with a distinct `M{tier}_` id prefix chosen specifically to NOT collide with the

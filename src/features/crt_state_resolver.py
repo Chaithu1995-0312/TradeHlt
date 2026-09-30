@@ -1761,7 +1761,7 @@ class CRTStateResolver:
             # Without a score feature the gate fails closed — EXECUTION is the
             # rarest state and must not fire on retest_flag alone.
             if state_name == "EXECUTION":
-                score = raw.get("score", raw.get("risk_score", raw.get("crt_score")))
+                score = raw.get("score", raw.get("risk_score", raw.get("crt_structure_rule_score")))
                 score_thr = float(thr["score_threshold"])
                 if score is None:
                     return False  # fail closed: no score ⇒ no EXECUTION

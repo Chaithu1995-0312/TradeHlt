@@ -16,10 +16,10 @@ PKG = Path(__file__).resolve().parents[2] / "src" / "research" / "model_runners"
 
 def test_catalog_has_live_four_and_blocked():
     ids = set(MODEL_CATALOG)
-    for need in ("rr", "gaussian", "zone_gate", "crt_score", "llm_gate", "strategies"):
+    for need in ("candle_commitment", "ema_momentum_kernel", "feature_cluster_similarity", "crt_structure_rule_score", "llm_gate", "strategies"):
         assert need in ids
     runnable = {m.model_id for m in list_models() if m.runnable}
-    assert {"rr", "gaussian", "zone_gate", "crt_score"} <= runnable
+    assert {"candle_commitment", "ema_momentum_kernel", "feature_cluster_similarity", "crt_structure_rule_score"} <= runnable
     for m in list_models():
         assert m.entry_point
         assert m.model_id in MODEL_CATALOG
@@ -36,9 +36,9 @@ def test_require_key_missing():
 
 
 def test_require_section():
-    cfg = {"engine_runner": {"zone_registry_path": "x"}}
+    cfg = {"engine_runner": {"feature_cluster_similarity_registry_path": "x"}}
     sec = require_section(cfg, "engine_runner")
-    assert sec["zone_registry_path"] == "x"
+    assert sec["feature_cluster_similarity_registry_path"] == "x"
     with pytest.raises(KeyError, match="missing production config"):
         require_section(cfg, "nope")
 

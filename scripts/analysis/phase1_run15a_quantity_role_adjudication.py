@@ -306,7 +306,7 @@ def adjudicate_curated(q: dict) -> dict:
         return _base(
             q,
             "EXPLICIT_MODEL_SPECIFIC_QUANTITY",
-            producers=["heuristic_gaussian_engine"],
+            producers=["ema_momentum_kernel"],
             consumers=["EngineRunner gaussian slot"],
             model_or_subsystem_specific=True,
             model_input=True,
@@ -343,12 +343,12 @@ def adjudicate_curated(q: dict) -> dict:
         return _base(
             q,
             "EXPLICIT_MODEL_SPECIFIC_QUANTITY",
-            producers=["rr_engine"],
+            producers=["candle_commitment"],
             consumers=["EngineRunner rr slot", "DecisionEngine gate (F-048)"],
             model_or_subsystem_specific=True,
             model_input=True,
             notes="Candle polarity misnamed rr_ratio — engine-local quantity",
-            evidence_refs=["F-048", "rr_engine"],
+            evidence_refs=["F-048", "candle_commitment"],
         )
 
     if qid == "Q-RR-FUSION-38":
@@ -379,12 +379,12 @@ def adjudicate_curated(q: dict) -> dict:
         return _base(
             q,
             "EXPLICIT_MODEL_SPECIFIC_QUANTITY",
-            producers=["zone_gate_engine", "zone_registry.json"],
-            consumers=["EngineRunner zone_gate"],
+            producers=["feature_cluster_similarity", "zone_registry.json"],
+            consumers=["EngineRunner feature_cluster_similarity"],
             model_or_subsystem_specific=True,
             model_input=True,
             notes="Zone membership geometry — not 38-vector feature",
-            evidence_refs=["F-041", "zone_gate_engine"],
+            evidence_refs=["F-041", "feature_cluster_similarity"],
         )
 
     if qid == "Q-SCORING-DISP":

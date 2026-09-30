@@ -154,7 +154,7 @@ payload["user_intent_to_closure"] = {
             ),
             "closure": (
                 "Registry __active__[XAUUSD]=xauusd_nb_20260722T194904Z; "
-                "entry.active=true. Live gaussian_impl still heuristic unless config "
+                "entry.active=true. Live removed_selector still heuristic unless config "
                 "changed separately."
             ),
         },

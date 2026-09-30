@@ -38,10 +38,10 @@ from data_ingestion.ohlcv_schema import (  # noqa: E402
     validate_ohlcv_frame,
 )
 from engines.crt_engine import compute as crt_compute  # noqa: E402
-from engines.heuristic_gaussian_engine import HeuristicGaussianEngine  # noqa: E402
-from engines.rr_engine import RREngine  # noqa: E402
+from engines.ema_momentum_kernel import EmaMomentumKernel  # noqa: E402
+from engines.candle_commitment import CandleCommitment  # noqa: E402
 from engines.scoring_engine import compute_scores  # noqa: E402
-from engines.zone_gate_engine import _compute_soft_zone_score  # noqa: E402
+from engines.feature_cluster_similarity import _compute_soft_zone_score  # noqa: E402
 from features.candle_math import body_ratio as cm_body_ratio  # noqa: E402
 from features.feature_schema import CANONICAL_FEATURES  # noqa: E402
 from research.contracts import Signal  # noqa: E402
@@ -86,7 +86,7 @@ SCORE_COMPONENT_WEIGHTS = (0.35, 0.25, 0.20, 0.20)
 # Retest mid-pocket → s_retest peaks at retest_depth=0.5 in scoring_engine.
 DESIGN_RETEST_DEPTH = 0.5
 DESIGN_CANDLES_SINCE_RETEST = 1  # entry is next bar after retest phase
-# Soft zone (zone_mode=soft path): near/fresh/strong around retest structure.
+# Soft zone (feature_cluster_similarity_mode=soft path): near/fresh/strong around retest structure.
 DESIGN_ZONE_DISTANCE = 0.10
 DESIGN_ZONE_FRESHNESS = 0.90
 DESIGN_ZONE_STRENGTH = 0.80
@@ -261,7 +261,7 @@ def _intended_engine_scores(feats: dict[str, Any]) -> dict[str, Any]:
         double_sweep=bool(feats["double_sweep"]),
         score_weights=tuple(feats["score_component_weights"]),
     )
-    # RR polarity (same as RREngine)
+    # RR polarity (same as CandleCommitment)
     hi, lo, cl = float(feats["high"]), float(feats["low"]), float(feats["close"])
     rng = hi - lo
     if rng <= 1e-9:
@@ -302,7 +302,7 @@ def _intended_engine_scores(feats: dict[str, Any]) -> dict[str, Any]:
             "x": round(x, 6),
             "kernel": "heuristic_exp",
         },
-        "zone_gate": {
+        "feature_cluster_similarity": {
             "score": round(zone_score, 6),
             "mode": "soft_designed",
             "passed": zone_score >= 0.25,  # informational only for pack
@@ -317,7 +317,7 @@ def _intended_engine_scores(feats: dict[str, Any]) -> dict[str, Any]:
             "semantic": "candle_structure_quality",
             "note": "polarity index, not true RR (F-048 class)",
         },
-        "EXPECTED_ENGINES": sorted(["crt", "gaussian", "zone_gate", "rr"]),
+        "EXPECTED_ENGINES": sorted(["crt", "gaussian", "feature_cluster_similarity", "rr"]),
     }
 
 
@@ -440,7 +440,7 @@ def _topic_intendeds(
             "out": {
                 "crt": eng.get("crt", {}).get("score"),
                 "gaussian": eng.get("gaussian", {}).get("score"),
-                "zone_gate": eng.get("zone_gate", {}).get("score"),
+                "feature_cluster_similarity": eng.get("feature_cluster_similarity", {}).get("score"),
                 "rr": eng.get("rr", {}).get("score"),
             },
             "note": "scores from real engine formulas; features designed from story, not random",
@@ -612,7 +612,7 @@ def produce_compare(bars: list[Bar], intended: dict[str, Any]) -> dict[str, Any]
         },
         {"score_component_weights": weights},
     )
-    rr_out = RREngine({}).compute(
+    rr_out = CandleCommitment({}).compute(
         {
             "open": feats["open"],
             "high": feats["high"],
@@ -629,7 +629,7 @@ def produce_compare(bars: list[Bar], intended: dict[str, Any]) -> dict[str, Any]
             }
         )
     )
-    g_engine = HeuristicGaussianEngine(
+    g_engine = EmaMomentumKernel(
         {"mu": DESIGN_GAUSS_MU, "sigma": DESIGN_GAUSS_SIGMA},
         instrument=INSTRUMENT,
         preload_registry=False,
@@ -651,7 +651,7 @@ def produce_compare(bars: list[Bar], intended: dict[str, Any]) -> dict[str, Any]
             "reason": g_out.get("reason"),
             "meta": g_out.get("meta", {}),
         },
-        "zone_gate": {
+        "feature_cluster_similarity": {
             "score": round(zone_out_score, 6),
             "mode": "soft_designed",
             "passed": zone_out_score >= 0.25,
@@ -671,8 +671,8 @@ def produce_compare(bars: list[Bar], intended: dict[str, Any]) -> dict[str, Any]
         "gaussian": math.isclose(
             ep["gaussian"]["score"], ei["gaussian"]["score"], abs_tol=1e-4
         ),
-        "zone_gate": math.isclose(
-            ep["zone_gate"]["score"], ei["zone_gate"]["score"], abs_tol=1e-5
+        "feature_cluster_similarity": math.isclose(
+            ep["feature_cluster_similarity"]["score"], ei["feature_cluster_similarity"]["score"], abs_tol=1e-5
         ),
         "rr": math.isclose(ep["rr"]["score"], ei["rr"]["score"], abs_tol=1e-4),
     }
@@ -701,13 +701,13 @@ def produce_compare(bars: list[Bar], intended: dict[str, Any]) -> dict[str, Any]
         "engines_intended_scores": {
             "crt": ei["crt"]["score"],
             "gaussian": ei["gaussian"]["score"],
-            "zone_gate": ei["zone_gate"]["score"],
+            "feature_cluster_similarity": ei["feature_cluster_similarity"]["score"],
             "rr": ei["rr"]["score"],
         },
         "engines_produced_scores": {
             "crt": ep["crt"]["score"],
             "gaussian": ep["gaussian"]["score"],
-            "zone_gate": ep["zone_gate"]["score"],
+            "feature_cluster_similarity": ep["feature_cluster_similarity"]["score"],
             "rr": ep["rr"]["score"],
         },
         "all_critical_pass": False,  # set below
@@ -886,7 +886,7 @@ def write_narrative(intended: dict[str, Any], produced: dict[str, Any]) -> str:
         f"| Engines all match | true | {c.get('engines_all_match')} | {c.get('engines_all_match')} |",
         f"| CRT score | {c.get('engines_intended_scores', {}).get('crt')} | {c.get('engines_produced_scores', {}).get('crt')} | {c.get('engines_match', {}).get('crt')} |",
         f"| Gaussian score | {c.get('engines_intended_scores', {}).get('gaussian')} | {c.get('engines_produced_scores', {}).get('gaussian')} | {c.get('engines_match', {}).get('gaussian')} |",
-        f"| Zone soft score | {c.get('engines_intended_scores', {}).get('zone_gate')} | {c.get('engines_produced_scores', {}).get('zone_gate')} | {c.get('engines_match', {}).get('zone_gate')} |",
+        f"| Zone soft score | {c.get('engines_intended_scores', {}).get('feature_cluster_similarity')} | {c.get('engines_produced_scores', {}).get('feature_cluster_similarity')} | {c.get('engines_match', {}).get('feature_cluster_similarity')} |",
         f"| RR polarity | {c.get('engines_intended_scores', {}).get('rr')} | {c.get('engines_produced_scores', {}).get('rr')} | {c.get('engines_match', {}).get('rr')} |",
         "",
         f"**Overall critical: {'PASS' if c.get('all_critical_pass') else 'FAIL'}**",
@@ -902,8 +902,8 @@ def write_narrative(intended: dict[str, Any], produced: dict[str, Any]) -> str:
         "- EMA/momentum seeds for bullish heuristic gaussian (fixed mu/sigma for pack)",
         "- Soft zone distance/freshness/strength near retest structure",
         "",
-        "Produced via real callables: `crt_engine.compute`, `HeuristicGaussianEngine`,",
-        "`_compute_soft_zone_score`, `RREngine.compute` — intended closed-form must match.",
+        "Produced via real callables: `crt_engine.compute`, `EmaMomentumKernel`,",
+        "`_compute_soft_zone_score`, `CandleCommitment.compute` — intended closed-form must match.",
         "",
         "## Narration of the 4-hour path",
         "",

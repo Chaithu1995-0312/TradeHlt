@@ -128,8 +128,8 @@ A real, in-flight split-brain caught while auditing this very protocol's premise
 - **Audit row:** see [`finding_dependency_audit.md`](finding_dependency_audit.md) Audit Log
   (F-038 ⚠FLAG → RESOLVED) and the `CORRECTED:` note appended to the F-038 finding.
 - **Residual (gated, NOT auto-resolved):** two config files still disagree
-  (`…_04.json` `enabled:false`/`gaussian_impl:heuristic` vs `… - deepdeektry.json`
-  `enabled:true`/`gaussian_impl:ml`) — surfaced as a `TruthConflict` for the user, per Step 3.
+  (`…_04.json` `enabled:false`/`removed_selector:heuristic` vs `… - deepdeektry.json`
+  `enabled:true`/`removed_selector:ml`) — surfaced as a `TruthConflict` for the user, per Step 3.
 
 Lesson, in one line: **a code fix is not a deployed fix until the active-version pointer resolves to
 it** — and the document asserting "shipped" must be verified against that resolution, not the edit.

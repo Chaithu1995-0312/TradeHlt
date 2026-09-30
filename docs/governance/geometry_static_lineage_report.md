@@ -223,7 +223,7 @@ feature_pipeline.py (canonical features)
 
 ### 3.5 Consumer File:line or Explicit No-Consumer Evidence
 - **rr_model consumer:** `src/config_layer/rr/rr_fusion.py` (NanoInferenceEngine, F-044)
-- **zone_registry consumer:** `src/engines/zone_gate_engine.py:230` (BitNetZoneGate, F-041)
+- **zone_registry consumer:** `src/engines/feature_cluster_similarity.py:230` (BitNetZoneGate, F-041)
 - Both models embed pipeline-canonical features
 
 ### 3.6 training_reachable Verdict
@@ -249,7 +249,7 @@ model artifact exists; zone_registry is live per F-041).
 - `models/rr_model.json`
 - `models/zone_registry.json`
 - `src/config_layer/rr/rr_fusion.py`
-- `src/engines/zone_gate_engine.py`
+- `src/engines/feature_cluster_similarity.py`
 
 ### 3.12 Result
 **YES** — canonical/pipeline features reach both model artifacts.

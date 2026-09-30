@@ -23,11 +23,10 @@ from pathlib import Path as _Path
 from typing import Optional
 from engines.trap_validator_engine import TrapValidatorEngine
 from engines.crt_engine import compute as crt_compute
-from engines.heuristic_gaussian_engine import HeuristicGaussianEngine
-from engines.ml_gaussian_engine import MLGaussianEngine
-from engines.zone_gate_engine import _compute_soft_zone_score
+from engines.ema_momentum_kernel import EmaMomentumKernel
+from engines.feature_cluster_similarity import _compute_soft_zone_score
 from engines.zone_cluster_score import score_zone_cluster
-from engines.rr_engine import RREngine
+from engines.candle_commitment import CandleCommitment
 from features.feature_schema import CANONICAL_FEATURES
 from core.fusion_engine import FusionEngine, GaussianAdapter
 from core.decision_engine import DecisionEngine
@@ -51,7 +50,7 @@ except Exception as _rr_fusion_import_exc:  # pragma: no cover - defensive impor
 
 logger = get_flow_logger("ENGINE_RUNNER")
 
-EXPECTED_ENGINES = {"crt", "gaussian", "zone_gate", "rr"}
+EXPECTED_ENGINES = {"crt", "ema_momentum_kernel", "feature_cluster_similarity", "candle_commitment"}
 
 # M2 — curated enveloped telemetry streams (additive; observation-only; mirrors M1 idiom).
 _FEATURE_SNAPSHOT_LOG      = _Path("logs/feature_snapshots.jsonl")
@@ -92,14 +91,13 @@ ENGINE_RUNNER_DEFAULTS: dict = {
     "model_path":               "model_export_format.json",
     "min_atr":                  0.0003,
     "allowed_sessions":         ["london", "new_york", "overlap"],
-    "zone_cluster_threshold":    0.25,
-    "zone_registry_path":       "models/zone_registry.json",
-    "zone_gate_execution_mode": "normal",
-    "zone_mode":                "hard",
-    "zone_min_samples":         50,
-    "zone_gate":                {"top_k": 3, "cluster_min_n": 2, "cluster_spread_max": 0.15},
+    "feature_cluster_similarity_cluster_threshold":    0.25,
+    "feature_cluster_similarity_registry_path":       "models/zone_registry.json",
+    "feature_cluster_similarity_execution_mode": "normal",
+    "feature_cluster_similarity_mode":                "hard",
+    "feature_cluster_similarity_min_samples":         50,
+    "feature_cluster_similarity":                {"top_k": 3, "cluster_min_n": 2, "cluster_spread_max": 0.15},
     "debug_mode":               False,
-    "gaussian_impl":            "heuristic",
     "convergence_window":       500,
     "fusion_compare_evaluate":  True,
     "fusion_use_evaluate":      False,
@@ -111,8 +109,8 @@ ENGINE_RUNNER_DEFAULTS: dict = {
     # differ from the active config (which is the sole source of truth). Locked by
     # tests/test_fusion_weights_config_only.py.
     "fusion_engine": {
-        "weight_crt": 0.4, "weight_gaussian": 0.3,
-        "weight_zone_gate": 0.2, "weight_rr": 0.1,
+        "weight_crt": 0.4, "weight_ema_momentum_kernel": 0.3,
+        "weight_feature_cluster_similarity": 0.2, "weight_candle_commitment": 0.1,
     },
 }
 
@@ -297,58 +295,18 @@ def _regime_governor_legacy(regime: str, dual_results: dict, cfg: dict) -> dict:
 
 class EngineRunner:
 
-    @staticmethod
-    def _get_gaussian_engine(config: dict):
-        """
-        Instantiate primary Gaussian engine from config["gaussian_impl"] only.
-
-        GAUSSIAN_IMPL env var removed — config is the single source of truth.
-
-        Values:
-          "heuristic"  → HeuristicGaussianEngine (EMA/momentum kernel)
-          "ml"         → MLGaussianEngine (GaussianNBModel)
-          "shadow_ml"  → HeuristicGaussianEngine (production score);
-                         MLGaussianEngine runs as shadow via _get_shadow_gaussian_engine()
-        """
-        cfg_impl = config.get("gaussian_impl", "heuristic") if isinstance(config, dict) else "heuristic"
-        impl = cfg_impl.lower()
-
-        if impl == "ml":
-            logger.info("EngineRunner: using MLGaussianEngine (config: gaussian_impl=ml)")
-            return MLGaussianEngine(config)
-        elif impl == "shadow_ml":
-            logger.info(
-                "EngineRunner: using HeuristicGaussianEngine + MLGaussianEngine shadow "
-                "(config: gaussian_impl=shadow_ml)"
-            )
-            return HeuristicGaussianEngine(config)
-        else:
-            logger.info("EngineRunner: using HeuristicGaussianEngine (config: gaussian_impl=%s)", impl)
-            return HeuristicGaussianEngine(config)
-
-    @staticmethod
-    def _get_shadow_gaussian_engine(config: dict):
-        """
-        Return MLGaussianEngine shadow when gaussian_impl=shadow_ml, else None.
-
-        The shadow engine's score is logged to engines_raw["gaussian"]["shadow"] but
-        never enters engine_results["gaussian"]["score"] — FusionEngine is unaffected.
-        """
-        cfg_impl = config.get("gaussian_impl", "") if isinstance(config, dict) else ""
-        if cfg_impl.lower() == "shadow_ml":
-            logger.info("EngineRunner: shadow MLGaussianEngine instantiated (shadow_ml mode)")
-            return MLGaussianEngine(config)
-        return None
-
     def __init__(self, config: dict):
         if not isinstance(config, dict):
             raise TypeError("EngineRunner requires a dict config. Got: %s" % type(config))
         self.config = config
 
         self.adapter = TrapValidatorEngine(config)
-        self.gaussian = self._get_gaussian_engine(config)
-        self.gaussian_shadow = self._get_shadow_gaussian_engine(config)  # None unless shadow_ml
-        self.rr = RREngine(config)
+        # Fusion slot is EmaMomentumKernel. The NB classifier is nb_outcome_classifier,
+        # not this slot. gaussian_shadow stays an attribute so callers can read it;
+        # the fixed slot never constructs a shadow engine.
+        self.gaussian = EmaMomentumKernel(config)
+        self.gaussian_shadow = None
+        self.rr = CandleCommitment(config)
         # Contract B (trained rr_fusion): default inert / shadow-only.
         # Only mutates the RR fusion slot when engine_runner.rr_fusion.enabled=true
         # (authority: F-038 disabled on active config; do not re-enable without ΔG001).
@@ -422,9 +380,9 @@ class EngineRunner:
         from core.fusion_engine import FusionConfig
         _fusion_config = FusionConfig(
             weight_crt=float(_cfg_require(_fusion_cfg_dict, "weight_crt", "fusion_engine")),
-            weight_gaussian=float(_cfg_require(_fusion_cfg_dict, "weight_gaussian", "fusion_engine")),
-            weight_zone_gate=float(_cfg_require(_fusion_cfg_dict, "weight_zone_gate", "fusion_engine")),
-            weight_rr=float(_cfg_require(_fusion_cfg_dict, "weight_rr", "fusion_engine")),
+            weight_ema_momentum_kernel=float(_cfg_require(_fusion_cfg_dict, "weight_ema_momentum_kernel", "fusion_engine")),
+            weight_feature_cluster_similarity=float(_cfg_require(_fusion_cfg_dict, "weight_feature_cluster_similarity", "fusion_engine")),
+            weight_candle_commitment=float(_cfg_require(_fusion_cfg_dict, "weight_candle_commitment", "fusion_engine")),
             conflict_resolution_policy=str(_cfg_require(_fusion_cfg_dict, "conflict_resolution_policy", "fusion_engine")),
             gaussian_weight=float(_cfg_require(_fusion_cfg_dict, "gaussian_weight", "fusion_engine")),
             neural_weight=float(_cfg_require(_fusion_cfg_dict, "neural_weight", "fusion_engine")),
@@ -466,18 +424,18 @@ class EngineRunner:
 
         # BitNet zone gate — path derived via ModelResolver (Phase 0):
         # registry active.model_file + ModelPaths layout + WHO identity parity;
-        # HOW zone_registry_path must match the resolved artifact (fail-closed).
-        # zone_gate BEHAVIORAL knobs (top_k / cluster_min_n / cluster_spread_max) are
-        # read fail-fast from the nested engine_runner.zone_gate section (§6.5 A1 rule).
-        zone_registry_path = str(_cfg_require(config, "zone_registry_path", "engine_runner"))
+        # HOW feature_cluster_similarity_registry_path must match the resolved artifact (fail-closed).
+        # feature_cluster_similarity BEHAVIORAL knobs (top_k / cluster_min_n / cluster_spread_max) are
+        # read fail-fast from the nested engine_runner.feature_cluster_similarity section (§6.5 A1 rule).
+        feature_cluster_similarity_registry_path = str(_cfg_require(config, "feature_cluster_similarity_registry_path", "engine_runner"))
         from config_layer.model_resolver import resolve_zone_gate_runtime
-        self._zone_resolved = resolve_zone_gate_runtime(how_path=zone_registry_path)
-        zone_registry_path = str(self._zone_resolved.require_artifact())
-        _zone_min_samples  = int(_cfg_require(config, "zone_min_samples", "engine_runner"))
-        _zone_gate_cfg     = _cfg_require(config, "zone_gate", "engine_runner")
-        _zone_top_k        = int(_cfg_require(_zone_gate_cfg, "top_k", "engine_runner.zone_gate"))
+        self._zone_resolved = resolve_zone_gate_runtime(how_path=feature_cluster_similarity_registry_path)
+        feature_cluster_similarity_registry_path = str(self._zone_resolved.require_artifact())
+        _feature_cluster_similarity_min_samples  = int(_cfg_require(config, "feature_cluster_similarity_min_samples", "engine_runner"))
+        _zone_gate_cfg     = _cfg_require(config, "feature_cluster_similarity", "engine_runner")
+        _zone_top_k        = int(_cfg_require(_zone_gate_cfg, "top_k", "engine_runner.feature_cluster_similarity"))
         self._zone_gate = get_zone_gate(
-            zone_registry_path, min_samples=_zone_min_samples, top_n=_zone_top_k,
+            feature_cluster_similarity_registry_path, min_samples=_feature_cluster_similarity_min_samples, top_n=_zone_top_k,
         )
 
         # [IC-007 / PLAN-002] engines-path CRT component weights (sweep, breakout, retest, time).
@@ -559,7 +517,7 @@ class EngineRunner:
                or r.startswith("invalid_session") or r.startswith("low_atr") or r.startswith("non_positive_atr"):
                 return "adapter"
             if r.startswith("zone_gate"):
-                return "zone_gate"
+                return "feature_cluster_similarity"
             if r.startswith("ultron_gate"):
                 return "ultron"
             if r.startswith("incomplete_engine_execution") or r.startswith("fusion_missing_engines") \
@@ -607,9 +565,9 @@ class EngineRunner:
         cfg = getattr(self.fusion, "cfg", None)
         weights = {
             "crt": _safe_float(getattr(cfg, "weight_crt", 0.30), 0.30),
-            "gaussian": _safe_float(getattr(cfg, "weight_gaussian", 0.25), 0.25),
-            "zone_gate": _safe_float(getattr(cfg, "weight_zone_gate", 0.25), 0.25),
-            "rr": _safe_float(getattr(cfg, "weight_rr", 0.20), 0.20),
+            "ema_momentum_kernel": _safe_float(getattr(cfg, "weight_ema_momentum_kernel", 0.25), 0.25),
+            "feature_cluster_similarity": _safe_float(getattr(cfg, "weight_feature_cluster_similarity", 0.25), 0.25),
+            "candle_commitment": _safe_float(getattr(cfg, "weight_candle_commitment", 0.20), 0.20),
         }
         total = 0.0
         for name, w in weights.items():
@@ -671,13 +629,13 @@ class EngineRunner:
         
         zonegate_input = {**input_data, **(context or {})}
 
-        _zone_threshold = float(_cfg_require(self.config, "zone_cluster_threshold", "engine_runner"))
-        _exec_mode = str(_cfg_require(self.config, "zone_gate_execution_mode", "engine_runner"))
+        _zone_threshold = float(_cfg_require(self.config, "feature_cluster_similarity_cluster_threshold", "engine_runner"))
+        _exec_mode = str(_cfg_require(self.config, "feature_cluster_similarity_execution_mode", "engine_runner"))
         _debug_mode = bool(_cfg_require(self.config, "debug_mode", "engine_runner"))
-        # zone_gate cluster-aggregation knobs (fail-fast nested read — §6.5 A1 rule)
-        _zone_gate_cfg = _cfg_require(self.config, "zone_gate", "engine_runner")
-        _cluster_min_n = int(_cfg_require(_zone_gate_cfg, "cluster_min_n", "engine_runner.zone_gate"))
-        _cluster_spread_max = float(_cfg_require(_zone_gate_cfg, "cluster_spread_max", "engine_runner.zone_gate"))
+        # feature_cluster_similarity cluster-aggregation knobs (fail-fast nested read — §6.5 A1 rule)
+        _zone_gate_cfg = _cfg_require(self.config, "feature_cluster_similarity", "engine_runner")
+        _cluster_min_n = int(_cfg_require(_zone_gate_cfg, "cluster_min_n", "engine_runner.feature_cluster_similarity"))
+        _cluster_spread_max = float(_cfg_require(_zone_gate_cfg, "cluster_spread_max", "engine_runner.feature_cluster_similarity"))
         _zone_debug_config = {
             "zones_loaded_count": len(getattr(self._zone_gate, "_zones", []) or []),
             "inside_zone":        False,
@@ -691,7 +649,7 @@ class EngineRunner:
         _zone_scored = score_zone_cluster(
             zonegate_input,
             self._zone_gate,
-            zone_cluster_threshold=_zone_threshold,
+            feature_cluster_similarity_cluster_threshold=_zone_threshold,
             cluster_min_n=_cluster_min_n,
             cluster_spread_max=_cluster_spread_max,
             execution_mode=_exec_mode,
@@ -703,7 +661,7 @@ class EngineRunner:
             zone_raw["passed"] = _zone_scored["passed"]
 
         # Soft zone scoring (optional override of score only — pass/fail still from hard gate)
-        _zone_mode = str(_cfg_require(self.config, "zone_mode", "engine_runner"))
+        _zone_mode = str(_cfg_require(self.config, "feature_cluster_similarity_mode", "engine_runner"))
         if _zone_mode == "soft":
             soft_score = _compute_soft_zone_score(zonegate_input)
             zone_raw = {**zone_raw, "score": soft_score}
@@ -712,7 +670,7 @@ class EngineRunner:
         self._audit.record_zone(zone_raw)
 
         zone_result = {
-            "engine": "zone_gate",
+            "engine": "feature_cluster_similarity",
             "score": float(zone_raw.get("score", 0.0)),
             "direction": 1 if zone_raw.get("passed") else 0,
             "meta": zone_raw,
@@ -754,7 +712,7 @@ class EngineRunner:
         rr_result = self.rr.compute(input_data)
         base_rr_score = _safe_float(rr_result.get("score"), 0.0)
 
-        # Optional RR enhancement layer: after RREngine, before FusionEngine.
+        # Optional RR enhancement layer: after CandleCommitment, before FusionEngine.
         if self.rr_fusion and self.rr_fusion.is_loaded:
             try:
                 _rr_thr = float(_cfg_require(
@@ -802,9 +760,9 @@ class EngineRunner:
 
         engine_results = {
             "crt": crt_result,
-            "gaussian": gaussian_result,
-            "zone_gate": zone_result,
-            "rr": rr_result,
+            "ema_momentum_kernel": gaussian_result,
+            "feature_cluster_similarity": zone_result,
+            "candle_commitment": rr_result,
         }
 
         # 5th engine — StrategyOrchestrator consensus (injected via context dict).
@@ -1016,24 +974,24 @@ class EngineRunner:
         # ------------------------------------------------------------------ #
         selected = gate_result.get("selected", {})
         p_win = _safe_float(
-            engine_results.get("gaussian", {}).get("score"), 0.5
+            engine_results.get("ema_momentum_kernel", {}).get("score"), 0.5
         )
         zone_gate_ctx = {
             "valid": bool(zone_result.get("passed", False)),
             "score": _safe_float(zone_result.get("score"), 0.0),
         }
         # F-048 RESOLVED 2026-07-24 — RR ownership split, DecisionEngine is semantic-only:
-        #   A — RREngine polarity score feeds FusionEngine averaging (weight_rr), upstream of here.
+        #   A — CandleCommitment polarity score feeds FusionEngine averaging (weight_candle_commitment), upstream of here.
         #   C — DecisionEngine has NO economic RR gate anymore, so it reads no rr/rr_semantic here.
         #   D — True RR is enforced by UltronRiskGate after SL/TP (live_engine_hook).
         #   B — rr_fusion stays off unless explicitly enabled (shadow/inert by default).
         # candle_polarity retained on the ctx for the collector audit record ONLY (non-decision);
         # the former "rr"/"rr_semantic" shim keys are gone — nothing consumes them now.
         _polarity = _safe_float(
-            engine_results.get("rr", {}).get("candle_polarity"),
+            engine_results.get("candle_commitment", {}).get("candle_polarity"),
             _safe_float(
-                engine_results.get("rr", {}).get("rr_ratio"),
-                _safe_float(engine_results.get("rr", {}).get("score"), 0.0),
+                engine_results.get("candle_commitment", {}).get("rr_ratio"),
+                _safe_float(engine_results.get("candle_commitment", {}).get("score"), 0.0),
             ),
         )
         fusion_ctx = {
@@ -1051,7 +1009,7 @@ class EngineRunner:
         decision_result = self.decision.evaluate(
             score=final_score,
             p_win=p_win,
-            zone_gate=zone_gate_ctx,
+            feature_cluster_similarity=zone_gate_ctx,
             fusion=fusion_ctx,
             config=effective_config,
         )
@@ -1138,14 +1096,14 @@ class EngineRunner:
                         "decision":    str(decision_result.get("decision", "")),
                         "score":       round(float(decision_result.get("final_score", 0.0)), 4),
                         "cluster_id":  int(
-                            engine_results.get("zone_gate", {}).get("cluster_id", -1)
-                            if isinstance(engine_results.get("zone_gate"), dict) else -1
+                            engine_results.get("feature_cluster_similarity", {}).get("cluster_id", -1)
+                            if isinstance(engine_results.get("feature_cluster_similarity"), dict) else -1
                         ),
                     },
                 )
-                _zone_r = engine_results.get("zone_gate") or {}
-                _gauss_r = engine_results.get("gaussian") or {}
-                _rr_r   = engine_results.get("rr") or {}
+                _zone_r = engine_results.get("feature_cluster_similarity") or {}
+                _gauss_r = engine_results.get("ema_momentum_kernel") or {}
+                _rr_r   = engine_results.get("candle_commitment") or {}
                 self._cognitive_bus.emit(_DS(
                     decision_id     = _did,
                     event_id        = _env["event_id"],

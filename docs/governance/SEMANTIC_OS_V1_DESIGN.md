@@ -164,7 +164,7 @@ module a name that (a) is stable across a future rename and (b) can say a filena
   for every remaining code-universe path, never materialized in the YAML (would violate the
   hand-author rule at the volume of ~700+ rows — see the report §3).
 - **`filename_semantic_status`** (ALIGNED/HISTORICAL/MISLEADING/COMPATIBILITY/SPLIT/UNKNOWN) is
-  the field this kind exists to carry — e.g. `src/engines/rr_engine.py` is classified MISLEADING
+  the field this kind exists to carry — e.g. `src/engines/candle_commitment.py` is classified MISLEADING
   because it computes a candle-polarity index bounded [0.5, 1.0], not economic reward:risk.
 - Does **not** duplicate CN/BD/JN/CT/OBJ: `concept_ids` and `owner_boundary`-style joins stay
   read-only pointers (owner_boundary is DERIVED, never hand-written on a FileIdentity record —

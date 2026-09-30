@@ -1,5 +1,5 @@
 """
-zone_gate_engine.py – BitNet Zone Gate with strict schema validation but fail‑open on registry errors.
+feature_cluster_similarity.py – BitNet Zone Gate with strict schema validation but fail‑open on registry errors.
 
 Added instrumentation (2026-04-09):
   - execution_mode: "normal" | "force_pass"
@@ -7,7 +7,7 @@ Added instrumentation (2026-04-09):
   - zone_debug_config: optional dict with per-bar debug metadata logged as JSON.
   - Module-level counters: total_pass / total_block / block_reason_dist.
   - get_zone_gate_counters() — read-only access to session counters.
-  - _compute_soft_zone_score() — soft scoring helper for zone_mode="soft".
+  - _compute_soft_zone_score() — soft scoring helper for feature_cluster_similarity_mode="soft".
 """
 
 from __future__ import annotations
@@ -83,7 +83,7 @@ def _log_zone_debug(
 
 
 # ------------------------------------------------------------------
-# Soft zone score helper (called from EngineRunner when zone_mode="soft")
+# Soft zone score helper (called from EngineRunner when feature_cluster_similarity_mode="soft")
 # ------------------------------------------------------------------
 
 def _compute_soft_zone_score(
@@ -120,7 +120,7 @@ def compute_weighted_cluster_score(
     Args:
         similarity_scores: List of similarity scores from nearest neighbours (0.0 - 1.0)
         spread_max: Max max-min spread before the cluster is rejected. Config-driven via
-                    ``engine_runner.zone_gate.cluster_spread_max``; default 0.15 preserves
+                    ``engine_runner.feature_cluster_similarity.cluster_spread_max``; default 0.15 preserves
                     the historical behaviour for standalone callers.
 
     Returns:
@@ -184,7 +184,7 @@ def _extract_vector(features: dict, feature_order: list | None = None) -> list:
     i.e. it quietly dropped trailing features and kept scoring. That is a mis-scoring path, not a
     compatibility path: ZoneGate is the only LIVE hard gate (F-041), so on the next schema change it
     would have decided confidently against a misaligned vector with no error and no log at INFO.
-    Length mismatch is now a hard ValueError, which `run_zone_gate_engine` converts to a BLOCK
+    Length mismatch is now a hard ValueError, which `run_feature_cluster_similarity` converts to a BLOCK
     (fail-closed) rather than a pass.
     """
     keys = list(feature_order) if feature_order else CANONICAL_KEYS
@@ -211,7 +211,7 @@ def _extract_vector(features: dict, feature_order: list | None = None) -> list:
 # Main gate function
 # ------------------------------------------------------------------
 
-def run_zone_gate_engine(
+def run_feature_cluster_similarity(
     raw_features: dict,
     model_fn: Callable,
     threshold: float = 0.5,

@@ -20,17 +20,16 @@
       "new_york",
       "overlap"
     ],
-    "zone_cluster_threshold": 0.25,
-    "zone_registry_path": "models/zone_registry_v4_2026_07.json",
-    "zone_gate_execution_mode": "normal",
-    "zone_mode": "hard",
-    "zone_gate": {
+    "feature_cluster_similarity_cluster_threshold": 0.25,
+    "feature_cluster_similarity_registry_path": "models/zone_registry_v4_2026_07.json",
+    "feature_cluster_similarity_execution_mode": "normal",
+    "feature_cluster_similarity_mode": "hard",
+    "feature_cluster_similarity": {
       "top_k": 3,
       "cluster_min_n": 2,
       "cluster_spread_max": 0.15
     },
     "debug_mode": false,
-    "gaussian_impl": "heuristic",
     "convergence_window": 500,
     "rr_fusion": {
       "enabled": false,
@@ -50,7 +49,7 @@
     "fusion_compare_evaluate": true,
     "fusion_use_evaluate": false,
     "ultron_gate_enabled": false,
-    "zone_min_samples": 50
+    "feature_cluster_similarity_min_samples": 50
   },
   "execution_planner": {
     "ttl_continuation_sec": 180,
@@ -119,9 +118,9 @@
   },
   "fusion_engine": {
     "weight_crt": 0.4,
-    "weight_gaussian": 0.2,
-    "weight_zone_gate": 0.2,
-    "weight_rr": 0.2,
+    "weight_ema_momentum_kernel": 0.2,
+    "weight_feature_cluster_similarity": 0.2,
+    "weight_candle_commitment": 0.2,
     "conflict_resolution_policy": "conservative",
     "gaussian_weight": 0.6,
     "neural_weight": 0.4,

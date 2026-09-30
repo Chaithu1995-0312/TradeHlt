@@ -4,8 +4,8 @@
 F-036 proved top_k is inert (ΔG001 ≡ 0) but left the MECHANISM open. Zone reaches an entry
 decision ONLY through the engine_runner fusion veto (CRT proposes; config use_bitnet=false →
 CRT itself ignores zones), via two channels:
-  • SCORE channel     — fusion_engine.weight_zone_gate (the weighted-average contribution)
-  • DIRECTION channel — engine_runner.zone_cluster_threshold (zone "passed" → BUY vote / abstain)
+  • SCORE channel     — fusion_engine.weight_feature_cluster_similarity (the weighted-average contribution)
+  • DIRECTION channel — engine_runner.feature_cluster_similarity_cluster_threshold (zone "passed" → BUY vote / abstain)
 
 ABLATION-FIRST (decisive, deterministic). Sweep each channel config-only and compare the
 ENTRY SET (trade-ledger sha256) vs the * baseline. Byte-identical ledger ⇒ that channel is
@@ -13,8 +13,8 @@ NON-PIVOTAL — a proof, no statistics needed (you can't bootstrap a difference 
 zero). ONLY cells that CHANGE the entry set are routed through the existing M4 QualificationGate
 (perm/BH/OOS/controls) — the repo's significance instrument, reused, nothing new built.
 
-  SCORE cells:     weight_zone_gate ∈ {0.0, 0.2*, 0.4, 0.6}   (threshold at default 0.25)
-  DIRECTION cells: zone_cluster_threshold ∈ {0.0, 0.25*, 0.5}  (weight at default 0.2)
+  SCORE cells:     weight_feature_cluster_similarity ∈ {0.0, 0.2*, 0.4, 0.6}   (threshold at default 0.25)
+  DIRECTION cells: feature_cluster_similarity_cluster_threshold ∈ {0.0, 0.25*, 0.5}  (weight at default 0.2)
 
 CAVEAT (honest): FusionEngine renormalizes by the sum of PRESENT weights (fusion_engine.py:487),
 so weight=0 cleanly removes zone from the weighted average + renormalizes the other 3. But the
@@ -86,7 +86,7 @@ DIR_THRESHOLDS = [0.0, 0.25, 0.5]          # 0.25*
 # ─────────────────────────────────────────────────────────────────────────────
 class _InjectZoneChannels:
     """Context manager: patch production_config.get_prod_section so a read of 'fusion_engine'
-    carries weight_zone_gate and a read of 'engine_runner' carries zone_cluster_threshold (and,
+    carries weight_feature_cluster_similarity and a read of 'engine_runner' carries feature_cluster_similarity_cluster_threshold (and,
     for Phase 2, debug_mode). Deep-copies the section so the cached config is never mutated."""
 
     def __init__(self, weight: float, threshold: float, debug: bool | None = None):
@@ -103,10 +103,10 @@ class _InjectZoneChannels:
             sec = orig(name, *args, **kwargs)
             if name == "fusion_engine":
                 sec = copy.deepcopy(sec)
-                sec["weight_zone_gate"] = w
+                sec["weight_feature_cluster_similarity"] = w
             elif name == "engine_runner":
                 sec = copy.deepcopy(sec)
-                sec["zone_cluster_threshold"] = t
+                sec["feature_cluster_similarity_cluster_threshold"] = t
                 if dbg is not None:
                     sec["debug_mode"] = dbg
             return sec
@@ -171,7 +171,7 @@ def _phase2_distribution(version: str, root: Path, instrument: str) -> dict:
 
     def _zone_score(r):
         return float(((r.get("zone") or {}).get("score")) or
-                     ((r.get("engines") or {}).get("zone_gate", {}) or {}).get("score", 0.0))
+                     ((r.get("engines") or {}).get("feature_cluster_similarity", {}) or {}).get("score", 0.0))
 
     def _eng(r, k):
         return float(((r.get("engines") or {}).get(k, {}) or {}).get("score", 0.0))
@@ -197,14 +197,14 @@ def _phase2_distribution(version: str, root: Path, instrument: str) -> dict:
     acc = [r for r in rows if _accepted(r)]
     rej = [r for r in rows if not _accepted(r)]
     # How often zone is the strongest / weakest of the four engines on a bar.
-    eng_names = ("crt", "gaussian", "zone_gate", "rr")
+    eng_names = ("crt", "gaussian", "feature_cluster_similarity", "rr")
     zone_rank = []  # 0 = strongest .. 3 = weakest
     for r in rows:
         scores = {k: _eng(r, k) for k in eng_names}
         if not any(scores.values()):
             continue
         order = sorted(eng_names, key=lambda k: scores[k], reverse=True)
-        zone_rank.append(order.index("zone_gate"))
+        zone_rank.append(order.index("feature_cluster_similarity"))
     n = max(len(zone_all), 1)
     return {
         "instrument": instrument,
@@ -270,7 +270,7 @@ def main(argv: list[str] | None = None) -> int:
     for cell in cells:
         cid = cell["id"]
         safe_print(f"[cell {cid}] channel={cell['channel']} "
-                   f"weight_zone_gate={cell['weight']} zone_cluster_threshold={cell['threshold']}")
+                   f"weight_feature_cluster_similarity={cell['weight']} feature_cluster_similarity_cluster_threshold={cell['threshold']}")
         l1_by, entries_by, sha_by, changed_by = {}, {}, {}, {}
         with _InjectZoneChannels(cell["weight"], cell["threshold"]):
             for inst in instruments:
@@ -335,7 +335,7 @@ def main(argv: list[str] | None = None) -> int:
     body = {
         "experiment": "zone_inertness_mechanism",
         "explains_finding": "F-036",
-        "baseline": {"weight_zone_gate": DEF_WEIGHT, "zone_cluster_threshold": DEF_THRESH},
+        "baseline": {"weight_feature_cluster_similarity": DEF_WEIGHT, "feature_cluster_similarity_cluster_threshold": DEF_THRESH},
         "score_channel_weights": SCORE_WEIGHTS,
         "direction_channel_thresholds": DIR_THRESHOLDS,
         "instruments": instruments,

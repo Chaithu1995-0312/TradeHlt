@@ -543,7 +543,7 @@ concepts:
     canonical_source: src/core/engine_runner.py
 
     invariants:
-      - EXPECTED_ENGINES = {crt, gaussian, zone_gate, rr} must all produce results or fail-fast on missing keys.
+      - EXPECTED_ENGINES = {crt, gaussian, feature_cluster_similarity, rr} must all produce results or fail-fast on missing keys.
       - Each engine score is in a declared numeric range consumed by fusion.
     preconditions:
       - Features and CRT structure available for the bar.

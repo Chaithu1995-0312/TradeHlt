@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import pytest
 
-from engines.zone_gate_engine import CANONICAL_KEYS, _extract_vector, run_zone_gate_engine
+from engines.feature_cluster_similarity import CANONICAL_KEYS, _extract_vector, run_feature_cluster_similarity
 from features.feature_schema import (
     CANONICAL_FEATURE_DIM,
     CANONICAL_FEATURE_ORDER,
@@ -48,7 +48,7 @@ def _always_confident(vector: list) -> float:
 def test_retired_schema_name_in_a_trained_order_raises(retired: str):
     """A feature_order naming a column the schema no longer emits is an error.
 
-    Source: zone_gate_engine._extract_vector — KeyError on a name absent from the
+    Source: feature_cluster_similarity._extract_vector — KeyError on a name absent from the
     feature dict is re-raised as ValueError, demanding remap or retrain.
     Failure mode: the missing column is defaulted to 0.0 and the stale model scores
     a vector whose mu/sigma no longer line up with any of its inputs.
@@ -61,13 +61,13 @@ def test_retired_schema_name_in_a_trained_order_raises(retired: str):
 def test_a_stale_registry_cannot_produce_a_pass():
     """Through the live entry point the stale artifact BLOCKS, it does not score.
 
-    Source: run_zone_gate_engine step 3 converts the _extract_vector ValueError to
+    Source: run_feature_cluster_similarity step 3 converts the _extract_vector ValueError to
     passed=False / valid=False (fail-closed), never to a pass.
     Failure mode: the one live hard gate returns passed=True off a mis-shaped
     vector, so F-076's "all six model families are stale" becomes a silent
     permissive gate instead of a visible block.
     """
-    result = run_zone_gate_engine(
+    result = run_feature_cluster_similarity(
         _canonical_features(),
         _always_confident,
         threshold=0.5,
@@ -137,17 +137,17 @@ def test_a_shorter_trained_order_is_aligned_by_name_not_truncated():
 def test_registry_errors_fail_open_while_vector_errors_fail_closed():
     """One gate, two opposite policies — asserted side by side so neither drifts.
 
-    Source: zone_gate_engine module docstring (strict schema validation but
+    Source: feature_cluster_similarity module docstring (strict schema validation but
     fail-open on registry errors); step 2 returns neutral 0.5 with passed=True,
     step 3 returns 0.0 with passed=False.
     Failure mode: the fail-open branch is widened to cover extraction errors too, so
     a mis-shaped vector reaches production as a neutral PASS.
     """
     features = _canonical_features()
-    open_path = run_zone_gate_engine(
+    open_path = run_feature_cluster_similarity(
         features, _always_confident, zone_registry={"not": "a registry"}
     )
-    closed_path = run_zone_gate_engine(
+    closed_path = run_feature_cluster_similarity(
         features, _always_confident, feature_order=_stale_order("wick_size")
     )
     assert (open_path["passed"], open_path["score"], open_path["valid"]) == (True, 0.5, True)

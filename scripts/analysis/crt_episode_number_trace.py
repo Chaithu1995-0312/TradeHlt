@@ -424,7 +424,7 @@ def replay(candles: list[Candle], arm, instrument: str) -> tuple[list[dict[str, 
                 "reasons": [{"reason": r, "session_name": s} for r, s in bar_reasons],
                 "geometry": geom,
                 "score_gate": dict(score_gate[-1]) if score_gate else None,
-                "zone_gate": _zone_gate_eval(snap, bar_reasons),
+                "feature_cluster_similarity": _zone_gate_eval(snap, bar_reasons),
             }
         )
 
@@ -514,7 +514,7 @@ def build_journey(ep: dict[str, Any], arm_name: str, arm=None) -> list[dict[str,
     terminal = bars[-1]
     retest_bar = next((b for b in bars if b["action"] == "RETEST_CONFIRMED"), None)
     sg = next((b["score_gate"] for b in reversed(bars) if b.get("score_gate")), None)
-    zg = next((b["zone_gate"] for b in reversed(bars) if b.get("zone_gate")), None)
+    zg = next((b["feature_cluster_similarity"] for b in reversed(bars) if b.get("feature_cluster_similarity")), None)
     geom = terminal.get("geometry")
     sess_reject = next(
         (r for r in terminal["reasons"] if str(r["reason"]).startswith("off_session:")), None
@@ -791,7 +791,7 @@ def render_proof(ep: dict[str, Any], arm_name: str, ctx: dict[str, Any]) -> str:
     g = terminal.get("geometry")
     retest_bar = next((b for b in bars if b["action"] == "RETEST_CONFIRMED"), None)
     sg = next((b["score_gate"] for b in reversed(bars) if b.get("score_gate")), None)
-    zg = next((b["zone_gate"] for b in reversed(bars) if b.get("zone_gate")), None)
+    zg = next((b["feature_cluster_similarity"] for b in reversed(bars) if b.get("feature_cluster_similarity")), None)
     st = (retest_bar or terminal)["state"]
     sess = next((r for r in terminal["reasons"] if str(r["reason"]).startswith("off_session:")), None)
 

@@ -109,7 +109,7 @@ def test_every_contested_member_is_reported(bundle):
 
 
 def test_feature_dim_divergence_is_recorded_not_reconciled(bundle):
-    """zone_gate identity claims 39 dims; the v4 artifact's feature_order lists 38."""
+    """feature_cluster_similarity identity claims 39 dims; the v4 artifact's feature_order lists 38."""
     for family, member in bundle.members.items():
         if (
             member.registry_feature_dim is not None

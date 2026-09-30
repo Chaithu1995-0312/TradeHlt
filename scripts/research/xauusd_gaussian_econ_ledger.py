@@ -585,7 +585,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         },
         "not_in_scope": [
             "M4 QualificationGate (E2)",
-            "gaussian_impl config change (E3)",
+            "removed_selector config change (E3)",
             "economic authority / production sizing",
             "post-hoc threshold retuning",
         ],

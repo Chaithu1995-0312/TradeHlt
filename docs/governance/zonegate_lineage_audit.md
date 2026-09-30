@@ -43,7 +43,7 @@ ZONEGATE_LINEAGE_VERDICT = ACTIVE_GEOMETRIC + NO_MARGINAL_VALUE
 | Legacy | `scripts/analysis/zone_registry_builder.py` (profitable trades + FeaturePipeline + KMeans) |
 | Other | `build_zone_registry_from_trades.py`, `build_zone_registry_forced.py` |
 | Runtime artifact provenance | `source: discover_zones_v1_converted_to_gaussian` |
-| Sample mass | Sum of zone `weight` fields ≈ **139,942** (≫ `zone_min_samples=50` underpowered floor) |
+| Sample mass | Sum of zone `weight` fields ≈ **139,942** (≫ `feature_cluster_similarity_min_samples=50` underpowered floor) |
 
 **Not** CRT `TRADE_OPENED` only. Population = opportunity/detection stream (F-022 class for **labels**, not for geometric μ/σ themselves).
 
@@ -51,7 +51,7 @@ ZONEGATE_LINEAGE_VERDICT = ACTIVE_GEOMETRIC + NO_MARGINAL_VALUE
 
 | Item | Detail |
 |---|---|
-| Contract | Full **38** keys — `CANONICAL_FEATURE_ORDER` (`zone_gate_engine.py:29`, `filter_canonical_inputs:163-167`) |
+| Contract | Full **38** keys — `CANONICAL_FEATURE_ORDER` (`feature_cluster_similarity.py:29`, `filter_canonical_inputs:163-167`) |
 | Registry `feature_order` | 38 names including pipeline `disp_strength`, `retest_depth` (FM-020/021) |
 | Per-zone mask | ~**25** non-zero weights / ~13 near-zero (learned, not design mask) |
 | CRT FM-027/028 | **Not used** — scores pipeline FeaturePipeline vector only |
@@ -81,7 +81,7 @@ Label audit (research only): `src/research/zone_label_audit.py` / `scripts/resea
 
 | Path | Role | SHA-256 (pin) |
 |---|---|---|
-| **`models/zone_registry.json`** | **Runtime scorer** (config `zone_registry_path`) | `e73e08934add02c9…eda3` |
+| **`models/zone_registry.json`** | **Runtime scorer** (config `feature_cluster_similarity_registry_path`) | `e73e08934add02c9…eda3` |
 | `models/zone_gate_registry.json` | Version manifest | `e6d36474…87c09` |
 | Manifest active | `v2_gaussian_runtime_2026_07` → `models/zone_registry.json` | **F-041A reconciled 2026-07-05** |
 
@@ -127,12 +127,12 @@ gap only; it grants no authority (§6.5) and changes no behavior.
 | API | Behavior |
 |---|---|
 | `get_zone_gate(path, …)` / `BitNetZoneGate` | Loads via `load_zone_registry` (`live_engine.py`) |
-| **Empty/unloadable registry → fail-CLOSED** | Missing/malformed registry → empty zones → `check()` returns score **0.0** and omits `top_scores` ⇒ `zone_cluster_score._model_fn` falls through to 0.0, which fails `zone_cluster_threshold` (0.25) ⇒ **every candle BLOCKS**. Schema error inside `run_zone_gate_engine` is a *different* path and does fail open (score 0.5, passed=True). |
-| Underpowered guard | Total `weight` &lt; `zone_min_samples` (50) → auto-bypass `underpowered_zone_registry` (score 1.0 ⇒ **passes**) |
+| **Empty/unloadable registry → fail-CLOSED** | Missing/malformed registry → empty zones → `check()` returns score **0.0** and omits `top_scores` ⇒ `zone_cluster_score._model_fn` falls through to 0.0, which fails `feature_cluster_similarity_cluster_threshold` (0.25) ⇒ **every candle BLOCKS**. Schema error inside `run_feature_cluster_similarity` is a *different* path and does fail open (score 0.5, passed=True). |
+| Underpowered guard | Total `weight` &lt; `feature_cluster_similarity_min_samples` (50) → auto-bypass `underpowered_zone_registry` (score 1.0 ⇒ **passes**) |
 | Disabled gate | `enabled=False` → `gate_disabled`, score 1.0 ⇒ **passes** |
 | Hot-reload | `RegistryWatcher` on path mtime |
 
-EngineRunner: `zone_registry_path` + nested `zone_gate.top_k` → `get_zone_gate(..., top_n=_zone_top_k)`.
+EngineRunner: `feature_cluster_similarity_registry_path` + nested `feature_cluster_similarity.top_k` → `get_zone_gate(..., top_n=_zone_top_k)`.
 
 ### 7. Inference inputs
 
@@ -154,8 +154,8 @@ pipeline feature dict (38 CANONICAL keys)
 |---|---|
 | Per-zone score | Similarity ∈[0,1] to historical cluster centroid |
 | Cluster score | Aggregated top-k neighborhood quality |
-| HARD mode | Compare to `zone_cluster_threshold` (0.25) — pass/fail vote into fusion context |
-| Fusion contribution | `engine_results["zone_gate"]` → weight `weight_zone_gate=0.2` |
+| HARD mode | Compare to `feature_cluster_similarity_cluster_threshold` (0.25) — pass/fail vote into fusion context |
+| Fusion contribution | `engine_results["feature_cluster_similarity"]` → weight `weight_feature_cluster_similarity=0.2` |
 | **Not** | True RR, p(win), or expectancy — geometric neighbourhood only |
 
 Per-zone `allowed` / threshold path inside `check()` is **not** the live spine authority; spine uses **top_scores + cluster aggregation** then fusion (`active_models` / engine_runner comments).
@@ -164,17 +164,17 @@ Per-zone `allowed` / threshold path inside `check()` is **not** the live spine a
 
 | Key | Value |
 |---|---|
-| `engine_runner.zone_registry_path` | `models/zone_registry.json` |
-| `zone_mode` | `hard` |
-| `zone_gate_execution_mode` | `normal` |
-| `zone_gate.top_k` | `3` |
-| `zone_gate.cluster_min_n` | `2` |
-| `zone_gate.cluster_spread_max` | `0.15` |
-| `zone_cluster_threshold` | `0.25` |
-| `zone_min_samples` | `50` |
-| `fusion_engine.weight_zone_gate` | `0.2` |
+| `engine_runner.feature_cluster_similarity_registry_path` | `models/zone_registry.json` |
+| `feature_cluster_similarity_mode` | `hard` |
+| `feature_cluster_similarity_execution_mode` | `normal` |
+| `feature_cluster_similarity.top_k` | `3` |
+| `feature_cluster_similarity.cluster_min_n` | `2` |
+| `feature_cluster_similarity.cluster_spread_max` | `0.15` |
+| `feature_cluster_similarity_cluster_threshold` | `0.25` |
+| `feature_cluster_similarity_min_samples` | `50` |
+| `fusion_engine.weight_feature_cluster_similarity` | `0.2` |
 
-`EXPECTED_ENGINES` includes `"zone_gate"`.
+`EXPECTED_ENGINES` includes `"feature_cluster_similarity"`.
 
 ### 10. Runtime consumption
 
@@ -183,8 +183,8 @@ EngineRunner.run
   → _zone_model_fn(vector)
        → BitNetZoneGate.check → top_scores
        → compute_weighted_cluster_score
-  → run_zone_gate_engine(..., threshold=zone_cluster_threshold)
-  → engine_results["zone_gate"]
+  → run_feature_cluster_similarity(..., threshold=feature_cluster_similarity_cluster_threshold)
+  → engine_results["feature_cluster_similarity"]
   → FusionEngine.compute (weight 0.2)
   → DecisionEngine
 ```
@@ -198,7 +198,7 @@ Backtest research default often `BACKTEST_ENGINE_GATE=0` (F-037) → zone never 
 
 | Evidence | Result |
 |---|---|
-| **F-036** gate-ON ablation | `weight_zone_gate` ∈{0,0.2,0.4,0.6} × threshold ∈{0,0.25,0.5} → **byte-identical entries** ⇒ ΔG001≡0 |
+| **F-036** gate-ON ablation | `weight_feature_cluster_similarity` ∈{0,0.2,0.4,0.6} × threshold ∈{0,0.25,0.5} → **byte-identical entries** ⇒ ΔG001≡0 |
 | Mechanism (F-036) | Zone **not weak** (mean≈0.61, often above 0.25) and **not under-weighted** → **redundant / decision-dominated** |
 | **F-041B** | 0/8 zones honest E>0 under `forward_walk` |
 | Config knobs | TUNABLE (CONFIG_DRIVEN) but **no authority** (§6.5) |
@@ -226,7 +226,7 @@ Historical opportunities used for KMeans still use pipeline feature keys; CRT em
 |---|---|---|
 | Retrain zones because of CH-002 | **NO** | Pipeline identities unchanged; live non-pivotal |
 | Re-label meta for research docs | Optional hygiene | Does not change runtime scores |
-| Change top_k / weight_zone_gate | Config-legal | **No authority** without ΔG001 (F-036) |
+| Change top_k / weight_feature_cluster_similarity | Config-legal | **No authority** without ΔG001 (F-036) |
 | Promote alternate zone file | Via registry + config path | Must keep manifest parity test green |
 | Drop ZoneGate from EXPECTED_ENGINES | Architecture program | Not this audit |
 
@@ -254,7 +254,7 @@ Historical opportunities used for KMeans still use pipeline feature keys; CRT em
    `PRODUCTION_BEHAVIOR_CHANGED = NO`.
 9. **Assignment parity (0.414) — RESOLVED 2026-07-22.** The recorded sub-finding is closed,
    and the framing behind it corrected: **the runtime SCORES, it never PARTITIONS.** The live
-   decision is `top_scores` → `compute_weighted_cluster_score` → `>= zone_cluster_threshold`;
+   decision is `top_scores` → `compute_weighted_cluster_score` → `>= feature_cluster_similarity_cluster_threshold`;
    no record is assigned to a zone (`best_zone_id` is telemetry, no consumer). So "assignment
    parity" measured a partitioning the runtime does not perform. Mechanically low because the
    13 runtime-zeroed dims carry **99.9983%** of the variance driving the KMeans objective
@@ -274,10 +274,10 @@ Historical opportunities used for KMeans still use pipeline feature keys; CRT em
 
 | Role | Path |
 |---|---|
-| Engine wrapper | `src/engines/zone_gate_engine.py` |
+| Engine wrapper | `src/engines/feature_cluster_similarity.py` |
 | Gate loader/check | `src/engines/live_engine.py` — `BitNetZoneGate` |
 | Similarity | `src/bitnet/zone_cosine_searcher.py` — `compute_gaussian_score` |
-| Orchestration | `src/core/engine_runner.py` — `_zone_model_fn`, zone_gate knobs |
+| Orchestration | `src/core/engine_runner.py` — `_zone_model_fn`, feature_cluster_similarity knobs |
 | Train | `scripts/research/discover_zones.py` |
 | Runtime artifact | `models/zone_registry.json` |
 | Manifest | `models/zone_gate_registry.json` |
@@ -285,7 +285,7 @@ Historical opportunities used for KMeans still use pipeline feature keys; CRT em
 | Findings | F-036, F-037, F-041 / F-041A / F-041B |
 | Config | `v2_multi_2026_04.json` engine_runner + fusion weights |
 | Intent | `docs/topics/model-intent-and-feature-ownership.md` |
-| active_models | `active_models.yaml` → `zone_gate:` |
+| active_models | `active_models.yaml` → `feature_cluster_similarity:` |
 | Parity test | `tests/test_zone_manifest_runtime_parity.py` |
 
 ---
@@ -319,7 +319,7 @@ which is the point of recording this here.
 | K | **8 zones, fixed** | k∈{4,6,8,12} **gate-selected** (6 for the OK unit) |
 | Label source | opportunities **stream** — F-022 contaminated (registry shows **~98% SL** on every zone) | **`forward_walk`** (honest exit model) |
 | Quality gate | `min_samples≥10` + fixed `threshold 0.3` — **cannot fail to be a library** | **G1 compactness ≤0.85, G2 silhouette ≥0.05, G3 OOS robust-z, G4 min-n** — a gate that *can* FAIL (and did → PARTIAL) |
-| Authority | **production HARD gate** (`zone_mode=hard`, wired) | **NONE** — PL-0, descriptive (§6.5) |
+| Authority | **production HARD gate** (`feature_cluster_similarity_mode=hard`, wired) | **NONE** — PL-0, descriptive (§6.5) |
 | Verdict | **INERT** (F-036 ΔG001≡0) + **0/8 zones honest E>0** (F-041B) | **`IC003B_PARTIAL`** — near-noise, seed-unstable k\*, weak continuum |
 
 **Four design flaws of ZoneGate that IC-003B fixes by construction:** (1) **honest labels** —

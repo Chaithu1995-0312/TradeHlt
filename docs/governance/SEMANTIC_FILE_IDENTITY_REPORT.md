@@ -21,7 +21,7 @@
 
 Physical filenames in this repository have drifted from what several modules actually do — in at
 least one case, a filename now names a *different quantity* than the module computes
-(`src/engines/rr_engine.py` reads as risk:reward; it computes candle polarity). Renaming files is
+(`src/engines/candle_commitment.py` reads as risk:reward; it computes candle polarity). Renaming files is
 expensive and risky (import graph, historical citations, git blame). This layer instead gives
 every module a **rename-stable semantic identity**:
 
@@ -193,11 +193,11 @@ Representative Tier-1 anchors:
 |---|---|---|---|
 | `crt.state_machine` | CRT Lifecycle Engine | `src/config_layer/crt_engine_v2.py` | HISTORICAL |
 | `crt.state_topology` | CRT State Topology | `src/config_layer/state_identity.py` | ALIGNED |
-| `engines.candle_polarity_scorer` | Candle Polarity Scorer | `src/engines/rr_engine.py` | MISLEADING |
+| `engines.candle_polarity_scorer` | Candle Polarity Scorer | `src/engines/candle_commitment.py` | MISLEADING |
 | `engines.crt_score_adapter` | CRT Score Adapter | `src/engines/crt_engine.py` | SPLIT |
 | `engines.crt_scorer` | CRT Weighted Scorer | `src/engines/scoring_engine.py` | ALIGNED |
 | `engines.gaussian_compat_shim` | Gaussian Compatibility Shim | `src/engines/gaussian_engine.py` | COMPATIBILITY |
-| `engines.heuristic_gaussian_scorer` | Heuristic Gaussian Scorer | `src/engines/heuristic_gaussian_engine.py` | ALIGNED |
+| `engines.heuristic_gaussian_scorer` | Heuristic Gaussian Scorer | `src/engines/ema_momentum_kernel.py` | ALIGNED |
 | `features.canonical_feature_contract` | Canonical Feature Contract | `src/features/feature_schema.py` | ALIGNED |
 | `features.production_feature_pipeline` | Production Feature Pipeline | `src/features/feature_pipeline.py` | ALIGNED |
 | `features.crt_feature_transcriber` | CRT Feature Transcriber | `src/features/crt_feature_builder.py` | ALIGNED (role: DEAD) |
@@ -225,8 +225,8 @@ total; the meaningful signal is `Identity Tier`/`Identity Provenance`, not the j
 
 One confirmed case in this pass, source-verified:
 
-**`src/engines/rr_engine.py`** — `filename_semantic_status: MISLEADING`.
-`rr_engine.py:69-73` computes:
+**`src/engines/candle_commitment.py`** — `filename_semantic_status: MISLEADING`.
+`candle_commitment.py:69-73` computes:
 
 ```python
 upper_body = (high  - close) / candle_range
@@ -250,12 +250,12 @@ complementary mechanism, not duplicated by this layer).
 ## 9. Compatibility files
 
 **`src/engines/gaussian_engine.py`** — `filename_semantic_status: COMPATIBILITY`, `role: SHIM`.
-33 lines, self-labeled `# BACKWARD-COMPATIBILITY SHIM`; re-exports `HeuristicGaussianEngine`,
-`GaussianRegistry`, and related symbols from `src/engines/heuristic_gaussian_engine.py`, and
-aliases `GaussianEngine = HeuristicGaussianEngine`. Its only importer in the whole repository is a
-test (`tests/test_gaussian_impl_switch.py`) — production code (`engine_runner.py`) already imports
-`HeuristicGaussianEngine` and `MLGaussianEngine` directly. The canonical implementation is
-`engines.heuristic_gaussian_scorer` (`src/engines/heuristic_gaussian_engine.py`).
+33 lines, self-labeled `# BACKWARD-COMPATIBILITY SHIM`; re-exports `EmaMomentumKernel`,
+`GaussianRegistry`, and related symbols from `src/engines/ema_momentum_kernel.py`, and
+aliases `GaussianEngine = EmaMomentumKernel`. Its only importer in the whole repository is a
+test (`tests/test_ema_momentum_kernel_slot.py`) — production code (`engine_runner.py`) already imports
+`EmaMomentumKernel` and `MLGaussianEngine` directly. The canonical implementation is
+`engines.heuristic_gaussian_scorer` (`src/engines/ema_momentum_kernel.py`).
 
 ---
 
@@ -357,7 +357,7 @@ candidates.
 Listed for a future, separately-authorized decision — **nothing below was renamed, and this
 report grants no rename authority**:
 
-- `src/engines/rr_engine.py` → a filename like `candle_polarity_engine.py` would eliminate the
+- `src/engines/candle_commitment.py` → a filename like `candle_polarity_engine.py` would eliminate the
   risk:reward misreading at the source, at the cost of touching every import site (dozens across
   `src/core/engine_runner.py`, research adapters, and tests) and every historical citation
   (`docs/current-findings.md` F-047/F-048, `docs/governance/rr_lineage_audit.md`).

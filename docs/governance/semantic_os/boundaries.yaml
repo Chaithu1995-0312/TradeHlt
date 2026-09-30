@@ -421,7 +421,7 @@ boundaries:
       - BD-008
 
     invariant_protected: >-
-      EXPECTED_ENGINES completeness is structural: crt, gaussian, zone_gate, and rr each produce a
+      EXPECTED_ENGINES completeness is structural: crt, gaussian, feature_cluster_similarity, and rr each produce a
       result (or fail-fast) before fusion. Channel defects remain diagnosable per engine.
     invariant_violation_symptom: >-
       Silent partial fusion, missing engine keys, or a collapsed channel (e.g. near-constant

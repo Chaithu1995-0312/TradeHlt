@@ -1,9 +1,9 @@
 """
-heuristic_gaussian_engine.py
+ema_momentum_kernel.py
 ============================
 Heuristic Gaussian probability scoring using EMA/momentum kernel.
 
-Renamed from gaussian_engine.py — class GaussianEngine → HeuristicGaussianEngine.
+Renamed from gaussian_engine.py — class GaussianEngine → EmaMomentumKernel.
 The original gaussian_engine.py now imports this as a backward-compat alias.
 
 Input contract:
@@ -188,7 +188,7 @@ class GaussianRegistry:
 # HEURISTIC GAUSSIAN ENGINE
 # ─────────────────────────────────────────────────────────────────────────────
 
-class HeuristicGaussianEngine:
+class EmaMomentumKernel:
     """
     Probability scoring using a Gaussian kernel on EMA/momentum features.
 
@@ -207,7 +207,7 @@ class HeuristicGaussianEngine:
         _resolved_instrument = instrument or (config.get("instrument") if isinstance(config, dict) else None)
         if not _resolved_instrument:
             raise ValueError(
-                "HeuristicGaussianEngine: no instrument supplied — pass instrument=<symbol> "
+                "EmaMomentumKernel: no instrument supplied — pass instrument=<symbol> "
                 "or include config['instrument']. No default is substituted (T-11 "
                 "no-silent-fallback rule): a fabricated instrument would load the wrong "
                 "Gaussian registry entry (mu/sigma) for this symbol."
@@ -251,20 +251,20 @@ class HeuristicGaussianEngine:
             self._registry_resolved = True
             self._registry_load_error = None
             logger.info(
-                "HeuristicGaussianEngine[%s]: loaded registry — active version '%s'",
+                "EmaMomentumKernel[%s]: loaded registry — active version '%s'",
                 self._instrument, self._loaded_version,
             )
         except (FileNotFoundError, RuntimeError) as exc:
             try:
                 from utils.integrity_events import emit_integrity_event
                 emit_integrity_event(
-                    "GAUSSIAN_NO_MODEL", "WARNING", "heuristic_gaussian_engine",
+                    "GAUSSIAN_NO_MODEL", "WARNING", "ema_momentum_kernel",
                     {"instrument": self._instrument, "error": str(exc)},
                 )
             except Exception:
                 pass
             logger.warning(
-                "HeuristicGaussianEngine[%s]: registry load failed (%s). "
+                "EmaMomentumKernel[%s]: registry load failed (%s). "
                 "Using config/default mu=%.2f, sigma=%.2f. "
                 "Will not retry until registry file mtime advances.",
                 self._instrument, exc,
@@ -295,7 +295,7 @@ class HeuristicGaussianEngine:
             self._watcher.mark_loaded()
             if self._loaded_version != prev or self._registry_load_error != prev_err:
                 logger.info(
-                    "HeuristicGaussianEngine[%s]: reloaded after mtime change — "
+                    "EmaMomentumKernel[%s]: reloaded after mtime change — "
                     "version '%s' -> '%s' (error=%s)",
                     self._instrument, prev, self._loaded_version,
                     self._registry_load_error,
@@ -337,9 +337,9 @@ class HeuristicGaussianEngine:
         """
         self._ensure_registry()
 
-        assert isinstance(input_data, dict), "HeuristicGaussianEngine input must be dict"
+        assert isinstance(input_data, dict), "EmaMomentumKernel input must be dict"
         assert len(input_data) >= len(CANONICAL_FEATURES), (
-            f"HeuristicGaussianEngine: input has {len(input_data)} features, "
+            f"EmaMomentumKernel: input has {len(input_data)} features, "
             f"expected at least {len(CANONICAL_FEATURES)}"
         )
 
@@ -349,18 +349,18 @@ class HeuristicGaussianEngine:
             momentum = input_data["momentum_score"]
         except KeyError as e:
             raise RuntimeError(
-                f"HeuristicGaussianEngine missing canonical feature: {e}"
+                f"EmaMomentumKernel missing canonical feature: {e}"
             ) from e
 
         if ema_fast == ema_slow and momentum == 0.0:
             logger.warning(
-                "HeuristicGaussianEngine: neutral_synthetic_condition detected; returning 0.5"
+                "EmaMomentumKernel: neutral_synthetic_condition detected; returning 0.5"
             )
             return {"score": 0.5, "reason": "neutral_synthetic_condition"}
 
         if ema_slow == 0:
             raise RuntimeError(
-                "HeuristicGaussianEngine: ema_slow is 0 — cannot compute EMA ratio"
+                "EmaMomentumKernel: ema_slow is 0 — cannot compute EMA ratio"
             )
 
         ema_diff = (ema_fast - ema_slow) / ema_slow

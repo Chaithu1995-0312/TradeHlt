@@ -84,7 +84,7 @@ def classify_episode(ep: dict) -> dict:
     crt_dir = (crt.get("event") or {}).get("direction")
     shape_name = shape.get("name")
     shape_matched = shape.get("matched")
-    crt_score = (me.get("crt") or {}).get("value")
+    crt_structure_rule_score = (me.get("crt") or {}).get("value")
     net = mpath.get("net_move")
     body = abs((ohlc.get("c") or 0) - (ohlc.get("o") or 0))
     rng = abs((ohlc.get("h") or 0) - (ohlc.get("l") or 0)) + 1e-12
@@ -256,21 +256,21 @@ def classify_episode(ep: dict) -> dict:
         )
     else:
         # Fallback: pre-2B heuristic (score-threshold) — superseded by POL-O12 when props present
-        if crt_state in ("EXPANSION", "RETEST", "DISPLACEMENT", "EXECUTION") and crt_score is not None:
-            if crt_score < 0.05:
+        if crt_state in ("EXPANSION", "RETEST", "DISPLACEMENT", "EXECUTION") and crt_structure_rule_score is not None:
+            if crt_structure_rule_score < 0.05:
                 obs["O12_crt_story_vs_structure_score"] = (
                     "CONTRADICTORY",
-                    f"CRT={crt_state} but structure_rule_score={crt_score}",
+                    f"CRT={crt_state} but structure_rule_score={crt_structure_rule_score}",
                 )
             else:
                 obs["O12_crt_story_vs_structure_score"] = (
                     "COVERED",
-                    f"CRT={crt_state} score={crt_score}",
+                    f"CRT={crt_state} score={crt_structure_rule_score}",
                 )
         else:
             obs["O12_crt_story_vs_structure_score"] = (
                 "PARTIAL",
-                f"CRT={crt_state} score={crt_score}",
+                f"CRT={crt_state} score={crt_structure_rule_score}",
             )
 
     # O13 model testimony
@@ -375,12 +375,12 @@ def classify_episode(ep: dict) -> dict:
         )
     elif me:
         # Testimony present but pre-L7-closure shape (no crt_story/testimony split)
-        if crt_state in ("EXPANSION", "RETEST", "EXECUTION") and crt_score is not None and crt_score < 0.05:
+        if crt_state in ("EXPANSION", "RETEST", "EXECUTION") and crt_structure_rule_score is not None and crt_structure_rule_score < 0.05:
             g = (me.get("gaussian") or {}).get("value")
             obs["O19_model_question_vs_crt_validity"] = (
                 "PARTIAL",
                 f"models answer quality questions (gaussian={g}) while CRT chapter advanced with "
-                f"crt_score={crt_score}; no joint validity object / no story-testimony split",
+                f"crt_structure_rule_score={crt_structure_rule_score}; no joint validity object / no story-testimony split",
             )
         else:
             obs["O19_model_question_vs_crt_validity"] = (

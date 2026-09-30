@@ -150,9 +150,9 @@ class FusionConfig:
 
     # Per-engine weights used by compute() to aggregate multi-engine scores.
     weight_crt:                  float = 0.30
-    weight_gaussian:             float = 0.25
-    weight_zone_gate:            float = 0.25
-    weight_rr:                   float = 0.20
+    weight_ema_momentum_kernel:             float = 0.25
+    weight_feature_cluster_similarity:            float = 0.25
+    weight_candle_commitment:                   float = 0.20
     # 5th engine — StrategyOrchestrator consensus.  Default 0.0 means disabled;
     # set to e.g. 0.10 in production config to activate.
     weight_strategy_consensus:   float = 0.0
@@ -162,10 +162,10 @@ class FusionConfig:
     # UNKNOWN mirrors the scalar weight_* defaults above so a degraded-regime
     # path matches the no-regime-arg path exactly.
     regime_fusion_weights: dict = field(default_factory=lambda: {
-        "TRENDING": {"crt": 0.38, "gaussian": 0.20, "zone_gate": 0.12, "rr": 0.20, "strategy_consensus": 0.10},
-        "RANGING":  {"crt": 0.18, "gaussian": 0.32, "zone_gate": 0.15, "rr": 0.25, "strategy_consensus": 0.10},
-        "VOLATILE": {"crt": 0.28, "gaussian": 0.14, "zone_gate": 0.12, "rr": 0.16, "strategy_consensus": 0.30},
-        "UNKNOWN":  {"crt": 0.30, "gaussian": 0.25, "zone_gate": 0.25, "rr": 0.20, "strategy_consensus": 0.00},
+        "TRENDING": {"crt": 0.38, "ema_momentum_kernel": 0.20, "feature_cluster_similarity": 0.12, "candle_commitment": 0.20, "strategy_consensus": 0.10},
+        "RANGING":  {"crt": 0.18, "ema_momentum_kernel": 0.32, "feature_cluster_similarity": 0.15, "candle_commitment": 0.25, "strategy_consensus": 0.10},
+        "VOLATILE": {"crt": 0.28, "ema_momentum_kernel": 0.14, "feature_cluster_similarity": 0.12, "candle_commitment": 0.16, "strategy_consensus": 0.30},
+        "UNKNOWN":  {"crt": 0.30, "ema_momentum_kernel": 0.25, "feature_cluster_similarity": 0.25, "candle_commitment": 0.20, "strategy_consensus": 0.00},
     })
 
     # Consensus gates for fuse_strategy_results()
@@ -294,12 +294,12 @@ class FusionEngine:
     def compute(self, engine_results: dict, trade=None, weights=None, regime: str = _REGIME_NOT_PROVIDED) -> dict:
         """
         Aggregate multi-engine outputs only.
-        Expects engine_results with keys: crt, gaussian, zone_gate, rr.
+        Expects engine_results with keys: crt, gaussian, feature_cluster_similarity, rr.
 
         Parameters
         ----------
-        weights : optional dict with keys "crt", "gaussian", "zone"|"zone_gate",
-                  "rr" (and optionally "strategy_consensus"). If provided,
+        weights : optional dict with keys "crt", "ema_momentum_kernel", "zone"|"feature_cluster_similarity",
+                  "candle_commitment" (and optionally "strategy_consensus"). If provided,
                   overrides config and regime weights. Must sum to 1.0 ±0.01.
         regime  : optional regime label ("TRENDING" / "RANGING" / "VOLATILE" /
                   "UNKNOWN" — lowercase variants accepted via _REGIME_NORM).
@@ -307,12 +307,12 @@ class FusionEngine:
                   (backward-compatible path). When set, the matching profile
                   from `cfg.regime_fusion_weights` is selected.
         """
-        expected = ("crt", "gaussian", "zone_gate", "rr")
+        expected = ("crt", "ema_momentum_kernel", "feature_cluster_similarity", "candle_commitment")
         missing = [name for name in expected if name not in engine_results]
         if missing:
             return {
                 "final_score": 0.0,
-                "scores": {"crt": 0.0, "gaussian": 0.0, "zone_gate": 0.0, "rr": 0.0},
+                "scores": {"crt": 0.0, "ema_momentum_kernel": 0.0, "feature_cluster_similarity": 0.0, "candle_commitment": 0.0},
                 "missing_engines": missing,
                 "reason": "missing_engine_outputs",
             }
@@ -341,24 +341,21 @@ class FusionEngine:
         # Resolve weights
         if weights is None:
             w_crt = self.cfg.weight_crt
-            w_gaussian = self.cfg.weight_gaussian
-            w_zone = self.cfg.weight_zone_gate
-            w_rr = self.cfg.weight_rr
+            w_gaussian = self.cfg.weight_ema_momentum_kernel
+            w_zone = self.cfg.weight_feature_cluster_similarity
+            w_rr = self.cfg.weight_candle_commitment
             w_consensus_override = None
         else:
-            # Accept either {crt, gaussian, zone, rr} (legacy override shape)
-            # or {crt, gaussian, zone_gate, rr, strategy_consensus} (regime profile).
-            zone_key = "zone_gate" if "zone_gate" in weights else "zone"
-            required = ("crt", "gaussian", zone_key, "rr")
+            required = ("crt", "ema_momentum_kernel", "feature_cluster_similarity", "candle_commitment")
             if not all(k in weights for k in required):
                 raise ValueError(f"Weights dict must contain keys: {required}")
             weight_sum = sum(float(v) for v in weights.values())
             if abs(weight_sum - 1.0) > 0.01:
                 raise ValueError(f"Weights sum to {weight_sum:.3f}, must be 1.0 ±0.01")
             w_crt = weights["crt"]
-            w_gaussian = weights["gaussian"]
-            w_zone = weights[zone_key]
-            w_rr = weights["rr"]
+            w_gaussian = weights["ema_momentum_kernel"]
+            w_zone = weights["feature_cluster_similarity"]
+            w_rr = weights["candle_commitment"]
             w_consensus_override = weights.get("strategy_consensus")  # may be None
 
         def _extract_score(payload: dict, preferred_keys: tuple[str, ...]) -> float:
@@ -374,22 +371,22 @@ class FusionEngine:
 
         score_crt = _extract_score(engine_results.get("crt", {}), ("score", "final_score", "final"))
         score_gaussian = _extract_score(
-            engine_results.get("gaussian", {}),
+            engine_results.get("ema_momentum_kernel", {}),
             ("score", "final_score", "final"),
         )
-        score_zonegate = _extract_score(engine_results.get("zone_gate", {}), ("score", "zone", "final_score"))
-        score_rr = _extract_score(engine_results.get("rr", {}), ("score", "rr", "final_score"))
+        score_zonegate = _extract_score(engine_results.get("feature_cluster_similarity", {}), ("score", "zone", "final_score"))
+        score_rr = _extract_score(engine_results.get("candle_commitment", {}), ("score", "rr", "final_score"))
         # 5th engine — StrategyOrchestrator consensus score (optional, 0.0 if absent)
         score_consensus = _extract_score(
             engine_results.get("strategy_consensus", {}),
             ("score", "confidence", "final_score"),
         )
 
-        # FIX 3 — track zone_gate health; exclude if always-zero (dead engine)
+        # FIX 3 — track feature_cluster_similarity health; exclude if always-zero (dead engine)
         self._health_zonegate.push(score_zonegate)
         zone_gate_dead = self._health_zonegate.is_dead()
         if zone_gate_dead:
-            logger.warning("zone_gate engine dead (mean=0, var=0) — excluded from fusion weights.")
+            logger.warning("feature_cluster_similarity engine dead (mean=0, var=0) — excluded from fusion weights.")
 
         # ── Conflict detection ────────────────────────────────────────────────
         # Extract non-zero direction signals (1=BUY, -1=SELL, 0=no opinion).
@@ -404,7 +401,7 @@ class FusionEngine:
 
         active_directions = [
             _dir(engine_results.get(k, {}))
-            for k in ("crt", "gaussian", "zone_gate", "rr")
+            for k in ("crt", "ema_momentum_kernel", "feature_cluster_similarity", "candle_commitment")
         ]
         active_directions = [d for d in active_directions if d != 0]
         has_conflict = bool(active_directions) and (
@@ -422,9 +419,9 @@ class FusionEngine:
                     "final_score": 0.0,
                     "scores": {
                         "crt":       round(score_crt,      4),
-                        "gaussian":  round(score_gaussian, 4),
-                        "zone_gate": round(score_zonegate, 4),
-                        "rr":        round(score_rr,       4),
+                        "ema_momentum_kernel":  round(score_gaussian, 4),
+                        "feature_cluster_similarity": round(score_zonegate, 4),
+                        "candle_commitment":        round(score_rr,       4),
                     },
                     "missing_engines": [],
                     "conflict_resolution_policy": policy,
@@ -442,9 +439,9 @@ class FusionEngine:
                         "final_score": 0.0,
                         "scores": {
                             "crt":       round(score_crt,      4),
-                            "gaussian":  round(score_gaussian, 4),
-                            "zone_gate": round(score_zonegate, 4),
-                            "rr":        round(score_rr,       4),
+                            "ema_momentum_kernel":  round(score_gaussian, 4),
+                            "feature_cluster_similarity": round(score_zonegate, 4),
+                            "candle_commitment":        round(score_rr,       4),
                         },
                         "missing_engines": [],
                         "conflict_resolution_policy": policy,
@@ -465,9 +462,9 @@ class FusionEngine:
                     "final_score": 0.0,
                     "scores": {
                         "crt":       round(score_crt,      4),
-                        "gaussian":  round(score_gaussian, 4),
-                        "zone_gate": round(score_zonegate, 4),
-                        "rr":        round(score_rr,       4),
+                        "ema_momentum_kernel":  round(score_gaussian, 4),
+                        "feature_cluster_similarity": round(score_zonegate, 4),
+                        "candle_commitment":        round(score_rr,       4),
                     },
                     "missing_engines": [],
                     "conflict_resolution_policy": policy,
@@ -475,7 +472,7 @@ class FusionEngine:
                 }
 
         # ── Weighted aggregation (always computed) ───────────────────────────
-        # FIX 3: exclude zone_gate weight when it is detected as dead so a
+        # FIX 3: exclude feature_cluster_similarity weight when it is detected as dead so a
         # permanently-zero engine cannot suppress all signals.
         # 5th engine (strategy_consensus) included only when its weight > 0.
         # Weights come from `weights=` override → regime profile → config defaults.
@@ -504,9 +501,9 @@ class FusionEngine:
         if self._convergence is not None:
             raw_scores = {
                 "crt":       score_crt,
-                "gaussian":  score_gaussian,
-                "zone_gate": score_zonegate,
-                "rr":        score_rr,
+                "ema_momentum_kernel":  score_gaussian,
+                "feature_cluster_similarity": score_zonegate,
+                "candle_commitment":        score_rr,
             }
             conv = self._convergence.apply(
                 raw_scores,
@@ -517,9 +514,9 @@ class FusionEngine:
             # Use calibrated scores for the returned scores dict
             cal = conv.get("scores", {})
             score_crt       = cal.get("crt",       score_crt)
-            score_gaussian  = cal.get("gaussian",  score_gaussian)
-            score_zonegate  = cal.get("zone_gate", score_zonegate)
-            score_rr        = cal.get("rr",        score_rr)
+            score_gaussian  = cal.get("ema_momentum_kernel",  score_gaussian)
+            score_zonegate  = cal.get("feature_cluster_similarity", score_zonegate)
+            score_rr        = cal.get("candle_commitment",        score_rr)
             conv_debug = {
                 "variance":  conv.get("variance"),
                 "entropy":   conv.get("entropy"),
@@ -534,9 +531,9 @@ class FusionEngine:
 
         scores_dict: dict = {
             "crt":       round(score_crt,       4),
-            "gaussian":  round(score_gaussian,  4),
-            "zone_gate": round(score_zonegate,  4),
-            "rr":        round(score_rr,        4),
+            "ema_momentum_kernel":  round(score_gaussian,  4),
+            "feature_cluster_similarity": round(score_zonegate,  4),
+            "candle_commitment":        round(score_rr,        4),
         }
         if w_consensus > 0.0:
             scores_dict["strategy_consensus"] = round(score_consensus, 4)

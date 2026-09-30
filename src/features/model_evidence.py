@@ -14,7 +14,7 @@ times; the binding is declared once.
 
 WHY THE SEMANTIC TRAVELS WITH THE VALUE
 ---------------------------------------
-``engine_results["rr"]["rr_ratio"]`` is a bare float whose meaning — candle polarity in [0.5,1],
+``engine_results["candle_commitment"]["rr_ratio"]`` is a bare float whose meaning — candle polarity in [0.5,1],
 NOT economic reward:risk — survived only in comments and in a defensive check inside
 DecisionEngine. A ModelEvidence record carries ``semantic`` alongside ``value``, so a downstream
 consumer cannot read polarity as reward:risk without contradicting a declared field. True RR is
@@ -28,7 +28,7 @@ resolver. CRT *score* (structure_rule_score) is model testimony answering
 an advanced CRT chapter is NOT auto-converted to "CRT says invalid" unless a producer contract
 explicitly says so. Default relationship: NOT_APPLICABLE (different questions).
 
-Quality scores (gaussian / zone_gate / rr) never invent market direction. ``direction`` stays
+Quality scores (gaussian / feature_cluster_similarity / rr) never invent market direction. ``direction`` stays
 UNKNOWN unless a producer legitimately emits a direction field under a declared contract.
 ``relationship_to_story`` stays UNKNOWN for quality scores (no declared mapping to CRT/context/
 shape direction). This is intentional fail-closed honesty, not incompleteness to paper over.
@@ -49,7 +49,7 @@ CONTRACT (no defaults, no fallbacks — same discipline as Layers 2/4/5)
 - A declared ``output_field`` missing from its result dict RAISES — the producer changed shape.
 - Models with ``engine_key: null`` are recorded in ``absent``, NAMED not dropped: the inert
   models (F-004 BitNet, F-005 TradeNet, envelope) stay visible instead of vanishing.
-- When a producer SELF-DECLARES its meaning (rr_engine emits ``semantic``), the registry's
+- When a producer SELF-DECLARES its meaning (candle_commitment emits ``semantic``), the registry's
   ``output_semantic`` must equal it, or the build RAISES. Producer and registry disagreeing about
   what a number means is the defect class this layer exists to make impossible.
 - ``reason`` is the ONLY non-declared field read, and it is diagnostic-only: it never enters the
@@ -525,7 +525,7 @@ class ModelEvidenceBuilder:
                     f"carry it (has: {sorted(result)}) — the producer changed shape"
                 )
             # Producer-vs-registry semantic cross-check. Some engines self-declare what their
-            # number means (rr_engine emits `semantic`). When they do, the declaration here MUST
+            # number means (candle_commitment emits `semantic`). When they do, the declaration here MUST
             # agree — a silent divergence between producer and registry is precisely the class
             # of defect this layer exists to make impossible.
             emitted_semantic = result.get("semantic")

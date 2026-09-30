@@ -38,7 +38,7 @@ resolution**, in the loader/runtime portion of the lifecycle.
 > These are fundamentally different runtime states, and collapsing them hides real defects.
 >
 > Gaussian is the proof. `GaussianRegistry._load_registry` **runs**
-> (`heuristic_gaussian_engine.py:226`, `:290`); it resolves the active version and
+> (`ema_momentum_kernel.py:226`, `:290`); it resolves the active version and
 > `_artifact_exists` (`:127-138`) **confirms the artifact file is on disk** — including a
 > `models/`-prefix strip — feeding `_resolve_with_fallback`, which would silently select a
 > different version if the active artifact vanished. What it never does is **open** the file:
@@ -107,7 +107,7 @@ artifact). Each `✗` carries the config key or code fact that determines it.
 | Cell | Determining fact |
 |---|---|
 | Gaussian (heuristic) · Artifact Opened | `_normalize_registry_entry` defaults `mu=0/sigma=1`; **0 of 11** registry entries carry either key |
-| Gaussian (ML) · Loader Invoked | `cfg.engine_runner.gaussian_impl = "heuristic"` → `MLGaussianEngine` never constructed |
+| Gaussian (ML) · Loader Invoked | `cfg.engine_runner.removed_selector = "heuristic"` → `MLGaussianEngine` never constructed |
 | RR-B · Loader Invoked | `cfg.engine_runner.rr_fusion.enabled = false` → `RRFusionLayer` never constructed |
 | BitNet · Registry Selects | `models/bitnet/bitnet_registry.json` is `{}` |
 | BitNet · Loader Invoked | `cfg.crt_engine.use_bitnet = false` → `bitnet_score` never called |
@@ -307,7 +307,7 @@ surface from the fusion Gaussian.
 ### 4.5 Runtime stage — never instantiated (4)
 
 Gaussian (ML), RR NanoInference, BitNet, and TradeNet v2 are never constructed on the live path.
-Three are **config-gated** (`gaussian_impl`, `rr_fusion.enabled`, `use_bitnet`) and therefore
+Three are **config-gated** (`removed_selector`, `rr_fusion.enabled`, `use_bitnet`) and therefore
 `DISABLED`; TradeNet is **code-absent** (`neural_fn` never supplied) and therefore `UNWIRED`. The
 distinction matters: three are reversible by config, one requires code.
 
@@ -334,8 +334,8 @@ logs/**/opportunities*.jsonl  (F-022 detection stream, rr_achieved read raw)
   → models/gaussian_registry.json              __active__ {ETH: v5_auto_2026_06_eth, BNB: p5_20260524T120449}
   → GaussianRegistry.load()                    opens the REGISTRY; existence-checks the artifact
   ✗ ARTIFACT NEVER OPENED                      mu/sigma read off the entry → defaults 0/1
-  → HeuristicGaussianEngine.compute            score = exp(-x²/2)
-  → FusionEngine (weight_gaussian 0.2) → DecisionEngine
+  → EmaMomentumKernel.compute            score = exp(-x²/2)
+  → FusionEngine (weight_ema_momentum_kernel 0.2) → DecisionEngine
   → FINAL EFFECT: a near-CONSTANT ≈0.8825
 ```
 
@@ -349,7 +349,7 @@ logs/BNBUSDT/…/opportunities.jsonl (139,942 records)
   → models/zone_gate_registry.json             active = v2_gaussian_runtime_2026_07 → same sha
   → src/core/engine_runner.py:469              resolve_zone_gate_runtime(how_path=…)  [FAIL-CLOSED]
   → src/core/engine_runner.py:474              get_zone_gate(…) → BitNetZoneGate.check
-  → FusionEngine (weight_zone_gate 0.2, zone_mode=hard) → DecisionEngine
+  → FusionEngine (weight_feature_cluster_similarity 0.2, feature_cluster_similarity_mode=hard) → DecisionEngine
   → FINAL EFFECT: real geometric HARD gate — but ΔG001 ≡ 0 (F-036), 0/8 zones honest E>0 (F-041B)
 ```
 
@@ -367,7 +367,7 @@ opportunities JSONL → scripts/data/build_rr_dataset.py → src/config_layer/rr
   → models/rr_registry.json               active = 202605_bnb_v2_bnbusdt  (declares 35 — see §4.3a)
   ✗ LOADER NEVER INVOKED — RRFusionLayer constructed only when rr_fusion.enabled
   → cfg rr_fusion.enabled = FALSE (F-038) ⇒ self.rr_fusion = None
-  → base RREngine.compute() flows through UNMUTATED (geometry only: close/high/low)
+  → base CandleCommitment.compute() flows through UNMUTATED (geometry only: close/high/low)
   → FINAL EFFECT: the trained model contributes NOTHING; the fusion "rr" slot is candle polarity
 ```
 
@@ -415,7 +415,7 @@ opportunities → src/research/clean_labels/builder.py  (y via forward_walk / ho
 ### 5.7 ReplayMemoryEngine — DISABLED (role: historical consumer)
 
 Not a model: no training script, no artifact, no registry. Reads historical
-`opportunities*.jsonl` (default dir `logs`) plus `zone_registry_path`, and answers similarity
+`opportunities*.jsonl` (default dir `logs`) plus `feature_cluster_similarity_registry_path`, and answers similarity
 queries; per-instrument state under `models/replay/zone_registry_{BTC,ETH,SOL,BNB}USDT.json`. Its
 only consumer, `CognitiveBus`, is **off** on the active config (§4.6), so the engine does not run.
 
@@ -448,7 +448,7 @@ flowchart TD
   AT --> RT[tradenet_registry.json]
   AE -.->|no registry by design| RE[none]
 
-  RG -.->|"opened? NO — entry has no mu/sigma"| LG[HeuristicGaussianEngine]
+  RG -.->|"opened? NO — entry has no mu/sigma"| LG[EmaMomentumKernel]
   RZ ==>|fail-closed resolver| LZ[BitNetZoneGate]
   RR -.->|"bypassed: config loads rr_model.json"| LR[RRFusionLayer]
   RB -.->|"bypassed: cwd hardcoded"| LB[composition.load_legacy]
@@ -487,7 +487,7 @@ Paths are repo-relative. `cfg` = `configs/production/v2_multi_2026_04.json`.
 | # | Finding | Class | Code path | Config / artifact path | Reproduction |
 |---|---|---|---|---|---|
 | 1 | `active_models.yaml` mirrors registry actives, all families | **PROVEN** | `tests/test_active_models_registry.py` R1 | `models/*_registry.json` ↔ `active_models.yaml` | `pytest tests/test_active_models_registry.py -k r1_registry -q` |
-| 2 | Gaussian: registry read supplies nothing (`mu`/`sigma` defaults fire) | **PROVEN** | `src/engines/heuristic_gaussian_engine.py` `_normalize_registry_entry` | `models/gaussian_registry.json` (11/11 entries lack both keys) | `pytest tests/test_gaussian_live_parameterization.py -q` |
+| 2 | Gaussian: registry read supplies nothing (`mu`/`sigma` defaults fire) | **PROVEN** | `src/engines/ema_momentum_kernel.py` `_normalize_registry_entry` | `models/gaussian_registry.json` (11/11 entries lack both keys) | `pytest tests/test_gaussian_live_parameterization.py -q` |
 | 3 | ZoneGate is the only registry↔runtime aligned family | **PROVEN** | `src/core/engine_runner.py:469` `resolve_zone_gate_runtime` | `models/zone_registry.json` sha `e73e0893…` | `pytest tests/test_zone_manifest_runtime_parity.py -q` |
 | 4 | RR config path is referenced by **no** registry | **PROVEN** | `src/core/engine_runner.py` (rr_fusion ctor, gated) | `cfg.engine_runner.rr_fusion.model_path` = `models/rr_model.json`; registry-active = `models/rr_model_202605_bnb_v2.json` | orphan scan in §4.4a |
 | 5 | Those two RR files are byte-identical **today** | **PROVEN** (point-in-time) | — | both sha256 `6ed92d26ff612538` | §4.4a command |
@@ -596,7 +596,7 @@ latest-by-`trained_at`. `bitnet` correctly declares `selection.version: null` /
 | gaussian ETH | 35 | 35 | 35 | consistent |
 | gaussian BNB | 38 | 38 | 38 | consistent |
 | **rr_model** | **35** | **35** | **38** | **registry metadata error** (§4.3a) — the YAML correctly mirrors a wrong registry |
-| zone_gate | 38 | *(no dim field)* | 38 (`feature_order`) | consistent |
+| feature_cluster_similarity | 38 | *(no dim field)* | 38 (`feature_order`) | consistent |
 | tradenet | 35 | *(no dim field)* | binary `.pth` | **UNVERIFIED** |
 | bitnet | n/a | `{}` | — | consistent (`compat: 6` = legacy contract) |
 
@@ -610,7 +610,7 @@ conflation. The RR defect is registry-layer only and must not be read as a runti
 | Family | YAML `identity_status` | Audit Runtime | Audit Artifact | Match |
 |---|---|---|---|---|
 | gaussian | `enabled_without_checkpoint` | ACTIVE | REGISTERED_ONLY | ✓ |
-| zone_gate | `selected_and_enabled` | ACTIVE | LOADED | ✓ |
+| feature_cluster_similarity | `selected_and_enabled` | ACTIVE | LOADED | ✓ |
 | rr_model | `selected_not_enabled` | DISABLED | REGISTERED_ONLY | ✓ |
 | bitnet | `absent` | DISABLED | **STORED_ONLY** | **partial** |
 | tradenet | `selected_not_enabled` | **UNWIRED** | REGISTERED_ONLY | **collision** |

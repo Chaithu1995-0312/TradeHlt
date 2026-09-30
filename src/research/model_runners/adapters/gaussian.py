@@ -1,12 +1,12 @@
-"""Live HeuristicGaussianEngine adapter (spine gaussian slot)."""
+"""Live EmaMomentumKernel adapter (spine gaussian slot)."""
 from __future__ import annotations
 
 from typing import Any
 
-from engines.heuristic_gaussian_engine import HeuristicGaussianEngine
+from engines.ema_momentum_kernel import EmaMomentumKernel
 from features.feature_schema import CANONICAL_FEATURES
 from research.model_runners.contracts import ModelContract
-from research.model_runners.require_config import require_key, require_section
+from research.model_runners.require_config import require_section
 from research.model_runners.substrate import BarContext, require_feature_keys
 
 
@@ -22,23 +22,17 @@ class GaussianAdapter:
         if not instrument:
             raise ValueError("instrument is required for gaussian adapter")
 
-        er = require_section(prod_config, "engine_runner")
-        impl = require_key(er, "gaussian_impl", path="engine_runner")
-        if impl != "heuristic":
-            raise RuntimeError(
-                f"gaussian model_id requires engine_runner.gaussian_impl='heuristic'; "
-                f"got {impl!r}. Use a separate model_id for ML path (Phase 3)."
-            )
-
+        require_section(prod_config, "engine_runner")
         # Pass instrument explicitly — do not rely on engine's internal instrument default.
+        # The fusion slot is EmaMomentumKernel. nb_outcome_classifier is a separate model_id.
         engine_cfg: dict[str, Any] = {"instrument": instrument}
-        self._engine = HeuristicGaussianEngine(engine_cfg, instrument=instrument)
+        self._engine = EmaMomentumKernel(engine_cfg, instrument=instrument)
         self.config_sections_read = ["engine_runner"]
-        self.config_keys_read = ["engine_runner.gaussian_impl"]
+        self.config_keys_read = []
         self.artifact_info = None
 
     @property
-    def engine(self) -> HeuristicGaussianEngine:
+    def engine(self) -> EmaMomentumKernel:
         """Public accessor for the wrapped live engine (R5).
 
         ``fusion_compute`` must hand the same engine instance to
@@ -62,6 +56,6 @@ class GaussianAdapter:
         native = self._engine.compute(feat)
         if not isinstance(native, dict):
             raise TypeError(
-                f"HeuristicGaussianEngine.compute must return dict, got {type(native)}"
+                f"EmaMomentumKernel.compute must return dict, got {type(native)}"
             )
         return native

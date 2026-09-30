@@ -18,8 +18,8 @@ import pandas as pd
 import numpy as np
 
 # ── Engine imports ────────────────────────────────────────────────
-from engines.rr_engine import RREngine
-from engines.heuristic_gaussian_engine import HeuristicGaussianEngine
+from engines.candle_commitment import CandleCommitment
+from engines.ema_momentum_kernel import EmaMomentumKernel
 from features.feature_schema import CANONICAL_FEATURES
 
 # ── Config ────────────────────────────────────────────────────────
@@ -75,7 +75,7 @@ def main():
     print(f"    Rows used:      {len(df):,}")
     print(f"    Date range:     {df['timestamp'].min()} → {df['timestamp'].max()}")
 
-    # ── Compute features needed by HeuristicGaussianEngine ──────────
+    # ── Compute features needed by EmaMomentumKernel ──────────
     # It needs: ema_fast, ema_slow, momentum_score (plus 38-key assertion)
     print("\n[2] Computing EMA/momentum/ATR features ...")
     close = df["close"]
@@ -93,9 +93,9 @@ def main():
     atr = tr.rolling(window=14).mean()
 
     # ── Initialise engines ──────────────────────────────────────────
-    rr_engine = RREngine(config={"min_rr": 1.5})
+    candle_commitment = CandleCommitment(config={"min_rr": 1.5})
     # Gaussian engine with mu=0, sigma=1 (no registry model)
-    gauss_engine = HeuristicGaussianEngine(
+    gauss_engine = EmaMomentumKernel(
         {"gaussian_mu": 0.0, "gaussian_sigma": 1.0},
         instrument="BNBUSDT",
         preload_registry=False,
@@ -121,9 +121,9 @@ def main():
             atr=float(atr.iloc[i]) if not pd.isna(atr.iloc[i]) else 0.0,
         )
 
-        # RREngine
+        # CandleCommitment
         try:
-            rr_result = rr_engine.compute({
+            rr_result = candle_commitment.compute({
                 "close": float(row["close"]),
                 "high":  float(row["high"]),
                 "low":   float(row["low"]),
@@ -133,7 +133,7 @@ def main():
             rr_scores.append(0.0)
             rr_fails += 1
 
-        # HeuristicGaussianEngine
+        # EmaMomentumKernel
         try:
             gauss_result = gauss_engine.compute(feat)
             gauss_scores.append(gauss_result.get("score", 0.5))

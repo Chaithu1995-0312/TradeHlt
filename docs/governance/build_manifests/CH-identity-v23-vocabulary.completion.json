@@ -10,7 +10,7 @@
   "production_behavior_changed": false,
   "authority_granted": false,
   "identity_status_examples": {
-    "zone_gate": "selected_and_enabled",
+    "feature_cluster_similarity": "selected_and_enabled",
     "gaussian": "enabled_without_checkpoint",
     "rr_model": "selected_not_enabled",
     "tradenet": "selected_not_enabled",

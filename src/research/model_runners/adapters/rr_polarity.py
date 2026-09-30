@@ -1,9 +1,9 @@
-"""Live RREngine (candle polarity) adapter."""
+"""Live CandleCommitment (candle polarity) adapter."""
 from __future__ import annotations
 
 from typing import Any
 
-from engines.rr_engine import RREngine
+from engines.candle_commitment import CandleCommitment
 from research.model_runners.contracts import ModelContract
 from research.model_runners.substrate import BarContext, require_feature_keys
 
@@ -11,9 +11,9 @@ from research.model_runners.substrate import BarContext, require_feature_keys
 class RRPolarityAdapter:
     def __init__(self, *, contract: ModelContract, prod_config: dict[str, Any]):
         self.contract = contract
-        # RREngine scoring uses high/low/close only; no production scoring section.
+        # CandleCommitment scoring uses high/low/close only; no production scoring section.
         # Pass empty config — engine min_rr is unused for polarity math.
-        self._engine = RREngine({})
+        self._engine = CandleCommitment({})
         self.config_sections_read: list[str] = []
         self.config_keys_read: list[str] = []
         self.artifact_info: dict[str, Any] | None = None
@@ -29,5 +29,5 @@ class RRPolarityAdapter:
             }
         )
         if not isinstance(native, dict):
-            raise TypeError(f"RREngine.compute must return dict, got {type(native)}")
+            raise TypeError(f"CandleCommitment.compute must return dict, got {type(native)}")
         return native

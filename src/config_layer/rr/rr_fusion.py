@@ -10,7 +10,7 @@ from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
-from config_layer.rr.rr_pattern_miner import (
+from config_layer.rr.rr_trained import (
     NanoInferenceEngine,
     DEFAULT_MODEL_PATH,
     FeatureDimensionError,

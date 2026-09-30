@@ -18,17 +18,16 @@
       "new_york",
       "overlap"
     ],
-    "zone_cluster_threshold": 0.25,
-    "zone_registry_path": "models/zone_registry_v4_2026_07.json",
-    "zone_gate_execution_mode": "normal",
-    "zone_mode": "hard",
-    "zone_gate": {
+    "feature_cluster_similarity_cluster_threshold": 0.25,
+    "feature_cluster_similarity_registry_path": "models/zone_registry_v4_2026_07.json",
+    "feature_cluster_similarity_execution_mode": "normal",
+    "feature_cluster_similarity_mode": "hard",
+    "feature_cluster_similarity": {
       "top_k": 3,
       "cluster_min_n": 2,
       "cluster_spread_max": 0.15
     },
     "debug_mode": false,
-    "gaussian_impl": "heuristic",
     "convergence_window": 500,
     "rr_fusion": {
       "enabled": false,
@@ -48,7 +47,7 @@
     "fusion_compare_evaluate": true,
     "fusion_use_evaluate": false,
     "ultron_gate_enabled": false,
-    "zone_min_samples": 50,
+    "feature_cluster_similarity_min_samples": 50,
     "signal_belief": {
       "_comment": "SignalBeliefTracker knobs (src/core/signal_belief_tracker.py). Restored 2026-09-18: the section was present in v1_multi_2026_03/v3_multi_2026_06 but absent here, so the code's .get(key, literal) fallbacks silently supplied it (the F-018 class). Values equal the class defaults byte-for-byte. enabled:false preserves current behavior -- the gate stays OFF; this declares the knobs, it does not arm anything.",
       "enabled": false,
@@ -124,9 +123,9 @@
   },
   "fusion_engine": {
     "weight_crt": 0.4,
-    "weight_gaussian": 0.2,
-    "weight_zone_gate": 0.2,
-    "weight_rr": 0.2,
+    "weight_ema_momentum_kernel": 0.2,
+    "weight_feature_cluster_similarity": 0.2,
+    "weight_candle_commitment": 0.2,
     "conflict_resolution_policy": "conservative",
     "gaussian_weight": 0.6,
     "neural_weight": 0.4,
@@ -563,7 +562,7 @@
     "_comment_smc_max_window": "CH-htfcrt-parent-candle-smc-v1 (2026-08-15). Trailing-candle-buffer bound for compute_smc_features's OB/FVG/breaker/mitigation scanners -- a performance/scope bound, not a registered identity parameter. Reuses swing_window above for the causal swing half-window k (no duplicate key).",
     "smc_max_window": 100
   },
-  "notes": "CH-htfcrt-parent-candle-smc-v1 (2026-08-15, user-authorized). Real calendar-true HTF parent candles (H4/D1/W1/MN1) + 3-candle parent-timeframe CRT (RANGE_C1/MANIPULATION_C2/DISTRIBUTION_C3, disjoint sub-graph) + 9 SMC primitives (order block, FVG, breaker, mitigation block, PDH/PDL, EQH/EQL, change-of-character) as canonical vector features (39->48, schema v5.0). parent_crt.enabled=true (arm ON per user decision) -- the M15 EXECUTION-gate bias check in crt_engine_v2.process_candle is live IN CODE. CH-parent-crt-caller-wire (2026-08-16): BacktestRunner now constructs runtime.parent_crt_feed.ParentCRTFeed and threads feed.bias into process_candle (pushed on every child bar including warmup). Live still has no process_candle loop (F-073). Research/analysis process_candle call sites still default parent_state=None. params UNCHANGED from v2_multi_2026_04 (config_hash identical, no rehash needed). MODEL-ARTIFACT STATUS: zone_gate/rr_fusion/gaussian/bitnet/tradenet are ALL trained on <=39-dim schemas and were ALREADY degrading (zone_gate: pre-existing feature_order drift, KeyError on legacy macd_hist name, fail-closed BLOCK) before this program -- verified via direct integration test that this promotion does not make it worse (BLOCK/refuse-load, never silent truncate, identical failure mode to today). Retraining all 6 model families is a separate, explicitly deferred, compute-bound activity; per user decision (\"Promote now, gates inert\"), this promotion does not block on that retrain. PROMOTION PATH: NOT via PromotionManager.promote_* (would silently strip parent_crt and every other new top-level section by overlaying only _METADATA_KEYS onto the v1_multi_2026_03 base). ConfigValidator.validate() was ATTEMPTED first (the real governance gate, not bypassed for convenience) and found REJECTing with hard_failure 'F-057 product gate: CRTConfig mode UNKNOWN' -- confirmed via a control run that this rejection is PRE-EXISTING and unrelated to this program: the unchanged, currently-active v2_multi_2026_04 params produce the IDENTICAL rejection today, because ConfigValidator does not stamp CRTConfig with an allowed construction-provenance mode before calling BacktestRunner. This is a real, separate defect worth its own governed fix, not patched here. Promoted via the governed manual-write shape (matching scripts/maintenance/_promote_v4_bnb_cutover.py's own precedent for when PromotionManager.promote_* cannot carry a full-config change): write config, flip ACTIVE_VERSION, append PROMOTED log entry with params_fingerprint freshness anchor, verify via PromotionManager.load_version + config_integrity.audit. User confirmed this exact write+flip explicitly before it was executed.",
+  "notes": "CH-htfcrt-parent-candle-smc-v1 (2026-08-15, user-authorized). Real calendar-true HTF parent candles (H4/D1/W1/MN1) + 3-candle parent-timeframe CRT (RANGE_C1/MANIPULATION_C2/DISTRIBUTION_C3, disjoint sub-graph) + 9 SMC primitives (order block, FVG, breaker, mitigation block, PDH/PDL, EQH/EQL, change-of-character) as canonical vector features (39->48, schema v5.0). parent_crt.enabled=true (arm ON per user decision) -- the M15 EXECUTION-gate bias check in crt_engine_v2.process_candle is live IN CODE. CH-parent-crt-caller-wire (2026-08-16): BacktestRunner now constructs runtime.parent_crt_feed.ParentCRTFeed and threads feed.bias into process_candle (pushed on every child bar including warmup). Live still has no process_candle loop (F-073). Research/analysis process_candle call sites still default parent_state=None. params UNCHANGED from v2_multi_2026_04 (config_hash identical, no rehash needed). MODEL-ARTIFACT STATUS: feature_cluster_similarity/rr_fusion/gaussian/bitnet/tradenet are ALL trained on <=39-dim schemas and were ALREADY degrading (feature_cluster_similarity: pre-existing feature_order drift, KeyError on legacy macd_hist name, fail-closed BLOCK) before this program -- verified via direct integration test that this promotion does not make it worse (BLOCK/refuse-load, never silent truncate, identical failure mode to today). Retraining all 6 model families is a separate, explicitly deferred, compute-bound activity; per user decision (\"Promote now, gates inert\"), this promotion does not block on that retrain. PROMOTION PATH: NOT via PromotionManager.promote_* (would silently strip parent_crt and every other new top-level section by overlaying only _METADATA_KEYS onto the v1_multi_2026_03 base). ConfigValidator.validate() was ATTEMPTED first (the real governance gate, not bypassed for convenience) and found REJECTing with hard_failure 'F-057 product gate: CRTConfig mode UNKNOWN' -- confirmed via a control run that this rejection is PRE-EXISTING and unrelated to this program: the unchanged, currently-active v2_multi_2026_04 params produce the IDENTICAL rejection today, because ConfigValidator does not stamp CRTConfig with an allowed construction-provenance mode before calling BacktestRunner. This is a real, separate defect worth its own governed fix, not patched here. Promoted via the governed manual-write shape (matching scripts/maintenance/_promote_v4_bnb_cutover.py's own precedent for when PromotionManager.promote_* cannot carry a full-config change): write config, flip ACTIVE_VERSION, append PROMOTED log entry with params_fingerprint freshness anchor, verify via PromotionManager.load_version + config_integrity.audit. User confirmed this exact write+flip explicitly before it was executed.",
   "schema_version": "1.3",
   "inout": {
     "scanner": {

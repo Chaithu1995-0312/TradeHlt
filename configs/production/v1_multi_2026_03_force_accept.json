@@ -18,8 +18,8 @@
       "new_york",
       "overlap"
     ],
-    "zone_cluster_threshold": 0.0,
-    "zone_registry_path": "models/zone_registry.json",
+    "feature_cluster_similarity_cluster_threshold": 0.0,
+    "feature_cluster_similarity_registry_path": "models/zone_registry.json",
     "rr_fusion": {
       "enabled": false,
       "model_path": "models/rr_model.json",

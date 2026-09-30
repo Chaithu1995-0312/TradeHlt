@@ -135,7 +135,7 @@ def _risk_check(instrument: str, trade_json: str = "") -> dict:
     description="Agent-internal: LLM reasons over component scores and returns TAKE|VETO|RESIZE advice.",
     write=False,
     args_schema={
-        "scores_json":  {"type": "str", "required": True, "desc": "JSON dict with crt, gaussian, zone_gate, rr, fusion scores"},
+        "scores_json":  {"type": "str", "required": True, "desc": "JSON dict with crt, gaussian, feature_cluster_similarity, rr, fusion scores"},
         "instrument":   {"type": "str", "required": False, "desc": "Instrument name (for context)"},
     },
 )

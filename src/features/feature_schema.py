@@ -358,7 +358,7 @@ class FeatureSchemaRegistry:
     # At model save time (in trainer.py):
         FeatureSchemaRegistry.register(version="gaussian_v6", feature_order_hash=FEATURE_ORDER_HASH)
 
-    # At inference time (in ml_gaussian_engine.py, zone_gate_engine.py, etc.):
+    # At inference time (in ml_gaussian_engine.py, feature_cluster_similarity.py, etc.):
         compatible = FeatureSchemaRegistry.check_compatibility("gaussian_v6")
         if not compatible:
             vec = vec[:SCHEMA_V2_FEATURE_DIM]   # truncate to model's training dim

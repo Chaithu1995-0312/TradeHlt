@@ -21,7 +21,7 @@ def _make_runner():
             return {"score": 0.3}
 
     class DummyDecision:
-        def evaluate(self, score, p_win, zone_gate, fusion, config):
+        def evaluate(self, score, p_win, feature_cluster_similarity, fusion, config):
             return {"decision": "Approved", "confidence": 0.9, "reason": "ok"}
 
     class DummyFusion:
@@ -73,15 +73,15 @@ def _make_runner():
 
 
 def _stub_zone_gate(**kwargs):
-    """Stub for run_zone_gate_engine — returns neutral pass so dual-gate tests
-    are not affected by canonical-key validation added in zone_gate_engine.py."""
+    """Stub for run_feature_cluster_similarity — returns neutral pass so dual-gate tests
+    are not affected by canonical-key validation added in feature_cluster_similarity.py."""
     return {"score": 0.4, "passed": True, "vector": [], "valid": True}
 
 
 def test_dual_gate_trend_selects_breakout(monkeypatch):
     monkeypatch.setattr(engine_runner, "crt_compute",
                         lambda trade_id, features, context: {"score": 0.1})
-    monkeypatch.setattr(engine_runner, "run_zone_gate_engine", _stub_zone_gate)
+    monkeypatch.setattr(engine_runner, "run_feature_cluster_similarity", _stub_zone_gate)
     runner = _make_runner()
 
     input_data = {
@@ -102,7 +102,7 @@ def test_dual_gate_trend_selects_breakout(monkeypatch):
 def test_dual_gate_range_selects_trap(monkeypatch):
     monkeypatch.setattr(engine_runner, "crt_compute",
                         lambda trade_id, features, context: {"score": 0.1})
-    monkeypatch.setattr(engine_runner, "run_zone_gate_engine", _stub_zone_gate)
+    monkeypatch.setattr(engine_runner, "run_feature_cluster_similarity", _stub_zone_gate)
     runner = _make_runner()
 
     input_data = {
@@ -123,7 +123,7 @@ def test_dual_gate_range_selects_trap(monkeypatch):
 def test_dual_gate_neutral_low_confidence_rejects(monkeypatch):
     monkeypatch.setattr(engine_runner, "crt_compute",
                         lambda trade_id, features, context: {"score": 0.1})
-    monkeypatch.setattr(engine_runner, "run_zone_gate_engine", _stub_zone_gate)
+    monkeypatch.setattr(engine_runner, "run_feature_cluster_similarity", _stub_zone_gate)
     runner = _make_runner()
 
     input_data = {
@@ -143,7 +143,7 @@ def test_dual_gate_neutral_low_confidence_rejects(monkeypatch):
 def test_layered_flow_fusion_runs_before_dual_veto(monkeypatch):
     monkeypatch.setattr(engine_runner, "crt_compute",
                         lambda trade_id, features, context: {"score": 0.1})
-    monkeypatch.setattr(engine_runner, "run_zone_gate_engine", _stub_zone_gate)
+    monkeypatch.setattr(engine_runner, "run_feature_cluster_similarity", _stub_zone_gate)
     runner = _make_runner()
 
     input_data = {
@@ -157,5 +157,5 @@ def test_layered_flow_fusion_runs_before_dual_veto(monkeypatch):
 
     out = runner.run(input_data, {"symbol": "AUDUSD"})
     assert runner.fusion.called is True
-    assert set(runner.fusion.last.keys()) == {"crt", "gaussian", "zone_gate", "rr"}
+    assert set(runner.fusion.last.keys()) == {"crt", "gaussian", "feature_cluster_similarity", "rr"}
     assert out["decision"] == "REJECT"

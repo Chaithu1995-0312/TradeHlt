@@ -29,7 +29,7 @@ OUTPUT JSON only:
   "weights": {
     "<feature_name>": <0.0–1.0 importance weight>
   },
-  "confidence_formula": "<e.g.: 0.4 * fusion_score + 0.3 * zone_gate + 0.3 * rr>",
+  "confidence_formula": "<e.g.: 0.4 * fusion_score + 0.3 * feature_cluster_similarity + 0.3 * rr>",
   "tier_rules": {
     "TIER_1": "<condition for high-confidence trades>",
     "TIER_2": "<condition for medium-confidence trades>",
@@ -132,7 +132,7 @@ def _summarize_trades(trades: list[dict]) -> dict:
         vals = [float(r.get(key, 0)) for r in rows if r.get(key) not in (None, "")]
         return sum(vals) / len(vals) if vals else 0.0
 
-    numeric_keys = ["fusion_score", "zone_gate", "rr", "body_ratio", "retest_depth",
+    numeric_keys = ["fusion_score", "feature_cluster_similarity", "rr", "body_ratio", "retest_depth",
                     "disp_strength", "pnl_rr_net"]
 
     summary = {
@@ -174,21 +174,21 @@ def _fallback_policy(trades: list[dict]) -> ExtractedPolicy:
     log.info("Using fallback policy (LLM unavailable)")
     return ExtractedPolicy(
         rules=[
-            "avoid trades when zone_gate < 0.6",
+            "avoid trades when feature_cluster_similarity < 0.6",
             "prefer trades when fusion_score > 0.7",
         ],
         filters=[
-            {"condition": "zone_gate < 0.5", "action": "BLOCK", "reason": "weak zone"},
+            {"condition": "feature_cluster_similarity < 0.5", "action": "BLOCK", "reason": "weak zone"},
         ],
         boosters=[
             {"condition": "fusion_score > 0.75 AND rr > 2.5", "action": "INCREASE_SIZE",
              "factor": 1.2, "reason": "high confidence setup"},
         ],
-        weights={"fusion_score": 0.4, "zone_gate": 0.35, "rr": 0.25},
-        confidence_formula="0.4 * fusion_score + 0.35 * zone_gate + 0.25 * rr",
+        weights={"fusion_score": 0.4, "feature_cluster_similarity": 0.35, "rr": 0.25},
+        confidence_formula="0.4 * fusion_score + 0.35 * feature_cluster_similarity + 0.25 * rr",
         tier_rules={
-            "TIER_1": "fusion_score > 0.70 AND zone_gate > 0.65",
-            "TIER_2": "fusion_score > 0.55 AND zone_gate > 0.50",
+            "TIER_1": "fusion_score > 0.70 AND feature_cluster_similarity > 0.65",
+            "TIER_2": "fusion_score > 0.55 AND feature_cluster_similarity > 0.50",
             "TIER_3": "everything else",
         },
         source="fallback",

@@ -7,7 +7,7 @@ It is NOT the same question as *which trained checkpoint actually reaches a deci
 — that is *Enabled*. On the active patch the two genuinely diverge:
 
   * ``engine_runner.rr_fusion.enabled = false`` — a version resolves, but ``RRFusionLayer``
-    is never constructed and base ``RREngine`` (a polarity formula, not the checkpoint)
+    is never constructed and base ``CandleCommitment`` (a polarity formula, not the checkpoint)
     flows through instead (F-038).
   * TradeNet resolves a version but the fusion neural slot is unwired (F-005).
   * ``crt_engine.use_bitnet = false`` — the gate is inert on the active patch (F-004).
@@ -51,10 +51,10 @@ _REPO_ROOT = Path(__file__).resolve().parents[2]
 # Resolver family -> active_models.yaml key (families may share one identity block:
 # `rr` and `rr_fusion` both mirror `rr_model`).
 _IDENTITY_KEY: dict[str, str] = {
-    "zone_gate": "zone_gate",
+    "feature_cluster_similarity": "feature_cluster_similarity",
     "rr": "rr_model",
     "rr_fusion": "rr_model",
-    "gaussian": "gaussian",
+    "gaussian": "ema_momentum_kernel",
     "bitnet": "bitnet",
     "tradenet": "tradenet",
 }
@@ -224,7 +224,7 @@ def load_production_bundle(
             )
 
         # Feature width, from BOTH authorities. They can disagree: on the active patch
-        # zone_gate identity claims 39 while the v4 artifact's own feature_order lists 38
+        # feature_cluster_similarity identity claims 39 while the v4 artifact's own feature_order lists 38
         # (missing macd_hist_raw). Report both; never pick a winner here.
         identity_dim = resolved.feature_schema_dim if selected_version else None
         registry_dim = None

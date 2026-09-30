@@ -15,7 +15,7 @@ tuning only) must classify every residual mismatch — never report a bare
 "mismatch". Each rule below is grounded in a specific, cited code fact, not a
 guess:
 
-  * EXECUTION fails closed for lack of a `score`/`risk_score`/`crt_score`
+  * EXECUTION fails closed for lack of a `score`/`risk_score`/`crt_structure_rule_score`
     feature (src/features/crt_state_resolver.py, `_continuous_gates_pass`
     EXECUTION branch) — none of those keys exist in `CANONICAL_FEATURES`
     (src/features/feature_schema.py), so no resolver config can ever produce
@@ -53,7 +53,7 @@ TAU_RECALL = 0.60     # recall at/below which a marginal-agreeing cell is a phas
 STRUCTURALLY_UNREACHABLE_STATES: dict[str, str] = {
     "EXECUTION": (
         "_continuous_gates_pass fails EXECUTION closed when "
-        "raw.get('score'/'risk_score'/'crt_score') is None; none of those "
+        "raw.get('score'/'risk_score'/'crt_structure_rule_score') is None; none of those "
         "three keys exist in CANONICAL_FEATURES, so the gate is "
         "unconditionally closed on any real 39-dim vector."
     ),

@@ -6,18 +6,18 @@ Semantics (hard path, identical to EngineRunner zone stage):
   BitNetZoneGate.check(vector) → top_scores
   → compute_weighted_cluster_score when len(top_scores) >= cluster_min_n
   → else best zone score
-  → run_zone_gate_engine pass/fail vs zone_cluster_threshold
+  → run_feature_cluster_similarity pass/fail vs feature_cluster_similarity_cluster_threshold
 
-Soft zone_mode override stays in EngineRunner (outside this helper).
+Soft feature_cluster_similarity_mode override stays in EngineRunner (outside this helper).
 """
 from __future__ import annotations
 
 import logging
 from typing import Any, Optional
 
-from engines.zone_gate_engine import (
+from engines.feature_cluster_similarity import (
     compute_weighted_cluster_score,
-    run_zone_gate_engine,
+    run_feature_cluster_similarity,
 )
 
 logger = logging.getLogger(__name__)
@@ -25,9 +25,9 @@ logger = logging.getLogger(__name__)
 
 def score_zone_cluster(
     raw_features: dict,
-    zone_gate: Any,
+    feature_cluster_similarity: Any,
     *,
-    zone_cluster_threshold: float,
+    feature_cluster_similarity_cluster_threshold: float,
     cluster_min_n: int,
     cluster_spread_max: float,
     execution_mode: str = "normal",
@@ -43,14 +43,14 @@ def score_zone_cluster(
       best_zone_id           — str | None
       best_zone_score        — float | None
       top_scores             — list[float]
-      meta                   — full run_zone_gate_engine result
+      meta                   — full run_feature_cluster_similarity result
     """
     check_holder: dict = {}
 
     def _model_fn(vector: list) -> float:
         """Same body as former EngineRunner._zone_model_fn (mechanical extract)."""
         try:
-            result = zone_gate.check(vector)
+            result = feature_cluster_similarity.check(vector)
             check_holder["check"] = result
             top_scores = result.get("top_scores")
             if top_scores and len(top_scores) >= cluster_min_n:
@@ -62,15 +62,15 @@ def score_zone_cluster(
             logger.debug("ZoneGate scoring fallback (0.5): %s", exc)
             return 0.5
 
-    zone_raw = run_zone_gate_engine(
+    zone_raw = run_feature_cluster_similarity(
         raw_features=raw_features,
         model_fn=_model_fn,
-        threshold=float(zone_cluster_threshold),
+        threshold=float(feature_cluster_similarity_cluster_threshold),
         execution_mode=str(execution_mode),
         zone_debug_config=zone_debug_config,
         # Schema-v4 safety net: score in the order the loaded registry was TRAINED on, not the
         # ambient canonical order. `None` on legacy registries with no `feature_order` field.
-        feature_order=getattr(zone_gate, "feature_order", None),
+        feature_order=getattr(feature_cluster_similarity, "feature_order", None),
     )
 
     check = check_holder.get("check") or {}

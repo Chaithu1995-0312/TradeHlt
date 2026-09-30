@@ -15,7 +15,7 @@ OOS split: chronological suffix matching E0 holdout (train then oos by timestamp
 Per-arm oos_split = n_oos / n_arm so the gate cut matches the journal HOLDOUT boundary.
 
 Authority: RESEARCH_ONLY. Verdict is M4 research telemetry — does NOT grant
-production authority, does NOT flip gaussian_impl, does NOT update findings
+production authority, does NOT flip removed_selector, does NOT update findings
 unless a human registers a finding later.
 
 Usage:

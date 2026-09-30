@@ -31,7 +31,7 @@ def test_resolve_zone_gate_runtime_matches_how_and_identity() -> None:
         repo_root=_REPO,
     )
     assert isinstance(r, ResolvedModel)
-    assert r.family == "zone_gate"
+    assert r.family == "feature_cluster_similarity"
     assert r.version == "v4_gaussian_runtime_2026_07"
     assert r.artifact_path is not None
     assert r.artifact_path.exists()

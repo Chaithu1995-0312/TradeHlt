@@ -9,8 +9,8 @@ import math
 
 import pytest
 
-import config_layer.rr.rr_pattern_miner as rpm
-from config_layer.rr.rr_pattern_miner import (
+import config_layer.rr.rr_trained as rpm
+from config_layer.rr.rr_trained import (
     _confidence_bypass,
     _chi2_sf,
     _CONF_BYPASS,
@@ -113,7 +113,7 @@ def test_percentile_ignores_confidence(monkeypatch):
 def test_train_emits_training_distribution():
     np = pytest.importorskip("numpy")
     pytest.importorskip("sklearn")
-    from config_layer.rr.rr_pattern_miner import RRPatternTrainer, N_FEATURES
+    from config_layer.rr.rr_trained import RRPatternTrainer, N_FEATURES
     rng = np.random.default_rng(0)
     m = 60
     X = rng.normal(size=(m, N_FEATURES)).tolist()

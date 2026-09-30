@@ -185,7 +185,7 @@ def runtime_assignment(vec38: list[float], zones: list[dict]) -> int:
     CORRECTED 2026-07-22 — previously documented as "exactly how the live gate
     partitions". It is not: the live spine consumes only `top_scores` and **never assigns
     a zone at all** (see the note in `engines.live_engine.BitNetZoneGate.check`; the real
-    decision is `compute_weighted_cluster_score(top_scores) >= zone_cluster_threshold` in
+    decision is `compute_weighted_cluster_score(top_scores) >= feature_cluster_similarity_cluster_threshold` in
     `engines.zone_cluster_score`). `best_zone_id` is telemetry. This argmax is therefore a
     *hypothetical* partition used for the parity diagnostic below — no decision path acts
     on it, which is why low parity is a governance observation and not a runtime risk.

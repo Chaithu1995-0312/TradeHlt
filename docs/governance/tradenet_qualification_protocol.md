@@ -125,7 +125,7 @@ This protocol qualifies **contract B** for eventual **contract A** consumption.
 **Contract C** (meta capital quality) requires a **separate** program if ever promoted.  
 **Contract D** may be used only as a **diagnostic twin** in shadow; it cannot clear GATE-O alone.
 
-`EXPECTED_ENGINES = {crt, gaussian, zone_gate, rr}` — TradeNet is **not** a fourth compute engine;
+`EXPECTED_ENGINES = {crt, gaussian, feature_cluster_similarity, rr}` — TradeNet is **not** a fourth compute engine;
 it is an optional neural layer on the **evaluate** path (`fusion_use_evaluate` + `neural_fn`).
 
 ---

@@ -357,12 +357,12 @@ def build_quality_vs_direction(ep: Mapping[str, Any]) -> Proposition:
     cdir_raw = _crt_direction(ep)
     me = ep.get("model_evidence") or {}
     vals = me.get("values") or {}
-    g = vals.get("gaussian") or {}
+    g = vals.get("ema_momentum_kernel") or {}
     rr = vals.get("rr_model") or {}
     surfaces = {
         "crt": {"direction": cdir_raw, "state": _crt_state(ep)},
         "testimony": {
-            "gaussian": {
+            "ema_momentum_kernel": {
                 "value": g.get("value"),
                 "semantic": g.get("semantic"),
                 "question": g.get("question"),

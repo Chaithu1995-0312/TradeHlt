@@ -1,5 +1,5 @@
 """
-P1 2026-07-22 — HeuristicGaussianEngine registry retry-storm cache.
+P1 2026-07-22 — EmaMomentumKernel registry retry-storm cache.
 
 Bug: when GaussianRegistry.load() failed (no active version for instrument),
 ``_registry`` stayed None and compute() re-called _load_registry() every bar
@@ -49,16 +49,16 @@ def missing_instrument_registry(tmp_path: Path) -> Path:
 def test_failed_registry_load_is_cached_not_retried_every_compute(
     missing_instrument_registry: Path, caplog
 ):
-    from engines.heuristic_gaussian_engine import HeuristicGaussianEngine
+    from engines.ema_momentum_kernel import EmaMomentumKernel
 
-    eng = HeuristicGaussianEngine(
+    eng = EmaMomentumKernel(
         {"gaussian_registry_path": str(missing_instrument_registry)},
         instrument="XAUUSD",
         preload_registry=False,
     )
     assert eng._registry_resolved is False
 
-    with caplog.at_level(logging.WARNING, logger="engines.heuristic_gaussian_engine"):
+    with caplog.at_level(logging.WARNING, logger="engines.ema_momentum_kernel"):
         for _ in range(20):
             out = eng.compute(_feats())
             assert "score" in out
@@ -77,9 +77,9 @@ def test_failed_registry_load_is_cached_not_retried_every_compute(
 
 
 def test_preload_failure_also_sets_resolved(missing_instrument_registry: Path):
-    from engines.heuristic_gaussian_engine import HeuristicGaussianEngine
+    from engines.ema_momentum_kernel import EmaMomentumKernel
 
-    eng = HeuristicGaussianEngine(
+    eng = EmaMomentumKernel(
         {"gaussian_registry_path": str(missing_instrument_registry)},
         instrument="XAUUSD",
         preload_registry=True,
@@ -104,11 +104,11 @@ def test_mtime_advance_allows_single_retry_after_miss(
     missing_instrument_registry: Path, tmp_path: Path
 ):
     """After a cached miss, promoting an active pointer must be pickable once mtime moves."""
-    from engines.heuristic_gaussian_engine import HeuristicGaussianEngine
+    from engines.ema_momentum_kernel import EmaMomentumKernel
     import os
     import time
 
-    eng = HeuristicGaussianEngine(
+    eng = EmaMomentumKernel(
         {"gaussian_registry_path": str(missing_instrument_registry)},
         instrument="XAUUSD",
         preload_registry=True,
@@ -142,10 +142,10 @@ def test_mtime_advance_allows_single_retry_after_miss(
 
 
 def test_explicit_mu_override_skips_registry_entirely(tmp_path: Path, caplog):
-    from engines.heuristic_gaussian_engine import HeuristicGaussianEngine
+    from engines.ema_momentum_kernel import EmaMomentumKernel
 
     # Empty/missing registry path would fail if consulted
-    eng = HeuristicGaussianEngine(
+    eng = EmaMomentumKernel(
         {
             "gaussian_registry_path": str(tmp_path / "nope.json"),
             "gaussian_mu": 0.25,
@@ -154,7 +154,7 @@ def test_explicit_mu_override_skips_registry_entirely(tmp_path: Path, caplog):
         instrument="XAUUSD",
         preload_registry=False,
     )
-    with caplog.at_level(logging.WARNING, logger="engines.heuristic_gaussian_engine"):
+    with caplog.at_level(logging.WARNING, logger="engines.ema_momentum_kernel"):
         out = eng.compute(_feats())
     assert out["score"] is not None
     assert eng.mu == pytest.approx(0.25)
@@ -165,9 +165,9 @@ def test_explicit_mu_override_skips_registry_entirely(tmp_path: Path, caplog):
 
 def test_resolving_instrument_still_loads_once():
     """BNB/ETH path: successful load remains one-shot until mtime change."""
-    from engines.heuristic_gaussian_engine import HeuristicGaussianEngine
+    from engines.ema_momentum_kernel import EmaMomentumKernel
 
-    eng = HeuristicGaussianEngine({}, instrument="BNBUSDT", preload_registry=True)
+    eng = EmaMomentumKernel({}, instrument="BNBUSDT", preload_registry=True)
     assert eng._registry_resolved is True
     # May or may not have a registry depending on env; if loaded, stays loaded
     calls = {"n": 0}

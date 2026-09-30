@@ -30,17 +30,17 @@ _ACTIVE_MODELS_YAML = _REPO_ROOT / "active_models.yaml"
 
 # Resolver family name → active_models.yaml top-level key
 _IDENTITY_YAML_KEY: dict[str, str] = {
-    "zone_gate": "zone_gate",
+    "feature_cluster_similarity": "feature_cluster_similarity",
     "rr": "rr_model",
     "rr_fusion": "rr_model",
-    "gaussian": "gaussian",
+    "gaussian": "ema_momentum_kernel",
     "bitnet": "bitnet",
     "tradenet": "tradenet",
 }
 
 # Resolver family → version-registry path on ModelPaths
 _REGISTRY_PATH: dict[str, Path] = {
-    "zone_gate": ModelPaths.ZONE_GATE_VERSION_REGISTRY,
+    "feature_cluster_similarity": ModelPaths.ZONE_GATE_VERSION_REGISTRY,
     "rr": ModelPaths.RR_REGISTRY,
     "rr_fusion": ModelPaths.RR_REGISTRY,
     "gaussian": ModelPaths.GAUSSIAN_REGISTRY,
@@ -259,7 +259,7 @@ def resolve_model(
     Parameters
     ----------
     family :
-        One of zone_gate | rr | rr_fusion | gaussian | bitnet | tradenet.
+        One of feature_cluster_similarity | rr | rr_fusion | gaussian | bitnet | tradenet.
     instrument :
         Optional instrument key (gaussian ``__active__`` map).
     how_path :
@@ -382,7 +382,7 @@ def resolve_zone_gate_runtime(
     default = _norm(ModelPaths.ZONE_GATE_RUNTIME_ALIAS, repo_root=root)
     path = how_path if how_path is not None else default
     return resolve_model(
-        "zone_gate",
+        "feature_cluster_similarity",
         how_path=path,
         require_artifact=True,
         require_how_match=True,

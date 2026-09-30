@@ -3006,11 +3006,11 @@
         "close"
       ],
       "impl": [
-        "heuristic_gaussian_engine"
+        "ema_momentum_kernel"
       ],
       "PRIMARY_ROLE": "EXPLICIT_MODEL_SPECIFIC_QUANTITY",
       "producers": [
-        "heuristic_gaussian_engine"
+        "ema_momentum_kernel"
       ],
       "consumers": [
         "EngineRunner gaussian slot"
@@ -3146,11 +3146,11 @@
         "OHLC"
       ],
       "impl": [
-        "rr_engine"
+        "candle_commitment"
       ],
       "PRIMARY_ROLE": "EXPLICIT_MODEL_SPECIFIC_QUANTITY",
       "producers": [
-        "rr_engine"
+        "candle_commitment"
       ],
       "consumers": [
         "EngineRunner rr slot",
@@ -3176,7 +3176,7 @@
       "unreachable_or_archived": false,
       "evidence_refs": [
         "F-048",
-        "rr_engine"
+        "candle_commitment"
       ],
       "adversarial_review": {},
       "notes": "Candle polarity misnamed rr_ratio \u2014 engine-local quantity"
@@ -3280,15 +3280,15 @@
         "price geometry"
       ],
       "impl": [
-        "zone_gate_engine"
+        "feature_cluster_similarity"
       ],
       "PRIMARY_ROLE": "EXPLICIT_MODEL_SPECIFIC_QUANTITY",
       "producers": [
-        "zone_gate_engine",
+        "feature_cluster_similarity",
         "zone_registry.json"
       ],
       "consumers": [
-        "EngineRunner zone_gate"
+        "EngineRunner feature_cluster_similarity"
       ],
       "direct_inputs": [
         "price geometry"
@@ -3310,7 +3310,7 @@
       "unreachable_or_archived": false,
       "evidence_refs": [
         "F-041",
-        "zone_gate_engine"
+        "feature_cluster_similarity"
       ],
       "adversarial_review": {},
       "notes": "Zone membership geometry \u2014 not 38-vector feature"
@@ -6609,9 +6609,9 @@
       "notes": "BitNet model output/metadata field bitnet_score_at_entry"
     },
     {
-      "quantity_id": "Q-AST-COL-zone_cluster_threshold",
+      "quantity_id": "Q-AST-COL-feature_cluster_similarity_cluster_threshold",
       "names": [
-        "zone_cluster_threshold"
+        "feature_cluster_similarity_cluster_threshold"
       ],
       "run1_class": "UNKNOWN",
       "formula_summary": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
@@ -6650,7 +6650,7 @@
         "scripts/research/diagnose_zone_inertness.py:108"
       ],
       "adversarial_review": {},
-      "notes": "BitNet model output/metadata field zone_cluster_threshold"
+      "notes": "BitNet model output/metadata field feature_cluster_similarity_cluster_threshold"
     },
     {
       "quantity_id": "Q-AST-COL-block_reason_dist",
@@ -6663,11 +6663,11 @@
         "UNKNOWN"
       ],
       "impl": [
-        "src/engines/zone_gate_engine.py:54"
+        "src/engines/feature_cluster_similarity.py:54"
       ],
       "PRIMARY_ROLE": "DIAGNOSTIC_OR_METRIC",
       "producers": [
-        "src/engines/zone_gate_engine.py:54"
+        "src/engines/feature_cluster_similarity.py:54"
       ],
       "consumers": [
         "validation scripts / tests / reports"
@@ -6691,7 +6691,7 @@
       "duplicate_of_quantity_id": null,
       "unreachable_or_archived": false,
       "evidence_refs": [
-        "src/engines/zone_gate_engine.py:54"
+        "src/engines/feature_cluster_similarity.py:54"
       ],
       "adversarial_review": {},
       "notes": "Diagnostic, probe, or report-field key \u2014 not a market feature quantity"

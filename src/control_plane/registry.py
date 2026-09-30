@@ -685,7 +685,7 @@ def core_command_specs() -> tuple[CommandSpec, ...]:
                         file_glob="logs/*.jsonl", help="Source file (trades CSV or opportunities JSONL)"),
                 ArgSpec("compressed_summary", flag="--compressed-summary", kind="file",  default=None,
                         file_glob="logs/compressed_*.json", help="Pre-computed compressed summary JSON"),
-                ArgSpec("target_model",       flag="--target-model",       kind="str",   default=None, help="Target model type (gaussian/zone_gate/rr)"),
+                ArgSpec("target_model",       flag="--target-model",       kind="str",   default=None, help="Target model type (gaussian/feature_cluster_similarity/rr)"),
                 ArgSpec("output",             flag="--output",             kind="str",   default=None, help="Output path for prompt file"),
                 ArgSpec("summary",            flag="--summary",            kind="file",  default=None,
                         file_glob="logs/*_summary.json", help="Optional pre-computed summary JSON"),
@@ -727,7 +727,7 @@ def core_command_specs() -> tuple[CommandSpec, ...]:
             mode="python-file",
             script="scripts/groq_bridge/apply_llm_suggestions.py",
             args_schema=(
-                ArgSpec("target_model",    flag="--target-model",    kind="str",  required=True, help="Target model type (gaussian/zone_gate/rr)"),
+                ArgSpec("target_model",    flag="--target-model",    kind="str",  required=True, help="Target model type (gaussian/feature_cluster_similarity/rr)"),
                 ArgSpec("suggestions_file",flag="--suggestions-file",kind="file", required=True,
                         file_glob="logs/groq_sessions/**/*.json", help="LLM JSON response file"),
                 ArgSpec("opportunities",   flag="--opportunities",   kind="file", required=True,

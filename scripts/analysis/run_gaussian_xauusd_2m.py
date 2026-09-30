@@ -82,7 +82,7 @@ def main() -> int:
         PHASE1_STATUS,
         guard_xauusd_csv_path,
     )
-    from engines.heuristic_gaussian_engine import HeuristicGaussianEngine
+    from engines.ema_momentum_kernel import EmaMomentumKernel
     from features.feature_pipeline import FeaturePipeline
     from features.feature_schema import (
         CANONICAL_FEATURE_ORDER,
@@ -274,7 +274,7 @@ def main() -> int:
         )
 
     print("running live heuristic gaussian (reference, not trained)...")
-    h_eng = HeuristicGaussianEngine(
+    h_eng = EmaMomentumKernel(
         {"instrument": "XAUUSD"}, instrument="XAUUSD", preload_registry=True
     )
     h_scores = np.full(len(records), np.nan)
@@ -288,9 +288,9 @@ def main() -> int:
         except Exception:
             h_exc += 1
     heuristic_rep = {
-        "model": "HeuristicGaussianEngine_live",
+        "model": "EmaMomentumKernel_live",
         "note": (
-            "LIVE fusion path when gaussian_impl=heuristic; "
+            "LIVE fusion path when removed_selector=heuristic; "
             "NOT the trained NB (F-060)"
         ),
         "mu": h_eng.mu,
@@ -360,7 +360,7 @@ def main() -> int:
                 "ETHUSDT": "v5_auto_2026_06_eth",
                 "BNBUSDT": "p5_20260524T120449",
             },
-            "live_gaussian_impl": "heuristic (trained NB not on spine; F-060)",
+            "live_removed_selector": "heuristic (trained NB not on spine; F-060)",
         },
         "trained_models": model_reports,
         "live_heuristic_reference": heuristic_rep,
@@ -372,8 +372,8 @@ def main() -> int:
             "application of BNB/ETH/EUR checkpoints.",
             "Descriptive stats only — NOT economic validation, NOT promote "
             "authority (§6.5).",
-            "Live spine uses HeuristicGaussianEngine, not these trained "
-            "checkpoints (gaussian_impl=heuristic).",
+            "Live spine uses EmaMomentumKernel, not these trained "
+            "checkpoints (removed_selector=heuristic).",
             "Labels/training of NB artifacts are F-022 contaminated (F-060) — "
             "research/docs only.",
         ],

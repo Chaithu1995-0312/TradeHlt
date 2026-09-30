@@ -32,7 +32,7 @@ TRADENET_LINEAGE_VERDICT = INERT / UNWIRED
 | **C — TradeNetMetaEngine** | Meta capital_quality blend around v1 TradeNet | Wired only via `CognitiveBus` sidecar (F-012) — **not** spine decision authority |
 | **D — Legacy train_pipeline binary** | `run_training_pipeline` / fusion ENTRY+EXIT → binary label | Alternate train path; same registry family |
 
-`EXPECTED_ENGINES = {crt, gaussian, zone_gate, rr}` — TradeNet is **not** an expected engine.
+`EXPECTED_ENGINES = {crt, gaussian, feature_cluster_similarity, rr}` — TradeNet is **not** an expected engine.
 
 ---
 
@@ -147,7 +147,7 @@ EngineRunner.__init__
   → never constructs TradeNetV2 / TradeNetMetaEngine
 
 EngineRunner.run
-  → engines crt/gaussian/zone_gate/rr
+  → engines crt/gaussian/feature_cluster_similarity/rr
   → fusion.compute(engine_results)   # 4-engine blend; no neural_fn
   → DecisionEngine …
 

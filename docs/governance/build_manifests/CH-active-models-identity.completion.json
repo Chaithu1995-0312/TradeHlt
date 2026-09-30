@@ -2,7 +2,7 @@
   "change_id": "CH-active-models-identity",
   "status": "COMPLETE_WITH_KNOWN_RESIDUAL",
   "completed_at": "2026-07-22",
-  "summary": "WHO identity version-binding (active_models.yaml schema 2.2) for gaussian, zone_gate, rr_model, bitnet, tradenet. CI R1–R4 in test_active_models_registry.py. No production config or EngineRunner behavior change.",
+  "summary": "WHO identity version-binding (active_models.yaml schema 2.2) for gaussian, feature_cluster_similarity, rr_model, bitnet, tradenet. CI R1–R4 in test_active_models_registry.py. No production config or EngineRunner behavior change.",
   "checks_run": {
     "tests/test_active_models_registry.py": "PASS (22)",
     "tests/test_config_reachability.py": "PASS",

@@ -134,7 +134,7 @@ class ReplayMemoryEngine:
     ----------
     opportunities_dir : Path or str
         Directory (or single file) containing opportunities.jsonl files.
-    zone_registry_path : str
+    feature_cluster_similarity_registry_path : str
         Path to the active zone registry JSON (for cluster assignment).
     max_records : int
         Hard cap on in-memory records (keeps most recent).
@@ -149,7 +149,7 @@ class ReplayMemoryEngine:
     def __init__(
         self,
         opportunities_dir:        "Path | str" = "logs",
-        zone_registry_path:       str          = "models/zone_registry.json",
+        feature_cluster_similarity_registry_path:       str          = "models/zone_registry.json",
         max_records:              int          = _DEFAULT_MAX_RECORDS,
         decay_half_life_days:     float        = _DEFAULT_DECAY_HALF_LIFE_DAYS,
         min_cluster_samples:      int          = _DEFAULT_MIN_CLUSTER_SAMPLES,
@@ -159,7 +159,7 @@ class ReplayMemoryEngine:
         max_corruption_ratio:     float        = MAX_CORRUPTION_RATIO,
     ):
         self._opps_dir        = Path(opportunities_dir)
-        self._zone_path       = Path(zone_registry_path)
+        self._zone_path       = Path(feature_cluster_similarity_registry_path)
         self._max_records     = max_records
         self._max_corruption_ratio = float(max_corruption_ratio)
         self._decay_lambda    = math.log(2.0) / max(decay_half_life_days, 1.0)

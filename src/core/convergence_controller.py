@@ -9,7 +9,7 @@ The controller does NOT re-aggregate engine scores.  When FusionEngine passes
 a pre-computed `weighted_score`, that value is used as `base_avg`; the
 controller's job is purely to apply a stability penalty and adaptive threshold:
 
-  1. BitNet dampening      — zone_gate score ** 4  (only if score > 0.5)
+  1. BitNet dampening      — feature_cluster_similarity score ** 4  (only if score > 0.5)
   2. Sigmoid calibration   — 1/(1+exp(-k*(s-t))) on all 4 scores
   3. Disagreement penalty  — variance-based penalty applied to weighted_score
   4. Entropy tracking      — informational; logged per bar
@@ -21,7 +21,7 @@ the flat average of calibrated scores so existing callers are unaffected.
 Usage (injected into FusionEngine):
     ctrl = ConvergenceController(window_size=500)
     result = ctrl.apply(
-        {"crt": 0.7, "gaussian": 0.6, "zone_gate": 0.9, "rr": 0.65},
+        {"crt": 0.7, "ema_momentum_kernel": 0.6, "feature_cluster_similarity": 0.9, "candle_commitment": 0.65},
         weighted_score=0.71,   # pre-computed by FusionEngine
     )
     ctrl.record_outcome(accepted=result["accepted"])
@@ -176,7 +176,7 @@ class ConvergenceController:
         """
         Parameters
         ----------
-        scores         : dict with keys "crt", "gaussian", "zone_gate", "rr"
+        scores         : dict with keys "crt", "ema_momentum_kernel", "feature_cluster_similarity", "candle_commitment"
                          Missing keys default to 0.5 (neutral).
         debug          : if True, include raw_scores breakdown in result.
         weighted_score : pre-computed weighted fusion score from FusionEngine.
@@ -195,11 +195,11 @@ class ConvergenceController:
         # --- Extract raw scores (default 0.5 for missing engines) ---
         raw = {
             "crt":       float(scores.get("crt",       0.5)),
-            "gaussian":  float(scores.get("gaussian",  0.5)),
-            "zone_gate": float(scores.get("zone_gate", 0.5)),
-            "rr":        float(scores.get("rr",        0.5)),
+            "ema_momentum_kernel":  float(scores.get("ema_momentum_kernel",  0.5)),
+            "feature_cluster_similarity": float(scores.get("feature_cluster_similarity", 0.5)),
+            "candle_commitment":        float(scores.get("candle_commitment",        0.5)),
         }
-        missing = [k for k in ("crt", "gaussian", "zone_gate", "rr") if k not in scores]
+        missing = [k for k in ("crt", "ema_momentum_kernel", "feature_cluster_similarity", "candle_commitment") if k not in scores]
 
         # Cold-start: skip transformations, honour weighted_score if supplied
         if not self.is_warm:
@@ -219,15 +219,15 @@ class ConvergenceController:
                 **({"debug": {"cold_start": True, "raw": raw, "weighted_score": weighted_score}} if debug else {}),
             }
 
-        # --- Step 1: BitNet dampening on zone_gate only ---
-        zg = raw["zone_gate"]
+        # --- Step 1: BitNet dampening on feature_cluster_similarity only ---
+        zg = raw["feature_cluster_similarity"]
         dampened_zg = (zg ** 4) if zg > 0.5 else zg
 
         working = {
             "crt":       raw["crt"],
-            "gaussian":  raw["gaussian"],
-            "zone_gate": dampened_zg,
-            "rr":        raw["rr"],
+            "ema_momentum_kernel":  raw["ema_momentum_kernel"],
+            "feature_cluster_similarity": dampened_zg,
+            "candle_commitment":        raw["candle_commitment"],
         }
 
         # --- Step 2: Sigmoid calibration on all 4 scores ---

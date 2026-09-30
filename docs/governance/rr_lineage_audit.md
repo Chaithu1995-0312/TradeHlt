@@ -24,7 +24,7 @@
 
 ```text
 RR_LINEAGE_VERDICT = THREE_CONTRACTS
-  A_LIVE_GEOMETRY     = ACTIVE ALIGNED (RREngine candle polarity ∈[0.5,1]; fusion score)
+  A_LIVE_GEOMETRY     = ACTIVE ALIGNED (CandleCommitment candle polarity ∈[0.5,1]; fusion score)
   B_TRAINED_FUSION    = INERT (rr_fusion.enabled=false; F-038 shipped)
                         + GATE_SKEW if re-enabled (F-044) + LABEL_RISK (F-045/F-022)
   C_DECISION_RR_GATE  = SEMANTIC_MISMATCH (F-048) — polarity vs rr_threshold=1.5
@@ -40,7 +40,7 @@ RR_LINEAGE_VERDICT = THREE_CONTRACTS
 
 | ID | Name | Learning? | Active on spine? |
 |---|---|---|---|
-| **A** | `RREngine` — Candle Polarity Index | No (geometry) | **YES** — fusion weight `weight_rr` |
+| **A** | `CandleCommitment` — Candle Polarity Index | No (geometry) | **YES** — fusion weight `weight_candle_commitment` |
 | **B** | `NanoInferenceEngine` + `RRFusionLayer` | Yes (Ridge + GNB + Mahalanobis) | **NO** — `rr_fusion.enabled=false` |
 | **C** | `DecisionEngine` `fusion["rr"] < rr_threshold` | N/A (consumer) | Gate-ON path only; **structurally broken** vs A |
 | **D** | `UltronRiskGate` Check 2 — true forward RR | N/A | Separate; uses trade `rr_ratio` from planner SL/TP |
@@ -64,7 +64,7 @@ RR_LINEAGE_VERDICT = THREE_CONTRACTS
 
 | Track | Features |
 |---|---|
-| **A** | `close`, `high`, `low` only (`rr_engine.py:47-49`) |
+| **A** | `close`, `high`, `low` only (`candle_commitment.py:47-49`) |
 | **B** | Full 38-dim `CANONICAL_FEATURES`; train/infer zero price indices `[0,1,2,3,4,7,8,16,17,26,27]` → **dof≈27** (`train_rr_model.py`, model `zero_indices`) |
 | Pipeline names | `retest_depth` / `disp_strength` (FM-021/020) appear in B vectors |
 | CRT FM-027/028 | **Not** used by A or B |
@@ -83,7 +83,7 @@ RR_LINEAGE_VERDICT = THREE_CONTRACTS
 | Path | Role |
 |---|---|
 | `scripts/data/build_rr_dataset.py` | Opportunities or trades → RR dataset JSON |
-| `RRPatternTrainer` | Ridge expected_rr + GNB p_win + Ledoit-Wolf confidence covariance (`rr_pattern_miner.py`) |
+| `RRPatternTrainer` | Ridge expected_rr + GNB p_win + Ledoit-Wolf confidence covariance (`rr_trained.py`) |
 | `scripts/training/train_rr_model.py` | Train → versioned model + `rr_registry.json` |
 | Probe | `scripts/analysis/rr_confidence_probe.py`, `scripts/research/rr_shadow_value.py` (read-only) |
 
@@ -102,7 +102,7 @@ Config default model path: `engine_runner.rr_fusion.model_path` / `rr_model.mode
 
 | Track | Loader |
 |---|---|
-| **A** | `RREngine(config)` in `EngineRunner.__init__` (`engine_runner.py:345`) — always |
+| **A** | `CandleCommitment(config)` in `EngineRunner.__init__` (`engine_runner.py:345`) — always |
 | **B** | `RRFusionLayer` only if `rr_fusion.enabled` (`:354-373`); `NanoInferenceEngine.load(path)` |
 
 With `enabled:false`: `self.rr_fusion = None`; `rr_result = self.rr.compute(input_data)` flows **unmutated** (F-038 Fix B; test `test_rr_fusion_disabled_is_base_rr_identity`).
@@ -151,13 +151,13 @@ canonical 38-vector (or historically starved 2–3 keys via score_dict — F-038
 | `rr_model` confidence mode | `legacy_scalar` |
 | `decision_engine.rr_threshold` | **`1.5`** |
 | `ultron` / execution `min_rr_ratio` | `1.5` (true RR on trade plan) |
-| `fusion_engine.weight_rr` | `0.2` (applies to **A** score in fusion average) |
+| `fusion_engine.weight_candle_commitment` | `0.2` (applies to **A** score in fusion average) |
 
 ### 10. Runtime consumption
 
 ```text
 EngineRunner.run
-  → rr_result = RREngine.compute(input_data)          # A always
+  → rr_result = CandleCommitment.compute(input_data)          # A always
   → if rr_fusion loaded: mutate rr_result             # B OFF → skip
   → engine_results["rr"] → FusionEngine.compute       # A score weight 0.2
   → DecisionEngine.evaluate(
@@ -170,7 +170,7 @@ EngineRunner.run
 **Backtest gate-ON:** EngineRunner is a **post-CRT veto**. F-048: `run()` can never return `execute` because polarity ≤1 < `rr_threshold` 1.5.  
 **Observed BNB baseline:** 11 trades journaled — admits are CRT path with ER rejects only `invalid_session` (2); DecisionEngine `execute` is not the journal admitter in this harness (veto-only / fail-soft nuances — F-048 residual).
 
-**True RR floor (D):** `UltronRiskGate` compares planner-derived `trade["rr_ratio"]` to `min_rr_ratio` — independent of RREngine.
+**True RR floor (D):** `UltronRiskGate` compares planner-derived `trade["rr_ratio"]` to `min_rr_ratio` — independent of CandleCommitment.
 
 **WIRING SHIPPED 2026-07-17 (contracts C/D, B unchanged):**
 - **C (F-048 partial fix):** `engine_runner` marks fusion RR as `rr_semantic=candle_polarity`; `DecisionEngine` only enforces economic RR when `true_rr` is supplied or legacy `rr` without polarity semantic — polarity no longer forces permanent `low_rr`.
@@ -203,7 +203,7 @@ Pre-registration frozen at
 
 | Question | Answer |
 |---|---|
-| Does RREngine read FM-027/028? | **No** (OHLC only) |
+| Does CandleCommitment read FM-027/028? | **No** (OHLC only) |
 | Does trained model use CRT emission keys? | **No** — pipeline vector |
 | Live A score changed by CH-002? | **No** (baseline economic parity PASS) |
 | Rebuild required now? | **NO** |
@@ -232,7 +232,7 @@ Pre-registration frozen at
 | Re-enable `rr_fusion` | **NO** | F-044 gate + F-045 labels + ΔG001 |
 | Switch confidence mode off legacy | Config research only | Still need enable + authority |
 | Fix DecisionEngine to true RR | Separate design program | Intent adjudication first |
-| Change RREngine formula | STRUCTURAL / high cost | Not lineage-driven |
+| Change CandleCommitment formula | STRUCTURAL / high cost | Not lineage-driven |
 
 ---
 
@@ -251,8 +251,8 @@ Pre-registration frozen at
 
 | Role | Path |
 |---|---|
-| Live geometry | `src/engines/rr_engine.py` |
-| Trained train/infer | `src/config_layer/rr/rr_pattern_miner.py` |
+| Live geometry | `src/engines/candle_commitment.py` |
+| Trained train/infer | `src/config_layer/rr/rr_trained.py` |
 | Dataset / labels | `src/config_layer/rr/rr_dataset_builder.py` |
 | Fusion layer | `src/config_layer/rr/rr_fusion.py` |
 | Orchestration | `src/core/engine_runner.py` ~345–373, ~683–730, ~954–977 |
@@ -286,7 +286,7 @@ Pre-registration frozen at
 ## Final return
 
 ```text
-RR_ACTIVE_ON_PATCH       = RREngine geometry YES; rr_fusion NO
+RR_ACTIVE_ON_PATCH       = CandleCommitment geometry YES; rr_fusion NO
 RR_LINEAGE_STATUS        = THREE_CONTRACTS (A ALIGNED / B INERT+SKEW / C MISMATCH)
 REBUILD_REQUIRED_NOW     = NO
 CH002_IMPACT             = INERT

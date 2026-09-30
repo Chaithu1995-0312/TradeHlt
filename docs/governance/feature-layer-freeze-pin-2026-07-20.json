@@ -133,7 +133,7 @@
           "backtest_v2": false,
           "crt_state_machine": false,
           "session_filter": false,
-          "zone_gate": false,
+          "feature_cluster_similarity": false,
           "fusion_gate": false,
           "decision_engine": false,
           "execution_planner": false,
@@ -235,7 +235,7 @@
     {
       "id": "ZONEGATE-ALIGNMENT-SAFETY-NET",
       "phase": "fail-closed vector alignment; prerequisite of SCHEMA-V4-VECTOR-MIGRATION",
-      "note": "2026-07-22. models/zone_registry.json always stored a top-level `feature_order` and nothing read it; zone_gate_engine._extract_vector built from the ambient CANONICAL_FEATURE_ORDER and silently truncated over-length vectors (a v2.0(35)->v3.0(38) back-compat path). Fixed: scoring is now name-anchored to the registry's own feature_order, truncation raises, and a registry naming a feature absent from the live schema raises ZoneFeatureOrderError at LOAD (never fail-open \u2014 a hard gate scoring a misaligned vector is worse than no gate).",
+      "note": "2026-07-22. models/zone_registry.json always stored a top-level `feature_order` and nothing read it; feature_cluster_similarity._extract_vector built from the ambient CANONICAL_FEATURE_ORDER and silently truncated over-length vectors (a v2.0(35)->v3.0(38) back-compat path). Fixed: scoring is now name-anchored to the registry's own feature_order, truncation raises, and a registry naming a feature absent from the live schema raises ZoneFeatureOrderError at LOAD (never fail-open \u2014 a hard gate scoring a misaligned vector is worse than no gate).",
       "parity_contract": "MUST be a no-op at v3.0: name-anchored extraction == positional extraction while feature_order == CANONICAL_FEATURE_ORDER, and the gate-ON BNBUSDT ledger stays 9bcba138775d4109."
     },
     {
@@ -428,7 +428,7 @@
           "downstream_dim_pins_fixed": "~30 test assertions across 16 files updated from literal 39 to 48 (or version 4.0 to 5.0), following the exact precedent SCHEMA-V4-VECTOR-MIGRATION set for its own 38->39 bump. Two REAL production-code bugs found and fixed in the process (not just test literals): research.model_runners.schema_resolver._canonical_minus_v4_only and research.clean_labels.builder.LEGACY_FEATURE_NAMES both derived a frozen historical 38-dim schema by subtracting only the ONE v4 addition from the LIVE (now-48) CANONICAL_FEATURES, silently redefining what \"the v3 schema\" meant every time the live schema grows; both fixed with an explicit v5-exclusion set + fail-closed dim guard.",
           "deferred_not_fixed": [
             "tests/test_crt_baseline_trace.py::test_artifact_invariants_if_present -- the underlying docs/governance/xauusd_crt_baseline_trace/xauusd_crt_baseline_trace_v1.jsonl artifact is itself frozen under XAUUSD_CRT_BASELINE_TRACE_V1_FREEZE.json and stores per-bar feature_count=39; regenerating it is a separate governed re-certification, not done in this pass.",
-            "Model retraining: all 6 model families (zone_gate/rr/rr_fusion/gaussian/bitnet/tradenet) remain trained on <=39-dim schemas; every fail-closed dim-mismatch mechanism was verified to degrade correctly (BLOCK/refuse-load, never silent truncate), but no artifact was retrained in this pass -- a separately sequenced, compute-bound activity.",
+            "Model retraining: all 6 model families (feature_cluster_similarity/rr/rr_fusion/gaussian/bitnet/tradenet) remain trained on <=39-dim schemas; every fail-closed dim-mismatch mechanism was verified to degrade correctly (BLOCK/refuse-load, never silent truncate), but no artifact was retrained in this pass -- a separately sequenced, compute-bound activity.",
             "docs/governance/geometry_census.jsonl / geometry_semantic_adjudication.jsonl: pre-existing stale (7-failure baseline before this program began) grew further (80 unadjudicated derivations, some newly contributed by features/smc/*.py); not regenerated in this pass, same pre-existing debt class."
           ]
         }

@@ -9,7 +9,7 @@
     "src/config_layer/model_resolver.py",
     "src/core/engine_runner.py",
     "src/engines/live_engine.py",
-    "src/engines/heuristic_gaussian_engine.py",
+    "src/engines/ema_momentum_kernel.py",
     "tests/test_model_paths_resolver.py",
     "tests/test_active_models_registry.py",
     "tests/test_engine_runner_rr_fusion.py",
@@ -18,8 +18,8 @@
     "assistant_project.md"
   ],
   "affected_feature_ids": [],
-  "affected_models": "zone_gate load path centralized via resolver; identity parity enforced at resolve time for wired families",
-  "affected_production_config": "none — HOW paths remain keys; resolver requires parity with registry-active artifact for zone_gate",
+  "affected_models": "feature_cluster_similarity load path centralized via resolver; identity parity enforced at resolve time for wired families",
+  "affected_production_config": "none — HOW paths remain keys; resolver requires parity with registry-active artifact for feature_cluster_similarity",
   "required_checks_ack": [
     "tests/test_model_paths_resolver.py",
     "tests/test_active_models_registry.py",

@@ -94,14 +94,14 @@ def collect(
 
     engines_flat = {
         "crt": _engine_value(engine_outputs.get("crt"), ("score",)),
-        "gaussian": _engine_value(engine_outputs.get("gaussian"), ("score",)),
+        "ema_momentum_kernel": _engine_value(engine_outputs.get("ema_momentum_kernel"), ("score",)),
         "adapter": _engine_value(engine_outputs.get("adapter"), ("score",)),
-        "rr": _engine_value(engine_outputs.get("rr"), ("score",)),
-        "zone_gate": _engine_value(engine_outputs.get("zone_gate"), _zonegate_value_keys()),
+        "candle_commitment": _engine_value(engine_outputs.get("candle_commitment"), ("score",)),
+        "feature_cluster_similarity": _engine_value(engine_outputs.get("feature_cluster_similarity"), _zonegate_value_keys()),
         "llm": _engine_value(engine_outputs.get("llm"), ("score",)),
     }
     gaussian_score = _to_float(
-        context.get("gaussian_score", context.get("score", engines_flat.get("gaussian", 0.0))),
+        context.get("gaussian_score", context.get("score", engines_flat.get("ema_momentum_kernel", 0.0))),
         0.0,
     )
 

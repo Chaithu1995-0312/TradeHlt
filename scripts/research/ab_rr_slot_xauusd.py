@@ -101,7 +101,7 @@ def main() -> int:
 
     # Weights from the baseline (crt 0.4, others 0.2).
     w = dict(base[0]["native"]["weights_used"])
-    wc, wg, wz, wr = w["crt"], w["gaussian"], w["zone_gate"], w["rr"]
+    wc, wg, wz, wr = w["crt"], w["gaussian"], w["feature_cluster_similarity"], w["rr"]
 
     # Raw closes -> forward returns (raw row order; warmup is the first 78 rows).
     raw = pd.read_csv(CSV)
@@ -123,7 +123,7 @@ def main() -> int:
             continue
         scores = rec["native"]["scores"]
         s_crt, s_gauss, s_zone, s_rr = (
-            scores["crt"], scores["gaussian"], scores["zone_gate"], scores["rr"],
+            scores["crt"], scores["gaussian"], scores["feature_cluster_similarity"], scores["rr"],
         )
         s_rrt = rr["native"]["score"]
         fused_base = wc * s_crt + wg * s_gauss + wz * s_zone + wr * s_rr
@@ -136,7 +136,7 @@ def main() -> int:
             "fused_rr_trained": float(fused_rrt),
             "crt": float(s_crt),
             "gaussian": float(s_gauss),
-            "zone_gate": float(s_zone),
+            "feature_cluster_similarity": float(s_zone),
             "rr_live_polarity": float(s_rr),
             "rr_trained": float(s_rrt),
         }

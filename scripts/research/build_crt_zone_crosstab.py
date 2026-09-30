@@ -47,7 +47,7 @@ def main() -> int:
         "instrument": args.instrument,
         "csv_path": csv_path,
         "registry_path": zcfg.registry_path,
-        "zone_cluster_threshold": zcfg.zone_cluster_threshold,
+        "feature_cluster_similarity_cluster_threshold": zcfg.feature_cluster_similarity_cluster_threshold,
         "n_labels": len(labels),
     }
 

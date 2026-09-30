@@ -187,7 +187,7 @@
       "consumer": "Gaussian_live_heuristic",
       "type": "engine",
       "active": true,
-      "entrypoint": "src/engines/heuristic_gaussian_engine.py",
+      "entrypoint": "src/engines/ema_momentum_kernel.py",
       "features": [
         "ema_fast",
         "ema_slow",
@@ -273,7 +273,7 @@
       "consumer": "ZoneGate",
       "type": "engine",
       "active": true,
-      "entrypoint": "src/engines/zone_gate_engine.py",
+      "entrypoint": "src/engines/feature_cluster_similarity.py",
       "features": [
         "zone geometry from registry; not full 38"
       ],
@@ -282,7 +282,7 @@
       "migration_action": "NONE",
       "retrain_required": false,
       "evidence": [
-        "zone_gate_engine",
+        "feature_cluster_similarity",
         "F-041"
       ],
       "unknowns": [
@@ -293,16 +293,16 @@
       "consumer": "RR_Engine",
       "type": "engine",
       "active": true,
-      "entrypoint": "src/engines/rr_engine.py",
+      "entrypoint": "src/engines/candle_commitment.py",
       "features": [
         "candle polarity / structure quality \u2014 not full pipeline vector"
       ],
-      "current_formula_binding": "RREngine.compute local",
+      "current_formula_binding": "CandleCommitment.compute local",
       "compatibility_verdict": "NOT_APPLICABLE",
       "migration_action": "NONE",
       "retrain_required": false,
       "evidence": [
-        "rr_engine.py",
+        "candle_commitment.py",
         "F-048"
       ],
       "unknowns": []

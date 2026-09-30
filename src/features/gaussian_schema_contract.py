@@ -23,8 +23,8 @@ Contract
 
 Authority
 ---------
-Alignment only (CLAUDE.md §6.5). Grants no re-enable of ``gaussian_impl=ml``
-and no economic authority. Live spine default remains heuristic (F-060).
+Alignment only (CLAUDE.md §6.5). Grants no fusion-slot swap onto MLGaussianEngine
+and no economic authority. The live slot is EmaMomentumKernel (F-060).
 """
 from __future__ import annotations
 

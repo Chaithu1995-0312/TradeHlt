@@ -242,7 +242,7 @@
       "reopen_policy": "not_closed_audited",
       "reopen_conditions": [
         "not CLOSED — AUDITED != CLOSED; further work advances lineage/remediation, does not reopen a CLOSED surface",
-        "re-audit if gaussian_impl wiring, train pipeline, or registry contract changes"
+        "re-audit if removed_selector wiring, train pipeline, or registry contract changes"
       ],
       "upstream_surfaces": [
         "CRT"
@@ -278,14 +278,14 @@
       "surface_name": "RR lineage audit",
       "status": "AUDITED",
       "status_detail": "RR_LINEAGE_STATUS=THREE_CONTRACTS (A ALIGNED / B INERT+SKEW / C MISMATCH)",
-      "scope_boundary": "Post-CH-002 observational audit of RREngine polarity, rr_fusion (disabled), DecisionEngine RR-gate mismatch (F-048), and Ultron true-RR separation. Does NOT close RR; does NOT remediate F-048; does NOT re-enable rr_fusion.",
+      "scope_boundary": "Post-CH-002 observational audit of CandleCommitment polarity, rr_fusion (disabled), DecisionEngine RR-gate mismatch (F-048), and Ultron true-RR separation. Does NOT close RR; does NOT remediate F-048; does NOT re-enable rr_fusion.",
       "authoritative_artifact": "docs/governance/rr_lineage_audit.md",
       "status_token": "RR_LINEAGE_STATUS        = THREE_CONTRACTS",
       "frozen": false,
       "reopen_policy": "not_closed_audited",
       "reopen_conditions": [
         "not CLOSED — AUDITED != CLOSED",
-        "re-audit if RREngine/rr_fusion/DecisionEngine RR wiring changes",
+        "re-audit if CandleCommitment/rr_fusion/DecisionEngine RR wiring changes",
         "F-048 intent adjudication is separate open work (does not reopen CRT)"
       ],
       "upstream_surfaces": [

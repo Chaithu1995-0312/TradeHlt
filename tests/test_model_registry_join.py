@@ -6,7 +6,7 @@ Joins the three model-declaring surfaces that previously had no test checking th
   - active_models.yaml <section>.semantic_ids — descriptive-mirror back-refs
 
 Before this floor, the same model carried three different ids across the three files
-(catalog "rr" / MIAR "rr_engine" / active_models.yaml "rr_model") with nothing checking they
+(catalog "rr" / MIAR "candle_commitment" / active_models.yaml "rr_model") with nothing checking they
 were the same model. This floor makes that mechanically checkable via one semantic_id.
 
 Design plan: docs/implementation_plan/dont-read-codebase-yet-lovely-clarke.md, "Phase 0 —
@@ -41,7 +41,7 @@ _SPINE_AUTHORITY = {"FUSION_VOTE", "VETO", "SPINE"}
 _OFFSPINE_AUTHORITY = {"NONE", "SHADOW"}
 # EXPECTED_ENGINES fusion-completeness votes (core.engine_runner.py:54) — the mechanical basis
 # for the FUSION_VOTE derivation rule documented in contracts.py's module docstring.
-_EXPECTED_ENGINE_ROWS = {"crt_score", "gaussian", "zone_gate", "rr"}
+_EXPECTED_ENGINE_ROWS = {"crt_structure_rule_score", "ema_momentum_kernel", "feature_cluster_similarity", "candle_commitment"}
 
 
 @pytest.fixture(scope="module")
@@ -204,7 +204,7 @@ def test_authority_consistent_with_spine_active():
 
 def test_fusion_vote_authority_matches_expected_engines():
     """Mechanical derivation, not a per-row judgment call: FUSION_VOTE iff the row's engine
-    is one of core.engine_runner.EXPECTED_ENGINES ({"crt","gaussian","zone_gate","rr"})."""
+    is one of core.engine_runner.EXPECTED_ENGINES ({"crt","gaussian","feature_cluster_similarity","rr"})."""
     fusion_vote_rows = {mid for mid, m in MODEL_CATALOG.items() if m.authority == "FUSION_VOTE"}
     assert fusion_vote_rows == _EXPECTED_ENGINE_ROWS, (
         f"FUSION_VOTE rows {fusion_vote_rows} != EXPECTED_ENGINES-derived set "

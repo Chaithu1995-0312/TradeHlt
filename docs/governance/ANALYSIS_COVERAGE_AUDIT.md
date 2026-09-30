@@ -146,8 +146,8 @@ membership / output-producing surfaces), reusing the consumer-trace evidence alr
    `src/core/acceptance_controller.py`, `src/core/convergence_controller.py`,
    `src/core/ultron_risk_gate_wrapper.py`, `src/config_layer/production_config.py`,
    `src/config_layer/model_resolver.py`.
-2. **The 4 scoring engines** `src/engines/{crt_engine_v2,heuristic_gaussian_engine,
-   ml_gaussian_engine,zone_gate_engine,rr_engine}.py` + `trap_validator_engine.py` — everything
+2. **The 4 scoring engines** `src/engines/{crt_engine_v2,ema_momentum_kernel,
+   ml_gaussian_engine,feature_cluster_similarity,candle_commitment}.py` + `trap_validator_engine.py` — everything
    `engine_runner.py` calls unconditionally.
 3. **The two thin-identity modules' upgrade** (`config_validator.py`, `promotion_manager.py` Semantic
    OS entries) as a standalone, low-risk governance-hygiene follow-up.

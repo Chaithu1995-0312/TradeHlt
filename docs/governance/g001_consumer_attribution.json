@@ -86,7 +86,7 @@
       "description": "Four-engine fusion gate (CRT/Gaussian/Zone/RR)",
       "features_or_signals": [
         "engine scores",
-        "zone_gate",
+        "feature_cluster_similarity",
         "rr",
         "gaussian"
       ],
@@ -112,8 +112,8 @@
       "new_authority_from_parity": false
     },
     {
-      "consumer_id": "zone_gate",
-      "path": "src/engines/zone_gate_engine.py",
+      "consumer_id": "feature_cluster_similarity",
+      "path": "src/engines/feature_cluster_similarity.py",
       "description": "Geometric HARD zone gate",
       "features_or_signals": [
         "zone registry geometry",

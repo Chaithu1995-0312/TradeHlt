@@ -168,7 +168,7 @@ Not true RR, not p(win) under journal exits, not fusion engine vote.
 |---|---|---|
 | `use_bitnet` | **`false`** | CRT / production params (`v2_multi_2026_04.json:252`) |
 | `bitnet_main_threshold` | `0.55` | CRT params (`:206`) |
-| `zone_cluster_threshold` | `0.25` | `engine_runner` — **ZoneGate**, not BitNet model |
+| `feature_cluster_similarity_cluster_threshold` | `0.25` | `engine_runner` — **ZoneGate**, not BitNet model |
 | `engine_runner.model_path` | `results/model_export_format.json` | **Not** wired into CRT `bitnet_score` |
 
 `active_models.yaml` bitnet block: `enabled: false`, `status: dormant`, findings `[F-004]`.

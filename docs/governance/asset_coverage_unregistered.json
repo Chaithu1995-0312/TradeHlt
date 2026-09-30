@@ -22,7 +22,7 @@
   "config_layer.insight_reporter|save",
   "config_layer.llm_inference_client|_append_llm_audit",
   "config_layer.rr.rr_dataset_builder|save_dataset",
-  "config_layer.rr.rr_pattern_miner|save",
+  "config_layer.rr.rr_trained|save",
   "control_plane.dashboard_api|_promote_registry",
   "control_plane.dashboard_api|promote_model_payload",
   "control_plane.jobs|_execute_run",

@@ -3,10 +3,8 @@ ml_gaussian_engine.py
 =====================
 ML-based Gaussian engine using a trained GaussianNBModel (32-dim).
 
-Selected via config["gaussian_impl"] (Config-First §6.5 — config is the single
-source of truth; the GAUSSIAN_IMPL env var was removed):
-  gaussian_impl=ml        → MLGaussianEngine (this file)
-  gaussian_impl=heuristic → HeuristicGaussianEngine (default)
+The fusion slot is EmaMomentumKernel. EngineRunner does not construct this class.
+nb_outcome_classifier is the offline NB model, not a fusion slot.
 
 Fail-open doctrine:
   Any exception during model load or inference returns

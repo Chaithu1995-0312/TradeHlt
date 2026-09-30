@@ -1052,7 +1052,7 @@
           "lineno": 134
         },
         {
-          "file": "tests/test_gaussian_impl_switch.py",
+          "file": "tests/test_ema_momentum_kernel_slot.py",
           "lineno": 21
         }
       ],
@@ -1135,7 +1135,7 @@
           "lineno": 135
         },
         {
-          "file": "tests/test_gaussian_impl_switch.py",
+          "file": "tests/test_ema_momentum_kernel_slot.py",
           "lineno": 22
         }
       ],
@@ -1422,7 +1422,7 @@
           "lineno": 56
         },
         {
-          "file": "tests/test_gaussian_impl_switch.py",
+          "file": "tests/test_ema_momentum_kernel_slot.py",
           "lineno": 23
         }
       ],

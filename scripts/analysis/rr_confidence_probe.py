@@ -38,7 +38,7 @@ if _SRC not in sys.path:
 
 import numpy as np  # analysis-only dependency (NOT used by the pure-Python hot path)
 
-from config_layer.rr.rr_pattern_miner import (
+from config_layer.rr.rr_trained import (
     NanoInferenceEngine,
     DEFAULT_MODEL_PATH,
     _MAHAL_CLIP,
@@ -145,7 +145,7 @@ def _static_dof_validation(model_path: str) -> dict:
 
 
 def _d_sq_vectorized(engine: NanoInferenceEngine, X: np.ndarray) -> np.ndarray:
-    """Replicate predict()'s d_sq EXACTLY (rr_pattern_miner.py:314-334), vectorized. UNCLIPPED."""
+    """Replicate predict()'s d_sq EXACTLY (rr_trained.py:314-334), vectorized. UNCLIPPED."""
     scale_mu = np.asarray(engine.scale_mu, dtype=np.float64)
     scale_sigma = np.asarray(engine.scale_sigma, dtype=np.float64)
     conf_mu = np.asarray(engine.conf_mu, dtype=np.float64)

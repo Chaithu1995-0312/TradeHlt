@@ -37,11 +37,11 @@ from config_layer.model_resolver import (  # noqa: E402
 def test_families_are_the_known_set():
     assert list_model_families() == [
         "bitnet",
+        "feature_cluster_similarity",
         "gaussian",
         "rr",
         "rr_fusion",
         "tradenet",
-        "zone_gate",
     ]
 
 
@@ -61,9 +61,9 @@ def test_enumeration_is_deterministic():
 
 
 def test_rows_are_registry_entries():
-    for row in enumerate_versions("zone_gate"):
+    for row in enumerate_versions("feature_cluster_similarity"):
         assert isinstance(row, RegistryEntry)
-        assert row.family == "zone_gate"
+        assert row.family == "feature_cluster_similarity"
         assert row.version
 
 
@@ -130,8 +130,8 @@ def test_can_resolve_a_non_selected_version():
 
 
 def test_resolved_version_is_marked_non_authoritative():
-    rows = enumerate_versions("zone_gate")
-    got = resolve_version("zone_gate", rows[0].version)
+    rows = enumerate_versions("feature_cluster_similarity")
+    got = resolve_version("feature_cluster_similarity", rows[0].version)
     assert got.meta["authority"] == "NONE"
     assert got.meta["explicit_version"] is True
 

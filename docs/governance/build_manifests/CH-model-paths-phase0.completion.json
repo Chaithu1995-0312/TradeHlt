@@ -13,7 +13,7 @@
   "production_behavior_changed": false,
   "authority_granted": false,
   "notes": [
-    "HOW zone_registry_path still required in config but must match registry-active artifact",
+    "HOW feature_cluster_similarity_registry_path still required in config but must match registry-active artifact",
     "rr_fusion when enabled still loads HOW path; warns if registry artifact differs"
   ],
   "rollback": "revert model_paths.py, model_resolver.py, engine_runner/live_engine/heuristic wires, tests, topic line"

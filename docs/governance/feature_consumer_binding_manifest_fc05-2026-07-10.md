@@ -69,7 +69,7 @@
 - verdict: `NOT_APPLICABLE`
 - migration: `NONE`
 - retrain_required: False
-- binding: RREngine.compute local
+- binding: CandleCommitment.compute local
 - unknowns: []
 
 ## rr_fusion

@@ -5,10 +5,10 @@ from pathlib import Path
 from typing import Any
 
 from core.fusion_engine import FusionConfig, FusionEngine, GaussianAdapter
-from research.model_runners.adapters.crt_score import CrtScoreAdapter
+from research.model_runners.adapters.crt_structure_rule_score import CrtScoreAdapter
 from research.model_runners.adapters.gaussian import GaussianAdapter as LiveGaussian
 from research.model_runners.adapters.rr_polarity import RRPolarityAdapter
-from research.model_runners.adapters.zone_gate import ZoneGateAdapter
+from research.model_runners.adapters.feature_cluster_similarity import ZoneGateAdapter
 from research.model_runners.contracts import ModelContract, get_contract
 from research.model_runners.require_config import require_key, require_section
 from research.model_runners.substrate import BarContext
@@ -28,13 +28,13 @@ class FusionComputeAdapter:
         # Build FusionConfig with production weights only (no dataclass default reliance).
         cfg = FusionConfig(
             weight_crt=float(require_key(fe, "weight_crt", path="fusion_engine")),
-            weight_gaussian=float(
-                require_key(fe, "weight_gaussian", path="fusion_engine")
+            weight_ema_momentum_kernel=float(
+                require_key(fe, "weight_ema_momentum_kernel", path="fusion_engine")
             ),
-            weight_zone_gate=float(
-                require_key(fe, "weight_zone_gate", path="fusion_engine")
+            weight_feature_cluster_similarity=float(
+                require_key(fe, "weight_feature_cluster_similarity", path="fusion_engine")
             ),
-            weight_rr=float(require_key(fe, "weight_rr", path="fusion_engine")),
+            weight_candle_commitment=float(require_key(fe, "weight_candle_commitment", path="fusion_engine")),
             gaussian_weight=float(
                 require_key(fe, "gaussian_weight", path="fusion_engine")
             ),
@@ -62,7 +62,7 @@ class FusionComputeAdapter:
         )
         # compute() does not call gaussian_adapter; still required by constructor.
         live_g = LiveGaussian(
-            contract=get_contract("gaussian"),
+            contract=get_contract("ema_momentum_kernel"),
             prod_config=prod_config,
             instrument=instrument,
         )
@@ -74,16 +74,16 @@ class FusionComputeAdapter:
             config=cfg,
         )
         self._crt = CrtScoreAdapter(
-            contract=get_contract("crt_score"), prod_config=prod_config
+            contract=get_contract("crt_structure_rule_score"), prod_config=prod_config
         )
         self._gauss = live_g
         self._zone = ZoneGateAdapter(
-            contract=get_contract("zone_gate"),
+            contract=get_contract("feature_cluster_similarity"),
             prod_config=prod_config,
             repo_root=repo_root,
         )
         self._rr = RRPolarityAdapter(
-            contract=get_contract("rr"), prod_config=prod_config
+            contract=get_contract("candle_commitment"), prod_config=prod_config
         )
 
         sections = set()
@@ -95,9 +95,9 @@ class FusionComputeAdapter:
         keys.extend(
             [
                 "fusion_engine.weight_crt",
-                "fusion_engine.weight_gaussian",
-                "fusion_engine.weight_zone_gate",
-                "fusion_engine.weight_rr",
+                "fusion_engine.weight_ema_momentum_kernel",
+                "fusion_engine.weight_feature_cluster_similarity",
+                "fusion_engine.weight_candle_commitment",
                 "fusion_engine.gaussian_weight",
                 "fusion_engine.neural_weight",
                 "fusion_engine.llm_weight",
@@ -123,9 +123,9 @@ class FusionComputeAdapter:
         }
         self._weights = {
             "crt": cfg.weight_crt,
-            "gaussian": cfg.weight_gaussian,
-            "zone_gate": cfg.weight_zone_gate,
-            "rr": cfg.weight_rr,
+            "ema_momentum_kernel": cfg.weight_ema_momentum_kernel,
+            "feature_cluster_similarity": cfg.weight_feature_cluster_similarity,
+            "candle_commitment": cfg.weight_candle_commitment,
         }
 
     def score_bar(self, bar: BarContext) -> dict[str, Any]:
@@ -135,9 +135,9 @@ class FusionComputeAdapter:
         rr_n = self._rr.score_bar(bar)
         engine_results = {
             "crt": crt_n,
-            "gaussian": g_n,
-            "zone_gate": z_n,
-            "rr": rr_n,
+            "ema_momentum_kernel": g_n,
+            "feature_cluster_similarity": z_n,
+            "candle_commitment": rr_n,
         }
         fused = self._fusion.compute(engine_results)
         if not isinstance(fused, dict):
@@ -145,13 +145,13 @@ class FusionComputeAdapter:
         out = dict(fused)
         out["component_native"] = {
             "crt": crt_n,
-            "gaussian": g_n,
-            "zone_gate": {
+            "ema_momentum_kernel": g_n,
+            "feature_cluster_similarity": {
                 k: z_n[k]
                 for k in z_n
                 if k in ("score", "passed", "best_zone_id", "cluster_score")
             },
-            "rr": rr_n,
+            "candle_commitment": rr_n,
         }
         out["weights_used"] = dict(self._weights)
         if "score" not in out and "final_score" in out:

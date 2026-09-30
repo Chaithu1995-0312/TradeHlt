@@ -1,7 +1,7 @@
 """Regression: Phase-5 gate call site always passes direction= to the scorer duck-type.
 
 Failure class (pre-existing since b34d6a8): CRTGaussianScorer.compute() rejected
-``direction`` while CRTCalibratedScorer and HeuristicGaussianEngine accept it,
+``direction`` while CRTCalibratedScorer and EmaMomentumKernel accept it,
 so ``--scorer static`` TypeError'd mid-backtest.
 
 This test pins the no-op scorer's API compatibility without changing scoring math.

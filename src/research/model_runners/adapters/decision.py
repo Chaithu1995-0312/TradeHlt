@@ -7,7 +7,7 @@ thing the whole spine exists to produce — had no offline surface.
 Call shape is copied from the live spine (``core/engine_runner.py:1011-1050``):
 
     p_win        = gaussian engine score            <- MIAR-flagged drift, see below
-    zone_gate    = {valid: zone.passed, score: zone.score}
+    feature_cluster_similarity    = {valid: zone.passed, score: zone.score}
     fusion       = {candle_polarity, weak_component: 1 - fusion.final_score}
     score        = fusion final_score
 
@@ -90,7 +90,7 @@ class DecisionAdapter:
                 "live merges AcceptanceController.get_thresholds() over config; "
                 "omitted offline because that controller is stateful/path-dependent"
             ),
-            "p_win_source": "engine_results.gaussian.score",
+            "p_win_source": "engine_results.ema_momentum_kernel.score",
             "p_win_note": (
                 "MIAR-flagged drift: a Gaussian conformity SCORE is fed where a "
                 "calibrated PROBABILITY is expected. Reproduced faithfully so the "
@@ -113,15 +113,15 @@ class DecisionAdapter:
                 "DecisionEngine inputs without inventing them"
             )
 
-        gaussian = components.get("gaussian")
+        gaussian = components.get("ema_momentum_kernel")
         if not isinstance(gaussian, dict) or "score" not in gaussian:
-            raise RuntimeError("gaussian component missing 'score' for p_win")
+            raise RuntimeError("ema_momentum_kernel component missing 'score' for p_win")
         p_win = float(gaussian["score"])
 
-        zone = components.get("zone_gate")
+        zone = components.get("feature_cluster_similarity")
         if not isinstance(zone, dict) or "score" not in zone or "passed" not in zone:
             raise RuntimeError(
-                "zone_gate component missing 'score'/'passed' for zone_gate context"
+                "feature_cluster_similarity component missing 'score'/'passed' for feature_cluster_similarity context"
             )
         zone_ctx = {"valid": bool(zone["passed"]), "score": float(zone["score"])}
 
@@ -129,9 +129,9 @@ class DecisionAdapter:
             raise RuntimeError("fusion result missing 'final_score'")
         final_score = float(fused["final_score"])
 
-        rr = components.get("rr")
+        rr = components.get("candle_commitment")
         if not isinstance(rr, dict) or "score" not in rr:
-            raise RuntimeError("rr component missing 'score' for candle_polarity")
+            raise RuntimeError("candle_commitment component missing 'score' for candle_polarity")
         fusion_ctx = {
             "candle_polarity": float(rr["score"]),  # audit only, not read by evaluate
             "weak_component": max(0.0, 1.0 - final_score),
@@ -140,7 +140,7 @@ class DecisionAdapter:
         result = self._engine.evaluate(
             score=final_score,
             p_win=p_win,
-            zone_gate=zone_ctx,
+            feature_cluster_similarity=zone_ctx,
             fusion=fusion_ctx,
             config=self._decision_cfg,
         )

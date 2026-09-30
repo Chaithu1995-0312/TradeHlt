@@ -535,7 +535,7 @@ def _apply_bh_and_claims(stratum_results: list[dict[str, Any]]) -> dict[str, Any
         "bh_q": BH_Q,
         "coordinator_authorized": False,
         "fusion_wire_authorized": False,
-        "gaussian_impl_flip_authorized": False,
+        "removed_selector_flip_authorized": False,
     }
 
 
@@ -667,7 +667,7 @@ def report_to_markdown(rep: Mapping[str, Any], *, title: str = "") -> str:
             f"**Program verdict:** `{gate.get('program_verdict')}`",
             f"**Coordinator authorized:** `{gate.get('coordinator_authorized')}` "
             f"· **Fusion wire:** `{gate.get('fusion_wire_authorized')}` "
-            f"· **ML flip:** `{gate.get('gaussian_impl_flip_authorized')}`",
+            f"· **ML flip:** `{gate.get('removed_selector_flip_authorized')}`",
             "",
             f"Bars scored: {rep.get('n_bars_scored')}  ·  ML fallback: {rep.get('ml_fallback_rate')}",
             f"CSV: `{rep.get('csv_path', '')}`",

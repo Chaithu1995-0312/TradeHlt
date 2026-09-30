@@ -214,11 +214,11 @@ class CognitiveBus:
             from core.hierarchical_meta_fusion import HierarchicalMetaFusion  # noqa
 
             opps_dir = str(self._cfg.get("opportunities_dir",    "logs"))
-            zone_reg = str(self._cfg.get("zone_registry_path",   "models/zone_registry.json"))
+            zone_reg = str(self._cfg.get("feature_cluster_similarity_registry_path",   "models/zone_registry.json"))
 
             self._replay_memory = ReplayMemoryEngine(
                 opportunities_dir  = opps_dir,
-                zone_registry_path = zone_reg,
+                feature_cluster_similarity_registry_path = zone_reg,
                 max_records        = int(self._cfg.get("max_replay_records",  50_000)),
                 decay_half_life_days = float(self._cfg.get("decay_half_life_days", 30.0)),
                 min_cluster_samples  = int(self._cfg.get("min_cluster_samples",    5)),

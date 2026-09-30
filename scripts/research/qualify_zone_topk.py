@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-qualify_zone_topk.py — measure ΔG001 of the engine_runner.zone_gate knobs
+qualify_zone_topk.py — measure ΔG001 of the engine_runner.feature_cluster_similarity knobs
 (top_k / cluster_min_n / cluster_spread_max) across crypto majors.
 
 WHY: the config-first migration shipped these as BEHAVIORAL knobs (default {3,2,0.15},
@@ -21,7 +21,7 @@ ISOLATION: a single full-history spine backtest is run per (cell, instrument); i
 feed Layer 1 and its trades.csv (parsed via ProductionSpineSource._parse_trades) feed a
 CANNED spine source so Layer 2 forward-walks the SAME entries with no re-run. The knob is
 injected by wrapping config_layer.production_config.get_prod_section (deep-copy the
-engine_runner section, override zone_gate) — NO JSON edit, NO rehash, NO promotion. Same
+engine_runner section, override feature_cluster_similarity) — NO JSON edit, NO rehash, NO promotion. Same
 MEASURE-ONLY discipline as session_sweep.py / exit_grid.py / qualify_majors.py.
 
 Usage:
@@ -91,7 +91,7 @@ STAGE_B_SPREAD = [0.10, 0.15, 0.25]
 # ─────────────────────────────────────────────────────────────────────────────
 class _InjectZoneGate:
     """Context manager: monkeypatch production_config.get_prod_section so a read of the
-    'engine_runner' section returns a deep copy with zone_gate.{top_k,cluster_min_n,
+    'engine_runner' section returns a deep copy with feature_cluster_similarity.{top_k,cluster_min_n,
     cluster_spread_max} overridden. backtest_v2 imports get_prod_section at call time
     (function-local `from ... import`), so patching the module attribute is seen."""
 
@@ -107,11 +107,11 @@ class _InjectZoneGate:
             sec = orig(name, *args, **kwargs)
             if name == "engine_runner":
                 sec = copy.deepcopy(sec)
-                zg = dict(sec.get("zone_gate", {}))
+                zg = dict(sec.get("feature_cluster_similarity", {}))
                 zg["top_k"] = tk
                 zg["cluster_min_n"] = cmn
                 zg["cluster_spread_max"] = csm
-                sec["zone_gate"] = zg
+                sec["feature_cluster_similarity"] = zg
             return sec
 
         self._orig = orig
@@ -306,7 +306,7 @@ def _delta(cell_m: dict, base_m: dict) -> dict:
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="qualify_zone_topk",
-                                description="Measure ΔG001 of the zone_gate knobs (crypto majors).")
+                                description="Measure ΔG001 of the feature_cluster_similarity knobs (crypto majors).")
     p.add_argument("--stage", choices=["A", "B"], default="A")
     p.add_argument("--instruments", nargs="*", default=MAJORS)
     p.add_argument("--out", default="results/research/zone_topk_sweep")

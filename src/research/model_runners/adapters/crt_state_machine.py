@@ -1,4 +1,4 @@
-"""Full CRTEngine state machine on sequential candles (not fusion crt_score)."""
+"""Full CRTEngine state machine on sequential candles (not fusion crt_structure_rule_score)."""
 from __future__ import annotations
 
 from pathlib import Path

@@ -4,13 +4,13 @@ WHAT THIS GUARDS
 ----------------
 `models/zone_registry.json` has always stored a top-level `feature_order` naming the 38 features its
 `mu`/`sigma`/`weights` vectors are aligned to — and until 2026-07-22 nothing read it.
-`zone_gate_engine._extract_vector` built the scoring vector from the ambient
+`feature_cluster_similarity._extract_vector` built the scoring vector from the ambient
 `CANONICAL_FEATURE_ORDER` and SILENTLY TRUNCATED anything longer:
 
     if len(vector) > CANONICAL_FEATURE_DIM:   # v2.0(35) -> v3.0(38) back-compat
         vector = vector[:CANONICAL_FEATURE_DIM]
 
-ZoneGate is the only LIVE hard gate (F-041, `zone_mode=hard`); every other trained consumer is inert
+ZoneGate is the only LIVE hard gate (F-041, `feature_cluster_similarity_mode=hard`); every other trained consumer is inert
 or off (F-004 BitNet, F-005 TradeNet, F-038 rr_fusion, F-060 Gaussian). So on the next schema change
 that gate would have scored a misaligned vector, decided confidently, and raised nothing.
 
@@ -31,7 +31,7 @@ import pytest
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from engines import zone_gate_engine as zge                       # noqa: E402
+from engines import feature_cluster_similarity as zge                       # noqa: E402
 from features.feature_schema import CANONICAL_FEATURE_ORDER       # noqa: E402
 
 # The PROMOTED runtime artifact (zone_gate_registry.json active entry). Repointed to the v4 remap
@@ -117,7 +117,7 @@ def test_missing_trained_feature_raises_named_error():
 
 # ── 3. fail-CLOSED, not fail-open, end to end ───────────────────────────────────────────────
 def test_alignment_failure_blocks_rather_than_passes():
-    """run_zone_gate_engine must convert an extraction failure into a BLOCK.
+    """run_feature_cluster_similarity must convert an extraction failure into a BLOCK.
 
     A gate that cannot align its vector must never return passed=True — that would turn a hard
     gate into a silent pass-through, the failure mode this whole floor exists to prevent.
@@ -125,7 +125,7 @@ def test_alignment_failure_blocks_rather_than_passes():
     feats = _features()
     feats.pop(CANONICAL_FEATURE_ORDER[0])
 
-    out = zge.run_zone_gate_engine(
+    out = zge.run_feature_cluster_similarity(
         raw_features={**_features(), **{}},   # complete dict passes canonical filtering
         model_fn=lambda v: 1.0,
         threshold=0.5,

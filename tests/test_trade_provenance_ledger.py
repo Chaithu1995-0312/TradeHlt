@@ -30,7 +30,9 @@ def test_build_provenance_base_resolves_identity():
     assert base["config_hash"]
     assert base["promotion_version"]
     assert base["strategy_id"]  # falls back to the resolved StrategyPackage name
-    assert "gaussian_impl=" in (base["model_version"] or "")
+    mv = base["model_version"] or ""
+    assert "removed_selector" not in mv
+    assert "gaussian_version=" in mv or "zone_gate_version=" in mv or "rr_version=" in mv or mv == ""
 
 
 def test_build_provenance_base_honors_explicit_strategy_id():

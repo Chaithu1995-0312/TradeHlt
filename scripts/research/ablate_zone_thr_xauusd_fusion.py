@@ -2,8 +2,8 @@
 """Full-fusion ZoneGate threshold ablation on XAUUSD.
 
 Gate-ON (BACKTEST_ENGINE_GATE=1) so EngineRunner fusion actually runs — the
-research default is gate-OFF (F-037). Sweeps engine_runner.zone_cluster_threshold
-with weight_zone_gate fixed at the active 0.2. Compares trade-ledger SHA and
+research default is gate-OFF (F-037). Sweeps engine_runner.feature_cluster_similarity_cluster_threshold
+with weight_feature_cluster_similarity fixed at the active 0.2. Compares trade-ledger SHA and
 Layer-1 G001 metrics vs baseline thr=0.25.
 
 MEASURE-ONLY: injects knobs via get_prod_section wrap — no JSON edit, no rehash,
@@ -74,7 +74,7 @@ DEFAULT_THRESHOLDS = [
 
 
 class _InjectZoneThr:
-    """Patch fusion weight (fixed) + engine_runner.zone_cluster_threshold (cell)."""
+    """Patch fusion weight (fixed) + engine_runner.feature_cluster_similarity_cluster_threshold (cell)."""
 
     def __init__(self, weight: float, threshold: float):
         self.weight = weight
@@ -89,10 +89,10 @@ class _InjectZoneThr:
             sec = orig(name, *args, **kwargs)
             if name == "fusion_engine":
                 sec = copy.deepcopy(sec)
-                sec["weight_zone_gate"] = w
+                sec["weight_feature_cluster_similarity"] = w
             elif name == "engine_runner":
                 sec = copy.deepcopy(sec)
-                sec["zone_cluster_threshold"] = t
+                sec["feature_cluster_similarity_cluster_threshold"] = t
             return sec
 
         self._orig = orig
@@ -125,7 +125,7 @@ def main(argv=None) -> int:
         nargs="*",
         type=float,
         default=DEFAULT_THRESHOLDS,
-        help="zone_cluster_threshold values to ablate",
+        help="feature_cluster_similarity_cluster_threshold values to ablate",
     )
     ap.add_argument(
         "--out",
@@ -153,7 +153,7 @@ def main(argv=None) -> int:
     safe_print("=== XAUUSD full-fusion ZoneGate thr ablation ===")
     safe_print(f"BACKTEST_ENGINE_GATE={os.environ.get('BACKTEST_ENGINE_GATE')}")
     safe_print(f"prod_version={version}")
-    safe_print(f"weight_zone_gate fixed={DEF_WEIGHT}")
+    safe_print(f"weight_feature_cluster_similarity fixed={DEF_WEIGHT}")
     safe_print(f"thresholds={args.thresholds}")
 
     selfcheck = None
@@ -189,7 +189,7 @@ def main(argv=None) -> int:
     for thr in thr_list:
         cid = f"thr_{str(thr).replace('.', 'p')}"
         is_baseline = abs(thr - DEF_THRESH) < 1e-12
-        safe_print(f"\n[cell {cid}] zone_cluster_threshold={thr} weight={DEF_WEIGHT}")
+        safe_print(f"\n[cell {cid}] feature_cluster_similarity_cluster_threshold={thr} weight={DEF_WEIGHT}")
         with _InjectZoneThr(DEF_WEIGHT, thr):
             try:
                 l1, entries, sha = qz._run_spine_once(
@@ -199,7 +199,7 @@ def main(argv=None) -> int:
                 safe_print(f"  ERROR: {e}")
                 cells[cid] = {
                     "threshold": thr,
-                    "weight_zone_gate": DEF_WEIGHT,
+                    "weight_feature_cluster_similarity": DEF_WEIGHT,
                     "error": str(e),
                 }
                 continue
@@ -234,7 +234,7 @@ def main(argv=None) -> int:
 
         cells[cid] = {
             "threshold": thr,
-            "weight_zone_gate": DEF_WEIGHT,
+            "weight_feature_cluster_similarity": DEF_WEIGHT,
             "is_baseline": is_baseline,
             "layer1_g001": l1,
             "entry_count": len(entries),
@@ -253,7 +253,7 @@ def main(argv=None) -> int:
     if not any_change:
         verdict = (
             "ZONE_THR_NON_PIVOTAL_ON_XAUUSD_FUSION — entry set byte-identical across all "
-            f"tested zone_cluster_threshold values (gate-ON, weight={DEF_WEIGHT}); thr lever "
+            f"tested feature_cluster_similarity_cluster_threshold values (gate-ON, weight={DEF_WEIGHT}); thr lever "
             "does not flip live decisions on this corpus."
         )
     else:
@@ -272,8 +272,8 @@ def main(argv=None) -> int:
         "mode": "full_fusion_gate_on",
         "backtest_engine_gate": os.environ.get("BACKTEST_ENGINE_GATE"),
         "baseline": {
-            "weight_zone_gate": DEF_WEIGHT,
-            "zone_cluster_threshold": DEF_THRESH,
+            "weight_feature_cluster_similarity": DEF_WEIGHT,
+            "feature_cluster_similarity_cluster_threshold": DEF_THRESH,
         },
         "thresholds": thr_list,
         "prod_version": version,

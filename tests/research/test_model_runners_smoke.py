@@ -45,9 +45,9 @@ def synth_csv(tmp_path_factory) -> Path:
     return p
 
 
-@pytest.mark.parametrize("model_id", ["rr", "gaussian", "crt_score"])
+@pytest.mark.parametrize("model_id", ["candle_commitment", "ema_momentum_kernel", "crt_structure_rule_score"])
 def test_phase1_smoke_no_zone(model_id: str, synth_csv: Path, tmp_path: Path):
-    """rr / gaussian / crt_score do not need zone registry artifact."""
+    """rr / gaussian / crt_structure_rule_score do not need zone registry artifact."""
     out = tmp_path / "out"
     req = RunRequest(
         model_id=model_id,
@@ -82,13 +82,13 @@ def test_zone_gate_smoke_if_artifact_present(synth_csv: Path, tmp_path: Path):
     cfg_path = REPO / "configs" / "production" / "v2_multi_2026_04.json"
     cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
     er = cfg["engine_runner"]
-    art = REPO / er["zone_registry_path"]
+    art = REPO / er["feature_cluster_similarity_registry_path"]
     if not art.is_file():
         pytest.skip(f"zone artifact absent: {art}")
 
     out = tmp_path / "out"
     req = RunRequest(
-        model_id="zone_gate",
+        model_id="feature_cluster_similarity",
         csv_path=synth_csv,
         instrument="SYNTH",
         out_dir=out,
@@ -105,7 +105,7 @@ def test_zone_gate_smoke_if_artifact_present(synth_csv: Path, tmp_path: Path):
     assert result.n_ok > 0
     manifest = json.loads(result.manifest_path.read_text(encoding="utf-8"))
     assert manifest["artifact"] is not None
-    assert "engine_runner.zone_registry_path" in manifest["config_keys_read"]
+    assert "engine_runner.feature_cluster_similarity_registry_path" in manifest["config_keys_read"]
 
 
 def test_cli_requires_flags():

@@ -39,7 +39,7 @@ class EngineContext(TypedDict, total=False):
 class EngineScores(TypedDict, total=False):
     crt:                float
     gaussian:           float
-    zone_gate:          float
+    feature_cluster_similarity:          float
     rr:                 float
     strategy_consensus: float   # 5th engine — StrategyOrchestrator consensus
 

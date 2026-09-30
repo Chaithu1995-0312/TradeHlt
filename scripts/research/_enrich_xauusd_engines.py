@@ -27,8 +27,8 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src"))
 
 from engines.crt_engine import compute as crt_compute
-from engines.heuristic_gaussian_engine import HeuristicGaussianEngine
-from engines.rr_engine import RREngine
+from engines.ema_momentum_kernel import EmaMomentumKernel
+from engines.candle_commitment import CandleCommitment
 from features.feature_schema import CANONICAL_FEATURES
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s | %(message)s")
@@ -41,7 +41,7 @@ OUTPUT_PATH = "results/research/trace_corpus/xauusd/trace_corpus_enriched.jsonl"
 FUSION_WEIGHTS = {
     "crt": 0.4,
     "gaussian": 0.3,
-    "zone_gate": 0.2,
+    "feature_cluster_similarity": 0.2,
     "rr": 0.1,
 }
 
@@ -66,7 +66,7 @@ def compute_crt_score(features: dict) -> dict:
         return {"score": 0.0, "reason": str(e)}
 
 
-def compute_gaussian_score(features: dict, engine: HeuristicGaussianEngine) -> dict:
+def compute_gaussian_score(features: dict, engine: EmaMomentumKernel) -> dict:
     """Run Gaussian engine on a feature dict."""
     try:
         result = engine.compute(features)
@@ -111,13 +111,13 @@ def compute_zone_score(features: dict) -> dict:
 
 
 # RR engine singleton (created once in main())
-rr_engine = None
+candle_commitment = None
 
 def compute_rr_score(features: dict) -> dict:
     """Run RR engine on a feature dict's OHLC data."""
-    global rr_engine
+    global candle_commitment
     try:
-        result = rr_engine.compute({
+        result = candle_commitment.compute({
             "close": float(features.get("close", 0)),
             "high": float(features.get("high", 0)),
             "low": float(features.get("low", 0)),
@@ -169,13 +169,13 @@ def main():
     log.info("Loaded %d enriched traces", len(traces))
 
     # 2. Initialise engines once (reused for all traces)
-    global rr_engine
-    gauss_engine = HeuristicGaussianEngine(
+    global candle_commitment
+    gauss_engine = EmaMomentumKernel(
         {"gaussian_mu": 0.0, "gaussian_sigma": 1.0},
         instrument="XAUUSD",
         preload_registry=False,
     )
-    rr_engine = RREngine(config={"min_rr": 1.5})
+    candle_commitment = CandleCommitment(config={"min_rr": 1.5})
 
     # 3. Score each trace
     enriched_count = 0
@@ -225,7 +225,7 @@ def main():
         engine_scores = {
             "crt": crt_result,
             "gaussian": gauss_result,
-            "zone_gate": zone_result,
+            "feature_cluster_similarity": zone_result,
             "rr": rr_result,
         }
         fusion = compute_fusion(engine_scores)

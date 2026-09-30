@@ -133,17 +133,17 @@ def build_records() -> list[dict]:
     R.append(_rec("IMPL-001", "implementation", 4, "CRTEngine", parent="STRAT-001",
                   evidence=[_ev("src/engines/crt_engine.py", "code", "CRTEngine")],
                   status="extant", notes="Concrete CRT scoring implementation."))
-    R.append(_rec("IMPL-002", "implementation", 4, "HeuristicGaussianEngine", parent="KERNEL-001",
-                  evidence=[_ev("src/engines/heuristic_gaussian_engine.py", "code", "Engine")],
+    R.append(_rec("IMPL-002", "implementation", 4, "EmaMomentumKernel", parent="KERNEL-001",
+                  evidence=[_ev("src/engines/ema_momentum_kernel.py", "code", "Engine")],
                   status="extant", notes="Fused at kernel (1 of 4 mandatory engines)."))
     R.append(_rec("IMPL-003", "implementation", 4, "MLGaussianEngine", parent="KERNEL-001",
                   evidence=[_ev("src/engines/ml_gaussian_engine.py", "code", "Engine")],
                   status="extant", notes="Fused at kernel."))
     R.append(_rec("IMPL-004", "implementation", 4, "ZoneGateEngine", parent="KERNEL-001",
-                  evidence=[_ev("src/engines/zone_gate_engine.py", "code", "Engine")],
+                  evidence=[_ev("src/engines/feature_cluster_similarity.py", "code", "Engine")],
                   findings=["F-021"], status="extant", notes="Fused at kernel; 0 ZONE rejects on RETEST (F-021)."))
-    R.append(_rec("IMPL-005", "implementation", 4, "RREngine", parent="KERNEL-001",
-                  evidence=[_ev("src/engines/rr_engine.py", "code", "Engine")],
+    R.append(_rec("IMPL-005", "implementation", 4, "CandleCommitment", parent="KERNEL-001",
+                  evidence=[_ev("src/engines/candle_commitment.py", "code", "Engine")],
                   status="extant", notes="Fused at kernel."))
     R.append(_rec("IMPL-006", "implementation", 4, "AutomationAgent",
                   evidence=[_ev("src/agent/agent_core.py", "code", "Agent")],

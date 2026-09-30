@@ -1302,7 +1302,7 @@ function loadStatus(){
 // ─── Model Versions (all 4) ───────────────────────────────────────────────────
 function loadModelVersions(){
   fetch('/api/model_versions').then(r=>r.json()).then(d=>{
-    var g=d.gaussian||{}, z=d.zone_gate||{}, r=d.rr_model||{}, t=d.tradenet||{};
+    var g=d.gaussian||{}, z=d.feature_cluster_similarity||{}, r=d.rr_model||{}, t=d.tradenet||{};
 
     // Gaussian
     document.getElementById('mv-g-version').textContent = g.version||'—';

@@ -258,31 +258,31 @@ Every MIAR entry **must** fill:
 | **primary_code** | `src/config_layer/crt_engine_v2.py` · `src/engines/crt_engine.py` · `src/engines/scoring_engine.py` |
 | **notes** | MIAR treats FSM + fusion scorer as one *intent owner* with two outputs; do not invent a second owner. Freeze + code audit (steps 1–3): [`crt_intent_contract.md`](crt_intent_contract.md) — primary drift = spine `crt_engine_v2.py` self-approves/executes; alignment stays 🟡 pending step 4. |
 
-### 3.4 Gaussian Engine
+### 3.4 Ema Momentum Kernel
 
 | Field | Content |
 |---|---|
-| **id** | `gaussian` |
+| **id** | `ema_momentum_kernel` |
 | **stage** | `market_understanding` · order **2** |
 | **intent** | How statistically **conformant** is this market state to previously observed market states (EMA/momentum axis)? |
 | **hypothesis** | A kernel over EMA-spread + momentum measures conformity to a reference locus; design once aimed at success-matching — **must not** be read as calibrated win probability without recalibration. |
 | **inputs** | `ema_fast`, `ema_slow`, `momentum_score` (live heuristic) |
 | **outputs** | Conformity **score** ∈ [0,1] (`ema_momentum_kernel_score`) |
 | **semantic_meaning** | Statistical **conformity score** (live: often near-constant, F-060) — **not** a probability, not entry permission |
-| **consumer** | Fusion (`weight_gaussian`); misused as DecisionEngine `p_win` (**forbidden reinterpretation**) |
+| **consumer** | Fusion (`weight_ema_momentum_kernel`); misused as DecisionEngine `p_win` (**forbidden reinterpretation**) |
 | **authority_boundary** | Stage-1 descriptive vote into fusion only |
 | **explicit_non_goals** | **Never** decide whether to trade; **never** determine entries alone; **never** classify CRT structure; **never** claim **probability** without calibration |
 | **dependencies** | `feature_pipeline` |
 | **falsification** | Kernel non-pivotal / information-inert (F-060 class) → no fusion authority |
 | **implementation_status** | EXECUTABLE (heuristic live; ML path partial/config-gated) |
 | **alignment** | 🟡 — design “historically profitable” vs kernel symmetry + p_win consumer drift |
-| **primary_code** | `src/engines/heuristic_gaussian_engine.py` · optional `ml_gaussian_engine.py` |
+| **primary_code** | `src/engines/ema_momentum_kernel.py` · optional `ml_gaussian_engine.py` |
 
-### 3.5 ZoneGate
+### 3.5 Feature Cluster Similarity
 
 | Field | Content |
 |---|---|
-| **id** | `zone_gate` |
+| **id** | `feature_cluster_similarity` |
 | **stage** | `market_understanding` · order **3** |
 | **intent** | Is this state occurring in a structurally valid location (zone neighbourhood)? |
 | **hypothesis** | Feature-space zones encode past good/bad regions. |
@@ -318,11 +318,11 @@ Every MIAR entry **must** fill:
 | **alignment** | 🟡 — intent clear; wiring missing; consumers absent on spine |
 | **primary_code** | `src/training/trade_net_v2.py` |
 
-### 3.7 RR Engine (deterministic)
+### 3.7 Candle Commitment
 
 | Field | Content |
 |---|---|
-| **id** | `rr_engine` |
+| **id** | `candle_commitment` |
 | **stage** | `market_understanding` · order **4** |
 | **intent** | How strong is the candle **commitment** and geometric quality? |
 | **hypothesis** | Extreme closes signal directional commitment useful as a structural-geometry vote. |
@@ -336,7 +336,7 @@ Every MIAR entry **must** fill:
 | **falsification** | Polarity non-informative for selection (research) |
 | **implementation_status** | EXECUTABLE |
 | **alignment** | 🟡 — name “RR” vs polarity semantics (implementation honest; naming drift) |
-| **primary_code** | `src/engines/rr_engine.py` |
+| **primary_code** | `src/engines/candle_commitment.py` |
 
 ### 3.8 RR Trained / NanoInference (parametric)
 
@@ -352,11 +352,11 @@ Every MIAR entry **must** fill:
 | **consumer** | `RRFusionLayer` only if `rr_fusion.enabled`; currently **disabled** |
 | **authority_boundary** | None live; shadow/offline only |
 | **explicit_non_goals** | **Never** claim to be KNN historical pattern mining; **never** set economic SL/TP alone |
-| **dependencies** | `feature_pipeline`, `gaussian` (when fused) |
+| **dependencies** | `feature_pipeline`, `ema_momentum_kernel` (when fused) |
 | **falsification** | Gate always bypasses / no ΔG001 (F-038, F-044) |
 | **implementation_status** | PARTIAL (39-dim model + percentile gate ready; fusion off) |
 | **alignment** | 🟡 — executable parametric stack; name “PatternMiner” implies retrieval (⚫ for retrieval intent) |
-| **primary_code** | `src/config_layer/rr/rr_pattern_miner.py` (`RRPatternTrainer`, `NanoInferenceEngine`) · `rr_fusion.py` |
+| **primary_code** | `src/config_layer/rr/rr_trained.py` (`RRPatternTrainer`, `NanoInferenceEngine`) · `rr_fusion.py` |
 | **notes** | **`RRPatternMiner` as historical evidence engine = ⚫ DESIGN_ONLY** (no class, no retrieval). See prior existence audit. |
 
 ### 3.9 BitNet
@@ -471,7 +471,7 @@ Every MIAR entry **must** fill:
 | **consumer** | ExecutionPlanner → UltronRiskGate |
 | **authority_boundary** | Sole scoring-stack owner of **approval**; **not** economic min_rr (Ultron); **not** Stage-1 description |
 | **explicit_non_goals** | **Never** rediscover market structure; **never** invent features; **never** (post F-048) own economic RR threshold; **never** reinterpret Gaussian score as probability |
-| **dependencies** | `crt`, `gaussian`, `zone_gate`, `rr_engine` |
+| **dependencies** | `crt`, `ema_momentum_kernel`, `feature_cluster_similarity`, `candle_commitment` |
 | **falsification** | Fusion non-pivotal or engines information-inert |
 | **implementation_status** | EXECUTABLE (`FusionEngine` + `DecisionEngine`) |
 | **alignment** | 🟡 — evaluate()/neural/LLM path dead; p_win fed from Gaussian |
@@ -567,7 +567,7 @@ Why not `design_only_concepts` (§5)? That bucket is for concepts with no produc
 | **consumer** | `CognitiveBus._process` → `logs/cognitive_telemetry.jsonl` |
 | **authority_boundary** | **NONE.** Never returned by `EngineRunner.run()` |
 | **explicit_non_goals** | **Never** enter `EXPECTED_ENGINES`; **never** gate/size/veto/modify a live decision; **never** be read as a calibrated probability (`opportunity_score` is ordinal); **never** re-derive market structure; **never** become the sole consumer path for specialist evidence without a qualification protocol |
-| **dependencies** | zone_gate, rr_engine, replay_memory, tradenet_meta |
+| **dependencies** | feature_cluster_similarity, candle_commitment, replay_memory, tradenet_meta |
 | **falsification** | Layer weights never separate outcomes, or the blend tracks a single dominant layer (redundant meta-layer) |
 | **implementation_status** | EXECUTABLE (gated by `cognitive_layer.enabled`) |
 | **alignment** | 🟢 (contract says advisory-only; code is advisory-only) |
@@ -662,9 +662,9 @@ drops are **silent by design** — telemetry loss is preferred over spine interf
 | What concepts/formulas exist? | `market_ontology` | All producers |
 | How is the canonical vector built? | `feature_pipeline` | All feature consumers |
 | What structure is the market in? | `crt` | gaussian, tradenet, decision_fusion (as readers) |
-| Is this state statistically familiar (EMA/momentum axis)? | `gaussian` | decision_fusion |
-| Is this inside a valid feature-space zone? | `zone_gate` | decision_fusion |
-| What is candle commitment geometry? | `rr_engine` | decision_fusion |
+| Is this state statistically familiar (EMA/momentum axis)? | `ema_momentum_kernel` | decision_fusion |
+| Is this inside a valid feature-space zone? | `feature_cluster_similarity` | decision_fusion |
+| What is candle commitment geometry? | `candle_commitment` | decision_fusion |
 | What is model-based expected RR/win blend? | `rr_trained` | (none live) |
 | Is this state semantically unsafe to approve? | `bitnet` | CRT approve path (when enabled) |
 | What is P(trade milestones)? | `tradenet` | (none live) |
@@ -680,7 +680,7 @@ drops are **silent by design** — telemetry loss is preferred over spine interf
 
 **Duplicate-ownership flags (current):**
 
-- DecisionEngine treating **gaussian score as p_win** → secondary consumer **reinterpreting** gaussian output (🟡 on `gaussian` / `decision_fusion`).  
+- DecisionEngine treating **gaussian score as p_win** → secondary consumer **reinterpreting** gaussian output (🟡 on `ema_momentum_kernel` / `decision_fusion`).  
 - Name **RR** for polarity vs economic RR (Ultron) → naming overlap, owners distinct if non-goals held.  
 - **RRPatternMiner** as historical retrieval → **no owner row** (⚫ design only).
 
@@ -693,10 +693,10 @@ drops are **silent by design** — telemetry loss is preferred over spine interf
 | 1 | market_ontology | 🟢 | EXECUTABLE |
 | 2 | feature_pipeline | 🟢 | EXECUTABLE |
 | 3 | crt | 🟡 | EXECUTABLE |
-| 4 | gaussian | 🟡 | EXECUTABLE |
-| 5 | zone_gate | 🟡 | EXECUTABLE |
+| 4 | ema_momentum_kernel | 🟡 | EXECUTABLE |
+| 5 | feature_cluster_similarity | 🟡 | EXECUTABLE |
 | 6 | tradenet | 🟡 | PARTIAL |
-| 7 | rr_engine | 🟡 | EXECUTABLE |
+| 7 | candle_commitment | 🟡 | EXECUTABLE |
 | 8 | rr_trained | 🟡 | PARTIAL |
 | 9 | bitnet | 🟢/🟡* | EXECUTABLE (inert default) |
 | 10 | trap | 🟢 | EXECUTABLE |

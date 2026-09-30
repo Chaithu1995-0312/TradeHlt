@@ -1,5 +1,5 @@
 """
-rr_pattern_miner.py
+rr_trained.py
 Feature -> RR Pattern Miner trainer and pure-Python inference.
 Canonical contract: feature vectors matching the model’s trained n_features and
 the live CANONICAL_FEATURE_DIM (schema v4.0 = 39). Dimension mismatch is

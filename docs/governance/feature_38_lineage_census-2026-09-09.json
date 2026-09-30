@@ -303,7 +303,7 @@
         "src/config_layer/state_identity.py",
         "src/core/feature_store.py",
         "src/core/gate_intelligence.py",
-        "src/engines/heuristic_gaussian_engine.py",
+        "src/engines/ema_momentum_kernel.py",
         "src/engines/trap_validator_engine.py",
         "src/features/crt_feature_builder.py",
         "src/features/derived_math.py"
@@ -336,7 +336,7 @@
         "src/config_layer/state_identity.py",
         "src/core/feature_store.py",
         "src/core/gate_intelligence.py",
-        "src/engines/heuristic_gaussian_engine.py",
+        "src/engines/ema_momentum_kernel.py",
         "src/engines/trap_validator_engine.py",
         "src/features/crt_feature_builder.py",
         "src/features/derived_math.py"
@@ -469,7 +469,7 @@
         "src/core/engine_runner.py",
         "src/core/gate_intelligence.py",
         "src/core/model_registry.py",
-        "src/engines/heuristic_gaussian_engine.py",
+        "src/engines/ema_momentum_kernel.py",
         "src/features/crt_feature_builder.py",
         "src/features/derived_math.py",
         "src/features/feature_pipeline.py",
@@ -1008,7 +1008,7 @@
       "static_consumers_sample": [
         "src/config_layer/crt_engine_v2.py",
         "src/config_layer/crt_gaussian_scorer.py",
-        "src/engines/rr_engine.py",
+        "src/engines/candle_commitment.py",
         "src/features/candle_math.py",
         "src/features/crt_feature_builder.py",
         "src/features/crt_state_resolver.py",

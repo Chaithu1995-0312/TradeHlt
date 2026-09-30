@@ -15,7 +15,7 @@ fact for reading this script's output correctly)
 
 CRTStateResolver's own EXECUTION branch is structurally unreachable on any real
 39-dim feature vector (F-069, `docs/current-findings.md`): `_continuous_gates_pass`
-requires a `score`/`risk_score`/`crt_score` feature that does not exist in
+requires a `score`/`risk_score`/`crt_structure_rule_score` feature that does not exist in
 `CANONICAL_FEATURES` (`src/features/feature_schema.py`) — confirmed empirically
 in every measurement this program has taken (baseline, all 33 F-069 Stage-A
 candidates, Stage B: resolver EXECUTION count is always 0). This is a deductive
@@ -574,7 +574,7 @@ def write_report(out_path: Path, *, comparison: dict, engine_provenance: dict,
     a("- **Resolver arm**: EXPANSION-entry transition — a relaxed proxy. "
       "`CRTStateResolver`'s own EXECUTION branch is structurally unreachable "
       "(F-069): `_continuous_gates_pass` requires a `score`/`risk_score`/"
-      "`crt_score` feature absent from `CANONICAL_FEATURES` "
+      "`crt_structure_rule_score` feature absent from `CANONICAL_FEATURES` "
       "(`src/features/feature_schema.py`) — confirmed 0 in every measurement "
       "this program has taken. A strict same-trigger comparison is therefore a "
       "foregone conclusion (0 trades) before any numbers are computed.")

@@ -5,7 +5,7 @@ run_rr_xauusd_2m.py
 OBSERVATION ONLY — run the trained RR (NanoInference / rr_fusion checkpoint)
 on XAUUSD trailing 2 months (same window as Gaussian + ZoneGate runs).
 
-Also records the LIVE base RREngine (candle polarity) for dual-path parity
+Also records the LIVE base CandleCommitment (candle polarity) for dual-path parity
 with the Gaussian ML vs heuristic recording pattern.
 
 Trained artifact:
@@ -15,7 +15,7 @@ Trained artifact:
 
 Live spine truth:
   engine_runner.rr_fusion.enabled=false (F-038) → trained path NOT on spine
-  fusion 'rr' slot = RREngine polarity only
+  fusion 'rr' slot = CandleCommitment polarity only
 
 Dim contract:
   Model is 38-dim schema v3 name order. Live CANONICAL is 39-dim v4.
@@ -157,7 +157,7 @@ def raw_ml_path(engine, features: list[float]) -> dict:
     confidence = min(1.0, max(0.0, confidence))
     expected_rr = sum(X[i] * engine.W[i] for i in range(n)) + engine.b
     # clamp like predict
-    from config_layer.rr.rr_pattern_miner import RR_SCORE_MAX, RR_SCORE_MIN
+    from config_layer.rr.rr_trained import RR_SCORE_MAX, RR_SCORE_MIN
 
     expected_rr = min(RR_SCORE_MAX, max(RR_SCORE_MIN, expected_rr))
     ll_loss = 0.0
@@ -187,14 +187,14 @@ def raw_ml_path(engine, features: list[float]) -> dict:
 
 def main() -> int:
     from config_layer.rr.rr_fusion import RRFusionLayer
-    from config_layer.rr.rr_pattern_miner import NanoInferenceEngine
+    from config_layer.rr.rr_trained import NanoInferenceEngine
     from data_ingestion.xauusd_phase1_candidate import (
         PHASE1_SHA256,
         PHASE1_STATUS,
         guard_xauusd_csv_path,
     )
-    from engines.heuristic_gaussian_engine import HeuristicGaussianEngine
-    from engines.rr_engine import RREngine
+    from engines.ema_momentum_kernel import EmaMomentumKernel
+    from engines.candle_commitment import CandleCommitment
     from features.feature_pipeline import FeaturePipeline
     from features.feature_schema import (
         CANONICAL_FEATURE_DIM,
@@ -281,7 +281,7 @@ def main() -> int:
 
     # Optional: heuristic gaussian for blend path (what fusion would pass in)
     print("scoring heuristic gaussian for fusion-blend context...")
-    h_eng = HeuristicGaussianEngine(
+    h_eng = EmaMomentumKernel(
         {"instrument": "XAUUSD"}, instrument="XAUUSD", preload_registry=True
     )
     g_scores = np.full(len(records), np.nan)
@@ -369,9 +369,9 @@ def main() -> int:
         f"raw conf mean={_stats(raw_conf).get('mean')}"
     )
 
-    # ── live polarity RREngine ──────────────────────────────────────────
-    print("scoring live RREngine polarity...")
-    pol_eng = RREngine({"min_rr": 1.5})
+    # ── live polarity CandleCommitment ──────────────────────────────────────────
+    print("scoring live CandleCommitment polarity...")
+    pol_eng = CandleCommitment({"min_rr": 1.5})
     pol_scores = np.full(n, np.nan)
     pol_reasons: Counter = Counter()
     pol_exc = 0
@@ -520,10 +520,10 @@ def main() -> int:
             "extract_path": "name_mapped_v3_order_38",
             "v3_order": v3_order,
             "v3_order_dim": len(v3_order),
-            "blend_gaussian": "HeuristicGaussianEngine on same bars (for predict blend)",
+            "blend_gaussian": "EmaMomentumKernel on same bars (for predict blend)",
         },
         "rr_polarity_live": {
-            "kind": "RREngine candle polarity (NOT trained)",
+            "kind": "CandleCommitment candle polarity (NOT trained)",
             "spine_enabled": True,
             "note": "Live fusion 'rr' slot; polarity ∈[0.5,1] — F-048 name mismatch vs thr 1.5",
             "score_stats": _stats(pol_scores),

@@ -52,7 +52,7 @@ ZONE_REGISTRY_PATH = str(_ModelPaths.ZONE_GATE_RUNTIME_ALIAS)
 # BITNET ZONE GATE
 # ─────────────────────────────────────────────────────────────────────────────
 
-def get_zone_registry_path(instrument: str, base_dir: str = "models/bitnet") -> str:
+def get_feature_cluster_similarity_registry_path(instrument: str, base_dir: str = "models/bitnet") -> str:
     """
     Return the per-instrument BitNet registry path if it exists,
     otherwise fall back to the global registry.
@@ -111,7 +111,7 @@ class BitNetZoneGate:
         zone_path : path to zone_registry.json (default ZONE_REGISTRY_PATH)
         enabled   : if False, gate is a no-op pass-through (default True)
         config    : optional config dict. Supports:
-                    ``zone_min_samples`` (int, default 50) — if the total
+                    ``feature_cluster_similarity_min_samples`` (int, default 50) — if the total
                     training sample count across all zones is below this
                     threshold, the gate auto-bypasses with reason
                     "underpowered_zone_registry" rather than producing
@@ -128,7 +128,7 @@ class BitNetZoneGate:
         self.feature_order: list | None = None
         # Number of top zone scores surfaced as ``top_scores`` for cluster weighting.
         # The live spine enforces this fail-fast at the engine_runner config boundary
-        # (engine_runner.zone_gate.top_k); the soft default here serves only standalone /
+        # (engine_runner.feature_cluster_similarity.top_k); the soft default here serves only standalone /
         # manual callers (direct instantiation, _smoke_test.py). Default 3 = historical.
         self._top_n: int = int((config or {}).get("zone_gate_top_k", 3))
         # Hot-reload watcher: detects discover_zones promotion mid-session.
@@ -148,7 +148,7 @@ class BitNetZoneGate:
 
         # ── Underpowered-registry guard ─────────────────────────────────────
         # The zone "weight" field tracks the number of training samples in each
-        # cluster.  If the total is below zone_min_samples the registry was
+        # cluster.  If the total is below feature_cluster_similarity_min_samples the registry was
         # built from too few trades (often a cross-instrument bootstrap) and
         # will produce noisy similarity scores.  In that case the gate
         # auto-bypasses rather than injecting spurious rejections.
@@ -156,11 +156,11 @@ class BitNetZoneGate:
         # T-22: NOT a silent config default. This is the standalone/unit-test tier of the
         # same two-tier pattern used by core.acceptance_controller.__init__ — the live path
         # always arrives via get_zone_gate(), which is fed from engine_runner's fail-fast
-        # _cfg_require("zone_min_samples"). A caller that constructs this class directly with
+        # _cfg_require("feature_cluster_similarity_min_samples"). A caller that constructs this class directly with
         # no config is by definition not the configured spine, so there is no config to
         # silently fall back FROM. Do not "fix" this to a strict read: it would break
         # standalone construction without closing any real config-drift hole.
-        _min_samples = float(_cfg.get("zone_min_samples", 50))
+        _min_samples = float(_cfg.get("feature_cluster_similarity_min_samples", 50))
         _total_samples = sum(float(z.get("weight", 0)) for z in self._zones)
         if self._zones and _total_samples < _min_samples:
             self._underpowered = True
@@ -188,8 +188,8 @@ class BitNetZoneGate:
         WHY THIS EXISTS (2026-07-22). `models/zone_registry.json` has always stored a
         `feature_order` name list alongside the zone vectors, but NOTHING read it: the scoring
         vector was built from the ambient `CANONICAL_FEATURE_ORDER` and
-        `zone_gate_engine._extract_vector` SILENTLY TRUNCATED anything longer (a v2.0(35)->v3.0(38)
-        back-compat path). ZoneGate is the only LIVE hard gate (F-041, zone_mode=hard) and every
+        `feature_cluster_similarity._extract_vector` SILENTLY TRUNCATED anything longer (a v2.0(35)->v3.0(38)
+        back-compat path). ZoneGate is the only LIVE hard gate (F-041, feature_cluster_similarity_mode=hard) and every
         other trained consumer is inert or off (F-004/F-005/F-038/F-060), so a schema change that
         reordered or extended the vector would have made this gate score against misaligned
         `mu`/`sigma` and raise nothing at all.
@@ -322,7 +322,7 @@ class BitNetZoneGate:
         # NAMING CORRECTED (was "no_zones_fail_open", which stated the opposite of the
         # behaviour): omitting `top_scores` below makes zone_cluster_score._model_fn fall
         # through to `result.get("score", 0.5)` → 0.0, which fails any positive
-        # zone_cluster_threshold (0.25 on the active config) → every candle BLOCKS.
+        # feature_cluster_similarity_cluster_threshold (0.25 on the active config) → every candle BLOCKS.
         # The omission is deliberate and load-bearing — do not add `top_scores` here
         # without deciding the pass/block question explicitly.
         #
@@ -362,9 +362,9 @@ class BitNetZoneGate:
         # NOTE: the per-zone `allowed`/`reason` decision computed below is part of this
         # method's standalone return contract, but it is BYPASSED by the live spine. The
         # real gate decision is made in engines.zone_cluster_score.score_zone_cluster:
-        #   compute_weighted_cluster_score(top_scores) >= zone_cluster_threshold.
+        #   compute_weighted_cluster_score(top_scores) >= feature_cluster_similarity_cluster_threshold.
 
-        # `top_scores` (length = self._top_n, config: engine_runner.zone_gate.top_k) is the
+        # `top_scores` (length = self._top_n, config: engine_runner.feature_cluster_similarity.top_k) is the
         # only field the live path consumes from this result.
         for zone in self._zones:
             try:
@@ -424,10 +424,10 @@ def get_zone_gate(
     path        : Path to zone registry JSON.
     min_samples : Minimum total training samples required before the gate is
                   active.  Registries with fewer samples auto-bypass.
-                  Mirrors ``engine_runner.zone_min_samples`` in the prod config.
+                  Mirrors ``engine_runner.feature_cluster_similarity_min_samples`` in the prod config.
     top_n       : Number of top-scoring zones returned as ``top_scores`` for the
                   downstream cluster-weighting step.  Mirrors
-                  ``engine_runner.zone_gate.top_k`` in the prod config; the spine
+                  ``engine_runner.feature_cluster_similarity.top_k`` in the prod config; the spine
                   always supplies it via fail-fast _cfg_require (default 3 here
                   preserves the historical behaviour for standalone callers).
     """
@@ -435,7 +435,7 @@ def get_zone_gate(
     if _ZONE_GATE is None:
         _ZONE_GATE = BitNetZoneGate(
             zone_path=path,
-            config={"zone_min_samples": min_samples, "zone_gate_top_k": top_n},
+            config={"feature_cluster_similarity_min_samples": min_samples, "zone_gate_top_k": top_n},
         )
     return _ZONE_GATE
 

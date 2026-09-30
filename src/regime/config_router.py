@@ -20,9 +20,9 @@ from src.regime.regime_classifier import (
 
 DEFAULT_FUSION_WEIGHTS = {
     "crt": 0.40,
-    "gaussian": 0.30,
-    "zone": 0.20,
-    "rr": 0.10
+    "ema_momentum_kernel": 0.30,
+    "feature_cluster_similarity": 0.20,
+    "candle_commitment": 0.10
 }
 
 DEFAULT_BITNET_THRESHOLD = 0.50

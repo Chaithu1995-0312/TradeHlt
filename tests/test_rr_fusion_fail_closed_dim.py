@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import pytest
 
-from config_layer.rr.rr_pattern_miner import (
+from config_layer.rr.rr_trained import (
     FeatureDimensionError,
     NanoInferenceEngine,
     DEFAULT_MODEL_PATH,

@@ -32,11 +32,11 @@ class ZoneMapConfig:
     """Strict knobs for historical zone mapping (mirrors engine_runner zone surface)."""
 
     registry_path: str
-    zone_cluster_threshold: float
+    feature_cluster_similarity_cluster_threshold: float
     top_k: int
     cluster_min_n: int
     cluster_spread_max: float
-    zone_min_samples: int = 50
+    feature_cluster_similarity_min_samples: int = 50
     execution_mode: str = "normal"
 
     @classmethod
@@ -45,22 +45,22 @@ class ZoneMapConfig:
         from config_layer.production_config import get_prod_section
 
         er = get_prod_section("engine_runner")
-        zg = _require(er, "zone_gate", "engine_runner")
+        zg = _require(er, "feature_cluster_similarity", "engine_runner")
         if not isinstance(zg, Mapping):
-            raise TypeError("engine_runner.zone_gate must be a mapping")
+            raise TypeError("engine_runner.feature_cluster_similarity must be a mapping")
         return cls(
-            registry_path=str(_require(er, "zone_registry_path", "engine_runner")),
-            zone_cluster_threshold=float(
-                _require(er, "zone_cluster_threshold", "engine_runner")
+            registry_path=str(_require(er, "feature_cluster_similarity_registry_path", "engine_runner")),
+            feature_cluster_similarity_cluster_threshold=float(
+                _require(er, "feature_cluster_similarity_cluster_threshold", "engine_runner")
             ),
-            top_k=int(_require(zg, "top_k", "engine_runner.zone_gate")),
-            cluster_min_n=int(_require(zg, "cluster_min_n", "engine_runner.zone_gate")),
+            top_k=int(_require(zg, "top_k", "engine_runner.feature_cluster_similarity")),
+            cluster_min_n=int(_require(zg, "cluster_min_n", "engine_runner.feature_cluster_similarity")),
             cluster_spread_max=float(
-                _require(zg, "cluster_spread_max", "engine_runner.zone_gate")
+                _require(zg, "cluster_spread_max", "engine_runner.feature_cluster_similarity")
             ),
-            zone_min_samples=int(_require(er, "zone_min_samples", "engine_runner")),
+            feature_cluster_similarity_min_samples=int(_require(er, "feature_cluster_similarity_min_samples", "engine_runner")),
             execution_mode=str(
-                _require(er, "zone_gate_execution_mode", "engine_runner")
+                _require(er, "feature_cluster_similarity_execution_mode", "engine_runner")
             ),
         )
 
@@ -74,7 +74,7 @@ class HistoricalZoneMapper:
         self._zone_gate = BitNetZoneGate(
             zone_path=config.registry_path,
             config={
-                "zone_min_samples": config.zone_min_samples,
+                "feature_cluster_similarity_min_samples": config.feature_cluster_similarity_min_samples,
                 "zone_gate_top_k": config.top_k,
             },
         )
@@ -93,7 +93,7 @@ class HistoricalZoneMapper:
         scored = score_zone_cluster(
             feat,
             self._zone_gate,
-            zone_cluster_threshold=self.config.zone_cluster_threshold,
+            feature_cluster_similarity_cluster_threshold=self.config.feature_cluster_similarity_cluster_threshold,
             cluster_min_n=self.config.cluster_min_n,
             cluster_spread_max=self.config.cluster_spread_max,
             execution_mode=self.config.execution_mode,
@@ -119,7 +119,7 @@ class HistoricalZoneMapper:
             "top_scores": tops,
             "cluster_score": float(scored["cluster_score"]),
             "passed_cluster_threshold": bool(scored["passed"]),
-            "zone_cluster_threshold": float(self.config.zone_cluster_threshold),
+            "feature_cluster_similarity_cluster_threshold": float(self.config.feature_cluster_similarity_cluster_threshold),
             "registry_sha256": self._registry_sha256,
             "feature_schema_dim": CANONICAL_FEATURE_DIM,
             "schema_version": SCHEMA_VERSION,

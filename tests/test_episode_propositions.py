@@ -53,7 +53,7 @@ def _ep(**overrides):
                     "question": "Is the market structure valid?",
                     "status": "active",
                 },
-                "gaussian": {
+                "ema_momentum_kernel": {
                     "value": 0.88,
                     "semantic": "ema_momentum_kernel_score",
                     "question": "profitable?",

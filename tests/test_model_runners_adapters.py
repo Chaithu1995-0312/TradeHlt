@@ -67,7 +67,7 @@ def _bar(features: dict[str, float]) -> BarContext:
 
 def test_every_runnable_model_has_an_adapter_branch(prod_config):
     """A runnable catalog entry with no build_adapter branch is a trap."""
-    needs_artifact = {"tradenet", "rr_trained", "envelope", "gaussian_ml"}
+    needs_artifact = {"tradenet", "rr_trained", "envelope", "nb_outcome_classifier"}
     needs_candles = {"crt_state_machine"}
     for contract in list_runnable():
         mid = contract.model_id

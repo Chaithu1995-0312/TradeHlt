@@ -2,7 +2,7 @@
 Tests for BitNetZoneGate underpowered-registry auto-bypass.
 
 When the total training sample count (sum of zone ``weight`` fields) is below
-``zone_min_samples``, the gate must auto-bypass with reason
+``feature_cluster_similarity_min_samples``, the gate must auto-bypass with reason
 "underpowered_zone_registry" rather than producing spurious rejections from a
 cross-instrument or bootstrap registry.
 """
@@ -40,13 +40,13 @@ def _make_tight_zone(weight: float, threshold: float = 0.5) -> dict:
 # ── Underpowered bypass tests ─────────────────────────────────────────────────
 
 class TestUnderpoweredBypass:
-    """Gate with total samples < zone_min_samples must always allow."""
+    """Gate with total samples < feature_cluster_similarity_min_samples must always allow."""
 
     def test_single_zone_weight_below_threshold_bypasses(self):
-        """weight=19 < zone_min_samples=50 → auto-bypass on any feature vector."""
+        """weight=19 < feature_cluster_similarity_min_samples=50 → auto-bypass on any feature vector."""
         gate = BitNetZoneGate(
             zones=[_make_tight_zone(weight=19.0)],
-            config={"zone_min_samples": 50},
+            config={"feature_cluster_similarity_min_samples": 50},
         )
         assert gate._underpowered is True
         result = gate.check([0.0] * 35)
@@ -58,7 +58,7 @@ class TestUnderpoweredBypass:
         """Even a vector far from the zone centroid passes when underpowered."""
         gate = BitNetZoneGate(
             zones=[_make_tight_zone(weight=5.0, threshold=0.5)],
-            config={"zone_min_samples": 50},
+            config={"feature_cluster_similarity_min_samples": 50},
         )
         result = gate.check([999.0] * 35)
         assert result["allowed"] is True
@@ -69,7 +69,7 @@ class TestUnderpoweredBypass:
         zones = [_make_tight_zone(weight=10.0) for _ in range(3)]
         gate = BitNetZoneGate(
             zones=zones,
-            config={"zone_min_samples": 50},
+            config={"feature_cluster_similarity_min_samples": 50},
         )
         assert gate._underpowered is True
         result = gate.check([0.0] * 35)
@@ -77,16 +77,16 @@ class TestUnderpoweredBypass:
         assert result["reason"] == "underpowered_zone_registry"
 
     def test_default_min_samples_is_50(self):
-        """Default zone_min_samples=50 used when config omitted."""
+        """Default feature_cluster_similarity_min_samples=50 used when config omitted."""
         gate = BitNetZoneGate(zones=[_make_tight_zone(weight=19.0)])
         # weight=19 < default 50 → underpowered
         assert gate._underpowered is True
 
     def test_weight_exactly_at_threshold_not_underpowered(self):
-        """weight == zone_min_samples → NOT underpowered (strict less-than)."""
+        """weight == feature_cluster_similarity_min_samples → NOT underpowered (strict less-than)."""
         gate = BitNetZoneGate(
             zones=[_make_tight_zone(weight=50.0)],
-            config={"zone_min_samples": 50},
+            config={"feature_cluster_similarity_min_samples": 50},
         )
         assert gate._underpowered is False
 
@@ -94,13 +94,13 @@ class TestUnderpoweredBypass:
 # ── Powered registry enforces threshold ──────────────────────────────────────
 
 class TestPoweredRegistryEnforces:
-    """Gate with total samples >= zone_min_samples must evaluate normally."""
+    """Gate with total samples >= feature_cluster_similarity_min_samples must evaluate normally."""
 
     def test_powered_registry_allows_close_vector(self):
         """Vector at zone centroid [0,0,...] → high Gaussian score → allowed."""
         gate = BitNetZoneGate(
             zones=[_make_zone(weight=60.0, threshold=0.5)],
-            config={"zone_min_samples": 50},
+            config={"feature_cluster_similarity_min_samples": 50},
         )
         assert gate._underpowered is False
         result = gate.check([0.0] * 35)
@@ -112,7 +112,7 @@ class TestPoweredRegistryEnforces:
         """Vector far from tight centroid → low Gaussian score → rejected."""
         gate = BitNetZoneGate(
             zones=[_make_tight_zone(weight=60.0, threshold=0.5)],
-            config={"zone_min_samples": 50},
+            config={"feature_cluster_similarity_min_samples": 50},
         )
         assert gate._underpowered is False
         result = gate.check([999.0] * 35)
@@ -128,10 +128,10 @@ class TestEdgeCases:
 
         Renamed from ``..._fails_open``. The branch returns score 0.0 and omits
         ``top_scores``, so downstream (``zone_cluster_score._model_fn``) it fails any
-        positive ``zone_cluster_threshold`` — it has always blocked. The old name and
+        positive ``feature_cluster_similarity_cluster_threshold`` — it has always blocked. The old name and
         assertion asserted the opposite of the behaviour.
         """
-        gate = BitNetZoneGate(zones=[], config={"zone_min_samples": 50})
+        gate = BitNetZoneGate(zones=[], config={"feature_cluster_similarity_min_samples": 50})
         assert gate._underpowered is False
         result = gate.check([0.0] * 35)
         # fail-closed path: no zones → block
