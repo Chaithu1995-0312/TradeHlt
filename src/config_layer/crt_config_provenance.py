@@ -8,7 +8,6 @@ Protocol: docs/governance/CRT_CONFIG_CONSTRUCTION_PROTOCOL.md
 from __future__ import annotations
 
 import logging
-import os
 import threading
 from dataclasses import asdict, dataclass, fields
 from datetime import datetime, timezone
@@ -166,13 +165,13 @@ def require_mode(
     allowed: set[ConstructionMode] | frozenset[ConstructionMode],
     *,
     context: str = "",
-    fail_closed: bool | None = None,
+    fail_closed: bool,
 ) -> ConstructionMode:
     """Check construction mode against *allowed*.
 
-    * fail_closed=None (default): raise if CRT_CONFIG_STRICT=1, else warn (P1).
-    * fail_closed=True: always raise on mismatch (P2 product paths).
-    * fail_closed=False: warn only.
+    * fail_closed=True: raise on mismatch (product paths).
+    * fail_closed=False: warn only (a caller-declared choice; EPIC-84 removed the
+      CRT_CONFIG_STRICT environment switch, so strictness never depends on the environment).
     """
     prov = get_provenance(cfg)
     mode = prov.mode
@@ -186,10 +185,6 @@ def require_mode(
         f"mark_explicit()/from_existing for EXPLICIT tests, or "
         f"allow_router_crt_config=True only when ROUTER_BASE is intentional."
     )
-    if fail_closed is None:
-        fail_closed = os.environ.get("CRT_CONFIG_STRICT", "").strip() in (
-            "1", "true", "TRUE", "yes",
-        )
     if fail_closed:
         raise RuntimeError(f"F-057 product gate: {msg}")
     logger.warning("F-057 observe (non-strict): %s", msg)

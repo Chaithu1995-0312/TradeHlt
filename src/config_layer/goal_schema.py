@@ -108,10 +108,13 @@ class GoalSpec:
     def from_prod_config(cls, cfg: dict) -> "GoalSpec":
         """Build a GoalSpec from a PRESENT `goal` section dict. Fails-fast (via
         `_require`) on a malformed section. `goal_id` + `enforce` are mandatory;
-        every target is optional (declare only the bounds you want to track)."""
-        tf = cfg.get("timeframe", {}) or {}
-        cons = cfg.get("constraints", {}) or {}
-        instruments = tuple(str(s) for s in (cfg.get("instruments") or []))
+        `timeframe`/`constraints`/`instruments` are mandatory; every numeric target is optional
+        (declare only the bounds you want to track)."""
+        # EPIC-84: timeframe / constraints / instruments are REQUIRED keys of a present `goal`
+        # section (declare `{}` / `[]` to mean "none"); an absent key is not the same as an empty one.
+        tf = _require(cfg, "timeframe")
+        cons = _require(cfg, "constraints")
+        instruments = tuple(str(s) for s in _require(cfg, "instruments"))
         return cls(
             enabled               = True,
             goal_id               = str(_require(cfg, "goal_id")),

@@ -41,6 +41,20 @@ except ImportError:
     from production_config import get_prod_section as _get_section  # standalone script path
 _RR_CFG = _get_section("rr_model")
 
+from config_layer.strict_config import require as _require_cfg
+
+
+def _require_rr(key: str):
+    """Strict read of ``rr_model.<key>`` (EPIC-84: no code default; absent -> raise)."""
+    return _require_cfg(_RR_CFG, key, section_name="rr_model", consumer="rr_pattern_miner")
+
+
+def _require_rr_gate(key: str):
+    """Strict read of ``rr_model.confidence_gate.<key>``."""
+    return _require_cfg(_GATE_CFG, key, section_name="rr_model.confidence_gate",
+                        consumer="rr_pattern_miner")
+
+
 # RR raw-score clamp bounds: STRUCTURAL algorithm constants, not config knobs (RR-001).
 # Algorithm boundaries belong in code, not config — no fallback, no degrees of freedom.
 RR_SCORE_MIN: float = -3.0
@@ -74,10 +88,12 @@ _W_CONFIDENCE:        float = _SCORE_WEIGHTS["confidence"]
 # In all modes the operating point is chosen via `target_bypass_fraction → empirical threshold`
 # (rr_confidence_probe.py emits the calibration table). They grant NO authority (§6.5); rr_fusion
 # stays `enabled:false` and the gate is inert until a measured ΔG001 re-enable.
-_GATE_CFG: dict = dict(_RR_CFG.get("confidence_gate") or {})
-_GATE_MODE: str = str(_GATE_CFG.get("mode", "legacy_scalar"))
-_GATE_P_THRESHOLD: float = float(_GATE_CFG.get("p_threshold", 0.01))    # for chi2_tail
-_GATE_DOF_SCALED_MAX: float = float(_GATE_CFG.get("dof_scaled_max", 3.0))  # for dof_scaled
+# EPIC-84: `confidence_gate` and its mode/threshold keys are REQUIRED (no code defaults; a missing
+# subsection no longer maps silently to `legacy_scalar`). Every in-use config declares them.
+_GATE_CFG: dict = dict(_require_rr("confidence_gate"))
+_GATE_MODE: str = str(_require_rr_gate("mode"))
+_GATE_P_THRESHOLD: float = float(_require_rr_gate("p_threshold"))    # for chi2_tail
+_GATE_DOF_SCALED_MAX: float = float(_require_rr_gate("dof_scaled_max"))  # for dof_scaled
 # `percentile` mode (most robust to the heavy-tailed / mis-conditioned empirical d_sq — F-044
 # refinement 2026-07-05): bypass iff d_sq > a cut calibrated from the training-d_sq empirical CDF.
 # The cut is NOT theory-derived; it is chosen via `target_bypass_fraction → empirical threshold`
@@ -174,11 +190,14 @@ class RRPatternTrainer:
 
     def __init__(
         self,
-        ridge_alpha: float = _RR_CFG.get("ridge_alpha", 10.0),
-        gnb_var_smoothing: float = _RR_CFG.get("gnb_var_smoothing", 1e-9),
+        ridge_alpha: Optional[float] = None,
+        gnb_var_smoothing: Optional[float] = None,
     ):
-        self.ridge_alpha = ridge_alpha
-        self.gnb_var_smoothing = gnb_var_smoothing
+        # None = "use the declared rr_model value" (strict read), not a code literal.
+        self.ridge_alpha = _require_rr("ridge_alpha") if ridge_alpha is None else ridge_alpha
+        self.gnb_var_smoothing = (
+            _require_rr("gnb_var_smoothing") if gnb_var_smoothing is None else gnb_var_smoothing
+        )
         self.state: Optional[Dict[str, Any]] = None
 
     def train(
@@ -530,7 +549,7 @@ def train_and_save(
     y_rr: List[float],
     y_win: List[int],
     path: str = DEFAULT_MODEL_PATH,
-    ridge_alpha: float = _RR_CFG.get("ridge_alpha", 10.0),
+    ridge_alpha: Optional[float] = None,
 ) -> Dict[str, Any]:
     trainer = RRPatternTrainer(ridge_alpha=ridge_alpha)
     trainer.train(X, y_rr, y_win)

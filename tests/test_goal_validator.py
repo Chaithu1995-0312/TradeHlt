@@ -20,6 +20,9 @@ def _spec(enforce: bool = False) -> GoalSpec:
     return GoalSpec.from_prod_config({
         "goal_id": "G001",
         "enforce": enforce,
+        "timeframe": {},
+        "constraints": {},
+        "instruments": [],
         "trades_per_month": {"min": 20, "max": 80},
         "avg_rr": {"min": 2.0},
         "win_rate": {"min": 0.35},

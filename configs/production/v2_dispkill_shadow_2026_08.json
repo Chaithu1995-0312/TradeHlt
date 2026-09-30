@@ -400,6 +400,10 @@
     "output_dir": "results/portfolio"
   },
   "llama_gate": {
+    "chat_max_tokens": 512,
+    "chat_temperature": 0.2,
+    "chat_stop_sequences": ["<|user|>", "</s>"],
+    "audit_log_path": "logs/llm_audit.jsonl",
     "server_url": "http://127.0.0.1:8080/completion",
     "request_timeout": 2.0,
     "probe_timeout": 1.0,

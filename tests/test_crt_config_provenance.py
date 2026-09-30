@@ -77,25 +77,32 @@ def test_compare_surfaces_structure():
 
 def test_require_mode_non_strict_warns_only():
     cfg = ConfigBuilder.build("XAUUSD", overrides=crt_test_fields())
-    # Should not raise without CRT_CONFIG_STRICT
-    os.environ.pop("CRT_CONFIG_STRICT", None)
     mode = require_mode(
         cfg,
         {ConstructionMode.PRODUCTION_MERGED},
         context="test_non_strict",
+        fail_closed=False,
     )
     assert mode == ConstructionMode.ROUTER_BASE
 
 
 def test_require_mode_strict_raises(monkeypatch):
-    monkeypatch.setenv("CRT_CONFIG_STRICT", "1")
+    # The environment no longer influences strictness (EPIC-84): the env var is ignored.
+    monkeypatch.delenv("CRT_CONFIG_STRICT", raising=False)
     cfg = ConfigBuilder.build("XAUUSD", overrides=crt_test_fields())
     with pytest.raises(RuntimeError, match="F-057"):
         require_mode(
             cfg,
             {ConstructionMode.PRODUCTION_MERGED},
             context="test_strict",
+            fail_closed=True,
         )
+
+
+def test_require_mode_fail_closed_is_required():
+    cfg = ConfigBuilder.build("XAUUSD", overrides=crt_test_fields())
+    with pytest.raises(TypeError):
+        require_mode(cfg, {ConstructionMode.PRODUCTION_MERGED}, context="x")  # type: ignore[call-arg]
 
 
 def test_assert_product_rejects_router_base():

@@ -158,7 +158,7 @@ def load_production_bundle(
 ) -> ProductionBundle:
     """Read-only: reconcile registry + identity + production config into one snapshot.
 
-    Never writes, never promotes, never raises on divergence.
+    Never writes, never promotes, never raises on divergence (an unreadable active config does raise).
     """
     root = (repo_root or _REPO_ROOT).resolve()
 
@@ -166,11 +166,10 @@ def load_production_bundle(
     from config_layer.production_config import get_active_version, get_full_config_dict
 
     version = active_version or get_active_version()
-    try:
-        cfg = get_full_config_dict(version) or {}
-    except Exception as exc:                       # config unreadable -> recorded, not fatal
-        logger.warning("production_bundle: cannot read config %s: %s", version, exc)
-        cfg = {}
+    # EPIC-84: an unreadable / empty active config is an error, not an empty dict (no fallback).
+    cfg = get_full_config_dict(version)
+    if not cfg:
+        raise RuntimeError(f"production_bundle: config {version!r} is unreadable or empty")
 
     identity_doc = {}
     try:

@@ -69,13 +69,11 @@ def _load_dotenv(start: Path = Path(__file__).resolve()) -> None:
 _load_dotenv()
 
 # ── Load llama_gate section from production config (required — no defaults) ──
+from config_layer.strict_config import require as _require_cfg
+
+
 def _require_lg(cfg: dict, key: str) -> object:
-    if key not in cfg:
-        raise KeyError(
-            f"llama_gate: required config key '{key}' missing from 'llama_gate' section. "
-            "Add it to configs/production/v1_multi_2026_03.json under 'llama_gate'."
-        )
-    return cfg[key]
+    return _require_cfg(cfg, key, section_name="llama_gate", consumer="llm_inference_client")
 
 
 from config_layer.production_config import get_prod_section as _get_section
@@ -90,23 +88,25 @@ _SCORE_TEMPERATURE:   float = float(_require_lg(_LG_CFG, "score_temperature"))
 _INSIGHT_MAX_TOKENS:  int   = int(_require_lg(_LG_CFG, "insight_max_tokens"))
 _INSIGHT_TEMPERATURE: float = float(_require_lg(_LG_CFG, "insight_temperature"))
 
-# Chat config — optional keys; graceful defaults until added to production config
-_CHAT_MAX_TOKENS:  int   = int(_LG_CFG.get("chat_max_tokens", 512))
-_CHAT_TEMPERATURE: float = float(_LG_CFG.get("chat_temperature", 0.2))
-_CHAT_STOP_SEQS:   list  = list(_LG_CFG.get("chat_stop_sequences", ["<|user|>", "</s>"]))
+# Chat config — required keys (EPIC-84: no code defaults)
+_CHAT_MAX_TOKENS:  int   = int(_require_lg(_LG_CFG, "chat_max_tokens"))
+_CHAT_TEMPERATURE: float = float(_require_lg(_LG_CFG, "chat_temperature"))
+_CHAT_STOP_SEQS:   list  = list(_require_lg(_LG_CFG, "chat_stop_sequences"))
 
-# Groq fallback config — optional keys, safe defaults
-_GROQ_FALLBACK_ENABLED:  bool  = bool(_LG_CFG.get("groq_fallback_enabled", True))
-_GROQ_MODEL:             str   = str(_LG_CFG.get("groq_model", "llama3-70b-8192"))
-_GROQ_SCORE_MAX_TOKENS:  int   = int(_LG_CFG.get("groq_score_max_tokens", 8))
-_GROQ_SCORE_TEMPERATURE: float = float(_LG_CFG.get("groq_score_temperature", 0.0))
+# Groq fallback config — required keys
+_GROQ_FALLBACK_ENABLED:  bool  = bool(_require_lg(_LG_CFG, "groq_fallback_enabled"))
+_GROQ_MODEL:             str   = str(_require_lg(_LG_CFG, "groq_model"))
+_GROQ_SCORE_MAX_TOKENS:  int   = int(_require_lg(_LG_CFG, "groq_score_max_tokens"))
+_GROQ_SCORE_TEMPERATURE: float = float(_require_lg(_LG_CFG, "groq_score_temperature"))
 
 # API key resolution — read from os.environ (populated by _load_dotenv above).
+# KEPT (EPIC-84): a secret, not a behaviour value. Absent key => Groq fallback disabled with an
+# explicit log (see below); no value substitutes for it.
 _GROQ_API_KEY:  str = os.environ.get("GROQ_API_KEY", "")
 _GROQ_ENDPOINT: str = "https://api.groq.com/openai/v1/chat/completions"
 
 # Audit log path
-_LLM_AUDIT_LOG: str = str(_LG_CFG.get("audit_log_path", "logs/llm_audit.jsonl"))
+_LLM_AUDIT_LOG: str = str(_require_lg(_LG_CFG, "audit_log_path"))
 
 # Chat circuit-breaker counter (independent from scoring counter in llm_scorer.py)
 FAIL_COUNT = 0

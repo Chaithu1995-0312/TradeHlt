@@ -55,6 +55,7 @@ def test_from_prod_config_parses_all_fields():
 def test_partial_goal_allows_undeclared_bounds():
     # A goal that only declares win_rate leaves every other bound None.
     spec = GoalSpec.from_prod_config({"goal_id": "G_partial", "enforce": True,
+                                      "timeframe": {}, "constraints": {}, "instruments": [],
                                       "win_rate": {"min": 0.5}})
     assert spec.enabled is True
     assert spec.enforce is True
@@ -85,13 +86,24 @@ def test_absent_section_fail_soft(monkeypatch):
 def test_present_but_malformed_fails_fast():
     # Missing the mandatory goal_id → fail-fast (real misconfiguration).
     with pytest.raises(KeyError, match="goal_id"):
-        GoalSpec.from_prod_config({"enforce": False})
+        GoalSpec.from_prod_config({"enforce": False, "timeframe": {}, "constraints": {},
+                                   "instruments": []})
 
 
 def test_present_range_missing_subbound_fails_fast():
     # A declared range key with no expected sub-bound is malformed → fail-fast.
     with pytest.raises(KeyError, match="avg_rr"):
-        GoalSpec.from_prod_config({"goal_id": "x", "enforce": False, "avg_rr": {}})
+        GoalSpec.from_prod_config({"goal_id": "x", "enforce": False, "timeframe": {},
+                                   "constraints": {}, "instruments": [], "avg_rr": {}})
+
+
+@pytest.mark.parametrize("missing", ["timeframe", "constraints", "instruments"])
+def test_mandatory_goal_keys_fail_closed(missing):
+    # EPIC-84: no silent {} / [] substitute for an absent key (declare {} / [] explicitly).
+    cfg = {"goal_id": "x", "enforce": False, "timeframe": {}, "constraints": {}, "instruments": []}
+    del cfg[missing]
+    with pytest.raises(KeyError, match=missing):
+        GoalSpec.from_prod_config(cfg)
 
 
 def test_active_config_loads_g001():

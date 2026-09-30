@@ -19,7 +19,17 @@ try:
     from config_layer.production_config import get_prod_section as _get_section
 except ImportError:
     from production_config import get_prod_section as _get_section  # standalone script path
+try:
+    from config_layer.strict_config import require as _require_cfg
+except ImportError:
+    from strict_config import require as _require_cfg  # standalone script path
 _GS_CFG = _get_section("gaussian_scorer")
+
+
+def _gs(key: str):
+    """Strict read of ``gaussian_scorer.<key>`` (EPIC-84: no code default; absent -> raise)."""
+    return _require_cfg(_GS_CFG, key, section_name="gaussian_scorer",
+                        consumer="CRTGaussianScorer")
 
 
 class CRTGaussianScorer:
@@ -37,12 +47,12 @@ class CRTGaussianScorer:
 
     # Real EURCAD M15 calibration (200 retest observations 2024-2025)
     # Replaces theoretical priors. All parameters computed from empirical distribution.
-    RETEST_MU = _GS_CFG.get("retest_mu", 0.237)
-    RETEST_S2 = _GS_CFG.get("retest_s2", 0.040)  # real mean/variance of retest_depth
-    BODY_MU   = _GS_CFG.get("body_mu",   0.847)
-    BODY_S2   = _GS_CFG.get("body_s2",   0.021)  # real mean/variance of body_ratio
-    DISP_MU   = _GS_CFG.get("disp_mu",   2.177)
-    DISP_S2   = _GS_CFG.get("disp_s2",   1.196)  # real mean/variance of disp_str ATR mult
+    RETEST_MU = _gs("retest_mu")
+    RETEST_S2 = _gs("retest_s2")  # real mean/variance of retest_depth
+    BODY_MU   = _gs("body_mu")
+    BODY_S2   = _gs("body_s2")  # real mean/variance of body_ratio
+    DISP_MU   = _gs("disp_mu")
+    DISP_S2   = _gs("disp_s2")  # real mean/variance of disp_str ATR mult
 
     # Hard filters: 5th/95th percentile of real observed feature range
     RETEST_MIN = 0.025
@@ -50,14 +60,15 @@ class CRTGaussianScorer:
     DISP_MAX   = 3.670  # 95th pct; 1.80 rejected 100% of real trades
 
     # Sigmoid calibration
-    SIGMOID_K  = _GS_CFG.get("sigmoid_k",  4.5)
-    SIGMOID_X0 = _GS_CFG.get("sigmoid_x0", 0.50)
+    SIGMOID_K  = _gs("sigmoid_k")
+    SIGMOID_X0 = _gs("sigmoid_x0")
 
     # Execution threshold (dynamic threshold overrides this per-trade)
-    EXECUTE_P = _GS_CFG.get("execute_p", 0.50)
+    EXECUTE_P = _gs("execute_p")
 
-    def __init__(self, decay_lambda: float = _GS_CFG.get("decay_lambda", 0.05)):
-        self.decay_lambda = decay_lambda
+    def __init__(self, decay_lambda: Optional[float] = None):
+        # None = "use the declared config value" (strict read), not a code literal.
+        self.decay_lambda = _gs("decay_lambda") if decay_lambda is None else decay_lambda
         self._log = logging.getLogger("CRT.GaussianScorer")
         from engines.scoring_engine import ScoringEngine
 
