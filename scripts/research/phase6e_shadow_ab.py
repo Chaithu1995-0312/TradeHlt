@@ -36,7 +36,7 @@ V3_REF = {"approved_trades": 35, "profit_factor": 2.5351}
 def _run_arm(label: str, extra: dict) -> dict:
     base = load_prod_config_from_registry(PROD_VERSION, INSTR)
     crt = ConfigBuilder.from_existing(INSTR, base, extra_overrides=extra)
-    cfg = BacktestConfig.from_prod_config(instrument=INSTR, crt_config=crt)
+    cfg = BacktestConfig.from_prod_config(instrument=INSTR, crt_config=crt, pip_size=0.0001, scorer_mode="calibrated", allow_router_crt_config=False, strategy_id="")
     loader = CandleLoader(CSV, INSTR)
     runner = BacktestRunner(cfg, csv_path=CSV)
     m = runner.run(loader.stream(), loader.count(), str(OUT / label))

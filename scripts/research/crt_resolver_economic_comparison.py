@@ -163,7 +163,7 @@ def resolve_engine_ledger(
     from runtime.backtest_v2 import BacktestConfig, BacktestRunner, CandleLoader, MultiInstrumentRunner
 
     crt_cfg = ConfigBuilder.from_production(instrument)
-    cfg = BacktestConfig.from_prod_config(crt_config=crt_cfg)
+    cfg = BacktestConfig.from_prod_config(crt_config=crt_cfg, instrument=instrument, pip_size=MultiInstrumentRunner.INSTRUMENT_PIP.get(instrument, 0.01), scorer_mode="calibrated", allow_router_crt_config=False, strategy_id="")
     cfg.instrument = instrument
     cfg.pip_size = MultiInstrumentRunner.INSTRUMENT_PIP.get(instrument, 0.01)
     loader = CandleLoader(str(ohlcv_path), instrument)

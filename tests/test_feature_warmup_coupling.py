@@ -113,6 +113,10 @@ def _runner(**kwargs):
     cfg = BacktestConfig.from_prod_config(
         instrument="BNBUSDT",
         crt_config=load_prod_config_from_registry(get_active_version(), "BNBUSDT"),
+        pip_size=0.0001,
+        scorer_mode="calibrated",
+        allow_router_crt_config=False,
+        strategy_id="",
     )
     cfg.instrument = "BNBUSDT"
     return BacktestRunner(cfg, **kwargs)
@@ -199,6 +203,10 @@ def test_process_candle_count_matches_feature_row_count_at_exact_warmup_boundary
     cfg = BacktestConfig.from_prod_config(
         instrument="BNBUSDT",
         crt_config=load_prod_config_from_registry(get_active_version(), "BNBUSDT"),
+        pip_size=0.0001,
+        scorer_mode="calibrated",
+        allow_router_crt_config=False,
+        strategy_id="",
     )
     cfg.instrument = "BNBUSDT"
     cfg.warmup_candles = required_warmup_rows()  # exact-equality boundary, not slack

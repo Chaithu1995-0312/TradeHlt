@@ -108,7 +108,7 @@ def _run_one(instrument: str, csv_path: str, output_dir: str,
     _sweep_overrides = {"min_consensus_signals": signals,
                         "min_consensus_agreement": agreement}
     try:
-        cfg = BacktestConfig.from_prod_config(instrument=instrument)
+        cfg = BacktestConfig.from_prod_config(instrument=instrument, pip_size=MultiInstrumentRunner.INSTRUMENT_PIP.get(instrument, 0.0001), scorer_mode="calibrated", allow_router_crt_config=False, strategy_id="")
         cfg.pip_size = MultiInstrumentRunner.INSTRUMENT_PIP.get(instrument, 0.0001)
         loader = CandleLoader(csv_path, instrument)
         runner = BacktestRunner(cfg, csv_path=csv_path,

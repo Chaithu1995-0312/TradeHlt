@@ -71,7 +71,7 @@ def test_backtest_runner_fallback_resolves_governed_config_not_bare_router():
     not the bare router-only profile."""
     from runtime.backtest_v2 import BacktestConfig, BacktestRunner
 
-    cfg = BacktestConfig.from_prod_config(instrument="BNBUSDT")
+    cfg = BacktestConfig.from_prod_config(instrument="BNBUSDT", pip_size=0.0001, scorer_mode="calibrated", allow_router_crt_config=False, strategy_id="")
     assert cfg.crt_config is None
     runner = BacktestRunner(cfg)  # no csv_path — legitimate no-feature mode (see
                                   # test_feature_warmup_coupling.py)
@@ -84,7 +84,8 @@ def test_backtest_runner_raises_on_unset_instrument_no_crt_config():
     instrument is supplied."""
     from runtime.backtest_v2 import BacktestConfig, BacktestRunner
 
-    cfg = BacktestConfig.from_prod_config()  # instrument defaults to "UNKNOWN"
+    cfg = BacktestConfig.from_prod_config(
+        instrument="UNKNOWN", pip_size=0.0001, scorer_mode="calibrated", allow_router_crt_config=False, strategy_id="")  # no real instrument
     assert cfg.crt_config is None
     with pytest.raises(ValueError):
         BacktestRunner(cfg)

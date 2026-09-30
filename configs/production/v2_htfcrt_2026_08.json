@@ -544,6 +544,7 @@
     }
   },
   "backtest": {
+    "timeframe": "M15",
     "sl_anchor": "displacement",
     "htf_reset_exempt_sweep": false,
     "session_window_basis": "broker_static",

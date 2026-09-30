@@ -51,7 +51,7 @@ def main() -> int:
     )
 
     crt_cfg = load_prod_config_from_registry(PROD_VERSION, instr)
-    cfg = BacktestConfig.from_prod_config(crt_config=crt_cfg)
+    cfg = BacktestConfig.from_prod_config(crt_config=crt_cfg, instrument=instr, pip_size=MultiInstrumentRunner.INSTRUMENT_PIP.get(instr, 0.0001), scorer_mode="calibrated", allow_router_crt_config=False, strategy_id="")
     cfg.instrument = instr
     cfg.pip_size = MultiInstrumentRunner.INSTRUMENT_PIP.get(cfg.instrument, 0.0001)
     if not _preflight_dataset(str(csv_path), cfg.instrument, bt_log):

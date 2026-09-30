@@ -281,7 +281,7 @@ def _run_backtest(
         from runtime.backtest_v2 import BacktestRunner, BacktestConfig, CandleLoader, MultiInstrumentRunner
 
         crt_cfg, prod_version = _load_crt_cfg(instrument)
-        cfg = BacktestConfig.from_prod_config(crt_config=crt_cfg)
+        cfg = BacktestConfig.from_prod_config(crt_config=crt_cfg, instrument=instrument, pip_size=MultiInstrumentRunner.INSTRUMENT_PIP.get(instrument, 0.0001), scorer_mode="calibrated", allow_router_crt_config=False, strategy_id="")
         cfg.instrument = instrument
         cfg.pip_size = MultiInstrumentRunner.INSTRUMENT_PIP.get(instrument, 0.0001)
 

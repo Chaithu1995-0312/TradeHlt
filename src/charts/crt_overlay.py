@@ -239,6 +239,9 @@ def run_spine_for_states(
             instrument=instrument,
             pip_size=_bt.MultiInstrumentRunner.INSTRUMENT_PIP.get(instrument, 0.0001),
             crt_config=crt_cfg,
+            scorer_mode="calibrated",
+            allow_router_crt_config=False,
+            strategy_id="",
         )
         loader = _bt.CandleLoader(str(csv_path), instrument)
         runner = _bt.BacktestRunner(cfg, csv_path=str(csv_path),

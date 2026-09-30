@@ -154,6 +154,9 @@ def _run_spine_once(instrument: str, version: str, out_dir: Path) -> tuple[dict,
         instrument=instrument,
         pip_size=_bt.MultiInstrumentRunner.INSTRUMENT_PIP.get(instrument, 0.0001),
         crt_config=crt_cfg,
+        scorer_mode="calibrated",
+        allow_router_crt_config=False,
+        strategy_id="",
     )
     cfg.scorer_mode = "calibrated"
     loader = _bt.CandleLoader(csv_path, instrument)

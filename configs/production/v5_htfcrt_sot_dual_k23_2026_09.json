@@ -524,6 +524,7 @@
     }
   },
   "backtest": {
+    "timeframe": "M15",
     "htf_clock_basis": "count",
     "_comment_htf_candles_per_range": "M15 bars per completed HTF window (HTFBuilder). 4 = 1H, 16 = 4H. The ONLY effect is how often current_htf_id flips, which ResetLogic.should_reset compares to active_range.htf_candle_id (DISPLACEMENT/SWEEP/RANGE/SHADOW_PENDING reset; EXPANSION/RETEST exempt). Independent of crt_engine.pending_displacement_ttl_candles, retrace_reset_pct, sessions, and TP. Changing this key does not change those rules.",
     "htf_candles_per_range": 16,

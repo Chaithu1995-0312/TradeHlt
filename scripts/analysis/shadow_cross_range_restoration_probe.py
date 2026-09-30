@@ -368,7 +368,7 @@ def main() -> int:
     (restore,) = _install_patches()
     try:
         crt_cfg = load_prod_config_from_registry(PROD_VERSION, args.instrument)
-        cfg = BacktestConfig.from_prod_config(crt_config=crt_cfg)
+        cfg = BacktestConfig.from_prod_config(crt_config=crt_cfg, instrument=args.instrument, pip_size=MultiInstrumentRunner.INSTRUMENT_PIP.get(args.instrument, 0.0001), scorer_mode="calibrated", allow_router_crt_config=False, strategy_id="")
         cfg.instrument = args.instrument
         cfg.pip_size = MultiInstrumentRunner.INSTRUMENT_PIP.get(args.instrument, 0.0001)
         loader = CandleLoader(args.csv, args.instrument)

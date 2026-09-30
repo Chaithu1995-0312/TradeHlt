@@ -471,7 +471,7 @@ def run_engine_candidate(
     from runtime.backtest_v2 import BacktestConfig, BacktestRunner, CandleLoader
 
     crt_cfg = dataclasses.replace(base_crt_cfg, **overrides)
-    cfg = BacktestConfig.from_prod_config(crt_config=crt_cfg)
+    cfg = BacktestConfig.from_prod_config(crt_config=crt_cfg, instrument=instrument, pip_size=0.0001, scorer_mode="calibrated", allow_router_crt_config=False, strategy_id="")
     cfg.instrument = instrument
     loader = CandleLoader(str(csv_path), instrument)
     runner = BacktestRunner(

@@ -92,7 +92,9 @@ def _build_backtest_v2_config(config: dict, instrument: str) -> BacktestConfig:
     # params/crt_engine merge) instead of the bare router profile, so this
     # programmatic path matches what the CLI would build for the same instrument.
     from config_layer.production_config import load_prod_config_from_registry, PROD_VERSION
-    params = config.get("params", {}) if isinstance(config, dict) else {}
+    from config_layer.strict_config import require_section
+    # EPIC-84: `config` is a production config JSON; its `params` section is required.
+    params = dict(require_section(config, "params", consumer="unified_replay_harness"))
 
     crt_cfg = load_prod_config_from_registry(PROD_VERSION, instrument)
     if params:
@@ -102,6 +104,9 @@ def _build_backtest_v2_config(config: dict, instrument: str) -> BacktestConfig:
         instrument=instrument,
         pip_size=INSTRUMENT_PIP.get(instrument, 0.0001),
         crt_config=crt_cfg,
+        scorer_mode="calibrated",
+        allow_router_crt_config=False,
+        strategy_id="",
     )
 
 

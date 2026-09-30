@@ -348,6 +348,20 @@ def run_portfolio(
             gap_reset_minutes     = 120,
             event_flush_every     = 100,
             crt_config            = crt_cfg,
+            cost_model_id         = "",   # EPIC-84: declared explicitly (was the dataclass default)
+            cost_model_params_hash = "",
+            allow_router_crt_config = False,
+            scorer_mode           = "calibrated",
+            strategy_id           = "",
+            htf_clock_basis       = "count",
+            htf_reset_exempt_sweep = False,
+            sl_anchor             = "displacement",
+            session_window_basis  = "broker_static",
+            exchange_session_windows = None,
+            target_policy         = "fixed_r",
+            trade_ttl_candles     = None,
+            decider               = "engine",
+            timeframe             = "M15",
         )
 
         loader = CandleLoader(instr.csv_path, instr.name)

@@ -44,7 +44,7 @@ def _run_backtest(output_dir: str, enable_trace: bool, trace_path: Path | None) 
     instrument = "XAUUSD"
     csv_path = "data/mt5/XAUUSD_M15.csv"
     crt_cfg = load_prod_config_from_registry(PROD_VERSION, instrument)
-    cfg = BacktestConfig.from_prod_config(crt_config=crt_cfg)
+    cfg = BacktestConfig.from_prod_config(crt_config=crt_cfg, instrument=instrument, pip_size=0.01, scorer_mode="calibrated", allow_router_crt_config=False, strategy_id="")
     cfg.instrument = instrument
     cfg.pip_size = 0.01
     cfg.scorer_mode = "calibrated"

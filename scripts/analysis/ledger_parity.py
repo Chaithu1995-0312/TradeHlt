@@ -50,6 +50,9 @@ def _run_arm(csv_path: str, instrument: str, pip_size: float, explicit_crt_confi
     crt_cfg = load_prod_config_from_registry(PROD_VERSION, instrument) if explicit_crt_config else None
     cfg = BacktestConfig.from_prod_config(
         instrument=instrument, pip_size=pip_size, crt_config=crt_cfg,
+        scorer_mode="calibrated",
+        allow_router_crt_config=False,
+        strategy_id="",
     )
     loader = CandleLoader(csv_path, instrument)
     runner = BacktestRunner(cfg, csv_path=csv_path)

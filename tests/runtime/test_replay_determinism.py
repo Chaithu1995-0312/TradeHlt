@@ -31,7 +31,7 @@ def _run_capped(n: int, instrument: str = _INSTRUMENT, csv: Path = _CSV) -> tupl
 
     # P2 F-057: product path requires PRODUCTION_MERGED (not bare ConfigBuilder).
     crt_cfg = load_prod_config_from_registry(get_active_version(), instrument)
-    cfg = BacktestConfig.from_prod_config(instrument=instrument, crt_config=crt_cfg)
+    cfg = BacktestConfig.from_prod_config(instrument=instrument, crt_config=crt_cfg, pip_size=0.0001, scorer_mode="calibrated", allow_router_crt_config=False, strategy_id="")
     loader = CandleLoader(str(csv), instrument)
     out_dir = tempfile.mkdtemp(prefix="replay_det_")
     runner = BacktestRunner(cfg, csv_path=str(csv))
@@ -60,7 +60,7 @@ def _run_artifacts(n: int, instrument: str, csv: Path) -> dict[str, bytes]:
 
     # P2 F-057: product path requires PRODUCTION_MERGED (not bare ConfigBuilder).
     crt_cfg = load_prod_config_from_registry(get_active_version(), instrument)
-    cfg = BacktestConfig.from_prod_config(instrument=instrument, crt_config=crt_cfg)
+    cfg = BacktestConfig.from_prod_config(instrument=instrument, crt_config=crt_cfg, pip_size=0.0001, scorer_mode="calibrated", allow_router_crt_config=False, strategy_id="")
     out_dir = tempfile.mkdtemp(prefix="replay_art_")
     BacktestRunner(cfg, csv_path=str(csv)).run(
         itertools.islice(CandleLoader(str(csv), instrument).stream(), n), n,

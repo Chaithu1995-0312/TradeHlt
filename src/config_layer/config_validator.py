@@ -155,6 +155,10 @@ def _run_instrument(
     cfg = BacktestConfig.from_prod_config(
         instrument=instrument,
         crt_config=crt_config,
+        pip_size=0.0001,
+        scorer_mode="calibrated",
+        allow_router_crt_config=False,
+        strategy_id="",
     )
     if warmup is not None:
         cfg.warmup_candles = warmup

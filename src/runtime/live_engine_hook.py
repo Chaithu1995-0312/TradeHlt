@@ -25,7 +25,9 @@ from config_layer.production_config import get_prod_metadata, get_prod_section
 from core.position_sizing import instrument_spec, size_trade_lots
 from core.ultron_risk_gate import UltronRiskGate
 from core.ultron_risk_gate_wrapper import UltronRiskGateWrapper
-from config_layer.strict_config import ConfigKeyMissingError
+from config_layer.strict_config import (
+    ConfigKeyMissingError, missing_keys, missing_reason, require_section,
+)
 from utils.logging_config import get_flow_logger
 
 try:
@@ -176,15 +178,34 @@ def _require_cfg(cfg: dict, key: str, section: str) -> object:
     return cfg[key]
 
 
+def _tp_multiplier_reject(crt_cfg: dict, intent: str, execution_id: str) -> "dict | None":
+    """EPIC-84 D7: the reject result when the TP multipliers for ``intent`` are undeclared.
+
+    Returns None when ``crt_engine.tp1_atr_multiplier_<intent>`` and ``tp2_atr_multiplier``
+    are both present; otherwise a reject dict with reason
+    ``config_key_missing:crt_engine.<key>`` (the trade is rejected, the engine keeps running).
+    """
+    tp1_key = f"tp1_atr_multiplier_{intent.lower()}"
+    missing = missing_keys(crt_cfg, [tp1_key, "tp2_atr_multiplier"])
+    if not missing:
+        return None
+    return {
+        "decision":            "reject",
+        "risk_reason":         missing_reason("crt_engine", missing),
+        "execution_id":        execution_id,
+        "final_position_size": 0.0,
+        "portfolio_state":     {},
+    }
+
+
 def _precision(symbol: str, exec_cfg: dict) -> int:
     """Return decimal precision for rounding prices for a given symbol.
 
-    `precision_overrides` is an optional per-symbol MAP (absence means "no override for this
-    symbol", not a missing value), so `.get(symbol, <default>)` is correct there — but the
-    fallback itself is now a strict config read.
+    `precision_overrides` is a REQUIRED per-symbol MAP (EPIC-84); a symbol absent from it means
+    "no override for this symbol", so `.get(symbol, <declared precision_default>)` is correct.
     """
     return int(
-        exec_cfg.get("precision_overrides", {}).get(
+        _require_cfg(exec_cfg, "precision_overrides", "execution_planner").get(
             symbol, _require_cfg(exec_cfg, "precision_default", "execution_planner")
         )
     )
@@ -362,7 +383,7 @@ def _load_engine_config() -> dict:
         )
 
     # Normalize session strings in allowed_sessions
-    raw_sessions = engine_cfg.get("allowed_sessions", [])
+    raw_sessions = _require_cfg(engine_cfg, "allowed_sessions", "engine_runner")
     if isinstance(raw_sessions, list) and raw_sessions:
         engine_cfg = dict(engine_cfg)
         engine_cfg["allowed_sessions"] = [_normalize_session(s) for s in raw_sessions]
@@ -683,7 +704,8 @@ _daily_reset_tracker = _DailyResetTracker()
 def _get_live_cfg() -> dict:
     global _live_cfg
     if _live_cfg is None:
-        _live_cfg = get_prod_section("live_integration") or {}
+        _live_cfg = require_section({"live_integration": get_prod_section("live_integration")},
+                                    "live_integration", consumer="live_engine_hook")
     return _live_cfg
 
 
@@ -1094,11 +1116,22 @@ class HookedLiveEngine(LiveEngine):
         )
 
         ultron_result = {"decision": "skipped", "risk_reason": "planner_did_not_execute"}
+        # EPIC-84 STORY-84.4: the per-intent TP1 multiplier and tp2 are REQUIRED. An intent with
+        # no declared `crt_engine.tp1_atr_multiplier_<intent>` rejects THIS trade with a named
+        # reason (D7) instead of silently borrowing the base multiplier / a 1.0/2.0 literal.
+        _tp_missing: list = []
         if trade_plan.get("decision") == "execute":
-            # ── CRT-style SL/TP (CRT engine is sole SL/TP authority) ─────────
-            _crt_cfg  = engine_config.get("crt_engine", {})
+            _crt_cfg  = engine_config["crt_engine"]   # presence enforced in _load_engine_config()
             _intent   = trade_plan.get("trade_intent", "UNKNOWN").upper()
             _tp1_key  = f"tp1_atr_multiplier_{_intent.lower()}"
+            _tp_reject = _tp_multiplier_reject(
+                _crt_cfg, _intent, trade_plan.get("execution_id", "UNKNOWN"))
+            if _tp_reject is not None:
+                _tp_missing = [_tp_reject["risk_reason"]]
+                logger.error("LIVE_HOOK: rejecting trade -- %s", _tp_reject["risk_reason"])
+                ultron_result = _tp_reject
+        if trade_plan.get("decision") == "execute" and not _tp_missing:
+            # ── CRT-style SL/TP (CRT engine is sole SL/TP authority) ─────────
             # ── T-16 (2026-07-23) RESOLVED by C3 (2026-07-29). The config illusion this
             # block used to document is CLOSED: `_load_engine_config()` now carries the
             # `crt_engine` section (nested), so `_crt_cfg` is the real section rather than
@@ -1112,12 +1145,10 @@ class HookedLiveEngine(LiveEngine):
             #     breakout 1.0->1.5, liq_sweep 1.0->1.2, pullback 1.0->0.8
             #     (reversal 1.0 and tp2 2.0 are unchanged in value).
             #
-            # The `.get(..., <literal>)` fallbacks are retained ONLY as a last-resort guard for
-            # a config that omits an optional per-intent key; the section's presence is now
-            # enforced upstream in _load_engine_config(). Floor:
-            # tests/test_live_hook_crt_config_plumbing.py.
-            _tp1_mult = float(_crt_cfg.get(_tp1_key, _crt_cfg.get("tp1_atr_multiplier", 1.0)))
-            _tp2_mult = float(_crt_cfg.get("tp2_atr_multiplier", 2.0))
+            # EPIC-84: the former `.get(..., <literal>)` fallbacks are gone; a missing key is
+            # rejected above. Floor: tests/test_live_hook_crt_config_plumbing.py.
+            _tp1_mult = float(_crt_cfg[_tp1_key])
+            _tp2_mult = float(_crt_cfg["tp2_atr_multiplier"])
             # F-072 / DM-001: canonical atr is close-relative (FM-041).
             # compute_crt_levels wants price-unit ATR (FM-074 == atr * close).
             _atr_abs = float(engine_input["atr"]) * float(engine_input["close"])

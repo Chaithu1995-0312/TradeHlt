@@ -191,6 +191,9 @@ class ProductionSpineSource:
                 instrument=instrument,
                 pip_size=_bt.MultiInstrumentRunner.INSTRUMENT_PIP.get(instrument, 0.0001),
                 crt_config=crt_cfg,
+                scorer_mode="calibrated",
+                allow_router_crt_config=False,
+                strategy_id="",
             )
             cfg.scorer_mode = require(
                 spine_block, "scorer_mode", section_name="spine", consumer=_CONSUMER,

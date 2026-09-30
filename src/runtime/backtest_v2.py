@@ -240,29 +240,29 @@ class BacktestConfig:
     warmup_candles:          int
 
     # ── Instrument metadata (instance-specific, not from global config) ──────
-    instrument:              str            = "UNKNOWN"
-    pip_size:                float          = 0.0001
+    instrument:              str
+    pip_size:                float
 
     # ── Engine config override (instance-specific) ────────────────
-    crt_config: Optional[CRTConfig] = None
+    crt_config: Optional[CRTConfig]   # None = load from the production registry (declared mode)
 
     # P2 F-057: allow ROUTER_BASE crt_config on product path (default refuse).
     # Use only for intentional router-profile experiments — not production claims.
-    allow_router_crt_config: bool = False
+    allow_router_crt_config: bool
 
     # ── Scorer mode ───────────────────────────────────────────────
-    scorer_mode: str = "calibrated"   # "calibrated" | "static"
+    scorer_mode: str   # "calibrated" | "static"
 
     # ── Cost-model identity (CH-cost-model-identity-stamp) ─────────
     # Derived in from_prod_config; defaulted so direct constructions elsewhere stay valid.
-    cost_model_id:           str = ""
-    cost_model_params_hash:  str = ""
+    cost_model_id:           str
+    cost_model_params_hash:  str
 
     # ── Strategy Registry pin (instance-specific; §13.5/§8) ────────
     # Names WHICH StrategyPackage this run claims to execute (strategies.
     # strategy_registry). "" = unresolved — TradeProvenanceV1 falls back to
     # a live from_active_config() projection rather than leaving it blank.
-    strategy_id: str = ""
+    strategy_id: str
 
     # ── [G2 2026-09-10] HTF reset-clock basis ──────────────────────
     # "count" (default, byte-identical to pre-G2 behaviour) | "calendar" (config-gated,
@@ -275,38 +275,44 @@ class BacktestConfig:
     # below. Not a silently-defaulted BEHAVIORAL VALUE in the F-018 sense — "count" is not a
     # guessed number standing in for a missing mandatory section, it is the documented,
     # unchanged legacy behaviour every config already exhibits today.
-    htf_clock_basis: str = "count"
+    htf_clock_basis: str
     # [K23 F4] Optional like htf_clock_basis: False = legacy (an HTF window flip resets SWEEP;
     # EXPANSION/RETEST are always exempt). True = SWEEP is exempt too. The documented,
     # unchanged legacy behaviour is the default, so no existing config changes.
-    htf_reset_exempt_sweep: bool = False
+    htf_reset_exempt_sweep: bool
     # [K23 F3] Optional: "displacement" = legacy SL anchor; "sweep_extreme" = swept wick extreme
     # -/+ crt sl_atr_buffer*atr. Default legacy, so no existing config changes.
-    sl_anchor: str = "displacement"
+    sl_anchor: str
     # [K23 F2] Optional: "broker_static" = legacy (crt_engine.session_windows compared to the
     # candle's broker-time clock); "exchange_local" = each session defined in its OWN exchange
     # zone and resolved per date (features.broker_clock.exchange_sessions_at), which requires
     # `exchange_session_windows`. MT5-sourced corpora only. Default legacy, so no config changes.
-    session_window_basis: str = "broker_static"
-    exchange_session_windows: Optional[dict] = None
+    session_window_basis: str
+    exchange_session_windows: Optional[dict]   # None unless session_window_basis=exchange_local
     # [STORY-83.11 §3.2 key 2] Optional, from the NEW `setup` section (not `backtest` — §10 Q1
     # Option A). "fixed_r" = legacy R-multiple TP1/TP2. "structural_tp2" = TP2 is the opposite
     # side of the active range; TP1 unchanged. Default legacy, so no existing config changes.
-    target_policy: str = "fixed_r"
+    target_policy: str
     # [STORY-83.11 §3.2 key 3] Optional, `setup` section. None = no time-stop = today. An int
     # N >= 1 closes a still-open trade no later than bar open_candle_index + N (§6, §10 Q3).
-    trade_ttl_candles: Optional[int] = None
+    trade_ttl_candles: Optional[int]   # None = declared "no time-stop"
     # [STORY-83.11 §3.2 key 4] Optional, `setup` section. "engine" (default) = today. "resolver"
     # (mode C, §5) is declared+validated but CRTEngine raises NotImplementedError at
     # construction if it is actually requested -- see crt_engine_v2.py's CRTEngine.__init__.
-    decider: str = "engine"
+    decider: str
+    # EPIC-84 STORY-84.4: declared in backtest.timeframe (was a getattr fallback to "M15").
+    timeframe: str
 
     @classmethod
     def from_prod_config(
         cls,
-        instrument: str = "UNKNOWN",
-        pip_size: float = 0.0001,
+        instrument: str,
+        pip_size: float,
         crt_config: Optional[CRTConfig] = None,
+        *,
+        scorer_mode: str,
+        allow_router_crt_config: bool,
+        strategy_id: str,
     ) -> "BacktestConfig":
         """
         Build a BacktestConfig from the production JSON 'backtest' section.
@@ -320,7 +326,16 @@ class BacktestConfig:
         sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
         from config_layer.production_config import get_prod_section
 
+        from config_layer.strict_config import require as _req, require_section as _req_section
+        from config_layer.production_config import get_full_config_dict as _gfc
+
         cfg = get_prod_section("backtest")
+
+        def _bt(key):
+            return _req(cfg, key, section_name="backtest", consumer="BacktestConfig")
+
+        if not instrument:
+            raise ValueError("BacktestConfig: instrument must be a non-empty symbol (EPIC-84).")
 
         required_keys = (
             "htf_candles_per_range", "warmup_candles",
@@ -338,7 +353,7 @@ class BacktestConfig:
             )
 
         # [G2] optional, Python-level default — see the field's own docstring above.
-        htf_clock_basis = str(cfg.get("htf_clock_basis", "count"))
+        htf_clock_basis = str(_bt("htf_clock_basis"))
         if htf_clock_basis not in ("count", "calendar"):
             raise ValueError(
                 f"BacktestConfig: backtest.htf_clock_basis={htf_clock_basis!r} is not "
@@ -346,21 +361,21 @@ class BacktestConfig:
             )
 
         # [K23 F4] optional bool, Python-level default False (legacy) — see the field's docstring.
-        htf_reset_exempt_sweep = cfg.get("htf_reset_exempt_sweep", False)
+        htf_reset_exempt_sweep = _bt("htf_reset_exempt_sweep")
         if not isinstance(htf_reset_exempt_sweep, bool):
             raise ValueError(
                 f"BacktestConfig: backtest.htf_reset_exempt_sweep={htf_reset_exempt_sweep!r} "
                 "must be a JSON boolean."
             )
         # [K23 F3] optional str, Python-level default "displacement" (legacy).
-        sl_anchor = cfg.get("sl_anchor", "displacement")
+        sl_anchor = _bt("sl_anchor")
         if sl_anchor not in ("displacement", "sweep_extreme"):
             raise ValueError(
                 f"BacktestConfig: backtest.sl_anchor={sl_anchor!r} must be "
                 "'displacement' or 'sweep_extreme'."
             )
         # [K23 F2] optional str, Python-level default "broker_static" (legacy).
-        session_window_basis = cfg.get("session_window_basis", "broker_static")
+        session_window_basis = _bt("session_window_basis")
         if session_window_basis not in ("broker_static", "exchange_local"):
             raise ValueError(
                 f"BacktestConfig: backtest.session_window_basis={session_window_basis!r} must be "
@@ -381,18 +396,18 @@ class BacktestConfig:
         # Absent entirely = both new keys at default (config_layer.setup.Setup shares this exact
         # validation, kept independently here so BacktestConfig.from_prod_config needs no
         # cross-module dependency, matching every other read in this function).
-        try:
-            from config_layer.production_config import get_prod_section as _gps
-            setup_cfg = _gps("setup")
-        except RuntimeError:
-            setup_cfg = {}
-        target_policy = setup_cfg.get("target_policy", "fixed_r")
+        # EPIC-84: the `setup` section and its keys are REQUIRED (no legacy defaults).
+        setup_cfg = _req_section(_gfc(), "setup", consumer="BacktestConfig")
+
+        def _setup(key):
+            return _req(setup_cfg, key, section_name="setup", consumer="BacktestConfig")
+        target_policy = _setup("target_policy")
         if target_policy not in ("fixed_r", "structural_tp2"):
             raise ValueError(
                 f"BacktestConfig: setup.target_policy={target_policy!r} must be "
                 "'fixed_r' or 'structural_tp2'."
             )
-        trade_ttl_candles = setup_cfg.get("trade_ttl_candles", None)
+        trade_ttl_candles = _setup("trade_ttl_candles")
         if trade_ttl_candles is not None and (
             not isinstance(trade_ttl_candles, int)
             or isinstance(trade_ttl_candles, bool)
@@ -402,7 +417,7 @@ class BacktestConfig:
                 "BacktestConfig: setup.trade_ttl_candles must be an int >= 1 or null, got "
                 f"{trade_ttl_candles!r}."
             )
-        decider = setup_cfg.get("decider", "engine")
+        decider = _setup("decider")
         if decider not in ("engine", "resolver"):
             raise ValueError(f"BacktestConfig: setup.decider={decider!r} must be 'engine' or 'resolver'.")
 
@@ -437,6 +452,10 @@ class BacktestConfig:
             target_policy = target_policy,
             trade_ttl_candles = trade_ttl_candles,
             decider = decider,
+            timeframe = str(_bt("timeframe")),
+            scorer_mode = scorer_mode,
+            allow_router_crt_config = bool(allow_router_crt_config),
+            strategy_id = strategy_id,
         )
 
 
@@ -2541,7 +2560,7 @@ class BacktestRunner:
             self.crt_cfg,
             context="BacktestRunner",
             allow_router_base=bool(
-                getattr(bt_config, "allow_router_crt_config", False)
+                bt_config.allow_router_crt_config
             ),
         )
 
@@ -2556,7 +2575,7 @@ class BacktestRunner:
         if csv_path:
             try:
                 csv_path = admit_csv_path(
-                    csv_path, bt_config.instrument or "UNKNOWN"
+                    csv_path, bt_config.instrument
                 ).filepath
             except (DatasetAdmissionError, Phase1CandidateError) as exc:
                 raise DatasetIntegrityError(
@@ -2732,7 +2751,7 @@ class BacktestRunner:
         try:
             from strategies.strategy_orchestrator import StrategyOrchestrator
             self._orch = StrategyOrchestrator(
-                pair=bt_config.instrument or "BNBUSDT",
+                pair=bt_config.instrument,
                 timeframe="M15",
             )
             self._orch_available = True
@@ -3962,7 +3981,7 @@ class BacktestRunner:
 
                         _er_context = {
                             "instrument":                    self.cfg.instrument,
-                            "timeframe":                     getattr(self.cfg, "timeframe", "M15"),
+                            "timeframe":                     self.cfg.timeframe,
                             "strategy_consensus_direction":  int(_feat_map_er.get("direction", 0)),
                         }
                         if _strat_consensus_score >= 0.0:
@@ -4442,7 +4461,7 @@ class BacktestRunner:
             record_run_last_ran(
                 _canonical_run_id,
                 source="backtest_v2",
-                instrument=getattr(self.cfg, "instrument", "") or "",
+                instrument=self.cfg.instrument,
                 artifact_path=str(paths.get("summary") or paths.get("trades") or ""),
             )
             _lt = getattr(self, "_layer_trace", None)
@@ -4450,7 +4469,7 @@ class BacktestRunner:
                 record_run_last_ran(
                     _lt.run_id,
                     source="layer_trace",
-                    instrument=getattr(self.cfg, "instrument", "") or "",
+                    instrument=self.cfg.instrument,
                     artifact_path=str(getattr(_lt, "path", "") or ""),
                 )
         except Exception:
@@ -4477,7 +4496,7 @@ class BacktestRunner:
                     _stamped = _stamp_tel(
                         _tel_records,
                         run_id=_canonical_run_id,
-                        instrument=str(getattr(self.cfg, "instrument", "") or ""),
+                        instrument=str(self.cfg.instrument),
                         timeframe="M15",
                         corpus_sha256=_tel_corpus_hash,
                     )
@@ -4499,7 +4518,7 @@ class BacktestRunner:
             _manifest = {
                 "schema":          "run_manifest_v2",
                 "run_id":          _canonical_run_id,
-                "instrument":      str(getattr(self.cfg, "instrument", "") or ""),
+                "instrument":      str(self.cfg.instrument),
                 "timeframe":       "M15",
                 "layer_trace_id":  _lt_run_id,
                 # [CH-identity-chain-closure-v1] bar-clock bridge path (empty when the section
@@ -4554,7 +4573,7 @@ class BacktestRunner:
             from utils.integrity_events import emit_integrity_event
             _trig = TrainingTrigger.from_prod_config()
             if _trig.should_trigger():
-                _instr = getattr(self.cfg, "instrument", "")
+                _instr = self.cfg.instrument
                 emit_integrity_event(
                     "TRAINING_RECOMMENDED", "INFO", "backtest_runner",
                     {"instrument":     _instr,
@@ -4696,11 +4715,10 @@ def _validate_htf_clock(cfg: "BacktestConfig", csv_path: str, log: logging.Logge
     from config_layer.production_config import get_prod_section
     from features.calendar_periods import HOUR_GRID_HOURS
 
-    try:
-        parent_cfg = get_prod_section("parent_crt")
-    except (RuntimeError, KeyError):
-        return  # no parent_crt section declared -- nothing to validate the clock against
-    if not bool(parent_cfg.get("enabled", False)):
+    from config_layer.strict_config import require as _req
+    # EPIC-84: `parent_crt` and `parent_crt.enabled` are required (no silent "not declared" path).
+    parent_cfg = get_prod_section("parent_crt")
+    if not bool(_req(parent_cfg, "enabled", section_name="parent_crt", consumer="htf_clock_G1")):
         log.info("[htf_clock] G1 skipped: parent_crt.enabled=false (no declared HTF intent).")
         return
 
@@ -4772,7 +4790,13 @@ class MultiInstrumentRunner:
             cfg = (
             BacktestConfig(**vars(self.bt_config))
             if self.bt_config is not None
-            else BacktestConfig.from_prod_config()
+            else BacktestConfig.from_prod_config(
+                instrument=instrument,
+                pip_size=self.INSTRUMENT_PIP.get(instrument, 0.0001),
+                scorer_mode="calibrated",
+                allow_router_crt_config=False,
+                strategy_id="",
+            )
         )
             cfg.instrument = instrument
             cfg.pip_size   = self.INSTRUMENT_PIP.get(instrument, 0.0001)
@@ -4903,7 +4927,14 @@ def main():
     _cli_overrides["--scorer"] = args.scorer
 
     # Load base config from JSON; CLI args override only when explicitly passed
-    cfg = BacktestConfig.from_prod_config(crt_config=crt_cfg)
+    cfg = BacktestConfig.from_prod_config(
+        instrument=_instr_hint,
+        pip_size=MultiInstrumentRunner.INSTRUMENT_PIP.get(_instr_hint, 0.0001),
+        crt_config=crt_cfg,
+        scorer_mode=args.scorer,
+        allow_router_crt_config=False,
+        strategy_id="",
+    )
     if args.htf         is not None:
         cfg.htf_candles_per_range = args.htf
         _cli_overrides["--htf"] = str(args.htf)

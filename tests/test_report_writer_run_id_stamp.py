@@ -218,7 +218,7 @@ def test_run_wires_canonical_folder_manifest_and_summary_range():
         pytest.skip("data CSV missing: data/XAUUSD_M15.csv")
 
     crt_cfg = load_prod_config_from_registry(get_active_version(), "XAUUSD")
-    cfg = BacktestConfig.from_prod_config(instrument="XAUUSD", crt_config=crt_cfg)
+    cfg = BacktestConfig.from_prod_config(instrument="XAUUSD", crt_config=crt_cfg, pip_size=0.0001, scorer_mode="calibrated", allow_router_crt_config=False, strategy_id="")
     n = 3000
     rows = list(itertools.islice(CandleLoader(str(csv), "XAUUSD").stream(), n))
     out_dir = tempfile.mkdtemp(prefix="rid_fold_manifest_")

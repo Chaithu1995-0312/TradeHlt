@@ -96,7 +96,7 @@ def _bt_cfg(monkeypatch, **extra):
     base.pop("htf_reset_exempt_sweep", None)
     base.update(extra)
     monkeypatch.setattr(pc, "get_prod_section", lambda name: base if name == "backtest" else {})
-    return BacktestConfig.from_prod_config("XAUUSD", crt_config=crt_config_for_test())
+    return BacktestConfig.from_prod_config("XAUUSD", crt_config=crt_config_for_test(), pip_size=0.0001, scorer_mode="calibrated", allow_router_crt_config=False, strategy_id="")
 
 
 def test_backtest_config_defaults_to_legacy(monkeypatch):
