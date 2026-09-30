@@ -1,4 +1,5 @@
 {
+  "job_kind": "unspecified",
   "_doc": "Program 9 — M5-base FX/metals group (MT5 provider corpus, ~270d retention). Stage-2 config for the SOLE consumer compression_box_straddle (pre-reg D7). COST CAVEAT (pre-registered): 12bps is several multiples of a median FX M5 bar (extends F-035) — the FX group informs the cross-market verdict, never the primary claim. Frozen by docs/research/preregistration-program-9.md.",
   "harness": {
     "warmup": 30,
@@ -17,7 +18,8 @@
     "tp_atr_mult": 2.0
   },
   "costs": {
-    "round_trip_bps": 12.0
+    "round_trip_bps": 12.0,
+    "cost_model": "flat_bps"
   },
   "qualification": {
     "min_samples": 30,

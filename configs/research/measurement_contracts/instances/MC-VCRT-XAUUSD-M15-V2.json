@@ -8,6 +8,8 @@
     "requires_mt00_pass": true,
     "note": "SUPERSEDES MC-VCRT-XAUUSD-M15-V1. V2 exists because V1's COST MODEL and EXIT MODEL are superseded, which V1's own kill_criteria requires be done as a NEW MC-* id and never as an edit to V1. V1's VERDICT is NOT superseded: F-081's 0 PROMOTE rests on GROSS expectancy (arm A +0.0080R, arm B -0.0835R, both CI crossing zero) and gross is cost-independent by construction. V1 remains sealed and was reproduced byte-identically from its committed ledgers before V2 was built (A n=944 gross +0.00798263 net -0.55588555; B n=462 gross -0.08352186 net -1.26166572). EXACTLY TWO measurement surfaces differ from V1: costs and exits. population, features, labels, pipeline_identity, prohibited_substitutions, split PARAMETERS, kill_criteria, all geometry, horizon, duplicate rule and both arm definitions are carried over unchanged. SPLIT EXECUTION: V1 declared splits.scheme=single_holdout_chronologic and never executed it -- driver.py contained no split/embargo/purge code and no split_manifest.json was written. V2 executes it with every V1 parameter unchanged, including seed 20260817; this is the first execution of the sealed definition, not a new definition. The same seed governs the random_entry control draw. SCHEMA NOTE: the frozen measurement_contract.schema.json carries additionalProperties:false on every object and has no slot for cost provenance, control configuration, or an execution note. Those statements are folded into the free-text fields the schema does allow (costs.components[].bps_or_formula, exits.intrabar_rule, metrics.success_gate, this note) rather than amending a frozen schema. Lane 2 of P-CRT-LANE-02 measures POPULATION AND POWER for SEM-012 (VISUAL_CRT_TRADE_OBJECT), not economics. Sealing this JSON grants comparability only: never promotion, never fusion weight, never an Ultron or ExecutionPlanner change, never ACTIVE_VERSION control, and never G001. economic_claims_allowed stays false until mt00==PASS and mt01_matrix_coverage==COMPLETE; repo-wide that is 0/27 probes implemented and MEASUREMENT_LAYER_STATUS=OPEN. A positive diagnostic expectancy under this contract is NOT an economic validation. This contract was sealed BEFORE any detector code existed, so the definition cannot have been fitted to an observed outcome. V2 ADDITIONALLY: a corrected cost model does NOT grant economic admissibility. V2 is a measurement-basis REPLICATION of V1's two pre-registered arms on the SAME corpus -- it inherits V1's Bonferroni alpha=0.025, spends no new alpha, and is not an independent test. A POSITIVE V2 result is therefore NOT registrable as an economic edge under any circumstance; it would require a fresh pre-registration on unseen data. Declared before the run (UNK-VCRT-02) so the outcome cannot be re-interpreted afterwards."
   },
+  "multiplicity": {"n_variants_preregistered": 2, "control": "bonferroni", "alpha_adjusted": 0.025},
+  "visual_audit_corpus_EXCLUDED": "data/XAUUSD_M15.csv",
   "population": {
     "unit_of_analysis": "trade_decision",
     "instruments": [
@@ -160,6 +162,7 @@
     "code_entrypoint": "src/research/costs.py::ComponentCostModel"
   },
   "exits": {
+    "ontology_id": "SEM-016",
     "exit_model_id": "EX-VCRT-INTRABAR-ADVERSE-V2",
     "exit_family": "intrabar_fixed_sl_tp",
     "parameters": {

@@ -1,4 +1,5 @@
 {
+  "job_kind": "unspecified",
   "_doc": "Program 6b — carry HARVEST (funding cashflow + price/basis). Drives scripts/research/qualify_harvest.py. Reuses the standard research sections (costs/qualification/universe) so ResearchConfig.from_file parses it; the cross_sectional block carries the harvest spec cohort (include_price toggles tradeable vs funding-only DIAGNOSTIC). universe.perp_dir points at the frozen perp corpus. PRE-REGISTERED, frozen: docs/research-readiness/program-6b-carry-harvest-preregistration.md.",
   "harness": {
     "warmup": 0,
@@ -16,7 +17,8 @@
     "tp_atr_mult": 2.0
   },
   "costs": {
-    "round_trip_bps": 12.0
+    "round_trip_bps": 12.0,
+    "cost_model": "flat_bps"
   },
   "qualification": {
     "min_samples": 30,

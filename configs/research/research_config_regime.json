@@ -1,4 +1,5 @@
 {
+  "job_kind": "unspecified",
   "_doc": "Program 4 — regime-conditioned consumption (toy family). Identical harness/forward_walk/cost/qualification/universe to research_config_majors.json so toy consumers are measured in Program 1's exact court (intrabar_fixed, 12bps, alpha=0.05). The extra top-level 'regime' block parameterizes the no-lookahead volatility-regime labeler + the conditioning controls; it is hash-neutral to ResearchConfig.sha256 (only the known blocks are hashed). The spine consumer is measured via research_config_spine_majors.json (apply_signal_defaults=false). FROZEN parameters per the pre-registration doc — do NOT grid these after a null (anti-archaeology).",
   "harness": {
     "warmup": 30,
@@ -16,7 +17,8 @@
     "tp_atr_mult": 2.0
   },
   "costs": {
-    "round_trip_bps": 12.0
+    "round_trip_bps": 12.0,
+    "cost_model": "flat_bps"
   },
   "qualification": {
     "min_samples": 30,

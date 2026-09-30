@@ -57,6 +57,10 @@
       "decay": 0.7,
       "high_conviction_threshold": 0.65,
       "min_confirmations": 2
+    },
+    "cognitive_layer": {
+      "_comment": "CognitiveBus gate (src/core/engine_runner.py, src/cognitive/cognitive_bus.py). EPIC-84 L-B (STORY-84.2) made config['cognitive_layer']['enabled'] a strict read -- the section was previously absent, so config.get('cognitive_layer', {}).get('enabled', False) silently supplied False. Declares the one key the code reads; enabled:false preserves current behavior byte-for-byte (the bus stays OFF).",
+      "enabled": false
     }
   },
   "execution_planner": {
@@ -124,7 +128,50 @@
     "min_shadow_trades": 30,
     "shadow_data_csv": "data/AUDUSD_M15.csv",
     "shadow_output_csv": "results/shadow_trades.csv",
-    "promotion_margin": 0.02
+    "promotion_margin": 0.02,
+    "promotion_base_version": "v1_multi_2026_03"
+  },
+  "strategy_orchestrator": {
+    "fail_open": true,
+    "min_signal_strategies": 2,
+    "min_agreement_ratio": 0.60,
+    "weights": {},
+    "enabled_strategies": ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "S10"]
+  },
+  "training_trigger": {
+    "min_new_samples": 500,
+    "drift_window_hours": 24,
+    "drift_event_threshold": 5,
+    "cooldown_hours": 6.0,
+    "marker_path": "results/training_trigger.json",
+    "opportunity_glob": "logs/**/opportunities.jsonl",
+    "integrity_log": "logs/integrity_events.jsonl",
+    "drift_event_kinds": ["RR_BYPASS", "RR_LLM_FALLBACK", "PROMOTION_FAILED"]
+  },
+  "agent": {
+    "groq": {
+      "api_key_env": "GROQ_API_KEY",
+      "model": "llama-3.1-70b-versatile",
+      "endpoint": "https://api.groq.com/openai/v1/chat/completions",
+      "request_timeout_s": 8.0,
+      "max_tokens": 1024,
+      "fail_count_disable": 5,
+      "temperature": 0.1
+    },
+    "findings": {
+      "enabled": true,
+      "log_tail_lines": 200,
+      "max_source_chars": 8000,
+      "redact_patterns": ["api_key", "secret", "password", "token", "AV_API_KEY", "GROQ_API_KEY"]
+    }
+  },
+  "bitnet": {
+    "bitnet_thresholds_path": "src/bitnet/bitnet_thresholds.json",
+    "debug_mode": false,
+    "default_threshold": 0.5
+  },
+  "context_report": {
+    "provider": "export"
   },
   "fusion_engine": {
     "weight_crt": 0.4,
@@ -143,7 +190,9 @@
     "tier_quarter": 0.5,
     "_comment_consensus": "T-22 (2026-07-19): declared because engine_runner previously read these via .get(key, literal) while its six neighbouring fusion keys used the strict _cfg_require -- an inconsistency in a single constructor call. Values equal the prior code defaults AND the FusionConfig dataclass defaults (fusion_engine.py:172-173) AND the consensus_sweep baseline, so declaring them is behaviour-neutral. NOTE the consensus gate itself is dormant on the decision path; scripts/analysis/consensus_sweep.py injects these via a get_prod_section monkeypatch, so they are NOT dead keys.",
     "min_consensus_signals": 2,
-    "min_consensus_agreement": 0.6
+    "min_consensus_agreement": 0.6,
+    "weight_strategy_consensus": 0.0,
+    "regime_fusion_weights": {"TRENDING": {"crt": 0.38, "gaussian": 0.20, "zone_gate": 0.12, "rr": 0.20, "strategy_consensus": 0.10}, "RANGING": {"crt": 0.18, "gaussian": 0.32, "zone_gate": 0.15, "rr": 0.25, "strategy_consensus": 0.10}, "VOLATILE": {"crt": 0.28, "gaussian": 0.14, "zone_gate": 0.12, "rr": 0.16, "strategy_consensus": 0.30}, "UNKNOWN": {"crt": 0.30, "gaussian": 0.25, "zone_gate": 0.25, "rr": 0.20, "strategy_consensus": 0.00}}
   },
   "decision_engine": {
     "score_threshold": 0.45,
@@ -154,7 +203,9 @@
     "weak_link_weight": 0.3,
     "threshold_percentile": 85,
     "threshold_min": 0.45,
-    "threshold_max": 0.65
+    "threshold_max": 0.65,
+    "threshold_window": 1000,
+    "fallback_top_n": 3
   },
   "regime_governor": {
     "max_trades_per_batch": 3,
@@ -196,7 +247,9 @@
     "acceptance_target_low": 0.05,
     "acceptance_target_high": 0.15,
     "acceptance_k_sigma": 1.0,
-    "acceptance_window": 200
+    "acceptance_window": 200,
+    "engine_threshold": 0.60,
+    "fusion_threshold": 0.65
   },
   "validation_summary": {
     "config_id": "v2_htfcrt_2026_08_promote",
@@ -409,7 +462,14 @@
     "output_dir": "results/portfolio",
     "currency": "INR",
     "per_trade_investment_inr": 10000.0,
-    "sizing_mode": "fixed_investment_inr"
+    "sizing_mode": "fixed_investment_inr",
+    "htf_candles": 16,
+    "correlation": {
+      "lookback_days": 20,
+      "cache_ttl_secs": 3600,
+      "min_observations": 10,
+      "max_staleness_days": 3
+    }
   },
   "llama_gate": {
     "server_url": "http://127.0.0.1:8080/completion",
@@ -669,6 +729,7 @@
       "USDCAD": 7.7,
       "NZDUSD": 10.0
     },
+    "unknown_pair_pip_value": 10.0,
     "currency": "INR",
     "_comment_user_sizing_2026_09_19": "User lock (INR): total capital 100000 (1 lakh). per_trade_investment_inr=10000 = capital allocated/invested per trade (notional), NOT max loss risk. max_risk_per_trade_* remain separate risk ceilings. Live MT5 lots unchanged; no live orders.",
     "per_trade_investment_inr": 10000,
@@ -982,17 +1043,25 @@
     }
   },
   "uat": {
+    "output_dir": "results/uat",
     "kill_switch": {
       "loss_threshold_r": 5.0,
       "window_trades": 10,
       "enabled": true,
-      "persist_path": "logs/kill_switch_state.json"
+      "persist_path": "logs/kill_switch_state.json",
+      "_comment_epic84_lf": "EPIC-84 L-F (STORY-84.6): daily_loss_limit_inr/weekly_loss_limit_inr/state_file are a SEPARATE consumer's required keys from the loss_threshold_r/window_trades/enabled/persist_path pair above -- both read this same 'uat.kill_switch' section but are different classes with no field overlap; declaring the second set does not change the first consumer's behaviour.",
+      "daily_loss_limit_inr": 10000.0,
+      "weekly_loss_limit_inr": 25000.0,
+      "state_file": "logs/kill_switch_state.json"
     },
     "monte_carlo": {
       "n_simulations": 1000,
       "initial_capital_inr": 100000.0,
       "ruin_threshold_pct": 0.5,
       "random_seed": 42
+    },
+    "signal_accuracy": {
+      "min_trades": 20
     }
   },
   "perp_funding_data": {

@@ -1,4 +1,5 @@
 {
+  "job_kind": "unspecified",
   "_doc": "Edge Discovery — SPINE variant pinned to v3_multi_2026_06. Same as research_config_spine.json but measures the v3 production config (which LOADS on the patch engine; v4 does not). v3 is itself UNTRACKED + UNGOVERNED (never in promotion_log) — this is a research measurement, not a governance statement.",
   "harness": {
     "warmup": 30,
@@ -16,7 +17,8 @@
     "tp_atr_mult": 2.0
   },
   "costs": {
-    "round_trip_bps": 12.0
+    "round_trip_bps": 12.0,
+    "cost_model": "flat_bps"
   },
   "qualification": {
     "min_samples": 30,

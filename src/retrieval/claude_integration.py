@@ -23,7 +23,6 @@ def _env_required(name: str, consumer: str) -> str:
         raise ConfigKeyMissingError([name], section="env", consumer=consumer)
     return os.environ[name]
 
-_ENTERPRISE_MODE = _env_required("RAG_ENTERPRISE_MODE", "claude_integration") == "1"
 _pipeline: RetrievalPipeline | None = None
 
 
@@ -135,7 +134,8 @@ class GroundingGate:
 
     @staticmethod
     def is_active() -> bool:
-        return _ENTERPRISE_MODE
+        # Read at use, not import: a missing var must fail the grounding call, not every importer.
+        return _env_required("RAG_ENTERPRISE_MODE", "claude_integration") == "1"
 
     def verify(self, query: str, ground: bool = True) -> dict[str, Any]:
         ctx = self.pipeline.retrieve_assembly(query, top_k=10)

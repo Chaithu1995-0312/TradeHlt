@@ -35,6 +35,12 @@ class FusionComputeAdapter:
                 require_key(fe, "weight_zone_gate", path="fusion_engine")
             ),
             weight_rr=float(require_key(fe, "weight_rr", path="fusion_engine")),
+            weight_strategy_consensus=float(
+                require_key(fe, "weight_strategy_consensus", path="fusion_engine")
+            ),
+            regime_fusion_weights=dict(
+                require_key(fe, "regime_fusion_weights", path="fusion_engine")
+            ),
             gaussian_weight=float(
                 require_key(fe, "gaussian_weight", path="fusion_engine")
             ),

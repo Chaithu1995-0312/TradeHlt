@@ -128,7 +128,9 @@
     "tier_quarter": 0.5,
     "_comment_consensus": "T-22 (2026-07-19): declared because engine_runner previously read these via .get(key, literal) while its six neighbouring fusion keys used the strict _cfg_require -- an inconsistency in a single constructor call. Values equal the prior code defaults AND the FusionConfig dataclass defaults (fusion_engine.py:172-173) AND the consensus_sweep baseline, so declaring them is behaviour-neutral. NOTE the consensus gate itself is dormant on the decision path; scripts/analysis/consensus_sweep.py injects these via a get_prod_section monkeypatch, so they are NOT dead keys.",
     "min_consensus_signals": 2,
-    "min_consensus_agreement": 0.6
+    "min_consensus_agreement": 0.6,
+    "weight_strategy_consensus": 0.0,
+    "regime_fusion_weights": {"TRENDING": {"crt": 0.38, "gaussian": 0.20, "zone_gate": 0.12, "rr": 0.20, "strategy_consensus": 0.10}, "RANGING": {"crt": 0.18, "gaussian": 0.32, "zone_gate": 0.15, "rr": 0.25, "strategy_consensus": 0.10}, "VOLATILE": {"crt": 0.28, "gaussian": 0.14, "zone_gate": 0.12, "rr": 0.16, "strategy_consensus": 0.30}, "UNKNOWN": {"crt": 0.30, "gaussian": 0.25, "zone_gate": 0.25, "rr": 0.20, "strategy_consensus": 0.00}}
   },
   "decision_engine": {
     "score_threshold": 0.45,
@@ -139,7 +141,9 @@
     "weak_link_weight": 0.3,
     "threshold_percentile": 85,
     "threshold_min": 0.45,
-    "threshold_max": 0.65
+    "threshold_max": 0.65,
+    "threshold_window": 1000,
+    "fallback_top_n": 3
   },
   "regime_governor": {
     "max_trades_per_batch": 3,

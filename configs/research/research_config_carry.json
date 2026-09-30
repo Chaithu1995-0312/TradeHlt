@@ -1,4 +1,5 @@
 {
+  "job_kind": "unspecified",
   "_doc": "Program 6 — carry/basis as a signal on cross-sectional spot dispersion. Drives scripts/research/qualify_carry.py. Reuses the standard research sections (costs/qualification/universe) so ResearchConfig.from_file parses it; the cross_sectional block carries the carry/basis interpreter cohort and universe.perp_dir points at the frozen perp corpus. PRE-REGISTERED, frozen: docs/research-readiness/program-6-carry-basis-preregistration.md.",
   "harness": {
     "warmup": 0,
@@ -16,7 +17,8 @@
     "tp_atr_mult": 2.0
   },
   "costs": {
-    "round_trip_bps": 12.0
+    "round_trip_bps": 12.0,
+    "cost_model": "flat_bps"
   },
   "qualification": {
     "min_samples": 30,

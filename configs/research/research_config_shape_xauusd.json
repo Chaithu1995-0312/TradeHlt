@@ -1,4 +1,5 @@
 {
+  "job_kind": "unspecified",
   "_doc": "Edge Discovery — Program 11 (semantic Market-Shape directional edge), XAUUSD-only, clean-substrate re-test of F-023/F-041B. FROZEN by docs/research/preregistration-program-11-shape-context-edge-xauusd.md (protocol_hash e5b8232d). apply_signal_defaults=true so the runner owns SL/TP geometry — the shape hypothesis SELECTS entries+direction only. intrabar_fixed exits, 12bps (a 0bps sensitivity twin is run separately). XAUUSD loaded via the Phase-1 frozen-candidate guard, not the glob. Research-only, non-promotable (§6.5).",
   "harness": {
     "warmup": 30,
@@ -16,7 +17,8 @@
     "tp_atr_mult": 2.0
   },
   "costs": {
-    "round_trip_bps": 12.0
+    "round_trip_bps": 12.0,
+    "cost_model": "flat_bps"
   },
   "qualification": {
     "min_samples": 30,

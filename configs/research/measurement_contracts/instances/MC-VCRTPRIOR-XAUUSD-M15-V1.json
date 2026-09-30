@@ -8,6 +8,8 @@
     "requires_mt00_pass": true,
     "note": "Sealed BEFORE any gate's holdout contrast was computed. Sparse independent signal = SEM-012 Visual CRT Arm A and Arm B entries from visual_crt.driver.run_arm (same detector and duplicate rule as F-081). FM-054 agree is a magnitude/time prior (SEM-028), not the entry. y_mfe_r / y_time_to_mfe are path labels, not F-081 walk R and not book PnL. economic_claims_allowed stays false until mt00==PASS and mt01_matrix_coverage==COMPLETE. P-GOAL-04 is not opened. A diagnostic sign-match is NOT G001. Not a retune of MC-MRPRIOR / F-094."
   },
+  "multiplicity": {"n_variants_preregistered": 2, "control": "bonferroni", "alpha_adjusted": 0.025},
+  "visual_audit_corpus_EXCLUDED": "data/XAUUSD_M15.csv",
   "population": {
     "unit_of_analysis": "signal_event",
     "instruments": [
@@ -122,6 +124,7 @@
     "code_entrypoint": "src/research/evidence/visual_crt_prior.py"
   },
   "exits": {
+    "ontology_id": "SEM-016",
     "exit_model_id": "EX-VCRTPRIOR-HORIZON-MFE-V1",
     "exit_family": "event_horizon",
     "parameters": {

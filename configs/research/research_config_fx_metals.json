@@ -1,4 +1,5 @@
 {
+  "job_kind": "unspecified",
   "_doc": "Edge Discovery — FX-MAJORS variant of research_config_majors.json. Toy/behavior hypotheses + falsification controls (apply_signal_defaults=true so the runner owns SL/TP geometry). Universe pinned to five FX majors (2yr M15 fetched via MT5; XAUUSD deferred pending the Stage-2 metals/holiday calendar — it REJECTs the FX-tuned gap gate). 'Run the Gate First' cross-instrument qualification (per-instrument then pooled). Spine is NOT measured here — it needs apply_signal_defaults=false; see research_config_spine_fx_metals.json. round_trip_bps=12.0 kept identical to the crypto run for comparability + conservatism (real FX spreads are tighter).",
   "harness": {
     "warmup": 30,
@@ -16,7 +17,8 @@
     "tp_atr_mult": 2.0
   },
   "costs": {
-    "round_trip_bps": 12.0
+    "round_trip_bps": 12.0,
+    "cost_model": "flat_bps"
   },
   "qualification": {
     "min_samples": 30,

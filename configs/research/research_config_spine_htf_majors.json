@@ -1,4 +1,5 @@
 {
+  "job_kind": "unspecified",
   "_doc": "Program 3 (Higher-Timeframe Directional Ontology) — SPINE family x CRYPTO-MAJORS on RESAMPLED H1/H4 data. Identical to research_config_spine_majors.json except the universe is repointed at data/resampled with a {TF} template pattern (qualify_htf substitutes H1/H4 per --tf). apply_signal_defaults MUST be false so the spine keeps its own SL/TP geometry. A NEW horizon ontology, NOT a Program-1 parameter pass.",
   "_horizon_doc": "Program 3A = BAR_COUNT_CONSTANT (PRIMARY): harness warmup/window_size/max_forward stay in BARS (max_forward=40 = 10h M15 / 40h H1 / 160h H4). Program 3B (WALL_CLOCK_CONSTANT) is pre-defined but NOT implemented. See research_config_htf_majors.json _horizon_doc.",
   "harness": {
@@ -17,7 +18,8 @@
     "tp_atr_mult": 2.0
   },
   "costs": {
-    "round_trip_bps": 12.0
+    "round_trip_bps": 12.0,
+    "cost_model": "flat_bps"
   },
   "qualification": {
     "min_samples": 30,
