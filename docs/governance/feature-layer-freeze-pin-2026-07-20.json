@@ -94,7 +94,7 @@
     },
     "causal_structure.py": {
       "path": "src/features/causal_structure.py",
-      "sha256": "0c9ee11696aa45154bdae8957255d3cc1122b00431738737ac04d3a995a68c9b"
+      "sha256": "2574f189cc4c08470d9c39a6e3f612e4f271dbef75ec7f7e0bb260c05b00d155"
     },
     "registry_init.py": {
       "path": "src/features/registry/__init__.py",
@@ -592,8 +592,8 @@
         },
         "causal_structure.py": {
           "pinned_before": "2574f189cc4c08470d9c39a6e3f612e4f271dbef75ec7f7e0bb260c05b00d155",
-          "live_after": "0c9ee11696aa45154bdae8957255d3cc1122b00431738737ac04d3a995a68c9b",
-          "diff_content": "Same as feature_schema.py: `git diff 8df8eede HEAD` is EMPTY, drift is a core.autocrlf checkout artifact, not a code change."
+          "live_after": "2574f189cc4c08470d9c39a6e3f612e4f271dbef75ec7f7e0bb260c05b00d155",
+          "diff_content": "CORRECTED 2026-09-30: this entry originally pinned 0c9ee11696aa... (this file's autocrlf-CRLF sha256 measured inside the epic84-wave1-integration worktree, a fresh checkout). That was a mistake, not a fix: the canonical tree (grokbotchanges / this repo root) has this file as LF on disk, hashing to the ORIGINAL pinned value 2574f189..., which is what the freeze test's sha256_file() actually reads here. `git diff` confirms zero content difference at any point in this program. The pin is restored to its original, correct value -- no drift ever occurred for this file; the prior entry manufactured one by pinning a hash that was never canonical."
         },
         "registry_init.py": {
           "pinned_before": "6cb4d8403b766fbbf98c840395283c91d7909930c103f84d5a54988a9f7b931e",
