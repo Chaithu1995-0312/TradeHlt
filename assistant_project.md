@@ -4787,3 +4787,13 @@ Belief Update / ROI / Goal: Goal: a trustworthy test gate. Belief: most reds wer
 Open Questions: --no-verify for the governed commit? Bucket C parked items (hybrid_alpha, dated capability map vs MIAR, freeze-pin waiver, BRIDGE_SCHEMA_VERSION locator, truth_tier scanner false positive, 38 ungated corpus reads, grandfathering root scratch scripts). Bucket D items (clock review, XAUUSD hash, stale findings, session-log cap, missing results evidence).
 Next Step: user decisions; then Semantic OS yaml, censuses, and the remaining Bucket C investigations.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-01
+Topic: Full-suite repair, part 2 (result)
+Decision/Output: The full suite went from 216F + 27E (98 files) to 102F + 17E (61 files) at 8,025 passed. The governance floor went from 17/583 to 14/586. Commits: 32ff661, 32feed9, 20f1a34, fff43bf, 20f491c. One self-inflicted regression was caught by the after-run diff and fixed in 20f491c: 20f1a34 had widened the canonical_38_v3 inverse map to v5 and broken the rr_trained parity pins; forward decoding keeps v3+v5. Semantic OS validates with 0 errors (was 17).
+Belief Update / ROI / Goal: Goal: a trustworthy gate. Belief: the remaining 61 files are decision-gated (Bucket D) or design/tool questions (Bucket C), not mechanical drift. Knowledge ROI: medium. Action: the user decides the parked items.
+Open Questions: census tools after the no-default CRTConfig; "not decorative" floor needs a new MISLEADING example; manifest hashing under autocrlf; plus the earlier C/D list.
+Next Step: user decisions on parked items.
+---
