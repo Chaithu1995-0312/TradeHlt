@@ -263,15 +263,16 @@ class GateIntelligence:
         atr = float(features.get("atr", 0.0))
         if atr <= 0:
             return 0.0
+        atr_denom = atr  # distinct local: `atr` is the registered close-relative FM-041 name
         if self._vol_atr_basis == "absolute":
             close = float(features.get("close", 0.0))
             if close <= 0:
                 return 0.0
-            atr = atr * close  # FM-074 atr_absolute (F-109)
+            atr_denom = atr * close  # FM-074 atr_absolute (F-109)
         bar_range = float(features.get("high", 0.0)) - float(features.get("low", 0.0))
         if bar_range <= 0:
             return 0.0
-        r = bar_range / atr
+        r = bar_range / atr_denom
         score = r if r <= 1.0 else 1.0 - (r - 1.0) / 2.0
         return min(1.0, max(0.0, score))
 
