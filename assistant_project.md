@@ -51,6 +51,26 @@ replay correctness > explainability > telemetry continuity > advisory-AI >
 
 ---
 📝 SESSION LOG ENTRY
+Date: 2026-10-01 14:25
+Topic: Archived unused logs and results into gzip packs outside the repo.
+Decision/Output: Seven tar.gz packs at D:\Tradelatest-archives\2026-10-01. Removed 35.67 GB of trees last written before 2026-09-01, plus the three scratch dual_construction copies. Packs are 6.84 GB. D: free went from 4.3 GB to 33.2 GB. logs is now 15.36 GB, results 6.71 GB. Kept dual_construction_full_gapfix, bar_matrix, September runs, layer_trace, and the live append JSONL a backtest was writing. Each pack was listed before the source was deleted. SHA-256 is in MANIFEST.jsonl. Notes added to logs/README.md and results/README.md.
+Belief Update / ROI / Goal: Goal: shrink the checkout without losing recoverable history. Belief: the bulk that was safe to move was old run output and three scratch copies, not the live streams. Knowledge ROI: high. Action: leave the live JSONL until no backtest is appending them, then pack those too if more space is needed.
+Open Questions: whether to pack the remaining ~13 GB of append-only JSONL once today's backtest is finished.
+Next Step: user says if the live streams should be packed next.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-01 13:27
+Topic: Disk census — why the checkout is ~65 GB, and where the newest data sits.
+Decision/Output: Measured top-level folders sum to about 64.9 GB. logs 39.56 GB, results 18.18 GB, data 2.11 GB, venv 1.5, .claude 1.2, .venv 0.8. .git is 0.27 GB. src/scripts/tests/docs/configs are under 0.3 GB. logs and results are gitignored telemetry and run output. Newest files written today are logs JSONL (sweep_lifecycle.jsonl 4.1 GB, llm episodes, crt_transitions.jsonl), not price bars. Newest market bars are data/mt5/W2026-08-03_to_2026-09-24/XAUUSD_M15.csv (3,578 rows, last bar 2026-09-24 23:45). The 2026-09-30 parquet is the frozen Phase-1 book (47,275 rows, last bar 2026-05-21, same sha256 as data/mt5/XAUUSD_M15.csv). No files deleted.
+Belief Update / ROI / Goal: Goal: know whether 65 GB is the trading system or leftover output. Belief: the source tree is small; the bulk is local logs and results. Knowledge ROI: high. Action: keep the frozen XAUUSD CSV as the long book and the 2026-09-24 window as the latest bars; reclaim logs/results only if the user asks.
+Open Questions: whether old dual_construction log copies (~19 GB) and results/research (5.71 GB) are still needed.
+Next Step: user decides what to delete.
+---
+
+---
+📝 SESSION LOG ENTRY
 Date: 2026-09-27 18:07
 Topic: Join engine geometry params to the feature schema for reuse.
 Decision/Output: On v2_htfcrt_2026_08, atr_period 14 and the matching CRTConfig duplicates (body_ratio_min 0.65, atr_multiplier_min 1.0, atr_min_displacement 1.2, expansion_atr_min_distance 0.3, retest_depth_max 0.15, sweep age 20, expansion TTL 495/124, score 0.45, soft-conf window 3, pending TTL 4) can share the production key. RSI 70/30 already lives on feature_pipeline; the resolver copies are unread. EMA 2/5 versus 9/21, the two session-window tables, the body cuts 0.6 / 0.65 / 0.70, and the EMA-band retest versus the range-depth retest stay separate. Resolver retest_atr_depth_fraction 0.50 disagrees with production 0.3 and is unread. FM-010 prose still says the gate is 0.70. No source or config edit. Appended to session_conversation_grok_20260927_1754.
@@ -4696,4 +4716,64 @@ Decision/Output: bc3d408 bot work committed as-is; 466be7d 84.4 merged (b1544bc)
 Belief Update / ROI / Goal: Goal: see the system end to end. Belief: A3b + D0a + 84.4 do not change this window's outcome; the session filter is the binding gate here. Knowledge ROI: medium. Action: watch a window with trades (full corpus) to see entry/SL/TP.
 Open Questions: ~20 callers still use pip_size 0.0001 for XAUUSD (kept, visible); auto-tuners were already broken.
 Next Step: user choice: full-corpus run in Run Trace, or 84.3 residue / 84.7.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-30
+Topic: Explained CRTStateResolver schema (read-only)
+Decision/Output: Walked through market_crt_states.yaml (feature_states / states / valid_transitions / thresholds / threshold_refs), CRTStateMemory, resolve() inputs/outputs and the resolution sites. No code changed.
+Belief Update / ROI / Goal: Goal: understand the resolver before deciding on mode-C / gate changes. Belief: the resolver is a feature-predicate + memory shadow of the engine; the engine stays the decision authority (setup.decider=engine). Knowledge ROI: medium. Action: none until the user decides.
+Open Questions: docstrings still say 39-dim (the schema is 48); does the user want the resolver to be the decider (mode C)?
+Next Step: user direction
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-09-30
+Topic: Engine schema and how it differs from the resolver (read-only)
+Decision/Output: Explained CRTConfig (frozen, no defaults), EngineState, Candle/SweepEvent/RiskScore/Trade/EngineEvent, the generated CRTState/VALID_TRANSITIONS, and process_candle; compared them to CRTStateResolver on input, logic, memory, output and authority. No code changed.
+Belief Update / ROI / Goal: Goal: know which construction decides trades. Belief: the engine owns trade, risk and exit; the resolver reproduces the state label only (no trade object), and they share geometry for sweep/retest but differ on expansion (F-069). Knowledge ROI: medium. Action: none.
+Open Questions: should the resolver ever be the decider (mode C)?
+Next Step: user direction
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-01
+Topic: Why keep the resolver when the engine exists (discussion, read-only)
+Decision/Output: Four uses: (1) explains why a bar is in a state from feature labels; (2) cross-checks the engine (F-069 parity, dual-construction trace); (3) research on every bar, not only on 3 trades; (4) mode C, where the resolver founds setups and the engine trades them. Costs: a second definition of the same states (drift, F-069), and it cannot open trades.
+Belief Update / ROI / Goal: Goal: more and better trades. Belief: the resolver's value is diagnostic plus the mode-C experiment; it adds no trade logic on its own. A memory note (2026-09-28, in-sample) says resolver DISPLACEMENT was the only CI>0 cell, so it may spot setups the engine misses. Knowledge ROI: medium. Action: if the user wants more trades, mode C on XAUUSD is the direct test.
+Open Questions: run the mode-C A/B (decider engine vs resolver) on the full XAUUSD corpus?
+Next Step: user decision
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-01
+Topic: Entry-chain fixes traced from run_20260930_163142 (lane/entry-chain worktree D:\Tradelatest-wt-entry-chain, NOT committed, NOT merged)
+Decision/Output: Traced the run's 3 trades to source. Root chain: (1) ResetLogic.should_reset lets EXPANSION/RETEST outlive the HTF flip before the retrace/extension resets (user: intended, "protect from all" -- comment-only); (2) entry priced at the RETEST close but approved one bar later and that bar never walked (all 3 trades already through SL/TP at approval); (3) a refused build_trade left a silent EXECUTION (summary rejected 0); (4) setups whose closes had already breached the stop were still retested. Implemented, all default-inert: strict `setup.entry_semantics` (approval_bar_legacy | resting_order) and `setup.retest_stop_guard` (false | true) on 12 configs (params hash unchanged); ExecutionEngine.stop_price (single stop authority) + close_unconfirmed; CRTEngine guard/_place_resting_order/_flatten_if_resting/_reject_failed_build/_record_accepted; runner exit pricing + rejection counting for TRADE_UNCONFIRMED / TRADE_BUILD_REJECTED; docs (config-reference `setup`, crt-spine topic, F-110 + CLAUDE.md row); tests/test_entry_chain.py (24 tests, 5 mutations each turn it red). Deviation from the approved plan, flagged: a stop breach ends the expansion by a direct reset_to_range("stop_breached") rather than via EXPIRED (EXPIRED is the TTL archive state and its reset reason is hard-coded "expansion_ttl_exceeded"; a direct reset keeps the reason truthful and costs no dead bar). FM-027 sign fix NOT done (still `abs()`; derived_math.py is a freeze-pinned file) -- deferred, needs its own turn. Verification (full XAUUSD M15, 47,275 rows, sha 4d73f5ce): legacy keys = 3 trades byte-identical to the 30-Sep run, events identical except the ghost bar (rejected 0->1, EXECUTION 4->3); engine/config test set fails the SAME 21 tests as unmodified HEAD (373 vs 346 passed); short-window parity_v5 engine_state/resolver/layer_trace identical (oracle surface blocked only by a missing gitignored cost manifest in the worktree). Arms (isolated roots, nothing activated): guard-only 24->6 retests, 1 trade, -1.20R; resting-only 24 retests -> 8 refused + 16 filled, 16/16 ended within one bar (14 stopped, 1 TP1+BE, 1 flattened), 0 confirmed, 13 journaled, -10.08R; both 6 retests, 6 filled, all ended within one bar, 3 journaled (3 vetoed by EngineRunner session gate at the retest bar), -0.38R. Counts, not an edge claim; no authority.
+Belief Update / ROI / Goal: Goal: find out whether the CRT retest entry is real before spending more on it. Belief: the 3-trade / -1.69R result measured a mis-specified entry (priced before approval, approval bar skipped, setups already invalidated), not a CRT retest entry; walked honestly the retests are stopped within one bar because the stop ($0.9-$2.6) sits inside one M15 bar's range. Knowledge ROI: high -- it explains the 3-trades-in-2-years funnel and retires "tune the entry/exit" as the next lever. Action: decide whether to merge lane/entry-chain and which semantics (if any) to activate; the open design question is the stop distance, not the timing.
+Open Questions: (a) merge lane/entry-chain into grokbotchanges? (b) under resting_order the EngineRunner post-commit session veto now fires at the retest bar, not the approval bar -- intended? (c) the stop is inside one bar's range: is the displacement-low anchor (or sweep_extreme) the right invalidation, or should a stop-aware retest gate require more room? (d) FM-027 signed fix + its parity tests. (e) bar_structure_snapshot crt_trade_open stays true after a trade closes (Run Trace shows stale entry/SL/TP on ~76% of bars) -- not addressed. (f) 2 pre-existing reds worth knowing: tests/test_feature_layer_freeze.py::test_source_file_pins_match and tests/test_doc_citations.py (21 drifting citations) are red on HEAD.
+Next Step: user review of the lane diff and the arm table; then decide merge/activation.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-01
+Topic: Net-R + capital trace of the backtest ledger; TP1-partial ledger defect fixed (lane/entry-chain, uncommitted)
+Decision/Output: Traced pnl_rr_net (entry_fill = retest close + adverse slip U(0,0.1 ATR) + half spread 0.02%; exit_fill = level − slip − half spread; R over |entry_fill − effective SL|) and capital (risk = running capital × 1%; lots = floor(₹/84 / stop / 100, 0.01); P&L ₹ = Δfill × 100 × lots × 84), reproducing all 3 trades of run_20260930_163142 to the paisa. Found and fixed: runner read trade.status after process_candle (already TP2/STOPPED), so the TP1-partial blend never ran. Fix = capture status before process_candle; TP-hit counters now count TP1_* reasons. tests/test_tp1_partial_ledger.py (real-engine TP1→TP2 / TP1→trail; source-order guard mutation-killed). Full-corpus legacy arm: only CRT-0003 changes, +0.6128R → +0.4504R (TP2 → TP1_TP2), capital 98,501.07 → 98,352.38; run −1.6923R → −1.8548R, PF 0.27 → 0.20; events byte-identical; tp1/tp2 hits 1/1. F-110, crt-spine topic, CLAUDE.md row updated.
+Belief Update / ROI / Goal: Goal: trust the ledger's money numbers. Belief: the one winner in the active config was over-booked by ~0.16R; capital % ≠ net R × 1% because lots are floored (85–94% of the risk budget used). Knowledge ROI: medium-high. Action: the resting/both arm numbers from earlier today predate this fix (their TP1 trades are slightly over-booked) — rerun if they are to be quoted.
+Open Questions: merge lane/entry-chain? sizing_mode / per_trade_investment_inr are declared but unread by the backtest — remove or wire? spread 0.02% vs measured (F-082).
+Next Step: user decision on merge.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-01
+Topic: Review of the earlier "commit & push grokbotchanges" assessment (read-only)
+Decision/Output: The earlier summary got the push state wrong and checked too little. Verified: grokbotchanges has NO upstream and there is no origin/grokbotchanges, so 248 commits (not "19+") are unpushed, all ahead of origin/main. All EPIC-84 lanes (L-B 1f66aad, L-C/E/F rebased), entry-chain, mc-d0a and sizing-bridge are on the branch. git cherry flags 17b7ba6/2976163/4a2a285 only because of later MC-D0a renames or identical content. No lane worktree has uncommitted code. 278d993 (Groq key) and .env are not in the branch, so pushing it does not publish them. The ic-003 working-tree edit is byte-identical to the stash@{1} "stray ic-003 doc", so it should not be committed by default. The settings.local.json diff is 4 permission allowlist lines (machine-local). gather-recent-7-days plan = already implemented in 0497dd8 (historical). report.json (Sep 29) = arm-comparison output, authority NONE. No tests were run, so the earlier "no code regressions" claim was UNVERIFIED.
+Belief Update / ROI / Goal: Goal: get the branch safely onto the remote. Belief: no code is missing from the branch; the real gap is that nothing has been pushed. Knowledge ROI: medium. Action: commit the session log + README edits + the plan doc, leave the stray ic-003 edit and settings to user choice, then `git push -u origin grokbotchanges`.
+Open Questions: commit or revert the stray ic-003 edit? Commit settings.local.json? Track or ignore report.json and the results_xau_*.log files?
+Next Step: user confirms the commit set, then push.
 ---
