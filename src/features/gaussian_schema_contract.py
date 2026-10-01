@@ -34,7 +34,11 @@ from features.feature_schema import (
     CANONICAL_FEATURE_DIM,
     CANONICAL_FEATURE_ORDER,
     SCHEMA_V3_ALIASES,
+    SCHEMA_V5_ALIASES,
 )
+
+# Every declared read-side rename (v3->v4 and <=v5->v6); both are pure relabels.
+_READ_ALIASES: dict = {**SCHEMA_V3_ALIASES, **SCHEMA_V5_ALIASES}
 
 
 class GaussianSchemaError(ValueError):
@@ -52,13 +56,13 @@ def resolve_trained_feature_name(name: str) -> str:
     live = set(CANONICAL_FEATURE_ORDER)
     if name in live:
         return name
-    alias = SCHEMA_V3_ALIASES.get(name)
+    alias = _READ_ALIASES.get(name)
     if alias is not None and alias in live:
         return alias
     raise GaussianSchemaError(
-        f"Gaussian feature '{name}' is absent from live schema v4 "
+        f"Gaussian feature '{name}' is absent from the live schema "
         f"(CANONICAL_FEATURE_DIM={CANONICAL_FEATURE_DIM}) and has no "
-        f"SCHEMA_V3_ALIASES target. Remap or retrain."
+        f"SCHEMA_V3_ALIASES/SCHEMA_V5_ALIASES target. Remap or retrain."
     )
 
 
@@ -85,7 +89,7 @@ def resolve_trained_feature_schema(saved_schema: Sequence[str]) -> List[str]:
     if missing:
         raise GaussianSchemaError(
             f"Gaussian feature_schema has name(s) absent from live schema: {missing}. "
-            f"Known aliases: {dict(SCHEMA_V3_ALIASES)}. Remap or retrain."
+            f"Known aliases: {dict(_READ_ALIASES)}. Remap or retrain."
         )
     # Collapse detection: two trained names must not map to the same live slot
     # (would silently drop a dimension of the model).

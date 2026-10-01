@@ -38,6 +38,7 @@ from features.feature_schema import (
     CANONICAL_FEATURE_DIM,
     CANONICAL_FEATURES,
     SCHEMA_V3_ALIASES,
+    SCHEMA_V5_ALIASES,
 )
 
 
@@ -45,9 +46,11 @@ class SchemaResolutionError(ValueError):
     """A trained schema cannot be aligned to the live canonical schema."""
 
 
-# Live name -> the v3 name that maps onto it (inverse of SCHEMA_V3_ALIASES).
-# Derived, never hand-written: SCHEMA_V3_ALIASES is the only alias authority.
-_LIVE_TO_V3: dict[str, str] = {live: v3 for v3, live in SCHEMA_V3_ALIASES.items()}
+# Every declared read-side rename (v3->v4 and <=v5->v6). feature_schema is the only alias authority.
+_READ_ALIASES: dict[str, str] = {**SCHEMA_V3_ALIASES, **SCHEMA_V5_ALIASES}
+
+# Live name -> the pre-rename name a historical model was trained under (inverse of _READ_ALIASES).
+_LIVE_TO_V3: dict[str, str] = {live: old for old, live in _READ_ALIASES.items()}
 
 # The one dimension v4 added over v3/legacy-38 (the MACD histogram split).
 _V4_ONLY_FEATURE = "macd_hist_raw"
@@ -274,12 +277,12 @@ def resolve_trained_name(name: str) -> str:
     """Map one trained name to its live canonical name. Unresolvable raises."""
     if name in CANONICAL_FEATURES:
         return name
-    alias = SCHEMA_V3_ALIASES.get(name)
+    alias = _READ_ALIASES.get(name)
     if alias is not None and alias in CANONICAL_FEATURES:
         return alias
     raise SchemaResolutionError(
         f"trained feature {name!r} is absent from the live canonical schema "
-        f"(dim={CANONICAL_FEATURE_DIM}) and has no SCHEMA_V3_ALIASES target. "
+        f"(dim={CANONICAL_FEATURE_DIM}) and has no SCHEMA_V3_ALIASES/SCHEMA_V5_ALIASES target. "
         f"Remap or retrain."
     )
 
@@ -307,7 +310,7 @@ def resolve_declared(
     if missing:
         raise SchemaResolutionError(
             f"artifact feature_schema has name(s) absent from the live schema: "
-            f"{missing}. Known aliases: {dict(SCHEMA_V3_ALIASES)}. Remap or retrain."
+            f"{missing}. Known aliases: {dict(_READ_ALIASES)}. Remap or retrain."
         )
     resolved_id = schema_id if schema_id else f"artifact_declared_{len(trained)}"
     return ResolvedSchema(

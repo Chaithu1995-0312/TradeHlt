@@ -4777,3 +4777,13 @@ Belief Update / ROI / Goal: Goal: get the branch safely onto the remote. Belief:
 Open Questions: commit or revert the stray ic-003 edit? Commit settings.local.json? Track or ignore report.json and the results_xau_*.log files?
 Next Step: user confirms the commit set, then push.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-01
+Topic: Full-suite repair, part 1 (Buckets A and B1)
+Decision/Output: Baseline full run was 216 failed + 27 errors in 97 files, plus 1 collection error (98 files). The governance floor before was 17 failed / 583 passed. Committed 32ff661 (28 test/fixture files, mechanical: EPIC-84 required keys, A3b intent inputs, bar_features=, v6.0/48 pins, ACTIVE_VERSION for model runners, real score_zone_cluster seam, Py3.12 loader, truth-class Document, story ontology relabelled via the declared v3/v5 aliases, vector fixture regenerated) and 32feed9 (flow graphs, cli-matrix, 6 doc citations). Uncommitted because the paths are governed: CODE_DRIFT fix in gaussian_schema_contract.py and model_runners/schema_resolver.py (both read SCHEMA_V3_ALIASES only, so F-107's declared SCHEMA_V5_ALIASES never reached them and every saved Gaussian refused to load); model-path debt relabel for the MC-D0a file moves; 11 active_models.yaml citations. The pre-commit hook runs bare `python` (Py3.14, no jsonschema) and cannot go green while Bucket D items stand.
+Belief Update / ROI / Goal: Goal: a trustworthy test gate. Belief: most reds were test drift behind intended EPIC-84/MC-D0a/v6.0 changes. Two were real src drift: the F-107 alias propagation and vector_store.hybrid_alpha. Several were red before those changes (the dual-gate dead patch target, the Windows path match, wick_size in the story ontology). Knowledge ROI: medium. Action: get the user's decision on governed commits, then continue Bucket B/C.
+Open Questions: --no-verify for the governed commit? Bucket C parked items (hybrid_alpha, dated capability map vs MIAR, freeze-pin waiver, BRIDGE_SCHEMA_VERSION locator, truth_tier scanner false positive, 38 ungated corpus reads, grandfathering root scratch scripts). Bucket D items (clock review, XAUUSD hash, stale findings, session-log cap, missing results evidence).
+Next Step: user decisions; then Semantic OS yaml, censuses, and the remaining Bucket C investigations.
+---

@@ -41,11 +41,6 @@
       "count": 1
     },
     {
-      "file": "src/cognitive/cognitive_bus.py",
-      "literal": "models/zone_registry.json",
-      "count": 1
-    },
-    {
       "file": "src/config_layer/rr/rr_dataset_builder.py",
       "literal": "models/rr_dataset.json",
       "count": 2
@@ -156,7 +151,7 @@
       "count": 1
     },
     {
-      "file": "src/engines/heuristic_gaussian_engine.py",
+      "file": "src/engines/ema_momentum_kernel.py",
       "literal": "models/gaussian_registry.json",
       "count": 1
     },
@@ -176,7 +171,7 @@
       "count": 1
     },
     {
-      "file": "src/engines/zone_gate_engine.py",
+      "file": "src/engines/feature_cluster_similarity.py",
       "literal": "...he registry's own top-level name list (`models/zone_registry.json`\n    -> `feature_order`). When supplied it is AUTHORITATIVE: the vector is assembled by ...",
       "count": 1
     },
@@ -207,12 +202,12 @@
     },
     {
       "file": "src/research/model_runners/adapters/__init__.py",
-      "literal": "gaussian_ml requires --artifact (trained GaussianNB json under models/)",
+      "literal": "nb_outcome_classifier requires --artifact (trained GaussianNB json under models/)",
       "count": 1
     },
     {
       "file": "src/research/model_runners/adapters/gaussian_ml.py",
-      "literal": "...n_impl``.\nThis offline model_id **never reads that flag**. Scoring requires an explicit\n``--artifact`` path to a trained GaussianNB bundle under models/.\n",
+      "literal": "...pter does not read\nengine_runner and is not a fusion slot. Scoring requires an explicit\n``--artifact`` path to a trained GaussianNB bundle under models/.\n",
       "count": 1
     },
     {
@@ -236,6 +231,6 @@
       "count": 1
     }
   ],
-  "debt_pair_count": 44,
-  "debt_occurrence_count": 54
+  "debt_pair_count": 43,
+  "debt_occurrence_count": 53
 }

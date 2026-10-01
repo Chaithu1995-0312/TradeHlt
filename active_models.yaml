@@ -52,8 +52,8 @@ meta:
   last_verified_against:                       # dual-form `path:line · Symbol` — enforced by tests/test_doc_citations.py
     - src/config_layer/state_identity.py:35 · CRTState              # enum + transitions extracted here 2026-07-18
     - src/config_layer/state_identity.py:69 · VALID_TRANSITIONS     # re-exported by crt_engine_v2 for back-compat
-    - src/config_layer/crt_engine_v2.py:2828 · process_candle       # SM entry point (transition defs span :847-:3230)
-    - src/engines/ema_momentum_kernel.py:316 · compute
+    - src/config_layer/crt_engine_v2.py:3589 · process_candle       # SM entry point (transition defs span :910-:1957)
+    - src/engines/ema_momentum_kernel.py:356 · compute
     - src/engines/feature_cluster_similarity.py:163 · filter_canonical_inputs
     - src/engines/candle_commitment.py:45 · compute
     - src/engines/live_engine.py:278 · check
@@ -292,7 +292,7 @@ crt:
 
       sweep:
         method: boundary_breach_with_rejection
-        file_line: src/config_layer/crt_engine_v2.py:879 · detect_sweep   # + try_range_to_sweep :1036
+        file_line: src/config_layer/crt_engine_v2.py:947 · detect_sweep   # + try_range_to_sweep :1107
         logic_long:  "candle.high > range.h_ref AND candle.close < range.h_ref"
         logic_short: "candle.low  < range.l_ref AND candle.close > range.l_ref"
         ohlcv_inputs: [high, low, close]
@@ -303,7 +303,7 @@ crt:
 
       displacement:
         method: multi_gate
-        file_line: src/config_layer/crt_engine_v2.py:1092 · try_sweep_to_displacement
+        file_line: src/config_layer/crt_engine_v2.py:1158 · try_sweep_to_displacement
         logic:
           all_gates_must_pass: true
           gate_0: "directional contract — LONG: close>open AND close>sweep.price; SHORT: close<open AND close<sweep.price (CH-directional-displacement-contract, 2026-08-13)"
@@ -321,7 +321,7 @@ crt:
 
       expansion:
         method: single_candle_extension
-        file_line: src/config_layer/crt_engine_v2.py:1419 · try_displacement_to_expansion   # also the SHADOW_PENDING resume path
+        file_line: src/config_layer/crt_engine_v2.py:1485 · try_displacement_to_expansion   # also the SHADOW_PENDING resume path
         logic:
           - "close > displacement_candle.close (long) / close < disp.close (short)"
           - "abs(close - disp_close) >= expansion_atr_min_distance × ATR"
@@ -332,7 +332,7 @@ crt:
 
       retest:
         method: adaptive_depth_ceiling
-        file_line: src/config_layer/crt_engine_v2.py:1591 · try_expansion_to_retest
+        file_line: src/config_layer/crt_engine_v2.py:1657 · try_expansion_to_retest
         logic: "depth = close - range.l_ref (long); must be < adaptive_ceiling"
         adaptive_ceiling: "max(0.25×range_size, 0.50×ATR)"
         min_depth: "0.1 × ATR"
@@ -344,7 +344,7 @@ crt:
 
       expired:
         method: ttl_guard
-        file_line: src/config_layer/crt_engine_v2.py:3238 · expansion_ttl_exceeded   # EXPANSION→EXPIRED TTL branch (emitted from process_candle)
+        file_line: src/config_layer/crt_engine_v2.py:4060 · expansion_ttl_exceeded   # EXPANSION→EXPIRED TTL branch (emitted from process_candle)
         logic: "age_candles > max_expansion_age_candles OR age_hours > max_expansion_age_hours"
         ohlcv_inputs: []                                    # time-based, not price-based
         config_keys: [max_expansion_age_candles, max_expansion_age_hours]
@@ -357,15 +357,15 @@ crt:
       shadow_pending:
         type: lifecycle_state       # cross-window displacement memory active; awaiting sweep confirmation
         entered_by: [RANGE]
-        file_line: src/config_layer/crt_engine_v2.py:1048 · try_range_to_shadow_pending
+        file_line: src/config_layer/crt_engine_v2.py:1119 · try_range_to_shadow_pending
       execution:
         type: terminal_execution_state   # trade emitted; no detection — RETEST→EXECUTION on gate pass
         entered_by: [RETEST]
-        file_line: src/config_layer/crt_engine_v2.py:1815 · try_retest_to_execution
+        file_line: src/config_layer/crt_engine_v2.py:1947 · try_retest_to_execution
       resolution:
         type: post_trade_state       # terminal; EXECUTION→RESOLUTION then reset to RANGE
         entered_by: [EXECUTION]
-        file_line: src/config_layer/crt_engine_v2.py:1826 · try_execution_to_resolution
+        file_line: src/config_layer/crt_engine_v2.py:1957 · try_execution_to_resolution
 
     cached_features_at_retest:   # CH-002 / F-050 identities — authoritative emission keys
       - {feature: displacement_retrace,   fm_id: FM-027, description: "Cross-candle retrace toward disp.open (NOT pipeline FM-021 retest_depth)"}
@@ -495,7 +495,7 @@ ema_momentum_kernel:
 
   runtime:                       # what actually executes in the fusion path today
     engine: EmaMomentumKernel
-    file: src/engines/ema_momentum_kernel.py:316 · compute   # class EmaMomentumKernel :191
+    file: src/engines/ema_momentum_kernel.py:356 · compute   # class EmaMomentumKernel :208
     active: true
     engine_key: ema_momentum_kernel
     output_field: score
