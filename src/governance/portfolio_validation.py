@@ -361,6 +361,8 @@ def run_portfolio(
             target_policy         = "fixed_r",
             trade_ttl_candles     = None,
             decider               = "engine",
+            entry_semantics       = "approval_bar_legacy",
+            retest_stop_guard     = False,
             timeframe             = "M15",
         )
 

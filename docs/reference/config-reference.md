@@ -422,6 +422,22 @@ Manifests: `CH-k23-f4-sweep-htf-exempt`, `CH-k23-f3-sl-anchor-sweep-extreme`, `C
 
 ---
 
+## `setup` — Execution-side variant keys (top-level section, outside `params`)
+
+Strictly required (EPIC-84: no defaults; a missing key raises `ConfigKeyMissingError` at load). Hash-neutral (`config_hash` covers `params` only). Read by `config_layer.setup.Setup.from_prod_config` and `BacktestConfig.from_prod_config`; each value is stamped into `summary.json`. Spec: `docs/implementation_plan/setup-overlay-spec-2026-09.md`.
+
+| Key                 | Type        | Today's value           | Effect |
+| ------------------- | ----------- | ----------------------- | ------ |
+| `target_policy`     | str         | `"fixed_r"`             | `"structural_tp2"` makes TP2 the opposite side of the active range (TP1 stays R-based); an inverted/too-close TP2 rejects the trade. |
+| `trade_ttl_candles` | int \| null | `null`                  | `N >= 1` closes a still-open trade no later than `open_candle_index + N`, at the bar close. `null` = no time-stop. |
+| `decider`           | str         | `"engine"`              | `"resolver"` = mode C comparison arm (the resolver founds the RETEST). |
+| `entry_semantics`   | str         | `"approval_bar_legacy"` | Entry-chain 2026-10-01. `"approval_bar_legacy"`: the trade is BUILT at the RETEST close but OPENED one bar later, on the soft-confirmation approval bar, which is never walked for SL/TP. `"resting_order"`: the order fills at the RETEST close (the retest bar), every soft-confirmation bar is walked for SL/TP, and an unconfirmed setup (timeout, or an approved setup that fails the session/zone/parent/shadow filters) is flattened at that bar's close as `TRADE_UNCONFIRMED` (`exit_reason` `UNCONFIRMED`). Stamped `risk_pct` is the 0.5% floor (no score exists at placement; sizing uses `backtest.risk_pct_per_trade`). Refused with `decider="resolver"`. |
+| `retest_stop_guard` | bool        | `false`                 | Entry-chain 2026-10-01. `true`: an EXPANSION whose bar CLOSE reaches the stop a trade built on that bar would use (`ExecutionEngine.stop_price`, the same formula `build_trade` trades, at that bar's ATR) ends the setup (reset reason `stop_breached`), so a RETEST can only be founded on a setup whose stop was never breached. Needed because `ResetLogic.should_reset` deliberately lets EXPANSION/RETEST outlive the HTF flip, which also switches off the 50% retrace and 1.618 extension resets. |
+
+Independent of both keys (applies in every mode): when `build_trade` refuses an approved setup (e.g. `inverted_sl_long`) the engine now emits `TRADE_BUILD_REJECTED`, resets, and the run counts a rejection; it used to idle in EXECUTION with no trade and report 0 rejected.
+
+---
+
 ## `feature_monitor` — Drift Detector
 
 | Key             | Type  | Default | Purpose                                   |
