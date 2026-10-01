@@ -140,7 +140,9 @@ def run_arm(tmp: Path, sl_anchor: str, target_policy: str, ttl: int, corpus_rel:
 
     def mutate(cfg: dict) -> None:
         cfg.setdefault("backtest", {})["sl_anchor"] = sl_anchor
-        cfg["setup"] = {"target_policy": target_policy, "trade_ttl_candles": ttl}
+        # Override only the two grid axes; every other declared `setup` key (decider,
+        # entry_semantics, retest_stop_guard, ...) is strict-required and must survive.
+        cfg["setup"] = {**cfg["setup"], "target_policy": target_policy, "trade_ttl_candles": ttl}
         if live_trace:
             enable_live_trace(cfg)
         # §7.3 required "equity basis" field -- read back, not guessed. Every arm shares this

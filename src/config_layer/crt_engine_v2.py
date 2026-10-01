@@ -637,6 +637,8 @@ class TelemetryCollector:
                                               or "timeout" in reason.lower())
                 else "FILTER_REJECTED" if any(k in reason for k in
                                                ("discount zone", "premium zone", "off_session"))
+                else "STOP_BREACHED"   if "stop_breached" in reason      # [entry-chain 2026-10-01]
+                else "BUILD_REJECTED"  if "trade_build_rejected" in reason  # [entry-chain 2026-10-01]
                 else "RESET_OTHER"
             )
             self._close_candidate(death, candle_index)
@@ -667,6 +669,12 @@ class TelemetryCollector:
             "trade_id":               None,
             "bar_ts":                 None,
         }
+
+    def active_candidate_id(self) -> Optional[str]:
+        """Id of the candidate whose lifecycle is still open, without closing it. Used by the
+        resting-order path so the trade row carries `candidate_id` from the bar it fills on,
+        while the lifecycle itself still closes at approval (ACCEPTED) or on reset."""
+        return self._active_candidate["candidate_id"] if self._active_candidate else None
 
     def on_candidate_score(self, score: float) -> None:
         """Track highest S-score seen across all soft-conf evaluations."""
@@ -2463,6 +2471,31 @@ class ExecutionEngine:
         self._trade_counter += 1
         return f"CRT-{self._trade_counter:04d}"
 
+    def stop_price(self, state: EngineState) -> Optional[float]:
+        """The stop `build_trade` would place for the CURRENT state, or None when it cannot be
+        derived (no displacement candle, direction NONE, or `sweep_extreme` without a sweep).
+
+        Pure: reads state, writes nothing, never touches `last_build_attempt`. Uses the bar's
+        current ATR (`state.atr_abs`), exactly as `build_trade` does when it is called on that
+        bar -- so a guard evaluated each bar asks "would a trade built NOW have its stop here?".
+        """
+        direction = state.direction
+        if state.displacement_candle is None or direction not in (Direction.LONG, Direction.SHORT):
+            return None
+        atr = state.atr_abs
+        if self.sl_anchor == "sweep_extreme":
+            # [K23 F3] Stop where the sweep idea is invalidated: beyond the swept wick extreme.
+            if state.sweep_event is None:
+                return None
+            _sc = state.sweep_event.candle
+            return (_sc.low - self.config.sl_atr_buffer * atr) if direction == Direction.LONG \
+                else (_sc.high + self.config.sl_atr_buffer * atr)
+        if direction == Direction.LONG:
+            # Swept LOW → displaced UP → SL below displacement candle low
+            return state.displacement_candle.low - self.config.sl_atr_buffer * atr
+        # Swept HIGH → displaced DOWN → SL above displacement candle high
+        return state.displacement_candle.high + self.config.sl_atr_buffer * atr
+
     @staticmethod
     def generate_trade_id(instrument: str, opened_at, direction: str, entry: float) -> str:
         """
@@ -2557,23 +2590,15 @@ class ExecutionEngine:
                 self.log.error("Cannot build trade: sweep_extreme anchor needs a sweep event.")
                 self._remember_build("REJECTED", "missing_sweep_extreme", None, entry, direction)
                 return None
-            _sc = state.sweep_event.candle
-            sl = (_sc.low - self.config.sl_atr_buffer * atr) if direction == Direction.LONG \
-                else (_sc.high + self.config.sl_atr_buffer * atr)
-        elif direction == Direction.LONG:
-            # Swept LOW → displaced UP → SL below displacement candle low
-            sl  = state.displacement_candle.low  - self.config.sl_atr_buffer * atr
-            # [Phase-2] TP levels anchored to actual risk distance (1R and 2R)
-            # This guarantees TP1=+1R and TP2=+2R regardless of ATR scaling.
-            # Risk distance is computed AFTER sl is set so it's always consistent.
-
-        elif direction == Direction.SHORT:
-            # Swept HIGH → displaced DOWN → SL above displacement candle high
-            sl  = state.displacement_candle.high + self.config.sl_atr_buffer * atr
-        else:
+        elif direction not in (Direction.LONG, Direction.SHORT):
             self.log.error("Cannot build trade: direction NONE.")
             self._remember_build("REJECTED", "invalid_direction", None, entry, direction)
             return None
+        # [Phase-2] TP levels anchored to actual risk distance (1R and 2R): the risk distance is
+        # computed AFTER sl is set so it is always consistent. The stop arithmetic itself lives in
+        # `stop_price` (entry-chain 2026-10-01) so the RETEST stop guard reads the SAME formula
+        # this method trades -- one authority, no second copy.
+        sl = self.stop_price(state)
 
         # ── Inverted SL guard ──────────────────────────────────────────────
         # Rejects when SL lands on the wrong side of entry — happens when the
@@ -2797,6 +2822,31 @@ class ExecutionEngine:
         )
         return "TIMEOUT"
 
+    def close_unconfirmed(self, trade: Trade, exit_price: float) -> str:
+        """[entry-chain 2026-10-01, entry_semantics="resting_order"] Flatten a resting order whose
+        setup was NOT confirmed (soft-confirmation timed out, or an approved setup failed a
+        session / zone / parent-bias / objective / shadow filter).
+
+        The order filled at the RETEST close and has lived through the confirmation window; an
+        unconfirmed setup is therefore closed at the bar's own CLOSE, exactly like
+        `close_timeout` -- a deadline/decision is not a level the market quoted, so there is no
+        price to book other than the close. A runner that already banked its TP1 partial keeps it
+        and only the open leg is closed here (same accounting as `close_timeout`).
+        """
+        if trade.status not in ("OPEN", "TP1"):
+            return "UNCHANGED"
+        pnl_direction = 1 if trade.direction == Direction.LONG else -1
+        if trade.status == "TP1":
+            runner_pnl = 0.5 * pnl_direction * (exit_price - trade.entry_price)
+            trade.pnl = trade.partial_pnl + runner_pnl
+        else:
+            trade.pnl = pnl_direction * (exit_price - trade.entry_price)
+        trade.status = "UNCONFIRMED"
+        self.log.info(
+            f"Trade UNCONFIRMED | {trade.id} | close={exit_price:.5f} PnL={trade.pnl:.5f}"
+        )
+        return "UNCONFIRMED"
+
 
 # ─────────────────────────────────────────────────────────────────
 # MODULE 5 — RESET LOGIC
@@ -2830,7 +2880,15 @@ class ResetLogic:
         # structural liquidity envelope; htf_candle_id on it is the clock tag.
         if current_htf_id != state.active_range.clock_id:
             if state.current_state in [CRTState.EXPANSION, CRTState.RETEST]:
-                return False, ""  # DO NOT INTERRUPT ACTIVE SETUP
+                # DO NOT INTERRUPT ACTIVE SETUP -- INTENDED (user decision 2026-10-01, "protect from
+                # all"). Note the SIDE EFFECT: this return precedes the 50% retrace and 1.618
+                # extension rules below, so once the HTF clock has flipped after EXPANSION began,
+                # those two resets no longer apply for the rest of the setup's life; only a RETEST
+                # or the expansion TTL (max_expansion_age_candles / _hours) ends it. A setup whose
+                # price has already closed through its stop therefore stays alive unless
+                # setup.retest_stop_guard is on (see CRTEngine._expansion_stop_breach).
+                # K23's F1 (retrace_reset_pct) consequently acts on EXPANSION only before the flip.
+                return False, ""
             if self.htf_reset_exempt_sweep and state.current_state == CRTState.SWEEP:
                 return False, ""  # [K23 F4] SWEEP survives the HTF flip; other resets still apply
             return True, f"HTF changed: {state.active_range.clock_id} → {current_htf_id}"
@@ -2887,7 +2945,9 @@ class CRTEngine:
                  exchange_session_windows: Optional[dict],
                  target_policy: str,
                  trade_ttl_candles: Optional[int],
-                 decider: str):
+                 decider: str,
+                 entry_semantics: str,
+                 retest_stop_guard: bool):
         # EPIC-84 (no defaults): every behaviour argument is required and declared. None stays a
         # declared value where it means "off" (exchange_session_windows=None: static windows;
         # trade_ttl_candles=None: no time-stop). Production callers use CRTEngine.from_setup.
@@ -2955,6 +3015,32 @@ class CRTEngine:
         if decider not in ("engine", "resolver"):
             raise ValueError(f"decider must be 'engine' or 'resolver', got {decider!r}")
         self.decider = decider
+        # [entry-chain 2026-10-01] Not CRTConfig fields; fed from setup.entry_semantics /
+        # setup.retest_stop_guard.
+        #   entry_semantics "approval_bar_legacy" = today: the trade is BUILT at the RETEST close
+        #     but OPENED one bar later, on the soft-confirmation approval bar, which is never
+        #     walked for SL/TP. "resting_order" = the order fills at the RETEST close and every
+        #     soft-confirmation bar is walked; an unconfirmed setup is flattened at that bar's close.
+        #   retest_stop_guard False = today. True = an EXPANSION whose bar CLOSE reaches the stop a
+        #     trade built on that bar would use (ExecutionEngine.stop_price) ends the setup, so a
+        #     RETEST can only be founded on a setup whose stop has never been breached.
+        if entry_semantics not in ("approval_bar_legacy", "resting_order"):
+            raise ValueError(
+                "entry_semantics must be 'approval_bar_legacy' or 'resting_order', "
+                f"got {entry_semantics!r}"
+            )
+        if not isinstance(retest_stop_guard, bool):
+            raise ValueError(f"retest_stop_guard must be a bool, got {retest_stop_guard!r}")
+        if entry_semantics == "resting_order" and decider == "resolver":
+            # Mode C founds its RETEST in `_found_retest_from_resolver`, a separate comparison
+            # arm (never a parity claim, F-069). Resting-order placement is only wired at the
+            # engine's own RETEST commit; fail closed rather than run mode C with legacy timing.
+            raise ValueError(
+                "entry_semantics='resting_order' is not supported with decider='resolver' "
+                "(mode C founds its RETEST outside the engine's RETEST commit)"
+            )
+        self.entry_semantics = entry_semantics
+        self._retest_stop_guard = retest_stop_guard
         # Mode C only: {bar timestamp (isoformat) -> founding row}. None until set_founding_map.
         self._founding_map: Optional[dict] = None
         # Candle buffer cap. "engine": atr_period * atr_buffer_multiplier (today, 42 on v5) --
@@ -3039,7 +3125,9 @@ class CRTEngine:
                    exchange_session_windows=setup.exchange_session_windows,
                    target_policy=setup.target_policy,
                    trade_ttl_candles=setup.trade_ttl_candles,
-                   decider=setup.decider)
+                   decider=setup.decider,
+                   entry_semantics=setup.entry_semantics,
+                   retest_stop_guard=setup.retest_stop_guard)
 
     @property
     def intrabar_exits(self) -> bool:
@@ -3310,6 +3398,194 @@ class CRTEngine:
         except Exception as _replay_err:
             self.log.warning(f"RETEST_REPLAY telemetry skipped: {_replay_err!r}")
 
+    # ── Entry-chain helpers (2026-10-01) ──────────────────────────────────────
+
+    def _session_name_at(self, candle: Candle) -> str:
+        """Session label for `candle` under the declared session basis -- a verbatim extraction of
+        the soft-confirmation session filter so the resting-order open event reuses the one
+        resolution instead of a second copy.
+
+        F-066: self.config.session_windows is authored in UTC (see CRTConfig.session_windows's
+        own "(UTC)" comment), but candle.timestamp on every MT5-sourced corpus is broker-server
+        time, not UTC. Compare against the UTC-converted timestamp when the operator has opted in
+        via the same feature_pipeline.session_timestamp_basis key the FM-052 feature already uses
+        (default "broker_local" = byte-identical prior behavior).
+        """
+        _sess_name = "OFF_SESSION"
+        if self._exchange_windows is not None:
+            # [K23 F2] exact per-date exchange windows; first declared match wins
+            # (so a London/NY overlap resolves to the earlier-declared session).
+            from features.broker_clock import exchange_sessions_at as _esa
+            _hits = _esa(candle.timestamp, self._exchange_windows)
+            if _hits:
+                _sess_name = _hits[0]
+        else:
+            if self._session_ts_basis == "utc_corrected":
+                from features import broker_clock as _bc
+                _ts_time = _bc.mt5_server_to_utc_scalar(candle.timestamp).time()
+            else:
+                _ts_time = candle.timestamp.time()
+            for _name, (_start, _end) in self.config.session_windows.items():
+                if _start <= _ts_time <= _end:
+                    _sess_name = _name
+                    break
+        return _sess_name
+
+    def _expansion_stop_breach(self, candle: Candle) -> Optional[float]:
+        """retest_stop_guard: the stop price when `candle`'s CLOSE has reached it, else None.
+
+        The stop is `ExecutionEngine.stop_price` -- the SAME formula `build_trade` trades -- at
+        this bar's ATR. LONG breaches at close <= stop, SHORT at close >= stop (the same
+        comparison `update_trade` uses for an SL touch).
+        """
+        stop = self.executor.stop_price(self.state)
+        if stop is None:
+            return None
+        if self.state.direction == Direction.LONG:
+            return stop if candle.close <= stop else None
+        return stop if candle.close >= stop else None
+
+    def _place_resting_order(self, candle: Candle, action: dict) -> None:
+        """entry_semantics="resting_order": fill the order at the RETEST close, on the bar that
+        founded the RETEST (called right after BEGIN_SOFT_CONF). The soft-confirmation bars that
+        follow are walked for SL/TP by the trade-management block, which runs before the state
+        machine. No score exists yet, so `build_trade` stamps the floor risk_pct (0.5%); that
+        stamp is not used for sizing (the ledger sizes from backtest.risk_pct_per_trade).
+        """
+        trade = self.executor.build_trade(self.state, self.risk)
+        if trade is None:
+            self._reject_failed_build(candle, 0.0, action)
+            return
+        self.executor.open_trade(trade, candle.timestamp)
+        # [STORY-83.11 §10 Q3d] N counts the entry bar (the RETEST bar for a resting order).
+        trade.open_candle_index = self.state.current_candle_index
+        self.state.active_trade = trade
+        self.ev_log.record(
+            "TRADE_OPENED", candle,
+            direction=trade.direction.value,
+            price=trade.entry_price,
+            metadata={
+                "id": trade.id,
+                "session_name": self._session_name_at(candle),
+                "S_score": None,   # the order is placed before any confirmation score exists
+                "sl": trade.sl_price,
+                "tp1": trade.tp1_price,
+                "tp2": trade.tp2_price,
+                "risk_pct": trade.risk_pct,
+                "entry_semantics": "resting_order",
+            },
+        )
+        action["action"]       = "TRADE_OPENED"
+        action["trade_id"]     = trade.id
+        action["risk_pct"]     = trade.risk_pct
+        action["live_metrics"] = self.get_live_metrics()
+        # The candidate lifecycle stays open until approval (ACCEPTED) or a reset; the trade row
+        # still carries its candidate_id from the bar it fills on.
+        _cid = self.telemetry.active_candidate_id()
+        if _cid is not None:
+            action["candidate_id"] = _cid
+
+    def _flatten_if_resting(self, candle: Candle, reason: str) -> bool:
+        """entry_semantics="resting_order" only: close the live resting order at this bar's CLOSE
+        because its setup was not confirmed. Returns True when an order was flattened (the caller
+        then reports the bar as TRADE_UNCONFIRMED), False for legacy semantics or when no live
+        order exists -- so legacy callers are untouched."""
+        if self.entry_semantics != "resting_order":
+            return False
+        trade = self.state.active_trade
+        if trade is None or trade.status not in ("OPEN", "TP1"):
+            return False
+        self.executor.close_unconfirmed(trade, candle.close)
+        self.ev_log.record(
+            "TRADE_UNCONFIRMED", candle,
+            reason=f"Trade {trade.id} closed: UNCONFIRMED ({reason})",
+            metadata={"pnl": trade.pnl, "unconfirmed_reason": reason},
+        )
+        return True
+
+    def _reject_failed_build(self, candle: Candle, score: float, action: dict) -> None:
+        """`build_trade` refused an otherwise-approved setup: record why, count it, reset.
+
+        The state used to be left in EXECUTION with no trade, no event and no reset (the engine
+        then idled until the next HTF reset) and the run summary reported 0 rejected -- a silent
+        gap (same class as F-079/F-083/F-102). The refusal reason is `last_build_attempt.reason`.
+        """
+        attempt = self.executor.last_build_attempt
+        reason = attempt.reason if attempt is not None and attempt.reason else "unknown"
+        self.ev_log.record(
+            "TRADE_BUILD_REJECTED", candle,
+            reason=f"build_trade refused: {reason}",
+            metadata={
+                "build_reason": reason,
+                "computed_sl": attempt.computed_sl if attempt is not None else None,
+                "entry": attempt.entry if attempt is not None else None,
+            },
+        )
+        # Telemetry BEFORE reset_to_range -- the reset nulls the geometry this record needs.
+        self._emit_retest_replay(candle, score, accepted=False, reject_reason="BUILD_REJECTED")
+        self.sm.reset_to_range(self.state, f"trade_build_rejected:{reason}", candle, self.ev_log)
+        action["action"] = "TRADE_BUILD_REJECTED"
+        action["reason"] = f"trade_build_rejected:{reason}"
+        action["state_after"] = self.state.current_state.name
+
+    def _record_accepted(self, candle: Candle, trade: Trade, effective_s: float,
+                         shadow_ctx: dict, shadow_disp_br: float, action: dict) -> None:
+        """Candidate ACCEPTED telemetry, the RETEST_REPLAY row and the Phase-3b temporal integrity
+        events -- extracted VERBATIM from the legacy open path so the resting-order confirm path
+        records exactly the same facts, in the same order, from one copy."""
+        # [TELEMETRY] Close candidate as ACCEPTED — Phase 4b: include shadow_context; Phase 3:
+        # candle_ts + trade_id so the ACCEPTED row resolves to the frozen PK and
+        # joins to trades.csv / L8; the returned candidate_id rides on `action`
+        # so the runner can stamp trades.csv.candidate_id (chain invariant 4/5).
+        _acc_cid = self.telemetry.on_candidate_accepted(
+            candle.index,
+            score_at_approval=effective_s,
+            candle_ts=candle.timestamp,
+            trade_id=trade.id,
+            shadow_context=shadow_ctx if self.state._came_from_shadow else {},
+            shadow_displacement_br=shadow_disp_br,
+        )
+        if _acc_cid is not None:
+            action["candidate_id"] = _acc_cid
+        self._emit_retest_replay(candle, effective_s, accepted=True, reject_reason=None)
+
+        # ── Phase 3b: Temporal integrity events ───────────────────
+        _struct_age = candle.index - self.state._expansion_entry_idx
+
+        # TEMPORAL_PARADOX (CRITICAL): last-resort guard — trade opened
+        # after TTL should have expired. If this fires, the TTL check
+        # has a gap (e.g. RETEST priority override let a stale trade through).
+        if (self.config.max_expansion_age_candles > 0
+                and _struct_age > self.config.max_expansion_age_candles):
+            emit_integrity_event(
+                "TEMPORAL_PARADOX", "CRITICAL", "crt_engine",
+                {
+                    "candidate_id":  f"CAND-{self.state._expansion_entry_idx}",
+                    "structure_age": _struct_age,
+                    "max_allowed":   self.config.max_expansion_age_candles,
+                    "shadow_used":   self.state._came_from_shadow,
+                    "candle_index":  candle.index,
+                },
+            )
+            # Note: trade is NOT cancelled here — RETEST > EXPIRED by design.
+            # TEMPORAL_PARADOX is informational: it shows TTL was overridden
+            # by a valid retest. Investigate if count > 0 after production run.
+
+        # TEMPORAL_STALE_WIN (WARNING): trade opened from expansion older than
+        # P95 (342 candles). Trade still executes — this labels it for training.
+        _warn_age = self.config.expansion_age_warn_candles
+        if _warn_age > 0 and _struct_age > _warn_age:
+            emit_integrity_event(
+                "TEMPORAL_STALE_WIN", "WARNING", "crt_engine",
+                {
+                    "candidate_id":   f"CAND-{self.state._expansion_entry_idx}",
+                    "structure_age":  _struct_age,
+                    "warn_threshold": _warn_age,
+                    "shadow_used":    self.state._came_from_shadow,
+                    "candle_index":   candle.index,
+                },
+            )
+
     def process_candle(
         self, candle: Candle, htf_candle_id: str,
         parent_state: Optional[Direction] = None,
@@ -3442,9 +3718,15 @@ class CRTEngine:
                     reason=f"Trade {self.state.active_trade.id} closed: {result}",
                     metadata={"pnl": self.state.active_trade.pnl},
                 )
-                self.sm.try_execution_to_resolution(
-                    self.state, f"Trade closed: {result}", candle, self.ev_log
-                )
+                # [entry-chain] A resting order that SL/TP closes while the setup is still in RETEST
+                # (confirmation not yet decided) has no legal RETEST->RESOLUTION edge (RETEST only
+                # reaches EXECUTION|RANGE). Skip the hop and reset directly; the TRADE_* event
+                # above already records the close. Legacy trades are always in EXECUTION here.
+                if not (self.entry_semantics == "resting_order"
+                        and self.state.current_state == CRTState.RETEST):
+                    self.sm.try_execution_to_resolution(
+                        self.state, f"Trade closed: {result}", candle, self.ev_log
+                    )
                 self.sm.reset_to_range(self.state, "Post-resolution reset", candle, self.ev_log)
                 action["action"] = f"TRADE_{result}"
                 action["state_after"] = self.state.current_state.name
@@ -3675,7 +3957,25 @@ class CRTEngine:
             # Try retest FIRST so a qualifying retest always wins over TTL expiry
             # on the same candle. If retest fires, we return before the TTL check runs.
             # [STORY-83.11b] decider="resolver": the engine does NOT found its own RETEST.
-            if self.decider == "engine" and self.sm.try_expansion_to_retest(
+            # [entry-chain 2026-10-01] retest_stop_guard: ResetLogic deliberately lets EXPANSION
+            # outlive the HTF flip (should_reset returns early), so the retrace/extension resets
+            # stop applying after the first flip. A bar CLOSE at/through the stop a trade built on
+            # this bar would use means the setup is already invalidated: end it here, BEFORE a
+            # RETEST can be founded on its bounce. A direct reset (not EXPIRED) keeps the reason
+            # truthful (EXPIRED is the TTL archive state) and costs no dead bar.
+            _stop_breach = (
+                self._expansion_stop_breach(candle) if self._retest_stop_guard else None
+            )
+            if _stop_breach is not None:
+                self.sm.reset_to_range(
+                    self.state,
+                    f"stop_breached (close={candle.close:.5f} stop={_stop_breach:.5f})",
+                    candle, self.ev_log,
+                )
+                action["action"] = "EXPANSION_STOP_BREACHED"
+                action["reason"] = "stop_breached"
+
+            elif self.decider == "engine" and self.sm.try_expansion_to_retest(
                     self.state, candle, self.state.atr_abs, self.ev_log):
                 action["action"] = "RETEST_CONFIRMED"
                 # Begin soft confirmation window (replaces binary 5-candle gate)
@@ -3685,6 +3985,10 @@ class CRTEngine:
                     "BEGIN_SOFT_CONF", candle,
                     reason="Retest locked — evaluating soft confirmation manifold"
                 )
+                if self.entry_semantics == "resting_order":
+                    # [entry-chain] the order fills at THIS bar's close (the retest close); the
+                    # soft-confirmation bars that follow are walked for SL/TP.
+                    self._place_resting_order(candle, action)
 
             else:
                 # ── Phase 3b: Expansion TTL guard ─────────────────────────────────
@@ -3848,15 +4152,17 @@ class CRTEngine:
                     # EPIC-84: telemetry BEFORE reset_to_range -- the reset nulls the geometry
                     # this record needs (displacement/retest/cached_features).
                     self._emit_retest_replay(candle, _effective_S, accepted=False, reject_reason="ZONE")
+                    _flat = self._flatten_if_resting(candle, "Not in discount zone")
                     self.sm.reset_to_range(self.state, "Not in discount zone", candle, self.ev_log)
-                    action["action"] = "FILTER_REJECTED"
+                    action["action"] = "TRADE_UNCONFIRMED" if _flat else "FILTER_REJECTED"
                     action["reason"] = "Not in discount zone"
 
                 elif self.state.direction == Direction.SHORT and entry_price < mid:
                     self.ev_log.record("FILTER_REJECTED", candle, reason="Not in premium zone")
                     self._emit_retest_replay(candle, _effective_S, accepted=False, reject_reason="ZONE")
+                    _flat = self._flatten_if_resting(candle, "Not in premium zone")
                     self.sm.reset_to_range(self.state, "Not in premium zone", candle, self.ev_log)
-                    action["action"] = "FILTER_REJECTED"
+                    action["action"] = "TRADE_UNCONFIRMED" if _flat else "FILTER_REJECTED"
                     action["reason"] = "Not in premium zone"
 
                 # ── Parent-timeframe bias gate (CH-htfcrt-parent-candle-smc-v1, 2026-08-15) ──
@@ -3875,11 +4181,13 @@ class CRTEngine:
                         reason=f"Against parent-timeframe bias ({parent_state.value})",
                     )
                     self._emit_retest_replay(candle, _effective_S, accepted=False, reject_reason="PARENT_BIAS")
+                    _flat = self._flatten_if_resting(
+                        candle, f"Against parent-timeframe bias ({parent_state.value})")
                     self.sm.reset_to_range(
                         self.state, f"Against parent-timeframe bias ({parent_state.value})",
                         candle, self.ev_log,
                     )
-                    action["action"] = "FILTER_REJECTED"
+                    action["action"] = "TRADE_UNCONFIRMED" if _flat else "FILTER_REJECTED"
                     action["reason"] = f"Against parent-timeframe bias ({parent_state.value})"
 
                 elif (
@@ -3894,12 +4202,14 @@ class CRTEngine:
                     self._emit_retest_replay(
                         candle, _effective_S, accepted=False, reject_reason="PARENT_OBJECTIVE",
                     )
+                    _flat = self._flatten_if_resting(
+                        candle, f"Against parent-timeframe objective ({parent_objective.value})")
                     self.sm.reset_to_range(
                         self.state,
                         f"Against parent-timeframe objective ({parent_objective.value})",
                         candle, self.ev_log,
                     )
-                    action["action"] = "FILTER_REJECTED"
+                    action["action"] = "TRADE_UNCONFIRMED" if _flat else "FILTER_REJECTED"
                     action["reason"] = (
                         f"Against parent-timeframe objective ({parent_objective.value})"
                     )
@@ -3919,24 +4229,7 @@ class CRTEngine:
                     # the UTC-converted timestamp when the operator has opted in via the same
                     # feature_pipeline.session_timestamp_basis key the FM-052 feature already
                     # uses (default "broker_local" = byte-identical prior behavior).
-                    _sess_name = "OFF_SESSION"
-                    if self._exchange_windows is not None:
-                        # [K23 F2] exact per-date exchange windows; first declared match wins
-                        # (so a London/NY overlap resolves to the earlier-declared session).
-                        from features.broker_clock import exchange_sessions_at as _esa
-                        _hits = _esa(candle.timestamp, self._exchange_windows)
-                        if _hits:
-                            _sess_name = _hits[0]
-                    else:
-                        if self._session_ts_basis == "utc_corrected":
-                            from features import broker_clock as _bc
-                            _ts_time = _bc.mt5_server_to_utc_scalar(candle.timestamp).time()
-                        else:
-                            _ts_time = candle.timestamp.time()
-                        for _name, (_start, _end) in self.config.session_windows.items():
-                            if _start <= _ts_time <= _end:
-                                _sess_name = _name
-                                break
+                    _sess_name = self._session_name_at(candle)
                     if _sess_name not in self.config.allowed_sessions:
                         self.ev_log.record(
                             "FILTER_REJECTED", candle,
@@ -3945,11 +4238,12 @@ class CRTEngine:
                         )
                         self._emit_retest_replay(candle, _effective_S, accepted=False,
                                                  reject_reason="OFF_SESSION")
+                        _flat = self._flatten_if_resting(candle, f"off_session:{_sess_name}")
                         self.sm.reset_to_range(
                             self.state, "off_session_filter",
                             candle, self.ev_log,
                         )
-                        action["action"] = "FILTER_REJECTED"
+                        action["action"] = "TRADE_UNCONFIRMED" if _flat else "FILTER_REJECTED"
                         action["reason"] = f"off_session:{_sess_name}"
                         action["state_after"] = self.state.current_state.name
                         return self._baseline_trace_finish(action)
@@ -3967,15 +4261,53 @@ class CRTEngine:
                         })
                         self._emit_retest_replay(candle, _effective_S, accepted=False,
                                                  reject_reason="SHADOW_ADVISORY")
+                        _flat = self._flatten_if_resting(candle, "shadow_advisory_only")
                         self.sm.reset_to_range(
                             self.state, "shadow_advisory_only", candle, self.ev_log
                         )
-                        action["action"] = "SHADOW_ADVISORY_BLOCK"
+                        action["action"] = "TRADE_UNCONFIRMED" if _flat else "SHADOW_ADVISORY_BLOCK"
                         return self._baseline_trace_finish(action)
                     # ─────────────────────────────────────────────────────────
 
-                    self.sm.try_retest_to_execution(self.state, candle, self.ev_log)
+                    if self.entry_semantics == "resting_order":
+                        # [entry-chain] The order is already live (placed at the RETEST bar by
+                        # `_place_resting_order`; a bar that closed it would have returned in the
+                        # trade-management block above). Approval only CONFIRMS it: move to
+                        # EXECUTION, close the candidate lifecycle ACCEPTED, emit no second
+                        # TRADE_OPENED. `active_trade` is live by construction in this branch.
+                        _live = self.state.active_trade
+                        if _live is None or _live.status not in ("OPEN", "TP1"):
+                            # Unreachable by construction (a closed order resets the setup before
+                            # confirmation can run). Fail loudly rather than confirm nothing.
+                            raise RuntimeError(
+                                "entry_semantics='resting_order' invariant violated: soft "
+                                "confirmation approved with no live resting order "
+                                f"(active_trade={'None' if _live is None else _live.status})"
+                            )
+                        self.sm.try_retest_to_execution(self.state, candle, self.ev_log)
+                        self.ev_log.record(
+                            "TRADE_CONFIRMED", candle,
+                            reason=f"Soft confirmation approved: resting order {_live.id} confirmed",
+                            metadata={"id": _live.id, "S_score": _effective_S},
+                        )
+                        action["action"]   = "TRADE_CONFIRMED"
+                        action["trade_id"] = _live.id
+                        self._record_accepted(candle, _live, _effective_S, _shadow_ctx,
+                                              _shadow_disp_br, action)
+                        action["state_after"] = self.state.current_state.name
+                        return self._baseline_trace_finish(action)
+
+                    # [entry-chain 2026-10-01] Build BEFORE the EXECUTION transition. The state
+                    # used to move to EXECUTION first and `build_trade` ran after it; a refusal
+                    # (e.g. inverted SL, 2024-06-03) then left the engine in EXECUTION with no
+                    # trade, no event and no reset, and the summary reported 0 rejected. `build_trade`
+                    # reads no `current_state`, so for a successful build the event order and every
+                    # value are unchanged (STATE_TRANSITION, then TRADE_OPENED).
                     trade = self.executor.build_trade(self.state, self.risk)
+                    if trade is None:
+                        self._reject_failed_build(candle, _effective_S, action)
+                        return self._baseline_trace_finish(action)
+                    self.sm.try_retest_to_execution(self.state, candle, self.ev_log)
 
                     if trade:
                         self.executor.open_trade(trade, candle.timestamp)
@@ -4004,59 +4336,10 @@ class CRTEngine:
                         # Embed live engine state so the backtest never needs to
                         # reach back into a static batch array for audit columns.
                         action["live_metrics"] = self.get_live_metrics()
-                        # [TELEMETRY] Close candidate as ACCEPTED — Phase 4b: include shadow_context; Phase 3:
-                        # candle_ts + trade_id so the ACCEPTED row resolves to the frozen PK and
-                        # joins to trades.csv / L8; the returned candidate_id rides on `action`
-                        # so the runner can stamp trades.csv.candidate_id (chain invariant 4/5).
-                        _acc_cid = self.telemetry.on_candidate_accepted(
-                            candle.index,
-                            score_at_approval=_effective_S,
-                            candle_ts=candle.timestamp,
-                            trade_id=trade.id,
-                            shadow_context=_shadow_ctx if self.state._came_from_shadow else {},
-                            shadow_displacement_br=_shadow_disp_br,
-                        )
-                        if _acc_cid is not None:
-                            action["candidate_id"] = _acc_cid
-                        self._emit_retest_replay(candle, _effective_S, accepted=True,
-                                                 reject_reason=None)
-
-                        # ── Phase 3b: Temporal integrity events ───────────────────
-                        _struct_age = candle.index - self.state._expansion_entry_idx
-
-                        # TEMPORAL_PARADOX (CRITICAL): last-resort guard — trade opened
-                        # after TTL should have expired. If this fires, the TTL check
-                        # has a gap (e.g. RETEST priority override let a stale trade through).
-                        if (self.config.max_expansion_age_candles > 0
-                                and _struct_age > self.config.max_expansion_age_candles):
-                            emit_integrity_event(
-                                "TEMPORAL_PARADOX", "CRITICAL", "crt_engine",
-                                {
-                                    "candidate_id":  f"CAND-{self.state._expansion_entry_idx}",
-                                    "structure_age": _struct_age,
-                                    "max_allowed":   self.config.max_expansion_age_candles,
-                                    "shadow_used":   self.state._came_from_shadow,
-                                    "candle_index":  candle.index,
-                                },
-                            )
-                            # Note: trade is NOT cancelled here — RETEST > EXPIRED by design.
-                            # TEMPORAL_PARADOX is informational: it shows TTL was overridden
-                            # by a valid retest. Investigate if count > 0 after production run.
-
-                        # TEMPORAL_STALE_WIN (WARNING): trade opened from expansion older than
-                        # P95 (342 candles). Trade still executes — this labels it for training.
-                        _warn_age = self.config.expansion_age_warn_candles
-                        if _warn_age > 0 and _struct_age > _warn_age:
-                            emit_integrity_event(
-                                "TEMPORAL_STALE_WIN", "WARNING", "crt_engine",
-                                {
-                                    "candidate_id":   f"CAND-{self.state._expansion_entry_idx}",
-                                    "structure_age":  _struct_age,
-                                    "warn_threshold": _warn_age,
-                                    "shadow_used":    self.state._came_from_shadow,
-                                    "candle_index":   candle.index,
-                                },
-                            )
+                        # [TELEMETRY] candidate ACCEPTED + replay + temporal integrity events:
+                        # shared with the resting-order confirm path (`_record_accepted`).
+                        self._record_accepted(candle, trade, _effective_S, _shadow_ctx,
+                                              _shadow_disp_br, action)
 
             elif self.state.soft_conf_candles >= self.config.soft_conf_max_candles:
                 # Evaluation window expired — no qualifying manifold found
@@ -4067,10 +4350,13 @@ class CRTEngine:
                 )
                 self._emit_retest_replay(candle, _effective_S, accepted=False,
                                          reject_reason="LOW_SCORE")
+                _flat = self._flatten_if_resting(candle, "Soft confirmation timeout")
                 self.sm.reset_to_range(
                     self.state, "Soft confirmation timeout", candle, self.ev_log
                 )
-                action["action"] = "CONFIRMATION_FAILED"
+                action["action"] = "TRADE_UNCONFIRMED" if _flat else "CONFIRMATION_FAILED"
+                if _flat:
+                    action["reason"] = "Soft confirmation timeout"
 
             else:
                 # Still within window — continue evaluating

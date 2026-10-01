@@ -32,10 +32,13 @@ def test_from_production_uses_the_declared_setup():
     assert e.executor.target_policy == d["setup"]["target_policy"]
     assert e.trade_ttl_candles == d["setup"]["trade_ttl_candles"]
     assert e.decider == d["setup"]["decider"]
+    assert e.entry_semantics == d["setup"]["entry_semantics"]
+    assert e._retest_stop_guard == d["setup"]["retest_stop_guard"]
 
 
 @pytest.mark.parametrize("section,key", [
     ("setup", "target_policy"), ("setup", "trade_ttl_candles"), ("setup", "decider"),
+    ("setup", "entry_semantics"), ("setup", "retest_stop_guard"),
     ("backtest", "sl_anchor"), ("backtest", "session_window_basis"),
     ("backtest", "htf_reset_exempt_sweep"), ("crt_engine", "retrace_reset_pct"),
 ])

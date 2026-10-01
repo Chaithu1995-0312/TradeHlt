@@ -54,7 +54,8 @@ def test_backtest_key_required(monkeypatch, key):
         BacktestConfig.from_prod_config("XAUUSD", 0.01, **_KW)
 
 
-@pytest.mark.parametrize("key", ["target_policy", "trade_ttl_candles", "decider"])
+@pytest.mark.parametrize("key", ["target_policy", "trade_ttl_candles", "decider",
+                                 "entry_semantics", "retest_stop_guard"])
 def test_setup_key_required(monkeypatch, key):
     from runtime.backtest_v2 import BacktestConfig
     _patch_sections(monkeypatch, drop_setup=(key,))

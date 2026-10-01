@@ -24,6 +24,11 @@ from typing import Optional
 TARGET_POLICIES = ("fixed_r", "structural_tp2")
 #: §3.2 key 4 allowed values.
 DECIDERS = ("engine", "resolver")
+#: Entry-chain key 1 (2026-10-01). `approval_bar_legacy` = today: the trade is built at the
+#: RETEST bar's close but only opened on the NEXT bar, after soft-confirmation approves, and the
+#: approval bar is never walked for SL/TP. `resting_order` = the order fills at the retest close
+#: and every soft-confirmation bar is walked; an unconfirmed setup is flattened at that bar's close.
+ENTRY_SEMANTICS = ("approval_bar_legacy", "resting_order")
 #: §3.2 key 1 / K23 F3 allowed values (existing, mirrors BacktestConfig.from_prod_config).
 SL_ANCHORS = ("displacement", "sweep_extreme")
 #: §3.2 key 6 / K23 F2 allowed values (existing).
@@ -37,6 +42,8 @@ V5_BASELINE: dict = {
     "target_policy": "fixed_r",
     "trade_ttl_candles": None,
     "decider": "engine",
+    "entry_semantics": "approval_bar_legacy",
+    "retest_stop_guard": False,
     "retrace_reset_pct": 0.5,
     "session_window_basis": "broker_static",
     "htf_reset_exempt_sweep": False,
@@ -62,6 +69,9 @@ class Setup:
     target_policy: str
     trade_ttl_candles: Optional[int]
     decider: str
+    #: Entry-chain keys (2026-10-01), `setup` section like keys 2-4. Strictly required.
+    entry_semantics: str
+    retest_stop_guard: bool
     retrace_reset_pct: float
     session_window_basis: str
     htf_reset_exempt_sweep: bool
@@ -107,6 +117,17 @@ class Setup:
         if decider not in DECIDERS:
             raise ValueError(f"Setup: setup.decider={decider!r} must be one of {DECIDERS}")
 
+        entry_semantics = _req(setup_section, "setup", "entry_semantics")
+        if entry_semantics not in ENTRY_SEMANTICS:
+            raise ValueError(
+                f"Setup: setup.entry_semantics={entry_semantics!r} must be one of {ENTRY_SEMANTICS}"
+            )
+        retest_stop_guard = _req(setup_section, "setup", "retest_stop_guard")
+        if not isinstance(retest_stop_guard, bool):
+            raise ValueError(
+                f"Setup: setup.retest_stop_guard must be a JSON boolean, got {retest_stop_guard!r}"
+            )
+
         backtest = get_prod_section("backtest", version=version)
         sl_anchor = _req(backtest, "backtest", "sl_anchor")
         if sl_anchor not in SL_ANCHORS:
@@ -148,6 +169,8 @@ class Setup:
             target_policy=target_policy,
             trade_ttl_candles=trade_ttl_candles,
             decider=decider,
+            entry_semantics=entry_semantics,
+            retest_stop_guard=retest_stop_guard,
             retrace_reset_pct=float(retrace_reset_pct),
             session_window_basis=session_window_basis,
             htf_reset_exempt_sweep=htf_reset_exempt_sweep,

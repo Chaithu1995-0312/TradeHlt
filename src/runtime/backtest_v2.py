@@ -300,6 +300,11 @@ class BacktestConfig:
     # (mode C, §5) is declared+validated but CRTEngine raises NotImplementedError at
     # construction if it is actually requested -- see crt_engine_v2.py's CRTEngine.__init__.
     decider: str
+    # Entry-chain keys (2026-10-01), `setup` section. `entry_semantics`: "approval_bar_legacy"
+    # (today) | "resting_order" (order fills at the retest close; soft-conf bars are walked).
+    # `retest_stop_guard`: when true, an EXPANSION whose close breaches the would-be stop ends.
+    entry_semantics: str
+    retest_stop_guard: bool
     # EPIC-84 STORY-84.4: declared in backtest.timeframe (was a getattr fallback to "M15").
     timeframe: str
 
@@ -420,6 +425,17 @@ class BacktestConfig:
         decider = _setup("decider")
         if decider not in ("engine", "resolver"):
             raise ValueError(f"BacktestConfig: setup.decider={decider!r} must be 'engine' or 'resolver'.")
+        entry_semantics = _setup("entry_semantics")
+        if entry_semantics not in ("approval_bar_legacy", "resting_order"):
+            raise ValueError(
+                f"BacktestConfig: setup.entry_semantics={entry_semantics!r} must be "
+                "'approval_bar_legacy' or 'resting_order'."
+            )
+        retest_stop_guard = _setup("retest_stop_guard")
+        if not isinstance(retest_stop_guard, bool):
+            raise ValueError(
+                f"BacktestConfig: setup.retest_stop_guard must be a JSON boolean, got {retest_stop_guard!r}."
+            )
 
         return cls(
             htf_candles_per_range = int(cfg["htf_candles_per_range"]),
@@ -452,6 +468,8 @@ class BacktestConfig:
             target_policy = target_policy,
             trade_ttl_candles = trade_ttl_candles,
             decider = decider,
+            entry_semantics = entry_semantics,
+            retest_stop_guard = retest_stop_guard,
             timeframe = str(_bt("timeframe")),
             scorer_mode = scorer_mode,
             allow_router_crt_config = bool(allow_router_crt_config),
@@ -1658,6 +1676,8 @@ class BacktestMetrics:
     session_window_basis:   str  = "broker_static"  # [K23 F2] stamped so a run is self-describing
     target_policy:          str  = "fixed_r"        # [STORY-83.11] stamped so a run is self-describing
     trade_ttl_candles:      Optional[int] = None    # [STORY-83.11] stamped so a run is self-describing
+    entry_semantics:        str  = "approval_bar_legacy"  # [entry-chain 2026-10-01] stamped
+    retest_stop_guard:      bool = False                  # [entry-chain 2026-10-01] stamped
 
     # ── [CH-run-identity-range-folder-manifest] corpus time range consumed ──────
     # First/last walked candle timestamps (as streamed, warmup included), so the
@@ -1722,6 +1742,8 @@ class BacktestMetrics:
             "session_window_basis":  self.session_window_basis,    # [K23 F2]
             "target_policy":         self.target_policy,           # [STORY-83.11]
             "trade_ttl_candles":     self.trade_ttl_candles,       # [STORY-83.11]
+            "entry_semantics":       self.entry_semantics,         # [entry-chain 2026-10-01]
+            "retest_stop_guard":     self.retest_stop_guard,       # [entry-chain 2026-10-01]
             "corpus_start":          self.corpus_start,            # [CH-run-identity-range-folder-manifest]
             "corpus_end":            self.corpus_end,
         }
@@ -1788,6 +1810,18 @@ def _resolve_exit(
             )
             return exit_raw, "TP1_TIMEOUT"
         return candle.close, "TIMEOUT"
+    if action == "TRADE_UNCONFIRMED":
+        # [entry-chain 2026-10-01, entry_semantics="resting_order"] A resting order whose setup was
+        # not confirmed is flattened at the bar's own CLOSE (ExecutionEngine.close_unconfirmed) --
+        # like a timeout, no level the market quoted, so the close is the only price to book. Same
+        # TP1-partial accounting as TIMEOUT: a banked partial stays, only the runner leg blends.
+        if trade_status == "TP1" and partial_tp_enabled:
+            exit_raw = (
+                partial_tp_fraction * t.tp1_price
+                + (1.0 - partial_tp_fraction) * candle.close
+            )
+            return exit_raw, "TP1_UNCONFIRMED"
+        return candle.close, "UNCONFIRMED"
     if "STOPPED" in action:
         if trade_status == "TP1" and partial_tp_enabled:
             # Runner stopped at breakeven; blend exit = f@TP1 + (1-f)@entry.
@@ -1844,6 +1878,8 @@ class MetricsEngine:
         session_window_basis: str = "broker_static",
         target_policy: str = "fixed_r",
         trade_ttl_candles: Optional[int] = None,
+        entry_semantics: str = "approval_bar_legacy",
+        retest_stop_guard: bool = False,
     ) -> BacktestMetrics:
         trades = journal.closed
         m = BacktestMetrics(instrument=self.instrument)
@@ -1856,6 +1892,8 @@ class MetricsEngine:
         m.session_window_basis   = session_window_basis    # [K23 F2]
         m.target_policy          = target_policy           # [STORY-83.11]
         m.trade_ttl_candles      = trade_ttl_candles       # [STORY-83.11]
+        m.entry_semantics        = entry_semantics         # [entry-chain 2026-10-01]
+        m.retest_stop_guard      = retest_stop_guard       # [entry-chain 2026-10-01]
         m.approved_trades  = len(trades)
         m.rejected_trades  = len(journal.rejections)
         m.total_setups     = m.approved_trades + m.rejected_trades
@@ -1871,8 +1909,11 @@ class MetricsEngine:
 
         m.wins           = sum(1 for t in trades if t.pnl_rr_net > 0)
         m.losses         = sum(1 for t in trades if t.pnl_rr_net <= 0)
-        m.tp1_hits       = sum(1 for t in trades if t.exit_reason in ("TP1", "TP2"))
-        m.tp2_hits       = sum(1 for t in trades if t.exit_reason == "TP2")
+        # A partial-TP close is reported as "TP1_<final>" (TP1_TP2, TP1_BE_STOP, ...) once the TP1
+        # partial is actually booked, so TP1 was reached for every TP1_* reason.
+        m.tp1_hits       = sum(1 for t in trades
+                               if t.exit_reason in ("TP1", "TP2") or t.exit_reason.startswith("TP1_"))
+        m.tp2_hits       = sum(1 for t in trades if t.exit_reason in ("TP2", "TP1_TP2"))
         m.total_pnl_rr_raw = sum(t.pnl_rr_raw for t in trades)
         m.total_pnl_rr_net = sum(t.pnl_rr_net for t in trades)
         m.avg_trade_duration = sum(t.duration_candles for t in trades) / len(trades)
@@ -3208,6 +3249,8 @@ class BacktestRunner:
             target_policy=self.cfg.target_policy,                     # [STORY-83.11]
             trade_ttl_candles=self.cfg.trade_ttl_candles,             # [STORY-83.11]
             decider=self.cfg.decider,                                 # [STORY-83.11]
+            entry_semantics=self.cfg.entry_semantics,                 # [entry-chain 2026-10-01]
+            retest_stop_guard=self.cfg.retest_stop_guard,             # [entry-chain 2026-10-01]
         )
         if self.cfg.decider == "resolver":
             # [STORY-83.11b] Mode C: the resolver's founding sidecar for THIS corpus. Fail-closed
@@ -3659,6 +3702,13 @@ class BacktestRunner:
             parent_objective = (
                 parent_feed.objective.status if parent_feed is not None else None
             )
+            # [net-R trace 2026-10-01] The trade's status BEFORE this bar. process_candle ->
+            # update_trade overwrites it (TP1 -> TP2 / STOPPED) on the very bar that closes the
+            # runner, so reading it afterwards made _resolve_exit's TP1-partial blend branches
+            # unreachable: a TP1-then-TP2 trade was booked entirely at TP2 (CRT-0003, +0.16R).
+            _pre_trade_status = (
+                engine.state.active_trade.status if engine.state.active_trade else None
+            )
             result     = engine.process_candle(
                 candle, htf.current_htf_id,
                 parent_state=parent_state,
@@ -3758,7 +3808,11 @@ class BacktestRunner:
                     _layer_trace.run_id, self.cfg.instrument, candle.timestamp
                 )
                 _lt_action = result.get("action", "NONE")
-                _lt_rejected = ("REJECTED" in _lt_action) or (_lt_action == "NONE" and bool(result.get("reason")))
+                _lt_rejected = (
+                    ("REJECTED" in _lt_action)
+                    or ("UNCONFIRMED" in _lt_action)   # [entry-chain] resting order flattened
+                    or (_lt_action == "NONE" and bool(result.get("reason")))
+                )
                 _lt_status = "REJECT" if _lt_rejected else "PASS"
                 _attempt = getattr(getattr(engine, "executor", None), "last_build_attempt", None)
                 if _attempt is None:
@@ -4260,11 +4314,17 @@ class BacktestRunner:
             elif (
                 "TRADE_STOPPED" in action or "TRADE_TP2" in action or "TRADE_TP1" in action
                 or "TRADE_TIMEOUT" in action  # [STORY-83.11 §6]
+                or "TRADE_UNCONFIRMED" in action  # [entry-chain 2026-10-01]
             ):
                 if journal.open_trade and engine.state.active_trade:
                     t = engine.state.active_trade
                     _closed = None
-                    _trade_status = getattr(t, "status", "OPEN")
+                    # Status the trade ENTERED this bar with (TP1 = partial already banked), not
+                    # the terminal status process_candle just wrote.
+                    _trade_status = (
+                        _pre_trade_status if _pre_trade_status is not None
+                        else getattr(t, "status", "OPEN")
+                    )
                     if "TP1" in action and "TP2" not in action and _partial_tp_enabled:
                         # Phase 3: partial TP — engine already moved SL→entry and set
                         # status="TP1". Don't close yet; runner continues to TP2 or BE.
@@ -4312,6 +4372,16 @@ class BacktestRunner:
 
             elif action.startswith("RISK_REJECTED"):
                 reason = action.split(":", 1)[1] if ":" in action else "unknown"
+                score  = engine.state.risk_score.final if engine.state.risk_score else 0.0
+                journal.on_rejected(reason, candle_idx, candle.timestamp, state_path, score)
+                self._episode_summarizer.on_rejected(reason, candle.timestamp)
+                state_path = []
+
+            elif action == "TRADE_BUILD_REJECTED":
+                # [entry-chain 2026-10-01] build_trade refused an approved setup (e.g. inverted
+                # SL). It used to leave the engine in EXECUTION with no trade and no record, so the
+                # run summary reported 0 rejected; it is now counted like any other rejection.
+                reason = str(result.get("reason") or "trade_build_rejected:unknown")
                 score  = engine.state.risk_score.final if engine.state.risk_score else 0.0
                 journal.on_rejected(reason, candle_idx, candle.timestamp, state_path, score)
                 self._episode_summarizer.on_rejected(reason, candle.timestamp)
@@ -4447,6 +4517,8 @@ class BacktestRunner:
             session_window_basis=self.cfg.session_window_basis,     # [K23 F2]
             target_policy=self.cfg.target_policy,                   # [STORY-83.11]
             trade_ttl_candles=self.cfg.trade_ttl_candles,           # [STORY-83.11]
+            entry_semantics=self.cfg.entry_semantics,               # [entry-chain 2026-10-01]
+            retest_stop_guard=self.cfg.retest_stop_guard,           # [entry-chain 2026-10-01]
         )
 
         # Phase 2: attach drift monitor stats to distribution summary. Best-effort —
