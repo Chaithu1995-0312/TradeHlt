@@ -2,7 +2,7 @@
 
 > **GENERATED — do not edit by hand.** Regenerate with `python scripts/analysis/gen_code_map.py`. Narrative + how-to-navigate lives in [`code-map.md`](code-map.md); module roles in [`codebase-state-map.md`](codebase-state-map.md).
 
-`src/` module-level import graph — 625 modules across 40 packages. Each per-package slice shows that package's modules and everything they import (a loadable unit).
+`src/` module-level import graph — 643 modules across 40 packages. Each per-package slice shows that package's modules and everything they import (a loadable unit).
 
 ## L0 — package dependency overview
 
@@ -69,6 +69,7 @@ flowchart LR
     charts --> features
     charts --> research
     charts --> runtime
+    cognitive --> config_layer
     cognitive --> core
     cognitive --> engines
     cognitive --> events
@@ -106,6 +107,7 @@ flowchart LR
     engines --> training
     engines --> utils
     events --> features
+    execution --> config_layer
     expansion --> config_layer
     expansion --> runtime
     features --> config_layer
@@ -130,6 +132,7 @@ flowchart LR
     inout --> utils
     interpreters --> config_layer
     interpreters --> research
+    journal --> config_layer
     journal --> core
     journal --> utils
     live --> config_layer
@@ -142,13 +145,16 @@ flowchart LR
     monitoring --> strategies
     monitoring --> uat
     monitoring --> utils
+    msip --> config_layer
     msip --> features
     multi_llm --> events
     multi_llm --> utils
     portfolio --> config_layer
     portfolio --> data_ingestion
     portfolio --> utils
+    regime --> config_layer
     regime --> utils
+    replay --> config_layer
     replay --> data_ingestion
     replay --> events
     replay --> utils
@@ -158,20 +164,24 @@ flowchart LR
     research --> data_ingestion
     research --> engines
     research --> features
+    research --> governance
     research --> interpreters
     research --> runtime
     research --> structure
     research --> training
     research --> utils
+    retrieval --> config_layer
     retrieval --> governance
     retrieval --> utils
     runtime --> analytics
     runtime --> bitnet
+    runtime --> charts
     runtime --> config_layer
     runtime --> core
     runtime --> data_ingestion
     runtime --> engines
     runtime --> features
+    runtime --> governance
     runtime --> inout
     runtime --> journal
     runtime --> live
@@ -239,6 +249,7 @@ flowchart LR
     config_layer_execution_planner["config_layer.execution_planner"]
     config_layer_llm_inference_client["config_layer.llm_inference_client"]
     config_layer_production_config["config_layer.production_config"]
+    config_layer_strict_config["config_layer.strict_config"]
     control_plane_registry["control_plane.registry"]
     core_engine_runner["core.engine_runner"]
     core_fusion_engine["core.fusion_engine"]
@@ -265,15 +276,18 @@ flowchart LR
     agent_agent_core --> agent_tool_planner
     agent_agent_core --> agent_tool_registry
     agent_agent_core --> config_layer_llm_inference_client
+    agent_agent_core --> config_layer_strict_config
     agent_cli --> agent
     agent_cli --> agent_agent_core
     agent_cli --> agent_grok_agentic
     agent_cli --> agent_state
     agent_cli --> config_layer_production_config
+    agent_cli --> config_layer_strict_config
     agent_executor --> agent_state
     agent_executor --> agent_tool_registry
     agent_findings_synthesizer --> agent_groq_client
     agent_findings_synthesizer --> config_layer_production_config
+    agent_findings_synthesizer --> config_layer_strict_config
     agent_findings_synthesizer --> control_plane_registry
     agent_goal_loop --> agent_goal
     agent_goal_loop --> agent_grok_agentic
@@ -283,6 +297,7 @@ flowchart LR
     agent_goal_loop --> agent_recipes_truth_janitor
     agent_grok_agentic --> agent_goal
     agent_groq_client --> config_layer_production_config
+    agent_groq_client --> config_layer_strict_config
     agent_intent_router --> agent_tool_planner
     agent_intent_router --> config_layer_llm_inference_client
     agent_modes --> agent_modes_copilot_mode
@@ -340,11 +355,13 @@ flowchart LR
     analytics_performance["analytics.performance"]
     analytics_sl_tp_comparator["analytics.sl_tp_comparator"]
     config_layer_production_config["config_layer.production_config"]
+    config_layer_strict_config["config_layer.strict_config"]
     data_ingestion_ohlcv_schema["data_ingestion.ohlcv_schema"]
     features_feature_schema["features.feature_schema"]
     runtime_backtest_v2["runtime.backtest_v2"]
     analytics_sl_tp_comparator --> analytics_metrics_oracle
     analytics_sl_tp_comparator --> config_layer_production_config
+    analytics_sl_tp_comparator --> config_layer_strict_config
     analytics_sl_tp_comparator --> data_ingestion_ohlcv_schema
     analytics_sl_tp_comparator --> features_feature_schema
     analytics_sl_tp_comparator --> runtime_backtest_v2
@@ -378,6 +395,8 @@ flowchart LR
     bitnet_zone_cosine_searcher["bitnet.zone_cosine_searcher"]
     bitnet_zone_validator["bitnet.zone_validator"]
     config_layer_model_paths["config_layer.model_paths"]
+    config_layer_production_config["config_layer.production_config"]
+    config_layer_strict_config["config_layer.strict_config"]
     engines_live_engine["engines.live_engine"]
     engines_scoring_engine["engines.scoring_engine"]
     features_dataset_builder["features.dataset_builder"]
@@ -405,6 +424,8 @@ flowchart LR
     bitnet_bitnet_registry --> config_layer_model_paths
     bitnet_bitnet_runner --> bitnet_bitnet_inference
     bitnet_bitnet_runner --> bitnet_model_contract
+    bitnet_bitnet_runner --> config_layer_production_config
+    bitnet_bitnet_runner --> config_layer_strict_config
     bitnet_bitnet_runner --> features_feature_schema
     bitnet_bitnet_runner --> utils_integrity_events
     bitnet_composition --> bitnet_adapters
@@ -414,6 +435,7 @@ flowchart LR
     bitnet_composition --> bitnet_encoders
     bitnet_composition --> bitnet_heads
     bitnet_composition --> bitnet_runtime_types
+    bitnet_composition --> config_layer_strict_config
     bitnet_composition --> features_feature_schema
     bitnet_contract_c_trainer --> bitnet_defaults
     bitnet_contract_c_trainer --> bitnet_label_contracts
@@ -452,6 +474,7 @@ flowchart LR
     charts_resolver_overlay["charts.resolver_overlay"]
     config_layer_crt_engine_v2["config_layer.crt_engine_v2"]
     config_layer_production_config["config_layer.production_config"]
+    config_layer_strict_config["config_layer.strict_config"]
     control_plane_dashboard_api["control_plane.dashboard_api"]
     data_ingestion_corpus_gate["data_ingestion.corpus_gate"]
     data_ingestion_dataset_integrity["data_ingestion.dataset_integrity"]
@@ -468,6 +491,7 @@ flowchart LR
     charts_chart_api --> data_ingestion_dataset_integrity
     charts_chart_series --> config_layer_crt_engine_v2
     charts_chart_series --> config_layer_production_config
+    charts_chart_series --> config_layer_strict_config
     charts_chart_series --> features_calendar_periods
     charts_chart_series --> research_resample
     charts_chart_series --> runtime_backtest_v2
@@ -488,6 +512,7 @@ flowchart LR
 flowchart LR
     cognitive["cognitive"]
     cognitive_cognitive_bus["cognitive.cognitive_bus"]
+    config_layer_strict_config["config_layer.strict_config"]
     core_hierarchical_meta_fusion["core.hierarchical_meta_fusion"]
     engines_tradenet_meta_engine["engines.tradenet_meta_engine"]
     events_event_fabric["events.event_fabric"]
@@ -495,6 +520,7 @@ flowchart LR
     replay_replay_memory_engine["replay.replay_memory_engine"]
     utils_logging_config["utils.logging_config"]
     cognitive --> cognitive_cognitive_bus
+    cognitive_cognitive_bus --> config_layer_strict_config
     cognitive_cognitive_bus --> core_hierarchical_meta_fusion
     cognitive_cognitive_bus --> engines_tradenet_meta_engine
     cognitive_cognitive_bus --> events_event_fabric
@@ -532,15 +558,18 @@ flowchart LR
     config_layer_parent_crt["config_layer.parent_crt"]
     config_layer_production_bundle["config_layer.production_bundle"]
     config_layer_production_config["config_layer.production_config"]
+    config_layer_retest_geometry["config_layer.retest_geometry"]
     config_layer_rr["config_layer.rr"]
     config_layer_rr_rr_dataset_builder["config_layer.rr.rr_dataset_builder"]
     config_layer_rr_rr_fusion["config_layer.rr.rr_fusion"]
-    config_layer_rr_rr_pattern_miner["config_layer.rr.rr_pattern_miner"]
+    config_layer_rr_rr_trained["config_layer.rr.rr_trained"]
+    config_layer_setup["config_layer.setup"]
     config_layer_stack_version["config_layer.stack_version"]
     config_layer_state_contract["config_layer.state_contract"]
     config_layer_state_contract_loader["config_layer.state_contract_loader"]
     config_layer_state_identity["config_layer.state_identity"]
     config_layer_state_topology["config_layer.state_topology"]
+    config_layer_strict_config["config_layer.strict_config"]
     bitnet_bitnet_inference["bitnet.bitnet_inference"]
     bitnet_bitnet_registry["bitnet.bitnet_registry"]
     core_gate_intelligence["core.gate_intelligence"]
@@ -562,7 +591,10 @@ flowchart LR
     utils_sweep_trace_logger["utils.sweep_trace_logger"]
     config_layer_config_builder --> config_layer_crt_config_provenance
     config_layer_config_builder --> config_layer_market_router
+    config_layer_config_builder --> config_layer_production_config
     config_layer_config_builder --> config_layer_state_identity
+    config_layer_config_builder --> config_layer_strict_config
+    config_layer_config_validator --> config_layer_config_builder
     config_layer_config_validator --> config_layer_goal_schema
     config_layer_config_validator --> config_layer_goal_validator
     config_layer_config_validator --> config_layer_production_config
@@ -570,6 +602,7 @@ flowchart LR
     config_layer_config_validator --> runtime_backtest_v2
     config_layer_crt_config_completeness --> config_layer_state_identity
     config_layer_crt_config_provenance --> config_layer_config_builder
+    config_layer_crt_config_provenance --> config_layer_market_router
     config_layer_crt_config_provenance --> config_layer_production_config
     config_layer_crt_config_provenance --> config_layer_state_identity
     config_layer_crt_engine_v2 --> bitnet_bitnet_inference
@@ -578,6 +611,8 @@ flowchart LR
     config_layer_crt_engine_v2 --> config_layer_htf_state
     config_layer_crt_engine_v2 --> config_layer_m15_structural_range
     config_layer_crt_engine_v2 --> config_layer_production_config
+    config_layer_crt_engine_v2 --> config_layer_retest_geometry
+    config_layer_crt_engine_v2 --> config_layer_setup
     config_layer_crt_engine_v2 --> config_layer_state_contract_loader
     config_layer_crt_engine_v2 --> config_layer_state_identity
     config_layer_crt_engine_v2 --> config_layer_state_topology
@@ -592,8 +627,11 @@ flowchart LR
     config_layer_crt_engine_v2 --> utils_integrity_events
     config_layer_crt_engine_v2 --> utils_sweep_trace_logger
     config_layer_crt_gaussian_scorer --> config_layer_production_config
+    config_layer_crt_gaussian_scorer --> config_layer_strict_config
     config_layer_crt_gaussian_scorer --> engines_scoring_engine
     config_layer_crt_gaussian_scorer --> features_derived_math
+    config_layer_execution_planner --> config_layer_production_config
+    config_layer_execution_planner --> config_layer_strict_config
     config_layer_execution_planner --> core_gate_intelligence
     config_layer_execution_planner --> utils_logging_config
     config_layer_goal_schema --> config_layer_production_config
@@ -605,6 +643,7 @@ flowchart LR
     config_layer_llm_inference_client --> config_layer_llm_narrative
     config_layer_llm_inference_client --> config_layer_llm_scorer
     config_layer_llm_inference_client --> config_layer_production_config
+    config_layer_llm_inference_client --> config_layer_strict_config
     config_layer_llm_narrative --> config_layer_llm_inference_client
     config_layer_llm_scorer --> config_layer_llm_inference_client
     config_layer_m15_structural_range --> config_layer_state_identity
@@ -617,19 +656,26 @@ flowchart LR
     config_layer_production_bundle --> config_layer_model_resolver
     config_layer_production_bundle --> config_layer_production_config
     config_layer_production_config --> config_layer_config_builder
+    config_layer_production_config --> config_layer_crt_config_completeness
     config_layer_production_config --> config_layer_crt_config_provenance
     config_layer_production_config --> config_layer_state_identity
+    config_layer_production_config --> config_layer_strict_config
+    config_layer_retest_geometry --> features_fm_resolve
     config_layer_rr_rr_dataset_builder --> features_feature_pipeline
     config_layer_rr_rr_dataset_builder --> features_feature_schema
     config_layer_rr_rr_dataset_builder --> features_schema_validator
     config_layer_rr_rr_fusion --> config_layer_production_config
-    config_layer_rr_rr_fusion --> config_layer_rr_rr_pattern_miner
+    config_layer_rr_rr_fusion --> config_layer_rr_rr_trained
     config_layer_rr_rr_fusion --> features_feature_pipeline
     config_layer_rr_rr_fusion --> features_feature_schema
     config_layer_rr_rr_fusion --> features_schema_validator
     config_layer_rr_rr_fusion --> utils_integrity_events
-    config_layer_rr_rr_pattern_miner --> config_layer_production_config
-    config_layer_rr_rr_pattern_miner --> features_feature_schema
+    config_layer_rr_rr_trained --> config_layer_production_config
+    config_layer_rr_rr_trained --> config_layer_strict_config
+    config_layer_rr_rr_trained --> features_feature_schema
+    config_layer_setup --> config_layer_production_config
+    config_layer_setup --> config_layer_strict_config
+    config_layer_setup --> features_broker_clock
     config_layer_stack_version --> config_layer_production_bundle
     config_layer_stack_version --> config_layer_production_config
     config_layer_stack_version --> features_feature_schema
@@ -656,28 +702,37 @@ flowchart LR
     control_plane_registry["control_plane.registry"]
     control_plane_report_api["control_plane.report_api"]
     control_plane_retrieval_api["control_plane.retrieval_api"]
+    control_plane_run_trace_api["control_plane.run_trace_api"]
     control_plane_server["control_plane.server"]
     agent_findings_synthesizer["agent.findings_synthesizer"]
     agent_groq_client["agent.groq_client"]
     charts_chart_api["charts.chart_api"]
     config_layer_llm_inference_client["config_layer.llm_inference_client"]
     config_layer_production_config["config_layer.production_config"]
+    config_layer_strict_config["config_layer.strict_config"]
     retrieval["retrieval"]
+    utils_parquet_store["utils.parquet_store"]
     utils_run_linkage["utils.run_linkage"]
     control_plane --> control_plane_jobs
     control_plane --> control_plane_registry
     control_plane --> control_plane_server
+    control_plane_context_report --> config_layer_strict_config
     control_plane_dashboard_api --> agent_groq_client
+    control_plane_dashboard_api --> config_layer_strict_config
     control_plane_dashboard_api --> utils_run_linkage
     control_plane_jobs --> control_plane_cp_types
     control_plane_jobs --> control_plane_monitors
     control_plane_jobs --> control_plane_registry
+    control_plane_monitors --> config_layer_strict_config
     control_plane_registry --> control_plane_cp_types
+    control_plane_report_api --> config_layer_strict_config
     control_plane_retrieval_api --> retrieval
+    control_plane_run_trace_api --> utils_parquet_store
     control_plane_server --> agent_findings_synthesizer
     control_plane_server --> charts_chart_api
     control_plane_server --> config_layer_llm_inference_client
     control_plane_server --> config_layer_production_config
+    control_plane_server --> config_layer_strict_config
     control_plane_server --> control_plane_code_context_extractor
     control_plane_server --> control_plane_context_report
     control_plane_server --> control_plane_dashboard_api
@@ -686,6 +741,7 @@ flowchart LR
     control_plane_server --> control_plane_registry
     control_plane_server --> control_plane_report_api
     control_plane_server --> control_plane_retrieval_api
+    control_plane_server --> control_plane_run_trace_api
 ```
 
 ## core
@@ -706,6 +762,7 @@ flowchart LR
     core_governance_mode["core.governance_mode"]
     core_hierarchical_meta_fusion["core.hierarchical_meta_fusion"]
     core_model_registry["core.model_registry"]
+    core_position_sizing["core.position_sizing"]
     core_regime_governor["core.regime_governor"]
     core_signal_audit["core.signal_audit"]
     core_signal_belief_tracker["core.signal_belief_tracker"]
@@ -717,14 +774,14 @@ flowchart LR
     config_layer_model_resolver["config_layer.model_resolver"]
     config_layer_production_config["config_layer.production_config"]
     config_layer_rr_rr_fusion["config_layer.rr.rr_fusion"]
+    config_layer_strict_config["config_layer.strict_config"]
+    engines_candle_commitment["engines.candle_commitment"]
     engines_crt_engine["engines.crt_engine"]
-    engines_heuristic_gaussian_engine["engines.heuristic_gaussian_engine"]
+    engines_ema_momentum_kernel["engines.ema_momentum_kernel"]
+    engines_feature_cluster_similarity["engines.feature_cluster_similarity"]
     engines_live_engine["engines.live_engine"]
-    engines_ml_gaussian_engine["engines.ml_gaussian_engine"]
-    engines_rr_engine["engines.rr_engine"]
     engines_trap_validator_engine["engines.trap_validator_engine"]
     engines_zone_cluster_score["engines.zone_cluster_score"]
-    engines_zone_gate_engine["engines.zone_gate_engine"]
     events_event_fabric["events.event_fabric"]
     features_causal_structure["features.causal_structure"]
     features_feature_pipeline["features.feature_pipeline"]
@@ -735,15 +792,19 @@ flowchart LR
     utils_integrity_events["utils.integrity_events"]
     utils_logging_config["utils.logging_config"]
     core_acceptance_controller --> config_layer_production_config
+    core_acceptance_controller --> config_layer_strict_config
     core_backtest_port --> runtime_backtest_v2
     core_collector --> config_layer_production_config
+    core_collector --> config_layer_strict_config
     core_collector --> utils_logging_config
     core_convergence_controller --> config_layer_production_config
+    core_decision_engine --> config_layer_strict_config
     core_decision_engine --> core_dynamic_threshold
     core_engine_runner --> cognitive_cognitive_bus
     core_engine_runner --> config_layer_model_resolver
     core_engine_runner --> config_layer_production_config
     core_engine_runner --> config_layer_rr_rr_fusion
+    core_engine_runner --> config_layer_strict_config
     core_engine_runner --> core_acceptance_controller
     core_engine_runner --> core_collector
     core_engine_runner --> core_convergence_controller
@@ -751,14 +812,13 @@ flowchart LR
     core_engine_runner --> core_fusion_engine
     core_engine_runner --> core_regime_governor
     core_engine_runner --> core_signal_audit
+    core_engine_runner --> engines_candle_commitment
     core_engine_runner --> engines_crt_engine
-    core_engine_runner --> engines_heuristic_gaussian_engine
+    core_engine_runner --> engines_ema_momentum_kernel
+    core_engine_runner --> engines_feature_cluster_similarity
     core_engine_runner --> engines_live_engine
-    core_engine_runner --> engines_ml_gaussian_engine
-    core_engine_runner --> engines_rr_engine
     core_engine_runner --> engines_trap_validator_engine
     core_engine_runner --> engines_zone_cluster_score
-    core_engine_runner --> engines_zone_gate_engine
     core_engine_runner --> events_event_fabric
     core_engine_runner --> features_feature_schema
     core_engine_runner --> utils_logging_config
@@ -766,19 +826,28 @@ flowchart LR
     core_feature_store --> features_feature_pipeline
     core_feature_store --> features_feature_schema
     core_feature_store --> features_schema_validator
+    core_fusion_engine --> config_layer_strict_config
     core_fusion_engine --> utils_integrity_events
     core_gate_intelligence --> utils_logging_config
     core_governance_mode --> config_layer_production_config
+    core_governance_mode --> config_layer_strict_config
     core_hierarchical_meta_fusion --> utils_logging_config
     core_model_registry --> config_layer_production_config
     core_model_registry --> features_feature_pipeline
     core_model_registry --> features_feature_schema
     core_model_registry --> training_evaluator
     core_model_registry --> utils_integrity_events
+    core_position_sizing --> config_layer_strict_config
     core_regime_governor --> config_layer_production_config
+    core_signal_audit --> config_layer_production_config
+    core_signal_belief_tracker --> config_layer_production_config
+    core_signal_belief_tracker --> config_layer_strict_config
     core_ultron_live_adapter --> core_ultron_risk_gate
     core_ultron_live_adapter --> utils_logging_config
+    core_ultron_risk_gate --> config_layer_strict_config
+    core_ultron_risk_gate --> core_position_sizing
     core_ultron_risk_gate --> utils_logging_config
+    core_ultron_risk_gate_wrapper --> config_layer_strict_config
 ```
 
 ## data_ingestion
@@ -798,6 +867,7 @@ flowchart LR
     data_ingestion_xauusd_phase1_candidate["data_ingestion.xauusd_phase1_candidate"]
     config_layer_crt_engine_v2["config_layer.crt_engine_v2"]
     config_layer_production_config["config_layer.production_config"]
+    config_layer_strict_config["config_layer.strict_config"]
     features_broker_clock["features.broker_clock"]
     features_feature_schema["features.feature_schema"]
     utils_console_safe["utils.console_safe"]
@@ -805,6 +875,7 @@ flowchart LR
     data_ingestion_clock_detector --> data_ingestion_ohlcv_schema
     data_ingestion_clock_detector --> features_broker_clock
     data_ingestion_clock_registry --> data_ingestion_ohlcv_schema
+    data_ingestion_corpus_gate --> config_layer_strict_config
     data_ingestion_corpus_gate --> data_ingestion_dataset_integrity
     data_ingestion_corpus_gate --> data_ingestion_dataset_registry
     data_ingestion_corpus_gate --> data_ingestion_xauusd_phase1_candidate
@@ -814,6 +885,7 @@ flowchart LR
     data_ingestion_corpus_store --> data_ingestion_dataset_registry
     data_ingestion_corpus_store --> data_ingestion_xauusd_phase1_candidate
     data_ingestion_dataset_integrity --> config_layer_production_config
+    data_ingestion_dataset_integrity --> config_layer_strict_config
     data_ingestion_dataset_integrity --> data_ingestion_ohlcv_schema
     data_ingestion_dataset_integrity --> data_ingestion_session_autoderive
     data_ingestion_dataset_integrity --> features_feature_schema
@@ -821,6 +893,7 @@ flowchart LR
     data_ingestion_dataset_integrity --> utils_logging_config
     data_ingestion_dataset_registry --> data_ingestion_xauusd_phase1_candidate
     data_ingestion_historical_fetcher --> config_layer_production_config
+    data_ingestion_historical_fetcher --> config_layer_strict_config
     data_ingestion_historical_fetcher --> data_ingestion_ohlcv_schema
     data_ingestion_historical_fetcher --> utils_logging_config
     data_ingestion_ohlcv_schema --> data_ingestion_clock_registry
@@ -832,22 +905,23 @@ flowchart LR
 ```mermaid
 flowchart LR
     engines["engines"]
+    engines_candle_commitment["engines.candle_commitment"]
     engines_crt_engine["engines.crt_engine"]
+    engines_ema_momentum_kernel["engines.ema_momentum_kernel"]
+    engines_feature_cluster_similarity["engines.feature_cluster_similarity"]
     engines_gaussian_engine["engines.gaussian_engine"]
-    engines_heuristic_gaussian_engine["engines.heuristic_gaussian_engine"]
     engines_live_engine["engines.live_engine"]
     engines_llm_engine["engines.llm_engine"]
     engines_ml_gaussian_engine["engines.ml_gaussian_engine"]
-    engines_rr_engine["engines.rr_engine"]
     engines_scoring_engine["engines.scoring_engine"]
     engines_tradenet_meta_engine["engines.tradenet_meta_engine"]
     engines_trap_validator_engine["engines.trap_validator_engine"]
     engines_zone_cluster_score["engines.zone_cluster_score"]
-    engines_zone_gate_engine["engines.zone_gate_engine"]
     bitnet_zone_cosine_searcher["bitnet.zone_cosine_searcher"]
     config_layer_llm_scorer["config_layer.llm_scorer"]
     config_layer_model_paths["config_layer.model_paths"]
     config_layer_rr_rr_fusion["config_layer.rr.rr_fusion"]
+    config_layer_strict_config["config_layer.strict_config"]
     core_model_registry["core.model_registry"]
     features_dataset_builder["features.dataset_builder"]
     features_feature_schema["features.feature_schema"]
@@ -862,14 +936,17 @@ flowchart LR
     utils_registry_refresh["utils.registry_refresh"]
     utils_zone_schema_migrator["utils.zone_schema_migrator"]
     engines_crt_engine --> engines_scoring_engine
-    engines_gaussian_engine --> engines_heuristic_gaussian_engine
-    engines_heuristic_gaussian_engine --> config_layer_model_paths
-    engines_heuristic_gaussian_engine --> features_feature_schema
-    engines_heuristic_gaussian_engine --> utils_integrity_events
-    engines_heuristic_gaussian_engine --> utils_registry_refresh
+    engines_ema_momentum_kernel --> config_layer_model_paths
+    engines_ema_momentum_kernel --> features_feature_schema
+    engines_ema_momentum_kernel --> utils_integrity_events
+    engines_ema_momentum_kernel --> utils_registry_refresh
+    engines_feature_cluster_similarity --> features_feature_schema
+    engines_feature_cluster_similarity --> utils_logging_config
+    engines_feature_cluster_similarity --> utils_zone_schema_migrator
     engines_live_engine --> bitnet_zone_cosine_searcher
     engines_live_engine --> config_layer_model_paths
     engines_live_engine --> config_layer_rr_rr_fusion
+    engines_live_engine --> config_layer_strict_config
     engines_live_engine --> features_dataset_builder
     engines_live_engine --> features_feature_schema
     engines_live_engine --> training_training_trigger
@@ -889,11 +966,9 @@ flowchart LR
     engines_tradenet_meta_engine --> features_dataset_builder
     engines_tradenet_meta_engine --> training_trainer
     engines_tradenet_meta_engine --> utils_logging_config
+    engines_trap_validator_engine --> config_layer_strict_config
     engines_trap_validator_engine --> features_session_classifier
-    engines_zone_cluster_score --> engines_zone_gate_engine
-    engines_zone_gate_engine --> features_feature_schema
-    engines_zone_gate_engine --> utils_logging_config
-    engines_zone_gate_engine --> utils_zone_schema_migrator
+    engines_zone_cluster_score --> engines_feature_cluster_similarity
 ```
 
 ## events
@@ -916,6 +991,10 @@ flowchart LR
     execution_execution_intent_v1_0["execution.execution_intent_v1_0"]
     execution_loop["execution.loop"]
     execution_override_handler["execution.override_handler"]
+    config_layer_strict_config["config_layer.strict_config"]
+    execution_alert_manager --> config_layer_strict_config
+    execution_loop --> config_layer_strict_config
+    execution_override_handler --> config_layer_strict_config
 ```
 
 ## expansion
@@ -929,9 +1008,11 @@ flowchart LR
     expansion_llm_pattern_extractor["expansion.llm_pattern_extractor"]
     expansion_policy_schema["expansion.policy_schema"]
     config_layer_llm_inference_client["config_layer.llm_inference_client"]
+    config_layer_strict_config["config_layer.strict_config"]
     runtime_backtest_v2["runtime.backtest_v2"]
     expansion_config_mutator --> expansion_policy_schema
     expansion_evaluator --> expansion_policy_schema
+    expansion_expansion_engine --> config_layer_strict_config
     expansion_expansion_engine --> expansion_config_mutator
     expansion_expansion_engine --> expansion_evaluator
     expansion_expansion_engine --> expansion_policy_schema
@@ -945,6 +1026,7 @@ flowchart LR
 ```mermaid
 flowchart LR
     features["features"]
+    features_bar_feature_frame["features.bar_feature_frame"]
     features_broker_clock["features.broker_clock"]
     features_calendar_periods["features.calendar_periods"]
     features_candle_math["features.candle_math"]
@@ -987,13 +1069,19 @@ flowchart LR
     features_smc_mitigation["features.smc.mitigation"]
     features_smc_order_block["features.smc.order_block"]
     config_layer_crt_config_completeness["config_layer.crt_config_completeness"]
+    config_layer_crt_config_provenance["config_layer.crt_config_provenance"]
     config_layer_crt_engine_v2["config_layer.crt_engine_v2"]
     config_layer_production_config["config_layer.production_config"]
+    config_layer_retest_geometry["config_layer.retest_geometry"]
     config_layer_state_identity["config_layer.state_identity"]
+    config_layer_strict_config["config_layer.strict_config"]
     data_ingestion_ohlcv_schema["data_ingestion.ohlcv_schema"]
     structure_predicates["structure.predicates"]
     utils_integrity_events["utils.integrity_events"]
     utils_logging_config["utils.logging_config"]
+    features_bar_feature_frame --> data_ingestion_ohlcv_schema
+    features_bar_feature_frame --> features_feature_pipeline
+    features_bar_feature_frame --> features_feature_schema
     features_calendar_periods --> config_layer_crt_engine_v2
     features_causal_structure --> features_feature_pipeline
     features_causal_structure --> features_fm_resolve
@@ -1001,6 +1089,9 @@ flowchart LR
     features_crt_feature_builder --> features_feature_schema
     features_crt_feature_builder --> features_fm_resolve
     features_crt_feature_builder --> utils_integrity_events
+    features_crt_state_resolver --> config_layer_crt_config_provenance
+    features_crt_state_resolver --> config_layer_production_config
+    features_crt_state_resolver --> config_layer_retest_geometry
     features_crt_state_resolver --> config_layer_state_identity
     features_crt_state_resolver --> features_feature_schema
     features_crt_state_resolver --> features_feature_states
@@ -1008,6 +1099,7 @@ flowchart LR
     features_crt_state_resolver --> structure_predicates
     features_dataset_builder --> features_feature_schema
     features_dataset_validator --> config_layer_production_config
+    features_dataset_validator --> config_layer_strict_config
     features_dataset_validator --> features_feature_builder
     features_dataset_validator --> features_feature_schema
     features_feature_builder --> features_dataset_builder
@@ -1027,6 +1119,7 @@ flowchart LR
     features_feature_pipeline --> features_smc_mitigation
     features_feature_pipeline --> features_smc_order_block
     features_feature_pipeline --> utils_logging_config
+    features_feature_schema --> features_registry
     features_feature_schema --> features_schema_validator
     features_feature_schema --> features_session_classifier
     features_feature_states --> features_feature_schema
@@ -1096,7 +1189,10 @@ flowchart LR
     governance_findings_export["governance.findings_export"]
     governance_framework_registry["governance.framework_registry"]
     governance_hypothesis_registry["governance.hypothesis_registry"]
+    governance_identity_chain["governance.identity_chain"]
+    governance_identity_spine["governance.identity_spine"]
     governance_jsonl_claim_catalog["governance.jsonl_claim_catalog"]
+    governance_measurement_basis["governance.measurement_basis"]
     governance_measurement_result_log["governance.measurement_result_log"]
     governance_module_attribution["governance.module_attribution"]
     governance_module_census["governance.module_census"]
@@ -1108,6 +1204,7 @@ flowchart LR
     governance_provenance_record["governance.provenance_record"]
     governance_provenance_resolver["governance.provenance_resolver"]
     governance_reflection_buffer_advanced["governance.reflection_buffer_advanced"]
+    governance_run_identity["governance.run_identity"]
     governance_script_census["governance.script_census"]
     governance_script_registry["governance.script_registry"]
     governance_script_seed["governance.script_seed"]
@@ -1122,6 +1219,7 @@ flowchart LR
     config_layer_config_validator["config_layer.config_validator"]
     config_layer_production_config["config_layer.production_config"]
     config_layer_state_identity["config_layer.state_identity"]
+    config_layer_strict_config["config_layer.strict_config"]
     control_plane_registry["control_plane.registry"]
     data_ingestion_ohlcv_schema["data_ingestion.ohlcv_schema"]
     expansion_expansion_engine["expansion.expansion_engine"]
@@ -1134,16 +1232,21 @@ flowchart LR
     utils_jsonl_writer["utils.jsonl_writer"]
     utils_logging_config["utils.logging_config"]
     governance --> governance_orchestrator
+    governance_expansion_integration --> config_layer_strict_config
     governance_expansion_integration --> expansion_expansion_engine
     governance_expansion_integration --> governance_shadow_promotion_gate
     governance_expansion_integration --> runtime_backtest_v2
     governance_framework_registry --> utils_jsonl_writer
     governance_hypothesis_registry --> governance_framework_registry
     governance_hypothesis_registry --> utils_jsonl_writer
+    governance_identity_chain --> governance_identity_spine
+    governance_identity_chain --> governance_measurement_basis
+    governance_measurement_basis --> identity_tokens
     governance_measurement_result_log --> identity_tokens
     governance_module_attribution --> governance_script_registry
     governance_module_attribution --> utils_jsonl_writer
     governance_module_census --> governance_module_attribution
+    governance_multi_strategy_validator --> config_layer_production_config
     governance_multi_strategy_validator --> governance_strategy_backtest
     governance_multi_strategy_validator --> utils_logging_config
     governance_orchestrator --> governance_bitnet_governance_executor
@@ -1152,8 +1255,11 @@ flowchart LR
     governance_portfolio_validation --> config_layer_config_builder
     governance_portfolio_validation --> config_layer_production_config
     governance_portfolio_validation --> config_layer_state_identity
+    governance_portfolio_validation --> config_layer_strict_config
     governance_portfolio_validation --> runtime_backtest_v2
     governance_promotion_manager --> config_layer_config_validator
+    governance_promotion_manager --> config_layer_production_config
+    governance_promotion_manager --> config_layer_strict_config
     governance_provenance_derivation --> governance_provenance_record
     governance_provenance_derivation --> governance_provenance_resolver
     governance_provenance_resolver --> governance_provenance_record
@@ -1176,6 +1282,7 @@ flowchart LR
     governance_semantic_query --> governance_semantic_objects
     governance_semantic_query --> governance_semantic_os
     governance_semantic_query --> research_probes_scriptmod
+    governance_shadow_promotion_gate --> config_layer_strict_config
     governance_strategy_backtest --> data_ingestion_ohlcv_schema
     governance_strategy_backtest --> features_feature_pipeline
     governance_strategy_backtest --> features_feature_schema
@@ -1199,6 +1306,7 @@ flowchart LR
     config_layer_crt_engine_v2["config_layer.crt_engine_v2"]
     config_layer_production_config["config_layer.production_config"]
     config_layer_state_identity["config_layer.state_identity"]
+    features_bar_feature_frame["features.bar_feature_frame"]
     features_feature_pipeline["features.feature_pipeline"]
     features_feature_schema["features.feature_schema"]
     features_feature_states["features.feature_states"]
@@ -1213,6 +1321,7 @@ flowchart LR
     identity_certify --> config_layer_crt_engine_v2
     identity_certify --> config_layer_production_config
     identity_certify --> config_layer_state_identity
+    identity_certify --> features_bar_feature_frame
     identity_certify --> features_feature_pipeline
     identity_certify --> features_feature_schema
     identity_certify --> features_feature_states
@@ -1309,8 +1418,10 @@ flowchart LR
     interpreters_reference["interpreters.reference"]
     interpreters_regime_observer["interpreters.regime_observer"]
     config_layer_crt_engine_v2["config_layer.crt_engine_v2"]
+    config_layer_strict_config["config_layer.strict_config"]
     research_contracts["research.contracts"]
     research_indicators["research.indicators"]
+    interpreters_adapter --> config_layer_strict_config
     interpreters_adapter --> interpreters_contract
     interpreters_adapter --> research_contracts
     interpreters_contract --> config_layer_crt_engine_v2
@@ -1334,8 +1445,10 @@ flowchart LR
     journal_trade_identity_v1_0["journal.trade_identity_v1_0"]
     journal_trade_logger["journal.trade_logger"]
     journal_trade_provenance_v1_0["journal.trade_provenance_v1_0"]
+    config_layer_production_config["config_layer.production_config"]
     core_collector["core.collector"]
     utils_integrity_events["utils.integrity_events"]
+    journal_trade_logger --> config_layer_production_config
     journal_trade_logger --> core_collector
     journal_trade_logger --> journal_schema
     journal_trade_logger --> utils_integrity_events
@@ -1350,13 +1463,17 @@ flowchart LR
     live_order_manager["live.order_manager"]
     live_telegram_bridge["live.telegram_bridge"]
     config_layer_production_config["config_layer.production_config"]
+    config_layer_strict_config["config_layer.strict_config"]
     core_ultron_live_adapter["core.ultron_live_adapter"]
     utils_logging_config["utils.logging_config"]
     live_mt5_bridge --> config_layer_production_config
+    live_mt5_bridge --> config_layer_strict_config
     live_mt5_bridge --> utils_logging_config
+    live_order_manager --> config_layer_strict_config
     live_order_manager --> core_ultron_live_adapter
     live_order_manager --> utils_logging_config
     live_telegram_bridge --> config_layer_production_config
+    live_telegram_bridge --> config_layer_strict_config
     live_telegram_bridge --> utils_logging_config
 ```
 
@@ -1371,9 +1488,11 @@ flowchart LR
     llm_research_policy_builder["llm_research.policy_builder"]
     config_layer_execution_planner["config_layer.execution_planner"]
     config_layer_llm_inference_client["config_layer.llm_inference_client"]
+    config_layer_market_router["config_layer.market_router"]
     core_engine_runner["core.engine_runner"]
     llm_research_evaluator --> llm_research_forward_tester
     llm_research_forward_tester --> config_layer_execution_planner
+    llm_research_forward_tester --> config_layer_market_router
     llm_research_forward_tester --> core_engine_runner
     llm_research_pattern_extractor --> config_layer_llm_inference_client
     llm_research_policy_builder --> llm_research_pattern_extractor
@@ -1409,11 +1528,13 @@ flowchart LR
     msip_isolation["msip.isolation"]
     msip_market_state_vector["msip.market_state_vector"]
     msip_shadow_emitter["msip.shadow_emitter"]
+    config_layer_strict_config["config_layer.strict_config"]
     features_feature_schema["features.feature_schema"]
     msip --> msip_interpretation_config
     msip --> msip_market_state_vector
     msip --> msip_shadow_emitter
     msip_disagreement --> msip_market_state_vector
+    msip_interpretation_config --> config_layer_strict_config
     msip_shadow_emitter --> features_feature_schema
     msip_shadow_emitter --> msip_interpretation_config
     msip_shadow_emitter --> msip_market_state_vector
@@ -1448,12 +1569,14 @@ flowchart LR
     portfolio_exposure_tracker["portfolio.exposure_tracker"]
     portfolio_replay["portfolio.replay"]
     config_layer_production_config["config_layer.production_config"]
+    config_layer_strict_config["config_layer.strict_config"]
     data_ingestion_historical_fetcher["data_ingestion.historical_fetcher"]
     utils_integrity_events["utils.integrity_events"]
     portfolio_allocator --> portfolio_capital_policy
     portfolio_allocator --> portfolio_correlation_engine
     portfolio_allocator --> portfolio_exposure_tracker
     portfolio_correlation_engine --> config_layer_production_config
+    portfolio_correlation_engine --> config_layer_strict_config
     portfolio_correlation_engine --> data_ingestion_historical_fetcher
     portfolio_correlation_engine --> utils_integrity_events
     portfolio_replay --> portfolio_allocator
@@ -1467,9 +1590,13 @@ flowchart LR
     regime_config_router["regime.config_router"]
     regime_market_state_cluster_engine["regime.market_state_cluster_engine"]
     regime_regime_classifier["regime.regime_classifier"]
+    config_layer_strict_config["config_layer.strict_config"]
     utils_logging_config["utils.logging_config"]
+    regime_config_router --> config_layer_strict_config
     regime_config_router --> regime_regime_classifier
+    regime_market_state_cluster_engine --> config_layer_strict_config
     regime_market_state_cluster_engine --> utils_logging_config
+    regime_regime_classifier --> config_layer_strict_config
 ```
 
 ## replay
@@ -1482,6 +1609,7 @@ flowchart LR
     replay_replay_similarity_index["replay.replay_similarity_index"]
     replay_timing_advisor["replay.timing_advisor"]
     replay_timing_reconstructor["replay.timing_reconstructor"]
+    config_layer_strict_config["config_layer.strict_config"]
     data_ingestion_ohlcv_schema["data_ingestion.ohlcv_schema"]
     events_event_fabric["events.event_fabric"]
     utils_integrity_events["utils.integrity_events"]
@@ -1490,9 +1618,11 @@ flowchart LR
     utils_registry_refresh["utils.registry_refresh"]
     replay_replay_drift_governor --> events_event_fabric
     replay_replay_drift_governor --> utils_logging_config
+    replay_replay_memory_engine --> config_layer_strict_config
     replay_replay_memory_engine --> utils_integrity_events
     replay_replay_memory_engine --> utils_parquet_store
     replay_replay_memory_engine --> utils_registry_refresh
+    replay_timing_advisor --> config_layer_strict_config
     replay_timing_reconstructor --> data_ingestion_ohlcv_schema
     replay_timing_reconstructor --> utils_parquet_store
 ```
@@ -1526,6 +1656,7 @@ flowchart LR
     research_controls_always_long["research.controls.always_long"]
     research_controls_random_baseline["research.controls.random_baseline"]
     research_costs["research.costs"]
+    research_cross_family_join["research.cross_family_join"]
     research_cross_sectional["research.cross_sectional"]
     research_envelope_offline["research.envelope_offline"]
     research_envelope_offline_shadow["research.envelope_offline.shadow"]
@@ -1588,6 +1719,9 @@ flowchart LR
     research_ic003b_sequence_geometry_schema["research.ic003b_sequence_geometry.schema"]
     research_ic003b_sequence_geometry_summarize["research.ic003b_sequence_geometry.summarize"]
     research_indicators["research.indicators"]
+    research_k23_table["research.k23_table"]
+    research_k23_table_heuristics["research.k23_table.heuristics"]
+    research_k23_table_table["research.k23_table.table"]
     research_mc_kit["research.mc_kit"]
     research_mc_kit_bars["research.mc_kit.bars"]
     research_mc_kit_stats["research.mc_kit.stats"]
@@ -1597,22 +1731,23 @@ flowchart LR
     research_measurement_forward_walk["research.measurement.forward_walk"]
     research_measurement_metrics["research.measurement.metrics"]
     research_measurement_mt00["research.measurement.mt00"]
+    research_measurement_trade_lifecycle_engine["research.measurement.trade_lifecycle_engine"]
     research_model_runners["research.model_runners"]
     research_model_runners_adapters["research.model_runners.adapters"]
     research_model_runners_adapters_bitnet["research.model_runners.adapters.bitnet"]
-    research_model_runners_adapters_crt_score["research.model_runners.adapters.crt_score"]
     research_model_runners_adapters_crt_state_machine["research.model_runners.adapters.crt_state_machine"]
+    research_model_runners_adapters_crt_structure_rule_score["research.model_runners.adapters.crt_structure_rule_score"]
     research_model_runners_adapters_decision["research.model_runners.adapters.decision"]
     research_model_runners_adapters_dual_engine["research.model_runners.adapters.dual_engine"]
     research_model_runners_adapters_envelope_net["research.model_runners.adapters.envelope_net"]
     research_model_runners_adapters_execution_plan["research.model_runners.adapters.execution_plan"]
+    research_model_runners_adapters_feature_cluster_similarity["research.model_runners.adapters.feature_cluster_similarity"]
     research_model_runners_adapters_fusion_compute["research.model_runners.adapters.fusion_compute"]
     research_model_runners_adapters_gaussian["research.model_runners.adapters.gaussian"]
     research_model_runners_adapters_gaussian_ml["research.model_runners.adapters.gaussian_ml"]
     research_model_runners_adapters_rr_polarity["research.model_runners.adapters.rr_polarity"]
     research_model_runners_adapters_rr_trained["research.model_runners.adapters.rr_trained"]
     research_model_runners_adapters_tradenet["research.model_runners.adapters.tradenet"]
-    research_model_runners_adapters_zone_gate["research.model_runners.adapters.zone_gate"]
     research_model_runners_contracts["research.model_runners.contracts"]
     research_model_runners_envelope["research.model_runners.envelope"]
     research_model_runners_require_config["research.model_runners.require_config"]
@@ -1731,9 +1866,10 @@ flowchart LR
     config_layer_htf_state["config_layer.htf_state"]
     config_layer_model_resolver["config_layer.model_resolver"]
     config_layer_production_config["config_layer.production_config"]
-    config_layer_rr_rr_pattern_miner["config_layer.rr.rr_pattern_miner"]
+    config_layer_rr_rr_trained["config_layer.rr.rr_trained"]
     config_layer_state_identity["config_layer.state_identity"]
     config_layer_state_topology["config_layer.state_topology"]
+    config_layer_strict_config["config_layer.strict_config"]
     core_decision_engine["core.decision_engine"]
     core_engine_runner["core.engine_runner"]
     core_fusion_engine["core.fusion_engine"]
@@ -1743,14 +1879,16 @@ flowchart LR
     data_ingestion_ohlcv_schema["data_ingestion.ohlcv_schema"]
     data_ingestion_session_autoderive["data_ingestion.session_autoderive"]
     data_ingestion_xauusd_phase1_candidate["data_ingestion.xauusd_phase1_candidate"]
+    engines_candle_commitment["engines.candle_commitment"]
     engines_crt_engine["engines.crt_engine"]
-    engines_heuristic_gaussian_engine["engines.heuristic_gaussian_engine"]
+    engines_ema_momentum_kernel["engines.ema_momentum_kernel"]
+    engines_feature_cluster_similarity["engines.feature_cluster_similarity"]
     engines_live_engine["engines.live_engine"]
     engines_ml_gaussian_engine["engines.ml_gaussian_engine"]
-    engines_rr_engine["engines.rr_engine"]
     engines_scoring_engine["engines.scoring_engine"]
     engines_zone_cluster_score["engines.zone_cluster_score"]
-    engines_zone_gate_engine["engines.zone_gate_engine"]
+    features_bar_feature_frame["features.bar_feature_frame"]
+    features_broker_clock["features.broker_clock"]
     features_calendar_periods["features.calendar_periods"]
     features_candle_math["features.candle_math"]
     features_crt_state_resolver["features.crt_state_resolver"]
@@ -1759,6 +1897,8 @@ flowchart LR
     features_feature_schema["features.feature_schema"]
     features_market_shape["features.market_shape"]
     features_parent_candle["features.parent_candle"]
+    governance_measurement_basis["governance.measurement_basis"]
+    governance_run_identity["governance.run_identity"]
     interpreters_regime_observer["interpreters.regime_observer"]
     runtime_backtest_v2["runtime.backtest_v2"]
     structure_predicates["structure.predicates"]
@@ -1773,10 +1913,12 @@ flowchart LR
     research_adapters_shape_signal_source --> features_market_shape
     research_adapters_shape_signal_source --> runtime_backtest_v2
     research_adapters_spine_signal_source --> config_layer_production_config
+    research_adapters_spine_signal_source --> config_layer_strict_config
     research_adapters_spine_signal_source --> runtime_backtest_v2
     research_adapters_structural_event_source --> research_indicators
     research_adapters_structural_event_source --> runtime_backtest_v2
     research_adapters_structural_event_source --> utils_parquet_store
+    research_band_tables --> config_layer_strict_config
     research_band_validation --> features_feature_pipeline
     research_band_validation --> research_measurement_bootstrap
     research_candle_state_encoder --> research_indicators
@@ -1788,11 +1930,13 @@ flowchart LR
     research_candle_state_transition_target --> research_indicators
     research_clean_labels --> research_clean_labels_builder
     research_clean_labels --> research_clean_labels_protocol
+    research_clean_labels_builder --> config_layer_strict_config
     research_clean_labels_builder --> features_dataset_builder
     research_clean_labels_builder --> features_feature_schema
     research_clean_labels_builder --> research_clean_labels_protocol
     research_clean_labels_builder --> research_contracts
     research_clean_labels_builder --> research_measurement_forward_walk
+    research_cli --> governance_measurement_basis
     research_cli --> research_config
     research_cli --> research_controls
     research_cli --> research_goal_alignment
@@ -1804,27 +1948,34 @@ flowchart LR
     research_cli --> research_runner
     research_conditional_entropy_grid --> research_indicators
     research_conditional_entropy_grid --> research_process_diagnostics
+    research_config --> config_layer_strict_config
     research_contracts --> config_layer_crt_engine_v2
     research_controls --> research_controls_always_long
     research_controls --> research_controls_random_baseline
     research_controls --> research_registry
+    research_controls_always_long --> config_layer_strict_config
     research_controls_always_long --> research_contracts
     research_controls_always_long --> research_indicators
+    research_controls_random_baseline --> config_layer_strict_config
     research_controls_random_baseline --> research_contracts
     research_controls_random_baseline --> research_indicators
+    research_cross_sectional --> config_layer_strict_config
     research_cross_sectional --> data_ingestion_ohlcv_schema
     research_cross_sectional --> research_costs
     research_cross_sectional --> research_qualification
     research_cross_sectional --> runtime_backtest_v2
     research_envelope_offline --> research_envelope_offline_shadow
     research_envelope_offline --> research_envelope_offline_train
+    research_envelope_offline_shadow --> config_layer_strict_config
     research_envelope_offline_shadow --> research_envelope_offline_train
+    research_envelope_offline_train --> config_layer_strict_config
     research_envelope_offline_train --> features_feature_schema
     research_envelope_offline_train --> research_clean_labels_builder
     research_episode_agreement --> research_episode_propositions
     research_episodes --> research_episodes_protocol
     research_episodes_builder --> research_episodes_protocol
     research_episodes_builder --> research_episodes_schema
+    research_episodes_events --> config_layer_strict_config
     research_episodes_events --> research_episodes_schema
     research_episodes_flat --> research_episodes_events
     research_episodes_flat --> research_episodes_policy
@@ -1863,6 +2014,7 @@ flowchart LR
     research_evidence_context_attribution --> research_evidence_asymmetry_contract
     research_evidence_context_attribution --> research_evidence_magnitude_prior
     research_evidence_context_attribution --> research_evidence_run_close_out
+    research_evidence_driver --> config_layer_strict_config
     research_evidence_driver --> research_evidence_catalog
     research_evidence_driver --> research_evidence_queries
     research_evidence_driver --> research_evidence_records
@@ -1908,6 +2060,8 @@ flowchart LR
     research_exit_grid --> research_contracts
     research_exit_grid --> research_costs
     research_exit_grid --> research_measurement_forward_walk
+    research_experiment_spec --> config_layer_strict_config
+    research_forensics --> governance_measurement_basis
     research_forensics --> research_config
     research_forensics --> research_costs
     research_forensics --> research_indicators
@@ -1917,6 +2071,7 @@ flowchart LR
     research_forensics --> runtime_backtest_v2
     research_goal_alignment --> config_layer_goal_schema
     research_goal_alignment --> config_layer_goal_validator
+    research_goal_alignment --> config_layer_strict_config
     research_goal_alignment --> research_contracts
     research_hypotheses --> research_hypotheses_compression_box_straddle
     research_hypotheses --> research_hypotheses_compression_breakout
@@ -1925,28 +2080,35 @@ flowchart LR
     research_hypotheses --> research_hypotheses_mean_reversion
     research_hypotheses --> research_hypotheses_spine_hypothesis
     research_hypotheses --> research_hypotheses_weekly_sweep_reversal
+    research_hypotheses_compression_box_straddle --> config_layer_strict_config
     research_hypotheses_compression_box_straddle --> research_candle_state_encoder
     research_hypotheses_compression_box_straddle --> research_contracts
     research_hypotheses_compression_box_straddle --> research_indicators
     research_hypotheses_compression_box_straddle --> research_registry
+    research_hypotheses_compression_breakout --> config_layer_strict_config
     research_hypotheses_compression_breakout --> research_candle_state_encoder
     research_hypotheses_compression_breakout --> research_contracts
     research_hypotheses_compression_breakout --> research_indicators
     research_hypotheses_compression_breakout --> research_registry
+    research_hypotheses_expansion_breakout --> config_layer_strict_config
     research_hypotheses_expansion_breakout --> research_contracts
     research_hypotheses_expansion_breakout --> research_indicators
     research_hypotheses_expansion_breakout --> research_registry
+    research_hypotheses_market_shape_hypothesis --> config_layer_strict_config
     research_hypotheses_market_shape_hypothesis --> research_adapters_shape_signal_source
     research_hypotheses_market_shape_hypothesis --> research_contracts
     research_hypotheses_market_shape_hypothesis --> research_indicators
     research_hypotheses_market_shape_hypothesis --> research_registry
+    research_hypotheses_mean_reversion --> config_layer_strict_config
     research_hypotheses_mean_reversion --> research_contracts
     research_hypotheses_mean_reversion --> research_indicators
     research_hypotheses_mean_reversion --> research_registry
+    research_hypotheses_spine_hypothesis --> config_layer_strict_config
     research_hypotheses_spine_hypothesis --> research_adapters_spine_signal_source
     research_hypotheses_spine_hypothesis --> research_contracts
     research_hypotheses_spine_hypothesis --> research_indicators
     research_hypotheses_spine_hypothesis --> research_registry
+    research_hypotheses_weekly_sweep_reversal --> config_layer_strict_config
     research_hypotheses_weekly_sweep_reversal --> interpreters_regime_observer
     research_hypotheses_weekly_sweep_reversal --> research_candle_state_encoder
     research_hypotheses_weekly_sweep_reversal --> research_contracts
@@ -1978,6 +2140,8 @@ flowchart LR
     research_ic003b_sequence_geometry_continuum --> research_ic003b_sequence_geometry_schema
     research_ic003b_sequence_geometry_dtw --> research_ic003b_sequence_geometry_schema
     research_ic003b_sequence_geometry_summarize --> research_ic003b_sequence_geometry_schema
+    research_k23_table_heuristics --> features_broker_clock
+    research_k23_table_table --> research_k23_table_heuristics
     research_mc_kit_trade --> research_contracts
     research_mc_kit_trade --> research_measurement_forward_walk
     research_measurement --> research_measurement_forward_walk
@@ -1985,22 +2149,24 @@ flowchart LR
     research_measurement_forward_walk --> research_contracts
     research_measurement_metrics --> research_contracts
     research_measurement_metrics --> research_costs
+    research_measurement_trade_lifecycle_engine --> research_contracts
+    research_measurement_trade_lifecycle_engine --> research_measurement_forward_walk
     research_model_runners --> research_model_runners_contracts
     research_model_runners --> research_model_runners_runner
     research_model_runners_adapters --> research_model_runners_adapters_bitnet
-    research_model_runners_adapters --> research_model_runners_adapters_crt_score
     research_model_runners_adapters --> research_model_runners_adapters_crt_state_machine
+    research_model_runners_adapters --> research_model_runners_adapters_crt_structure_rule_score
     research_model_runners_adapters --> research_model_runners_adapters_decision
     research_model_runners_adapters --> research_model_runners_adapters_dual_engine
     research_model_runners_adapters --> research_model_runners_adapters_envelope_net
     research_model_runners_adapters --> research_model_runners_adapters_execution_plan
+    research_model_runners_adapters --> research_model_runners_adapters_feature_cluster_similarity
     research_model_runners_adapters --> research_model_runners_adapters_fusion_compute
     research_model_runners_adapters --> research_model_runners_adapters_gaussian
     research_model_runners_adapters --> research_model_runners_adapters_gaussian_ml
     research_model_runners_adapters --> research_model_runners_adapters_rr_polarity
     research_model_runners_adapters --> research_model_runners_adapters_rr_trained
     research_model_runners_adapters --> research_model_runners_adapters_tradenet
-    research_model_runners_adapters --> research_model_runners_adapters_zone_gate
     research_model_runners_adapters --> research_model_runners_contracts
     research_model_runners_adapters --> research_model_runners_substrate
     research_model_runners_adapters_bitnet --> bitnet_bitnet_inference
@@ -2008,16 +2174,16 @@ flowchart LR
     research_model_runners_adapters_bitnet --> research_model_runners_contracts
     research_model_runners_adapters_bitnet --> research_model_runners_require_config
     research_model_runners_adapters_bitnet --> research_model_runners_substrate
-    research_model_runners_adapters_crt_score --> engines_crt_engine
-    research_model_runners_adapters_crt_score --> research_model_runners_contracts
-    research_model_runners_adapters_crt_score --> research_model_runners_require_config
-    research_model_runners_adapters_crt_score --> research_model_runners_substrate
     research_model_runners_adapters_crt_state_machine --> config_layer_config_builder
     research_model_runners_adapters_crt_state_machine --> config_layer_crt_engine_v2
     research_model_runners_adapters_crt_state_machine --> config_layer_production_config
     research_model_runners_adapters_crt_state_machine --> research_model_runners_contracts
     research_model_runners_adapters_crt_state_machine --> research_model_runners_require_config
     research_model_runners_adapters_crt_state_machine --> research_model_runners_substrate
+    research_model_runners_adapters_crt_structure_rule_score --> engines_crt_engine
+    research_model_runners_adapters_crt_structure_rule_score --> research_model_runners_contracts
+    research_model_runners_adapters_crt_structure_rule_score --> research_model_runners_require_config
+    research_model_runners_adapters_crt_structure_rule_score --> research_model_runners_substrate
     research_model_runners_adapters_decision --> core_decision_engine
     research_model_runners_adapters_decision --> research_model_runners_adapters_fusion_compute
     research_model_runners_adapters_decision --> research_model_runners_contracts
@@ -2039,15 +2205,22 @@ flowchart LR
     research_model_runners_adapters_execution_plan --> research_model_runners_contracts
     research_model_runners_adapters_execution_plan --> research_model_runners_require_config
     research_model_runners_adapters_execution_plan --> research_model_runners_substrate
+    research_model_runners_adapters_feature_cluster_similarity --> config_layer_model_resolver
+    research_model_runners_adapters_feature_cluster_similarity --> engines_live_engine
+    research_model_runners_adapters_feature_cluster_similarity --> engines_zone_cluster_score
+    research_model_runners_adapters_feature_cluster_similarity --> features_feature_schema
+    research_model_runners_adapters_feature_cluster_similarity --> research_model_runners_contracts
+    research_model_runners_adapters_feature_cluster_similarity --> research_model_runners_require_config
+    research_model_runners_adapters_feature_cluster_similarity --> research_model_runners_substrate
     research_model_runners_adapters_fusion_compute --> core_fusion_engine
-    research_model_runners_adapters_fusion_compute --> research_model_runners_adapters_crt_score
+    research_model_runners_adapters_fusion_compute --> research_model_runners_adapters_crt_structure_rule_score
+    research_model_runners_adapters_fusion_compute --> research_model_runners_adapters_feature_cluster_similarity
     research_model_runners_adapters_fusion_compute --> research_model_runners_adapters_gaussian
     research_model_runners_adapters_fusion_compute --> research_model_runners_adapters_rr_polarity
-    research_model_runners_adapters_fusion_compute --> research_model_runners_adapters_zone_gate
     research_model_runners_adapters_fusion_compute --> research_model_runners_contracts
     research_model_runners_adapters_fusion_compute --> research_model_runners_require_config
     research_model_runners_adapters_fusion_compute --> research_model_runners_substrate
-    research_model_runners_adapters_gaussian --> engines_heuristic_gaussian_engine
+    research_model_runners_adapters_gaussian --> engines_ema_momentum_kernel
     research_model_runners_adapters_gaussian --> features_feature_schema
     research_model_runners_adapters_gaussian --> research_model_runners_contracts
     research_model_runners_adapters_gaussian --> research_model_runners_require_config
@@ -2057,10 +2230,10 @@ flowchart LR
     research_model_runners_adapters_gaussian_ml --> research_model_runners_schema_resolver
     research_model_runners_adapters_gaussian_ml --> research_model_runners_substrate
     research_model_runners_adapters_gaussian_ml --> training_trainer
-    research_model_runners_adapters_rr_polarity --> engines_rr_engine
+    research_model_runners_adapters_rr_polarity --> engines_candle_commitment
     research_model_runners_adapters_rr_polarity --> research_model_runners_contracts
     research_model_runners_adapters_rr_polarity --> research_model_runners_substrate
-    research_model_runners_adapters_rr_trained --> config_layer_rr_rr_pattern_miner
+    research_model_runners_adapters_rr_trained --> config_layer_rr_rr_trained
     research_model_runners_adapters_rr_trained --> research_model_runners_contracts
     research_model_runners_adapters_rr_trained --> research_model_runners_require_config
     research_model_runners_adapters_rr_trained --> research_model_runners_schema_resolver
@@ -2070,13 +2243,6 @@ flowchart LR
     research_model_runners_adapters_tradenet --> research_model_runners_require_config
     research_model_runners_adapters_tradenet --> research_model_runners_substrate
     research_model_runners_adapters_tradenet --> training_trade_net_v2
-    research_model_runners_adapters_zone_gate --> config_layer_model_resolver
-    research_model_runners_adapters_zone_gate --> engines_live_engine
-    research_model_runners_adapters_zone_gate --> engines_zone_cluster_score
-    research_model_runners_adapters_zone_gate --> features_feature_schema
-    research_model_runners_adapters_zone_gate --> research_model_runners_contracts
-    research_model_runners_adapters_zone_gate --> research_model_runners_require_config
-    research_model_runners_adapters_zone_gate --> research_model_runners_substrate
     research_model_runners_runner --> research_model_runners_adapters
     research_model_runners_runner --> research_model_runners_contracts
     research_model_runners_runner --> research_model_runners_envelope
@@ -2097,7 +2263,11 @@ flowchart LR
     research_mother_range_driver --> research_mc_kit_trade
     research_mother_range_driver --> research_measurement_forward_walk
     research_mother_range_driver --> research_mother_range_geometry
+    research_mt5_cost_calibration --> config_layer_strict_config
+    research_ohlcv_open_close_label --> config_layer_strict_config
+    research_ohlcv_tick_attribution --> config_layer_strict_config
     research_ohlcv_tick_attribution --> research_ohlcv_probe_report
+    research_ohlcv_volume_semantics --> config_layer_strict_config
     research_ohlcv_volume_semantics --> research_ohlcv_probe_report
     research_opportunity_bands --> research_band_tables
     research_oracle --> research_oracle_multi_tp_walk
@@ -2106,6 +2276,8 @@ flowchart LR
     research_oracle_exit_sweep --> research_oracle_multi_tp_walk
     research_oracle_exit_sweep --> research_oracle_stop_policy
     research_oracle_labeler --> config_layer_production_config
+    research_oracle_labeler --> governance_measurement_basis
+    research_oracle_labeler --> governance_run_identity
     research_oracle_labeler --> research_costs
     research_oracle_labeler --> research_measurement_forward_walk
     research_oracle_labeler --> research_oracle_multi_tp_walk
@@ -2138,7 +2310,9 @@ flowchart LR
     research_process_characterization --> research_indicators
     research_process_diagnostics --> research_process_characterization
     research_provenance --> config_layer_production_config
+    research_provenance --> config_layer_strict_config
     research_provenance --> features_feature_schema
+    research_provenance --> governance_measurement_basis
     research_qualification --> research_contracts
     research_qualification --> research_costs
     research_qualification --> research_measurement_metrics
@@ -2152,6 +2326,7 @@ flowchart LR
     research_rc003_distinct_object_driver --> features_feature_pipeline
     research_rc003_distinct_object_driver --> features_feature_schema
     research_rc003_distinct_object_driver --> research_measurement_bootstrap
+    research_regime_conditioning --> config_layer_strict_config
     research_regime_conditioning --> research_contracts
     research_regime_conditioning --> research_costs
     research_regime_conditioning --> research_measurement_metrics
@@ -2159,6 +2334,7 @@ flowchart LR
     research_registry --> research_contracts
     research_resample --> config_layer_crt_engine_v2
     research_runner --> data_ingestion_corpus_store
+    research_runner --> governance_measurement_basis
     research_runner --> research_config
     research_runner --> research_contracts
     research_runner --> research_costs
@@ -2232,12 +2408,13 @@ flowchart LR
     research_synthetic_stories_liquidity_reversal --> research_synthetic_story_spec
     research_synthetic_stories_range_rotation --> research_synthetic_story_spec
     research_synthetic_stories_trend_continuation --> research_synthetic_story_spec
+    research_synthetic_story_builder --> config_layer_strict_config
     research_synthetic_story_builder --> data_ingestion_ohlcv_schema
+    research_synthetic_story_builder --> engines_candle_commitment
     research_synthetic_story_builder --> engines_crt_engine
-    research_synthetic_story_builder --> engines_heuristic_gaussian_engine
-    research_synthetic_story_builder --> engines_rr_engine
+    research_synthetic_story_builder --> engines_ema_momentum_kernel
+    research_synthetic_story_builder --> engines_feature_cluster_similarity
     research_synthetic_story_builder --> engines_scoring_engine
-    research_synthetic_story_builder --> engines_zone_gate_engine
     research_synthetic_story_builder --> features_candle_math
     research_synthetic_story_builder --> features_feature_schema
     research_synthetic_story_builder --> research_contracts
@@ -2264,7 +2441,9 @@ flowchart LR
     research_visual_crt_geometry --> features_candle_math
     research_visual_crt_geometry --> research_visual_crt_pools
     research_visual_crt_geometry --> structure_predicates
+    research_visual_crt_measure --> config_layer_strict_config
     research_visual_crt_measure --> data_ingestion_dataset_integrity
+    research_visual_crt_measure --> governance_measurement_basis
     research_visual_crt_measure --> research_costs
     research_visual_crt_measure --> research_measurement_forward_walk
     research_visual_crt_measure --> research_provenance
@@ -2277,6 +2456,7 @@ flowchart LR
     research_weekly_sweep_weekly_range --> config_layer_crt_engine_v2
     research_weekly_sweep_weekly_range --> data_ingestion_session_autoderive
     research_weekly_sweep_weekly_range --> structure_predicates
+    research_xau_metals_protocol --> config_layer_strict_config
     research_zone_label_audit --> bitnet_zone_cosine_searcher
     research_zone_label_audit --> research_contracts
     research_zone_label_audit --> research_measurement_forward_walk
@@ -2290,19 +2470,22 @@ flowchart LR
     research_zone_mapping_build_corpus_zone_map --> research_zone_mapping_zone_census
     research_zone_mapping_collect_trade_opened_features --> config_layer_config_builder
     research_zone_mapping_collect_trade_opened_features --> config_layer_crt_engine_v2
-    research_zone_mapping_collect_trade_opened_features --> config_layer_production_config
+    research_zone_mapping_collect_trade_opened_features --> config_layer_strict_config
     research_zone_mapping_collect_trade_opened_features --> data_ingestion_xauusd_phase1_candidate
+    research_zone_mapping_collect_trade_opened_features --> features_bar_feature_frame
     research_zone_mapping_collect_trade_opened_features --> features_feature_pipeline
     research_zone_mapping_collect_trade_opened_features --> features_feature_schema
     research_zone_mapping_collect_trade_opened_features --> runtime_backtest_v2
     research_zone_mapping_crt_zone_crosstab --> config_layer_config_builder
     research_zone_mapping_crt_zone_crosstab --> config_layer_crt_engine_v2
+    research_zone_mapping_crt_zone_crosstab --> features_bar_feature_frame
     research_zone_mapping_crt_zone_crosstab --> features_feature_pipeline
     research_zone_mapping_crt_zone_crosstab --> features_feature_schema
     research_zone_mapping_crt_zone_crosstab --> research_zone_mapping_collect_trade_opened_features
     research_zone_mapping_crt_zone_crosstab --> research_zone_mapping_historical_zone_mapper
     research_zone_mapping_crt_zone_crosstab --> research_zone_mapping_zone_census
     research_zone_mapping_crt_zone_crosstab --> runtime_backtest_v2
+    research_zone_mapping_displacement_zone_event_study --> config_layer_strict_config
     research_zone_mapping_displacement_zone_event_study --> research_zone_mapping_crt_zone_crosstab
     research_zone_mapping_gaussian_delta_gap_eval --> config_layer_crt_engine_v2
     research_zone_mapping_gaussian_delta_gap_eval --> research_contracts
@@ -2312,8 +2495,9 @@ flowchart LR
     research_zone_mapping_gaussian_delta_gap_eval --> research_zone_mapping_rare_zone_detection_eval
     research_zone_mapping_gaussian_family_shadow_eval --> config_layer_config_builder
     research_zone_mapping_gaussian_family_shadow_eval --> config_layer_crt_engine_v2
-    research_zone_mapping_gaussian_family_shadow_eval --> engines_heuristic_gaussian_engine
+    research_zone_mapping_gaussian_family_shadow_eval --> engines_ema_momentum_kernel
     research_zone_mapping_gaussian_family_shadow_eval --> engines_ml_gaussian_engine
+    research_zone_mapping_gaussian_family_shadow_eval --> features_bar_feature_frame
     research_zone_mapping_gaussian_family_shadow_eval --> features_feature_pipeline
     research_zone_mapping_gaussian_family_shadow_eval --> features_feature_schema
     research_zone_mapping_gaussian_family_shadow_eval --> research_contracts
@@ -2325,6 +2509,7 @@ flowchart LR
     research_zone_mapping_gaussian_family_shadow_eval --> research_zone_mapping_zone_census
     research_zone_mapping_gaussian_family_shadow_eval --> runtime_backtest_v2
     research_zone_mapping_historical_zone_mapper --> config_layer_production_config
+    research_zone_mapping_historical_zone_mapper --> config_layer_strict_config
     research_zone_mapping_historical_zone_mapper --> engines_live_engine
     research_zone_mapping_historical_zone_mapper --> engines_zone_cluster_score
     research_zone_mapping_historical_zone_mapper --> features_feature_schema
@@ -2355,6 +2540,7 @@ flowchart LR
     retrieval_retriever["retrieval.retriever"]
     retrieval_truth_tier["retrieval.truth_tier"]
     retrieval_vector_store["retrieval.vector_store"]
+    config_layer_strict_config["config_layer.strict_config"]
     governance_semantic_grounding["governance.semantic_grounding"]
     utils_duckdb_query["utils.duckdb_query"]
     utils_parquet_store["utils.parquet_store"]
@@ -2371,6 +2557,7 @@ flowchart LR
     retrieval --> retrieval_vector_store
     retrieval_chunking --> retrieval_config
     retrieval_chunking --> retrieval_corpus
+    retrieval_claude_integration --> config_layer_strict_config
     retrieval_claude_integration --> governance_semantic_grounding
     retrieval_claude_integration --> retrieval
     retrieval_claude_integration --> retrieval_config
@@ -2407,12 +2594,14 @@ flowchart LR
     runtime_analyze_fusion_shadow["runtime.analyze_fusion_shadow"]
     runtime_backtest_bitnet["runtime.backtest_bitnet"]
     runtime_backtest_v2["runtime.backtest_v2"]
+    runtime_bar_clock_bridge["runtime.bar_clock_bridge"]
     runtime_bar_structure_snapshot["runtime.bar_structure_snapshot"]
     runtime_baseline_capture["runtime.baseline_capture"]
     runtime_crt_baseline_trace["runtime.crt_baseline_trace"]
     runtime_crt_construction_trace["runtime.crt_construction_trace"]
     runtime_crt_fail_reason_counters["runtime.crt_fail_reason_counters"]
     runtime_exit_model_band["runtime.exit_model_band"]
+    runtime_layer_trace["runtime.layer_trace"]
     runtime_live_engine_hook["runtime.live_engine_hook"]
     runtime_live_rail_feeder["runtime.live_rail_feeder"]
     runtime_live_rail_orchestrator["runtime.live_rail_orchestrator"]
@@ -2421,6 +2610,7 @@ flowchart LR
     analytics_metrics_oracle["analytics.metrics_oracle"]
     bitnet_bitnet_inference["bitnet.bitnet_inference"]
     bitnet_bitnet_runner["bitnet.bitnet_runner"]
+    charts_resolver_overlay["charts.resolver_overlay"]
     config_layer_config_builder["config_layer.config_builder"]
     config_layer_crt_config_provenance["config_layer.crt_config_provenance"]
     config_layer_crt_engine_v2["config_layer.crt_engine_v2"]
@@ -2432,11 +2622,13 @@ flowchart LR
     config_layer_production_config["config_layer.production_config"]
     config_layer_stack_version["config_layer.stack_version"]
     config_layer_state_identity["config_layer.state_identity"]
+    config_layer_strict_config["config_layer.strict_config"]
     core_collector["core.collector"]
     core_engine_runner["core.engine_runner"]
     core_feature_store["core.feature_store"]
     core_gate_intelligence["core.gate_intelligence"]
     core_model_registry["core.model_registry"]
+    core_position_sizing["core.position_sizing"]
     core_signal_belief_tracker["core.signal_belief_tracker"]
     core_ultron_live_adapter["core.ultron_live_adapter"]
     core_ultron_risk_gate["core.ultron_risk_gate"]
@@ -2447,6 +2639,8 @@ flowchart LR
     data_ingestion_ohlcv_schema["data_ingestion.ohlcv_schema"]
     data_ingestion_xauusd_phase1_candidate["data_ingestion.xauusd_phase1_candidate"]
     engines_live_engine["engines.live_engine"]
+    features_bar_feature_frame["features.bar_feature_frame"]
+    features_broker_clock["features.broker_clock"]
     features_calendar_periods["features.calendar_periods"]
     features_candle_math["features.candle_math"]
     features_crt_state_resolver["features.crt_state_resolver"]
@@ -2460,11 +2654,15 @@ flowchart LR
     features_smc_levels["features.smc.levels"]
     features_smc_mitigation["features.smc.mitigation"]
     features_smc_order_block["features.smc.order_block"]
+    governance_identity_spine["governance.identity_spine"]
+    governance_measurement_basis["governance.measurement_basis"]
+    governance_run_identity["governance.run_identity"]
     inout_live_rail_bar_builder["inout.live_rail.bar_builder"]
     inout_live_rail_config["inout.live_rail.config"]
     inout_live_rail_factory["inout.live_rail.factory"]
     inout_live_rail_resilience["inout.live_rail.resilience"]
     inout_live_rail_types["inout.live_rail.types"]
+    journal_trade_identity_v1_0["journal.trade_identity_v1_0"]
     journal_trade_provenance_v1_0["journal.trade_provenance_v1_0"]
     live_mt5_bridge["live.mt5_bridge"]
     live_order_manager["live.order_manager"]
@@ -2480,38 +2678,52 @@ flowchart LR
     utils_episode_summarizer["utils.episode_summarizer"]
     utils_integrity_events["utils.integrity_events"]
     utils_logging_config["utils.logging_config"]
+    utils_parquet_store["utils.parquet_store"]
     utils_pattern_hasher["utils.pattern_hasher"]
+    utils_run_id_last_ran["utils.run_id_last_ran"]
     utils_sweep_trace_logger["utils.sweep_trace_logger"]
     utils_trade_logger["utils.trade_logger"]
     runtime_analyze_fusion_shadow --> utils_console_safe
     runtime_analyze_fusion_shadow --> utils_integrity_events
     runtime_backtest_bitnet --> bitnet_bitnet_runner
+    runtime_backtest_bitnet --> config_layer_strict_config
     runtime_backtest_bitnet --> core_engine_runner
     runtime_backtest_bitnet --> features_feature_pipeline
     runtime_backtest_bitnet --> features_feature_schema
     runtime_backtest_bitnet --> utils_console_safe
     runtime_backtest_v2 --> bitnet_bitnet_inference
+    runtime_backtest_v2 --> charts_resolver_overlay
     runtime_backtest_v2 --> config_layer_config_builder
     runtime_backtest_v2 --> config_layer_crt_config_provenance
     runtime_backtest_v2 --> config_layer_crt_engine_v2
     runtime_backtest_v2 --> config_layer_goal_validator
     runtime_backtest_v2 --> config_layer_production_config
+    runtime_backtest_v2 --> config_layer_strict_config
     runtime_backtest_v2 --> core_engine_runner
     runtime_backtest_v2 --> core_model_registry
+    runtime_backtest_v2 --> core_position_sizing
     runtime_backtest_v2 --> core_signal_belief_tracker
     runtime_backtest_v2 --> data_ingestion_corpus_gate
     runtime_backtest_v2 --> data_ingestion_dataset_integrity
     runtime_backtest_v2 --> data_ingestion_dataset_registry
     runtime_backtest_v2 --> data_ingestion_ohlcv_schema
     runtime_backtest_v2 --> data_ingestion_xauusd_phase1_candidate
+    runtime_backtest_v2 --> features_bar_feature_frame
+    runtime_backtest_v2 --> features_broker_clock
     runtime_backtest_v2 --> features_calendar_periods
     runtime_backtest_v2 --> features_feature_monitor
     runtime_backtest_v2 --> features_feature_pipeline
     runtime_backtest_v2 --> features_feature_schema
     runtime_backtest_v2 --> features_parent_candle
+    runtime_backtest_v2 --> governance_identity_spine
+    runtime_backtest_v2 --> governance_measurement_basis
+    runtime_backtest_v2 --> governance_run_identity
+    runtime_backtest_v2 --> journal_trade_identity_v1_0
     runtime_backtest_v2 --> journal_trade_provenance_v1_0
+    runtime_backtest_v2 --> runtime_bar_clock_bridge
     runtime_backtest_v2 --> runtime_bar_structure_snapshot
     runtime_backtest_v2 --> runtime_crt_construction_trace
+    runtime_backtest_v2 --> runtime_layer_trace
     runtime_backtest_v2 --> runtime_parent_crt_feed
     runtime_backtest_v2 --> strategies_strategy_orchestrator
     runtime_backtest_v2 --> strategies_strategy_registry
@@ -2522,8 +2734,11 @@ flowchart LR
     runtime_backtest_v2 --> utils_integrity_events
     runtime_backtest_v2 --> utils_logging_config
     runtime_backtest_v2 --> utils_pattern_hasher
+    runtime_backtest_v2 --> utils_run_id_last_ran
     runtime_backtest_v2 --> utils_sweep_trace_logger
     runtime_backtest_v2 --> utils_trade_logger
+    runtime_bar_clock_bridge --> config_layer_production_config
+    runtime_bar_clock_bridge --> governance_identity_spine
     runtime_bar_structure_snapshot --> config_layer_production_config
     runtime_bar_structure_snapshot --> features_parent_candle
     runtime_bar_structure_snapshot --> features_smc_breaker
@@ -2532,6 +2747,7 @@ flowchart LR
     runtime_bar_structure_snapshot --> features_smc_levels
     runtime_bar_structure_snapshot --> features_smc_mitigation
     runtime_bar_structure_snapshot --> features_smc_order_block
+    runtime_bar_structure_snapshot --> utils_parquet_store
     runtime_baseline_capture --> config_layer_production_bundle
     runtime_baseline_capture --> config_layer_production_config
     runtime_baseline_capture --> config_layer_stack_version
@@ -2543,12 +2759,15 @@ flowchart LR
     runtime_crt_construction_trace --> runtime_crt_baseline_trace
     runtime_exit_model_band --> analytics_metrics_oracle
     runtime_exit_model_band --> runtime_backtest_v2
+    runtime_layer_trace --> config_layer_production_config
     runtime_live_engine_hook --> config_layer_execution_planner
     runtime_live_engine_hook --> config_layer_production_config
+    runtime_live_engine_hook --> config_layer_strict_config
     runtime_live_engine_hook --> core_collector
     runtime_live_engine_hook --> core_engine_runner
     runtime_live_engine_hook --> core_feature_store
     runtime_live_engine_hook --> core_gate_intelligence
+    runtime_live_engine_hook --> core_position_sizing
     runtime_live_engine_hook --> core_ultron_risk_gate
     runtime_live_engine_hook --> core_ultron_risk_gate_wrapper
     runtime_live_engine_hook --> engines_live_engine
@@ -2587,6 +2806,7 @@ flowchart LR
     runtime_parent_crt_feed --> features_parent_candle
     runtime_unified_replay_harness --> config_layer_config_builder
     runtime_unified_replay_harness --> config_layer_production_config
+    runtime_unified_replay_harness --> config_layer_strict_config
     runtime_unified_replay_harness --> runtime_backtest_bitnet
     runtime_unified_replay_harness --> runtime_backtest_v2
     runtime_unified_replay_harness --> utils_console_safe
@@ -2643,6 +2863,7 @@ flowchart LR
     strategies_strategy_result["strategies.strategy_result"]
     bitnet_bitnet_inference["bitnet.bitnet_inference"]
     config_layer_production_config["config_layer.production_config"]
+    config_layer_strict_config["config_layer.strict_config"]
     core_model_registry["core.model_registry"]
     engines_crt_engine["engines.crt_engine"]
     features_feature_schema["features.feature_schema"]
@@ -2661,53 +2882,65 @@ flowchart LR
     strategies --> strategies_strategy_orchestrator
     strategies --> strategies_strategy_result
     strategies_base_strategy --> config_layer_production_config
+    strategies_base_strategy --> config_layer_strict_config
     strategies_base_strategy --> strategies_strategy_result
     strategies_base_strategy --> utils_logging_config
     strategies_intent_builder --> strategies_strategy_intent
     strategies_intent_builder --> strategies_strategy_result
     strategies_s01_crt_wrapper --> config_layer_production_config
+    strategies_s01_crt_wrapper --> config_layer_strict_config
     strategies_s01_crt_wrapper --> engines_crt_engine
     strategies_s01_crt_wrapper --> strategies_base_strategy
     strategies_s01_crt_wrapper --> strategies_strategy_result
     strategies_s01_crt_wrapper --> utils_logging_config
     strategies_s02_mean_reversion --> config_layer_production_config
+    strategies_s02_mean_reversion --> config_layer_strict_config
     strategies_s02_mean_reversion --> strategies_base_strategy
     strategies_s02_mean_reversion --> strategies_strategy_result
     strategies_s02_mean_reversion --> utils_logging_config
     strategies_s03_breakout --> config_layer_production_config
+    strategies_s03_breakout --> config_layer_strict_config
     strategies_s03_breakout --> strategies_base_strategy
     strategies_s03_breakout --> strategies_strategy_result
     strategies_s03_breakout --> utils_logging_config
     strategies_s04_stat_arb --> config_layer_production_config
+    strategies_s04_stat_arb --> config_layer_strict_config
     strategies_s04_stat_arb --> strategies_base_strategy
     strategies_s04_stat_arb --> strategies_strategy_result
     strategies_s04_stat_arb --> utils_logging_config
     strategies_s05_grid --> config_layer_production_config
+    strategies_s05_grid --> config_layer_strict_config
     strategies_s05_grid --> strategies_base_strategy
     strategies_s05_grid --> strategies_strategy_result
     strategies_s05_grid --> utils_logging_config
     strategies_s06_scalping --> config_layer_production_config
+    strategies_s06_scalping --> config_layer_strict_config
     strategies_s06_scalping --> strategies_base_strategy
     strategies_s06_scalping --> strategies_strategy_result
     strategies_s06_scalping --> utils_logging_config
     strategies_s07_news_sentiment --> config_layer_production_config
+    strategies_s07_news_sentiment --> config_layer_strict_config
     strategies_s07_news_sentiment --> strategies_base_strategy
     strategies_s07_news_sentiment --> strategies_strategy_result
     strategies_s07_news_sentiment --> utils_logging_config
     strategies_s08_ml_ensemble --> bitnet_bitnet_inference
     strategies_s08_ml_ensemble --> config_layer_production_config
+    strategies_s08_ml_ensemble --> config_layer_strict_config
     strategies_s08_ml_ensemble --> strategies_base_strategy
     strategies_s08_ml_ensemble --> strategies_strategy_result
     strategies_s08_ml_ensemble --> utils_logging_config
     strategies_s09_pattern_recog --> config_layer_production_config
+    strategies_s09_pattern_recog --> config_layer_strict_config
     strategies_s09_pattern_recog --> strategies_base_strategy
     strategies_s09_pattern_recog --> strategies_strategy_result
     strategies_s09_pattern_recog --> utils_logging_config
     strategies_s10_trap_strategy --> config_layer_production_config
+    strategies_s10_trap_strategy --> config_layer_strict_config
     strategies_s10_trap_strategy --> strategies_base_strategy
     strategies_s10_trap_strategy --> strategies_strategy_result
     strategies_s10_trap_strategy --> utils_logging_config
     strategies_strategy_orchestrator --> config_layer_production_config
+    strategies_strategy_orchestrator --> config_layer_strict_config
     strategies_strategy_orchestrator --> strategies_base_strategy
     strategies_strategy_orchestrator --> strategies_intent_builder
     strategies_strategy_orchestrator --> strategies_s01_crt_wrapper
@@ -2752,6 +2985,7 @@ flowchart LR
     training_training_trigger["training.training_trigger"]
     config_layer_production_config["config_layer.production_config"]
     config_layer_rr_rr_dataset_builder["config_layer.rr.rr_dataset_builder"]
+    config_layer_strict_config["config_layer.strict_config"]
     core_model_registry["core.model_registry"]
     features_dataset_builder["features.dataset_builder"]
     features_dataset_validator["features.dataset_validator"]
@@ -2783,6 +3017,7 @@ flowchart LR
     training_trainer --> features_gaussian_schema_contract
     training_trainer --> utils_integrity_events
     training_training_trigger --> config_layer_production_config
+    training_training_trigger --> config_layer_strict_config
 ```
 
 ## uat
@@ -2794,15 +3029,19 @@ flowchart LR
     uat_monte_carlo["uat.monte_carlo"]
     uat_uat_runner["uat.uat_runner"]
     config_layer_production_config["config_layer.production_config"]
+    config_layer_strict_config["config_layer.strict_config"]
     strategies_strategy_orchestrator["strategies.strategy_orchestrator"]
     strategies_strategy_result["strategies.strategy_result"]
     utils_llm_logger["utils.llm_logger"]
     utils_logging_config["utils.logging_config"]
     uat_kill_switch --> config_layer_production_config
+    uat_kill_switch --> config_layer_strict_config
     uat_kill_switch --> utils_logging_config
     uat_monte_carlo --> config_layer_production_config
+    uat_monte_carlo --> config_layer_strict_config
     uat_monte_carlo --> utils_logging_config
     uat_uat_runner --> config_layer_production_config
+    uat_uat_runner --> config_layer_strict_config
     uat_uat_runner --> strategies_strategy_orchestrator
     uat_uat_runner --> strategies_strategy_result
     uat_uat_runner --> uat_kill_switch
@@ -2837,6 +3076,7 @@ flowchart LR
     utils_parquet_store["utils.parquet_store"]
     utils_pattern_hasher["utils.pattern_hasher"]
     utils_registry_refresh["utils.registry_refresh"]
+    utils_run_id_last_ran["utils.run_id_last_ran"]
     utils_run_linkage["utils.run_linkage"]
     utils_run_manifest["utils.run_manifest"]
     utils_sweep_trace_logger["utils.sweep_trace_logger"]

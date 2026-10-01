@@ -1,19 +1,22 @@
 {
-  "active_version": "v2_multi_2026_04",
-  "model_count": 7,
+  "active_version": "v2_htfcrt_2026_08",
+  "model_count": 10,
   "model_names": [
     "bitnet",
     "crt",
+    "ema_momentum_kernel",
     "engine_runner",
-    "gaussian",
+    "envelope",
+    "feature_cluster_similarity",
+    "feature_lineage",
     "rr_model",
     "strategies",
-    "feature_cluster_similarity"
+    "tradenet"
   ],
   "runtime_flags": {
     "bitnet_enabled": false,
     "feature_cluster_similarity_mode": "hard",
-    "registry_file": "models/zone_registry.json",
+    "registry_file": "models/zone_registry_v4_2026_07.json",
     "rr_fusion_active": false
   }
 }

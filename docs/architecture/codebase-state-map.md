@@ -39,7 +39,7 @@ state is files (JSON configs + JSONL event logs).
 | Package | Role | Key modules (one-line) |
 |---|---|---|
 | `src/core/` | Decision spine + risk | `engine_runner.py` (orchestrator), `fusion_engine.py` (weighted fusion), `decision_engine.py` (threshold/accept), `ultron_risk_gate.py` (capital gate, kill-switch), `model_registry.py` (atomic model load), `collector.py` (structured decision log), `types.py` (`EngineRunnerOutput`, `GateResult`) |
-| `src/engines/` | Scoring engines | `crt_engine.py`, `heuristic_gaussian_engine.py`, `ml_gaussian_engine.py`, `zone_gate_engine.py`, `rr_engine.py`, `trap_validator_engine.py` (hard adapter gate), `live_engine.py` (zone-gate singleton harness) |
+| `src/engines/` | Scoring engines | `crt_engine.py`, `ema_momentum_kernel.py`, `ml_gaussian_engine.py`, `feature_cluster_similarity.py`, `candle_commitment.py` (renamed from heuristic_gaussian/zone_gate/rr by MC-D0a), `trap_validator_engine.py` (hard adapter gate), `live_engine.py` (zone-gate singleton harness) |
 | `src/config_layer/` | Config + execution planning + CRT math + LLM client | `production_config.py` (`get_prod_section`, `ACTIVE_VERSION`), `execution_planner.py` (`ExecutionPlannerV1_2`), `crt_engine_v2.py` (`CRTState`, CRT computation), `config_validator.py` (`ConfigValidator`), `llm_inference_client.py` (LLaMA/Groq client), `llm_scorer.py` (circuit-breaker scorer) |
 | `src/runtime/` | Replay + live orchestration | `backtest_v2.py` (`BacktestRunner`, the candle loop), `live_engine_hook.py` (`LiveEngineHook`, live orchestration + singletons), `baseline_capture.py`, `unified_replay_harness.py` |
 | `src/governance/` | Promotion + portfolio validation | `promotion_manager.py` (only path to prod), `orchestrator.py`, `portfolio_validation.py`, `shadow_promotion_gate.py`, `multi_strategy_validator.py` |
@@ -73,6 +73,12 @@ state is files (JSON configs + JSONL event logs).
 | `src/uat/` | Acceptance-test runner | `uat_runner.py` (signal accuracy, trade sim, alerts, scorecard, Monte-Carlo, kill-switch, edge cases) |
 | `src/ui/` | Dashboard API | minimal Flask-lite dashboard API (near-empty package; React UI lives in `ui_kits/`) |
 | `src/logs/` | Runtime-log placeholder | no modules — runtime JSONL output lands in the top-level `logs/` directory |
+| `src/charts/` | Own OHLC charts from the consumed corpus (INFRA-CPC-V1 A0) | `chart_api.py`, `chart_series.py`, `crt_overlay.py` (CRTState colour layer), `render.py` |
+| `src/identity/` | Identity store — Phase 4 writers/readers for the frozen layer identities | `store.py`, `hashes.py`, `certify.py`, `check.py`, `query.py`, `tokens.py`, `outcome.py` |
+| `src/msip/` | MSIP shadow continuous market-state (OBSERVATION_ONLY; never influences CRT/trades) | `market_state_vector.py`, `interpretation_config.py`, `disagreement.py`, `isolation.py`, `shadow_emitter.py` |
+| `src/retrieval/` | Truth-tier lexical RAG over the repo corpus (off-spine) | `corpus.py` (truth-class discovery), `lexical.py` (BM25 over Parquet sidecars), `index_store.py`, `truth_tier.py`, `retriever.py`, `vector_store.py` |
+| `src/structure/` | Governed CRT structural kernel (shared geometry, ontology SP-001..003) | `predicates.py` |
+| `src/validation_access/` | Validation Access VA-XAUUSD-M15 ladder S→I→F→E (packaging only, no authority) | `ladder.py`, `surfaces.py` |
 
 ---
 
