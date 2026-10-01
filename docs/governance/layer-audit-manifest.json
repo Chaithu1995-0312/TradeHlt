@@ -85,8 +85,8 @@
         },
         {
           "path": "docs/governance/corpus_authority_decision.schema.json",
-          "sha256": "e77e00ac4848531a583899a98d4a7d7aa5d0ec94b720ce565e4e66c67a3d49ec",
-          "size_bytes": 5503
+          "sha256": "27e017c28082d87c0a2ceb6ab560cf019504baa435297caa0cbb0831954fe02a",
+          "size_bytes": 6793
         },
         {
           "path": "docs/governance/corpus_authority_decisions.jsonl",

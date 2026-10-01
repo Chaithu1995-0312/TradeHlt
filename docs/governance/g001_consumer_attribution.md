@@ -1,6 +1,6 @@
 # G001 Consumer Attribution
 
-> Generated: `2026-07-26T08:51:59Z` Â· schema v1
+> Generated: `2026-10-01T12:48:41Z` Â· schema v1
 >
 > Goal: **G001** Â· see [`goal.md`](../architecture/goal.md)
 >
@@ -29,7 +29,7 @@
 | `crt_spine_state_machine` | VALIDATED | MEASURED_NO_STANDALONE_EDGE | 0 | True | False |
 | `scoring_engine_crt_composite` | VALIDATED | NOT_ISOLATED | 0 | True | False |
 | `engine_runner_fusion` | PARTIAL | MEASURED_NON_PIVOTAL_OR_INERT_CHANNELS | 0 | True | False |
-| `zone_gate` | AUDITED | MEASURED_NO_MARGINAL_VALUE | 0 | True | False |
+| `feature_cluster_similarity` | AUDITED | MEASURED_NO_MARGINAL_VALUE | 0 | True | False |
 | `bitnet_gate` | AUDITED_CONDITIONAL_SKEW | MEASURED_NO_IMPROVEMENT | 0 | False | False |
 | `rr_fusion` | AUDITED_GATE_MISSPEC | DISABLED_NO_AUTHORITY | 0 | False | False |
 | `session_filter` | VALIDATED | MEASURED_NOT_PROMOTABLE_BNB | 0 | True | False |
@@ -63,15 +63,15 @@
 
 - **Path:** `src/core/engine_runner.py`
 - **Description:** Four-engine fusion gate (CRT/Gaussian/Zone/RR)
-- **Signals:** engine scores, zone_gate, rr, gaussian
+- **Signals:** engine scores, feature_cluster_similarity, rr, gaussian
 - **Semantic evidence:** F-037, F-038, F-060, docs/governance/gaussian_lineage_audit.md, docs/governance/rr_lineage_audit.md
 - **Economic evidence:** F-036, F-037, F-060, F-038
 - **Notes:** Zone non-pivotal (F-036); Gaussian near-constant inert (F-060); rr_fusion disabled (F-038). Gate-ON modest N change only (F-037).
 - **Scope:** `incumbent_fusion_when_enabled`
 
-#### `zone_gate`
+#### `feature_cluster_similarity`
 
-- **Path:** `src/engines/zone_gate_engine.py`
+- **Path:** `src/engines/feature_cluster_similarity.py`
 - **Description:** Geometric HARD zone gate
 - **Signals:** zone registry geometry, feature vectors for membership
 - **Semantic evidence:** docs/governance/zonegate_lineage_audit.md, F-041

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-07-31T18:36:26Z",
+  "generated_at_utc": "2026-10-01T12:48:41Z",
   "purpose": "Permanent FM ownership / consumer matrix. Semantic correctness (parity, resolve_fm) is tracked per FM. Economic/G001 authority is NEVER derived from this matrix \u2014 see g001_consumer_attribution.json.",
   "invariants": [
     "economic_authority is always NONE at the feature layer",
@@ -8,10 +8,10 @@
     "resolve_fm_bindings list bind phases only; series FMs stay pipeline-owned"
   ],
   "summary": {
-    "feature_count": 52,
+    "feature_count": 66,
     "resolve_fm_bound_count": 9,
     "parity_floor_count": 46,
-    "no_parity_floor_count": 6
+    "no_parity_floor_count": 20
   },
   "consumers": {
     "crt_engine_v2": {
@@ -57,7 +57,7 @@
     "engine_runner_fusion": {
       "path": "src/core/engine_runner.py",
       "fm_ids": [],
-      "role": "Fusion of crt/gaussian/zone_gate/rr scores (consumes scores, not raw FM math)"
+      "role": "Fusion of crt/gaussian/feature_cluster_similarity/rr scores (consumes scores, not raw FM math)"
     },
     "feature_state_encoder_shadow": {
       "path": "src/features/feature_states.py",
@@ -1079,17 +1079,17 @@
     },
     {
       "fm_id": "FM-064",
-      "name": "trend_strength",
+      "name": "trend_strength_z",
       "section": "rolling_indicators",
       "lifecycle": "registered",
       "computation_class": "rolling",
       "computation_authority": "PIPELINE",
-      "impl": "feature_pipeline.compute_trend_features",
+      "impl": "feature_pipeline.compute_normalization",
       "produced_by": "feature_pipeline.compute_normalization",
       "consumed_by_declared": [
         "UNKNOWN"
       ],
-      "vector_key": "trend_strength",
+      "vector_key": "trend_strength_z",
       "vector_index": 11,
       "resolve_fm_bindings": [],
       "parity_tests": [],
@@ -1099,7 +1099,7 @@
     },
     {
       "fm_id": "FM-065",
-      "name": "candles_since_retest",
+      "name": "candles_since_sweep",
       "section": "rolling_indicators",
       "lifecycle": "registered",
       "computation_class": "rolling_stateful",
@@ -1109,7 +1109,7 @@
       "consumed_by_declared": [
         "UNKNOWN"
       ],
-      "vector_key": "candles_since_retest",
+      "vector_key": "candles_since_sweep",
       "vector_index": 35,
       "resolve_fm_bindings": [],
       "parity_tests": [],
@@ -1229,6 +1229,286 @@
       "resolve_fm_bindings": [
         "phase2_crt"
       ],
+      "parity_tests": [],
+      "semantic_status": "NO_PARITY_FLOOR",
+      "economic_authority": "NONE",
+      "g001_status": "NOT_APPLICABLE_AT_FEATURE_LAYER"
+    },
+    {
+      "fm_id": "FM-071",
+      "name": "body_commitment",
+      "section": "structural_states",
+      "lifecycle": "research",
+      "computation_class": "structural_state",
+      "computation_authority": "STRUCTURAL_PIPELINE",
+      "impl": "features.magnitude_states.MagnitudeStateEncoder",
+      "produced_by": "features.magnitude_states.MagnitudeStateEncoder",
+      "consumed_by_declared": [
+        "UNKNOWN"
+      ],
+      "vector_key": [],
+      "vector_index": [],
+      "resolve_fm_bindings": [],
+      "parity_tests": [],
+      "semantic_status": "NO_PARITY_FLOOR",
+      "economic_authority": "NONE",
+      "g001_status": "NOT_APPLICABLE_AT_FEATURE_LAYER"
+    },
+    {
+      "fm_id": "FM-072",
+      "name": "atr_magnitude",
+      "section": "structural_states",
+      "lifecycle": "research",
+      "computation_class": "structural_state",
+      "computation_authority": "STRUCTURAL_PIPELINE",
+      "impl": "features.magnitude_states.MagnitudeStateEncoder",
+      "produced_by": "features.magnitude_states.MagnitudeStateEncoder",
+      "consumed_by_declared": [
+        "UNKNOWN"
+      ],
+      "vector_key": [],
+      "vector_index": [],
+      "resolve_fm_bindings": [],
+      "parity_tests": [],
+      "semantic_status": "NO_PARITY_FLOOR",
+      "economic_authority": "NONE",
+      "g001_status": "NOT_APPLICABLE_AT_FEATURE_LAYER"
+    },
+    {
+      "fm_id": "FM-073",
+      "name": "momentum_magnitude",
+      "section": "structural_states",
+      "lifecycle": "research",
+      "computation_class": "structural_state",
+      "computation_authority": "STRUCTURAL_PIPELINE",
+      "impl": "features.magnitude_states.MagnitudeStateEncoder",
+      "produced_by": "features.magnitude_states.MagnitudeStateEncoder",
+      "consumed_by_declared": [
+        "UNKNOWN"
+      ],
+      "vector_key": [],
+      "vector_index": [],
+      "resolve_fm_bindings": [],
+      "parity_tests": [],
+      "semantic_status": "NO_PARITY_FLOOR",
+      "economic_authority": "NONE",
+      "g001_status": "NOT_APPLICABLE_AT_FEATURE_LAYER"
+    },
+    {
+      "fm_id": "FM-074",
+      "name": "atr_absolute",
+      "section": "rolling_indicators",
+      "lifecycle": "registered",
+      "computation_class": "rolling",
+      "computation_authority": "PIPELINE",
+      "impl": "feature_pipeline.compute_indicators",
+      "produced_by": "feature_pipeline.compute_indicators",
+      "consumed_by_declared": [
+        "UNKNOWN"
+      ],
+      "vector_key": [],
+      "vector_index": [],
+      "resolve_fm_bindings": [],
+      "parity_tests": [],
+      "semantic_status": "NO_PARITY_FLOOR",
+      "economic_authority": "NONE",
+      "g001_status": "NOT_APPLICABLE_AT_FEATURE_LAYER"
+    },
+    {
+      "fm_id": "FM-075",
+      "name": "order_block_distance",
+      "section": "derived_metrics",
+      "lifecycle": "registered",
+      "computation_class": "scalar",
+      "computation_authority": "FORMULA_REGISTRY",
+      "impl": "features.smc.order_block.order_block_distance",
+      "produced_by": "features.feature_pipeline.compute_smc_features",
+      "consumed_by_declared": [
+        "UNKNOWN"
+      ],
+      "vector_key": "order_block_distance",
+      "vector_index": 39,
+      "resolve_fm_bindings": [],
+      "parity_tests": [],
+      "semantic_status": "NO_PARITY_FLOOR",
+      "economic_authority": "NONE",
+      "g001_status": "NOT_APPLICABLE_AT_FEATURE_LAYER"
+    },
+    {
+      "fm_id": "FM-076",
+      "name": "fvg_distance",
+      "section": "derived_metrics",
+      "lifecycle": "registered",
+      "computation_class": "scalar",
+      "computation_authority": "FORMULA_REGISTRY",
+      "impl": "features.smc.fvg.fvg_distance",
+      "produced_by": "features.feature_pipeline.compute_smc_features",
+      "consumed_by_declared": [
+        "UNKNOWN"
+      ],
+      "vector_key": "fvg_distance",
+      "vector_index": 40,
+      "resolve_fm_bindings": [],
+      "parity_tests": [],
+      "semantic_status": "NO_PARITY_FLOOR",
+      "economic_authority": "NONE",
+      "g001_status": "NOT_APPLICABLE_AT_FEATURE_LAYER"
+    },
+    {
+      "fm_id": "FM-077",
+      "name": "breaker_distance",
+      "section": "derived_metrics",
+      "lifecycle": "registered",
+      "computation_class": "scalar",
+      "computation_authority": "FORMULA_REGISTRY",
+      "impl": "features.smc.breaker.breaker_distance",
+      "produced_by": "features.feature_pipeline.compute_smc_features",
+      "consumed_by_declared": [
+        "UNKNOWN"
+      ],
+      "vector_key": "breaker_distance",
+      "vector_index": 41,
+      "resolve_fm_bindings": [],
+      "parity_tests": [],
+      "semantic_status": "NO_PARITY_FLOOR",
+      "economic_authority": "NONE",
+      "g001_status": "NOT_APPLICABLE_AT_FEATURE_LAYER"
+    },
+    {
+      "fm_id": "FM-078",
+      "name": "mitigation_block_distance",
+      "section": "derived_metrics",
+      "lifecycle": "registered",
+      "computation_class": "scalar",
+      "computation_authority": "FORMULA_REGISTRY",
+      "impl": "features.smc.mitigation.mitigation_block_distance",
+      "produced_by": "features.feature_pipeline.compute_smc_features",
+      "consumed_by_declared": [
+        "UNKNOWN"
+      ],
+      "vector_key": "mitigation_block_distance",
+      "vector_index": 42,
+      "resolve_fm_bindings": [],
+      "parity_tests": [],
+      "semantic_status": "NO_PARITY_FLOOR",
+      "economic_authority": "NONE",
+      "g001_status": "NOT_APPLICABLE_AT_FEATURE_LAYER"
+    },
+    {
+      "fm_id": "FM-079",
+      "name": "pdh_distance",
+      "section": "derived_metrics",
+      "lifecycle": "registered",
+      "computation_class": "scalar",
+      "computation_authority": "FORMULA_REGISTRY",
+      "impl": "features.smc.levels.pdh_pdl_distance",
+      "produced_by": "features.feature_pipeline.compute_smc_features",
+      "consumed_by_declared": [
+        "UNKNOWN"
+      ],
+      "vector_key": "pdh_distance",
+      "vector_index": 43,
+      "resolve_fm_bindings": [],
+      "parity_tests": [],
+      "semantic_status": "NO_PARITY_FLOOR",
+      "economic_authority": "NONE",
+      "g001_status": "NOT_APPLICABLE_AT_FEATURE_LAYER"
+    },
+    {
+      "fm_id": "FM-080",
+      "name": "pdl_distance",
+      "section": "derived_metrics",
+      "lifecycle": "registered",
+      "computation_class": "scalar",
+      "computation_authority": "FORMULA_REGISTRY",
+      "impl": "features.smc.levels.pdh_pdl_distance",
+      "produced_by": "features.feature_pipeline.compute_smc_features",
+      "consumed_by_declared": [
+        "UNKNOWN"
+      ],
+      "vector_key": "pdl_distance",
+      "vector_index": 44,
+      "resolve_fm_bindings": [],
+      "parity_tests": [],
+      "semantic_status": "NO_PARITY_FLOOR",
+      "economic_authority": "NONE",
+      "g001_status": "NOT_APPLICABLE_AT_FEATURE_LAYER"
+    },
+    {
+      "fm_id": "FM-081",
+      "name": "eqh_distance",
+      "section": "derived_metrics",
+      "lifecycle": "registered",
+      "computation_class": "scalar",
+      "computation_authority": "FORMULA_REGISTRY",
+      "impl": "features.smc.levels.eqh_eql_distance",
+      "produced_by": "features.feature_pipeline.compute_smc_features",
+      "consumed_by_declared": [
+        "UNKNOWN"
+      ],
+      "vector_key": "eqh_distance",
+      "vector_index": 45,
+      "resolve_fm_bindings": [],
+      "parity_tests": [],
+      "semantic_status": "NO_PARITY_FLOOR",
+      "economic_authority": "NONE",
+      "g001_status": "NOT_APPLICABLE_AT_FEATURE_LAYER"
+    },
+    {
+      "fm_id": "FM-082",
+      "name": "eql_distance",
+      "section": "derived_metrics",
+      "lifecycle": "registered",
+      "computation_class": "scalar",
+      "computation_authority": "FORMULA_REGISTRY",
+      "impl": "features.smc.levels.eqh_eql_distance",
+      "produced_by": "features.feature_pipeline.compute_smc_features",
+      "consumed_by_declared": [
+        "UNKNOWN"
+      ],
+      "vector_key": "eql_distance",
+      "vector_index": 46,
+      "resolve_fm_bindings": [],
+      "parity_tests": [],
+      "semantic_status": "NO_PARITY_FLOOR",
+      "economic_authority": "NONE",
+      "g001_status": "NOT_APPLICABLE_AT_FEATURE_LAYER"
+    },
+    {
+      "fm_id": "FM-083",
+      "name": "change_of_character",
+      "section": "structural_states",
+      "lifecycle": "registered",
+      "computation_class": "structural_state",
+      "computation_authority": "STRUCTURAL_PIPELINE",
+      "impl": "features.smc.choch.change_of_character",
+      "produced_by": "features.feature_pipeline.compute_smc_features",
+      "consumed_by_declared": [
+        "UNKNOWN"
+      ],
+      "vector_key": "change_of_character",
+      "vector_index": 47,
+      "resolve_fm_bindings": [],
+      "parity_tests": [],
+      "semantic_status": "NO_PARITY_FLOOR",
+      "economic_authority": "NONE",
+      "g001_status": "NOT_APPLICABLE_AT_FEATURE_LAYER"
+    },
+    {
+      "fm_id": "FM-084",
+      "name": "trend_strength_raw",
+      "section": "rolling_indicators",
+      "lifecycle": "registered",
+      "computation_class": "rolling",
+      "computation_authority": "PIPELINE",
+      "impl": "feature_pipeline.compute_trend_features",
+      "produced_by": "feature_pipeline.compute_trend_features",
+      "consumed_by_declared": [
+        "trend_strength_z"
+      ],
+      "vector_key": [],
+      "vector_index": [],
+      "resolve_fm_bindings": [],
       "parity_tests": [],
       "semantic_status": "NO_PARITY_FLOOR",
       "economic_authority": "NONE",

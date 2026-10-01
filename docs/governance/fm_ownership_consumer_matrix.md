@@ -1,6 +1,6 @@
 # FM Ownership / Consumer Matrix
 
-> Generated: `2026-07-31T18:36:26Z` · schema v1
+> Generated: `2026-10-01T12:48:41Z` · schema v1
 >
 > **Source script:** `scripts/governance/build_fm_ownership_matrix.py`
 >
@@ -9,10 +9,10 @@
 
 ## Summary
 
-- Features: **52**
+- Features: **66**
 - resolve_fm bound: **9**
 - With parity floor: **46**
-- Without parity floor: **6**
+- Without parity floor: **20**
 
 ## Consumers (runtime modules)
 
@@ -23,7 +23,7 @@
 | `feature_pipeline` | `src/features/feature_pipeline.py` | Batch/live feature vector producer (primary computation for series FMs) | — |
 | `causal_structure` | `src/features/causal_structure.py` | Online FC1-A structure + liquidity for FeatureStore | FM-025, FM-026 |
 | `crt_feature_builder` | `src/features/crt_feature_builder.py` | BitNet feeder transcriber (historically 0 live callers) | FM-001, FM-002, FM-010 |
-| `engine_runner_fusion` | `src/core/engine_runner.py` | Fusion of crt/gaussian/zone_gate/rr scores (consumes scores, not raw FM math) | — |
+| `engine_runner_fusion` | `src/core/engine_runner.py` | Fusion of crt/gaussian/feature_cluster_similarity/rr scores (consumes scores, not raw FM math) | — |
 | `feature_state_encoder_shadow` | `src/features/feature_states.py` | Shadow: numeric → state names (research; not trading gate) | — |
 
 ## Features
@@ -75,13 +75,27 @@
 | FM-061 | `retest_flag` | structural_states | STRUCTURAL_PIPELINE | — | PARITY_PLUS_ORACLE_SCENARIO | NONE | test_feature_structural_states_complex.py |
 | FM-062 | `volume_ratio` | rolling_indicators | PIPELINE | — | SERIES_PARITY | NONE | test_feature_rolling_indicators.py |
 | FM-063 | `volume_spike` | rolling_indicators | PIPELINE | — | SERIES_PARITY | NONE | test_feature_volume_spike_parity.py |
-| FM-064 | `trend_strength` | rolling_indicators | PIPELINE | — | NO_PARITY_FLOOR | NONE | — |
-| FM-065 | `candles_since_retest` | rolling_indicators | PIPELINE | — | NO_PARITY_FLOOR | NONE | — |
+| FM-064 | `trend_strength_z` | rolling_indicators | PIPELINE | — | NO_PARITY_FLOOR | NONE | — |
+| FM-065 | `candles_since_sweep` | rolling_indicators | PIPELINE | — | NO_PARITY_FLOOR | NONE | — |
 | FM-066 | `last_swing_high_price` | rolling_indicators | PIPELINE | — | ORACLE_PARITY | NONE | test_fc1a_swing_oracle_parity.py |
 | FM-067 | `last_swing_low_price` | rolling_indicators | PIPELINE | — | ORACLE_PARITY | NONE | test_fc1a_swing_oracle_parity.py |
 | FM-068 | `rsi_state` | structural_states | STRUCTURAL_PIPELINE | — | PARITY_FLOOR_PRESENT | NONE | test_feature_structural_states.py |
 | FM-069 | `displacement_flag` | structural_states | STRUCTURAL_PIPELINE | — | PARITY_FLOOR_PRESENT | NONE | test_feature_structural_states.py |
 | FM-070 | `candles_since_retest_state` | derived_metrics | FORMULA_REGISTRY | phase2_crt | NO_PARITY_FLOOR | NONE | — |
+| FM-071 | `body_commitment` | structural_states | STRUCTURAL_PIPELINE | — | NO_PARITY_FLOOR | NONE | — |
+| FM-072 | `atr_magnitude` | structural_states | STRUCTURAL_PIPELINE | — | NO_PARITY_FLOOR | NONE | — |
+| FM-073 | `momentum_magnitude` | structural_states | STRUCTURAL_PIPELINE | — | NO_PARITY_FLOOR | NONE | — |
+| FM-074 | `atr_absolute` | rolling_indicators | PIPELINE | — | NO_PARITY_FLOOR | NONE | — |
+| FM-075 | `order_block_distance` | derived_metrics | FORMULA_REGISTRY | — | NO_PARITY_FLOOR | NONE | — |
+| FM-076 | `fvg_distance` | derived_metrics | FORMULA_REGISTRY | — | NO_PARITY_FLOOR | NONE | — |
+| FM-077 | `breaker_distance` | derived_metrics | FORMULA_REGISTRY | — | NO_PARITY_FLOOR | NONE | — |
+| FM-078 | `mitigation_block_distance` | derived_metrics | FORMULA_REGISTRY | — | NO_PARITY_FLOOR | NONE | — |
+| FM-079 | `pdh_distance` | derived_metrics | FORMULA_REGISTRY | — | NO_PARITY_FLOOR | NONE | — |
+| FM-080 | `pdl_distance` | derived_metrics | FORMULA_REGISTRY | — | NO_PARITY_FLOOR | NONE | — |
+| FM-081 | `eqh_distance` | derived_metrics | FORMULA_REGISTRY | — | NO_PARITY_FLOOR | NONE | — |
+| FM-082 | `eql_distance` | derived_metrics | FORMULA_REGISTRY | — | NO_PARITY_FLOOR | NONE | — |
+| FM-083 | `change_of_character` | structural_states | STRUCTURAL_PIPELINE | — | NO_PARITY_FLOOR | NONE | — |
+| FM-084 | `trend_strength_raw` | rolling_indicators | PIPELINE | — | NO_PARITY_FLOOR | NONE | — |
 
 ## How to regenerate
 

@@ -1090,19 +1090,19 @@ file_identities:
   evidence:
   - path: src/config_layer/crt_engine_v2.py
     symbol: StateMachine
-    line: 947
+    line: 1012
     type: code
   - path: src/config_layer/crt_engine_v2.py
     symbol: _transition
-    line: 980
+    line: 1045
     type: code
   - path: src/config_layer/crt_engine_v2.py
     symbol: process_candle
-    line: 2760
+    line: 3589
     type: code
   - path: src/config_layer/crt_engine_v2.py
     symbol: CRTEngine
-    line: 2609
+    line: 2932
     type: code
   supersedes: null
   superseded_by: null
@@ -1242,7 +1242,7 @@ file_identities:
 - id: engines.candle_polarity_scorer
   kind: file_identity
   semantic_name: Candle Polarity Scorer
-  physical_path: src/engines/rr_engine.py
+  physical_path: src/engines/candle_commitment.py
   status: ACTIVE
   authority: advisory
   tier: 1
@@ -1252,13 +1252,14 @@ file_identities:
   canonical: true
   role: CANONICAL
   semantic_layer: SCORING
-  filename_semantic_status: MISLEADING
-  filename_status_reason: '"rr" reads as risk:reward, which this module does not compute. rr_engine.py:69-73
-    sets polarity = max((high-close)/range, (close-low)/range); the two terms sum to 1, so the output
-    is bounded [0.5, 1.0], and a degenerate/zero-range candle returns 0.0. That is a candle-shape score,
-    not a forward reward ratio. The module says so itself at :81 ("semantic": "candle_structure_quality").
-    Economic RR lives in src/core/ultron_risk_gate.py:230-245.'
+  filename_semantic_status: ALIGNED
+  filename_status_reason: 'Renamed from rr_engine.py by MC-D0a (f125339) to its true label; it was MISLEADING
+    before that ("rr" read as risk:reward). candle_commitment.py:71 sets polarity = max((high-close)/range,
+    (close-low)/range); the two terms sum to 1, so the output is bounded [0.5, 1.0], and a degenerate/zero-range
+    candle returns 0.0. That is a candle-shape score, not a forward reward ratio (:79 "semantic":
+    "candle_structure_quality"). Economic RR lives in src/core/ultron_risk_gate.py:230-245.'
   aliases:
+  - candle_commitment
   - rr_engine
   - candle structure quality
   - rr_ratio
@@ -1271,13 +1272,13 @@ file_identities:
     and src/features/model_evidence.py already enforces producer-declared semantics against active_models.yaml
     for exactly this defect class.
   evidence:
-  - path: src/engines/rr_engine.py
+  - path: src/engines/candle_commitment.py
     symbol: candle_polarity
-    line: 73
+    line: 75
     type: code
-  - path: src/engines/rr_engine.py
+  - path: src/engines/candle_commitment.py
     symbol: rr_ratio
-    line: 79
+    line: 77
     type: code
   - path: src/core/ultron_risk_gate.py
     symbol: rr_ratio
@@ -1354,7 +1355,7 @@ file_identities:
   kind: file_identity
   semantic_name: Gaussian Compatibility Shim
   physical_path: src/engines/gaussian_engine.py
-  status: ACTIVE
+  status: RETIRED
   authority: advisory
   tier: 1
   confidence: HIGH
@@ -1364,28 +1365,24 @@ file_identities:
   role: SHIM
   semantic_layer: SCORING
   filename_semantic_status: COMPATIBILITY
-  filename_status_reason: Self-labeled BACKWARD-COMPATIBILITY SHIM (33 lines); re-exports HeuristicGaussianEngine/GaussianRegistry
-    from heuristic_gaussian_engine.py and aliases GaussianEngine = HeuristicGaussianEngine. Its only importer
-    is a test — production code already imports the canonical module directly.
+  filename_status_reason: 'Retired module path since MC-D0a (f125339): the docstring names
+    engines.ema_momentum_kernel.EmaMomentumKernel as the fusion-slot engine and states the module does not
+    re-export it. Until MC-D0a it was a backward-compatibility shim aliasing GaussianEngine = HeuristicGaussianEngine.'
   aliases:
   - gaussian_engine
   concept_ids:
   - CN-005
-  miar_entry: gaussian
-  summary_50: Import-compatibility re-export; carries no logic of its own.
-  why_this_identity: Naming it a shim stops a reader from assuming this file holds the Gaussian scoring
+  miar_entry: null
+  summary_50: Retired module path; re-exports nothing (the engine lives in ema_momentum_kernel.py).
+  why_this_identity: Naming it a retired shim stops a reader from assuming this file holds the scoring
     implementation.
-  evidence:
-  - path: src/engines/gaussian_engine.py
-    symbol: GaussianEngine
-    line: 26
-    type: code
+  evidence: []
   supersedes: null
-  superseded_by: null
+  superseded_by: engines.heuristic_gaussian_scorer
 - id: engines.heuristic_gaussian_scorer
   kind: file_identity
   semantic_name: Heuristic Gaussian Scorer
-  physical_path: src/engines/heuristic_gaussian_engine.py
+  physical_path: src/engines/ema_momentum_kernel.py
   status: ACTIVE
   authority: advisory
   tier: 1
@@ -1396,20 +1393,22 @@ file_identities:
   role: CANONICAL
   semantic_layer: SCORING
   filename_semantic_status: ALIGNED
-  filename_status_reason: 'Name matches responsibility: the live 3-feature Gaussian heuristic scorer,
-    the canonical implementation gaussian_engine.py re-exports.'
+  filename_status_reason: 'Renamed from heuristic_gaussian_engine.py by MC-D0a (f125339) to its true label
+    (MIAR ema_momentum_kernel: conformance on the EMA/momentum axis). The live 3-feature heuristic scorer;
+    the old gaussian_engine.py path no longer re-exports it.'
   aliases:
+  - ema_momentum_kernel
   - heuristic_gaussian_engine
   concept_ids:
   - CN-005
-  miar_entry: gaussian
+  miar_entry: ema_momentum_kernel
   summary_50: Canonical Gaussian heuristic scoring engine (registry-backed, live).
   why_this_identity: Distinguishing this from engines.gaussian_compat_shim and engines.ml_gaussian_scorer
     keeps the three Gaussian-named files from being read as one.
   evidence:
-  - path: src/engines/heuristic_gaussian_engine.py
-    symbol: HeuristicGaussianEngine
-    line: 191
+  - path: src/engines/ema_momentum_kernel.py
+    symbol: EmaMomentumKernel
+    line: 208
     type: code
   supersedes: null
   superseded_by: null
@@ -1485,7 +1484,7 @@ file_identities:
   - ml_gaussian_engine
   concept_ids:
   - CN-005
-  miar_entry: gaussian
+  miar_entry: nb_outcome_classifier
   summary_50: ML-trained Gaussian scoring engine, imported alongside the heuristic scorer by engine_runner.
   why_this_identity: Keeps the ML variant distinct from the heuristic canonical scorer and the compatibility
     shim.
@@ -1577,7 +1576,7 @@ file_identities:
 - id: engines.zone_gate_engine
   kind: file_identity
   semantic_name: Zone Gate Engine
-  physical_path: src/engines/zone_gate_engine.py
+  physical_path: src/engines/feature_cluster_similarity.py
   status: ACTIVE
   authority: advisory
   tier: 2

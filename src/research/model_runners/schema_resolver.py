@@ -49,8 +49,9 @@ class SchemaResolutionError(ValueError):
 # Every declared read-side rename (v3->v4 and <=v5->v6). feature_schema is the only alias authority.
 _READ_ALIASES: dict[str, str] = {**SCHEMA_V3_ALIASES, **SCHEMA_V5_ALIASES}
 
-# Live name -> the pre-rename name a historical model was trained under (inverse of _READ_ALIASES).
-_LIVE_TO_V3: dict[str, str] = {live: old for old, live in _READ_ALIASES.items()}
+# Live name -> the v3 name that maps onto it (inverse of SCHEMA_V3_ALIASES only; canonical_38_v3
+# trained names are pinned to the removed rr_trained v3 mapping by tests/test_model_runners_schema_resolver.py).
+_LIVE_TO_V3: dict[str, str] = {live: v3 for v3, live in SCHEMA_V3_ALIASES.items()}
 
 # The one dimension v4 added over v3/legacy-38 (the MACD histogram split).
 _V4_ONLY_FEATURE = "macd_hist_raw"
