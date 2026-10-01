@@ -49,7 +49,8 @@ def _make_snapshot(**overrides) -> DecisionSnapshot:
 
 
 def _make_bus(config: dict = None) -> CognitiveBus:
-    return CognitiveBus(config or {})
+    # EPIC-84: the cognitive_layer section is required at construction; engine keys are lazy.
+    return CognitiveBus(config or {"cognitive_layer": {}})
 
 
 # ── Test 1: emit() is non-blocking ───────────────────────────────────────────

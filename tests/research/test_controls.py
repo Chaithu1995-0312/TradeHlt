@@ -49,7 +49,8 @@ def test_always_long_profitable_on_uptrend():
 def test_always_long_only_emits_longs():
     al = get_hypothesis("always_long")
     candles = _uptrend(60)
-    dirs = {s.direction for i in range(25, len(candles)) for s in al.detect(candles[:i + 1], {}, {})}
+    dirs = {s.direction for i in range(25, len(candles))
+            for s in al.detect(candles[:i + 1], {}, {"instrument": "TEST"})}
     assert dirs == {"long"}
 
 

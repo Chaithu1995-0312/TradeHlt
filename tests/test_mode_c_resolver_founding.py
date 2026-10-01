@@ -21,7 +21,7 @@ import pytest
 from charts import resolver_overlay as ro
 from config_layer.crt_engine_v2 import Candle
 from config_layer.state_identity import VALID_TRANSITIONS, CRTState, Direction
-from tests.helpers.crt_config import crt_engine_for_test
+from tests.helpers.crt_config import bar_features_for_test, crt_engine_for_test
 
 _T0 = datetime(2026, 7, 7, 0, 0)
 
@@ -46,7 +46,7 @@ def _row(cs: list[Candle], **over) -> dict:
 def _run(engine, cs):
     action = None
     for c in cs:
-        action = engine.process_candle(c, "H1")
+        action = engine.process_candle(c, "H1", bar_features=bar_features_for_test())
     return action
 
 
@@ -71,7 +71,7 @@ def test_resolver_founding_edge_is_declared():
 def test_mode_c_without_a_map_fails_closed():
     e = crt_engine_for_test(decider="resolver")
     with pytest.raises(RuntimeError, match="set_founding_map"):
-        e.process_candle(_candles(1)[0], "H1")
+        e.process_candle(_candles(1)[0], "H1", bar_features=bar_features_for_test())
 
 
 def test_engine_mode_refuses_a_founding_map():
@@ -126,7 +126,7 @@ def test_busy_engine_skips_founding():
     e = _mode_c(cs)
     _run(e, cs[:-1])
     e.state.evaluating_soft_conf = True                  # a soft-conf window is already open
-    e.process_candle(cs[-1], "H1")
+    e.process_candle(cs[-1], "H1", bar_features=bar_features_for_test())
     assert any(ev.event == "RESOLVER_FOUNDING_SKIPPED" for ev in e.state.event_log)
     assert e.state.retest_candle is None                 # nothing installed over the open window
 
@@ -136,7 +136,7 @@ def test_off_state_bar_resets_to_range_before_founding():
     e = _mode_c(cs)
     _run(e, cs[:-1])
     e.state.current_state = CRTState.SWEEP               # engine mid-episode of its own
-    action = e.process_candle(cs[-1], "H1")
+    action = e.process_candle(cs[-1], "H1", bar_features=bar_features_for_test())
     assert action["action"] == "RETEST_CONFIRMED" and e.state.current_state is CRTState.RETEST
 
 

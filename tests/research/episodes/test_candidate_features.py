@@ -96,8 +96,8 @@ def test_a_variable_length_namespace_needs_no_dimension_constant():
 def test_production_canonical_contract_is_unchanged():
     from features.feature_schema import CANONICAL_FEATURE_DIM, CANONICAL_FEATURES
 
-    assert CANONICAL_FEATURE_DIM == 39
-    assert len(CANONICAL_FEATURES) == 39
+    assert CANONICAL_FEATURE_DIM == 48
+    assert len(CANONICAL_FEATURES) == 48
 
 
 def test_episodes_still_store_no_canonical_vector():

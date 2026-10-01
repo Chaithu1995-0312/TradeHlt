@@ -49,13 +49,13 @@ SMC_PRIMITIVES = (
 def test_schema_is_48_dim_v5_with_a_nine_slot_smc_tail():
     """The vector grew by exactly the 9 SMC primitives, appended.
 
-    Source: feature_schema.CANONICAL_FEATURE_DIM (48), SCHEMA_VERSION ("5.0"),
-    SCHEMA_V4_FEATURE_DIM (39)
+    Source: feature_schema.CANONICAL_FEATURE_DIM (48), SCHEMA_VERSION ("6.0" -- F-107
+    renamed slots 11/35 in place; dims and order unchanged since 5.0), SCHEMA_V4_FEATURE_DIM (39)
     Failure mode: a tenth primitive is appended without a schema-version bump, so
     every consumer that trusts SCHEMA_VERSION scores a vector it was not trained on.
     """
     assert CANONICAL_FEATURE_DIM == 48
-    assert SCHEMA_VERSION == "5.0"
+    assert SCHEMA_VERSION == "6.0"
     assert SCHEMA_V4_FEATURE_DIM == 39
     assert CANONICAL_FEATURE_DIM - SCHEMA_V4_FEATURE_DIM == len(SMC_PRIMITIVES)
     assert tuple(CANONICAL_FEATURE_ORDER[SCHEMA_V4_FEATURE_DIM:]) == SMC_PRIMITIVES

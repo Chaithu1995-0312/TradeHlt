@@ -105,7 +105,9 @@ def test_autoderive_holiday_passes_only_when_listed(tmp_path):
     rep_no = validate_dataset(str(p), instrument="EURUSD", raise_on_fail=False,
                               write_report=False, cfg_override=_AUTODERIVE)
     assert rep_no["decision"] == DatasetDecision.REJECT.value
-    sc = {"holidays": ["2024-01-17"]}
+    sc = {"crypto_quote_suffixes": ["USDT", "USDC", "BUSD"],
+          "weekday_open_hour": 22, "weekday_close_hour": 21, "weekday_daily_break_hours": [21],
+          "holidays": ["2024-01-17"], "known_gaps": []}
     rep_yes = validate_dataset(str(p), instrument="EURUSD", raise_on_fail=False, write_report=False,
                                cfg_override={**_AUTODERIVE, "session_calendar": sc})
     assert rep_yes["decision"] == DatasetDecision.APPROVE.value

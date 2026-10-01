@@ -24,6 +24,7 @@ def _load_replay_module():
     path = _ROOT / "scripts" / "research" / "execution_planner_replay.py"
     spec = importlib.util.spec_from_file_location("execution_planner_replay", path)
     mod = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = mod   # @dataclass resolves cls.__module__ via sys.modules
     spec.loader.exec_module(mod)
     return mod
 

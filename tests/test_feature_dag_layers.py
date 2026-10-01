@@ -87,6 +87,9 @@ def test_ontology_crosscheck_only_known_rollups(dag):
         # ref_high/ref_low/bos_level rollup above, not a new kind of drift.
         "order_block_distance", "fvg_distance", "breaker_distance", "mitigation_block_distance",
         "pdh_distance", "pdl_distance", "eqh_distance", "eql_distance",
+        # F-107 / schema v6.0 (raw/z split): ontology FM-064 v2 declares the non-canonical
+        # intermediate trend_strength_raw; the DAG rolls it up to close -- same rollup class.
+        "trend_strength_z",
     }
     unexpected = [x["feature"] for x in dag["ontology_crosscheck"] if x["feature"] not in allowed]
     assert not unexpected, f"new ontology<->DAG edge divergence on registered features: {unexpected}"

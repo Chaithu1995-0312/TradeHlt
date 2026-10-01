@@ -74,14 +74,18 @@ def _make_full_state() -> EngineState:
     state.atr_abs       = 15.0
     state.risk_score = None          # → risk_pct fallback path (0.005)
     state.cached_features = {
-        # Intent routing via _derive_trade_intent → "reversal"
-        # (body_ratio=0.4 < 0.6 → not breakout; csr key absent → 99 > 5 → not pullback)
-        "retest_depth":  0.35,
-        "body_ratio":    0.40,
-        "disp_strength": 0.80,
-        "retest_index":  5,
-        "session":       1,
-        "double_sweep":  False,
+        # Intent routing via _derive_trade_intent → "reversal": the seven EPIC-84 A3b
+        # INTENT_INPUT_KEYS (no sweep → not liq_sweep; csr=99 > 5 → not pullback;
+        # body_ratio=0.4 < 0.6 → not breakout).
+        "displacement_retrace":   0.35,
+        "displacement_atr_ratio": 0.80,
+        "body_ratio":             0.40,
+        "double_sweep":           False,
+        "sweep_detected":         False,
+        "candles_since_sweep":    99,
+        "momentum_score":         0.0,
+        "retest_index":           5,
+        "session":                1,
     }
     return state
 

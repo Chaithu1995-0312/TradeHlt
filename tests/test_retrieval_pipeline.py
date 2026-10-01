@@ -46,7 +46,7 @@ def sample_py_doc(tmp_config: RetrievalConfig) -> Document:
     """A small Python document for chunking tests."""
     return Document(
         path=tmp_config.repo_root / "src" / "retrieval" / "__init__.py",
-        domain="source_code",
+        authority_rank=0, tier_rule="test", truth_class="source_code",
         content=(
             "'''Module docstring.'''\n"
             "import os\n\n"
@@ -68,7 +68,7 @@ def sample_md_doc(tmp_config: RetrievalConfig) -> Document:
     """A small markdown document for chunking tests."""
     return Document(
         path=tmp_config.repo_root / "docs" / "test.md",
-        domain="architecture",
+        authority_rank=0, tier_rule="test", truth_class="architecture",
         content=(
             "# Title\n\n"
             "Some intro text.\n\n"
@@ -93,21 +93,23 @@ class TestCorpusDiscoverer:
         docs = discoverer.discover()
         assert len(docs) > 0
         # Should find the retrieval module itself
-        retrieval_init = [d for d in docs if "retrieval/__init__.py" in str(d.path)]
+        retrieval_init = [d for d in docs if d.path.as_posix().endswith("src/retrieval/__init__.py")]
         assert len(retrieval_init) > 0
 
     def test_discover_domain_filter(self, tmp_config: RetrievalConfig) -> None:
         discoverer = CorpusDiscoverer(tmp_config)
-        docs = discoverer.discover_domain("source_code")
-        assert all(d.domain == "source_code" for d in docs)
+        # Truth classes replaced the old domain vocabulary; src/ is CURRENT.
+        docs = discoverer.discover_domain("CURRENT")
+        assert all(d.domain == "CURRENT" for d in docs)
         assert len(docs) > 0
 
     def test_document_has_enriched_metadata(self, tmp_config: RetrievalConfig) -> None:
         discoverer = CorpusDiscoverer(tmp_config)
-        docs = discoverer.discover_domain("source_code")
-        py_docs = [d for d in docs if d.path.suffix == ".py"]
-        if py_docs:
-            assert "symbols" in py_docs[0].metadata  # enriched python symbols
+        docs = discoverer.discover_domain("CURRENT")
+        # Symbols are added only when a file defines a class/function; corpus.py does.
+        corpus_py = [d for d in docs if d.path.as_posix().endswith("src/retrieval/corpus.py")]
+        assert corpus_py, "src/retrieval/corpus.py not discovered as CURRENT"
+        assert "CorpusDiscoverer" in corpus_py[0].metadata["symbols"].split(",")
 
 
 # ── chunking tests ─────────────────────────────────────────────────────────
@@ -132,7 +134,7 @@ class TestChunker:
         yaml_content = "key1: value1\nsubkey: subvalue\n\nkey2: value2\n"
         doc = Document(
             path=tmp_config.repo_root / "configs" / "test.yaml",
-            domain="config",
+            authority_rank=0, tier_rule="test", truth_class="config",
             content=yaml_content,
             metadata={"filepath": "configs/test.yaml", "filename": "test.yaml",
                       "extension": ".yaml", "domain": "config"},
@@ -146,7 +148,7 @@ class TestChunker:
         long_text = "paragraph one.\n\n" * 100  # ~1500 chars
         doc = Document(
             path=tmp_config.repo_root / "test_long.txt",
-            domain="analysis",
+            authority_rank=0, tier_rule="test", truth_class="analysis",
             content=long_text,
             metadata={"filepath": "test_long.txt", "filename": "test_long.txt",
                       "extension": ".txt", "domain": "analysis"},
@@ -220,7 +222,7 @@ class TestVectorStore:
         # Add a config doc
         doc1 = Document(
             path=tmp_config.repo_root / "test_config.yaml",
-            domain="config",
+            authority_rank=0, tier_rule="test", truth_class="config",
             content="key: value",
             metadata={"filepath": "test_config.yaml", "domain": "config"},
         )
@@ -233,7 +235,7 @@ class TestVectorStore:
         # Add a source code doc
         doc2 = Document(
             path=tmp_config.repo_root / "test_code.py",
-            domain="source_code",
+            authority_rank=0, tier_rule="test", truth_class="source_code",
             content="def foo(): pass",
             metadata={"filepath": "test_code.py", "domain": "source_code"},
         )

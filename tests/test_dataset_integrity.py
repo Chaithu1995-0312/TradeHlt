@@ -178,7 +178,10 @@ def test_duplicate_header_in_file_raises(tmp_path):
 
 # ── session-aware FX/metals handling ────────────────────────────────────────
 def test_classify_market():
-    cfg = {"session_calendar": {"crypto_quote_suffixes": ["USDT", "USDC", "BUSD"]}}
+    cfg = {"session_calendar": {"crypto_quote_suffixes": ["USDT", "USDC", "BUSD"],
+                                "weekday_open_hour": 22, "weekday_close_hour": 21,
+                                "weekday_daily_break_hours": [21], "holidays": [],
+                                "known_gaps": []}}
     assert classify_market("BTCUSDT", cfg) is MarketType.CRYPTO
     assert classify_market("BNBUSDT", cfg) is MarketType.CRYPTO
     assert classify_market("GBPUSD", cfg) is MarketType.WEEKDAY   # FX

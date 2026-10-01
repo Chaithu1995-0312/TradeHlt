@@ -153,15 +153,15 @@ def test_zero_atr_handled():
     )
 
 
-# ── Test 5: CANONICAL_FEATURE_DIM == 39 (schema v4.0; was 38 at v3.0) ────────
+# ── Test 5: CANONICAL_FEATURE_DIM == 48 (v5.0 SMC append; v6.0 kept it; was 39 at v4.0) ──
 
 def test_canonical_dim():
     from features.feature_schema import CANONICAL_FEATURE_DIM, CANONICAL_FEATURES
-    assert CANONICAL_FEATURE_DIM == 39, (
-        f"Expected CANONICAL_FEATURE_DIM=39, got {CANONICAL_FEATURE_DIM}"
+    assert CANONICAL_FEATURE_DIM == 48, (
+        f"Expected CANONICAL_FEATURE_DIM=48, got {CANONICAL_FEATURE_DIM}"
     )
-    assert len(CANONICAL_FEATURES) == 39, (
-        f"Expected len(CANONICAL_FEATURES)=39, got {len(CANONICAL_FEATURES)}"
+    assert len(CANONICAL_FEATURES) == 48, (
+        f"Expected len(CANONICAL_FEATURES)=48, got {len(CANONICAL_FEATURES)}"
     )
     # Check the three new features are present
     for feat in ("liquidity_distance", "liquidity_pressure_score", "volume_spike"):

@@ -28,6 +28,9 @@ def _make_runner():
         def __init__(self):
             self.called = False
             self.last = None
+            # EPIC-84: run() reads the per-engine weights from fusion.cfg (FusionConfig).
+            from types import SimpleNamespace
+            self.cfg = SimpleNamespace(**ENGINE_RUNNER_DEFAULTS["fusion_engine"])
 
         def compute(self, payload, *, regime=None, **kwargs):
             self.called = True
@@ -50,6 +53,7 @@ def _make_runner():
     runner.rr = DummyRR()
     runner.fusion = DummyFusion()
     runner.collector = DummyCollector()
+    runner._zone_gate = None   # score_zone_cluster is stubbed; the gate object is never read
     runner.dual_cfg = dict(engine_runner.DUAL_ENGINE_DEFAULTS)
     runner._audit = SignalAuditRecorder(debug_mode=False)
     runner.decision = DummyDecision()
@@ -79,16 +83,16 @@ def _make_runner():
     return runner
 
 
-def _stub_zone_gate(**kwargs):
-    """Stub for run_feature_cluster_similarity — returns neutral pass so dual-gate tests
+def _stub_zone_gate(*args, **kwargs):
+    """Stub for engine_runner.score_zone_cluster — returns neutral pass so dual-gate tests
     are not affected by canonical-key validation added in feature_cluster_similarity.py."""
-    return {"score": 0.4, "passed": True, "vector": [], "valid": True}
+    return {"score": 0.4, "passed": True, "meta": {}}
 
 
 def test_dual_gate_trend_selects_breakout(monkeypatch):
     monkeypatch.setattr(engine_runner, "crt_compute",
                         lambda trade_id, features, context: {"score": 0.1})
-    monkeypatch.setattr(engine_runner, "run_feature_cluster_similarity", _stub_zone_gate)
+    monkeypatch.setattr(engine_runner, "score_zone_cluster", _stub_zone_gate)
     runner = _make_runner()
 
     input_data = {
@@ -110,7 +114,7 @@ def test_dual_gate_trend_selects_breakout(monkeypatch):
 def test_dual_gate_range_selects_trap(monkeypatch):
     monkeypatch.setattr(engine_runner, "crt_compute",
                         lambda trade_id, features, context: {"score": 0.1})
-    monkeypatch.setattr(engine_runner, "run_feature_cluster_similarity", _stub_zone_gate)
+    monkeypatch.setattr(engine_runner, "score_zone_cluster", _stub_zone_gate)
     runner = _make_runner()
 
     input_data = {
@@ -132,7 +136,7 @@ def test_dual_gate_range_selects_trap(monkeypatch):
 def test_dual_gate_neutral_low_confidence_rejects(monkeypatch):
     monkeypatch.setattr(engine_runner, "crt_compute",
                         lambda trade_id, features, context: {"score": 0.1})
-    monkeypatch.setattr(engine_runner, "run_feature_cluster_similarity", _stub_zone_gate)
+    monkeypatch.setattr(engine_runner, "score_zone_cluster", _stub_zone_gate)
     runner = _make_runner()
 
     input_data = {
@@ -153,7 +157,7 @@ def test_dual_gate_neutral_low_confidence_rejects(monkeypatch):
 def test_layered_flow_fusion_runs_before_dual_veto(monkeypatch):
     monkeypatch.setattr(engine_runner, "crt_compute",
                         lambda trade_id, features, context: {"score": 0.1})
-    monkeypatch.setattr(engine_runner, "run_feature_cluster_similarity", _stub_zone_gate)
+    monkeypatch.setattr(engine_runner, "score_zone_cluster", _stub_zone_gate)
     runner = _make_runner()
 
     input_data = {

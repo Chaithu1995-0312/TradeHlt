@@ -219,7 +219,7 @@ def test_process_candle_count_matches_feature_row_count_at_exact_warmup_boundary
 
     calls: list = []
 
-    def _spy(self, candle, htf_candle_id):
+    def _spy(self, candle, htf_candle_id, parent_state=None, parent_objective=None, *, bar_features):
         calls.append(candle.timestamp)
         return {"action": "NONE"}
 

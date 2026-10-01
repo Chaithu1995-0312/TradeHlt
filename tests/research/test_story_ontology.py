@@ -87,7 +87,8 @@ def test_engine_bands_well_formed():
     assert bands["rr"]["strong"] > bands["rr"]["weak"]
 
 
-@pytest.mark.parametrize("bad_path", [["RANGE", "RETEST"], ["SWEEP", "RESOLUTION"]])
+# RANGE->RETEST became legal with the mode-C resolver founding edge; RANGE->EXECUTION never is.
+@pytest.mark.parametrize("bad_path", [["RANGE", "EXECUTION"], ["SWEEP", "RESOLUTION"]])
 def test_crt_path_checker_rejects_illegal_edges(bad_path):
     legal, _ = crt_path_is_legal(bad_path)
     assert legal is False

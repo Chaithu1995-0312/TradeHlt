@@ -12,6 +12,9 @@ from research.model_runners.runner import RunRequest, run_model
 
 
 REPO = Path(__file__).resolve().parents[2]
+# §4.0: the runners consume the ACTIVE config (v2_multi_2026_04 is point-in-time, pre-MC-D0a labels).
+_ACTIVE_CONFIG = REPO / "configs" / "production" / (
+    (REPO / "configs" / "production" / "ACTIVE_VERSION").read_text(encoding="utf-8").strip() + ".json")
 
 
 def _write_synth_csv(path: Path, n: int = 250) -> None:
@@ -55,7 +58,7 @@ def test_phase1_smoke_no_zone(model_id: str, synth_csv: Path, tmp_path: Path):
         instrument="SYNTH",
         out_dir=out,
         repo_root=REPO,
-        config_path=REPO / "configs" / "production" / "v2_multi_2026_04.json",
+        config_path=_ACTIVE_CONFIG,
         start=None,
         end=None,
         limit=30,
@@ -79,7 +82,7 @@ def test_phase1_smoke_no_zone(model_id: str, synth_csv: Path, tmp_path: Path):
 
 
 def test_zone_gate_smoke_if_artifact_present(synth_csv: Path, tmp_path: Path):
-    cfg_path = REPO / "configs" / "production" / "v2_multi_2026_04.json"
+    cfg_path = _ACTIVE_CONFIG
     cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
     er = cfg["engine_runner"]
     art = REPO / er["feature_cluster_similarity_registry_path"]

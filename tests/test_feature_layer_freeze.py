@@ -169,7 +169,7 @@ def test_xauusd_coverage_metadata_scopes_false_green():
         "backtest_v2",
         "crt_state_machine",
         "session_filter",
-        "feature_cluster_similarity",
+        "zone_gate",   # dated 2026-07-20 pin keeps its point-in-time label (pre-MC-D0a)
         "fusion_gate",
         "decision_engine",
         "execution_planner",

@@ -67,40 +67,40 @@ market_states:
   # structure layer — the CRT skeleton (the ONLY layer with non-null crt_state_map)
   - {id: range,               layer: structure, crt_state_map: RANGE,          feature_signature: [swing_high, swing_low, atr, volatility_regime]}
   - {id: shadow_pending,      layer: structure, crt_state_map: SHADOW_PENDING, feature_signature: [sweep_detected, disp_strength]}
-  - {id: sweep,               layer: structure, crt_state_map: SWEEP,          feature_signature: [sweep_detected, liquidity_sweep, wick_size, body_ratio]}
+  - {id: sweep,               layer: structure, crt_state_map: SWEEP,          feature_signature: [sweep_detected, liquidity_sweep, candle_range, body_ratio]}
   - {id: displacement,        layer: structure, crt_state_map: DISPLACEMENT,   feature_signature: [disp_strength, body_ratio, body_size, atr, momentum_score]}
   - {id: break_of_structure,  layer: structure, crt_state_map: DISPLACEMENT,   feature_signature: [break_of_structure, higher_high, lower_low, disp_strength]}
   - {id: expansion,           layer: structure, crt_state_map: EXPANSION,      feature_signature: [disp_strength, atr, volatility_ratio, body_ratio]}
-  - {id: retest,              layer: structure, crt_state_map: RETEST,         feature_signature: [retest_depth, candles_since_retest, body_ratio, ema_fast]}
-  - {id: execution,           layer: structure, crt_state_map: EXECUTION,      feature_signature: [retest_depth, candles_since_retest, body_ratio, momentum_score]}
+  - {id: retest,              layer: structure, crt_state_map: RETEST,         feature_signature: [retest_depth, candles_since_sweep, body_ratio, ema_fast]}
+  - {id: execution,           layer: structure, crt_state_map: EXECUTION,      feature_signature: [retest_depth, candles_since_sweep, body_ratio, momentum_score]}
   - {id: resolution,          layer: structure, crt_state_map: RESOLUTION,     feature_signature: [close, atr, disp_strength]}
-  - {id: expired,             layer: structure, crt_state_map: EXPIRED,        feature_signature: [candles_since_retest, atr]}
+  - {id: expired,             layer: structure, crt_state_map: EXPIRED,        feature_signature: [candles_since_sweep, atr]}
   # trend layer (semantic-only)
-  - {id: uptrend,             layer: trend,     crt_state_map: null, feature_signature: [ema_fast, ema_slow, ema_spread, trend_strength, trend_bias, higher_high]}
-  - {id: downtrend,           layer: trend,     crt_state_map: null, feature_signature: [ema_fast, ema_slow, ema_spread, trend_strength, trend_bias, lower_low]}
-  - {id: ranging_trend,       layer: trend,     crt_state_map: null, feature_signature: [ema_spread, trend_strength, atr]}
+  - {id: uptrend,             layer: trend,     crt_state_map: null, feature_signature: [ema_fast, ema_slow, ema_spread, trend_strength_z, trend_bias, higher_high]}
+  - {id: downtrend,           layer: trend,     crt_state_map: null, feature_signature: [ema_fast, ema_slow, ema_spread, trend_strength_z, trend_bias, lower_low]}
+  - {id: ranging_trend,       layer: trend,     crt_state_map: null, feature_signature: [ema_spread, trend_strength_z, atr]}
   - {id: trend_pullback,      layer: trend,     crt_state_map: null, feature_signature: [ema_fast, ema_slow, retest_depth, body_ratio, momentum_score]}
-  - {id: trend_exhaustion,    layer: trend,     crt_state_map: null, feature_signature: [rsi_14, momentum_score, macd_hist, trend_strength]}
+  - {id: trend_exhaustion,    layer: trend,     crt_state_map: null, feature_signature: [rsi_14, momentum_score, macd_hist_z, trend_strength_z]}
   # liquidity layer (semantic-only)
   - {id: liquidity_buildup,   layer: liquidity, crt_state_map: null, feature_signature: [swing_high, swing_low, liquidity_pressure_score, volume_ratio]}
-  - {id: sweep_low,           layer: liquidity, crt_state_map: null, feature_signature: [liquidity_sweep, sweep_detected, swing_low, liquidity_distance, wick_size]}
-  - {id: sweep_high,          layer: liquidity, crt_state_map: null, feature_signature: [liquidity_sweep, sweep_detected, swing_high, liquidity_distance, wick_size]}
+  - {id: sweep_low,           layer: liquidity, crt_state_map: null, feature_signature: [liquidity_sweep, sweep_detected, swing_low, liquidity_distance, candle_range]}
+  - {id: sweep_high,          layer: liquidity, crt_state_map: null, feature_signature: [liquidity_sweep, sweep_detected, swing_high, liquidity_distance, candle_range]}
   - {id: double_sweep,        layer: liquidity, crt_state_map: null, feature_signature: [double_sweep, liquidity_sweep, sweep_detected]}
-  - {id: stop_hunt,           layer: liquidity, crt_state_map: null, feature_signature: [liquidity_sweep, sweep_detected, wick_size, volume_spike]}
+  - {id: stop_hunt,           layer: liquidity, crt_state_map: null, feature_signature: [liquidity_sweep, sweep_detected, candle_range, volume_spike]}
   # volatility layer (semantic-only)
   - {id: compression,         layer: volatility, crt_state_map: null, feature_signature: [volatility_ratio, volatility_regime, atr, body_ratio]}
   - {id: expansion_vol,       layer: volatility, crt_state_map: null, feature_signature: [volatility_ratio, atr, disp_strength, body_size]}
   - {id: volatility_spike,    layer: volatility, crt_state_map: null, feature_signature: [volatility_ratio, volume_spike, atr]}
   # pattern layer (semantic-only)
-  - {id: bull_flag,           layer: pattern,   crt_state_map: null, feature_signature: [ema_fast, ema_slow, body_ratio, retest_depth, trend_strength]}
-  - {id: bear_flag,           layer: pattern,   crt_state_map: null, feature_signature: [ema_fast, ema_slow, body_ratio, retest_depth, trend_strength]}
+  - {id: bull_flag,           layer: pattern,   crt_state_map: null, feature_signature: [ema_fast, ema_slow, body_ratio, retest_depth, trend_strength_z]}
+  - {id: bear_flag,           layer: pattern,   crt_state_map: null, feature_signature: [ema_fast, ema_slow, body_ratio, retest_depth, trend_strength_z]}
   - {id: ascending_triangle,  layer: pattern,   crt_state_map: null, feature_signature: [swing_high, higher_high, break_of_structure, atr]}
   - {id: double_top,          layer: pattern,   crt_state_map: null, feature_signature: [swing_high, higher_high, rsi_14]}
   - {id: double_bottom,       layer: pattern,   crt_state_map: null, feature_signature: [swing_low, lower_low, rsi_14]}
   - {id: failed_breakout,     layer: pattern,   crt_state_map: null, feature_signature: [break_of_structure, liquidity_sweep, sweep_detected, retest_depth]}
   # momentum layer (semantic-only)
-  - {id: momentum_increasing, layer: momentum,  crt_state_map: null, feature_signature: [momentum_score, macd_line, macd_hist, rsi_14]}
-  - {id: momentum_decreasing, layer: momentum,  crt_state_map: null, feature_signature: [momentum_score, macd_hist, rsi_14]}
+  - {id: momentum_increasing, layer: momentum,  crt_state_map: null, feature_signature: [momentum_score, macd_line, macd_hist_z, rsi_14]}
+  - {id: momentum_decreasing, layer: momentum,  crt_state_map: null, feature_signature: [momentum_score, macd_hist_z, rsi_14]}
   # session layer (semantic-only)
   - {id: session_london,      layer: session,   crt_state_map: null, feature_signature: [session, hour_of_day]}
   - {id: session_newyork,     layer: session,   crt_state_map: null, feature_signature: [session, hour_of_day]}
@@ -127,7 +127,7 @@ families:
     description: "Established trend pulls back to a retest of prior structure, then continues."
     outcome_bias: either
     canonical_state_sequence: [range, sweep, displacement, expansion, retest, execution, resolution]
-    key_features: [ema_fast, ema_slow, ema_spread, trend_strength, disp_strength, retest_depth, momentum_score]
+    key_features: [ema_fast, ema_slow, ema_spread, trend_strength_z, disp_strength, retest_depth, momentum_score]
 
   - id: range_rotation
     status: active

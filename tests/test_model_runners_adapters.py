@@ -30,7 +30,9 @@ from research.model_runners.contracts import (  # noqa: E402
 from research.model_runners.envelope import collect_code_provenance  # noqa: E402
 from research.model_runners.substrate import BarContext  # noqa: E402
 
-CONFIG_PATH = ROOT / "configs" / "production" / "v2_multi_2026_04.json"
+# §4.0: the runners consume the ACTIVE config (v2_multi_2026_04 is point-in-time, pre-MC-D0a labels).
+_ACTIVE = (ROOT / "configs" / "production" / "ACTIVE_VERSION").read_text(encoding="utf-8").strip()
+CONFIG_PATH = ROOT / "configs" / "production" / f"{_ACTIVE}.json"
 
 # Adapters that need a --artifact or sequential candles are constructed elsewhere.
 _SIMPLE_FEATURE_ADAPTERS = ("regime", "trap", "breakout")

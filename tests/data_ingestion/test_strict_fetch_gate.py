@@ -27,7 +27,7 @@ from data_ingestion.ohlcv_schema import DatasetIntegrityError        # noqa: E40
 _SC = {
     "crypto_quote_suffixes": ["USDT", "USDC", "BUSD"],
     "weekday_open_hour": 22, "weekday_close_hour": 21, "weekday_daily_break_hours": [21],
-    "holidays": [],
+    "holidays": [], "known_gaps": [],
 }
 _STRICT = {"enforce_path_consistency": False, "max_missing_pct": 0.0,
            "max_single_gap_candles": 0, "max_gap_span_minutes": 0,

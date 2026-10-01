@@ -92,6 +92,17 @@ def _postings_for(chunks: list[dict[str, Any]]) -> list[dict[str, Any]]:
 class _FixtureConfig:
     index_dir: Path
     top_k_default: int = 10
+    # Rerank knobs mirror build_default_config (RetrievalConfig has no field defaults).
+    candidate_n: int = 600
+    stem_boost: float = 4.0
+    short_chunk_penalty: float = 0.4
+    short_chunk_max_tokens: int = 8
+    json_record_penalty: float = 0.35
+    file_agg_boost: float = 0.35
+    routing_extra_limit: int = 120
+    file_route_boost: float = 7.0
+    file_route_max_files: int = 8
+    file_route_chunks_per_file: int = 6
     bm25_k1: float = 1.2
     bm25_b: float = 0.75
     exact_id_boost: float = 5.0

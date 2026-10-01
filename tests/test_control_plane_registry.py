@@ -30,7 +30,8 @@ def test_tutorial_mapping_and_stage_order() -> None:
     # All specs must have a non-empty workflow_stage; core-workflow specs must be
     # in the ordered stage list. Supplemental stages (Maintenance, Groq Bridge,
     # Analysis, Agent) are intentionally outside the core workflow_stage_order.
-    _SUPPLEMENTAL_STAGES = {"Maintenance", "Groq Bridge", "Analysis", "Agent"}
+    _SUPPLEMENTAL_STAGES = {"Maintenance", "Groq Bridge", "Analysis", "Agent",
+                            "Research & Analysis"}   # registry._WORKFLOW_STAGE_BY_COMMAND (rag index)
     for spec in specs.values():
         assert spec.workflow_stage, f"Spec {spec.id!r} has empty workflow_stage"
         if spec.workflow_stage not in _SUPPLEMENTAL_STAGES:

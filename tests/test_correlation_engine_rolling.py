@@ -55,28 +55,33 @@ def _stub_fetcher(data: dict):
     return mock
 
 
+# EPIC-84: portfolio.correlation keys are required (no defaults).
+_CFG = {"correlation": {"lookback_days": 10, "min_observations": 5,
+                        "cache_ttl_secs": 3600, "max_staleness_days": 7}}
+
+
 # ── Public API: trivial cases ───────────────────────────────────────────────
 
 def test_same_symbol_is_one():
-    ce = CorrelationEngine(config={}, fetcher=None)
+    ce = CorrelationEngine(config=_CFG, fetcher=None)
     assert ce.correlation("BTCUSDT", "BTCUSDT") == pytest.approx(1.0)
 
 
 def test_empty_symbol_is_zero():
-    ce = CorrelationEngine(config={}, fetcher=None)
+    ce = CorrelationEngine(config=_CFG, fetcher=None)
     assert ce.correlation("", "EURUSD") == pytest.approx(0.0)
     assert ce.correlation("EURUSD", "") == pytest.approx(0.0)
 
 
 def test_max_corr_empty_existing():
-    ce = CorrelationEngine(config={}, fetcher=None)
+    ce = CorrelationEngine(config=_CFG, fetcher=None)
     assert ce.max_correlation_with_existing("BTCUSDT", []) == pytest.approx(0.0)
 
 
 # ── Fetcher=None → pure heuristic fallback ──────────────────────────────────
 
 def test_no_fetcher_falls_back_to_heuristic():
-    ce = CorrelationEngine(config={}, fetcher=None)
+    ce = CorrelationEngine(config=_CFG, fetcher=None)
     # Same-group crypto → HIGH
     assert ce.correlation("BTCUSDT", "ETHUSDT") == pytest.approx(_HIGH_CORR)
     # FX major vs USD short → MED
@@ -232,7 +237,7 @@ def test_tracked_instruments_union(monkeypatch):
         "src.config_layer.production_config.get_prod_section",
         fake_get_section,
     )
-    ce = CorrelationEngine(config={}, fetcher=None)
+    ce = CorrelationEngine(config=_CFG, fetcher=None)
     insts = ce._get_tracked_instruments()
     assert insts == ["BTCUSDT", "ETHUSDT", "EURUSD", "GBPUSD"]
 
@@ -250,7 +255,7 @@ def test_tracked_instruments_empty_emits_event(monkeypatch, tmp_path):
         "src.utils.integrity_events._LOG_PATH",
         log_path,
     )
-    ce = CorrelationEngine(config={}, fetcher=None)
+    ce = CorrelationEngine(config=_CFG, fetcher=None)
     ce._get_tracked_instruments()
     text = log_path.read_text(encoding="utf-8")
     assert "CORRELATION_NO_INSTRUMENTS" in text
@@ -264,7 +269,7 @@ def test_static_fallback_emits_event(monkeypatch, tmp_path):
         "src.utils.integrity_events._LOG_PATH",
         log_path,
     )
-    ce = CorrelationEngine(config={}, fetcher=None)
+    ce = CorrelationEngine(config=_CFG, fetcher=None)
     ce.correlation("FAKE1", "FAKE2")
     text = log_path.read_text(encoding="utf-8")
     assert "CORRELATION_STATIC_FALLBACK" in text

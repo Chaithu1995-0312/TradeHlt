@@ -23,7 +23,9 @@ if str(SRC) not in sys.path:
 from research.model_runners.adapters import build_adapter  # noqa: E402
 from research.model_runners.contracts import get_contract  # noqa: E402
 
-CONFIG_PATH = ROOT / "configs" / "production" / "v2_multi_2026_04.json"
+# §4.0: the runners consume the ACTIVE config (v2_multi_2026_04 is point-in-time, pre-MC-D0a labels).
+_ACTIVE = (ROOT / "configs" / "production" / "ACTIVE_VERSION").read_text(encoding="utf-8").strip()
+CONFIG_PATH = ROOT / "configs" / "production" / f"{_ACTIVE}.json"
 
 # Fields that only a COMPLETE trade plan carries.
 _EXECUTABLE_FIELDS = (
