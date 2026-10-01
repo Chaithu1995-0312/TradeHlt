@@ -19,10 +19,11 @@ digraph flow_telemetry {
     "config_layer.crt_engine_v2" [style="dashed", fontcolor="#888888"];
     "config_layer.production_config" [style="dashed", fontcolor="#888888"];
     "config_layer.rr.rr_fusion" [style="dashed", fontcolor="#888888"];
+    "config_layer.strict_config" [style="dashed", fontcolor="#888888"];
     "core.engine_runner" [style="dashed", fontcolor="#888888"];
     "core.fusion_engine" [style="dashed", fontcolor="#888888"];
     "core.model_registry" [style="dashed", fontcolor="#888888"];
-    "engines.heuristic_gaussian_engine" [style="dashed", fontcolor="#888888"];
+    "engines.ema_momentum_kernel" [style="dashed", fontcolor="#888888"];
     "engines.live_engine" [style="dashed", fontcolor="#888888"];
     "events" [style="dashed", fontcolor="#888888"];
     "features.crt_feature_builder" [style="dashed", fontcolor="#888888"];
@@ -55,12 +56,13 @@ digraph flow_telemetry {
     "config_layer.crt_engine_v2" -> "utils.integrity_events";
     "config_layer.rr.rr_fusion" -> "utils.integrity_events";
     "core.collector" -> "config_layer.production_config";
+    "core.collector" -> "config_layer.strict_config";
     "core.collector" -> "utils.logging_config";
     "core.engine_runner" -> "core.collector";
     "core.engine_runner" -> "events.event_fabric";
     "core.fusion_engine" -> "utils.integrity_events";
     "core.model_registry" -> "utils.integrity_events";
-    "engines.heuristic_gaussian_engine" -> "utils.integrity_events";
+    "engines.ema_momentum_kernel" -> "utils.integrity_events";
     "engines.live_engine" -> "utils.integrity_events";
     "events" -> "events.event_fabric";
     "events.event_fabric" -> "features.feature_schema";

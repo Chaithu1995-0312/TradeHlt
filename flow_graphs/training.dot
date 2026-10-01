@@ -17,15 +17,20 @@ digraph flow_training {
     // 1-hop dependency boundary (not flow members)
     "bitnet.zone_cosine_searcher" [style="dashed", fontcolor="#888888"];
     "config_layer.production_config" [style="dashed", fontcolor="#888888"];
+    "config_layer.strict_config" [style="dashed", fontcolor="#888888"];
     "engines.live_engine" [style="dashed", fontcolor="#888888"];
     "engines.ml_gaussian_engine" [style="dashed", fontcolor="#888888"];
     "engines.tradenet_meta_engine" [style="dashed", fontcolor="#888888"];
     "features.feature_builder" [style="dashed", fontcolor="#888888"];
     "features.feature_pipeline" [style="dashed", fontcolor="#888888"];
     "features.feature_schema" [style="dashed", fontcolor="#888888"];
+    "features.gaussian_schema_contract" [style="dashed", fontcolor="#888888"];
     "features.schema_validator" [style="dashed", fontcolor="#888888"];
+    "research.clean_labels.builder" [style="dashed", fontcolor="#888888"];
+    "research.model_runners.adapters.gaussian_ml" [style="dashed", fontcolor="#888888"];
     "runtime.backtest_v2" [style="dashed", fontcolor="#888888"];
     "runtime.baseline_capture" [style="dashed", fontcolor="#888888"];
+    "strategies.strategy_package" [style="dashed", fontcolor="#888888"];
     "training.trade_net_v2" [style="dashed", fontcolor="#888888"];
     "utils.integrity_events" [style="dashed", fontcolor="#888888"];
 
@@ -55,24 +60,27 @@ digraph flow_training {
     "core.model_registry" -> "utils.integrity_events";
     "engines.live_engine" -> "features.dataset_builder";
     "engines.ml_gaussian_engine" -> "core.model_registry";
-    "engines.ml_gaussian_engine" -> "features.dataset_builder";
     "engines.ml_gaussian_engine" -> "training.trainer";
     "engines.tradenet_meta_engine" -> "core.model_registry";
     "engines.tradenet_meta_engine" -> "features.dataset_builder";
     "engines.tradenet_meta_engine" -> "training.trainer";
     "features.dataset_builder" -> "features.feature_schema";
     "features.dataset_validator" -> "config_layer.production_config";
+    "features.dataset_validator" -> "config_layer.strict_config";
     "features.dataset_validator" -> "features.feature_builder";
     "features.dataset_validator" -> "features.feature_schema";
     "features.feature_builder" -> "features.dataset_builder";
+    "research.clean_labels.builder" -> "features.dataset_builder";
+    "research.model_runners.adapters.gaussian_ml" -> "training.trainer";
     "runtime.backtest_v2" -> "core.model_registry";
     "runtime.baseline_capture" -> "core.model_registry";
+    "strategies.strategy_package" -> "core.model_registry";
     "training.phase5_calibration" -> "config_layer.production_config";
     "training.trade_net_v2" -> "core.model_registry";
     "training.trade_net_v2" -> "features.dataset_builder";
     "training.trade_net_v2" -> "training.trainer";
     "training.train_pipeline" -> "features.feature_schema";
     "training.trainer" -> "features.feature_schema";
-    "training.trainer" -> "training.trade_net_v2";
+    "training.trainer" -> "features.gaussian_schema_contract";
     "training.trainer" -> "utils.integrity_events";
 }

@@ -34,7 +34,7 @@ the runner rejects** rather than fusing a partial set.
 
 ## Entry points & validations
 - **Reached via:** `EngineRunner.run()` on the candle→order spine — invoked by `runtime.backtest_v2` (replay) and `runtime.live_engine_hook` (live). Not called directly.
-- **Validated by:** the four-engine completeness guard (`engine_runner.py:787 · missing_engines`); per-engine fail-fast (EmaMomentumKernel) / fail-open (ML Gaussian, feature-cluster gate) doctrine; signal-audit records every engine score.
+- **Validated by:** the four-engine completeness guard (`engine_runner.py:825 · missing_engines`); per-engine fail-fast (EmaMomentumKernel) / fail-open (ML Gaussian, feature-cluster gate) doctrine; signal-audit records every engine score.
 
 ## Tests
 - [`tests/test_ema_momentum_kernel_slot.py`](../../tests/test_ema_momentum_kernel_slot.py) — heuristic↔ML selector, 38-dim schema contract, direction mirroring for shorts.
