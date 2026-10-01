@@ -117,6 +117,7 @@ def test_v2_declares_its_measurement_weaknesses():
     assert "replication" in risks, "re-use of V1's corpus must stay declared"
 
 
+@pytest.mark.measurement
 def test_cost_provenance_hash_is_recomputed_not_trusted():
     """A provenance string nobody recomputes is a comment, not evidence."""
     import hashlib

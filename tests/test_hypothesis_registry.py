@@ -88,13 +88,30 @@ def test_every_code_hypothesis_exists(registry: HypothesisRegistry) -> None:
     assert not problems, "\n".join(problems)
 
 
+def _is_results_evidence(err) -> bool:
+    return err.kind == "evidence" and "path not found: results/" in err.detail
+
+
 def test_program_and_evidence_paths_resolve(registry: HypothesisRegistry) -> None:
-    """Every programs[] path and evidence[].path exists on disk (repo root)."""
+    """Every programs[] path and evidence[].path exists on disk (repo root).
+
+    Evidence under gitignored results/ is checked by the measurement test below instead.
+    """
     import os
 
     os.chdir(_REPO)  # validate_paths resolves relative to cwd
-    errors = registry.validate_paths()
+    errors = [e for e in registry.validate_paths() if not _is_results_evidence(e)]
     assert not errors, "path problems:\n" + "\n".join(str(e) for e in errors)
+
+
+@pytest.mark.measurement
+def test_results_evidence_paths_resolve(registry: HypothesisRegistry) -> None:
+    """evidence[].path under gitignored results/ exists — only on a machine that ran the study."""
+    import os
+
+    os.chdir(_REPO)
+    errors = [e for e in registry.validate_paths() if _is_results_evidence(e)]
+    assert not errors, "missing results/ evidence:\n" + "\n".join(str(e) for e in errors)
 
 
 def test_unique_ids(raw_lines: list[dict]) -> None:

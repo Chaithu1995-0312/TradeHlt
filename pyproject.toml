@@ -54,4 +54,5 @@ markers = [
   "shadow_economic: owner-gated shadow measurement",
   "capital_micro: owner-gated real capital — never default",
   "slow: long-running",
+  "measurement: reads gitignored results/ evidence; skipped unless --run-measurement (owner runs on demand)",
 ]

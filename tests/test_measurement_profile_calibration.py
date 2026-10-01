@@ -41,6 +41,7 @@ def test_metals_calibration_is_measured():
     assert cal["instrument"] == "XAUUSD"
 
 
+@pytest.mark.measurement
 def test_metals_provenance_manifest_exists_and_hash_matches():
     """A stored provenance hash that nobody recomputes is decoration."""
     cal = _costs("metals_mt5")["calibration"]
@@ -52,6 +53,7 @@ def test_metals_provenance_manifest_exists_and_hash_matches():
     )
 
 
+@pytest.mark.measurement
 def test_metals_values_match_the_source_manifest():
     """The seeded numbers must be the measured ones, not drifted copies."""
     cal = _costs("metals_mt5")["calibration"]

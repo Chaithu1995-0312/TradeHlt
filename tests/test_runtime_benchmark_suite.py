@@ -9,6 +9,8 @@ import hashlib
 import json
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parent.parent
 POLICY = ROOT / "docs" / "governance" / "runtime-benchmark-suite-2026-07-20.md"
 PIN = ROOT / "docs" / "governance" / "runtime-benchmark-suite-pin-2026-07-20.json"
@@ -87,6 +89,7 @@ def test_rb1_gate_pair_provenance():
         assert a.get("metrics_authority") == "DESCRIPTIVE_ONLY_NOT_PROMOTION"
 
 
+@pytest.mark.measurement
 def test_rb1_artifacts_rehash_when_retained():
     pin = _load_pin()
     rb1 = pin["benchmarks"]["RB1_XAUUSD_W2M"]

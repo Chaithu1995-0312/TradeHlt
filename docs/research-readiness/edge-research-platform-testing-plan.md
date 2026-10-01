@@ -70,6 +70,10 @@ Tiny capital (only after FLOW_MATCHES_INTENT + economic survivor)
 | **L8 Tiny capital** | `capital_micro` | Explicit owner + checklist | Real | Only after L7 survivor + `FLOW_MATCHES_INTENT` |
 
 **CI default:** L0–L2 always.  
+**Measurement evidence (added 2026-10-01, user decision):** a test whose assertion needs gitignored
+`results/` evidence carries `measurement`. `tests/conftest.py` SKIPs it with a reason by default;
+the owner runs it on demand. Stale-finding freshness (`Revalidate-by`) is a governance WARNING, not a
+failure, and unreviewed real-corpus clocks are mocked in process for tests only (never persisted).  
 **Never in default CI:** L5 mutation, L7 economic promote, L8 capital.  
 **Secrets:** L3 may use public endpoints only in CI; authenticated Binance/MT5 stay out of PR CI unless a locked runner exists.
 
@@ -92,6 +96,7 @@ markers = [
   "shadow_economic: owner-gated shadow measurement",
   "capital_micro: owner-gated real capital — never default",
   "slow: long-running",
+  "measurement: reads gitignored results/ evidence; skipped unless --run-measurement (owner runs on demand)",
 ]
 ```
 
@@ -397,6 +402,7 @@ Do **not** automate green CI. Checklist in program work item when a survivor exi
 | Nightly | + `market_network` | Daily |
 | Pre-release human | + `broker_mt5_ro`, `exec_dry_run`, `ui_playwright` | Before any live claim |
 | Owner only | `shadow_economic` | After design freeze |
+| Owner on demand | `measurement` (`--run-measurement` or `-m measurement`) | When the results/ evidence is on disk |
 | Never auto | `capital_micro` | Explicit dual env ack |
 
 ---

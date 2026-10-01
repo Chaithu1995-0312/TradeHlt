@@ -15,6 +15,28 @@ collect_ignore = [
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 
+def pytest_addoption(parser):
+    parser.addoption(
+        "--run-measurement", action="store_true", default=False,
+        help="run @pytest.mark.measurement tests (they read gitignored results/ evidence)",
+    )
+
+
+def pytest_collection_modifyitems(config, items):
+    """Measurement tests are owner-run on demand (edge-research-platform-testing-plan.md §2/§9).
+
+    They read evidence under gitignored results/, which only exists on the machine that ran the
+    study, so by default they SKIP with a reason instead of failing. Opt in with
+    `--run-measurement` or by selecting them: `pytest -m measurement`.
+    """
+    if config.getoption("--run-measurement") or "measurement" in (config.getoption("-m") or ""):
+        return
+    skip = pytest.mark.skip(reason="measurement test: needs results/ evidence; run with --run-measurement")
+    for item in items:
+        if item.get_closest_marker("measurement") is not None:
+            item.add_marker(skip)
+
+
 @pytest.fixture(scope="session", autouse=True)
 def _declare_synthetic_corpus_clocks(tmp_path_factory):
     """Phase-3 clock provenance for test-built corpora.
@@ -34,6 +56,39 @@ def _declare_synthetic_corpus_clocks(tmp_path_factory):
         tmp_path_factory.getbasetemp(), "UTC",
         reason="pytest tmp tree: corpora are constructed by the test that reads them",
     )
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _mock_unreviewed_real_corpus_clocks():
+    """Mock clock for REAL corpora that tests read but a human has not reviewed yet.
+
+    Tests that replay data/BNBUSDT_M15.csv or data/mt5/EURUSD_*.csv check determinism and parity
+    (run A == run B), not which clock the stamps are on. Blocking them on the human review would
+    make the suite wait on a governance decision it is not testing. So the harness mocks the clock
+    in process, by acquisition family: crypto USDT pairs are exchange UTC, data/mt5/ is broker time.
+
+    Scope is deliberately narrow:
+      - only registry records with user_reviewed=false (reviewed records keep the real SHA check);
+      - never persisted — configs/data_provenance/ohlcv_clock_registry.json is untouched, and
+        production still refuses these files until the review CLI is run;
+      - test_ohlcv_clock_provenance.py isolates itself from in-process declarations, so the gate
+        itself is still tested for real.
+    """
+    from data_ingestion import clock_registry as cr
+
+    root = cr.repo_root()
+    for key, rec in cr.load_registry().items():
+        if rec.user_reviewed or not key.endswith(".csv"):
+            continue
+        name = Path(key).name.upper()
+        if key.startswith("data/mt5/"):
+            tz = cr.TZ_MT5_SERVER_NY_DST
+        elif "USDT" in name:
+            tz = cr.TZ_UTC
+        else:
+            continue
+        cr.declare_in_process(root / key, tz,
+                              reason="pytest mock clock: unreviewed real corpus, not a review")
 
 
 _FIXTURE_PATH = Path(__file__).parent / "fixtures" / "test_vectors.json"

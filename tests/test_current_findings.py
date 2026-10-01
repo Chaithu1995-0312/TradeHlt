@@ -3,8 +3,9 @@
 Mirrors tests/test_topic_docs.py (read-a-doc-and-assert) and extends it with the
 knowledge-governance contract per CLAUDE.md §6.2:
   - each finding is dated, confidence-rated, and has a non-empty Evidence link;
-  - VALIDATED/OPEN findings must not be past their Revalidate-by date (the mechanical
-    "nobody reviewed it" cure — this test can go red from the passage of time alone);
+  - VALIDATED/OPEN findings past their Revalidate-by date are reported as a governance WARNING,
+    not a failure (user decision 2026-10-01: time passing is not a defect; the user re-verifies
+    findings when a decision needs them);
   - the CLAUDE.md "Repository Truths Index" and the living doc agree on the non-terminal F-ids.
 
 It checks the mechanical contract only — NOT that each conclusion still matches the source
@@ -18,6 +19,7 @@ import hashlib
 import json
 import re
 import subprocess
+import warnings
 from pathlib import Path
 
 import pytest
@@ -186,8 +188,17 @@ def test_revalidation_window_respects_status_ceiling() -> None:
     )
 
 
+class StaleFindingWarning(UserWarning):
+    """A VALIDATED/OPEN finding is past its Revalidate-by date. Advisory: the user re-verifies."""
+
+
 def test_nonterminal_findings_are_fresh() -> None:
-    """VALIDATED/OPEN findings must not be past their Revalidate-by date."""
+    """VALIDATED/OPEN findings past Revalidate-by are WARNED, not failed.
+
+    User decision 2026-10-01: a stale finding needs re-verification against source, which only a
+    real measurement can do; bumping the date to turn this green would be the false cure. So the
+    floor surfaces the list in the pytest warnings summary and the user reviews it on demand.
+    """
     today = _dt.date.today()
     blocks = _parse_findings()
     stale: list[str] = []
@@ -202,10 +213,13 @@ def test_nonterminal_findings_are_fresh() -> None:
             continue  # covered by test_findings_have_required_fields
         if today > due:
             stale.append(f"{fid} (revalidate-by {revalidate})")
-    assert not stale, (
-        "stale findings — re-verify and bump Revalidate-by, or mark SUPERSEDED/RETIRED: "
-        + ", ".join(stale)
-    )
+    if stale:
+        warnings.warn(
+            f"{len(stale)} stale finding(s) — re-verify and bump Revalidate-by, or mark "
+            "SUPERSEDED/RETIRED: " + ", ".join(stale),
+            StaleFindingWarning,
+            stacklevel=1,
+        )
 
 
 def test_index_and_doc_agree_on_nonterminal_ids() -> None:

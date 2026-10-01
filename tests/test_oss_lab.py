@@ -387,6 +387,18 @@ def test_codebase_memory_g1_g3_pin_and_evidence():
     assert (ev / "LICENSE").is_file()
     assert (ev / "checksums.txt").is_file()
     assert (ev / "REPO_INTEL_RUN_MANIFEST_PLAN.json").is_file()
+    isolation = (
+        _REPO / "oss_lab" / "adapters" / "codebase_memory" / "INSTALL_ISOLATION.md"
+    )
+    assert isolation.is_file()
+    assert "tools/oss_lab/codebase-memory/v0.10.2" in isolation.read_text(encoding="utf-8")
+    assert (_REPO / "oss_lab" / "adapters" / "codebase_memory" / "lab.cbmignore").is_file()
+    assert (_REPO / "tools" / "oss_lab" / "codebase-memory" / "v0.10.2").is_dir()
+
+
+@pytest.mark.measurement
+def test_codebase_memory_results_archive_retained():
+    """The verified archive + cosign bundle + runs dir live under gitignored results/."""
     # Verified archive lives under results/ (not activated)
     zip_path = (
         _REPO
@@ -408,14 +420,7 @@ def test_codebase_memory_g1_g3_pin_and_evidence():
         / "codebase-memory-mcp-windows-amd64.zip.bundle"
     )
     assert bundle.is_file()
-    isolation = (
-        _REPO / "oss_lab" / "adapters" / "codebase_memory" / "INSTALL_ISOLATION.md"
-    )
-    assert isolation.is_file()
-    assert "tools/oss_lab/codebase-memory/v0.10.2" in isolation.read_text(encoding="utf-8")
-    assert (_REPO / "oss_lab" / "adapters" / "codebase_memory" / "lab.cbmignore").is_file()
     assert (_REPO / "results" / "oss_lab" / "repo_intel" / "runs").is_dir()
-    assert (_REPO / "tools" / "oss_lab" / "codebase-memory" / "v0.10.2").is_dir()
 
 
 def test_gate_doc_shows_approved_for_lab():
