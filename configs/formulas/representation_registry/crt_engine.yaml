@@ -106,6 +106,69 @@ representations:
     parameterization: {ordinal: 2, target_policy: setup.target_policy, r_multiple: crt_engine.tp2_atr_multiplier}
     absence: "n/a"
 
+  # ── slice 3: the engine's position (Decision/Execution) ──
+  Trade.risk_pct:
+    concept_id: DEX-01
+    encoding: "float fraction of equity (dataclass default, never read from config)"
+    parameterization: {risk_fraction: 0.01}
+    divergence_ref: "DEX-01 Trade.risk_pct"
+    absence: "n/a"
+
+  Trade.opened_at:
+    concept_id: DEX-03
+    encoding: "datetime of the fill bar"
+    parameterization: {entry_semantics: setup.entry_semantics}
+    divergence_ref: "DEX-03 setup.entry_semantics = approval_bar_legacy"
+    absence: "None until filled"
+
+  Trade.open_candle_index:
+    concept_id: DEX-03
+    encoding: "int bar index of the fill bar"
+    parameterization: {entry_semantics: setup.entry_semantics}
+    divergence_ref: "DEX-03 setup.entry_semantics = approval_bar_legacy"
+    absence: "0 before the fill (a sentinel; the Trade is only read after it fills)"
+
+  events.TRADE_OPENED:
+    concept_id: DEX-04
+    encoding: "event row: the CRT rail approved and opened the plan"
+    parameterization: {rail: crt_engine}
+    divergence_ref: "DEX-04 CRT engine DECISION/FILTERED resets"
+    absence: "n/a (a FILTERED plan is an events.RESET row instead)"
+
+  Trade.status:
+    concept_id: DEX-05
+    encoding: "str PENDING | OPEN | TP1 | TP2 | STOPPED | STOPPED_STRUCTURAL | TIMEOUT | UNCONFIRMED"
+    parameterization: {}
+    divergence_ref: "DEX-05 Trade.status"
+    absence: "n/a"
+
+  Trade.closed_at:
+    concept_id: DEX-05
+    encoding: "datetime of the close bar"
+    parameterization: {}
+    absence: "None while open"
+
+  ExecutionEngine.update_trade:
+    concept_id: DEX-06
+    encoding: "per-bar resting-exit update (partial at TP1, runner stop moved)"
+    parameterization: {partial_fraction: 0.5, trail_fraction: 0.5, tie_break: stop_first}
+    divergence_ref: "DEX-06 ExecutionEngine.update_trade"
+    absence: "n/a"
+
+  Trade.displacement_origin:
+    concept_id: DEX-07
+    encoding: "price: open of the founding MKT-E04 candle (the close_on_origin reference)"
+    parameterization: {on_invalidation: close_on_origin, precedence: crt_engine.displacement_origin_kill_precedence}
+    divergence_ref: "DEX-07 active config crt_engine.displacement_origin_kill_enabled = true"
+    absence: "None when the trade was built without a displacement candle (the rule then never fires)"
+
+  Trade.pnl:
+    concept_id: DEX-09
+    encoding: "float price per unit, partial and runner blended"
+    parameterization: {walk: bar_replay, basis: gross, cost_model: none}
+    divergence_ref: "DEX-09 Trade.pnl"
+    absence: "0.0 while open (a sentinel; read only after the close)"
+
 # Representations of no live concept: kept and marked, never deleted (I-13).
 deprecated:
   SweepEvent.double_confirmed: "structurally constant False (crt_engine_v2.py:965 vs :2041); 0 true in 873,561 recorded SWEEP events"
@@ -123,13 +186,6 @@ unmapped:
   # slice 2: Trade fields that are not plan meaning. New coverage of the Trade type (V-10 extended),
   # not growth of an existing type's list; shrink-only from here.
   Trade.id: "identifier, not a concept"
-  Trade.risk_pct: "sizing — Decision/Execution (slice 3)"
-  Trade.runner_active: "position lifecycle — slice 3"
-  Trade.opened_at: "fill time — slice 3"
-  Trade.closed_at: "exit time — slice 3"
-  Trade.pnl: "realised position result — slice 3 (EXECUTION outcome, not TRS-08)"
-  Trade.partial_pnl: "partial-exit result — slice 3 (exit schedule)"
-  Trade.status: "position lifecycle — slice 3"
+  Trade.runner_active: "set at build, never read by the engine (grep 2026-10-02); no position meaning"
+  Trade.partial_pnl: "component of DEX-09 (the TP1 leg), not a concept of its own"
   Trade.cached_features: "feature snapshot at build time, not plan meaning"
-  Trade.open_candle_index: "fill bar — slice 3"
-  Trade.displacement_origin: "SEM-021 position kill reference — slice 3"

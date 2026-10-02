@@ -35,21 +35,33 @@ def _shards():
     return copy.deepcopy(load_representation_shards())
 
 
-def test_shipped_registries_pass_and_warn_the_open_slice_3_decision():
+def _with_open_d2_2(concepts):
+    """Re-open the settled D2-2 deferral on a copy (slice 3 settled it as DEX-07, D3-1)."""
+    for item in concepts["TRS-03"]["divergences"]:
+        if item.get("decided_in") == "slice_3":
+            item["decide_in"] = item.pop("decided_in")
+    return concepts
+
+
+def test_shipped_registries_pass_and_d2_2_is_settled():
     concepts = load_concept_contracts()["concepts"]
     assert validate_concepts(load_concept_contracts()) == []
     assert validate_representations(concepts, load_representation_shards()) == []
     assert validate_role_status_untouched() == []
     assert validate_deferred_decisions(concepts) == []
+    assert open_deferred_decisions(concepts) == []
+    settled = [d for d in concepts["TRS-03"]["divergences"] if d.get("decided_in") == "slice_3"]
+    assert len(settled) == 1 and _DECISION == settled[0]["decision"] and "DEX-07" in settled[0]["resolution"]
+    assert validate_all() == []
+
+
+def test_an_open_slice_3_deferral_still_warns():
+    concepts = _with_open_d2_2(_concepts())
     pending = open_deferred_decisions(concepts)
     assert any(row["concept_id"] == "TRS-03" and row["decide_in"] == "slice_3" for row in pending)
-    with pytest.warns(UserWarning, match="TRS-03") as caught:
-        assert validate_all() == []
-    text = " ".join(str(item.message) for item in caught)
-    assert "slice_3" in text
-    assert _DECISION in text
-    with pytest.warns(UserWarning, match="slice_3"):
+    with pytest.warns(UserWarning, match="slice_3") as caught:
         warn_open_deferred_decisions(concepts)
+    assert _DECISION in " ".join(str(item.message) for item in caught)
 
 
 def test_v13_a_thesis_without_invalidation_or_with_an_unknown_role_fails():
@@ -138,7 +150,8 @@ def test_v10_every_trade_field_is_covered_and_a_bracket_key_covers_tp1():
 
 
 def test_v16_slice_3_is_an_error_only_after_an_accepted_decision_concept():
-    concepts = _concepts()
+    concepts = {cid: rec for cid, rec in _with_open_d2_2(_concepts()).items()
+                if rec.get("layer") != "DECISION_EXECUTION"}
     concepts["DX-01"] = {"layer": "DECISION_EXECUTION", "status": "PROPOSED"}
     assert validate_deferred_decisions(concepts) == []
 

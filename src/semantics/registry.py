@@ -805,15 +805,84 @@ def _assigns_status(target: ast.AST) -> bool:
     return False
 
 
+_ROLE_SCANNED = ("trading", "execution")
+
+
 def validate_role_status_untouched(root: Optional[Path] = None) -> list[str]:
-    """V-15. Scan src/semantics/trading. A missing package is an error."""
-    base = (Path(root) if root else ROOT) / "src" / "semantics" / "trading"
+    """V-15. Scan src/semantics/trading and (slice 3) src/semantics/execution. A missing package is an error."""
+    problems = []
+    for package in _ROLE_SCANNED:
+        base = (Path(root) if root else ROOT) / "src" / "semantics" / package
+        if not base.is_dir():
+            problems.append(f"src/semantics/{package}: package missing (I-10)")
+            continue
+        for path in sorted(base.rglob("*.py")):
+            relative = path.relative_to(ROOT).as_posix()
+            problems.extend(validate_role_source(path.read_text(encoding="utf-8"), name=relative))
+    return problems
+
+
+#: Thesis lifecycle transitions (TRS-01). Execution reads a thesis; it never moves it (I-3, D3-1).
+_THESIS_TRANSITIONS = frozenset({"mark_failed", "mark_spent", "mark_expired"})
+_MUTATORS = frozenset({"replace", "__setattr__", "setattr"})
+
+
+def validate_execution_source(source: str, *, name: str = "<source>") -> list[str]:
+    """V-17 on one source string: no thesis transition, no attribute assignment, no replace/setattr."""
+    tree = ast.parse(source)
+    problems = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            func = node.func
+            called = func.attr if isinstance(func, ast.Attribute) else getattr(func, "id", None)
+            if called in _THESIS_TRANSITIONS:
+                problems.append(f"{name}:{node.lineno}: thesis transition {called}( in execution (I-3)")
+            elif called in _MUTATORS:
+                problems.append(f"{name}:{node.lineno}: {called}( in execution mutates an object (I-3)")
+        if isinstance(node, (ast.Assign, ast.AnnAssign, ast.AugAssign)):
+            targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+            for target in targets:
+                for sub in ast.walk(target):
+                    if isinstance(sub, ast.Attribute) and isinstance(sub.ctx, ast.Store):
+                        problems.append(f"{name}:{node.lineno}: attribute assignment .{sub.attr} in execution (I-3)")
+    return problems
+
+
+def validate_execution_never_moves_a_thesis(root: Optional[Path] = None) -> list[str]:
+    """V-17. Scan src/semantics/execution. A missing package is an error."""
+    base = (Path(root) if root else ROOT) / "src" / "semantics" / "execution"
     if not base.is_dir():
-        return ["src/semantics/trading: package missing (I-10)"]
+        return ["src/semantics/execution: package missing (I-3)"]
     problems = []
     for path in sorted(base.rglob("*.py")):
         relative = path.relative_to(ROOT).as_posix()
-        problems.extend(validate_role_source(path.read_text(encoding="utf-8"), name=relative))
+        problems.extend(validate_execution_source(path.read_text(encoding="utf-8"), name=relative))
+    return problems
+
+
+def validate_exit_reasons(concepts: Mapping[str, Any]) -> list[str]:
+    """V-18. lifecycle.exit_reasons are unique upper-case tokens; DEX-05's equal position.ExitReason."""
+    from semantics.execution.position import POSITION, ExitReason   # lazy: execution imports this module
+
+    problems = []
+    for cid, rec in concepts.items():
+        if not isinstance(rec, dict) or rec.get("layer") != Layer.DECISION_EXECUTION.value:
+            continue
+        lifecycle = rec.get("lifecycle")
+        if not isinstance(lifecycle, dict) or "exit_reasons" not in lifecycle:
+            continue
+        reasons = lifecycle["exit_reasons"]
+        where = f"concept {cid}"
+        if not isinstance(reasons, list) or not all(isinstance(r, str) and r and r == r.upper() for r in reasons):
+            problems.append(f"{where}: lifecycle.exit_reasons must be a list of upper-case tokens (I-9)")
+            continue
+        if len(set(reasons)) != len(reasons):
+            problems.append(f"{where}: lifecycle.exit_reasons repeats a token (I-9)")
+        if cid == POSITION and reasons != [m.value for m in ExitReason]:
+            problems.append(f"{where}: lifecycle.exit_reasons {reasons} != position.ExitReason (I-9)")
+    position = concepts.get(POSITION)
+    if isinstance(position, dict) and "exit_reasons" not in (position.get("lifecycle") or {}):
+        problems.append(f"concept {POSITION}: lifecycle.exit_reasons is missing (I-9)")
     return problems
 
 
@@ -854,6 +923,20 @@ def validate_deferred_decisions(concepts: Mapping[str, Any]) -> list[str]:
     ]
 
 
+def validate_settled_decisions(concepts: Mapping[str, Any]) -> list[str]:
+    """V-16 ext (A-10). A divergence that says decided_in must name its resolution."""
+    problems = []
+    for cid, rec in concepts.items():
+        if not isinstance(rec, dict):
+            continue
+        for item in rec.get("divergences") or []:
+            if isinstance(item, dict) and "decided_in" in item:
+                resolution = item.get("resolution")
+                if not isinstance(resolution, str) or not resolution.strip():
+                    problems.append(f"concept {cid}: decided_in {item['decided_in']} has no resolution (A-10)")
+    return problems
+
+
 def warn_open_deferred_decisions(concepts: Mapping[str, Any]) -> list[dict]:
     """Emit one UserWarning listing every open slice_3 decision. Returns the same rows."""
     pending = open_deferred_decisions(concepts)
@@ -879,5 +962,8 @@ def validate_all() -> list[str]:
     problems.extend(validate_terminal_reasons(load_terminal_reason_map()))
     problems.extend(validate_role_status_untouched())
     problems.extend(validate_deferred_decisions(concepts))
+    problems.extend(validate_settled_decisions(concepts))
+    problems.extend(validate_execution_never_moves_a_thesis())
+    problems.extend(validate_exit_reasons(concepts))
     warn_open_deferred_decisions(concepts)
     return problems

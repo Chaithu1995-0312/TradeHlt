@@ -1,4 +1,5 @@
 # Semantic OS v2 — CONCEPT CONTRACTS (meaning plane). Slice 1: Geometry + Market. Slice 2: Trading.
+# Slice 3: Decision/Execution.
 #
 # Spec:      docs/governance/SEMANTIC_OS_V2_MEANING_PLANE.md
 # Companion: configs/formulas/representation_registry/*.yaml  (representation -> concept)
@@ -23,8 +24,8 @@
 
 schema: concept_contracts/v1
 version: 1
-slice: 2
-layers_in_slice: [GEOMETRY, MARKET, TRADING]
+slice: 3
+layers_in_slice: [GEOMETRY, MARKET, TRADING, DECISION_EXECUTION]
 
 concepts:
 
@@ -853,7 +854,7 @@ concepts:
     authority: {evidence: [REPO, USER_DECISION], sources: [src/config_layer/crt_engine_v2.py], lineage: [D2-2]}
     divergences:
       - {surface: "ResetLogic.should_reset retrace (crt_engine_v2.py:2898-2909)", current: "the move is the displacement candle body abs(close-open), and the retrace fires at retrace >= retrace_reset_pct (inclusive); the 1.618 extension (:2911-2923) uses sweep level to displacement close", contract: "one move (sweep reference price to displacement close) for both invalidation and extension; the breach is GP-02 strict", disposition: RECORDED}
-      - {surface: "ResetLogic.should_reset (crt_engine_v2.py:2876)", current: "all resets are suppressed while a trade is OPEN or TP1, so an invalidation after entry is neither acted on nor recorded", contract: "the invalidation is recorded on the thesis; whether it also closes the position is a Decision/Execution policy", disposition: RECORDED, decide_in: slice_3, decision: "When a thesis is invalidated while its position is open, does the position close?"}
+      - {surface: "ResetLogic.should_reset (crt_engine_v2.py:2876)", current: "all resets are suppressed while a trade is OPEN or TP1, so an invalidation after entry is neither acted on nor recorded", contract: "the invalidation is recorded on the thesis; whether it also closes the position is a Decision/Execution policy", disposition: RECORDED, decided_in: slice_3, decision: "When a thesis is invalidated while its position is open, does the position close?", resolution: "a policy, not a rule: DEX-07 exit_rule parameter on_invalidation in {hold, close_on_invalidation, close_on_origin}; the invalidation is always recorded on the thesis (user, D3-1)"}
     version: 1
 
   TRS-04:
@@ -959,4 +960,204 @@ concepts:
     authority: {evidence: [REPO], sources: [src/research/measurement/forward_walk.py, src/research/oracle/multi_tp_walk.py], lineage: [SEM-017, F-088]}
     divergences:
       - {surface: "forward_walk", current: "one target, no partial exit, no stop move", contract: "an outcome is only comparable to production when its walk matches production's exit plan; the walk is identity-bearing", evidence: "F-088", disposition: RECORDED}
+    version: 1
+
+  # ═══════════════════════════════ DECISION / EXECUTION (slice 3) ═══════════════════════════════
+  # What happens to a real position: size, admission, fill, approval, lifecycle, exits, carry,
+  # realised result. Never redefines a market or trading concept (I-3); a decision may end a
+  # PLAN or a POSITION, never a thesis. User decisions D3-1..D3-6 (spec §14).
+  # Order of one position: plan (TRADING) -> DEX-01 size -> DEX-02 admission -> DEX-03 fill ->
+  # DEX-04 approval (before the fill under approval_bar_legacy, after it under resting_order) ->
+  # DEX-05 position under DEX-06 schedule and DEX-07 rules -> DEX-08 carry -> DEX-09 result.
+
+  DEX-01:
+    canonical_name: position_size
+    layer: DECISION_EXECUTION
+    kind: EXECUTION_SPEC
+    status: ACCEPTED
+    definition: "How much to trade: the quantity at which hitting the plan's stop loses exactly the chosen fraction of equity."
+    identity: {reference: TRS-01, timeframe: plan, clock: bar_close, availability_rule: "bar the plan is built (equity as of that bar)"}
+    parameterization:
+      risk_fraction: {domain: float, identity_bearing: true, default_ref: backtest.risk_pct_per_trade}
+      equity_basis: {domain: [initial_capital, current_equity], identity_bearing: true}
+    inputs: [TRS-04, TRS-05]
+    rule: "quantity = risk_fraction * equity / R, R = |entry - stop| in price per unit. risk_fraction is a FRACTION (0.01 = 1 percent), never a percent. equity_basis initial_capital uses the starting capital for every position; current_equity uses realised equity at the plan bar (closed positions only, never open P&L). Rounding to a broker lot step is execution detail outside this concept."
+    units: {unit: instrument_units, normalization_basis: "risk distance |entry - stop|", missing_rule: "no stop -> no size (None)"}
+    lifecycle: null
+    absence: "None when the plan has no stop (R undefined) or R == 0."
+    authority: {evidence: [REPO, USER_DECISION], sources: [src/config_layer/crt_engine_v2.py, src/core/ultron_risk_gate.py, src/runtime/backtest_v2.py], lineage: [F-111]}
+    divergences:
+      - {surface: "execution_planner.risk_percent / ultron_risk_gate.max_risk_per_trade_pct (live rail)", current: "a PERCENT (1.0 = 1 percent)", contract: "risk_fraction is a fraction", evidence: "F-111 (docs/governance/config_unit_registry.json)", disposition: RECORDED}
+      - {surface: "backtest.sizing_mode = fixed_investment_inr with per_trade_investment_inr", current: "the backtest ledger sizes by a fixed rupee investment per trade, not by risk", contract: "size from risk_fraction and R", disposition: RECORDED}
+      - {surface: "Trade.risk_pct (crt_engine_v2.py:215)", current: "a dataclass default 0.01 that the engine never reads from config", contract: "risk_fraction is an identity-bearing value declared by the caller", disposition: RECORDED}
+    version: 1
+
+  DEX-02:
+    canonical_name: portfolio_admission
+    layer: DECISION_EXECUTION
+    kind: DECISION
+    status: ACCEPTED
+    definition: "Whether the portfolio has room for one more position. A plan over a cap is FILTERED, never shrunk to fit."
+    identity: {reference: TRS-01, timeframe: bar, clock: bar_close, availability_rule: "fill bar (the open positions are those open at that bar's close)"}
+    parameterization:
+      max_concurrent_positions: {domain: int, identity_bearing: true}
+      max_open_risk: {domain: float, identity_bearing: true}
+    inputs: [DEX-01]   # plus the open DEX-05 positions at the fill bar; not listed to keep the graph acyclic
+    rule: "ADMITTED iff (open positions + 1 <= max_concurrent_positions) and (sum of open positions' risk_fraction + this plan's risk_fraction <= max_open_risk). Otherwise FILTERED with reason_code portfolio_cap (terminal DECISION/FILTERED of the PLAN only). The size is never trimmed to fit. A filtered plan does not end its thesis: a later plan of the same ACTIVE thesis may be admitted. Positions of the same thesis count like any other and may overlap (user, D3-4/D3-5). Open risk is the risk_fraction at entry; a stop moved after TP1 does not reduce it. max_open_risk is a fraction of equity."
+    units: {domain: verdict, values: [ADMITTED, FILTERED]}
+    lifecycle: null
+    absence: "n/a (every plan that reaches its fill bar gets a verdict)."
+    authority: {evidence: [REPO, USER_DECISION], sources: [src/core/ultron_risk_gate.py, src/portfolio/allocator.py], lineage: [F-013, F-111]}
+    divergences:
+      - {surface: "PortfolioAllocator.allocate (src/portfolio/allocator.py:85-99)", current: "sizes risk from signal confidence and TRIMS it to fit the remaining cap; no count cap; nothing calls it (F-013)", contract: "fixed risk_fraction; over a cap the plan is FILTERED, never trimmed", disposition: RECORDED}
+      - {surface: "UltronRiskGate.evaluate check 5 (ultron_risk_gate.py:363-372)", current: "rejects over_exposure on the open-risk cap, in PERCENT (max_portfolio_risk_pct 5.0), using min(risk, max_risk_per_trade_pct)", contract: "fractions; this plan's own risk_fraction", disposition: RECORDED}
+      - {surface: "EngineState.active_trade (crt_engine_v2.py)", current: "the CRT engine holds one trade at a time, so it never opens a second position on any thesis", contract: "count and risk caps only; overlap allowed", disposition: RECORDED}
+      - {surface: "inout.risk.max_concurrent_trades = 3 (active config)", current: "declared for the inout rail; no reader found in src/ by grep 2026-10-02", contract: "max_concurrent_positions", disposition: RECORDED}
+    version: 1
+
+  DEX-03:
+    canonical_name: fill
+    layer: DECISION_EXECUTION
+    kind: EXECUTION
+    status: ACCEPTED
+    definition: "The moment an admitted plan becomes a position: one fill bar and one fill price."
+    identity: {reference: TRS-01, timeframe: bar, clock: bar_close, availability_rule: "fill bar"}
+    parameterization:
+      entry_semantics: {domain: TRS-04.entry_semantics, legacy_values: [approval_bar_legacy], identity_bearing: true}
+    inputs: [TRS-04, DEX-02]
+    rule: "resting_order: fill bar = the MKT-E09 retest bar, fill price = its close (TRS-04). Entry slippage is a cost (TRS-07 component), never folded into the fill price, so it is charged once. An unadmitted plan never fills. A fill is observable only on its own bar or later (I-6)."
+    units: {unit: price, normalization_basis: none}
+    lifecycle: null
+    absence: "None when the plan is FILTERED (DEX-02) or has no entry."
+    authority: {evidence: [REPO], sources: [src/config_layer/crt_engine_v2.py], lineage: [F-110]}
+    divergences:
+      - {surface: "setup.entry_semantics = approval_bar_legacy (active config)", current: "booked one bar after the retest at the retest close", contract: "see TRS-04", evidence: "F-110", disposition: RECORDED}
+    version: 1
+
+  DEX-04:
+    canonical_name: approval
+    layer: DECISION_EXECUTION
+    kind: DECISION
+    status: ACCEPTED
+    definition: "A decision rail's verdict on one plan: APPROVED, or FILTERED with a reason code. It ends a plan or a position, never a thesis or a market object (I-3)."
+    identity: {reference: TRS-01, timeframe: bar, clock: bar_close, availability_rule: "bar the rail decides"}
+    parameterization:
+      rail: {domain: [crt_engine, planner_ultron], identity_bearing: true}
+    inputs: [TRS-01, TRS-04, TRS-05, TRS-06, DEX-03]
+    rule: "The rail is identity-bearing because the two rails approve different populations (F-103). Under approval_bar_legacy the verdict precedes the fill. Under resting_order the order fills at the retest close and the verdict follows on a later confirmation bar: APPROVED keeps the position; FILTERED closes it at that bar's close with exit reason UNCONFIRMED (crt_engine_v2.py close_unconfirmed). FILTERED reason codes come from terminal_reason_map.yaml class FILTERED. A FILTERED plan ends that plan only; the thesis stays ACTIVE (D3-4)."
+    units: {domain: verdict, values: [APPROVED, FILTERED]}
+    lifecycle: null
+    absence: "None until the rail decides; a plan never reaching a decision bar has no verdict."
+    authority: {evidence: [REPO], sources: [src/config_layer/crt_engine_v2.py, src/config_layer/execution_planner.py, src/core/ultron_risk_gate.py], lineage: [F-103, F-109, F-110]}
+    divergences:
+      - {surface: "backtest rail vs live rail", current: "backtest reaches the CRT engine filters but never ExecutionPlannerV1_2 / UltronRiskGate; live reaches the planner and Ultron but has no CRT state machine", contract: "one approval concept; the rail is a parameter", evidence: "F-103", disposition: RECORDED}
+      - {surface: "planner_ultron on XAUUSD", current: "the planner gate cannot approve REVERSAL/CONTINUATION (ceiling 0.45 < 0.55); 26 of 27 replayed CRT trades reject_gate", contract: "a verdict means what the rail decided, not that the rail can approve", evidence: "F-109", disposition: RECORDED}
+      - {surface: "CRT engine DECISION/FILTERED resets", current: "a filter resets the whole episode to RANGE", contract: "a filter ends the plan; the thesis keeps its own lifecycle (TRS-01)", disposition: RECORDED}
+    version: 1
+
+  DEX-05:
+    canonical_name: position
+    layer: DECISION_EXECUTION
+    kind: EXECUTION
+    status: ACCEPTED
+    definition: "One filled plan from its fill to its close. A thesis may found several positions, which may overlap (D3-4/D3-5)."
+    identity: {reference: TRS-01, timeframe: bar, clock: bar_close, availability_rule: "fill bar; each transition on its own bar"}
+    parameterization: {}
+    inputs: [DEX-01, DEX-03, DEX-06, DEX-07]
+    rule: "instance_key = (anchor = fill bar, side = direction, parent = the thesis instance). OPEN on the fill bar; PARTIAL when the DEX-06 partial fills at target 1; CLOSED on the bar of exactly one exit_reason: STOP (initial stop, before target 1), TRAIL_STOP (runner stop after target 1), TARGET_FINAL (target 2), INVALIDATION or ORIGIN (DEX-07), TIMEOUT (DEX-07 ttl), UNCONFIRMED (DEX-04 FILTERED after a resting fill). Termination is EXECUTION/POSITION_CLOSED. Closing a position never changes its thesis's state, and a thesis ending never closes a position by itself (only DEX-07 can)."
+    units: {domain: lifecycle}
+    lifecycle: {states: [OPEN, PARTIAL, CLOSED], exit_reasons: [STOP, TRAIL_STOP, TARGET_FINAL, INVALIDATION, ORIGIN, TIMEOUT, UNCONFIRMED], terminal_authority: EXECUTION}
+    absence: "None when there is no fill."
+    authority: {evidence: [REPO, USER_DECISION], sources: [src/config_layer/crt_engine_v2.py], lineage: [F-088, F-110]}
+    divergences:
+      - {surface: "Trade.status (crt_engine_v2.py:2710-2844)", current: "PENDING / OPEN / TP1 / TP2 / STOPPED / STOPPED_STRUCTURAL / TIMEOUT / UNCONFIRMED; STOPPED covers both the initial stop and the runner's trailed stop", contract: "state and exit_reason are separate; STOP and TRAIL_STOP are distinct reasons", disposition: RECORDED}
+      - {surface: "CRTState.EXECUTION / RESOLUTION", current: "position lifecycle carried as market CRT states", contract: "a position is not an episode stage (§3); remapping waits for L3 v2.0.0 (D-4)", disposition: RECORDED}
+    version: 1
+
+  DEX-06:
+    canonical_name: exit_schedule
+    layer: DECISION_EXECUTION
+    kind: EXECUTION_SPEC
+    status: ACCEPTED
+    definition: "The resting exits of a position: how much closes at target 1, where the runner's stop moves after it, and which exit wins when one bar touches several."
+    identity: {reference: TRS-01, timeframe: plan, clock: bar_close, availability_rule: "bar the plan is built"}
+    parameterization:
+      partial_fraction: {domain: float, identity_bearing: true, default_ref: execution_planner.partial_tp_fraction}
+      trail_fraction: {domain: float, identity_bearing: true}
+      tie_break: {domain: [stop_first], identity_bearing: true}
+    inputs: [TRS-04, TRS-05, TRS-06]
+    rule: "At target 1, partial_fraction of the position closes at target 1 and the runner's stop moves to entry + trail_fraction * (target1 - entry) (0 = breakeven; 0.5 = half way). The runner then exits at target 2 or the moved stop. stop_first: when one bar's range touches the stop and a target, the stop fills (intrabar touch on high/low). These are the multi_tp_walk arguments partial_fraction, trail_fraction and tie_break production (F-088), so a DEX-09 bar_replay result must equal multi_tp_walk under the same values."
+    units: {unit: fraction, normalization_basis: "position quantity (partial_fraction); target1 - entry distance (trail_fraction)"}
+    lifecycle: null
+    absence: "n/a (every position has a schedule; a single-target plan is partial_fraction 1.0)."
+    authority: {evidence: [REPO], sources: [src/config_layer/crt_engine_v2.py, src/research/oracle/multi_tp_walk.py], lineage: [SEM-017, F-088, F-056]}
+    divergences:
+      - {surface: "ExecutionEngine.update_trade (crt_engine_v2.py:2735, 2762)", current: "the partial 0.5 is a literal in the engine, while execution_planner.partial_tp_fraction is declared separately", contract: "partial_fraction is one identity-bearing value", disposition: RECORDED}
+      - {surface: "execution_planner.partial_tp_breakeven_enabled", current: "named breakeven, but the runner stop moves half way to target 1 (crt_engine_v2.py:2765)", contract: "trail_fraction 0.5; the name is a recorded naming trap", evidence: "F-088", disposition: RECORDED}
+      - {surface: "ExecutionEngine.update_trade docstring", current: "declares priority TP2 > SL > TP1", contract: "stop_first is the effective rule (_intrabar_trigger_price)", evidence: "F-088", disposition: RECORDED}
+    version: 1
+
+  DEX-07:
+    canonical_name: exit_rule
+    layer: DECISION_EXECUTION
+    kind: EXECUTION_SPEC
+    status: ACCEPTED
+    definition: "The non-resting reasons a position closes: what to do when its thesis is invalidated, and an optional time limit."
+    identity: {reference: TRS-01, timeframe: bar, clock: bar_close, availability_rule: "bar the plan is built; each firing on its own bar's close"}
+    parameterization:
+      on_invalidation: {domain: [hold, close_on_invalidation, close_on_origin], identity_bearing: true}
+      precedence: {domain: [after_resting_fills], legacy_values: [absolute], identity_bearing: true, default_ref: crt_engine.displacement_origin_kill_precedence}
+      ttl_bars: {domain: int, identity_bearing: true, default_ref: setup.trade_ttl_candles}
+    inputs: [TRS-01, TRS-03, MKT-E04, DEX-06]
+    rule: "D2-2 settled as a policy (user, D3-1). The TRS-03 invalidation is ALWAYS recorded on the thesis (FAILED), whatever the value. hold: the position ignores it and ends by DEX-06 exits or ttl. close_on_invalidation: close at the close of the MKT-E10 breach bar (exit_reason INVALIDATION). close_on_origin: close at the close of the first bar after the fill that closes beyond the open of the founding MKT-E04 candle against the direction (exit_reason ORIGIN; SEM-021). Both are close-triggered and booked at that close. after_resting_fills: on that bar the stop, targets and partial fill first; the rule closes what is left. ttl_bars: close at the close of the ttl-th bar after the fill if nothing else fired (exit_reason TIMEOUT); no value = no time limit. No setting claims economic value (SEM-021 is unmeasured)."
+    units: {domain: policy}
+    lifecycle: null
+    absence: "n/a"
+    authority: {evidence: [REPO, USER_DECISION], sources: [src/config_layer/crt_engine_v2.py, src/config_layer/state_identity.py], lineage: [D2-2, SEM-021, STORY-83.11]}
+    divergences:
+      - {surface: "ResetLogic.should_reset (crt_engine_v2.py:2876)", current: "an invalidation after entry is neither acted on nor recorded", contract: "always recorded on the thesis", disposition: RECORDED}
+      - {surface: "crt_engine.displacement_origin_kill_precedence = absolute", current: "evaluates the kill before resting fills on the same bar, which can cancel a fill that already happened", contract: "after_resting_fills; absolute is a declared measurement weakness (SEM-021)", disposition: RECORDED}
+      - {surface: "active config crt_engine.displacement_origin_kill_enabled = true", current: "the active engine is close_on_origin", contract: "on_invalidation is a declared value; close_on_origin is one of three", disposition: RECORDED}
+    version: 1
+
+  DEX-08:
+    canonical_name: carry
+    layer: DECISION_EXECUTION
+    kind: MEASUREMENT
+    status: ACCEPTED
+    definition: "Overnight financing (swap) a position pays or earns for the broker days it is held."
+    identity: {reference: TRS-01, timeframe: position, clock: broker_server_day, availability_rule: "exit bar"}
+    parameterization:
+      cost_source: {domain: str, identity_bearing: true}
+    inputs: [DEX-03, DEX-05]
+    rule: "nights = number of broker rollovers crossed: the distinct broker-server calendar dates that have bars, after the fill bar's date, up to and including the exit bar's date (weekends without bars add none). weighted_nights = sum over those rollovers of 3 on the calibration's triple-swap weekday, else 1. carry = research.costs.ComponentCostModel carry with nights_held = weighted_nights, in price, and in R over |entry - stop|. A debit is a cost; the cost model decides the sign rule. Broker-server time is the clock (MT5 bar stamps are server time, F-066)."
+    units: {unit: R, normalization_basis: "risk distance |entry - stop|", missing_rule: "a position held over at least one rollover with swap or the triple-swap weekday unmeasured has no carry (None), never 0; zero rollovers is a real 0"}
+    lifecycle: null
+    absence: "None when swap or the triple-swap weekday is unmeasured and nights > 0."
+    authority: {evidence: [REPO, USER_DECISION], sources: [src/research/costs.py], lineage: [SEM-015, F-066]}
+    divergences:
+      - {surface: "ComponentCostModel (research/costs.py:122-123, 232-261)", current: "per-night swap only; no triple-swap weekday field; slice-2 outcomes pass nights_held = 0", contract: "weighted nights from a calibrated triple-swap weekday", disposition: RECORDED}
+    version: 1
+
+  DEX-09:
+    canonical_name: position_result
+    layer: DECISION_EXECUTION
+    kind: OUTCOME
+    status: ACCEPTED
+    definition: "The realised R of one whole position: every partial and final exit, net of costs and carry when net."
+    identity: {reference: TRS-01, timeframe: position, clock: bar_close, availability_rule: "exit bar"}
+    parameterization:
+      walk: {domain: [bar_replay, broker_fills], identity_bearing: true}
+      basis: {domain: [gross, net], identity_bearing: true}
+      cost_model: {domain: TRS-08.cost_model, identity_bearing: true}
+      cost_source: {domain: str, identity_bearing: true, applies_to: [net]}
+    inputs: [DEX-03, DEX-05, DEX-06, DEX-07, DEX-08, TRS-07]
+    rule: "gross R = sum over exits of (exit fraction * signed exit move) / R. net = gross - TRS-07 cost_r for the position's actual exits - DEX-08 carry. The position's identity also carries its DEX-01, DEX-06 and DEX-07 parameterizations. bar_replay walks OHLC bars (backtest); broker_fills uses the broker's executed fills (live / paper) - the two are never pooled (F-010). Under on_invalidation hold and ttl none, a bar_replay gross result must equal research.oracle.multi_tp_walk with the same partial_fraction, trail_fraction and tie_break."
+    units: {unit: R, normalization_basis: "risk distance |entry - stop|", missing_rule: "an open position has no result (None)"}
+    lifecycle: null
+    absence: "None until the position is CLOSED; None for net when carry or cost is None."
+    authority: {evidence: [REPO], sources: [src/config_layer/crt_engine_v2.py, src/research/oracle/multi_tp_walk.py], lineage: [F-010, F-088, F-110]}
+    divergences:
+      - {surface: "Trade.pnl (crt_engine_v2.py)", current: "price per unit, gross, blended by literal 0.5 weights", contract: "R, with basis and cost model in identity", disposition: RECORDED}
+      - {surface: "F-110 ledger fix", current: "the TP1 partial was not booked in the ledger before 2026-10-01", contract: "every exit is part of the result", evidence: "F-110", disposition: RECORDED}
     version: 1

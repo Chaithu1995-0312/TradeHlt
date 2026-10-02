@@ -26,10 +26,8 @@ _FEATURE_UNMAPPED = (
 _CRT_UNMAPPED = (
     "CRTState.EXECUTION", "CRTState.RESOLUTION", "CRTState.EXPIRED",
     "CRTState.RANGE_C1", "CRTState.MANIPULATION_C2", "CRTState.DISTRIBUTION_C3",
-    # slice 2: first coverage of the Trade type (non-plan fields; slice 3 owns most of them)
-    "Trade.id", "Trade.risk_pct", "Trade.runner_active", "Trade.opened_at", "Trade.closed_at",
-    "Trade.pnl", "Trade.partial_pnl", "Trade.status", "Trade.cached_features",
-    "Trade.open_candle_index", "Trade.displacement_origin",
+    # slice 2: first coverage of the Trade type. Slice 3 mapped the position fields to DEX-*.
+    "Trade.id", "Trade.runner_active", "Trade.partial_pnl", "Trade.cached_features",
 )
 # slice 2: ObjectiveStatus mapped to TRS-02, so the parent list is empty.
 _PARENT_UNMAPPED = ()
@@ -39,6 +37,7 @@ _PINNED = {
     "parent_crt": _PARENT_UNMAPPED,
     "research_walks": (),
     "research_costs": (),
+    "live_rail": ("PortfolioAllocator.allocate",),
 }
 
 

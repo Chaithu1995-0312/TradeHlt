@@ -158,7 +158,7 @@ EXECUTION/POSITION_CLOSED 4. The engine's CRT series is therefore policy- and ob
 
 `MKT-E03 choch` · `MKT-C02 structural_trend` · `GP-07 in_band` / `MKT-Z06 retest_band` (OQ7) · zone
 state FILLED · `MKT-E02` consumption `once_per_level` · parent-track C1/C2/C3 stage mapping · M15
-objective and objective-based targets · Trading and Decision/Execution concept contracts (slice 2) ·
+objective and objective-based targets · ~~Trading and Decision/Execution concept contracts~~ (done: slice 2 §13, slice 3 §14) ·
 grounding `--kind CONCEPT/REPRESENTATION` · L3 v2.0.0 · ontology scope v2.
 
 ## 12. Amendments
@@ -185,10 +185,31 @@ Concept contracts TRS-01…08 (thesis, objective, invalidation, entry, stop, tar
 | Id | Decision |
 |---|---|
 | D2-1 | A thesis is born on the MKT-E04 displacement bar, not on the sweep. A sweep without displacement is an episode, not a failed thesis. |
-| D2-2 | Invalidation (ends the thesis) and stop (ends the position) are separate and both required (I-11). Whether an invalidation while the position is open closes the position is **deferred to slice 3** as a recorded divergence with `decide_in: slice_3`; the validator fails once slice-3 records exist and it is still open. |
+| D2-2 | Invalidation (ends the thesis) and stop (ends the position) are separate and both required (I-11). Whether an invalidation while the position is open closes the position is **deferred to slice 3** as a recorded divergence with `decide_in: slice_3`; the validator fails once slice-3 records exist and it is still open. **Settled in slice 3 (D3-1).** |
 | D2-3 | Objectives and targets are roles (I-10). `fixed_r` targets are plan-derived (Trading layer); `structural_tp2` places a TARGET role on a MKT-L01 level. Multipliers are in R. |
 | D2-4 | TRS-04 contract value is `resting_order`; `approval_bar_legacy` is a legacy value with an I-6 divergence (F-110). |
 | D2-5 | An outcome's identity carries its walk, its basis (gross / net) and, for net, its cost model (I-15). |
 | D2-6 | The exit schedule (partial fractions, stop management after TP1), fills, position lifecycle and approval are Decision/Execution — slice 3. |
 | D2-7 | Trade intent (`liq_sweep`, `pullback`, `breakout`, `reversal`) is an identity-bearing parameter of TRS-06 target 1, not a concept. |
 | D2-8 | Slice 2 is implemented by Grok and reviewed by Claude; no separate audit (user). |
+
+## 14. Slice 3 — Decision/Execution layer (user decisions 2026-10-02)
+
+Concept contracts DEX-01…09: position_size, portfolio_admission, fill, approval, position,
+exit_schedule, exit_rule, carry, position_result. Order of one position: plan → size → admission →
+fill → approval (before the fill under `approval_bar_legacy`, after it under `resting_order`) →
+position under its schedule and rules → carry → result.
+
+| Id | Decision |
+|---|---|
+| D3-1 | **D2-2 settled as a policy, not a rule.** DEX-07 `on_invalidation ∈ {hold, close_on_invalidation, close_on_origin}` is identity-bearing. The TRS-03 invalidation is always recorded on the thesis, whatever the value. The active engine is `close_on_origin` (SEM-021, `after_resting_fills`). No value carries an economic claim. The TRS-03 divergence now reads `decided_in: slice_3`. |
+| D3-2 | Scope: the core seven concepts plus overnight carry (DEX-08) and portfolio admission (DEX-02). |
+| D3-3 | A night is a broker-server rollover: each later broker date with bars, up to the exit bar's date. The triple-swap weekday comes from the swap calibration; if swap or that weekday is unmeasured and a night is crossed, carry is None, never 0. |
+| D3-4 | A plan over a portfolio cap is FILTERED (`portfolio_cap`), never trimmed. A filter or a position close ends only that plan or position; the thesis keeps its own lifecycle. |
+| D3-5 | Caps: `max_concurrent_positions` and `max_open_risk` (a fraction of equity). One thesis may found several positions, and they may overlap. |
+| D3-6 | Risk is a fraction everywhere in the contract; percent-valued settings are recorded divergences (F-111). `PortfolioAllocator` is not called: it trims risk and sizes from confidence, a different meaning (recorded on DEX-02). |
+| D3-7 | DEX-09 `walk ∈ {bar_replay, broker_fills}` keeps backtest and live results apart (F-010, F-103). A `bar_replay` result under `hold` with no TTL must equal `multi_tp_walk` with the same exit schedule. |
+| D3-8 | Slice 3 is implemented by Claude, by user decision (2026-10-02, "You implement"), as a one-slice exception to O-5 like slice 1's fixes. Same brief, same rules. |
+
+Amendment A-10 (§6): an optional `decided_in` + `resolution` on a divergence records a settled
+deferral; only `decide_in` counts as open (V-16).
