@@ -127,6 +127,10 @@
       "reason": "Governance — config_integrity orphaned check."
     },
     {
+      "claim": "F-111",
+      "reason": "Governance — config unit/scale declaration (risk %, drawdown INR); instrument configuration, not a market object."
+    },
+    {
       "claim": "F-008",
       "reason": "Governance/risk — drift detected but not acted on; instrument behaviour, not a market object."
     },

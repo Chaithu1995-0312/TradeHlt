@@ -68,7 +68,7 @@
     "ttl_reversal_sec": 180,
     "ttl_liq_sweep_sec": 300,
     "ttl_continuation_sec": 180,
-    "risk_percent": 0.5,
+    "risk_percent": 1.0,
     "reject_unknown_intent": true,
     "partial_tp_breakeven_enabled": true,
     "partial_tp_fraction": 0.5,
@@ -1198,10 +1198,10 @@
     "max_corruption_ratio": 0.1
   },
   "multi_strategy_validator": {
-    "_comment": "MultiStrategyValidator hard gates (src/governance/multi_strategy_validator.py). warmup and max_forward_candles were BARE literals in the __init__ signature until 2026-09-18 -- undeclared anywhere, so config_reachability could not see them. Values equal the prior literals; max_portfolio_drawdown is INR.",
+    "_comment": "MultiStrategyValidator hard gates (src/governance/multi_strategy_validator.py). warmup and max_forward_candles were BARE literals in the __init__ signature until 2026-09-18 -- undeclared anywhere, so config_reachability could not see them. Values equal the prior literals; max_portfolio_drawdown is INR. 2026-10-01 (user decision): max_portfolio_drawdown 75000000.0 -> 75000.0 -- the 75 M was a scale mistake (750x the 100,000 INR capital, so the gate could never fire); intended limit is 75,000 INR.",
     "min_strategy_trades": 5,
     "min_portfolio_win_rate": 0.3,
-    "max_portfolio_drawdown": 75000000.0,
+    "max_portfolio_drawdown": 75000.0,
     "warmup": 60,
     "max_forward_candles": 40
   }

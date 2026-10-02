@@ -12,7 +12,7 @@ Hard gates (any failure → REJECT)
 -----------------------------------
   1. min_strategy_trades: each strategy must have >= 5 trades
   2. min_portfolio_win_rate: portfolio-weighted win rate >= 0.30
-  3. max_portfolio_drawdown_inr: worst per-strategy drawdown <= 75,000,000 INR
+  3. max_portfolio_drawdown_inr: worst per-strategy drawdown <= 75,000 INR
 
 Soft gates (logged as warnings, do not block)
 ----------------------------------------------
@@ -56,7 +56,7 @@ logger = get_flow_logger("COLLECTOR")
 # the production path reads the multi_strategy_validator section via from_prod_config (§6.5 A1).
 _MIN_STRATEGY_TRADES       = 5
 _MIN_PORTFOLIO_WIN_RATE    = 0.30
-_MAX_PORTFOLIO_DRAWDOWN    = 75_000_000.0   # INR  (75 M)
+_MAX_PORTFOLIO_DRAWDOWN    = 75_000.0       # INR  (was 75_000_000.0 -- a 750x scale mistake, F-111)
 _WARMUP_CANDLES            = 60
 _MAX_FORWARD_CANDLES       = 40
 
