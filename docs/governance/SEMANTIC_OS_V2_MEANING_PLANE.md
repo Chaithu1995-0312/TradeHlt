@@ -1,6 +1,7 @@
 # Semantic OS v2 — Meaning Plane (Ontology v2)
 
-> **Status:** FROZEN v2.0.0 architecture (user + architecture-review accepted 2026-10-02). PROPOSED
+> **Status:** FROZEN v2.0.0 architecture (user + architecture-review accepted 2026-10-02); v2.0.1
+> clarifications in §12. PROPOSED
 > concepts stay open by design (I-18). Implementation is sliced; slice 1 = Geometry + Market.
 > **Authority:** meaning authority (CLAUDE.md §6.6). Grants **no** runtime authority (§6.5).
 > **Charter it extends:** [`SEMANTIC_OS_CONTRACT.md`](SEMANTIC_OS_CONTRACT.md) (system plane, advisory).
@@ -159,3 +160,17 @@ EXECUTION/POSITION_CLOSED 4. The engine's CRT series is therefore policy- and ob
 state FILLED · `MKT-E02` consumption `once_per_level` · parent-track C1/C2/C3 stage mapping · M15
 objective and objective-based targets · Trading and Decision/Execution concept contracts (slice 2) ·
 grounding `--kind CONCEPT/REPRESENTATION` · L3 v2.0.0 · ontology scope v2.
+
+## 12. Amendments
+
+Clarifications only (v2.0.1, 2026-10-02, from the slice-1 independent audit). They state what the
+frozen text left implicit; no concept, invariant or decision above changes meaning (I-19).
+
+| Id | Section | Clarification |
+|---|---|---|
+| A-1 | §5 | For MKT-P01 the `instance_key` is (anchor = bar of the first stage after AWAITING_SWEEP, side = none, parent = `run_id`). This is the "run_id + first non-AWAITING bar" key of the slice-1 brief, expressed in §5 terms. |
+| A-2 | §6 | Optional record fields, not validated in slice 1: `lifecycle.proposed_states` (states named but PROPOSED, never emitted), `lifecycle.entry_events` / `exit_events` (stage records; tokens may name a concept id or a lifecycle step such as `founding` or `termination`), `parameterization.<p>.applies_to` (the founding values a parameter applies to), `parameterization.<p>.default_ref` (the config key that usually supplies the value — documentation only; a missing identity-bearing value is still an error, never a default). |
+| A-3 | §6 | A parameter `domain` written `CONCEPT.param` takes its domain from that concept's parameter. |
+| A-4 | §5, §7 | A REP parameter value written `section.key` binds the parameter to settings. It is valid only if the key resolves in the active config to an in-domain value; each resolved value is its own parameterization (I-17). |
+| A-5 | §8 | `terminal_reason_map.yaml` declares both the authority and the class vocabulary; at equal match length an `exact` entry beats a `prefix` entry. |
+| A-6 | §6, §11 | Consumer derivation (I-14, and I-18's "0 consumers") has no slice-1 mechanism; it arrives with grounding `--kind CONCEPT/REPRESENTATION`. Slice 1 enforces only "0 representations". |

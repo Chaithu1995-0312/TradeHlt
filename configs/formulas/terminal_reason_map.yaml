@@ -5,7 +5,8 @@
 # additively; reset timing is not part of this map.
 #
 # Matching: `exact` compares the whole string; `prefix` compares the start. When several entries
-# match, the LONGEST match wins. An unmatched reason is an error (never silently MARKET).
+# match, the LONGEST match wins; at equal length an `exact` entry beats a `prefix` entry. An
+# unmatched reason is an error (never silently MARKET).
 # Coverage floor: every string literal / f-string prefix passed to `reset_to_range(...)` in
 # src/config_layer/crt_engine_v2.py and src/runtime/backtest_v2.py, and every reason returned by
 # ResetLogic.should_reset, must match an entry here.
@@ -14,6 +15,7 @@ schema: terminal_reason_map/v1
 version: 1
 
 authorities: [MARKET, OBSERVATION, PRODUCER, DECISION, EXECUTION]
+classes: [FAILED, SPENT, EXPIRED, AVAILABILITY_LAPSE, CONSTRUCTION, FILTERED, POSITION_CLOSED, BUILD_FAILED]
 
 entries:
 
@@ -52,4 +54,7 @@ entries:
 
 # Series shaping (I-3a): an occupancy series containing any DECISION termination is
 # `policy_shaped`; any OBSERVATION termination makes it `observation_shaped`; any PRODUCER
-# termination makes it `producer_shaped`. The engine's CRT series is all three today.
+# termination makes it `producer_shaped`.
+# CORRECTED 2026-10-02: "The engine's CRT series is all three today" -> on the active-config XAUUSD
+# trace (run_20260930_163142, 2,887 RESETs) the series is policy- and observation-shaped; it has
+# 0 PRODUCER terminations, so it is not producer-shaped (verified by the slice-1 projection).

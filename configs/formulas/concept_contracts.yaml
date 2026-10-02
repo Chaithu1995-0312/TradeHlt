@@ -167,6 +167,8 @@ concepts:
       - {surface: "causal_structure _last_swing_*_price", current: "0.0 means no swing yet", contract: "absence distinguishable from every valid value (I-7)", disposition: RECORDED}
       - {surface: "features.smc._geometry.detect_causal_swings", current: "second causal swing detector", contract: "one swing_pivot founding", evidence: "equivalence with causal_structure swings UNVERIFIED", disposition: RECORDED}
       - {surface: "liquidity_* features (FM-025/026)", current: "distances only; no level object", contract: "liquidity_level object", disposition: RECORDED}
+      - {surface: "causal_structure._centered_flags (causal_structure.py:66-69)", current: "high[j] == window max marks a pivot, so equal highs inside one window are each a pivot and a flat window confirms pivots", contract: "rule says 'pivot' and is silent on whether the extreme must be unique", evidence: "slice-1 swing_levels follows causal_structure (Grok question, verified 2026-10-02)", disposition: RECORDED}
+      - {surface: "causal_structure FM-025 liquidity_distance (causal_structure.py:179-180)", current: "a non-finite distance (no usable level) is stored as 10.0, the same number as a real distance of 10", contract: "absence distinguishable from every valid value (I-7)", evidence: "slot is unmapped in slice 1 (MEASUREMENT); verified 2026-10-02", disposition: RECORDED}
     version: 1
 
   MKT-L02:
@@ -262,7 +264,8 @@ concepts:
     lifecycle: {states: [FLIPPED, TOUCHED], transitions: {MKT-E06: TOUCHED}, terminal_authority: MARKET}
     absence: "present:false."
     authority: {evidence: [REPO], sources: [src/features/smc/breaker.py], lineage: [F-076]}
-    divergences: []
+    divergences:
+      - {surface: "features.smc.breaker.find_active_breaker (breaker.py:64-66)", current: "Zone.formed_at_index is the order-block ORIGIN candle; the close-through bar (local violated_at) is not stored on the zone", contract: "available_at = bar of the close-through", evidence: "slice-1 breaker_views sets available_at to the first bar the finder returns the zone (Grok, verified 2026-10-02)", disposition: RECORDED}
     version: 1
 
   MKT-Z05:
@@ -281,6 +284,7 @@ concepts:
     authority: {evidence: [REPO], sources: [src/features/smc/mitigation.py], lineage: [F-076]}
     divergences:
       - {surface: "name 'mitigation'", current: "both the touch verb and this zone type", contract: "verb = zone_touch (MKT-E06); zone = ob_body_zone", disposition: RECORDED}
+      - {surface: "features.smc.mitigation.find_active_mitigation_block (mitigation.py:53-63)", current: "returns None when the first outer touch bar also enters the body; the inner zone is then never reported, not even for one bar", contract: "zone exists from the bar of first outer touch, then TOUCHED", evidence: "the inner touch test scans the same bars as the outer touch test (verified 2026-10-02)", disposition: RECORDED}
     version: 1
 
   MKT-Z06:

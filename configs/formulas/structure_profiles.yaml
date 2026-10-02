@@ -141,3 +141,119 @@ structural_profiles:
       POOL with a declared `impulse`-for-`rng.size` substitution, which is a different
       reference anchor from the engine's. Unifying the two anchors would move F-081 Arm B's
       evidence, so they stay two foundings rather than one predicate.
+
+  swing_pivot:
+    id:             SPP-005
+    aliases:        ["swing-pivot", "confirmed k-delayed swing"]
+    founding:
+      identity:     UNKNOWN
+      name:         Confirmed swing pivot (k-delayed, FC1-A)
+      object:       src/features/causal_structure.py
+      description: >
+        A swing high or low that becomes a liquidity level only after k later bars have
+        confirmed it (FC1-A). The level describes the pivot bar and is knowable at the
+        confirmation bar.
+      threshold_refs:
+        k:          feature_pipeline.swing_window
+    walk:           UNKNOWN
+    predicates:     [SP-001]
+    status:         registered
+    owner:          semantic-os-v2
+    evidence:       ["F-051", "FM-057"]
+    origin:         "Semantic OS v2 slice 1 (2026-10-02) — founding named by the slice-1 handoff. Declaration only."
+    version:        1
+    notes: >
+      founding.identity is UNKNOWN. FM-057 is a feature id, not a founding identity.
+      Declared UNKNOWN rather than invented (§6.6).
+
+  prior_day:
+    id:             SPP-006
+    aliases:        ["prior-day", "previous day high/low"]
+    founding:
+      identity:     UNKNOWN
+      name:         Previous broker-day high/low (declared clock, F-066)
+      object:       src/features/smc/levels.py
+      description: >
+        The high and low of the previous day on a caller-declared clock. Broker-server
+        day and UTC day are different clocks (F-066); the clock is part of the level's
+        semantic identity.
+      threshold_refs:
+        clock:      feature_pipeline.session_timestamp_basis
+    walk:           UNKNOWN
+    predicates:     [SP-001]
+    status:         registered
+    owner:          semantic-os-v2
+    evidence:       ["F-076", "F-066"]
+    origin:         "Semantic OS v2 slice 1 (2026-10-02) — founding named by the slice-1 handoff. Declaration only."
+    version:        1
+    notes: >
+      founding.identity is UNKNOWN: no SEM-* node names this box. The object file emits
+      distances, not the day envelope itself.
+
+  equal_cluster:
+    id:             SPP-007
+    aliases:        ["equal-cluster", "equal highs/lows"]
+    founding:
+      identity:     UNKNOWN
+      name:         Equal highs/lows within tolerance·ATR
+      object:       src/features/smc/levels.py
+      description: >
+        The most recent confirmed swing that has another swing of the same kind within
+        tolerance_atr times ATR. Absence is no cluster, not a sentinel price.
+      threshold_refs:
+        k:              feature_pipeline.swing_window
+        tolerance_atr:  caller-supplied keyword (features.smc.levels.eqh_eql_distance tolerance_atr)
+    walk:           UNKNOWN
+    predicates:     [SP-001]
+    status:         registered
+    owner:          semantic-os-v2
+    evidence:       ["F-076"]
+    origin:         "Semantic OS v2 slice 1 (2026-10-02) — founding named by the slice-1 handoff. Declaration only."
+    version:        1
+    notes: >
+      founding.identity is UNKNOWN. The tolerance is a caller keyword, not a number stored
+      in this file.
+
+  mother_range:
+    id:             SPP-008
+    aliases:        ["mother-range", "frozen t=0 mother range"]
+    founding:
+      identity:     SEM-026
+      name:         Frozen t=0 mother range (SEM-026)
+      object:       src/research/mother_range/geometry.py
+      description: >
+        The high/low of a frozen t=0 calendar mother block. Inside-close against that box
+        is the SEM-026 research object. It is not a sweep of an M15 structural range.
+      threshold_refs: {}
+    walk:           UNKNOWN
+    predicates:     ["UNKNOWN"]
+    status:         research
+    owner:          semantic-os-v2
+    evidence:       ["F-090"]
+    origin:         "Semantic OS v2 slice 1 (2026-10-02) — founding named by the slice-1 handoff. Declaration only."
+    version:        1
+    notes: >
+      predicates is UNKNOWN: the mother-range object is an inside-close, not SP-001.
+      Grants no production authority (F-090).
+
+  htf_range_resolver:
+    id:             SPP-009
+    aliases:        ["htf-range-resolver", "resolver HTF range"]
+    founding:
+      identity:     UNKNOWN
+      name:         Resolver HTF range sweep reference
+      object:       src/features/crt_state_resolver.py
+      description: >
+        The higher-timeframe range the CRT state resolver sweeps against. A different
+        construction from the live engine's M15 envelope (F-069).
+      threshold_refs: {}
+    walk:           UNKNOWN
+    predicates:     [SP-001]
+    status:         research
+    owner:          semantic-os-v2
+    evidence:       ["F-069"]
+    origin:         "Semantic OS v2 slice 1 (2026-10-02) — founding named by the slice-1 handoff. Declaration only."
+    version:        1
+    notes: >
+      founding.identity and walk are UNKNOWN. Declaration only; F-069 stays the record
+      of the resolver-versus-engine construction gap.

@@ -28,7 +28,10 @@ from features.registry import (
     validate_structural_profiles,
 )
 
-_SEED_IDS = {"SPP-001", "SPP-002", "SPP-003", "SPP-004"}
+_SEED_IDS = {
+    "SPP-001", "SPP-002", "SPP-003", "SPP-004",
+    "SPP-005", "SPP-006", "SPP-007", "SPP-008", "SPP-009",
+}
 
 
 @pytest.fixture(scope="module")
@@ -48,6 +51,7 @@ def test_seed_profiles_validate(ont) -> None:
 
 
 def test_all_four_foundings_are_declared(profiles) -> None:
+    """Every declared founding, including the slice-1 SPP-005..009 rows."""
     ids = {p["id"] for p in profiles["structural_profiles"].values()}
     assert ids == _SEED_IDS
 
@@ -59,6 +63,11 @@ def test_the_incumbent_is_declared_alongside_research(profiles) -> None:
     assert by_id["SPP-002"]["status"] == "registered"   # armed on the active config
     assert by_id["SPP-003"]["status"] == "research"
     assert by_id["SPP-004"]["status"] == "research"
+    assert by_id["SPP-005"]["status"] == "registered"
+    assert by_id["SPP-006"]["status"] == "registered"
+    assert by_id["SPP-007"]["status"] == "registered"
+    assert by_id["SPP-008"]["status"] == "research"
+    assert by_id["SPP-009"]["status"] == "research"
 
 
 def test_profiles_do_not_disturb_the_existing_validators(ont) -> None:

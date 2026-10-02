@@ -56,6 +56,12 @@ GOVERNED_PREFIXES: tuple[str, ...] = (
     # Research-framework consolidation (2026-09-14): archived originals + their SHA-256 manifests are
     # the zero-loss record — any staged change under archive/ must run the archive-ledger floor.
     "archive/",
+    # Semantic OS v2 slice 1: the meaning-plane package and its three registries.
+    # configs/formulas/ already covers the yaml; these entries name the surfaces explicitly.
+    "src/semantics/",
+    "configs/formulas/concept_contracts.yaml",
+    "configs/formulas/representation_registry/",
+    "configs/formulas/terminal_reason_map.yaml",
 )
 
 # Exact files (not under a governed prefix) that also pull in the gate.
@@ -123,6 +129,8 @@ GREEN_FLOOR: tuple[str, ...] = (
     # Phase 0 model-registry join (2026-09-23): MODEL_CATALOG <-> miar_registry.json <->
     # active_models.yaml now share one semantic_id; this is the floor that keeps them agreeing.
     "tests/test_model_registry_join.py",
+    # Semantic OS v2 slice 1: geometry, identity, events, availability, absence, episodes.
+    "tests/semantics/",
 )
 
 
