@@ -212,6 +212,14 @@ Spec: `docs/governance/JSONL_CLAIM_SURFACE.md`.
 This is **not** a semantically-executable trading OS. It does not close inventory gaps by
 fabrication. Advisory only (§6.5).
 
+## 11. Meaning plane (v2)
+
+Semantic OS v2 adds a **meaning plane** beside this advisory system plane: market ontology →
+concept contracts → representation registry → implementation. It carries meaning authority
+(CLAUDE.md §6.6), not runtime authority, and does not change any rule in §1–§10. Its records are
+called **concept contracts** so that "contract" keeps meaning the `CT-*` records above.
+Spec: [`SEMANTIC_OS_V2_MEANING_PLANE.md`](SEMANTIC_OS_V2_MEANING_PLANE.md).
+
 ---
 
 _Charter for Semantic OS v1. Detailed design: SEMANTIC_OS_V1_DESIGN.md._

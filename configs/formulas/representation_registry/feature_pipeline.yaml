@@ -1,0 +1,130 @@
+# REP shard — producer: feature_pipeline (CANONICAL_FEATURES, schema 6.0, 48 slots).
+# A representation never defines meaning; it points to a concept in concept_contracts.yaml (I-2).
+# Every slot appears exactly once: in `representations`, `raw_observations`, or the shrink-only
+# `unmapped` ratchet (a slot leaves `unmapped` only by gaining a representation).
+
+schema: representation_registry/v1
+producer_id: feature_pipeline
+schema_version: "6.0"
+
+representations:
+
+  double_sweep:
+    slot: 6
+    concept_id: MKT-C04
+    encoding: bool_int8
+    parameterization: {k: "feature_pipeline.swing_window", window: "feature_pipeline.double_sweep_window"}
+    absence: "0 also when no swing reference exists yet (divergence, I-7)"
+
+  trend_bias:
+    slot: 10
+    concept_id: MKT-C03
+    encoding: signed_int {-1,0,1}
+    parameterization: {ema_fast_span: "feature_pipeline.ema_fast_span", ema_slow_span: "feature_pipeline.ema_slow_span"}
+    absence: "warmup rows dropped by the pipeline"
+
+  sweep_detected:
+    slot: 20
+    concept_id: MKT-E01
+    encoding: bool_int8 (abs of liquidity_sweep)
+    parameterization: {founding: swing_pivot, tie: inclusive}
+    divergence_ref: "MKT-E01 FM-058 tie"
+    absence: "0 also when no swing reference exists yet (divergence, I-7)"
+
+  liquidity_sweep:
+    slot: 21
+    concept_id: MKT-E01
+    encoding: signed_side_int {-1 LOWER swept, 0, +1 UPPER swept}
+    parameterization: {founding: swing_pivot, tie: inclusive}
+    divergence_ref: "MKT-E01 FM-058 tie"
+    absence: "0 also when no swing reference exists yet (divergence, I-7)"
+
+  break_of_structure:
+    slot: 22
+    concept_id: MKT-C01
+    encoding: signed_int {-1 BELOW_LAST_SWING_LOW, 0 INSIDE, +1 ABOVE_LAST_SWING_HIGH}
+    parameterization: {k: "feature_pipeline.swing_window"}
+    divergence_ref: "MKT-C01 FM-057 slot"
+    absence: "0 also when no swing exists (UNDEFINED conflated with INSIDE, I-7)"
+
+  swing_high:
+    slot: 23
+    concept_id: MKT-L01
+    encoding: formation_flag (1 on the bar the UPPER swing level becomes available)
+    parameterization: {founding: swing_pivot, k: "feature_pipeline.swing_window"}
+    absence: "0 = no level formed this bar"
+
+  swing_low:
+    slot: 24
+    concept_id: MKT-L01
+    encoding: formation_flag (1 on the bar the LOWER swing level becomes available)
+    parameterization: {founding: swing_pivot, k: "feature_pipeline.swing_window"}
+    absence: "0 = no level formed this bar"
+
+  higher_high:
+    slot: 25
+    concept_id: MKT-E08
+    encoding: bool_int8 (UPPER side)
+    parameterization: {founding: swing_pivot}
+    absence: "0 also when no swing reference exists yet (divergence, I-7)"
+
+  lower_low:
+    slot: 26
+    concept_id: MKT-E08
+    encoding: bool_int8 (LOWER side)
+    parameterization: {founding: swing_pivot}
+    absence: "0 also when no swing reference exists yet (divergence, I-7)"
+
+  session:
+    slot: 31
+    concept_id: MKT-C06
+    encoding: session_ordinal
+    parameterization: {session_timestamp_basis: "feature_pipeline.session_timestamp_basis"}
+    absence: "n/a"
+
+  change_of_character:
+    slot: 47
+    concept_id: MKT-C07
+    encoding: signed_int {-1,0,1}
+    parameterization: {}
+    divergence_ref: "MKT-C07 name"
+    absence: "0 also when an input is undefined (I-7)"
+
+# L0 raw observations — not concepts of the meaning plane (CANONICAL_LAYER_IDENTITY_CONTRACT L0).
+raw_observations: [open, high, low, close, volume]
+
+# Shrink-only ratchet: slots with no slice-1 concept. Never add to this list; remove a slot when it
+# gains a representation above.
+unmapped:
+  volume_ratio: "participation measurement — no slice-1 concept"
+  ema_fast: "indicator measurement — no slice-1 concept"
+  ema_slow: "indicator measurement — no slice-1 concept"
+  ema_spread: "measurement; FM-022 dimensional mix (F-061)"
+  trend_strength_z: "measurement"
+  momentum_score: "measurement; FM-023 dimensional mix (F-061)"
+  atr: "measurement (close-relative, FM-041)"
+  volatility_ratio: "measurement"
+  rsi_14: "measurement"
+  macd_line: "measurement"
+  macd_signal: "measurement"
+  macd_hist_raw: "measurement"
+  macd_hist_z: "measurement"
+  body_size: "bar anatomy measurement"
+  candle_range: "bar anatomy measurement"
+  body_ratio: "bar anatomy measurement"
+  volatility_regime: "categorical measurement"
+  hour_of_day: "clock measurement"
+  disp_strength: "impulse measurement (MKT-E05 family)"
+  retest_depth: "measurement; retest semantics PROPOSED (OQ7)"
+  candles_since_sweep: "count since MKT-E01{swing_pivot} — measurement concept not in slice 1"
+  liquidity_distance: "distance to MKT-L01 — measurement concept not in slice 1"
+  liquidity_pressure_score: "transform of liquidity_distance"
+  volume_spike: "participation measurement (F-065)"
+  order_block_distance: "distance to MKT-Z03; presence missing (I-7)"
+  fvg_distance: "distance to MKT-Z02; presence missing (I-7)"
+  breaker_distance: "distance to MKT-Z04; presence missing (I-7)"
+  mitigation_block_distance: "distance to MKT-Z05; presence missing (I-7)"
+  pdh_distance: "distance to MKT-L01{prior_day,UPPER}; presence missing (I-7)"
+  pdl_distance: "distance to MKT-L01{prior_day,LOWER}; presence missing (I-7)"
+  eqh_distance: "distance to MKT-L01{equal_cluster,UPPER}; presence missing (I-7)"
+  eql_distance: "distance to MKT-L01{equal_cluster,LOWER}; presence missing (I-7)"

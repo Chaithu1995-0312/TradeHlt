@@ -1,0 +1,47 @@
+# REP shard — producer: parent_crt (config_layer.htf_state / config_layer.parent_crt).
+
+schema: representation_registry/v1
+producer_id: parent_crt
+schema_version: "htf_state/1"
+
+representations:
+
+  HTFState.EXPANSION:
+    concept_id: MKT-C05
+    encoding: "enum_member -> htf_posture.BREAK_WITH_PRIOR"
+    parameterization: {}
+    absence: "n/a"
+
+  HTFState.REVERSAL:
+    concept_id: MKT-C05
+    encoding: "enum_member -> htf_posture.BREAK_AGAINST_PRIOR"
+    parameterization: {}
+    absence: "n/a"
+
+  HTFState.DISTRIBUTION:
+    concept_id: MKT-C05
+    encoding: "enum_member -> htf_posture.INSIDE_WIDE"
+    parameterization: {}
+    absence: "n/a"
+
+  HTFState.ACCUMULATION:
+    concept_id: MKT-C05
+    encoding: "enum_member -> htf_posture.INSIDE_NARROW"
+    parameterization: {}
+    absence: "n/a"
+
+  HTFState.UNKNOWN:
+    concept_id: MKT-C05
+    encoding: "enum_member -> htf_posture.UNKNOWN (absence)"
+    parameterization: {}
+    absence: "this member IS the absence value"
+
+deprecated:
+  HTFStateThresholds.expansion_min_range_ratio: "inert: htf_state.py:105-108 both branches return EXPANSION"
+
+# Shrink-only ratchet.
+unmapped:
+  ObjectiveStatus.NONE: "Trading layer (TRS-02 objective role) — slice 2"
+  ObjectiveStatus.EXISTS: "Trading layer — slice 2"
+  ObjectiveStatus.ACHIEVED: "Trading layer — slice 2"
+  ObjectiveStatus.INVALIDATED: "Trading layer — slice 2"

@@ -1,0 +1,72 @@
+# REP shard — producer: crt_engine (config_layer.crt_engine_v2 CRTEngine._transition / events.jsonl).
+# Producer identity is part of REPRESENTATION identity only; the resolver is a different producer
+# and its CRTState occupancy is never equal to the engine's (L3 §7.2).
+
+schema: representation_registry/v1
+producer_id: crt_engine
+schema_version: "crt_state_identity/12"
+
+representations:
+
+  CRTState.RANGE:
+    concept_id: MKT-P01.AWAITING_SWEEP
+    encoding: enum_member
+    parameterization: {founding: m15_structural_range}
+    absence: "n/a"
+
+  CRTState.SWEEP:
+    concept_id: MKT-P01.SWEPT
+    encoding: enum_member
+    parameterization: {founding: m15_structural_range}
+    absence: "n/a"
+
+  CRTState.SHADOW_PENDING:
+    concept_id: MKT-P01.SHADOW_PENDING
+    encoding: enum_member
+    parameterization: {founding: m15_structural_range}
+    absence: "n/a"
+
+  CRTState.DISPLACEMENT:
+    concept_id: MKT-P01.DISPLACED
+    encoding: enum_member
+    parameterization: {founding: m15_structural_range}
+    absence: "n/a"
+
+  CRTState.EXPANSION:
+    concept_id: MKT-P01.EXTENDED
+    encoding: enum_member
+    parameterization: {founding: m15_structural_range}
+    absence: "n/a"
+
+  CRTState.RETEST:
+    concept_id: MKT-P01.RETESTING
+    encoding: enum_member
+    parameterization: {founding: m15_structural_range}
+    absence: "n/a"
+
+  SweepEvent:
+    concept_id: MKT-E01
+    encoding: object (direction = implied bias, price = swept extreme, candle_index)
+    parameterization: {founding: m15_structural_range, tie: strict}
+    absence: "None"
+
+  events.RESET:
+    concept_id: MKT-P01
+    encoding: "termination record: legacy `reason` string -> terminal_reason_map.yaml"
+    parameterization: {founding: m15_structural_range}
+    absence: "n/a"
+
+# Representations of no live concept: kept and marked, never deleted (I-13).
+deprecated:
+  SweepEvent.double_confirmed: "structurally constant False (crt_engine_v2.py:965 vs :2041); 0 true in 873,561 recorded SWEEP events"
+  cached_features.double_sweep: "carries SweepEvent.double_confirmed under the FM-060 key name (crt_engine_v2.py:1912)"
+  RejectReason.NO_DOUBLE_SWEEP: "unreachable"
+
+# Shrink-only ratchet.
+unmapped:
+  CRTState.EXECUTION: "position lifecycle (Execution layer) — needs L3 v2.0.0 and the Trading/Execution slice"
+  CRTState.RESOLUTION: "position lifecycle (Execution layer) — needs L3 v2.0.0 and the Trading/Execution slice"
+  CRTState.EXPIRED: "TTL soft-archive state; termination authority PRODUCER — stage vs termination record undecided"
+  CRTState.RANGE_C1: "parent track; stage mapping PROPOSED (F-075/F-077)"
+  CRTState.MANIPULATION_C2: "parent track; stage mapping PROPOSED"
+  CRTState.DISTRIBUTION_C3: "parent track; stage mapping PROPOSED"

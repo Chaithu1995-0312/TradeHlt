@@ -1,0 +1,55 @@
+# Legacy RESET reason -> terminal authority (Semantic OS v2, I-3 / I-3a).
+#
+# Read-time mapping over the reason strings the engine ALREADY logs on every RESET event
+# (events.jsonl `reason`). No historical file is rewritten. New runs may add the same fields
+# additively; reset timing is not part of this map.
+#
+# Matching: `exact` compares the whole string; `prefix` compares the start. When several entries
+# match, the LONGEST match wins. An unmatched reason is an error (never silently MARKET).
+# Coverage floor: every string literal / f-string prefix passed to `reset_to_range(...)` in
+# src/config_layer/crt_engine_v2.py and src/runtime/backtest_v2.py, and every reason returned by
+# ResetLogic.should_reset, must match an entry here.
+
+schema: terminal_reason_map/v1
+version: 1
+
+authorities: [MARKET, OBSERVATION, PRODUCER, DECISION, EXECUTION]
+
+entries:
+
+  # ── MARKET: price or the market clock ended the episode ──────────────────────
+  - {match: prefix, reason: "HTF changed:",           authority: MARKET,      class: EXPIRED,           code: HTF_ROLLOVER,        market_event: MKT-E12, source: "crt_engine_v2.py ResetLogic.should_reset"}
+  - {match: prefix, reason: "50% retrace hit",        authority: MARKET,      class: FAILED,            code: RETRACE_BREACH,      market_event: MKT-E10, source: "crt_engine_v2.py ResetLogic.should_reset"}
+  - {match: prefix, reason: "1.618 extension hit",    authority: MARKET,      class: SPENT,             code: EXTENSION_REACH,     market_event: MKT-E11, source: "crt_engine_v2.py ResetLogic.should_reset"}
+
+  # ── OBSERVATION: the data stream, not the market, changed ────────────────────
+  - {match: prefix, reason: "Session gap detected:",  authority: OBSERVATION, class: AVAILABILITY_LAPSE, code: DATA_GAP,           source: "backtest_v2.py gap reset", note: "a timestamp jump cannot distinguish a scheduled closure from missing bars"}
+
+  # ── PRODUCER: our construction acted (re-seed, consistency, patience) ────────
+  - {match: exact,  reason: "resolver_founding",                 authority: PRODUCER, class: CONSTRUCTION, code: RESOLVER_RESEED,         source: "crt_engine_v2.py _found_retest_from_resolver"}
+  - {match: exact,  reason: "resolver_founding_inputs_missing",  authority: PRODUCER, class: CONSTRUCTION, code: RESOLVER_INPUTS_MISSING, source: "crt_engine_v2.py _found_retest_from_resolver"}
+  - {match: prefix, reason: "SHADOW_LEAK:",                      authority: PRODUCER, class: CONSTRUCTION, code: SHADOW_LEAK,             source: "crt_engine_v2.py shadow resume"}
+  - {match: exact,  reason: "Sweep expired",                     authority: PRODUCER, class: EXPIRED,      code: SWEEP_TTL,               source: "crt_engine_v2.py SWEEP TTL", note: "O-4: TTL is our patience parameter, not a market fact"}
+  - {match: exact,  reason: "expansion_ttl_exceeded",            authority: PRODUCER, class: EXPIRED,      code: EXPANSION_TTL,           source: "crt_engine_v2.py EXPANSION TTL", note: "O-4"}
+
+  # ── DECISION: policy rejected an otherwise observable opportunity ────────────
+  - {match: exact,  reason: "off_session_filter",                  authority: DECISION, class: FILTERED, code: OFF_SESSION,               source: "crt_engine_v2.py RETEST session filter"}
+  - {match: prefix, reason: "off_session:",                        authority: DECISION, class: FILTERED, code: OFF_SESSION,               source: "crt_engine_v2.py _flatten_if_resting reason"}
+  - {match: prefix, reason: "Against parent-timeframe bias",       authority: DECISION, class: FILTERED, code: PARENT_BIAS,               source: "crt_engine_v2.py parent-CRT gate (F-075)"}
+  - {match: prefix, reason: "Against parent-timeframe objective",  authority: DECISION, class: FILTERED, code: PARENT_OBJECTIVE,          source: "crt_engine_v2.py objective gate (F-078)"}
+  - {match: exact,  reason: "Not in discount zone",                authority: DECISION, class: FILTERED, code: PD_LOCATION,               source: "crt_engine_v2.py premium/discount filter"}
+  - {match: exact,  reason: "Not in premium zone",                 authority: DECISION, class: FILTERED, code: PD_LOCATION,               source: "crt_engine_v2.py premium/discount filter"}
+  - {match: exact,  reason: "shadow_advisory_only",                authority: DECISION, class: FILTERED, code: SHADOW_ADVISORY,           source: "crt_engine_v2.py shadow advisory block"}
+  - {match: exact,  reason: "Soft confirmation timeout",           authority: DECISION, class: FILTERED, code: SOFT_CONFIRMATION_TIMEOUT, source: "crt_engine_v2.py soft confirmation"}
+  - {match: prefix, reason: "Soft confirmation not met within",    authority: DECISION, class: FILTERED, code: SOFT_CONFIRMATION_TIMEOUT, source: "crt_engine_v2.py soft confirmation event"}
+  - {match: prefix, reason: "stop_breached",                       authority: DECISION, class: FILTERED, code: RETEST_STOP_GUARD,         source: "crt_engine_v2.py setup.retest_stop_guard (F-110)", note: "policy guard acting on a market fact; the market fact itself is a GP-02 on the planned stop level"}
+
+  # ── EXECUTION: the position or its construction ended the episode ────────────
+  - {match: exact,  reason: "Post-resolution reset",  authority: EXECUTION, class: POSITION_CLOSED, code: POST_RESOLUTION,      source: "crt_engine_v2.py after RESOLUTION"}
+  - {match: prefix, reason: "trade_build_rejected:",  authority: EXECUTION, class: BUILD_FAILED,    code: TRADE_BUILD_REJECTED, source: "crt_engine_v2.py build_trade refusal (F-110)"}
+  - {match: exact,  reason: "TP1_BE_RESET",           authority: EXECUTION, class: POSITION_CLOSED, code: TP1_BE_RESET,         source: "backtest_v2.py exit reason"}
+  - {match: exact,  reason: "RESET_CLOSE",            authority: EXECUTION, class: POSITION_CLOSED, code: RESET_CLOSE,          source: "backtest_v2.py exit reason"}
+
+# Series shaping (I-3a): an occupancy series containing any DECISION termination is
+# `policy_shaped`; any OBSERVATION termination makes it `observation_shaped`; any PRODUCER
+# termination makes it `producer_shaped`. The engine's CRT series is all three today.

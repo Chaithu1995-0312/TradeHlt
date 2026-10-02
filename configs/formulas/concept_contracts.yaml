@@ -1,0 +1,788 @@
+# Semantic OS v2 — CONCEPT CONTRACTS (meaning plane). Slice 1: Geometry + Market.
+#
+# Spec:      docs/governance/SEMANTIC_OS_V2_MEANING_PLANE.md
+# Companion: configs/formulas/representation_registry/*.yaml  (representation -> concept)
+#            configs/formulas/terminal_reason_map.yaml        (legacy RESET reason -> authority)
+#
+# AUTHORITY: meaning authority (CLAUDE.md §6.6). Grants NO runtime authority (§6.5).
+# "Contract" alone means a Semantic OS CT-* behaviour contract (advisory). These are CONCEPT contracts.
+#
+# Field rules (enforced by the validator — see the handoff brief):
+#   status ACCEPTED  = contractually definable from an identified REPO source or explicit USER_DECISION.
+#                      NOT validated, NOT economically useful, NOT universal trading knowledge.
+#   status PROPOSED  = no representation and no consumer may bind to it (I-18).
+#   authority.sources must be git-tracked paths (ACCEPTED only; at least one).
+#   inputs reference concepts in the same or a LOWER layer only (I-12).
+#   every parameter declares identity_bearing (I-17).
+#   kind MEASUREMENT must declare units.unit and units.normalization_basis (I-4).
+#   `representation` and `consumers` are NOT stored here: the REP registry is the single source for
+#   representation -> concept, and consumers are derived mechanically from code (I-14).
+#   divergences: current-vs-contract differences. Recorded, never fixed in place (Phase B).
+#   legacy_values: parameter values that existing REPRESENTATIONS carry but the contract does not
+#                  accept; a representation may use one only if a matching divergence is recorded.
+
+schema: concept_contracts/v1
+version: 1
+slice: 1
+layers_in_slice: [GEOMETRY, MARKET]
+
+concepts:
+
+  # ═══════════════════════════════ GEOMETRY ═══════════════════════════════
+
+  GP-01:
+    canonical_name: pierce
+    layer: GEOMETRY
+    kind: PRIMITIVE
+    status: ACCEPTED
+    definition: "The bar's extreme trades strictly beyond a price on the given side."
+    identity: {reference: price, timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {side: {domain: [UPPER, LOWER], identity_bearing: true}}
+    inputs: []
+    rule: "UPPER: high > L ; LOWER: low < L. Equality is NOT a pierce."
+    units: {domain: bool}
+    absence: "Undefined when L is absent; callers must not pass a sentinel price."
+    authority: {evidence: [REPO], sources: [src/structure/predicates.py, src/features/causal_structure.py], lineage: [SP-001]}
+    divergences: []
+    version: 1
+
+  GP-02:
+    canonical_name: beyond
+    layer: GEOMETRY
+    kind: PRIMITIVE
+    status: ACCEPTED
+    definition: "The bar closes strictly beyond a price on the given side (acceptance)."
+    identity: {reference: price, timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {side: {domain: [UPPER, LOWER], identity_bearing: true}}
+    inputs: []
+    rule: "UPPER: close > L ; LOWER: close < L. Equality is NOT beyond."
+    units: {domain: bool}
+    absence: "Undefined when L is absent."
+    authority: {evidence: [REPO], sources: [src/features/causal_structure.py, src/features/smc/breaker.py, src/config_layer/htf_state.py], lineage: [FM-057]}
+    divergences: []
+    version: 1
+
+  GP-03:
+    canonical_name: reach
+    layer: GEOMETRY
+    kind: PRIMITIVE
+    status: ACCEPTED
+    definition: "The bar closes at or beyond a price on the given side."
+    identity: {reference: price, timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {side: {domain: [UPPER, LOWER], identity_bearing: true}}
+    inputs: []
+    rule: "UPPER: close >= L ; LOWER: close <= L. Equality IS a reach."
+    units: {domain: bool}
+    absence: "Undefined when L is absent."
+    authority: {evidence: [REPO], sources: [src/config_layer/htf_state.py], lineage: [SEM-009]}
+    divergences: []
+    version: 1
+
+  GP-04:
+    canonical_name: pierce_and_reject
+    layer: GEOMETRY
+    kind: PRIMITIVE
+    status: ACCEPTED
+    definition: "The bar pierces a price and closes strictly back on the origin side."
+    identity: {reference: price, timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {side: {domain: [UPPER, LOWER], identity_bearing: true}}
+    inputs: []
+    rule: "UPPER: high > L and close < L ; LOWER: low < L and close > L (SP-001 swept_high/swept_low). A close exactly AT L is neither GP-02 nor GP-04."
+    units: {domain: bool}
+    absence: "Undefined when L is absent."
+    authority: {evidence: [REPO], sources: [src/structure/predicates.py], lineage: [SP-001]}
+    divergences:
+      - {surface: "FM-058 liquidity_sweep (src/features/causal_structure.py, src/features/feature_pipeline.py)", current: "inclusive close-back (close <= ref)", contract: "strict (close < ref)", evidence: "XAUUSD M15 47,275 bars: 7,567 inclusive vs 7,537 strict sweeps, 30 tie-only bars (0.40%)", disposition: PHASE_B_CANDIDATE}
+    version: 1
+
+  GP-05:
+    canonical_name: overlap
+    layer: GEOMETRY
+    kind: PRIMITIVE
+    status: ACCEPTED
+    definition: "The bar's range intersects a price interval, edges inclusive."
+    identity: {reference: zone, timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {}
+    inputs: []
+    rule: "low <= zone_high and high >= zone_low (features.smc._geometry.is_mitigated)."
+    units: {domain: bool}
+    absence: "Undefined when the zone is absent."
+    authority: {evidence: [REPO], sources: [src/features/smc/_geometry.py], lineage: []}
+    divergences: []
+    version: 1
+
+  GP-06:
+    canonical_name: directional_impulse
+    layer: GEOMETRY
+    kind: PRIMITIVE
+    status: ACCEPTED
+    definition: "A bar whose body travels away from the swept side and closes beyond the swept price."
+    identity: {reference: sweep_price, timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {bias: {domain: [LONG, SHORT], identity_bearing: true}}
+    inputs: []
+    rule: "LONG: close > open and close > sweep_price ; SHORT: close < open and close < sweep_price (SP-002, F-074). Bias is inherited from the sweep, never re-derived from this bar."
+    units: {domain: bool}
+    absence: "Undefined without a sweep."
+    authority: {evidence: [REPO], sources: [src/structure/predicates.py], lineage: [SP-002, F-074]}
+    divergences: []
+    version: 1
+
+  GP-07:
+    canonical_name: in_band
+    layer: GEOMETRY
+    kind: PRIMITIVE
+    status: PROPOSED
+    definition: "The bar trades inside a band around a reference price."
+    identity: {reference: price, timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {}
+    inputs: []
+    rule: "UNDEFINED — SP-003 retest_band definition is deferred on OQ7 (src/structure/predicates.py:33)."
+    units: {domain: bool}
+    absence: "n/a"
+    authority: {evidence: [], sources: [], lineage: [SP-003]}
+    divergences:
+      - {surface: "feature_pipeline retest_flag (src/features/feature_pipeline.py:1025-1035)", current: "internal ATR band, no FM id", contract: "no definition yet", disposition: RECORDED}
+    version: 1
+
+  # ═══════════════════════════════ MARKET — LEVELS ═══════════════════════════════
+
+  MKT-L01:
+    canonical_name: liquidity_level
+    layer: MARKET
+    kind: LEVEL
+    status: ACCEPTED
+    definition: "A price the market founded (by structure, calendar or chart) that is hypothesised to hold resting orders on its outer side. A level is never a role (objective/stop)."
+    identity: {reference: founding, timeframe: per_founding, clock: per_founding, availability_rule: per_founding}
+    parameterization:
+      founding: {domain: [m15_structural_range, parent_candle, weekly_mon_tue, visual_pool, swing_pivot, prior_day, equal_cluster, mother_range, htf_range_resolver], identity_bearing: true}
+      k: {domain: int, identity_bearing: true, applies_to: [swing_pivot, equal_cluster], default_ref: feature_pipeline.swing_window}
+      tolerance_atr: {domain: float, identity_bearing: true, applies_to: [equal_cluster]}
+    inputs: []
+    rule: "Per founding. swing_pivot(k): pivot at bar j published at j+k (FC1-A causal). m15_structural_range: SEM-011 envelope h_ref/l_ref. prior_day: previous D1 high/low on a declared clock. equal_cluster: most recent swing with another swing within tolerance_atr*ATR."
+    units: {unit: price, normalization_basis: none, sign_convention: "side UPPER = +1, LOWER = -1"}
+    lifecycle: {states: [ACTIVE, SWEPT, BROKEN, EXPIRED], transitions: {MKT-E01: SWEPT, GP-02: BROKEN}, terminal_authority: MARKET}
+    absence: "No level = None. Never a sentinel price (causal_structure encodes 'no swing yet' as 0.0 — recorded divergence)."
+    authority: {evidence: [REPO, USER_DECISION], sources: [configs/formulas/structure_profiles.yaml, src/config_layer/m15_structural_range.py, src/features/causal_structure.py, src/features/smc/levels.py], lineage: [SEM-011, SPP-001, SPP-002, SPP-003, SPP-004]}
+    divergences:
+      - {surface: "causal_structure _last_swing_*_price", current: "0.0 means no swing yet", contract: "absence distinguishable from every valid value (I-7)", disposition: RECORDED}
+      - {surface: "features.smc._geometry.detect_causal_swings", current: "second causal swing detector", contract: "one swing_pivot founding", evidence: "equivalence with causal_structure swings UNVERIFIED", disposition: RECORDED}
+      - {surface: "liquidity_* features (FM-025/026)", current: "distances only; no level object", contract: "liquidity_level object", disposition: RECORDED}
+    version: 1
+
+  MKT-L02:
+    canonical_name: derived_level
+    layer: MARKET
+    kind: LEVEL
+    status: ACCEPTED
+    definition: "A price derived from another market object: a retracement or extension of a move, a candle extreme, or a range equilibrium. Identity includes its anchor."
+    identity: {reference: anchor, timeframe: per_anchor, clock: bar_close, availability_rule: "anchor available_at"}
+    parameterization:
+      kind: {domain: [retracement, extension, candle_extreme, equilibrium], identity_bearing: true}
+      fraction: {domain: float, identity_bearing: true, applies_to: [retracement], default_ref: crt_engine.retrace_reset_pct}
+      fib: {domain: float, identity_bearing: true, applies_to: [extension], default_ref: crt_engine.extension_reset_fib}
+    inputs: [MKT-L01, MKT-E04]
+    rule: "retracement = end - fraction*(end-start); extension = origin + fib*(end-origin); equilibrium = (upper+lower)/2; candle_extreme = high|low of the anchor bar."
+    units: {unit: price, normalization_basis: none}
+    lifecycle: null
+    absence: "No anchor -> no level (None)."
+    authority: {evidence: [REPO], sources: [src/config_layer/crt_engine_v2.py, src/config_layer/m15_structural_range.py], lineage: []}
+    divergences:
+      - {surface: "range equilibrium vs 50% displacement retracement", current: "both 'a 50% level', anchors implicit", contract: "distinct identities via anchor", disposition: RECORDED}
+    version: 1
+
+  # ═══════════════════════════════ MARKET — ZONES ═══════════════════════════════
+
+  MKT-Z01:
+    canonical_name: range
+    layer: MARKET
+    kind: ZONE
+    status: ACCEPTED
+    definition: "The interval between an upper and a lower liquidity level of one founding."
+    identity: {reference: founding, timeframe: per_founding, clock: per_founding, availability_rule: "max(available_at of both levels)"}
+    parameterization: {founding: {domain: "MKT-L01.founding", identity_bearing: true}}
+    inputs: [MKT-L01]
+    rule: "[lower.price, upper.price] of two MKT-L01 levels with equal founding and formation."
+    units: {unit: price, normalization_basis: none}
+    lifecycle: {states: [ACTIVE, REFOUNDED], transitions: {MKT-E12: REFOUNDED}, terminal_authority: MARKET}
+    absence: "No range = None."
+    authority: {evidence: [REPO], sources: [src/config_layer/m15_structural_range.py], lineage: [SEM-011]}
+    divergences:
+      - {surface: "the word 'range'", current: "names a zone, the CRT RANGE stage, the HTFBuilder clock and bar measurements", contract: "zone only; stage = AWAITING_SWEEP; clock = htf_period", disposition: RECORDED}
+    version: 1
+
+  MKT-Z02:
+    canonical_name: fvg
+    layer: MARKET
+    kind: ZONE
+    status: ACCEPTED
+    definition: "Fair value gap: the price interval left untraded between candle i-1 and candle i+1 around a middle candle i."
+    identity: {reference: three_candle_pattern, timeframe: bar, clock: bar_close, availability_rule: "close of bar i+1"}
+    parameterization: {}
+    inputs: [GP-05]
+    rule: "bullish if high[i-1] < low[i+1]: zone [high[i-1], low[i+1]]; bearish if low[i-1] > high[i+1]: zone [high[i+1], low[i-1]] (features.smc.fvg._find_fvg_events)."
+    units: {unit: price, normalization_basis: none}
+    lifecycle: {states: [ACTIVE, TOUCHED], proposed_states: [FILLED], transitions: {MKT-E06: TOUCHED}, terminal_authority: MARKET}
+    absence: "No active zone = present:false (distance slot 0.0 is ambiguous — recorded divergence)."
+    authority: {evidence: [REPO], sources: [src/features/smc/fvg.py, src/features/smc/_geometry.py], lineage: [F-076]}
+    divergences:
+      - {surface: "fvg_distance slot", current: "0.0 = no zone AND 0.0 = at the edge", contract: "distance + separate presence (I-7)", disposition: PHASE_B_CANDIDATE}
+      - {surface: "lifecycle", current: "one touch = mitigated/filled", contract: "TOUCHED accepted; FILLED (fully traded through) PROPOSED", disposition: RECORDED}
+    version: 1
+
+  MKT-Z03:
+    canonical_name: order_block
+    layer: MARKET
+    kind: ZONE
+    status: ACCEPTED
+    definition: "The last opposite-coloured candle before a structural break, as a zone."
+    identity: {reference: structure_break_origin, timeframe: bar, clock: bar_close, availability_rule: "bar of the founding break"}
+    parameterization: {k: {domain: int, identity_bearing: true, default_ref: feature_pipeline.swing_window}}
+    inputs: [MKT-E02, GP-05]
+    rule: "features.smc.order_block: origin candle found by _origin_candle before a break from _find_break_events; zone = origin high/low."
+    units: {unit: price, normalization_basis: none}
+    lifecycle: {states: [ACTIVE, TOUCHED, BROKEN], transitions: {MKT-E06: TOUCHED, MKT-E07: BROKEN}, terminal_authority: MARKET}
+    absence: "present:false."
+    authority: {evidence: [REPO], sources: [src/features/smc/order_block.py], lineage: [F-076]}
+    divergences:
+      - {surface: "_find_break_events", current: "a break 'event' on every bar beyond the swing (re-fires)", contract: "founded on MKT-E02 onset", disposition: PHASE_B_CANDIDATE}
+      - {surface: "order_block_distance slot", current: "0.0 = none", contract: "presence (I-7)", disposition: PHASE_B_CANDIDATE}
+    version: 1
+
+  MKT-Z04:
+    canonical_name: breaker
+    layer: MARKET
+    kind: ZONE
+    status: ACCEPTED
+    definition: "An order block that price closed through (BROKEN), with its polarity flipped."
+    identity: {reference: order_block, timeframe: bar, clock: bar_close, availability_rule: "bar of the close-through"}
+    parameterization: {k: {domain: int, identity_bearing: true}}
+    inputs: [MKT-Z03, MKT-E07, GP-05]
+    rule: "features.smc.breaker.find_active_breaker."
+    units: {unit: price, normalization_basis: none}
+    lifecycle: {states: [FLIPPED, TOUCHED], transitions: {MKT-E06: TOUCHED}, terminal_authority: MARKET}
+    absence: "present:false."
+    authority: {evidence: [REPO], sources: [src/features/smc/breaker.py], lineage: [F-076]}
+    divergences: []
+    version: 1
+
+  MKT-Z05:
+    canonical_name: ob_body_zone
+    layer: MARKET
+    kind: ZONE
+    status: ACCEPTED
+    definition: "The body-only inner zone of an order block whose outer zone has already been touched (today's 'mitigation block')."
+    identity: {reference: order_block, timeframe: bar, clock: bar_close, availability_rule: "bar of first outer touch"}
+    parameterization: {k: {domain: int, identity_bearing: true}}
+    inputs: [MKT-Z03, GP-05]
+    rule: "features.smc.mitigation.find_active_mitigation_block."
+    units: {unit: price, normalization_basis: none}
+    lifecycle: {states: [ACTIVE, TOUCHED], transitions: {MKT-E06: TOUCHED}, terminal_authority: MARKET}
+    absence: "present:false."
+    authority: {evidence: [REPO], sources: [src/features/smc/mitigation.py], lineage: [F-076]}
+    divergences:
+      - {surface: "name 'mitigation'", current: "both the touch verb and this zone type", contract: "verb = zone_touch (MKT-E06); zone = ob_body_zone", disposition: RECORDED}
+    version: 1
+
+  MKT-Z06:
+    canonical_name: retest_band
+    layer: MARKET
+    kind: ZONE
+    status: PROPOSED
+    definition: "The band around a reference that price must return into to count as a retest."
+    identity: {reference: UNKNOWN, timeframe: bar, clock: bar_close, availability_rule: UNKNOWN}
+    parameterization: {}
+    inputs: [GP-07]
+    rule: "UNDEFINED (OQ7)."
+    units: {unit: price, normalization_basis: UNKNOWN}
+    lifecycle: null
+    absence: "n/a"
+    authority: {evidence: [], sources: [], lineage: [SP-003]}
+    divergences: []
+    version: 1
+
+  # ═══════════════════════════════ MARKET — EVENTS ═══════════════════════════════
+
+  MKT-E01:
+    canonical_name: sweep
+    layer: MARKET
+    kind: EVENT
+    status: ACCEPTED
+    definition: "Price trades beyond a liquidity level and closes back on the origin side in the same bar."
+    identity: {reference: "MKT-L01 founding", timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization:
+      founding: {domain: "MKT-L01.founding", identity_bearing: true}
+      tie: {domain: [strict], legacy_values: [inclusive], identity_bearing: true}
+    inputs: [MKT-L01, GP-04]
+    rule: "GP-04 on an ACTIVE, already-available MKT-L01. swept_side = level side; implied_bias = SHORT if UPPER swept, LONG if LOWER swept."
+    units: {domain: event, sign_convention: "+1 = UPPER level swept (implied bias SHORT)"}
+    lifecycle: null
+    absence: "No sweep on a bar = no event. A bar with no available reference level is distinct from 'no sweep'."
+    authority: {evidence: [REPO], sources: [src/structure/predicates.py, src/config_layer/crt_engine_v2.py, src/features/causal_structure.py], lineage: [SP-001, FM-058, FM-059]}
+    divergences:
+      - {surface: "at least 7 detectors (engine detect_sweep, parent_crt, resolver _detect_htf_range_sweep, FM-058, sujan_crt, visual_crt, weekly_sweep)", current: "independent implementations", contract: "one composition (GP-04) parameterised by founding (I-8)", disposition: RECORDED}
+      - {surface: "FM-058 tie", current: "inclusive", contract: "strict", evidence: "0.40% of sweep bars on XAUUSD M15", disposition: PHASE_B_CANDIDATE}
+      - {surface: "engine SweepEvent.double_confirmed (crt_engine_v2.py:965) + score_sweep double_bonus + adjusted +0.10 + RejectReason.NO_DOUBLE_SWEEP", current: "structurally constant False (detect_sweep runs only in RANGE where sweep_event is always None); 0 true in 873,561 recorded SWEEP events", contract: "DEPRECATED (unreachable semantics, I-13)", disposition: DEPRECATED}
+    version: 1
+
+  MKT-E02:
+    canonical_name: structure_break
+    layer: MARKET
+    kind: EVENT
+    status: ACCEPTED
+    definition: "The bar on which price first closes beyond the most recent confirmed swing level (a transition, not a state)."
+    identity: {reference: "MKT-L01 swing_pivot", timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization:
+      k: {domain: int, identity_bearing: true, default_ref: feature_pipeline.swing_window}
+      consumption: {domain: [onset], proposed_values: [once_per_level], identity_bearing: true}
+    inputs: [MKT-C01]
+    rule: "Event at bar t iff structural_position[t] in {ABOVE_LAST_SWING_HIGH, BELOW_LAST_SWING_LOW} and structural_position[t] != structural_position[t-1]. 'once_per_level' (a level is consumed by its break) is PROPOSED."
+    units: {domain: event, sign_convention: "+1 = UPPER (bullish break)"}
+    lifecycle: null
+    absence: "No break = no event; undefined position = no event."
+    authority: {evidence: [REPO, USER_DECISION], sources: [src/features/smc/order_block.py, configs/formulas/market_ontology.yaml], lineage: [FM-057]}
+    divergences:
+      - {surface: "FM-057 break_of_structure slot", current: "non-zero on every bar beyond the level (37.75% of XAUUSD bars, 26% first-of-run)", contract: "that slot represents MKT-C01; this event has no representation yet", disposition: RECORDED}
+      - {surface: "market_ontology.yaml:40 scope", current: "ontology excludes BOS/CHoCH/pivot detection state machines", contract: "ontology scope v2 owns these semantics (deferred change id)", disposition: RECORDED}
+    version: 1
+
+  MKT-E03:
+    canonical_name: choch
+    layer: MARKET
+    kind: EVENT
+    status: PROPOSED
+    definition: "Change of character. Two candidate definitions, undecided: (B) a structure_break opposite the last structure_break; (C) a structure_break that ends a HH/HL or LH/LL swing sequence."
+    identity: {reference: UNKNOWN, timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {}
+    inputs: [MKT-E02]
+    rule: "UNDEFINED. The repo's FM-083 meaning is MKT-C07, not this concept."
+    units: {domain: event}
+    lifecycle: null
+    absence: "n/a"
+    authority: {evidence: [TK], sources: [], lineage: []}
+    divergences: []
+    version: 1
+
+  MKT-E04:
+    canonical_name: crt_displacement
+    layer: MARKET
+    kind: EVENT
+    status: ACCEPTED
+    definition: "A directional impulse away from the side of a specific prior sweep."
+    identity: {reference: MKT-E01, timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {}
+    inputs: [MKT-E01, GP-06]
+    rule: "GP-06 with bias = the sweep's implied bias and sweep_price = the sweep extreme. Magnitude gates (body quality, ATR size, sweep age) are caller parameters, not part of the primitive."
+    units: {domain: event}
+    lifecycle: null
+    absence: "No prior sweep -> undefined, not 'no displacement'."
+    authority: {evidence: [REPO], sources: [src/structure/predicates.py, src/config_layer/crt_engine_v2.py], lineage: [SP-002, F-074]}
+    divergences: []
+    version: 1
+
+  MKT-E05:
+    canonical_name: impulse_candle
+    layer: MARKET
+    kind: EVENT
+    status: ACCEPTED
+    definition: "A large-bodied candle with no sweep reference (energy only)."
+    identity: {reference: none, timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {}
+    inputs: []
+    rule: "feature_pipeline displacement_flag (body/ATR thresholds)."
+    units: {domain: event}
+    lifecycle: null
+    absence: "n/a"
+    authority: {evidence: [REPO], sources: [src/features/feature_pipeline.py], lineage: []}
+    divergences:
+      - {surface: "name 'displacement'", current: "used for both this and MKT-E04", contract: "distinct concepts", disposition: RECORDED}
+    version: 1
+
+  MKT-E06:
+    canonical_name: zone_touch
+    layer: MARKET
+    kind: EVENT
+    status: ACCEPTED
+    definition: "The first bar after a zone becomes available whose range overlaps it."
+    identity: {reference: zone, timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {}
+    inputs: [GP-05]
+    rule: "GP-05 on a zone with available_at < bar."
+    units: {domain: event}
+    lifecycle: null
+    absence: "n/a"
+    authority: {evidence: [REPO], sources: [src/features/smc/_geometry.py], lineage: []}
+    divergences: []
+    version: 1
+
+  MKT-E07:
+    canonical_name: zone_break
+    layer: MARKET
+    kind: EVENT
+    status: ACCEPTED
+    definition: "The bar that closes beyond a zone's far edge."
+    identity: {reference: zone, timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {}
+    inputs: [GP-02]
+    rule: "GP-02 on the far edge (bullish zone: close < low; bearish zone: close > high) — features.smc.breaker violation rule."
+    units: {domain: event}
+    lifecycle: null
+    absence: "n/a"
+    authority: {evidence: [REPO], sources: [src/features/smc/breaker.py], lineage: []}
+    divergences: []
+    version: 1
+
+  MKT-E08:
+    canonical_name: level_pierce
+    layer: MARKET
+    kind: EVENT
+    status: ACCEPTED
+    definition: "The bar's extreme trades beyond a level, regardless of the close."
+    identity: {reference: "MKT-L01 founding", timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {founding: {domain: "MKT-L01.founding", identity_bearing: true}}
+    inputs: [MKT-L01, GP-01]
+    rule: "GP-01 on an available MKT-L01."
+    units: {domain: event, sign_convention: "+1 = UPPER"}
+    lifecycle: null
+    absence: "No reference level -> undefined."
+    authority: {evidence: [REPO], sources: [src/features/causal_structure.py], lineage: []}
+    divergences: []
+    version: 1
+
+  MKT-E09:
+    canonical_name: retest_entry
+    layer: MARKET
+    kind: EVENT
+    status: ACCEPTED
+    definition: "The bar on which the engine's CRT episode enters its retest stage."
+    identity: {reference: MKT-P01, timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {}
+    inputs: [MKT-E04]
+    rule: "Engine EXPANSION->RETEST transition (try_expansion_to_retest). The band semantics behind it are OQ7 (MKT-Z06 PROPOSED)."
+    units: {domain: event}
+    lifecycle: null
+    absence: "n/a"
+    authority: {evidence: [REPO], sources: [src/config_layer/crt_engine_v2.py], lineage: []}
+    divergences:
+      - {surface: "retest meaning", current: "engine rule exists, ontology definition deferred (OQ7)", contract: "event accepted, band PROPOSED", disposition: RECORDED}
+    version: 1
+
+  MKT-E10:
+    canonical_name: retrace_breach
+    layer: MARKET
+    kind: EVENT
+    status: ACCEPTED
+    definition: "Price closes beyond a retracement level against the move it retraces."
+    identity: {reference: "MKT-L02 retracement", timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {}
+    inputs: [MKT-L02, GP-02]
+    rule: "GP-02 against the move on the retracement level."
+    units: {domain: event}
+    lifecycle: null
+    absence: "n/a"
+    authority: {evidence: [REPO], sources: [src/config_layer/crt_engine_v2.py], lineage: []}
+    divergences:
+      - {surface: "ResetLogic.should_reset (crt_engine_v2.py:2898-2910)", current: "retrace measured from disp.close as a fraction of the move; emitted only as RESET 'N% retrace hit'", contract: "a market event; the thesis binds it as FAILED (Trading layer, later slice)", disposition: RECORDED}
+    version: 1
+
+  MKT-E11:
+    canonical_name: extension_reach
+    layer: MARKET
+    kind: EVENT
+    status: ACCEPTED
+    definition: "Price closes at or beyond an extension level in the move's direction."
+    identity: {reference: "MKT-L02 extension", timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {}
+    inputs: [MKT-L02, GP-03]
+    rule: "GP-03 with the move on the extension level."
+    units: {domain: event}
+    lifecycle: null
+    absence: "n/a"
+    authority: {evidence: [REPO], sources: [src/config_layer/crt_engine_v2.py], lineage: []}
+    divergences:
+      - {surface: "ResetLogic.should_reset (crt_engine_v2.py:2912-2923)", current: "emitted only as RESET '1.618 extension hit'", contract: "a market event; the thesis binds it as SPENT", disposition: RECORDED}
+    version: 1
+
+  MKT-E12:
+    canonical_name: clock_rollover
+    layer: MARKET
+    kind: EVENT
+    status: ACCEPTED
+    definition: "The governing clock enters a new period (HTF period, session, broker day)."
+    identity: {reference: clock, timeframe: bar, clock: declared, availability_rule: "first bar of the new period"}
+    parameterization: {clock: {domain: [htf_period, session, broker_day], identity_bearing: true}}
+    inputs: []
+    rule: "clock_id[t] != clock_id[t-1]."
+    units: {domain: event}
+    lifecycle: null
+    absence: "n/a"
+    authority: {evidence: [REPO], sources: [src/config_layer/crt_engine_v2.py, src/config_layer/m15_structural_range.py], lineage: []}
+    divergences: []
+    version: 1
+
+  # ═══════════════════════════════ MARKET — CONDITIONS ═══════════════════════════════
+
+  MKT-C01:
+    canonical_name: structural_position
+    layer: MARKET
+    kind: CONDITION
+    status: ACCEPTED
+    definition: "Where the close sits relative to the most recent confirmed swing high and swing low."
+    identity: {reference: "MKT-L01 swing_pivot", timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {k: {domain: int, identity_bearing: true, default_ref: feature_pipeline.swing_window}}
+    inputs: [MKT-L01, GP-02]
+    rule: "ABOVE_LAST_SWING_HIGH if close > last confirmed swing high (as of t-1); BELOW_LAST_SWING_LOW if close < last confirmed swing low; else INSIDE."
+    units: {domain: [BELOW_LAST_SWING_LOW, INSIDE, ABOVE_LAST_SWING_HIGH], sign_convention: "-1/0/+1"}
+    lifecycle: null
+    absence: "No confirmed swing yet = UNDEFINED (distinct from INSIDE)."
+    authority: {evidence: [REPO, USER_DECISION], sources: [src/features/causal_structure.py], lineage: [FM-057]}
+    divergences:
+      - {surface: "FM-057 break_of_structure slot 22", current: "named 'break' (an event) but measures this condition; 0 when no swing exists", contract: "condition + UNDEFINED", disposition: RECORDED}
+    version: 1
+
+  MKT-C02:
+    canonical_name: structural_trend
+    layer: MARKET
+    kind: CONDITION
+    status: PROPOSED
+    definition: "Direction of the most recent structure_break."
+    identity: {reference: MKT-E02, timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {}
+    inputs: [MKT-E02]
+    rule: "UNDEFINED until MKT-E03 is decided; no repository basis."
+    units: {domain: [UP, DOWN]}
+    lifecycle: null
+    absence: "n/a"
+    authority: {evidence: [TK], sources: [], lineage: []}
+    divergences: []
+    version: 1
+
+  MKT-C03:
+    canonical_name: momentum_bias
+    layer: MARKET
+    kind: CONDITION
+    status: ACCEPTED
+    definition: "Sign of short-vs-long EMA momentum. Momentum, not structure."
+    identity: {reference: ema_pair, timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization:
+      ema_fast_span: {domain: int, identity_bearing: true, default_ref: feature_pipeline.ema_fast_span}
+      ema_slow_span: {domain: int, identity_bearing: true, default_ref: feature_pipeline.ema_slow_span}
+    inputs: []
+    rule: "FM-054 trend_bias."
+    units: {domain: [-1, 0, 1]}
+    lifecycle: null
+    absence: "Before EMA warmup = UNDEFINED."
+    authority: {evidence: [REPO], sources: [configs/formulas/market_ontology.yaml, src/features/feature_pipeline.py], lineage: [FM-054]}
+    divergences:
+      - {surface: "name trend_bias", current: "implies structural trend", contract: "momentum_bias (alias)", disposition: RECORDED}
+    version: 1
+
+  MKT-C04:
+    canonical_name: two_sided_sweep
+    layer: MARKET
+    kind: CONDITION
+    status: ACCEPTED
+    definition: "Swing-founded sweeps of BOTH sides occurred within the last W bars."
+    identity: {reference: "MKT-E01 swing_pivot", timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization:
+      k: {domain: int, identity_bearing: true, default_ref: feature_pipeline.swing_window}
+      window: {domain: int, identity_bearing: true, default_ref: feature_pipeline.double_sweep_window}
+    inputs: [MKT-E01]
+    rule: "FM-060: any(liquidity_sweep > 0) and any(liquidity_sweep < 0) over the last W bars."
+    units: {domain: bool}
+    lifecycle: null
+    absence: "Fewer than one reference level = UNDEFINED."
+    authority: {evidence: [REPO], sources: [src/features/causal_structure.py, configs/formulas/market_ontology.yaml], lineage: [FM-060]}
+    divergences:
+      - {surface: "name double_sweep", current: "same key also used for the engine's dead double_confirmed (crt_engine_v2.py:1912)", contract: "two_sided_sweep{k,W}; engine attribute DEPRECATED", disposition: RECORDED}
+      - {surface: "feature_pipeline.py:281 comment", current: "says tuning W 'redefines no registered math'", contract: "W is identity-bearing: a new W is a new parameterization_id (I-17)", disposition: RECORDED}
+      - {surface: "inherited FM-058 tie", current: "inclusive", contract: "strict (GP-04)", disposition: PHASE_B_CANDIDATE}
+    version: 1
+
+  MKT-C05:
+    canonical_name: htf_posture
+    layer: MARKET
+    kind: CONDITION
+    status: ACCEPTED
+    definition: "How a closed parent bar relates to the previous closed parent bar: broke with the prior bar's direction, broke against it, or closed inside (wide or narrow)."
+    identity: {reference: parent_bar_pair, timeframe: parent, clock: parent_close, availability_rule: "parent bar close"}
+    parameterization:
+      distribution_min_range_ratio: {domain: float, identity_bearing: true}
+      accumulation_max_range_ratio: {domain: float, identity_bearing: true}
+    inputs: [GP-02]
+    rule: "config_layer.htf_state.classify_htf_state. Values: BREAK_WITH_PRIOR (EXPANSION), BREAK_AGAINST_PRIOR (REVERSAL), INSIDE_WIDE (DISTRIBUTION), INSIDE_NARROW (ACCUMULATION)."
+    units: {domain: [BREAK_WITH_PRIOR, BREAK_AGAINST_PRIOR, INSIDE_WIDE, INSIDE_NARROW, UNKNOWN]}
+    lifecycle: null
+    absence: "UNKNOWN before two closed parents."
+    authority: {evidence: [REPO], sources: [src/config_layer/htf_state.py], lineage: [SEM-008, F-078]}
+    divergences:
+      - {surface: "htf_state.py:105-108", current: "two consecutive branches both return EXPANSION -> expansion_min_range_ratio decides nothing", contract: "parameter DEPRECATED as inert (I-13)", disposition: DEPRECATED}
+      - {surface: "htf_state.py:100", current: "'prior direction' = previous candle colour; a doji counts as bearish", contract: "recorded", disposition: RECORDED}
+      - {surface: "htf_state.py:109-113", current: "ratio between the two thresholds falls through to ACCUMULATION", contract: "recorded", disposition: RECORDED}
+      - {surface: "HTFState value names", current: "EXPANSION/DISTRIBUTION/ACCUMULATION collide with CRT and weekly meanings", contract: "renamed values (alias)", disposition: RECORDED}
+    version: 1
+
+  MKT-C06:
+    canonical_name: session
+    layer: MARKET
+    kind: CONDITION
+    status: ACCEPTED
+    definition: "The trading session a bar belongs to, on a declared clock."
+    identity: {reference: clock, timeframe: bar, clock: declared, availability_rule: bar_open}
+    parameterization: {session_timestamp_basis: {domain: [broker_local, utc_corrected], identity_bearing: true, default_ref: feature_pipeline.session_timestamp_basis}}
+    inputs: []
+    rule: "FM-052."
+    units: {domain: session_ordinal}
+    lifecycle: null
+    absence: "n/a"
+    authority: {evidence: [REPO], sources: [src/features/feature_pipeline.py], lineage: [FM-052, F-066]}
+    divergences:
+      - {surface: "MT5 broker clock", current: "broker-local labelled as UTC (F-066)", contract: "clock declared via parameter", disposition: RECORDED}
+    version: 1
+
+  MKT-C07:
+    canonical_name: break_against_momentum
+    layer: MARKET
+    kind: CONDITION
+    status: ACCEPTED
+    definition: "A non-inside structural position whose sign opposes momentum_bias. This is FM-083's documented meaning, NOT the conventional CHoCH."
+    identity: {reference: "MKT-C01 x MKT-C03", timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {}
+    inputs: [MKT-C01, MKT-C03]
+    rule: "position if position != 0 and momentum != 0 and sign(position) != sign(momentum), else 0 (features.smc.choch.change_of_character)."
+    units: {domain: [-1, 0, 1]}
+    lifecycle: null
+    absence: "UNDEFINED if either input is UNDEFINED."
+    authority: {evidence: [REPO], sources: [src/features/smc/choch.py, configs/formulas/market_ontology.yaml], lineage: [FM-083]}
+    divergences:
+      - {surface: "name change_of_character / CHoCH", current: "suggests the conventional structure-reversal CHoCH", contract: "alias break_against_momentum; 'choch' reserved for MKT-E03 (PROPOSED)", disposition: RECORDED}
+      - {surface: "input is MKT-C01 (a condition)", current: "inherits BOS re-firing (runs ~2 bars)", contract: "recorded", disposition: RECORDED}
+    version: 1
+
+  # ═══════════════════════════════ MARKET — EPISODE ═══════════════════════════════
+
+  MKT-P01:
+    canonical_name: crt_episode
+    layer: MARKET
+    kind: EPISODE
+    status: ACCEPTED
+    definition: "One instance of the CRT structure: a founded range, a sweep of one side, a directional displacement away from it, extension, and a retest. Market stages only — execution and resolution belong to the position lifecycle."
+    identity: {reference: "MKT-L01 founding", timeframe: per_founding, clock: per_founding, availability_rule: "stage entry bar"}
+    parameterization: {founding: {domain: "MKT-L01.founding", identity_bearing: true}}
+    inputs: [MKT-L01, MKT-E01, MKT-E04, MKT-E09, MKT-E10, MKT-E11, MKT-E12]
+    rule: "Engine state machine (crt_engine_v2) projected onto stages. Instance key = (run_id, bar of the first stage after AWAITING_SWEEP). Terminations carry terminal_authority via configs/formulas/terminal_reason_map.yaml."
+    units: {domain: episode}
+    lifecycle:
+      states: [AWAITING_SWEEP, SWEPT, SHADOW_PENDING, DISPLACED, EXTENDED, RETESTING]
+      terminal_authority: [MARKET, OBSERVATION, PRODUCER, DECISION, EXECUTION]
+      handover: "entry eligibility at RETESTING -> Trading layer (later slice)"
+    absence: "n/a"
+    authority: {evidence: [REPO, USER_DECISION], sources: [src/config_layer/crt_engine_v2.py, src/config_layer/state_identity.py], lineage: [SEM-003]}
+    divergences:
+      - {surface: "crt_state_identity.yaml occupancy_class", current: "SWEEP/DISPLACEMENT/EXPANSION/RETEST labelled 'event'", contract: "kind EPISODE_STAGE (entered by an event); measured dwell EXPANSION median 5, max 395 bars", disposition: RECORDED}
+      - {surface: "CRTState EXECUTION / RESOLUTION", current: "in the same state machine as market stages", contract: "position lifecycle (Execution layer); requires L3 v2.0.0 (deferred)", disposition: RECORDED}
+      - {surface: "RESET", current: "one event kind for market, observation, producer, decision and execution terminations; decision vetoes reset the episode (F-055)", contract: "terminal_authority on every termination; series declares policy_shaped/observation_shaped (I-3, I-3a)", disposition: RECORDED}
+      - {surface: "L3 §7.1", current: "no canonical setup_id", contract: "episode_id (L3 v2.0.0, deferred)", disposition: RECORDED}
+    version: 1
+
+  MKT-P01.AWAITING_SWEEP:
+    canonical_name: awaiting_sweep
+    layer: MARKET
+    kind: EPISODE_STAGE
+    status: ACCEPTED
+    definition: "A founded range exists and no sweep has occurred yet."
+    identity: {reference: MKT-P01, timeframe: per_founding, clock: per_founding, availability_rule: "entry bar"}
+    parameterization: {}
+    inputs: [MKT-P01]
+    rule: "Engine CRTState.RANGE."
+    units: {domain: stage}
+    lifecycle: {entry_events: [founding, termination], exit_events: [MKT-E01]}
+    absence: "n/a"
+    authority: {evidence: [REPO], sources: [src/config_layer/state_identity.py], lineage: []}
+    divergences: []
+    version: 1
+
+  MKT-P01.SWEPT:
+    canonical_name: swept
+    layer: MARKET
+    kind: EPISODE_STAGE
+    status: ACCEPTED
+    definition: "One side of the founding range has been swept; awaiting displacement."
+    identity: {reference: MKT-P01, timeframe: per_founding, clock: per_founding, availability_rule: "entry bar"}
+    parameterization: {}
+    inputs: [MKT-P01, MKT-E01]
+    rule: "Engine CRTState.SWEEP."
+    units: {domain: stage}
+    lifecycle: {entry_events: [MKT-E01], exit_events: [MKT-E04, MKT-E12, termination]}
+    absence: "n/a"
+    authority: {evidence: [REPO], sources: [src/config_layer/state_identity.py], lineage: []}
+    divergences: []
+    version: 1
+
+  MKT-P01.SHADOW_PENDING:
+    canonical_name: shadow_pending
+    layer: MARKET
+    kind: EPISODE_STAGE
+    status: ACCEPTED
+    definition: "A displacement was seen before its confirming sweep; the confirming sweep has now occurred."
+    identity: {reference: MKT-P01, timeframe: per_founding, clock: per_founding, availability_rule: "entry bar"}
+    parameterization: {}
+    inputs: [MKT-P01, MKT-E01]
+    rule: "Engine CRTState.SHADOW_PENDING."
+    units: {domain: stage}
+    lifecycle: {entry_events: [MKT-E01], exit_events: [stage_SWEPT]}
+    absence: "n/a"
+    authority: {evidence: [REPO], sources: [src/config_layer/state_identity.py], lineage: []}
+    divergences: []
+    version: 1
+
+  MKT-P01.DISPLACED:
+    canonical_name: displaced
+    layer: MARKET
+    kind: EPISODE_STAGE
+    status: ACCEPTED
+    definition: "A directional displacement away from the swept side has occurred."
+    identity: {reference: MKT-P01, timeframe: per_founding, clock: per_founding, availability_rule: "entry bar"}
+    parameterization: {}
+    inputs: [MKT-P01, MKT-E04]
+    rule: "Engine CRTState.DISPLACEMENT."
+    units: {domain: stage}
+    lifecycle: {entry_events: [MKT-E04], exit_events: [stage_EXTENDED, MKT-E10, MKT-E11, MKT-E12]}
+    absence: "n/a"
+    authority: {evidence: [REPO], sources: [src/config_layer/state_identity.py], lineage: []}
+    divergences: []
+    version: 1
+
+  MKT-P01.EXTENDED:
+    canonical_name: extended
+    layer: MARKET
+    kind: EPISODE_STAGE
+    status: ACCEPTED
+    definition: "Price continues away from the swept side after displacement, before any retest."
+    identity: {reference: MKT-P01, timeframe: per_founding, clock: per_founding, availability_rule: "entry bar"}
+    parameterization: {}
+    inputs: [MKT-P01, MKT-E04]
+    rule: "Engine CRTState.EXPANSION (renamed: EXPANSION collides with htf_posture)."
+    units: {domain: stage}
+    lifecycle: {entry_events: [MKT-E04], exit_events: [MKT-E09, MKT-E10, MKT-E11, MKT-E12]}
+    absence: "n/a"
+    authority: {evidence: [REPO], sources: [src/config_layer/state_identity.py], lineage: []}
+    divergences:
+      - {surface: "ResetLogic.should_reset (crt_engine_v2.py:2881-2891)", current: "EXTENDED/RETESTING survive the HTF rollover and that early return also skips the retrace/extension rules (F-110)", contract: "recorded", disposition: RECORDED}
+    version: 1
+
+  MKT-P01.RETESTING:
+    canonical_name: retesting
+    layer: MARKET
+    kind: EPISODE_STAGE
+    status: ACCEPTED
+    definition: "Price has returned toward the displacement origin after extension."
+    identity: {reference: MKT-P01, timeframe: per_founding, clock: per_founding, availability_rule: "entry bar"}
+    parameterization: {}
+    inputs: [MKT-P01, MKT-E09]
+    rule: "Engine CRTState.RETEST."
+    units: {domain: stage}
+    lifecycle: {entry_events: [MKT-E09], exit_events: [entry_eligible, termination]}
+    absence: "n/a"
+    authority: {evidence: [REPO], sources: [src/config_layer/state_identity.py], lineage: []}
+    divergences: []
+    version: 1
