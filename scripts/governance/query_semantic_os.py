@@ -46,7 +46,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument(
         "--kind",
         default="NOUN",
-        help="NOUN | RELATIONSHIP | IMPLEMENTATION | EVIDENCE | JSONL",
+        help="NOUN | RELATIONSHIP | IMPLEMENTATION | EVIDENCE | JSONL | CONCEPT | REPRESENTATION",
     )
     ap.add_argument(
         "--token",

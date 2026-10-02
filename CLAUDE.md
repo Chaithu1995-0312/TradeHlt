@@ -805,7 +805,14 @@ python scripts/governance/query_semantic_os.py --ground --kind NOUN --token <id-
 python scripts/governance/query_semantic_os.py --ground --kind RELATIONSHIP --relation owns --source <id> --dest <id>
 python scripts/governance/query_semantic_os.py --ground --kind IMPLEMENTATION --token <path> --symbol <Name>
 python scripts/governance/query_semantic_os.py --ground --kind EVIDENCE --token F-048
+python scripts/governance/query_semantic_os.py --ground --kind CONCEPT --token sweep
+python scripts/governance/query_semantic_os.py --ground --kind REPRESENTATION --token crt_engine:Trade.pnl
 ```
+
+v2 meaning-plane concepts and representations (`configs/formulas/concept_contracts.yaml`,
+`representation_registry/`) ground only through `CONCEPT` / `REPRESENTATION` (+ relations
+`represents`, `input_of`); `NOUN` never falls through to them. Spec:
+`docs/governance/SEMANTIC_OS_V2_MEANING_PLANE.md` §15.
 
 **JSONL claims (CH-jsonl-claim-surface).** Before asserting anything a JSONL stream is supposed
 to prove — that a trade was profitable, that CRT was in state X at a bar, that a measurement ran,

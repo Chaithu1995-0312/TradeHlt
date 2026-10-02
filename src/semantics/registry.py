@@ -923,6 +923,30 @@ def validate_deferred_decisions(concepts: Mapping[str, Any]) -> list[str]:
     ]
 
 
+def validate_proposed_unbound_source(source: str, proposed: Iterable[str], *, name: str = "<source>") -> list[str]:
+    """V-19 on one source string: a PROPOSED concept id never appears as a string constant."""
+    ids = set(proposed)
+    problems = []
+    for node in ast.walk(ast.parse(source)):
+        if isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value in ids:
+            problems.append(f"{name}:{node.lineno}: PROPOSED concept {node.value} is bound in code (I-18)")
+    return problems
+
+
+def validate_proposed_unbound(concepts: Mapping[str, Any], root: Optional[Path] = None) -> list[str]:
+    """V-19 (spec §15 G-5). Scan src/semantics: no code binds to a PROPOSED concept (I-18, A-6)."""
+    proposed = {
+        cid for cid, rec in concepts.items()
+        if isinstance(rec, dict) and rec.get("status") == ContractStatus.PROPOSED.value
+    }
+    base = (Path(root) if root else ROOT) / "src" / "semantics"
+    problems = []
+    for path in sorted(base.rglob("*.py")):
+        relative = path.relative_to(base.parents[1]).as_posix()
+        problems.extend(validate_proposed_unbound_source(path.read_text(encoding="utf-8"), proposed, name=relative))
+    return problems
+
+
 def validate_settled_decisions(concepts: Mapping[str, Any]) -> list[str]:
     """V-16 ext (A-10). A divergence that says decided_in must name its resolution."""
     problems = []
@@ -965,5 +989,6 @@ def validate_all() -> list[str]:
     problems.extend(validate_settled_decisions(concepts))
     problems.extend(validate_execution_never_moves_a_thesis())
     problems.extend(validate_exit_reasons(concepts))
+    problems.extend(validate_proposed_unbound(concepts))
     warn_open_deferred_decisions(concepts)
     return problems

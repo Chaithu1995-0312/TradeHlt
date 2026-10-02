@@ -213,3 +213,26 @@ position under its schedule and rules → carry → result.
 
 Amendment A-10 (§6): an optional `decided_in` + `resolution` on a divergence records a settled
 deferral; only `decide_in` counts as open (V-16).
+
+## 15. Grounding the meaning plane (user decisions 2026-10-02)
+
+Before 2026-10-02 no v2 concept or representation was groundable (`--kind NOUN --token sweep` and
+`--token MKT-E01` both UNKNOWN). Grounding (CLAUDE.md §6.7, `governance.semantic_grounding`) gains
+two claim kinds and two relations. It reads the v2 registries through `semantics.registry`
+loaders (one parser, I-8) and grants no runtime authority.
+
+| Claim | Token | GROUNDED payload | Other outcomes |
+|---|---|---|---|
+| `CONCEPT` | concept id (incl. stage ids such as `MKT-P01.SWEPT`), `canonical_name`, or alias (A-7); names case-insensitive, ids exact | id, name, layer, kind, status, definition, rule, parameters, inputs, divergences (surface + disposition), its representations, its derived consumers | no match → UNKNOWN; a name/alias matching two concepts → AMBIGUOUS |
+| `REPRESENTATION` | `producer:key` (e.g. `crt_engine:Trade.pnl`) or a bare key that is unique across shards | concept id, parameterization, encoding, absence, `divergence_ref`, producer, schema version | unmapped key → UNKNOWN with the recorded reason; deprecated key → **REFUSED** (I-13: marked dead, never asserted); a bare key in two shards → AMBIGUOUS |
+| `RELATIONSHIP represents` | source = a representation token, target = a concept id | GROUNDED iff the representation's `concept_id` is the target | otherwise UNKNOWN |
+| `RELATIONSHIP input_of` | source, target = concept ids | GROUNDED iff source is in the target's `inputs` | otherwise UNKNOWN |
+
+| Id | Decision |
+|---|---|
+| G-1 | A PROPOSED concept is GROUNDED as a named concept; the payload carries `status: PROPOSED` and a caveat that its rule is not accepted and nothing may bind to it. Asserting its rule as fact is the error, not naming it. |
+| G-2 | Unmapped → UNKNOWN (no meaning yet, reason quoted); deprecated → REFUSED. |
+| G-3 | `NOUN` stays the v1 Semantic OS vocabulary and never falls through to v2: a v2 claim uses `--kind CONCEPT` / `REPRESENTATION`. No silent cross-match between the two vocabularies. |
+| G-4 | Consumers (I-14) are derived mechanically, evidence class HEURISTIC: modules under `src/` (outside `src/semantics/`) whose AST reads a representation's symbol — `Class.attr` keys by attribute name, enum members by `Enum.MEMBER`, feature slots by string constant. A homonym can produce a false consumer, so it never grants PROVEN. |
+| G-5 | I-18's consumer half (A-6) becomes checkable: V-19 — no PROPOSED concept id appears as a string constant anywhere in `src/semantics/`. |
+| G-6 | CLAUDE.md §6.7 gains the two command lines; the agent tool `truth.ground_claim` lists the two kinds. |

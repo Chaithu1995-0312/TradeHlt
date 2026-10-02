@@ -76,7 +76,8 @@ def _run(
     name="truth.ground_claim",
     description=(
         "Closed semantic environment: ground a repository NOUN, RELATIONSHIP, "
-        "IMPLEMENTATION, or EVIDENCE claim against tool-returned authorities. "
+        "IMPLEMENTATION, EVIDENCE, JSONL, or v2 CONCEPT / REPRESENTATION claim against "
+        "tool-returned authorities. "
         "UNKNOWN/AMBIGUOUS/UNANSWERABLE means do not invent the record."
     ),
     write=False,
@@ -84,7 +85,7 @@ def _run(
         "kind": {
             "type": "str",
             "required": True,
-            "desc": "NOUN | RELATIONSHIP | IMPLEMENTATION | EVIDENCE | JSONL",
+            "desc": "NOUN | RELATIONSHIP | IMPLEMENTATION | EVIDENCE | JSONL | CONCEPT | REPRESENTATION",
         },
         "token": {
             "type": "str",

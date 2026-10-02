@@ -35,7 +35,10 @@ def grounder() -> SemanticGrounder:
 
 def test_claim_kinds_and_relations_are_closed():
     # JSONL joined the closed set in CH-jsonl-claim-surface PR-2 (CT-008 extension).
-    assert CLAIM_KINDS == {"NOUN", "RELATIONSHIP", "IMPLEMENTATION", "EVIDENCE", "JSONL"}
+    # CONCEPT / REPRESENTATION joined for the v2 meaning plane (SEMANTIC_OS_V2_MEANING_PLANE.md §15).
+    assert CLAIM_KINDS == {
+        "NOUN", "RELATIONSHIP", "IMPLEMENTATION", "EVIDENCE", "JSONL", "CONCEPT", "REPRESENTATION",
+    }
     from governance.semantic_grounding import REFUSED, STATUSES
 
     assert STATUSES == {"GROUNDED", "UNKNOWN", "AMBIGUOUS", "UNANSWERABLE", "REFUSED"}

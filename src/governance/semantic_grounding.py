@@ -3,12 +3,15 @@
 The LLM may reason and communicate freely. It may not introduce a repository noun,
 relationship, implementation claim, or evidence claim that this module did not return.
 
-Four claim kinds, closed:
+Claim kinds, closed:
 
-  NOUN             a name/id that must resolve to one authority record
+  NOUN             a name/id that must resolve to one authority record (v1 vocabulary only)
   RELATIONSHIP     a typed join between two already-grounded endpoints
   IMPLEMENTATION   a path (and optional symbol) that must exist on disk
   EVIDENCE         a finding / hypothesis / test / closure surface
+  JSONL            whether a JSONL stream may close a claim (relation = CC-* id)
+  CONCEPT          a v2 concept contract (governance.concept_grounding, spec §15)
+  REPRESENTATION   a v2 representation (`producer:key`)
 
 Statuses, closed: GROUNDED | UNKNOWN | AMBIGUOUS | UNANSWERABLE
 
@@ -57,6 +60,9 @@ CLAIM_KINDS = frozenset({
     "EVIDENCE",
     # CH-jsonl-claim-surface PR-2: may a JSONL stream CLOSE this claim? relation=CC-* required.
     "JSONL",
+    # Semantic OS v2 meaning plane (SEMANTIC_OS_V2_MEANING_PLANE.md §15): governance.concept_grounding.
+    "CONCEPT",
+    "REPRESENTATION",
 })
 GROUNDED, UNKNOWN, AMBIGUOUS, UNANSWERABLE, REFUSED = (
     "GROUNDED",
@@ -93,8 +99,13 @@ RELATION_KINDS = frozenset(
         "governed_by",
         "journey_step",
         "identity_of",
+        # v2 meaning plane (§15): representation -> concept, concept -> concept input.
+        "represents",
+        "input_of",
     }
 )
+#: Relations answered by governance.concept_grounding, never by NOUN endpoints (G-3).
+MEANING_RELATIONS = frozenset({"represents", "input_of"})
 
 # L0 identity kinds from SEMANTIC_OS_V1_DESIGN.md §2 — closed enum, not file types.
 IDENTITY_KINDS = frozenset(
@@ -335,6 +346,7 @@ class SemanticGrounder:
         self._hypotheses: Optional[dict[str, dict]] = None
         self._closure_ids: Optional[set[str]] = None
         self._change_classes: Optional[set[str]] = None
+        self._meaning_plane = None
 
     @classmethod
     def load(cls, rebuild_objects: bool = False) -> "SemanticGrounder":
@@ -394,6 +406,15 @@ class SemanticGrounder:
             self._change_classes = change_class_names()
         return self._change_classes
 
+    @property
+    def meaning_plane(self):
+        """The v2 registries (§15). Loaded on first CONCEPT / REPRESENTATION / meaning relation."""
+        if self._meaning_plane is None:
+            from governance.concept_grounding import MeaningPlane
+
+            self._meaning_plane = MeaningPlane.load()
+        return self._meaning_plane
+
     def ground(
         self,
         claim_kind: str,
@@ -420,6 +441,14 @@ class SemanticGrounder:
             return self.ground_implementation(token, symbol=symbol or None)
         if kind == "JSONL":
             return self.ground_jsonl(token, relation=relation, source=source, target=target)
+        if kind == "CONCEPT":
+            from governance.concept_grounding import ground_concept
+
+            return ground_concept(self.meaning_plane, token)
+        if kind == "REPRESENTATION":
+            from governance.concept_grounding import ground_representation
+
+            return ground_representation(self.meaning_plane, token)
         return self.ground_evidence(token)
 
     # ------------------------------------------------------------------ NOUN
@@ -613,6 +642,10 @@ class SemanticGrounder:
                 rel,
                 "relationship requires grounded source and target",
             )
+        if rel in MEANING_RELATIONS:
+            from governance.concept_grounding import ground_meaning_relation
+
+            return ground_meaning_relation(self.meaning_plane, rel, src_raw, dst_raw)
         src = self.ground_noun(src_raw)
         dst = self.ground_noun(dst_raw)
         token = f"{src_raw} --{rel}--> {dst_raw}"
