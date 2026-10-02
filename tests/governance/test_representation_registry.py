@@ -26,15 +26,19 @@ _FEATURE_UNMAPPED = (
 _CRT_UNMAPPED = (
     "CRTState.EXECUTION", "CRTState.RESOLUTION", "CRTState.EXPIRED",
     "CRTState.RANGE_C1", "CRTState.MANIPULATION_C2", "CRTState.DISTRIBUTION_C3",
+    # slice 2: first coverage of the Trade type (non-plan fields; slice 3 owns most of them)
+    "Trade.id", "Trade.risk_pct", "Trade.runner_active", "Trade.opened_at", "Trade.closed_at",
+    "Trade.pnl", "Trade.partial_pnl", "Trade.status", "Trade.cached_features",
+    "Trade.open_candle_index", "Trade.displacement_origin",
 )
-_PARENT_UNMAPPED = (
-    "ObjectiveStatus.NONE", "ObjectiveStatus.EXISTS",
-    "ObjectiveStatus.ACHIEVED", "ObjectiveStatus.INVALIDATED",
-)
+# slice 2: ObjectiveStatus mapped to TRS-02, so the parent list is empty.
+_PARENT_UNMAPPED = ()
 _PINNED = {
     "feature_pipeline": _FEATURE_UNMAPPED,
     "crt_engine": _CRT_UNMAPPED,
     "parent_crt": _PARENT_UNMAPPED,
+    "research_walks": (),
+    "research_costs": (),
 }
 
 

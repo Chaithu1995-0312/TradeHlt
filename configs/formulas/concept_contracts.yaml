@@ -1,4 +1,4 @@
-# Semantic OS v2 — CONCEPT CONTRACTS (meaning plane). Slice 1: Geometry + Market.
+# Semantic OS v2 — CONCEPT CONTRACTS (meaning plane). Slice 1: Geometry + Market. Slice 2: Trading.
 #
 # Spec:      docs/governance/SEMANTIC_OS_V2_MEANING_PLANE.md
 # Companion: configs/formulas/representation_registry/*.yaml  (representation -> concept)
@@ -23,8 +23,8 @@
 
 schema: concept_contracts/v1
 version: 1
-slice: 1
-layers_in_slice: [GEOMETRY, MARKET]
+slice: 2
+layers_in_slice: [GEOMETRY, MARKET, TRADING]
 
 concepts:
 
@@ -453,7 +453,8 @@ concepts:
     version: 1
 
   MKT-E09:
-    canonical_name: retest_entry
+    canonical_name: retest_touch
+    aliases: [retest_entry]   # renamed 2026-10-02 (slice 2): "entry" is a Trading-layer role (TRS-04)
     layer: MARKET
     kind: EVENT
     status: ACCEPTED
@@ -789,4 +790,173 @@ concepts:
     absence: "n/a"
     authority: {evidence: [REPO], sources: [src/config_layer/state_identity.py], lineage: []}
     divergences: []
+    version: 1
+
+  # ═══════════════════════════════ TRADING (slice 2) ═══════════════════════════════
+  # What a trade PLAN means: thesis, its roles on market prices, cost, measured outcome.
+  # Roles never write a level's status (I-10). Fills, position lifecycle, approval and the exit
+  # schedule (partial fractions, stop management) are Decision/Execution — slice 3 (user, D2-6).
+
+  TRS-01:
+    canonical_name: thesis
+    layer: TRADING
+    kind: THESIS
+    status: ACCEPTED
+    definition: "A directional claim on one MKT-P01 episode, born on the bar of its MKT-E04 displacement. A sweep with no displacement is an episode that never became a thesis, not a failed thesis."
+    identity: {reference: MKT-P01, timeframe: per_founding, clock: per_founding, availability_rule: "bar of MKT-E04"}
+    parameterization: {founding: {domain: "MKT-L01.founding", identity_bearing: true}}
+    inputs: [MKT-P01, MKT-E01, MKT-E04]
+    rule: "direction = the implied bias of the MKT-E01 sweep, confirmed by MKT-E04 (GP-06 away from the swept side, F-074). A thesis binds exactly one TRS-03 invalidation and one TRS-05 stop (I-11); it may bind a TRS-02 objective, a TRS-04 entry and TRS-06 targets."
+    roles: {invalidation: TRS-03, stop: TRS-05, objective: TRS-02, entry: TRS-04, target: TRS-06}
+    units: {domain: direction, values: [LONG, SHORT]}
+    lifecycle: {states: [ACTIVE, FAILED, SPENT, EXPIRED], transitions: {TRS-03: FAILED, MKT-E11: SPENT, MKT-E12: EXPIRED}, terminal_authority: MARKET}
+    absence: "No MKT-E04 after the sweep -> no thesis (None)."
+    authority: {evidence: [REPO, USER_DECISION], sources: [src/config_layer/crt_engine_v2.py, src/structure/predicates.py], lineage: [F-074, D2-1]}
+    divergences:
+      - {surface: "CRTEngine.try_range_to_sweep (crt_engine_v2.py:1112)", current: "state.direction is set on the SWEEP transition, before any displacement", contract: "direction belongs to a thesis, which exists only from MKT-E04 (D2-1)", disposition: RECORDED}
+    version: 1
+
+  TRS-02:
+    canonical_name: objective
+    layer: TRADING
+    kind: OBJECTIVE
+    status: ACCEPTED
+    definition: "A role on a market level: the price a directional bias expects to reach. The level keeps its own status (I-10)."
+    identity: {reference: "MKT-L01 founding", timeframe: per_founding, clock: per_founding, availability_rule: "bar the bias exists and the level is available"}
+    parameterization:
+      scope: {domain: [parent_range], identity_bearing: true}
+    inputs: [MKT-L01, GP-02, GP-03]
+    rule: "LONG: target = h_ref; SHORT: target = l_ref. ACHIEVED = GP-03 REACH of the target; INVALIDATED = GP-02 BEYOND of the opposite range edge; otherwise EXISTS; NONE until a bias exists (htf_state.resolve_objective). Scope parent_range only: the bias is the parent-track C3 bias; an M15 objective is PROPOSED (spec §11)."
+    units: {unit: price, normalization_basis: none}
+    lifecycle: {states: [NONE, EXISTS, ACHIEVED, INVALIDATED], transitions: {GP-03: ACHIEVED, GP-02: INVALIDATED}, terminal_authority: MARKET}
+    absence: "status NONE with target None."
+    authority: {evidence: [REPO], sources: [src/config_layer/htf_state.py], lineage: [F-078]}
+    divergences:
+      - {surface: "htf_state.resolve_objective / Objective (htf_state.py:116-141)", current: "one record carries both the target and invalidate_at", contract: "the target is TRS-02; the opposite edge is an invalidation role (TRS-03 family) on the same range", disposition: RECORDED}
+      - {surface: "parent C3 bias", current: "the bias input is the parent-track C3 state, whose stage mapping is PROPOSED (F-075/F-077)", contract: "scope parent_range is accepted on the htf_state rule alone", disposition: RECORDED}
+    version: 1
+
+  TRS-03:
+    canonical_name: invalidation
+    layer: TRADING
+    kind: INVALIDATION
+    status: ACCEPTED
+    definition: "The rule that says a thesis is wrong. It ends the thesis, not the position. Expiry (MKT-E12) and a spent move (MKT-E11) end a thesis without falsifying it and are not invalidations."
+    identity: {reference: TRS-01, timeframe: per_founding, clock: per_founding, availability_rule: "the role (its retracement level) on the MKT-E04 bar; its firing (MKT-E10) on the breach bar"}
+    parameterization:
+      retrace_fraction: {domain: float, identity_bearing: true, default_ref: crt_engine.retrace_reset_pct}
+    inputs: [TRS-01, MKT-E10, MKT-L02]
+    rule: "MKT-E10 against the thesis direction on the MKT-L02 retracement of the displacement move at retrace_fraction. The displacement move runs from the MKT-E01 sweep reference price to the MKT-E04 close; MKT-E11 (SPENT) measures its extension on the same move (user, 2026-10-02)."
+    units: {domain: event}
+    lifecycle: null
+    absence: "n/a (a thesis without an invalidation is not tradable, I-11)."
+    authority: {evidence: [REPO, USER_DECISION], sources: [src/config_layer/crt_engine_v2.py], lineage: [D2-2]}
+    divergences:
+      - {surface: "ResetLogic.should_reset retrace (crt_engine_v2.py:2898-2909)", current: "the move is the displacement candle body abs(close-open), and the retrace fires at retrace >= retrace_reset_pct (inclusive); the 1.618 extension (:2911-2923) uses sweep level to displacement close", contract: "one move (sweep reference price to displacement close) for both invalidation and extension; the breach is GP-02 strict", disposition: RECORDED}
+      - {surface: "ResetLogic.should_reset (crt_engine_v2.py:2876)", current: "all resets are suppressed while a trade is OPEN or TP1, so an invalidation after entry is neither acted on nor recorded", contract: "the invalidation is recorded on the thesis; whether it also closes the position is a Decision/Execution policy", disposition: RECORDED, decide_in: slice_3, decision: "When a thesis is invalidated while its position is open, does the position close?"}
+    version: 1
+
+  TRS-04:
+    canonical_name: entry
+    layer: TRADING
+    kind: ENTRY
+    status: ACCEPTED
+    definition: "The price and bar at which a plan is entered. The fill is observable only on or after the bar of the decision to enter (I-6)."
+    identity: {reference: TRS-01, timeframe: bar, clock: bar_close, availability_rule: "fill bar"}
+    parameterization:
+      entry_semantics: {domain: [resting_order], legacy_values: [approval_bar_legacy], identity_bearing: true}
+    inputs: [TRS-01, MKT-E09]
+    rule: "resting_order: the plan is decided and filled at the close of the MKT-E09 retest bar; the confirmation bars after it are walked, and an unconfirmed plan is closed at that bar's close (crt_engine_v2.py entry_semantics)."
+    units: {unit: price, normalization_basis: none}
+    lifecycle: null
+    absence: "No retest after the thesis -> no entry (None)."
+    authority: {evidence: [REPO], sources: [src/config_layer/crt_engine_v2.py], lineage: [F-110]}
+    divergences:
+      - {surface: "setup.entry_semantics = approval_bar_legacy (active config)", current: "the RETEST close is booked on the later approval bar and the bar between is never walked for SL/TP", contract: "resting_order; a fill is never priced from before its own decision bar without walking the bars between (I-6)", evidence: "F-110: 16 of 16 filled orders end within one bar", disposition: RECORDED}
+    version: 1
+
+  TRS-05:
+    canonical_name: stop
+    layer: TRADING
+    kind: STOP
+    status: ACCEPTED
+    definition: "The price that closes the position at a loss. A role on a market price; distinct from the thesis invalidation (I-11)."
+    identity: {reference: TRS-01, timeframe: bar, clock: bar_close, availability_rule: "bar the plan is built"}
+    parameterization:
+      anchor: {domain: [displacement, sweep_extreme], identity_bearing: true, default_ref: backtest.sl_anchor}
+      buffer_atr: {domain: float, identity_bearing: true, default_ref: crt_engine.sl_atr_buffer}
+    inputs: [TRS-01, MKT-E01, MKT-E04, MKT-L02]
+    rule: "LONG: anchor low - buffer_atr * ATR; SHORT: anchor high + buffer_atr * ATR. anchor displacement = the MKT-E04 candle's extreme (a MKT-L02 candle_extreme); sweep_extreme = the swept candle's wick extreme. ATR is the plan bar's absolute ATR (FM-074). A stop on the wrong side of entry rejects the plan (ExecutionEngine.stop_price / build_trade)."
+    units: {unit: price, normalization_basis: none}
+    lifecycle: null
+    absence: "None when there is no displacement candle, no direction, or anchor sweep_extreme without a sweep."
+    authority: {evidence: [REPO], sources: [src/config_layer/crt_engine_v2.py], lineage: [F-072]}
+    divergences:
+      - {surface: "other stop constructions in the active config", current: "strategy_engine.s01..s10.sl_atr_mult, inout.exit.sl_atr_buffer_mult, sl_tp_comparison.legacy_sl_atr_mult build stops by other rules", contract: "one stop concept; other constructions are separate representations (unmapped in slice 2)", disposition: RECORDED}
+    version: 1
+
+  TRS-06:
+    canonical_name: target
+    layer: TRADING
+    kind: TARGET
+    status: ACCEPTED
+    definition: "A price at which the plan expects to take profit. A role: either derived from the plan (a multiple of R) or placed on a market level."
+    identity: {reference: TRS-01, timeframe: bar, clock: bar_close, availability_rule: "bar the plan is built"}
+    parameterization:
+      ordinal: {domain: [1, 2], identity_bearing: true}
+      target_policy: {domain: [fixed_r, structural_tp2], identity_bearing: true, applies_to: [2], default_ref: setup.target_policy}
+      r_multiple: {domain: float, identity_bearing: true}
+      intent: {domain: [liq_sweep, pullback, breakout, reversal], identity_bearing: true, applies_to: [1]}
+    inputs: [TRS-01, TRS-04, TRS-05, MKT-L01]
+    rule: "R = |entry - stop|. fixed_r: target = entry +/- r_multiple * R. structural_tp2: target 2 = the opposite edge of the founding range (a MKT-L01 level in a TARGET role); the plan is rejected if that edge is behind entry or closer than 1R; under structural_tp2 r_multiple is not used and is not part of that target's identity. Target 1's r_multiple is chosen by intent (ExecutionEngine._derive_trade_intent, crt_engine_v2.py:2529)."
+    units: {unit: price, normalization_basis: none, multiplier_unit: R}
+    lifecycle: null
+    absence: "None when the plan has no stop (R undefined)."
+    authority: {evidence: [REPO], sources: [src/config_layer/crt_engine_v2.py, src/config_layer/state_identity.py], lineage: [STORY-83.11]}
+    divergences:
+      - {surface: "config keys tp1_atr_multiplier_* / tp2_atr_multiplier", current: "named ATR multipliers", contract: "they multiply R (crt_engine_v2.py build_trade)", disposition: RECORDED}
+      - {surface: "intent labels", current: "a classifier over RETEST features selects the target-1 multiple", contract: "the labels carry no defined market meaning yet; they are a parameter of the target, not concepts", disposition: RECORDED}
+    version: 1
+
+  TRS-07:
+    canonical_name: cost
+    layer: TRADING
+    kind: MEASUREMENT
+    status: ACCEPTED
+    definition: "The round-trip cost of one plan, in price and in R (cost_r = cost_price / R)."
+    identity: {reference: TRS-01, timeframe: plan, clock: bar_close, availability_rule: "flat_bps: bar the plan is built; component: the exit bar (it depends on the exit kind)"}
+    parameterization:
+      cost_model: {domain: [component, flat_bps], identity_bearing: true}
+      cost_source: {domain: str, identity_bearing: true}
+    inputs: [TRS-04, TRS-05]   # plus the exit kind of the walk that consumes it (TRS-08); not listed to keep the graph acyclic
+    rule: "component: research.costs.ComponentCostModel (half spread both legs, commission per leg, entry slippage, stop slippage only on stop exits; SEM-015); the exit kind is the walk's actual exit (stop exit = forward_walk SL_HIT, or multi_tp_walk.is_stop_exit), never a caller's assumption. flat_bps: research.costs.CostModel (round-trip bps of entry). cost_source names the calibration (manifest + sha256, or SYNTHETIC)."
+    units: {unit: R, normalization_basis: "risk distance |entry - stop|", missing_rule: "a cost model with status UNKNOWN yields no cost (None), never 0"}
+    lifecycle: null
+    absence: "None when the cost model is UNKNOWN or the plan has no stop."
+    authority: {evidence: [REPO], sources: [src/research/costs.py], lineage: [SEM-015, F-082]}
+    divergences:
+      - {surface: "research flat 12 bps default", current: "~11x the measured XAUUSD cost (F-082)", contract: "the cost model is part of every outcome's identity (I-15)", disposition: RECORDED}
+    version: 1
+
+  TRS-08:
+    canonical_name: outcome
+    layer: TRADING
+    kind: OUTCOME
+    status: ACCEPTED
+    definition: "The R result of walking one plan forward through a named walk under a named cost model (I-15)."
+    identity: {reference: TRS-01, timeframe: bar, clock: bar_close, availability_rule: "exit bar"}
+    parameterization:
+      walk: {domain: [forward_walk, multi_tp_walk], identity_bearing: true}   # forward_walk_oco removed 2026-10-02: it walks a two-sided box, not the thesis direction
+      basis: {domain: [gross, net], identity_bearing: true}
+      cost_model: {domain: [component, flat_bps, none], identity_bearing: true}
+      cost_source: {domain: str, identity_bearing: true, applies_to: [net]}
+      walk_params: {domain: mapping, identity_bearing: true}
+    inputs: [TRS-04, TRS-05, TRS-06, TRS-07]
+    rule: "gross: R from the walk (intrabar high/low touch; stop is checked before targets on the same bar), cost_model none. net: gross minus TRS-07 cost_r computed from the walk's actual exit; cost_model and cost_source name the TRS-07 model and its calibration. A walk_params value that is a dataclass (SEM-016 AdverseFill) enters the identity as its type name plus fields. walk_params holds every walk argument that changes the result (multi_tp_walk partial_fraction, trail_fraction, stop_policy, tie_break, max_forward; forward_walk exit_model, max_forward) and is declared by the caller at measurement time, so a REP names the walk and the measurement records walk_params."
+    units: {unit: R, normalization_basis: "risk distance |entry - stop|", missing_rule: "an unwalkable plan (no future bars) has no outcome (None)"}
+    lifecycle: null
+    absence: "None until the walk reaches an exit or its horizon."
+    authority: {evidence: [REPO], sources: [src/research/measurement/forward_walk.py, src/research/oracle/multi_tp_walk.py], lineage: [SEM-017, F-088]}
+    divergences:
+      - {surface: "forward_walk", current: "one target, no partial exit, no stop move", contract: "an outcome is only comparable to production when its walk matches production's exit plan; the walk is identity-bearing", evidence: "F-088", disposition: RECORDED}
     version: 1

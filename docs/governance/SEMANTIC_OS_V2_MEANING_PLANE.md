@@ -1,7 +1,7 @@
 # Semantic OS v2 — Meaning Plane (Ontology v2)
 
 > **Status:** FROZEN v2.0.0 architecture (user + architecture-review accepted 2026-10-02); v2.0.1
-> clarifications in §12. PROPOSED
+> clarifications in §12; slice 2 (Trading) decisions in §13. PROPOSED
 > concepts stay open by design (I-18). Implementation is sliced; slice 1 = Geometry + Market.
 > **Authority:** meaning authority (CLAUDE.md §6.6). Grants **no** runtime authority (§6.5).
 > **Charter it extends:** [`SEMANTIC_OS_CONTRACT.md`](SEMANTIC_OS_CONTRACT.md) (system plane, advisory).
@@ -174,3 +174,21 @@ frozen text left implicit; no concept, invariant or decision above changes meani
 | A-4 | §5, §7 | A REP parameter value written `section.key` binds the parameter to settings. It is valid only if the key resolves in the active config to an in-domain value; each resolved value is its own parameterization (I-17). |
 | A-5 | §8 | `terminal_reason_map.yaml` declares both the authority and the class vocabulary; at equal match length an `exact` entry beats a `prefix` entry. |
 | A-6 | §6, §11 | Consumer derivation (I-14, and I-18's "0 consumers") has no slice-1 mechanism; it arrives with grounding `--kind CONCEPT/REPRESENTATION`. Slice 1 enforces only "0 representations". |
+| A-7 | §6 | Optional `aliases` list on a concept record: earlier canonical names kept for history (MKT-E09 `retest_entry` → `retest_touch`). An alias is never a second concept. |
+| A-8 | §6 | Optional `roles` mapping on a THESIS record names the concepts it binds (I-11). Optional `decide_in` + `decision` on a divergence name a deferred decision and the slice that must settle it. |
+| A-9 | §13 | Slice-2 review (2026-10-02). A role's availability is separate from its firing's: TRS-03 is knowable on the MKT-E04 bar, MKT-E10 on the breach bar. One displacement move, from the sweep reference price to the MKT-E04 close, serves both invalidation and extension (user); the engine's body-based inclusive retrace is a TRS-03 divergence. A component cost depends on the walk's actual exit, so it is available on the exit bar. A net outcome's identity names `cost_source`. `forward_walk_oco` leaves the TRS-08 walk domain (user). TRS-06 cites `ExecutionEngine._derive_trade_intent`, not `CRTEngine`. |
+
+## 13. Slice 2 — Trading layer (user decisions 2026-10-02)
+
+Concept contracts TRS-01…08 (thesis, objective, invalidation, entry, stop, target, cost, outcome).
+
+| Id | Decision |
+|---|---|
+| D2-1 | A thesis is born on the MKT-E04 displacement bar, not on the sweep. A sweep without displacement is an episode, not a failed thesis. |
+| D2-2 | Invalidation (ends the thesis) and stop (ends the position) are separate and both required (I-11). Whether an invalidation while the position is open closes the position is **deferred to slice 3** as a recorded divergence with `decide_in: slice_3`; the validator fails once slice-3 records exist and it is still open. |
+| D2-3 | Objectives and targets are roles (I-10). `fixed_r` targets are plan-derived (Trading layer); `structural_tp2` places a TARGET role on a MKT-L01 level. Multipliers are in R. |
+| D2-4 | TRS-04 contract value is `resting_order`; `approval_bar_legacy` is a legacy value with an I-6 divergence (F-110). |
+| D2-5 | An outcome's identity carries its walk, its basis (gross / net) and, for net, its cost model (I-15). |
+| D2-6 | The exit schedule (partial fractions, stop management after TP1), fills, position lifecycle and approval are Decision/Execution — slice 3. |
+| D2-7 | Trade intent (`liq_sweep`, `pullback`, `breakout`, `reversal`) is an identity-bearing parameter of TRS-06 target 1, not a concept. |
+| D2-8 | Slice 2 is implemented by Grok and reviewed by Claude; no separate audit (user). |

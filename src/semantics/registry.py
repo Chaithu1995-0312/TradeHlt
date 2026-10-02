@@ -10,6 +10,7 @@ from __future__ import annotations
 import ast
 import json
 import subprocess
+import warnings
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Optional, Sequence
 
@@ -169,7 +170,21 @@ def _in_domain(value: Any, domain: Any) -> bool:
         return type(value) is int
     if domain == "float":
         return type(value) in (int, float)
+    if domain == "str":
+        return isinstance(value, str) and value != ""
+    if domain == "mapping":
+        return isinstance(value, dict)
     return False
+
+
+def _bound_value(value: Any) -> Any:
+    """Concrete value a REP parameter binds to. A config reference is resolved first (I-2)."""
+    if _is_config_ref(value):
+        resolved = active_config_value(value)
+        if resolved is _MISSING or _is_config_ref(resolved):
+            return _MISSING
+        return resolved
+    return value
 
 
 def validate_concepts(doc: Mapping[str, Any], *, tracked: Optional[set[str]] = None) -> list[str]:
@@ -241,6 +256,7 @@ def validate_concepts(doc: Mapping[str, Any], *, tracked: Optional[set[str]] = N
                     )
         elif "inputs" in rec and not isinstance(inputs, list):
             problems.append(f"{where}: inputs must be a list")
+        problems.extend(_alias_problems_for(cid, rec, concepts))
         if status_name in (ContractStatus.ACCEPTED.value, ContractStatus.FROZEN.value):
             authority = rec.get("authority") if isinstance(rec.get("authority"), dict) else {}
             evidence = authority.get("evidence")
@@ -258,6 +274,7 @@ def validate_concepts(doc: Mapping[str, Any], *, tracked: Optional[set[str]] = N
                         problems.append(f"{where}: source {norm} is not git-tracked")
         if "divergences" in rec and not isinstance(rec.get("divergences"), list):
             problems.append(f"{where}: divergences must be a list")
+    problems.extend(_v13_thesis_roles(concepts))
     return problems
 
 
@@ -291,14 +308,20 @@ def _param_problems(where: str, rep: Mapping[str, Any], concept: Mapping[str, An
             problems.append(f"{where}: parameter {name!r} is not on the concept contract")
             continue
         domain = _resolve_domain(spec.get("domain"), concepts)
-        if _in_domain(value, domain):
+        bound = _bound_value(value)
+        if bound is _MISSING:
+            problems.append(f"{where}: parameter {name}={value!r} does not resolve")
+            continue
+        if _in_domain(bound, domain):
             continue
         legacy = spec.get("legacy_values") or []
-        if value in legacy and rep.get("divergence_ref"):
+        if bound in legacy and rep.get("divergence_ref"):
             continue
+        resolved = "" if bound == value else f" (resolved {bound!r})"
         problems.append(
             f"{where}: parameter {name}={value!r} is outside domain {domain!r} "
             "and is not a legacy value with divergence_ref"
+            f"{resolved}"
         )
     return problems
 
@@ -338,6 +361,8 @@ def validate_representations(concepts: Mapping[str, dict], shards: Mapping[str, 
                 problems.append(f"{where}: concept {cid} is PROPOSED (I-18)")
                 continue
             problems.extend(_param_problems(where, rep, concept, concepts))
+            if concept.get("kind") == Kind.OUTCOME.value:
+                problems.extend(_v14_outcome(where, rep))
             if "encoding" not in rep:
                 problems.append(f"{where}: encoding is required")
             ident = _identity_tuple(cid, rep, shard)
@@ -388,10 +413,20 @@ def _covered(shard: Mapping[str, Any]) -> set[str]:
 
 
 def _v10_crt(shard: Mapping[str, Any]) -> list[str]:
+    """CRTState members, plus every field of Trade. A Trade.tp1_price[intent] key covers tp1_price."""
+    from dataclasses import fields
+
+    from config_layer.crt_engine_v2 import Trade
+
     covered = _covered(shard)
+    trade_covered = set(covered)
+    for name in covered:
+        if isinstance(name, str) and name.startswith("Trade.tp1_price[") and name.endswith("]"):
+            trade_covered.add("Trade.tp1_price")
     missing = [f"CRTState.{m.name}" for m in CRTState if f"CRTState.{m.name}" not in covered]
+    missing += [f"Trade.{field.name}" for field in fields(Trade) if f"Trade.{field.name}" not in trade_covered]
     if missing:
-        return [f"crt_engine: CRTState members not covered: {missing}"]
+        return [f"crt_engine: members not covered: {missing}"]
     return []
 
 
@@ -667,6 +702,174 @@ def validate_terminal_reasons(doc: Mapping[str, Any], *, root: Optional[Path] = 
     return problems
 
 
+def _alias_problems_for(cid: str, rec: Mapping[str, Any], concepts: Mapping[str, dict]) -> list[str]:
+    """V-1 extension: an alias equals no canonical_name and no other concept's alias."""
+    aliases = rec.get("aliases")
+    if aliases is None:
+        return []
+    if not isinstance(aliases, list):
+        return [f"concept {cid}: aliases must be a list"]
+    names = {
+        other.get("canonical_name"): other_id
+        for other_id, other in concepts.items()
+        if isinstance(other, dict) and isinstance(other.get("canonical_name"), str)
+    }
+    problems = []
+    seen: set[str] = set()
+    for alias in aliases:
+        if not isinstance(alias, str) or not alias:
+            problems.append(f"concept {cid}: alias {alias!r} must be a non-empty string")
+            continue
+        owner = names.get(alias)
+        if owner is not None:
+            problems.append(f"concept {cid}: alias {alias!r} equals canonical_name of {owner}")
+        if alias in seen:
+            problems.append(f"concept {cid}: alias {alias!r} is repeated")
+        seen.add(alias)
+        for other_id, other in concepts.items():
+            if other_id == cid or not isinstance(other, dict):
+                continue
+            other_aliases = other.get("aliases") or []
+            if isinstance(other_aliases, list) and alias in other_aliases:
+                problems.append(f"concept {cid}: alias {alias!r} is also declared by {other_id}")
+    return problems
+
+
+def _v13_thesis_roles(concepts: Mapping[str, dict]) -> list[str]:
+    """V-13. A THESIS has an INVALIDATION and a STOP, and every role id exists (I-11)."""
+    problems = []
+    for cid, rec in concepts.items():
+        if not isinstance(rec, dict) or rec.get("kind") != Kind.THESIS.value:
+            continue
+        roles = rec.get("roles")
+        where = f"concept {cid}"
+        if not isinstance(roles, dict):
+            problems.append(f"{where}: THESIS requires roles.invalidation and roles.stop (I-11)")
+            continue
+        for role_name, expected in (("invalidation", Kind.INVALIDATION.value), ("stop", Kind.STOP.value)):
+            role_id = roles.get(role_name)
+            role = concepts.get(role_id) if isinstance(role_id, str) else None
+            if not isinstance(role, dict) or role.get("kind") != expected:
+                problems.append(f"{where}: roles.{role_name} must be a {expected} concept (I-11)")
+        for role_name, role_id in roles.items():
+            if role_id not in concepts:
+                problems.append(f"{where}: roles.{role_name} {role_id!r} is not a concept (I-11)")
+    return problems
+
+
+def _v14_outcome(where: str, rep: Mapping[str, Any]) -> list[str]:
+    """V-14. An OUTCOME representation names walk and basis (I-15). walk_params are not required."""
+    params = rep.get("parameterization") or {}
+    if not isinstance(params, dict):
+        return []
+    problems = []
+    if "walk" not in params:
+        problems.append(f"{where}: OUTCOME representation requires walk (I-15)")
+    if "basis" not in params:
+        problems.append(f"{where}: OUTCOME representation requires basis (I-15)")
+        return problems
+    basis = _bound_value(params.get("basis"))
+    if basis is _MISSING:
+        problems.append(f"{where}: OUTCOME basis does not resolve (I-15)")
+        return problems
+    cost = _bound_value(params["cost_model"]) if "cost_model" in params else _MISSING
+    if basis == "gross" and cost != "none":
+        problems.append(f"{where}: basis gross requires cost_model none (I-15)")
+    elif basis == "net" and cost in (_MISSING, "none", None):
+        problems.append(f"{where}: basis net requires a cost model other than none (I-15)")
+    return problems
+
+
+def validate_role_source(source: str, *, name: str = "<source>") -> list[str]:
+    """V-15 on one source string. A dataclass keyword status= is not an assignment."""
+    tree = ast.parse(source)
+    problems = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "with_status":
+            problems.append(f"{name}:{node.lineno}: .with_status( call (I-10)")
+        if isinstance(node, (ast.Assign, ast.AnnAssign, ast.AugAssign)):
+            targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+            for target in targets:
+                if _assigns_status(target):
+                    problems.append(f"{name}:{node.lineno}: assignment to .status (I-10)")
+    return problems
+
+
+def _assigns_status(target: ast.AST) -> bool:
+    if isinstance(target, ast.Attribute):
+        return target.attr == "status"
+    if isinstance(target, (ast.Tuple, ast.List)):
+        return any(_assigns_status(elt) for elt in target.elts)
+    if isinstance(target, ast.Starred):
+        return _assigns_status(target.value)
+    return False
+
+
+def validate_role_status_untouched(root: Optional[Path] = None) -> list[str]:
+    """V-15. Scan src/semantics/trading. A missing package is an error."""
+    base = (Path(root) if root else ROOT) / "src" / "semantics" / "trading"
+    if not base.is_dir():
+        return ["src/semantics/trading: package missing (I-10)"]
+    problems = []
+    for path in sorted(base.rglob("*.py")):
+        relative = path.relative_to(ROOT).as_posix()
+        problems.extend(validate_role_source(path.read_text(encoding="utf-8"), name=relative))
+    return problems
+
+
+def open_deferred_decisions(concepts: Mapping[str, Any]) -> list[dict]:
+    """Divergences that still say decide_in slice_3 (D2-2). Loud until a later slice settles them."""
+    found = []
+    for cid, rec in concepts.items():
+        if not isinstance(rec, dict):
+            continue
+        for item in rec.get("divergences") or []:
+            if isinstance(item, dict) and item.get("decide_in") == "slice_3":
+                found.append({
+                    "concept_id": cid,
+                    "decide_in": item.get("decide_in"),
+                    "decision": item.get("decision"),
+                    "surface": item.get("surface"),
+                })
+    return found
+
+
+def validate_deferred_decisions(concepts: Mapping[str, Any]) -> list[str]:
+    """V-16. slice_3 deferrals are an error once an ACCEPTED DECISION_EXECUTION concept exists."""
+    pending = open_deferred_decisions(concepts)
+    if not pending:
+        return []
+    accepted = any(
+        isinstance(rec, dict)
+        and rec.get("layer") == Layer.DECISION_EXECUTION.value
+        and rec.get("status") == ContractStatus.ACCEPTED.value
+        for rec in concepts.values()
+    )
+    if not accepted:
+        return []
+    return [
+        f"concept {item['concept_id']}: decide_in slice_3 is unsettled ({item.get('decision')}) "
+        "and layer DECISION_EXECUTION has an ACCEPTED concept (D2-2)"
+        for item in pending
+    ]
+
+
+def warn_open_deferred_decisions(concepts: Mapping[str, Any]) -> list[dict]:
+    """Emit one UserWarning listing every open slice_3 decision. Returns the same rows."""
+    pending = open_deferred_decisions(concepts)
+    if pending:
+        lines = [
+            f"{item['concept_id']} decide_in={item['decide_in']}: {item.get('decision')}"
+            for item in pending
+        ]
+        warnings.warn(
+            "open deferred decisions (D2-2): " + "; ".join(lines),
+            UserWarning,
+            stacklevel=2,
+        )
+    return pending
+
+
 def validate_all() -> list[str]:
     concepts_doc = load_concept_contracts()
     concepts = concepts_doc.get("concepts") or {}
@@ -674,4 +877,7 @@ def validate_all() -> list[str]:
     problems = validate_concepts(concepts_doc)
     problems.extend(validate_representations(concepts, shards))
     problems.extend(validate_terminal_reasons(load_terminal_reason_map()))
+    problems.extend(validate_role_status_untouched())
+    problems.extend(validate_deferred_decisions(concepts))
+    warn_open_deferred_decisions(concepts)
     return problems

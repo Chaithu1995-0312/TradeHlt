@@ -56,6 +56,56 @@ representations:
     parameterization: {founding: m15_structural_range}
     absence: "n/a"
 
+  # ── slice 2: the engine's trade plan (Trade dataclass, crt_engine_v2.py:205) ──
+  Trade.direction:
+    concept_id: TRS-01
+    encoding: "Direction LONG | SHORT"
+    parameterization: {founding: m15_structural_range}
+    absence: "n/a (a Trade is only built with a direction)"
+
+  Trade.entry_price:
+    concept_id: TRS-04
+    encoding: price
+    parameterization: {entry_semantics: approval_bar_legacy}   # active config setup.entry_semantics
+    divergence_ref: "TRS-04 setup.entry_semantics = approval_bar_legacy"
+    absence: "n/a"
+
+  Trade.sl_price:
+    concept_id: TRS-05
+    encoding: price
+    parameterization: {anchor: backtest.sl_anchor, buffer_atr: crt_engine.sl_atr_buffer}
+    absence: "n/a (build_trade refuses a plan without a stop)"
+
+  "Trade.tp1_price[liq_sweep]":
+    concept_id: TRS-06
+    encoding: price
+    parameterization: {ordinal: 1, intent: liq_sweep, r_multiple: crt_engine.tp1_atr_multiplier_liq_sweep}
+    absence: "n/a"
+
+  "Trade.tp1_price[pullback]":
+    concept_id: TRS-06
+    encoding: price
+    parameterization: {ordinal: 1, intent: pullback, r_multiple: crt_engine.tp1_atr_multiplier_pullback}
+    absence: "n/a"
+
+  "Trade.tp1_price[breakout]":
+    concept_id: TRS-06
+    encoding: price
+    parameterization: {ordinal: 1, intent: breakout, r_multiple: crt_engine.tp1_atr_multiplier_breakout}
+    absence: "n/a"
+
+  "Trade.tp1_price[reversal]":
+    concept_id: TRS-06
+    encoding: price
+    parameterization: {ordinal: 1, intent: reversal, r_multiple: crt_engine.tp1_atr_multiplier_reversal}
+    absence: "n/a"
+
+  Trade.tp2_price:
+    concept_id: TRS-06
+    encoding: price
+    parameterization: {ordinal: 2, target_policy: setup.target_policy, r_multiple: crt_engine.tp2_atr_multiplier}
+    absence: "n/a"
+
 # Representations of no live concept: kept and marked, never deleted (I-13).
 deprecated:
   SweepEvent.double_confirmed: "structurally constant False (crt_engine_v2.py:965 vs :2041); 0 true in 873,561 recorded SWEEP events"
@@ -70,3 +120,16 @@ unmapped:
   CRTState.RANGE_C1: "parent track; stage mapping PROPOSED (F-075/F-077)"
   CRTState.MANIPULATION_C2: "parent track; stage mapping PROPOSED"
   CRTState.DISTRIBUTION_C3: "parent track; stage mapping PROPOSED"
+  # slice 2: Trade fields that are not plan meaning. New coverage of the Trade type (V-10 extended),
+  # not growth of an existing type's list; shrink-only from here.
+  Trade.id: "identifier, not a concept"
+  Trade.risk_pct: "sizing — Decision/Execution (slice 3)"
+  Trade.runner_active: "position lifecycle — slice 3"
+  Trade.opened_at: "fill time — slice 3"
+  Trade.closed_at: "exit time — slice 3"
+  Trade.pnl: "realised position result — slice 3 (EXECUTION outcome, not TRS-08)"
+  Trade.partial_pnl: "partial-exit result — slice 3 (exit schedule)"
+  Trade.status: "position lifecycle — slice 3"
+  Trade.cached_features: "feature snapshot at build time, not plan meaning"
+  Trade.open_candle_index: "fill bar — slice 3"
+  Trade.displacement_origin: "SEM-021 position kill reference — slice 3"

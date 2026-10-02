@@ -36,12 +36,33 @@ representations:
     parameterization: {}
     absence: "this member IS the absence value"
 
+  # ── slice 2: objective role status (htf_state.resolve_objective) ──
+  ObjectiveStatus.NONE:
+    concept_id: TRS-02
+    encoding: "enum_member -> objective status NONE (absence: no bias yet)"
+    parameterization: {scope: parent_range}
+    absence: "this member IS the absence value"
+
+  ObjectiveStatus.EXISTS:
+    concept_id: TRS-02
+    encoding: "enum_member -> objective status EXISTS"
+    parameterization: {scope: parent_range}
+    absence: "n/a"
+
+  ObjectiveStatus.ACHIEVED:
+    concept_id: TRS-02
+    encoding: "enum_member -> objective status ACHIEVED (GP-03 on the target)"
+    parameterization: {scope: parent_range}
+    absence: "n/a"
+
+  ObjectiveStatus.INVALIDATED:
+    concept_id: TRS-02
+    encoding: "enum_member -> objective status INVALIDATED (GP-02 on the opposite edge)"
+    parameterization: {scope: parent_range}
+    absence: "n/a"
+
 deprecated:
   HTFStateThresholds.expansion_min_range_ratio: "inert: htf_state.py:105-108 both branches return EXPANSION"
 
-# Shrink-only ratchet.
-unmapped:
-  ObjectiveStatus.NONE: "Trading layer (TRS-02 objective role) — slice 2"
-  ObjectiveStatus.EXISTS: "Trading layer — slice 2"
-  ObjectiveStatus.ACHIEVED: "Trading layer — slice 2"
-  ObjectiveStatus.INVALIDATED: "Trading layer — slice 2"
+# Shrink-only ratchet. Emptied in slice 2 (ObjectiveStatus -> TRS-02).
+unmapped: {}

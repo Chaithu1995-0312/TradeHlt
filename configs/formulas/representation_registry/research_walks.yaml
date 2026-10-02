@@ -1,0 +1,24 @@
+# REP shard — producer: research_walks (research.measurement.forward_walk, research.oracle.multi_tp_walk).
+# Each walk returns GROSS R. walk_params (exit_model, max_forward, partial_fraction, trail_fraction,
+# stop_policy, tie_break, ...) are chosen by the caller per measurement, so the measurement that runs
+# the walk records them; this shard names the walk (I-15, TRS-08).
+
+schema: representation_registry/v1
+producer_id: research_walks
+schema_version: "research_walks/1"
+
+representations:
+
+  Outcome.rr_achieved:
+    concept_id: TRS-08
+    encoding: "float R (price move / risk_distance), research.contracts.Outcome"
+    parameterization: {walk: forward_walk, basis: gross, cost_model: none}
+    absence: "n/a (forward_walk always returns an Outcome; TIMEOUT marks the horizon)"
+
+  OracleOutcome.rr_gross:
+    concept_id: TRS-08
+    encoding: "float R, position-weighted over the TP1 partial and the runner (SEM-017)"
+    parameterization: {walk: multi_tp_walk, basis: gross, cost_model: none}
+    absence: "n/a"
+
+unmapped: {}
