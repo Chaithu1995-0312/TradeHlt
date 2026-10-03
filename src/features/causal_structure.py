@@ -78,17 +78,23 @@ def causal_structure_series(
     *,
     k: int | None = None,
     double_sweep_window: int | None = None,
+    sweep_semantics: str | None = None,
 ) -> Dict[str, np.ndarray]:
     """
     Full-series causal structure matching FeaturePipeline production binding.
 
     Used for parity tests and online FeatureStore (call with history, take last row).
 
-    `k=None` / `double_sweep_window=None` resolve from config (single source of truth); pass an
-    explicit value to override.
+    `k=None` / `double_sweep_window=None` / `sweep_semantics=None` resolve from config (single
+    source of truth); pass an explicit value to override. `sweep_semantics="e01_lifecycle"`
+    selects FM-090/091/092 (the lifecycle over THESE bars only: a caller holding a truncated
+    window must carry the lifecycle itself, as FeatureStore does).
     """
     k = _resolve_k(k)
     double_sweep_window = _resolve_double_sweep_window(double_sweep_window)
+    if sweep_semantics is None:
+        from features.feature_pipeline import resolve_sweep_semantics
+        sweep_semantics = resolve_sweep_semantics()
     high = np.asarray(high, dtype=float)
     low = np.asarray(low, dtype=float)
     close = np.asarray(close, dtype=float)
@@ -149,13 +155,24 @@ def causal_structure_series(
         elif not np.isnan(ref_l[i]) and low[i] < ref_l[i] and close[i] >= ref_l[i]:
             sweep[i] = -1
 
+    if sweep_semantics == "e01_lifecycle":
+        # FM-090: MKT-E01 on every ACTIVE swing level (features.level_lifecycle), UPPER-first slot.
+        from features.level_lifecycle import swing_level_sweeps
+        up_ev, down_ev = swing_level_sweeps(high, low, close, sh, sl, k=k)
+        sweep = np.where(up_ev == 1, 1, np.where(down_ev == 1, -1, 0)).astype(np.int8)
+    elif sweep_semantics == "latest_unconsumed":
+        up_ev, down_ev = (sweep > 0).astype(np.int8), (sweep < 0).astype(np.int8)
+    else:
+        raise ValueError(f"causal_structure_series: sweep_semantics {sweep_semantics!r}")
+
     sweep_detected = (sweep != 0).astype(np.int8)
 
+    # FM-060 reads the signed slot (identical to up_ev/down_ev in legacy mode); FM-092 reads the
+    # per-side events, so a two-sided bar counts.
     double_sweep = np.zeros(n, dtype=np.int8)
     for i in range(n):
         lo = max(0, i - double_sweep_window + 1)
-        window = sweep[lo : i + 1]
-        if (window > 0).any() and (window < 0).any():
+        if up_ev[lo : i + 1].any() and down_ev[lo : i + 1].any():
             double_sweep[i] = 1
 
     # BOS level ffill
@@ -195,6 +212,8 @@ def causal_structure_series(
         # Internal refs (not CANONICAL_FEATURES — FeatureStore must not inject these)
         "_last_swing_high_price": np.where(np.isnan(last_h), 0.0, last_h),
         "_last_swing_low_price": np.where(np.isnan(last_l), 0.0, last_l),
+        "_sweep_upper": up_ev.astype(np.float64),
+        "_sweep_lower": down_ev.astype(np.float64),
     }
 
 
@@ -207,13 +226,19 @@ def causal_structure_at_bar(
     k: int | None = None,
     liquidity_sweep_history: Sequence[int] | None = None,
     double_sweep_window: int | None = None,
+    sweep_semantics: str | None = None,
 ) -> Dict[str, float]:
     """Structure features for the last bar of the provided history.
 
-    `k=None` / `double_sweep_window=None` resolve from config; pass an explicit value to override.
+    `k=None` / `double_sweep_window=None` / `sweep_semantics=None` resolve from config; pass an
+    explicit value to override. In "e01_lifecycle" mode the sweep keys are computed over THIS
+    window only; FeatureStore overwrites them from its own carried LevelBook.
     """
     # Resolve once so the series computation and the history-window slice below cannot disagree.
     double_sweep_window = _resolve_double_sweep_window(double_sweep_window)
+    if sweep_semantics is None:
+        from features.feature_pipeline import resolve_sweep_semantics
+        sweep_semantics = resolve_sweep_semantics()
     series = causal_structure_series(
         np.asarray(highs, dtype=float),
         np.asarray(lows, dtype=float),
@@ -221,9 +246,11 @@ def causal_structure_at_bar(
         np.asarray(atrs, dtype=float),
         k=k,
         double_sweep_window=double_sweep_window,
+        sweep_semantics=sweep_semantics,
     )
-    # Prefer store's double_sweep history window if provided (matches FeatureStore maxlen)
-    if liquidity_sweep_history is not None:
+    # Prefer store's double_sweep history window if provided (matches FeatureStore maxlen).
+    # Legacy FM-060 only: the signed history cannot carry FM-092's per-side events.
+    if liquidity_sweep_history is not None and sweep_semantics == "latest_unconsumed":
         hist = list(liquidity_sweep_history) + [int(series["liquidity_sweep"][-1])]
         hist = hist[-double_sweep_window:]
         has_pos = any(v > 0 for v in hist)

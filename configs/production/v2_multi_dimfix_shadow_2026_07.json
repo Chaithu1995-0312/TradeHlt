@@ -532,7 +532,8 @@
     "normalization_basis": "atr_absolute",
     "_comment_shadow": "SHADOW CLONE of v2_multi_2026_04 (2026-07-22, program FM-030-031-DIMENSIONAL-MIX-MIGRATION). EXACTLY ONE value differs from the active config: feature_pipeline.normalization_basis atr_relative -> atr_absolute, selecting the corrected FM-030/FM-031 identities. Everything else -- including engine_runner.dual_engine trend_strength_threshold/momentum_threshold, which are tuned to the LEGACY price-scaled magnitudes -- is byte-identical, deliberately: recalibrating them in the same arm would confound the A/B. MEASUREMENT ONLY. Never promoted, never referenced by configs/production/ACTIVE_VERSION. Driver: scripts/research/dimensional_mix_shadow_diagnostic.py. Evidence: F-061.",
     "_comment_session_timestamp_basis": "F-066 (2026-08-01). Selects which clock hour_of_day/session (FM-052) derive from. 'broker_local' = DEFAULT, byte-identical. See configs/production/v2_multi_2026_04.json's fuller comment for the evidence; unchanged here (this shadow config isolates the FM-030/031 A/B only).",
-    "session_timestamp_basis": "broker_local"
+    "session_timestamp_basis": "broker_local",
+    "sweep_semantics": "latest_unconsumed"
   },
   "notes": "April tuner run, 3-month window",
   "schema_version": "1.3",

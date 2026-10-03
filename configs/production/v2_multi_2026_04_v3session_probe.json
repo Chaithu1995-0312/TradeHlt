@@ -532,7 +532,8 @@
     "_comment_normalization_basis": "FM-030/031 IDENTITY SELECTOR (2026-07-22, program FM-030-031-DIMENSIONAL-MIX-MIGRATION). Not a period -- it chooses WHICH registered identity ema_spread/momentum_score emit. 'atr_relative' = FM-022/FM-023, numerator / atr; because atr is close-relative (atr_14_raw/close) and the numerator is absolute price, the emitted value scales with price level (legacy == corrected * close). This is the DEFAULT and is byte-identical to the pre-2026-07-22 pipeline -- the XAUUSD freeze-pin vector SHA is its parity proof. 'atr_absolute' = FM-030/FM-031, numerator / (atr * close), scale-invariant. F-061 measured the legacy arm's decision-surface cost on crypto (detect_regime ~constant 'trend', breakout score pinned at 1.0, tanh(momentum) saturated); the corrected arm is measured via configs/production/v2_multi_dimfix_shadow_2026_07.json and carries NO production authority (CLAUDE.md 6.5).",
     "normalization_basis": "atr_relative",
     "_comment_session_timestamp_basis": "F-066 (2026-08-01). Selects which clock hour_of_day/session (FM-052) derive from. 'broker_local' = DEFAULT, byte-identical to every pipeline run before this key existed. See configs/production/v2_multi_2026_04.json's fuller comment for the evidence; unchanged here.",
-    "session_timestamp_basis": "broker_local"
+    "session_timestamp_basis": "broker_local",
+    "sweep_semantics": "latest_unconsumed"
   },
   "notes": "April tuner run, 3-month window",
   "schema_version": "1.3",

@@ -99,6 +99,12 @@ _ALLOWLISTED_FILES = {
     # double_sweep_window lookup through resolve_double_sweep_window(). Surfaced only when the
     # structural_states registration put `double_sweep` under enforcement (line 152).
     "features/causal_structure.py",
+    # E01-LIFECYCLE-SWEEP-IDENTITY (2026-10-03): the ONE MKT-L01 lifecycle implementation behind
+    # FM-090..093 (batch swing_level_sweeps + live LiveSweepState). Exempt on the same basis as
+    # causal_structure.py: parity-bound by tests/test_e01_sweep_semantics.py (batch pipeline ==
+    # causal twin == live FeatureStore, exact int8) and tests/test_level_lifecycle.py (== the
+    # semantics-layer walker). FeatureStore only transports its output (d.update).
+    "features/level_lifecycle.py",
 }
 _ALLOWLISTED_PREFIXES = ("features/registry/", "structure/")
 

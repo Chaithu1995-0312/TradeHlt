@@ -236,3 +236,27 @@ loaders (one parser, I-8) and grants no runtime authority.
 | G-4 | Consumers (I-14) are derived mechanically, evidence class HEURISTIC: modules under `src/` (outside `src/semantics/`) whose AST reads a representation's symbol — `Class.attr` keys by attribute name, enum members by `Enum.MEMBER`, feature slots by string constant. A homonym can produce a false consumer, so it never grants PROVEN. |
 | G-5 | I-18's consumer half (A-6) becomes checkable: V-19 — no PROPOSED concept id appears as a string constant anywhere in `src/semantics/`. |
 | G-6 | CLAUDE.md §6.7 gains the two command lines; the agent tool `truth.ground_claim` lists the two kinds. |
+
+## 16. Integration run 1 → normalisations (user decisions 2026-10-03)
+
+The first Semantic OS integration run (`scripts/governance/semantic_os_integration.py` on the one-month
+XAUUSD slice, `results/semantic_os_integration/20261002T192245Z`) observed the real backtest bar by bar
+(replay gate PASS, 279/279 events) and left 3 UNEXPLAINED rows in 2 defect classes, neither found by the
+earlier manual reviews. Both are settled here as **semantic normalisations, not trading claims**.
+
+| Id | Decision |
+|---|---|
+| R1-A | **One displacement reference price.** MKT-E01 carries `sweep_extreme` (the sweep bar's high when the UPPER level is swept, low when the LOWER is). It is the only definition: MKT-E04 (GP-06 sweep price), TRS-03 (retracement move start) and MKT-E11 (extension move start) consume it. Before this, MKT-E04 said "sweep extreme" while the TRS-03/MKT-E11 implementation used the swept level. The engine already uses the wick (`crt_engine_v2.py:2913`). Second-order fix: the TRS-03 divergence had misnamed the engine's extension origin as "sweep level"; it is CORRECTED, not deleted. PROVISIONAL until re-verified by run 2. |
+| R1-B | **A clock rollover is context, not a termination, once the episode is EXTENDED.** MKT-E12 expires a thesis only while its episode is at MKT-P01.DISPLACED (`trading.thesis.mark_expired(..., extended_at=)`). From EXTENDED on the thesis ends by TRS-03, MKT-E11, or the expansion TTL (PRODUCER, O-4), and the invalidation and extension still apply after the flip. The engine stops evaluating them after the flip (`crt_engine_v2.py:2882-2891`): that difference is a RECORDED divergence on TRS-03 and MKT-E11. PROVISIONAL until re-verified by run 2. |
+| R1-C | C5/C6 (trade plan, position) run on a deterministic **trade-exercising** real slice, not the full corpus by default. |
+| R1-D | The integration run never reports P&L, PF, win rate, expectancy or strategy quality. |
+
+**R1-C result (2026-10-03).** Selected from engine output only (`results/semantic_os_integration/r1c_scan/selection.json`):
+the full corpus has 3 engine trades, all LONG; the window 2024-11-13 20:00 → 2025-02-25 16:30 (6,559 bars,
+`XAUUSD_W2024-11-13-to-2025-02-25-r11536.csv`) reproduces CRT-0002 STOPPED and CRT-0003 TP1→TP2 exactly. SHORT and
+`TP1_BE_STOP` do not occur in the corpus and stay covered by synthetic tests only. A slice must start on the
+count-HTF grid (MKT-E12 divergence recorded). Integration run `20261002T205937Z` on it: replay gate PASS (1,114
+events), 0 unexplained disagreements among the claims exercised, C5/C6 decided on both trades (entry, stop,
+targets, exit reason and bar all AGREE; entry bar EXPECTED per the recorded `approval_bar_legacy` divergence).
+R1-A and R1-B therefore survive semantic conformance testing on two corpora. That is not a trading truth, and they
+stay PROVISIONAL until the user promotes them.

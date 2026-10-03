@@ -9,6 +9,7 @@
     MKT-E10 retrace_breach     GP-02 against the move, on a MKT-L02 retracement
     MKT-E11 extension_reach    GP-03 with the move, on a MKT-L02 extension
     MKT-E12 clock_rollover     the governing clock changed period
+    level_lifecycle            the MKT-L01 lifecycle (ACTIVE -> SWEPT / BROKEN) walked over bars
 
 An EVENT never persists (I-1): it is emitted for exactly one bar.
 This module takes primitives (prices, available_at). It does not import zones.
@@ -52,6 +53,9 @@ class MarketEvent:
     implied_bias: Optional[Bias] = None
     reference: Optional[str] = None     # founding / anchor / clock id of what was interacted with
     reference_price: Optional[float] = None
+    # MKT-E01 only: the sweep bar's high (UPPER swept) or low (LOWER swept). The ONE canonical
+    # displacement reference price (R1-A); MKT-E04, TRS-03 and MKT-E11 read it, never redefine it.
+    extreme: Optional[float] = None
 
 
 def sweep(bar: Bar, level: Level) -> Optional[MarketEvent]:
@@ -63,8 +67,9 @@ def sweep(bar: Bar, level: Level) -> Optional[MarketEvent]:
     if not gp.pierce_and_reject(bar, level.price, level.side):
         return None
     pid = parameterization_id(SWEEP, {"founding": level.founding, "tie": "strict"}, ("founding", "tie"))
+    extreme = float(bar.high) if level.side is Side.UPPER else float(bar.low)
     return MarketEvent(SWEEP, bar.index, bar.index, pid, level.side, implied_bias_of_sweep(level.side),
-                       level.founding, level.price)
+                       level.founding, level.price, extreme)
 
 
 def level_pierce(bar: Bar, level: Level) -> Optional[MarketEvent]:
@@ -166,6 +171,55 @@ def extension_reach(bar: Bar, level: Level, move_bias: Bias) -> Optional[MarketE
         return None
     return MarketEvent(EXTENSION_REACH, bar.index, bar.index, _empty_pid(EXTENSION_REACH), side, None,
                        level.anchor, level.price)
+
+
+@dataclass(frozen=True)
+class LevelLifecycle:
+    """MKT-L01 lifecycle walked over bars (contract: ACTIVE -> SWEPT on MKT-E01, ACTIVE -> BROKEN on
+    GP-02). `events[i]` = the MKT-E01 events on bar i, one per swept level (a bar that sweeps two
+    levels has two events: multiplicity is kept as data, not encoded). `ended[j]` = (status, bar) of
+    `levels[j]` once it left ACTIVE, or None while it is still ACTIVE."""
+
+    levels: tuple
+    events: tuple
+    ended: tuple
+
+    def status_before(self, j: int, i: int) -> Optional[LevelStatus]:
+        """Status of levels[j] going into bar i, i.e. before bar i's own transition (None = not
+        available on bar i; same availability rule as the walk: available_at <= i)."""
+        if self.levels[j].available_at > i:
+            return None
+        end = self.ended[j]
+        return LevelStatus.ACTIVE if end is None or end[1] >= i else end[0]
+
+
+def level_lifecycle(levels: Sequence[Level], bars: Sequence[Bar]) -> LevelLifecycle:
+    """Apply the MKT-L01 transitions bar by bar. Only ACTIVE, already-available levels are tested;
+    a sweep (GP-04) ends a level SWEPT, a close beyond it (GP-02) ends it BROKEN. The contract has no
+    EXPIRED rule, so no level expires here. `bars[i].index` must equal i.
+
+    The transitions are `features.level_lifecycle.LevelBook` (the one implementation the feature
+    producers also run); this wrapper adds the MKT-E01 event objects. A level that is not ACTIVE,
+    or has no side, is never tested.
+    """
+    from features.level_lifecycle import LevelBook
+
+    book = LevelBook()
+    key_of: dict = {}
+    for j, lvl in enumerate(levels):
+        if lvl.status is LevelStatus.ACTIVE and lvl.side is not None:
+            key_of[book.add(lvl.price, lvl.side.value, formed_at=lvl.formed_at,
+                            available_at=lvl.available_at)] = j
+    events: list[tuple] = []
+    for i, bar in enumerate(bars):
+        if bar.index != i:
+            raise ValueError(f"level_lifecycle: bar at position {i} has index {bar.index}")
+        swept = book.step(i, float(bar.high), float(bar.low), float(bar.close)).swept
+        events.append(tuple(sweep(bar, levels[key_of[key]]) for key in swept))
+    ended: list = [None] * len(levels)
+    for key, (status, i) in book.ended.items():
+        ended[key_of[key]] = (LevelStatus(status), i)
+    return LevelLifecycle(tuple(levels), tuple(events), tuple(ended))
 
 
 def clock_rollovers(clock_ids: Sequence[str], *, clock: str) -> tuple[Optional[MarketEvent], ...]:

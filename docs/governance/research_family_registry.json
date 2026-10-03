@@ -131,6 +131,10 @@
       "reason": "Governance — config unit/scale declaration (risk %, drawdown INR); instrument configuration, not a market object."
     },
     {
+      "claim": "F-112",
+      "reason": "Architecture — feature-producer conformance to the MKT-E01/MKT-L01 semantic contract (which levels a sweep slot tests and whether they are consumed); a fact about the measuring instrument, not a market-object research claim."
+    },
+    {
       "claim": "F-008",
       "reason": "Governance/risk — drift detected but not acted on; instrument behaviour, not a market object."
     },

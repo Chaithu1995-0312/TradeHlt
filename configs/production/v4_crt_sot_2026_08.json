@@ -606,6 +606,7 @@
     "normalization_basis": "atr_relative",
     "_comment_session_timestamp_basis": "F-066 (2026-08-01, blind-label investigation). Selects which clock hour_of_day/session (FM-052) derive from. 'broker_local' = the DEFAULT, byte-identical to every pipeline run before this key existed: uses the raw timestamp column as-is. For this MT5-sourced corpus that raw timestamp is actually broker-server time (EET/EEST, tracking America/New_York DST), NOT UTC, despite session_windows_utc's name -- measured 53.36 pct of XAUUSD bars carry the wrong session label under this basis (two independent cross-instrument tests: BTCUSDT cross-correlation, NFP-release alignment; see docs/research/preregistration-blind-label-descriptive-fidelity.md). 'utc_corrected' = derives from features/broker_clock.py's true-UTC conversion, making session/hour_of_day match what session_windows_utc already claims. This key stays 'broker_local' here; flipping to 'utc_corrected' is a separate, explicitly-gated decision (feature-vector SHA changes on ~53 pct of bars, freeze-pin re-certification required) -- NOT made by this config edit.",
     "session_timestamp_basis": "broker_local",
+    "sweep_semantics": "latest_unconsumed",
     "_comment_smc_max_window": "CH-htfcrt-parent-candle-smc-v1 (2026-08-15). Trailing-candle-buffer bound for compute_smc_features's OB/FVG/breaker/mitigation scanners -- a performance/scope bound, not a registered identity parameter. Reuses swing_window above for the causal swing half-window k (no duplicate key).",
     "smc_max_window": 100
   },

@@ -57,26 +57,26 @@ def form_thesis(
     """None unless events.sweep fires and GP-06 confirms it on the displacement bar.
 
     The displacement move, shared by the invalidation retracement and the spent
-    extension, runs from the sweep's reference price to the displacement close
-    (MKT-E04: away from the sweep).
+    extension, runs from MKT-E01 sweep_extreme (the sweep bar's wick, R1-A) to the
+    displacement close (MKT-E04: away from the sweep).
     """
     event = sweep(sweep_bar, level)
-    if event is None or event.implied_bias is None or event.reference_price is None:
+    if event is None or event.implied_bias is None or event.extreme is None:
         return None
     if displacement_bar.index < event.bar:
         return None
-    if not gp.directional_impulse(displacement_bar, event.reference_price, event.implied_bias):
+    if not gp.directional_impulse(displacement_bar, event.extreme, event.implied_bias):
         return None
     founding = str(event.reference)
     born = displacement_bar.index
     invalidation = make_invalidation(
-        event.reference_price, displacement_bar.close, retrace_fraction, formed_at=born,
+        event.extreme, displacement_bar.close, retrace_fraction, formed_at=born,
     )
     pid = parameterization_id(THESIS, {"founding": founding}, ("founding",))
     return Thesis(
         THESIS, pid, born, event.implied_bias, founding, event.bar, born, invalidation,
         ACTIVE, None, float(retrace_fraction), float(extension_fib),
-        float(event.reference_price), float(displacement_bar.close), clock,
+        float(event.extreme), float(displacement_bar.close), clock,
     )
 
 
@@ -108,11 +108,16 @@ def mark_spent(thesis: Thesis, bar: Bar) -> Thesis:
     return _terminal(thesis, SPENT, event.bar)
 
 
-def mark_expired(thesis: Thesis, clock_ids: Sequence[str]) -> Thesis:
-    """EXPIRED on the first MKT-E12 at or after the thesis is born."""
+def mark_expired(thesis: Thesis, clock_ids: Sequence[str], *, extended_at: Optional[int] = None) -> Thesis:
+    """EXPIRED on the first MKT-E12 at or after the thesis is born, while its episode is still at
+    MKT-P01.DISPLACED. `extended_at` is the bar the episode reached MKT-P01.EXTENDED (None = it has
+    not): from that bar on a rollover is context, not termination (R1-B)."""
     if thesis.status != ACTIVE:
         return thesis
     for event in clock_rollovers(clock_ids, clock=thesis.clock):
-        if event is not None and event.bar >= thesis.born_at:
-            return _terminal(thesis, EXPIRED, event.bar)
+        if event is None or event.bar < thesis.born_at:
+            continue
+        if extended_at is not None and event.bar >= extended_at:
+            continue
+        return _terminal(thesis, EXPIRED, event.bar)
     return thesis

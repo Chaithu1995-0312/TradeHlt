@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-01T12:49:32+00:00",
+  "generated_at": "2026-10-03T09:38:22+00:00",
   "active_version": "v2_htfcrt_2026_08",
   "crtconfig_field_count": 53,
   "section_loaded_via_get_prod_section": {
@@ -69,6 +69,7 @@
       "src/runtime/bar_structure_snapshot.py",
       "src/runtime/baseline_capture.py",
       "src/runtime/unified_replay_harness.py",
+      "src/semantics/registry.py",
       "src/strategies/strategy_registry.py",
       "src/training/trade_net_v2.py",
       "src/training/train_pipeline.py",
@@ -439,6 +440,8 @@
       "src/research/zone_mapping/collect_trade_opened_features.py",
       "src/runtime/backtest_v2.py",
       "src/runtime/live_engine_hook.py",
+      "src/semantics/execution/approval.py",
+      "src/semantics/registry.py",
       "src/strategies/s01_crt_wrapper.py",
       "src/strategies/strategy_package.py",
       "src/utils/logging_config.py"
@@ -454,7 +457,8 @@
       "src/config_layer/crt_engine_v2.py",
       "src/research/evidence/context_attribution.py",
       "src/runtime/backtest_v2.py",
-      "src/runtime/parent_crt_feed.py"
+      "src/runtime/parent_crt_feed.py",
+      "src/semantics/registry.py"
     ],
     "rr_model": [
       "scripts/analysis/pit_swing_blast_radius.py",
@@ -564,6 +568,7 @@
       "scripts/analysis/trade_intent_ownership_shadow.py",
       "scripts/analysis/xauusd_excel_feature_state_trace.py",
       "scripts/governance/build_fm_ownership_matrix.py",
+      "scripts/governance/semantic_os_integration.py",
       "scripts/research/build_bar_matrix.py",
       "scripts/research/smc_visual_verification.py",
       "scripts/training/train_gaussian_xauusd.py",
@@ -571,7 +576,10 @@
       "src/config_layer/crt_engine_v2.py",
       "src/features/feature_pipeline.py",
       "src/inout/live_rail/tickdb_adapter.py",
-      "src/runtime/backtest_v2.py"
+      "src/runtime/backtest_v2.py",
+      "src/semantics/consumers.py",
+      "src/semantics/integration/checks.py",
+      "src/semantics/registry.py"
     ],
     "notes": [
       "scripts/analysis/build_feature_contract_v1_seed.py",
@@ -670,6 +678,7 @@
       "src/data_ingestion/clock_registry.py",
       "src/execution/execution_intent_v1_0.py",
       "src/features/market_reality_contract.py",
+      "src/governance/concept_grounding.py",
       "src/governance/jsonl_claim_catalog.py",
       "src/governance/promotion_manager.py",
       "src/governance/semantic_grounding.py",
@@ -702,6 +711,8 @@
       "src/runtime/baseline_capture.py",
       "src/runtime/crt_construction_trace.py",
       "src/runtime/layer_trace.py",
+      "src/semantics/identity.py",
+      "src/semantics/registry.py",
       "src/training/bar_semantic_tracker.py",
       "src/training/stage1_dataset_builder.py",
       "src/training/trade_net_v2.py",
@@ -787,6 +798,8 @@
       "scripts/analysis/xauusd_crt_baseline_trace.py",
       "scripts/analysis/xauusd_crt_transition_trace.py",
       "scripts/governance/promote_v2.py",
+      "scripts/governance/semantic_os_integration.py",
+      "scripts/governance/semantic_os_trade_window.py",
       "scripts/maintenance/_compute_hash.py",
       "scripts/maintenance/_promote_v4_bnb_cutover.py",
       "scripts/maintenance/g1_build_v4_crt_sot_config.py",
@@ -806,6 +819,7 @@
       "src/runtime/bar_structure_snapshot.py",
       "src/runtime/crt_construction_trace.py",
       "src/runtime/layer_trace.py",
+      "src/semantics/integration/report.py",
       "src/strategies/strategy_package.py",
       "src/strategies/strategy_registry.py",
       "src/utils/run_manifest.py"
@@ -838,7 +852,7 @@
     ]
   },
   "summary": {
-    "READ_AND_USED": 416,
+    "READ_AND_USED": 417,
     "METADATA": 8,
     "READ_BUT_INERT": 31,
     "SHADOW_ONLY": 21,
@@ -852,7 +866,8 @@
       "evidence": [
         "scripts/research/setup_grid_s4.py",
         "src/config_layer/setup.py",
-        "src/runtime/backtest_v2.py"
+        "src/runtime/backtest_v2.py",
+        "src/semantics/trading/target.py"
       ],
       "note": ""
     },
@@ -883,9 +898,13 @@
       "key": "entry_semantics",
       "verdict": "READ_AND_USED",
       "evidence": [
+        "scripts/governance/semantic_os_integration.py",
+        "scripts/governance/semantic_os_trade_window.py",
         "src/config_layer/crt_engine_v2.py",
         "src/config_layer/setup.py",
-        "src/runtime/backtest_v2.py"
+        "src/runtime/backtest_v2.py",
+        "src/semantics/execution/fill.py",
+        "src/semantics/trading/entry.py"
       ],
       "note": ""
     },
@@ -2642,7 +2661,8 @@
       "verdict": "READ_AND_USED",
       "evidence": [
         "src/config_layer/crt_engine_v2.py",
-        "src/config_layer/state_identity.py"
+        "src/config_layer/state_identity.py",
+        "src/semantics/integration/checks.py"
       ],
       "note": ""
     },
@@ -2652,7 +2672,8 @@
       "verdict": "READ_AND_USED",
       "evidence": [
         "src/config_layer/crt_engine_v2.py",
-        "src/config_layer/state_identity.py"
+        "src/config_layer/state_identity.py",
+        "src/semantics/integration/checks.py"
       ],
       "note": ""
     },
@@ -2768,7 +2789,9 @@
         "scripts/research/crt_resolver_economic_comparison.py",
         "src/config_layer/crt_engine_v2.py",
         "src/research/model_runners/adapters/execution_plan.py",
-        "src/runtime/backtest_v2.py"
+        "src/runtime/backtest_v2.py",
+        "src/semantics/integration/checks.py",
+        "src/semantics/trading/stop.py"
       ],
       "note": ""
     },
@@ -2795,7 +2818,8 @@
         "scripts/analysis/crt_episode_number_trace.py",
         "scripts/analysis/xauusd_excel_feature_state_trace.py",
         "src/config_layer/crt_engine_v2.py",
-        "src/research/model_runners/adapters/execution_plan.py"
+        "src/research/model_runners/adapters/execution_plan.py",
+        "src/semantics/integration/checks.py"
       ],
       "note": ""
     },
@@ -2818,7 +2842,8 @@
         "scripts/analysis/trade_intent_ownership_shadow.py",
         "scripts/research/live_path_replay.py",
         "src/config_layer/crt_engine_v2.py",
-        "src/research/oracle/labeler.py"
+        "src/research/oracle/labeler.py",
+        "src/semantics/trading/target.py"
       ],
       "note": "consumed via dynamic getattr() dispatch"
     },
@@ -2832,7 +2857,8 @@
         "scripts/analysis/trade_intent_ownership_shadow.py",
         "scripts/research/live_path_replay.py",
         "src/config_layer/crt_engine_v2.py",
-        "src/research/oracle/labeler.py"
+        "src/research/oracle/labeler.py",
+        "src/semantics/trading/target.py"
       ],
       "note": "consumed via dynamic getattr() dispatch"
     },
@@ -2846,7 +2872,8 @@
         "scripts/analysis/trade_intent_ownership_shadow.py",
         "scripts/research/live_path_replay.py",
         "src/config_layer/crt_engine_v2.py",
-        "src/research/oracle/labeler.py"
+        "src/research/oracle/labeler.py",
+        "src/semantics/trading/target.py"
       ],
       "note": "consumed via dynamic getattr() dispatch"
     },
@@ -2873,7 +2900,8 @@
       "verdict": "READ_AND_USED",
       "evidence": [
         "src/config_layer/crt_engine_v2.py",
-        "src/config_layer/setup.py"
+        "src/config_layer/setup.py",
+        "src/semantics/integration/checks.py"
       ],
       "note": ""
     },
@@ -3039,7 +3067,8 @@
         "scripts/analysis/p4_execution_intent_attribution.py",
         "scripts/analysis/trade_intent_ownership_shadow.py",
         "src/config_layer/crt_engine_v2.py",
-        "src/config_layer/production_config.py"
+        "src/config_layer/production_config.py",
+        "src/semantics/trading/target.py"
       ],
       "note": ""
     },
@@ -3108,7 +3137,8 @@
       "key": "extension_reset_fib",
       "verdict": "READ_AND_USED",
       "evidence": [
-        "src/config_layer/crt_engine_v2.py"
+        "src/config_layer/crt_engine_v2.py",
+        "src/semantics/integration/checks.py"
       ],
       "note": ""
     },
@@ -3338,6 +3368,7 @@
         "src/runtime/live_rail_feeder.py",
         "src/runtime/parent_crt_feed.py",
         "src/scanner/spine_adapter.py",
+        "src/semantics/registry.py",
         "src/strategies/strategy_orchestrator.py",
         "src/uat/uat_runner.py",
         "src/utils/run_manifest.py",
@@ -3770,7 +3801,9 @@
       "evidence": [
         "src/governance/portfolio_validation.py",
         "src/runtime/backtest_v2.py",
-        "src/runtime/exit_model_band.py"
+        "src/runtime/exit_model_band.py",
+        "src/semantics/execution/size.py",
+        "src/semantics/integration/checks.py"
       ],
       "note": ""
     },
@@ -3791,6 +3824,7 @@
         "src/config_layer/crt_engine_v2.py",
         "src/control_plane/registry.py",
         "src/governance/portfolio_validation.py",
+        "src/semantics/integration/observe.py",
         "src/utils/trade_logger.py"
       ],
       "note": ""
@@ -4479,6 +4513,7 @@
         "src/runtime/live_rail_feeder.py",
         "src/runtime/parent_crt_feed.py",
         "src/scanner/spine_adapter.py",
+        "src/semantics/registry.py",
         "src/strategies/strategy_orchestrator.py",
         "src/uat/uat_runner.py",
         "src/utils/run_manifest.py",
@@ -4650,6 +4685,7 @@
         "src/data_ingestion/clock_registry.py",
         "src/execution/execution_intent_v1_0.py",
         "src/features/market_reality_contract.py",
+        "src/governance/concept_grounding.py",
         "src/governance/jsonl_claim_catalog.py",
         "src/governance/promotion_manager.py",
         "src/governance/semantic_grounding.py",
@@ -4682,6 +4718,8 @@
         "src/runtime/baseline_capture.py",
         "src/runtime/crt_construction_trace.py",
         "src/runtime/layer_trace.py",
+        "src/semantics/identity.py",
+        "src/semantics/registry.py",
         "src/training/bar_semantic_tracker.py",
         "src/training/stage1_dataset_builder.py",
         "src/training/trade_net_v2.py",
@@ -4799,6 +4837,7 @@
         "src/config_layer/stack_version.py",
         "src/data_ingestion/clock_detector.py",
         "src/features/market_reality_contract.py",
+        "src/governance/concept_grounding.py",
         "src/governance/hypothesis_registry.py",
         "src/governance/jsonl_claim_catalog.py",
         "src/governance/measurement_result_log.py",
@@ -4837,7 +4876,10 @@
         "src/research/visual_crt/measure.py",
         "src/research/zone_label_audit.py",
         "src/research/zone_mapping/gaussian_delta_gap_eval.py",
-        "src/research/zone_mapping/gaussian_family_shadow_eval.py"
+        "src/research/zone_mapping/gaussian_family_shadow_eval.py",
+        "src/semantics/integration/checks.py",
+        "src/semantics/market/episodes.py",
+        "src/semantics/registry.py"
       ],
       "note": ""
     },
@@ -5045,6 +5087,7 @@
         "src/runtime/live_rail_feeder.py",
         "src/runtime/parent_crt_feed.py",
         "src/scanner/spine_adapter.py",
+        "src/semantics/registry.py",
         "src/strategies/strategy_orchestrator.py",
         "src/uat/uat_runner.py",
         "src/utils/run_manifest.py",
@@ -5210,7 +5253,9 @@
       "evidence": [
         "src/governance/portfolio_validation.py",
         "src/runtime/backtest_v2.py",
-        "src/runtime/exit_model_band.py"
+        "src/runtime/exit_model_band.py",
+        "src/semantics/execution/size.py",
+        "src/semantics/integration/checks.py"
       ],
       "note": ""
     },
@@ -5501,7 +5546,9 @@
       "evidence": [
         "scripts/analysis/crt_local_math_authority_probe.py",
         "scripts/analysis/semantic_layer_validation.py",
-        "src/features/feature_pipeline.py"
+        "src/features/feature_pipeline.py",
+        "src/semantics/integration/checks.py",
+        "src/semantics/market/conditions.py"
       ],
       "note": ""
     },
@@ -5512,7 +5559,9 @@
       "evidence": [
         "scripts/analysis/crt_local_math_authority_probe.py",
         "scripts/analysis/semantic_layer_validation.py",
-        "src/features/feature_pipeline.py"
+        "src/features/feature_pipeline.py",
+        "src/semantics/integration/checks.py",
+        "src/semantics/market/conditions.py"
       ],
       "note": ""
     },
@@ -5781,7 +5830,8 @@
       "evidence": [
         "scripts/analysis/session_filter_funnel_probe.py",
         "src/features/feature_pipeline.py",
-        "src/features/session_classifier.py"
+        "src/features/session_classifier.py",
+        "src/semantics/market/conditions.py"
       ],
       "note": ""
     },
@@ -5826,7 +5876,8 @@
         "scripts/analysis/feature_trace_report.py",
         "scripts/analysis/xauusd_excel_feature_state_trace.py",
         "scripts/research/build_bar_matrix.py",
-        "src/features/feature_pipeline.py"
+        "src/features/feature_pipeline.py",
+        "src/semantics/registry.py"
       ],
       "note": ""
     },
@@ -5849,7 +5900,19 @@
         "src/config_layer/crt_engine_v2.py",
         "src/features/feature_pipeline.py",
         "src/inout/live_rail/tickdb_adapter.py",
-        "src/runtime/backtest_v2.py"
+        "src/runtime/backtest_v2.py",
+        "src/semantics/integration/checks.py",
+        "src/semantics/market/conditions.py"
+      ],
+      "note": ""
+    },
+    {
+      "section": "feature_pipeline",
+      "key": "sweep_semantics",
+      "verdict": "READ_AND_USED",
+      "evidence": [
+        "scripts/governance/semantic_os_integration.py",
+        "src/features/feature_pipeline.py"
       ],
       "note": ""
     },
@@ -5915,7 +5978,8 @@
         "scripts/research/crt_variant_surface.py",
         "scripts/research/link001_choch_measurement.py",
         "src/agent/cli.py",
-        "src/research/evidence/queries.py"
+        "src/research/evidence/queries.py",
+        "src/semantics/integration/checks.py"
       ],
       "note": ""
     },
@@ -5973,7 +6037,8 @@
         "src/research/zone_mapping/gaussian_family_shadow_eval.py",
         "src/runtime/backtest_bitnet.py",
         "src/runtime/backtest_v2.py",
-        "src/runtime/unified_replay_harness.py"
+        "src/runtime/unified_replay_harness.py",
+        "src/semantics/integration/observe.py"
       ],
       "note": ""
     },
@@ -6216,6 +6281,7 @@
         "scripts/data/unified_data_builder.py",
         "scripts/governance/crt_config_construction_census.py",
         "scripts/governance/feature_surface_query.py",
+        "scripts/governance/semantic_os_integration.py",
         "scripts/live/run_live_rail.py",
         "scripts/maintenance/g2_v4_crt_sot_parity.py",
         "scripts/portfolio/replay_allocator.py",
@@ -6332,6 +6398,7 @@
         "src/research/zone_mapping/rare_zone_fa_characterization.py",
         "src/runtime/backtest_v2.py",
         "src/runtime/unified_replay_harness.py",
+        "src/semantics/integration/observe.py",
         "src/validation_access/ladder.py"
       ],
       "note": ""
@@ -6413,6 +6480,7 @@
         "src/control_plane/dashboard_api.py",
         "src/data_ingestion/historical_fetcher.py",
         "src/portfolio/correlation_engine.py",
+        "src/semantics/consumers.py",
         "src/training/stage1_dataset_builder.py"
       ],
       "note": ""
@@ -6716,6 +6784,7 @@
         "scripts/analysis/xauusd_excel_feature_state_trace.py",
         "scripts/analysis/xauusd_phase1_finish_validation.py",
         "scripts/analysis/xauusd_strict_reject_forensic.py",
+        "scripts/governance/semantic_os_trade_window.py",
         "scripts/research/ab_rr_slot_xauusd.py",
         "scripts/research/build_bar_matrix.py",
         "scripts/research/crt_parity_sweep.py",
@@ -6733,7 +6802,8 @@
         "src/charts/chart_api.py",
         "src/inout/live_rail/types.py",
         "src/live/mt5_bridge.py",
-        "src/monitoring/health_checker.py"
+        "src/monitoring/health_checker.py",
+        "src/semantics/integration/observe.py"
       ],
       "note": ""
     },
@@ -7055,6 +7125,7 @@
         "src/config_layer/stack_version.py",
         "src/data_ingestion/clock_detector.py",
         "src/features/market_reality_contract.py",
+        "src/governance/concept_grounding.py",
         "src/governance/hypothesis_registry.py",
         "src/governance/jsonl_claim_catalog.py",
         "src/governance/measurement_result_log.py",
@@ -7093,7 +7164,10 @@
         "src/research/visual_crt/measure.py",
         "src/research/zone_label_audit.py",
         "src/research/zone_mapping/gaussian_delta_gap_eval.py",
-        "src/research/zone_mapping/gaussian_family_shadow_eval.py"
+        "src/research/zone_mapping/gaussian_family_shadow_eval.py",
+        "src/semantics/integration/checks.py",
+        "src/semantics/market/episodes.py",
+        "src/semantics/registry.py"
       ],
       "note": ""
     },
@@ -7157,7 +7231,8 @@
         "src/config_layer/market_router.py",
         "src/governance/semantic_grounding.py",
         "src/governance/semantic_objects.py",
-        "src/retrieval/divergence.py"
+        "src/retrieval/divergence.py",
+        "src/semantics/registry.py"
       ],
       "note": ""
     },
@@ -7282,6 +7357,7 @@
         "src/data_ingestion/clock_registry.py",
         "src/execution/execution_intent_v1_0.py",
         "src/features/market_reality_contract.py",
+        "src/governance/concept_grounding.py",
         "src/governance/jsonl_claim_catalog.py",
         "src/governance/promotion_manager.py",
         "src/governance/semantic_grounding.py",
@@ -7314,6 +7390,8 @@
         "src/runtime/baseline_capture.py",
         "src/runtime/crt_construction_trace.py",
         "src/runtime/layer_trace.py",
+        "src/semantics/identity.py",
+        "src/semantics/registry.py",
         "src/training/bar_semantic_tracker.py",
         "src/training/stage1_dataset_builder.py",
         "src/training/trade_net_v2.py",
@@ -7431,6 +7509,7 @@
         "src/config_layer/stack_version.py",
         "src/data_ingestion/clock_detector.py",
         "src/features/market_reality_contract.py",
+        "src/governance/concept_grounding.py",
         "src/governance/hypothesis_registry.py",
         "src/governance/jsonl_claim_catalog.py",
         "src/governance/measurement_result_log.py",
@@ -7469,7 +7548,10 @@
         "src/research/visual_crt/measure.py",
         "src/research/zone_label_audit.py",
         "src/research/zone_mapping/gaussian_delta_gap_eval.py",
-        "src/research/zone_mapping/gaussian_family_shadow_eval.py"
+        "src/research/zone_mapping/gaussian_family_shadow_eval.py",
+        "src/semantics/integration/checks.py",
+        "src/semantics/market/episodes.py",
+        "src/semantics/registry.py"
       ],
       "note": ""
     },

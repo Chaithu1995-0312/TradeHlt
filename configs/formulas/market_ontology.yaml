@@ -844,6 +844,45 @@ derived_metrics:
       consumed_by:      [UNKNOWN]
       vector_key:       retest_depth
       vector_index:     34
+  # FM-095 — FM-021 gated on FM-094, CONFIG-GATED and INACTIVE (2026-10-03,
+  # CH-e01-lifecycle-retest-identity). Added FLAT + additive to this frozen runtime key (CLAUDE.md 6.6).
+  retest_depth_e01:
+    id:          FM-095
+    version:     1
+    lifecycle:   registered
+    formula:     "clip(abs(close - ema_fast) / (atr * close), <feature_pipeline.retest_depth_clip_low>, <feature_pipeline.retest_depth_clip_high>) if retest_flag_e01==1 and atr>0 and close>0 else 0.0. Emitted at vector slot retest_depth only when <feature_pipeline.sweep_semantics> == 'e01_lifecycle'; the default selects FM-021."
+    config_keys: [feature_pipeline.retest_depth_clip_low, feature_pipeline.retest_depth_clip_high]
+    impl:        derived_math.retest_depth
+    depends_on:  [close, ema_fast, atr, retest_flag_e01]
+    clip:        [0.0, 1.0]
+    active:      false
+    replaces:            FM-021
+    config_key:          feature_pipeline.sweep_semantics
+    migration_class:     FORMULA_CORRECTION
+    requires:            [retrain_inactive_artifacts]
+    note: >
+      Same math and the same scalar impl as FM-021; only the gate changes (FM-094 instead of FM-061).
+      Measured 2026-10-03 (docs/analysis/e01-lifecycle-downstream-consumers-2026-10-03.md): differs
+      from FM-021 on 8,213 of 47,197 XAUUSD bars (17.4%). Live == batch at every prefix in both modes
+      (tests/test_e01_sweep_semantics.py::test_live_feeder_matches_batch_at_every_prefix): the live
+      rail takes this slot from runtime.live_rail_feeder (full-history pipeline), and
+      core.feature_store never recomputes it. Retest semantics remain PROPOSED (OQ7).
+    taxonomy:
+      category:        Retest
+      knowledge_class: Derived
+    semantics:
+      description:   "How far price sits from the fast EMA, in ATR-scaled units, on bars where an MKT-E01-triggered retest is active; 0.0 otherwise."
+      why_it_exists: "FM-021 under the lifecycle sweep, so the retest-depth slot stays consistent with FM-090..093 when e01_lifecycle is selected. Registered and executable but INACTIVE."
+      interpretation:
+        high: "Price is far from the reference — a shallow or failed retest."
+        low:  "Price has returned tightly to the reference. 0.0 also means no retest; disambiguate with FM-094."
+    states: []
+    lineage:
+      derivation_depth: 5
+      produced_by:      feature_pipeline.compute_canonical_temporal_features
+      consumed_by:      []
+      vector_key:       []
+      vector_index:     []
   ema_spread:
     id:          FM-022
     version:     1
@@ -2204,6 +2243,38 @@ rolling_indicators:
       consumed_by:      [UNKNOWN]
       vector_key:       candles_since_sweep
       vector_index:     35
+  # FM-093 — MKT-E01 lifecycle identity of FM-065, CONFIG-GATED and INACTIVE (2026-10-03); see the
+  # FM-090..092 block in structural_states for the program note.
+  candles_since_sweep_e01:
+    id:        FM-093
+    version:   1
+    lifecycle: registered
+    computation_class: rolling_stateful
+    formula:   "cumcount of bars since the last MKT-E01 event (groupby (liquidity_sweep_e01 != 0).cumsum(); a bar with any lifecycle sweep event resets it to 0); 0 before the first event. Emitted only when <feature_pipeline.sweep_semantics> == 'e01_lifecycle'; the default selects FM-065."
+    impl:      feature_pipeline.compute_canonical_temporal_features
+    depends_on: [liquidity_sweep_e01]
+    units:     bars
+    active:    false
+    replaces:            FM-065
+    config_key:          feature_pipeline.sweep_semantics
+    migration_class:     FORMULA_CORRECTION
+    requires:            [retrain_inactive_artifacts]
+    taxonomy:
+      category:        Retest
+      knowledge_class: Statistical
+    semantics:
+      description:   "Bars elapsed since the most recent MKT-E01 lifecycle sweep event; 0 before any."
+      why_it_exists: "Corrects FM-065's anchor, which counts from the legacy latest-level sweep (FM-058). Registered and executable but INACTIVE."
+      interpretation:
+        high: "The last lifecycle sweep was long ago."
+        low:  "A lifecycle sweep just occurred."
+    states: []
+    lineage:
+      derivation_depth: 4
+      produced_by:      feature_pipeline.compute_canonical_temporal_features
+      consumed_by:      []
+      vector_key:       []
+      vector_index:     []
   # ── FM-065/FM-070 resolution history (2026-07-24 → 2026-07-31) ─────────────────────────────
   # DISCOVERED BY REGISTRATION, then withdrawn on 2026-07-24. Registering the name turned
   # tests/test_feature_math_lint.py::test_floor_is_green RED on two sites:
@@ -2661,6 +2732,146 @@ structural_states:
       consumed_by:      [UNKNOWN]
       vector_key:       double_sweep
       vector_index:     6
+  # ── FM-090 / FM-091 / FM-092 — MKT-E01 lifecycle identities, CONFIG-GATED and INACTIVE (2026-10-03) ──
+  # Program set is FM-090..095: FM-093 (rolling_indicators) and the transitive retest identities
+  # FM-094 (retest_flag_e01, below FM-061) and FM-095 (retest_depth_e01, derived_metrics, below FM-021),
+  # added by CH-e01-lifecycle-retest-identity after the consumer A/B showed retest_depth also moves.
+  # Corrected identities of the sweep slots against the frozen contract (concept_contracts.yaml
+  # MKT-E01 rule + MKT-L01 lifecycle, MKT-C04 v2). Legacy FM-058/059/060 test only the LATEST swing
+  # level and never consume it; these test every ACTIVE swing level and consume it once SWEPT or
+  # BROKEN (features.level_lifecycle.LevelBook). Selected only by
+  # `feature_pipeline.sweep_semantics: "e01_lifecycle"` (non-promoted shadow config); the default
+  # "latest_unconsumed" keeps FM-058/059/060 byte-identical. Same pattern as F-061 FM-030/031:
+  # registration grants NO production authority (CLAUDE.md 6.5). Evidence: Semantic OS C7 inventory,
+  # 2026-10-03 (541 E01 + 119 C04 disagreements on the XAUUSD one-month slice).
+  liquidity_sweep_e01:
+    id:          FM-090
+    version:     1
+    lifecycle:   registered
+    computation_class: structural_state
+    formula:     "+1 if any ACTIVE UPPER swing_pivot(k) level is swept (high > L and close < L) on the bar; else -1 if any ACTIVE LOWER level is swept (low < L and close > L); else 0 -> int8. A level is ACTIVE from its available_at bar until it is swept (SWEPT) or closed beyond (BROKEN). Emitted only when <feature_pipeline.sweep_semantics> == 'e01_lifecycle'; the default selects FM-058."
+    impl:        feature_pipeline.compute_structure_liquidity
+    depends_on:  [high, low, close, swing_high, swing_low]
+    bounds:      "{-1, 0, 1}"
+    active:      false
+    replaces:            FM-058
+    config_key:          feature_pipeline.sweep_semantics
+    migration_class:     FORMULA_CORRECTION
+    requires:            [retrain_inactive_artifacts]
+    note: >
+      Lifecycle authority: features.level_lifecycle (LevelBook, swing_level_sweeps); the semantics
+      layer wraps the same code (semantics.market.events.level_lifecycle). UPPER-first projection: a
+      bar that sweeps both sides is two MKT-E01 events but this slot encodes +1 (declared encoding;
+      the loss is the recorded MKT-E01 divergence "feature_pipeline.liquidity_sweep two-sided bar").
+      Strict tie (GP-04), not FM-058's inclusive tie.
+    taxonomy:
+      category:        Liquidity
+      knowledge_class: Structural
+    semantics:
+      description:   "A stop-run on any still-ACTIVE swing level, consumed once swept or broken (MKT-E01)."
+      why_it_exists: "Corrects FM-058, which tests only the latest swing level, re-fires on a level already swept or broken, and misses older levels still resting. Registered and executable but INACTIVE."
+      interpretation:
+        high: "+1 — an ACTIVE swing high was swept on this bar (UPPER-first if both sides were)."
+        low:  "-1 — an ACTIVE swing low was swept and no swing high was. 0 means no sweep event."
+    states:
+      - name:        SellSideSweep
+        value:       -1
+        condition:   "an ACTIVE LOWER level swept and no ACTIVE UPPER level swept"
+        description: "Sell-side liquidity taken at a still-resting swing low, then rejected."
+      - name:        NoSweep
+        value:       0
+        condition:   "no ACTIVE level swept on this bar"
+        description: "No MKT-E01 event."
+      - name:        BuySideSweep
+        value:       1
+        condition:   "an ACTIVE UPPER level swept (with or without a LOWER one)"
+        description: "Buy-side liquidity taken at a still-resting swing high, then rejected."
+    lineage:
+      derivation_depth: 3
+      produced_by:      feature_pipeline.compute_structure_liquidity
+      consumed_by:      []
+      vector_key:       []
+      vector_index:     []
+  sweep_detected_e01:
+    id:          FM-091
+    version:     1
+    lifecycle:   registered
+    computation_class: structural_state
+    formula:     "liquidity_sweep_e01 != 0 -> int8 {0, 1}  (= at least one MKT-E01 event on the bar). Emitted only when <feature_pipeline.sweep_semantics> == 'e01_lifecycle'; the default selects FM-059."
+    impl:        feature_pipeline.compute_canonical_structure_features
+    depends_on:  [liquidity_sweep_e01]
+    bounds:      "{0, 1}"
+    active:      false
+    replaces:            FM-059
+    config_key:          feature_pipeline.sweep_semantics
+    migration_class:     FORMULA_CORRECTION
+    requires:            [retrain_inactive_artifacts]
+    taxonomy:
+      category:        Liquidity
+      knowledge_class: Structural
+    semantics:
+      description:   "Direction-agnostic presence of at least one MKT-E01 sweep event on this bar."
+      why_it_exists: "Corrects FM-059 by inheriting FM-090's lifecycle. Registered and executable but INACTIVE."
+      interpretation:
+        high: "1 — at least one ACTIVE swing level was swept."
+        low:  "0 — no sweep event."
+    states:
+      - name:        NoSweep
+        value:       0
+        condition:   "liquidity_sweep_e01 == 0"
+        description: "No MKT-E01 event on this bar."
+      - name:        SweepDetected
+        value:       1
+        condition:   "liquidity_sweep_e01 != 0"
+        description: "At least one MKT-E01 event; consult liquidity_sweep_e01 for the (UPPER-first) side."
+    lineage:
+      derivation_depth: 4
+      produced_by:      feature_pipeline.compute_canonical_structure_features
+      consumed_by:      []
+      vector_key:       []
+      vector_index:     []
+  double_sweep_e01:
+    id:          FM-092
+    version:     1
+    lifecycle:   registered
+    computation_class: structural_state
+    formula:     "MKT-C04 v2: at least one UPPER and at least one LOWER MKT-E01 event (FM-090 lifecycle, per side, NOT the signed slot) within rolling(<feature_pipeline.double_sweep_window>) bars, bar i included -> int8 {0, 1}. Emitted only when <feature_pipeline.sweep_semantics> == 'e01_lifecycle'; the default selects FM-060."
+    impl:        feature_pipeline.compute_canonical_structure_features
+    depends_on:  [high, low, close, swing_high, swing_low]
+    bounds:      "{0, 1}"
+    active:      false
+    replaces:            FM-060
+    config_key:          feature_pipeline.sweep_semantics
+    migration_class:     FORMULA_CORRECTION
+    requires:            [retrain_inactive_artifacts]
+    note: >
+      Reads per-side event flags, so a bar that sweeps both sides counts (the signed slot would
+      lose one side). Same window key as FM-060 (feature_pipeline.double_sweep_window).
+    taxonomy:
+      category:        Liquidity
+      knowledge_class: Heuristic
+    semantics:
+      description:   "Swing-founded sweep events of BOTH sides within a short trailing window (MKT-C04 v2)."
+      why_it_exists: "Corrects FM-060, whose rule reads the lossy signed slot (circular, contract v1). Registered and executable but INACTIVE."
+      interpretation:
+        high: "1 — both sides swept recently (counting a single two-sided bar)."
+        low:  "0 — at most one side swept in the window."
+        caveat: "HEURISTIC window length, as FM-060."
+    states:
+      - name:        NoDoubleSweep
+        value:       0
+        condition:   "events of at most one side in the trailing window"
+        description: "No two-sided liquidity event."
+      - name:        DoubleSweep
+        value:       1
+        condition:   "an UPPER and a LOWER MKT-E01 event within the trailing window"
+        description: "Liquidity taken on both sides in quick succession."
+    lineage:
+      derivation_depth: 4
+      produced_by:      feature_pipeline.compute_canonical_structure_features
+      consumed_by:      []
+      vector_key:       []
+      vector_index:     []
   retest_flag:
     id:        FM-061
     version:   1
@@ -2692,6 +2903,56 @@ structural_states:
         value:       1
         condition:   "sweep within retest_lookback bars AND |close - ema_fast| <= retest_atr_band_mult * atr * close"
         description: "Price has returned to the fast-EMA reference after taking liquidity — FM-021 retest_depth is meaningful here."
+    lineage:
+      derivation_depth: 4
+      produced_by:      feature_pipeline.compute_canonical_structure_features
+      consumed_by:      [feature_pipeline.compute_canonical_temporal_features]
+      vector_key:       []
+      vector_index:     []
+  # FM-094 — FM-061 fed by the MKT-E01 lifecycle sweep, CONFIG-GATED and INACTIVE (2026-10-03,
+  # CH-e01-lifecycle-retest-identity). Completes CH-e01-lifecycle-sweep-identity: FM-061 reads
+  # liquidity_sweep, so selecting FM-090 changes this column's values without changing its formula
+  # (measured: retest_depth, gated on this flag, moved on 17.4% of XAUUSD bars). A changed dependency
+  # is a new identity (F-054 dependency_contract_hash), hence a new id rather than a silent re-meaning.
+  retest_flag_e01:
+    id:        FM-094
+    version:   1
+    lifecycle: registered
+    computation_class: structural_state
+    formula:   "rolling_any(liquidity_sweep_e01 != 0, <feature_pipeline.retest_lookback>) and abs(close - ema_fast) <= <feature_pipeline.retest_atr_band_mult> * atr * close -> int8 {0, 1}. Emitted only when <feature_pipeline.sweep_semantics> == 'e01_lifecycle'; the default selects FM-061."
+    config_keys: [feature_pipeline.retest_lookback, feature_pipeline.retest_atr_band_mult]
+    impl:      feature_pipeline.compute_canonical_structure_features
+    depends_on: [liquidity_sweep_e01, close, ema_fast, atr]
+    lookback:  10
+    bounds:    "{0, 1}"
+    active:    false
+    replaces:            FM-061
+    config_key:          feature_pipeline.sweep_semantics
+    migration_class:     FORMULA_CORRECTION
+    requires:            [retrain_inactive_artifacts]
+    note: >
+      Same formula as FM-061; only the sweep input changes (FM-090 instead of FM-058). This does NOT
+      claim the contract's retest meaning: retest semantics are still PROPOSED (concept_contracts.yaml,
+      SP-003 / OQ7). Formula pinned to the code by
+      tests/test_e01_sweep_semantics.py::test_retest_flag_follows_the_selected_sweep_identity.
+    taxonomy:
+      category:        Retest
+      knowledge_class: Heuristic
+    semantics:
+      description:   "An MKT-E01 lifecycle sweep occurred recently AND price is within an ATR-scaled band of the fast EMA."
+      why_it_exists: "FM-061 with the lifecycle sweep as its trigger, so the retest gate inherits FM-090's consumed-level semantics. Registered and executable but INACTIVE."
+      interpretation:
+        high: "1 — a lifecycle sweep within retest_lookback bars and price back at the reference."
+        low:  "0 — no recent lifecycle sweep, or price outside the band."
+    states:
+      - name:        NoRetest
+        value:       0
+        condition:   "no MKT-E01 event within retest_lookback bars, or |close - ema_fast| outside the ATR band"
+        description: "No active retest. FM-095 emits 0.0 on these bars."
+      - name:        RetestActive
+        value:       1
+        condition:   "MKT-E01 event within retest_lookback bars AND |close - ema_fast| <= retest_atr_band_mult * atr * close"
+        description: "FM-095 is meaningful here."
     lineage:
       derivation_depth: 4
       produced_by:      feature_pipeline.compute_canonical_structure_features

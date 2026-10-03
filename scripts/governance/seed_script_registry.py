@@ -52,6 +52,54 @@ OVERLAYS: list[dict[str, Any]] = [
             "agreement / 10.77% EXPANSION recall between the two; never merge them."
         ),
     },
+    # Semantic OS v2 meaning plane: integration run (engine observed bar by bar vs concept contracts).
+    {
+        "path": "scripts/governance/semantic_os_integration.py",
+        "category": "GOVERNANCE",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "EXTRACTED_TO_SRC",
+        "logic_in_script": False,
+        "dest_modules": [
+            "src/semantics/integration/observe.py",
+            "src/semantics/integration/checks.py",
+            "src/semantics/integration/report.py",
+        ],
+        "purpose": (
+            "Semantic OS integration run: runs the real backtest twice on one XAUUSD corpus "
+            "(default the one-month slice), refuses to judge unless the observed and plain "
+            "event streams are identical, then compares every observed bar with the v2 concept "
+            "contracts (AGREE / EXPECTED_DIVERGENCE / UNEXPLAINED / NOT_CHECKABLE) and writes "
+            "results/semantic_os_integration/<stamp>/ with a D-level table per concept."
+        ),
+        "task_refs": ["SEMANTIC_OS_V2_MEANING_PLANE", "SITS"],
+        "notes": (
+            "Thin wrapper — logic lives in src/semantics/integration/. Observation only: the "
+            "engine is wrapped per instance, never edited. Not a performance run: no P&L, "
+            "expectancy or win rate. Meaning authority only (CLAUDE.md §6.5/§6.6)."
+        ),
+    },
+    # Semantic OS v2 R1-C: deterministic trade-exercising corpus window for the integration run.
+    {
+        "path": "scripts/governance/semantic_os_trade_window.py",
+        "category": "GOVERNANCE",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "EXTRACTED_TO_SRC",
+        "logic_in_script": False,
+        "dest_modules": ["src/semantics/integration/select_window.py"],
+        "purpose": (
+            "R1-C: from a plain full-corpus XAUUSD backtest (engine trades CSV + events.jsonl only, "
+            "never a Semantic OS verdict) pick the smallest contiguous window with the widest trade "
+            "lifecycle coverage (trade, LONG, SHORT, stop exit, TP1, TP2, >=2 trades), cut it "
+            "verbatim to data/mt5/XAUUSD_W<start>-to-<end>.csv, verify the engine reproduces the "
+            "same trades on the slice, and write results/semantic_os_integration/r1c_scan/selection.json."
+        ),
+        "task_refs": ["SEMANTIC_OS_V2_MEANING_PLANE", "R1-C", "SITS"],
+        "notes": (
+            "Thin wrapper — logic lives in src/semantics/integration/select_window.py. Selection "
+            "provenance is engine output only, so the integration experiment is not contaminated "
+            "by its own verdicts. No P&L is read or reported."
+        ),
+    },
     # CH-semantic-os-v2: Semantic OS build 1 (L1 concept/boundary/journey registry).
     {
         "path": "scripts/governance/seed_semantic_os.py",

@@ -142,7 +142,7 @@ concepts:
     absence: "n/a"
     authority: {evidence: [], sources: [], lineage: [SP-003]}
     divergences:
-      - {surface: "feature_pipeline retest_flag (src/features/feature_pipeline.py:1025-1035)", current: "internal ATR band, no FM id", contract: "no definition yet", disposition: RECORDED}
+      - {surface: "feature_pipeline retest_flag (src/features/feature_pipeline.py compute_canonical_structure_features)", current: "internal ATR band after a recent sweep; FM-061 (legacy sweep input) / FM-094 (MKT-E01 sweep input, sweep_semantics e01_lifecycle). CORRECTED 2026-10-03: was 'no FM id'", contract: "no definition yet", disposition: RECORDED}
     version: 1
 
   # ═══════════════════════════════ MARKET — LEVELS ═══════════════════════════════
@@ -318,7 +318,7 @@ concepts:
       founding: {domain: "MKT-L01.founding", identity_bearing: true}
       tie: {domain: [strict], legacy_values: [inclusive], identity_bearing: true}
     inputs: [MKT-L01, GP-04]
-    rule: "GP-04 on an ACTIVE, already-available MKT-L01. swept_side = level side; implied_bias = SHORT if UPPER swept, LONG if LOWER swept."
+    rule: "GP-04 on an ACTIVE, already-available MKT-L01. swept_side = level side; implied_bias = SHORT if UPPER swept, LONG if LOWER swept. The event carries sweep_extreme = the sweep bar's high (UPPER swept) or low (LOWER swept): the ONE canonical displacement reference price (R1-A). MKT-E04, TRS-03 and MKT-E11 consume MKT-E01 sweep_extreme and never define their own."
     units: {domain: event, sign_convention: "+1 = UPPER level swept (implied bias SHORT)"}
     lifecycle: null
     absence: "No sweep on a bar = no event. A bar with no available reference level is distinct from 'no sweep'."
@@ -326,8 +326,9 @@ concepts:
     divergences:
       - {surface: "at least 7 detectors (engine detect_sweep, parent_crt, resolver _detect_htf_range_sweep, FM-058, sujan_crt, visual_crt, weekly_sweep)", current: "independent implementations", contract: "one composition (GP-04) parameterised by founding (I-8)", disposition: RECORDED}
       - {surface: "FM-058 tie", current: "inclusive", contract: "strict", evidence: "0.40% of sweep bars on XAUUSD M15", disposition: PHASE_B_CANDIDATE}
+      - {surface: "feature_pipeline.liquidity_sweep two-sided bar", current: "both upper and lower founding levels swept on the same bar -> encoded upper only (+1)", contract: "both sides swept", evidence: "C7, XAUUSD_W2026-07-06-to-2026-08-07, sha dcaf88a7, 2026-10-03: 0 genuinely two-sided bars under the MKT-L01 lifecycle. CORRECTED twice: 6 -> 3 -> 0. The first count (6) compared against the latest swing level only; the second (3: bars 372, 1101, 1740) came from a classifier that called a bar two-sided when the slot's OWN rule fired on both sides, without requiring a contract MKT-E01 event on both. On all three the contract has a single LOWER event (the latest upper level was already SWEPT), so the lost side is part of the lifecycle defect, not this divergence. The divergence remains a structural property of the one-slot representation: a bar with events on both sides is encoded UPPER only (UPPER-first projection, also under FM-090). A representation/encoding divergence, not a detection defect. How MKT-E01 multiplicity is represented is UNRESOLVED; the user kept the 48-slot v6 representation (2026-10-03)", disposition: RECORDED}
       - {surface: "engine SweepEvent.double_confirmed (crt_engine_v2.py:965) + score_sweep double_bonus + adjusted +0.10 + RejectReason.NO_DOUBLE_SWEEP", current: "structurally constant False (detect_sweep runs only in RANGE where sweep_event is always None); 0 true in 873,561 recorded SWEEP events", contract: "DEPRECATED (unreachable semantics, I-13)", disposition: DEPRECATED}
-    version: 1
+    version: 2   # R1-A: sweep_extreme is the canonical displacement reference price
 
   MKT-E02:
     canonical_name: structure_break
@@ -376,13 +377,13 @@ concepts:
     identity: {reference: MKT-E01, timeframe: bar, clock: bar_close, availability_rule: bar_close}
     parameterization: {}
     inputs: [MKT-E01, GP-06]
-    rule: "GP-06 with bias = the sweep's implied bias and sweep_price = the sweep extreme. Magnitude gates (body quality, ATR size, sweep age) are caller parameters, not part of the primitive."
+    rule: "GP-06 with bias = the sweep's implied bias and sweep_price = MKT-E01 sweep_extreme (R1-A). Magnitude gates (body quality, ATR size, sweep age) are caller parameters, not part of the primitive."
     units: {domain: event}
     lifecycle: null
     absence: "No prior sweep -> undefined, not 'no displacement'."
     authority: {evidence: [REPO], sources: [src/structure/predicates.py, src/config_layer/crt_engine_v2.py], lineage: [SP-002, F-074]}
     divergences: []
-    version: 1
+    version: 2   # R1-A
 
   MKT-E05:
     canonical_name: impulse_candle
@@ -499,14 +500,15 @@ concepts:
     identity: {reference: "MKT-L02 extension", timeframe: bar, clock: bar_close, availability_rule: bar_close}
     parameterization: {}
     inputs: [MKT-L02, GP-03]
-    rule: "GP-03 with the move on the extension level."
+    rule: "GP-03 with the move on the extension level. For a thesis the move runs from MKT-E01 sweep_extreme to the MKT-E04 close (R1-A)."
     units: {domain: event}
     lifecycle: null
     absence: "n/a"
     authority: {evidence: [REPO], sources: [src/config_layer/crt_engine_v2.py], lineage: []}
     divergences:
       - {surface: "ResetLogic.should_reset (crt_engine_v2.py:2912-2923)", current: "emitted only as RESET '1.618 extension hit'", contract: "a market event; the thesis binds it as SPENT", disposition: RECORDED}
-    version: 1
+      - {surface: "ResetLogic.should_reset HTF protection (crt_engine_v2.py:2882-2891)", current: "after the HTF clock flips during EXPANSION/RETEST the function returns before the extension rule, so it never fires again for that setup", contract: "a thesis that survives a rollover (R1-B) can still be SPENT", evidence: "integration run results/semantic_os_integration/20261002T192245Z", disposition: RECORDED}
+    version: 2   # R1-A, R1-B
 
   MKT-E12:
     canonical_name: clock_rollover
@@ -522,8 +524,9 @@ concepts:
     lifecycle: null
     absence: "n/a"
     authority: {evidence: [REPO], sources: [src/config_layer/crt_engine_v2.py, src/config_layer/m15_structural_range.py], lineage: []}
-    divergences: []
-    version: 1
+    divergences:
+      - {surface: "runtime.backtest_v2.HTFBuilder with backtest.htf_clock_basis = count (active config)", current: "the htf_period clock is a bar counter that flips every htf_candles_per_range bars counted from the FIRST ROW OF THE LOADED FILE, so the same bar falls in a different period depending on where the input starts; an unaligned slice re-tiles every period and the engine follows a different trajectory (0 of 2 trades reproduced, R1-C scan 2026-10-03)", contract: "a clock period is a property of time, not of the input file; the calendar basis (features.calendar_periods) satisfies it", evidence: "results/semantic_os_integration/r1c_scan/selection.json", disposition: RECORDED}
+    version: 2   # count-clock divergence recorded (R1-C)
 
   # ═══════════════════════════════ MARKET — CONDITIONS ═══════════════════════════════
 
@@ -593,7 +596,7 @@ concepts:
       k: {domain: int, identity_bearing: true, default_ref: feature_pipeline.swing_window}
       window: {domain: int, identity_bearing: true, default_ref: feature_pipeline.double_sweep_window}
     inputs: [MKT-E01]
-    rule: "FM-060: any(liquidity_sweep > 0) and any(liquidity_sweep < 0) over the last W bars."
+    rule: "At least one UPPER-side and at least one LOWER-side MKT-E01{swing_pivot(k)} event in the last W bars (bar i included). MKT-E01 events are taken from the MKT-L01 lifecycle (any ACTIVE level, consumed once SWEPT or BROKEN); one bar with both is two events and counts. Never computed from a signed sweep slot."
     units: {domain: bool}
     lifecycle: null
     absence: "Fewer than one reference level = UNDEFINED."
@@ -602,7 +605,8 @@ concepts:
       - {surface: "name double_sweep", current: "same key also used for the engine's dead double_confirmed (crt_engine_v2.py:1912)", contract: "two_sided_sweep{k,W}; engine attribute DEPRECATED", disposition: RECORDED}
       - {surface: "feature_pipeline.py:281 comment", current: "says tuning W 'redefines no registered math'", contract: "W is identity-bearing: a new W is a new parameterization_id (I-17)", disposition: RECORDED}
       - {surface: "inherited FM-058 tie", current: "inclusive", contract: "strict (GP-04)", disposition: PHASE_B_CANDIDATE}
-    version: 1
+      - {surface: "FM-060 rule on the liquidity_sweep slot (feature_pipeline.py double_sweep; causal_structure double_sweep; core/feature_store.py liquidity_sweep history)", current: "any(liquidity_sweep > 0) and any(liquidity_sweep < 0) over W: inherits the slot's one-side encoding of a two-sided bar and its latest-level, never-consumed sweep", contract: "MKT-E01 events of both sides within W (rule above)", evidence: "C7 2026-10-03, XAUUSD_W2026-07-06-to-2026-08-07 sha dcaf88a7: 119 disagreeing bars vs the definition reading. Rule superseded in contract v2 (user decision 2026-10-03); producers unchanged", disposition: RECORDED}
+    version: 2   # rule now consumes MKT-E01 events, not the lossy slot (was v1: FM-060 on liquidity_sweep)
 
   MKT-C05:
     canonical_name: htf_posture
@@ -810,12 +814,12 @@ concepts:
     rule: "direction = the implied bias of the MKT-E01 sweep, confirmed by MKT-E04 (GP-06 away from the swept side, F-074). A thesis binds exactly one TRS-03 invalidation and one TRS-05 stop (I-11); it may bind a TRS-02 objective, a TRS-04 entry and TRS-06 targets."
     roles: {invalidation: TRS-03, stop: TRS-05, objective: TRS-02, entry: TRS-04, target: TRS-06}
     units: {domain: direction, values: [LONG, SHORT]}
-    lifecycle: {states: [ACTIVE, FAILED, SPENT, EXPIRED], transitions: {TRS-03: FAILED, MKT-E11: SPENT, MKT-E12: EXPIRED}, terminal_authority: MARKET}
+    lifecycle: {states: [ACTIVE, FAILED, SPENT, EXPIRED], transitions: {TRS-03: FAILED, MKT-E11: SPENT, MKT-E12: EXPIRED}, terminal_authority: MARKET, expiry_rule: "MKT-E12 expires the thesis only while its episode is at MKT-P01.DISPLACED. From MKT-P01.EXTENDED on, a rollover is context, not termination (R1-B): the thesis then ends by TRS-03, MKT-E11, or the episode's expansion TTL (PRODUCER, O-4)."}
     absence: "No MKT-E04 after the sweep -> no thesis (None)."
     authority: {evidence: [REPO, USER_DECISION], sources: [src/config_layer/crt_engine_v2.py, src/structure/predicates.py], lineage: [F-074, D2-1]}
     divergences:
       - {surface: "CRTEngine.try_range_to_sweep (crt_engine_v2.py:1112)", current: "state.direction is set on the SWEEP transition, before any displacement", contract: "direction belongs to a thesis, which exists only from MKT-E04 (D2-1)", disposition: RECORDED}
-    version: 1
+    version: 2   # R1-B: stage-dependent expiry
 
   TRS-02:
     canonical_name: objective
@@ -847,15 +851,16 @@ concepts:
     parameterization:
       retrace_fraction: {domain: float, identity_bearing: true, default_ref: crt_engine.retrace_reset_pct}
     inputs: [TRS-01, MKT-E10, MKT-L02]
-    rule: "MKT-E10 against the thesis direction on the MKT-L02 retracement of the displacement move at retrace_fraction. The displacement move runs from the MKT-E01 sweep reference price to the MKT-E04 close; MKT-E11 (SPENT) measures its extension on the same move (user, 2026-10-02)."
+    rule: "MKT-E10 against the thesis direction on the MKT-L02 retracement of the displacement move at retrace_fraction. The displacement move runs from MKT-E01 sweep_extreme (the sweep bar's wick, R1-A) to the MKT-E04 close; MKT-E11 (SPENT) measures its extension on the same move (user, 2026-10-02; reference price normalised 2026-10-03). The invalidation still applies after a rollover the thesis survives (R1-B)."
     units: {domain: event}
     lifecycle: null
     absence: "n/a (a thesis without an invalidation is not tradable, I-11)."
     authority: {evidence: [REPO, USER_DECISION], sources: [src/config_layer/crt_engine_v2.py], lineage: [D2-2]}
     divergences:
-      - {surface: "ResetLogic.should_reset retrace (crt_engine_v2.py:2898-2909)", current: "the move is the displacement candle body abs(close-open), and the retrace fires at retrace >= retrace_reset_pct (inclusive); the 1.618 extension (:2911-2923) uses sweep level to displacement close", contract: "one move (sweep reference price to displacement close) for both invalidation and extension; the breach is GP-02 strict", disposition: RECORDED}
+      - {surface: "ResetLogic.should_reset retrace (crt_engine_v2.py:2898-2909)", current: "the move is the displacement candle body abs(close-open), and the retrace fires at retrace >= retrace_reset_pct (inclusive); the 1.618 extension (:2911-2923) measures from sweep_event.price, the sweep WICK, to the displacement close (CORRECTED 2026-10-03: previously recorded as 'sweep level'; found by integration run 20261002T192245Z bar 1019)", contract: "one move (MKT-E01 sweep_extreme to displacement close) for both invalidation and extension; the breach is GP-02 strict. The engine's extension now matches the contract; the retrace (body, >=) still differs", disposition: RECORDED}
+      - {surface: "ResetLogic.should_reset HTF protection (crt_engine_v2.py:2882-2891)", current: "after the HTF clock flips during EXPANSION/RETEST the function returns before the retrace rule, so a surviving setup is never invalidated by price again", contract: "a thesis that survives a rollover (R1-B) can still FAIL on MKT-E10", evidence: "integration run results/semantic_os_integration/20261002T192245Z", disposition: RECORDED}
       - {surface: "ResetLogic.should_reset (crt_engine_v2.py:2876)", current: "all resets are suppressed while a trade is OPEN or TP1, so an invalidation after entry is neither acted on nor recorded", contract: "the invalidation is recorded on the thesis; whether it also closes the position is a Decision/Execution policy", disposition: RECORDED, decided_in: slice_3, decision: "When a thesis is invalidated while its position is open, does the position close?", resolution: "a policy, not a rule: DEX-07 exit_rule parameter on_invalidation in {hold, close_on_invalidation, close_on_origin}; the invalidation is always recorded on the thesis (user, D3-1)"}
-    version: 1
+    version: 2   # R1-A, R1-B
 
   TRS-04:
     canonical_name: entry

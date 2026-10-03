@@ -15,6 +15,7 @@ representations:
     encoding: bool_int8
     parameterization: {k: "feature_pipeline.swing_window", window: "feature_pipeline.double_sweep_window"}
     absence: "0 also when no swing reference exists yet (divergence, I-7)"
+    note: "sweep_semantics latest_unconsumed = FM-060 (rule on the signed slot, recorded MKT-C04 divergence); e01_lifecycle = FM-092 (MKT-C04 v2, per-side MKT-E01 events)"
 
   trend_bias:
     slot: 10
@@ -30,14 +31,16 @@ representations:
     parameterization: {founding: swing_pivot, tie: inclusive}
     divergence_ref: "MKT-E01 FM-058 tie"
     absence: "0 also when no swing reference exists yet (divergence, I-7)"
+    note: "sweep_semantics latest_unconsumed = FM-059 (latest swing level, never consumed, inclusive tie); e01_lifecycle = FM-091 (any ACTIVE level, consumed, strict tie)"
 
   liquidity_sweep:
     slot: 21
     concept_id: MKT-E01
-    encoding: signed_side_int {-1 LOWER swept, 0, +1 UPPER swept}
+    encoding: signed_side_int {-1 LOWER swept, 0, +1 UPPER swept}; UPPER-first projection when both sides are swept on one bar (declared lossy encoding, MKT-E01 divergence "feature_pipeline.liquidity_sweep two-sided bar")
     parameterization: {founding: swing_pivot, tie: inclusive}
     divergence_ref: "MKT-E01 FM-058 tie"
     absence: "0 also when no swing reference exists yet (divergence, I-7)"
+    note: "sweep_semantics latest_unconsumed = FM-058 (latest swing level, never consumed, inclusive tie); e01_lifecycle = FM-090 (any ACTIVE level, consumed, strict tie)"
 
   break_of_structure:
     slot: 22
@@ -115,7 +118,7 @@ unmapped:
   volatility_regime: "categorical measurement"
   hour_of_day: "clock measurement"
   disp_strength: "impulse measurement (MKT-E05 family)"
-  retest_depth: "measurement; retest semantics PROPOSED (OQ7)"
+  retest_depth: "measurement; retest semantics PROPOSED (OQ7); identity-bearing on sweep_semantics: latest_unconsumed = FM-021 (gate FM-061), e01_lifecycle = FM-095 (gate FM-094)"
   candles_since_sweep: "count since MKT-E01{swing_pivot} — measurement concept not in slice 1"
   liquidity_distance: "distance to MKT-L01 — measurement concept not in slice 1"
   liquidity_pressure_score: "transform of liquidity_distance"

@@ -14,6 +14,7 @@
 | CRT / Gaussian / Zone / RR engines | [`engine-memory.md`](engine-memory.md) | `src/engines/` |
 | Promotion, validators, registries | [`governance-memory.md`](governance-memory.md) | `src/governance/`, `src/config_layer/config_validator.py` |
 | Full spine, layers, cross-subsystem | [`architecture-memory.md`](architecture-memory.md) | multi-package |
+| Trading meaning, concept contracts, v2 grounding | [`semantic-os-memory.md`](semantic-os-memory.md) | `src/semantics/`, `configs/formulas/concept_contracts.yaml` |
 
 ## Load rules
 

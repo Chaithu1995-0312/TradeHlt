@@ -66,6 +66,16 @@ class FeatureStore:
         self._liquidity_sweep_history: Deque[int] = deque(maxlen=max(10, _ds_window))
         # OHLCV(+atr) ring for causal structure (FC1-A live contract)
         self._ohlcv_hist: Deque[Dict[str, float]] = deque(maxlen=max_history)
+        # MKT-E01 sweep identity (feature_pipeline.sweep_semantics). In "e01_lifecycle" mode a
+        # level's consumption state cannot be rebuilt from the truncated OHLCV ring, so the store
+        # CARRIES the lifecycle across bars (features.level_lifecycle.LevelBook) and derives
+        # liquidity_sweep / sweep_detected / double_sweep / candles_since_sweep from it (FM-090..093).
+        from features.feature_pipeline import SWEEP_E01_LIFECYCLE, resolve_sweep_semantics, resolve_swing_window
+        self._sweep_semantics = resolve_sweep_semantics()
+        self._e01 = None
+        if self._sweep_semantics == SWEEP_E01_LIFECYCLE:
+            from features.level_lifecycle import LiveSweepState
+            self._e01 = LiveSweepState(k=resolve_swing_window(), window=_ds_window)
 
     def process(
         self,
@@ -151,12 +161,17 @@ class FeatureStore:
             struct = causal_structure_at_bar(
                 highs, lows, closes, atrs,
                 liquidity_sweep_history=list(self._liquidity_sweep_history),
+                sweep_semantics=self._sweep_semantics,
             )
             # Only CANONICAL structure keys — skip internal _last_swing_* helpers
             for key, val in struct.items():
                 if key.startswith("_"):
                     continue
                 d[key] = val
+            if self._e01 is not None:
+                # FM-090..093 from the carried lifecycle (features.level_lifecycle owns the math).
+                d.update(self._e01.step(highs, lows, closes[-1],
+                                        struct.get("swing_high") == 1.0, struct.get("swing_low") == 1.0))
         except Exception as exc:
             logger.warning("FeatureStore: causal structure failed (%s); leaving feeder values", exc)
 

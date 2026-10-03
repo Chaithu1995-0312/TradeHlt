@@ -140,6 +140,12 @@ _FP_CFG_KEYS = (
     # tests/test_session_timestamp_basis.py for a regression proving the shift is NOT a no-op on
     # non-MT5 timestamps (documented, not just asserted away). ──
     "session_timestamp_basis",                                # FM-052 clock domain + crt_engine filter
+    # MKT-E01 sweep identity (2026-10-03). "latest_unconsumed" (legacy, FM-058/059/060/065): the
+    # sweep slots test only the LATEST swing level and never consume it. "e01_lifecycle"
+    # (FM-090..093): every ACTIVE swing level, consumed once swept or broken
+    # (features.level_lifecycle). Selects the identity of liquidity_sweep / sweep_detected /
+    # double_sweep / candles_since_sweep; registration grants no production authority (§6.5).
+    "sweep_semantics",
     # ── SMC primitives (CH-htfcrt-parent-candle-smc-v1, 2026-08-15) — `compute_smc_features`
     # reuses the EXISTING `swing_window` key above (no duplicate) for its causal swing half-
     # window; `smc_max_window` is the ONE genuinely new key, a trailing-candle-buffer bound
@@ -154,6 +160,11 @@ _NORMALIZATION_BASES = ("atr_relative", "atr_absolute")
 
 # Legal values for `feature_pipeline.session_timestamp_basis`. Same no-silent-fallback rule.
 _SESSION_TIMESTAMP_BASES = ("broker_local", "utc_corrected")
+
+# Legal values for `feature_pipeline.sweep_semantics`. Same no-silent-fallback rule.
+SWEEP_LEGACY = "latest_unconsumed"
+SWEEP_E01_LIFECYCLE = "e01_lifecycle"
+_SWEEP_SEMANTICS = (SWEEP_LEGACY, SWEEP_E01_LIFECYCLE)
 
 # C2 (2026-07-31 semantic layer audit, extends F-061 from crypto to XAUUSD): "atr_relative"
 # selects FM-022/FM-023, which the feature certification ledger marks SUPERSEDED by FM-030/031
@@ -253,7 +264,25 @@ def _resolve_feature_pipeline_cfg(cfg: Optional[dict]) -> dict:
             "the config declares."
         )
     _warn_once_if_mislabeled_session_basis(_ts_basis)
+    if cfg["sweep_semantics"] not in _SWEEP_SEMANTICS:
+        raise ValueError(
+            f"feature_pipeline.sweep_semantics={cfg['sweep_semantics']!r} is not one of "
+            f"{_SWEEP_SEMANTICS}. An unrecognised value must NOT silently fall through to the "
+            "legacy arm -- it would emit a different sweep identity than the config declares."
+        )
     return cfg
+
+
+def resolve_sweep_semantics(cfg: Optional[dict] = None) -> str:
+    """THE single source of truth for the sweep identity (batch pipeline, live FeatureStore and
+    the causal_structure twin all resolve it here, so batch and live cannot disagree)."""
+    if cfg is None:
+        from config_layer.production_config import get_prod_section
+        cfg = get_prod_section("feature_pipeline")
+    value = _require_fp_cfg(cfg, "sweep_semantics")
+    if value not in _SWEEP_SEMANTICS:
+        raise ValueError(f"feature_pipeline.sweep_semantics={value!r} is not one of {_SWEEP_SEMANTICS}")
+    return value
 
 
 def resolve_swing_window(cfg: Optional[dict] = None) -> int:
@@ -839,10 +868,23 @@ class FeaturePipeline:
         sweep_high = (df["high"] > ref_high) & (df["close"] <= ref_high)
         sweep_low  = (df["low"]  < ref_low)  & (df["close"] >= ref_low)
 
-        df["liquidity_sweep"] = np.where(
-            sweep_high,  1,
-            np.where(sweep_low, -1, 0)
-        ).astype(np.int8)
+        if self._fp_cfg["sweep_semantics"] == SWEEP_E01_LIFECYCLE:
+            # FM-090: MKT-E01 on every ACTIVE swing level, consumed once SWEPT or BROKEN; the one
+            # lifecycle implementation (features.level_lifecycle). Per-side flags are kept as
+            # internal (non-vector) columns so FM-092 double_sweep reads events, not the signed
+            # slot. UPPER-first projection into the slot (declared encoding).
+            from features.level_lifecycle import swing_level_sweeps
+            up, down = swing_level_sweeps(df["high"].to_numpy(), df["low"].to_numpy(),
+                                          df["close"].to_numpy(), df["swing_high"].to_numpy(),
+                                          df["swing_low"].to_numpy(), k=_s)
+            df["_e01_sweep_upper"] = up
+            df["_e01_sweep_lower"] = down
+            df["liquidity_sweep"] = np.where(up == 1, 1, np.where(down == 1, -1, 0)).astype(np.int8)
+        else:
+            df["liquidity_sweep"] = np.where(
+                sweep_high,  1,
+                np.where(sweep_low, -1, 0)
+            ).astype(np.int8)
 
         self.df = df
 
@@ -1022,8 +1064,9 @@ class FeaturePipeline:
         # Retest: after a sweep, price returns close to fast EMA within ATR-based band.
         # Rolling window so retests up to N bars after the sweep are captured (was a 1-bar
         # .shift(1) which forced the counter to 1 always).
-        # Config: feature_pipeline.retest_lookback / retest_atr_band_mult (Tier 3 —
-        # `retest_flag` is an internal column, no FM id).
+        # Config: feature_pipeline.retest_lookback / retest_atr_band_mult. `retest_flag` is an
+        # internal (non-vector) column registered as FM-061; it reads liquidity_sweep, so under
+        # sweep_semantics == "e01_lifecycle" it is FM-094 and the retest_depth it gates is FM-095.
         _RETEST_LOOKBACK = self._fp_cfg["retest_lookback"]
         recent_sweep = (
             (df["liquidity_sweep"] != 0)
@@ -1043,14 +1086,21 @@ class FeaturePipeline:
         # resolve_double_sweep_window() instead of a signature literal, so batch and live are a
         # single source. Parity floor: tests/test_fc1a_swing_causal.py.
         window = self._fp_cfg["double_sweep_window"]
+        if self._fp_cfg["sweep_semantics"] == SWEEP_E01_LIFECYCLE:
+            # FM-092 (MKT-C04 v2): per-side MKT-E01 events, so a two-sided bar counts.
+            up_events = df["_e01_sweep_upper"] == 1
+            down_events = df["_e01_sweep_lower"] == 1
+        else:
+            up_events = df["liquidity_sweep"] > 0
+            down_events = df["liquidity_sweep"] < 0
         seen_up = (
-            (df["liquidity_sweep"] > 0)
+            up_events
             .rolling(window=window, min_periods=1)
             .max()
             .astype(bool)
         )
         seen_down = (
-            (df["liquidity_sweep"] < 0)
+            down_events
             .rolling(window=window, min_periods=1)
             .max()
             .astype(bool)

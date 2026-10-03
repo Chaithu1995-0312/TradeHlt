@@ -66,11 +66,11 @@
   "source_file_pins": {
     "market_ontology.yaml": {
       "path": "configs/formulas/market_ontology.yaml",
-      "sha256": "132c92962abf97336ba943aba153785359a7b0ad2605dcbcb82f03a286e74ab9"
+      "sha256": "bb6f7cd89f69c986762e7d490d338951c1feed2b180ac8174e5f07496d2f373e"
     },
     "active_config": {
       "path": "configs/production/v2_htfcrt_2026_08.json",
-      "sha256": "4d7d2b1c110d0f52fb869ff5606a349627b3b0afb706d755f210d6ddad96a8fd"
+      "sha256": "fbe40700330da01da29385110a8a58d7854cad73a1404b1bbf4cba6f12c96d7d"
     },
     "ACTIVE_VERSION": {
       "path": "configs/production/ACTIVE_VERSION",
@@ -78,11 +78,11 @@
     },
     "feature_pipeline.py": {
       "path": "src/features/feature_pipeline.py",
-      "sha256": "67377f36ff021e98364bfbbe1a3f49823bbcb06ef3aa9872efe91133b4a4505a"
+      "sha256": "220575f5ab5ad7f49c0f7a975a99415b6712f058df01055e190ec4a014afd382"
     },
     "feature_schema.py": {
       "path": "src/features/feature_schema.py",
-      "sha256": "ac0751b1f35390eb81dd5193a8a35c03b034bb38d6fe1b4dc07937302de0e7fd"
+      "sha256": "48a52845f0bce29ca800cd321dc623d5edc2471233595f761e3ef546e10a6ebb"
     },
     "candle_math.py": {
       "path": "src/features/candle_math.py",
@@ -94,7 +94,7 @@
     },
     "causal_structure.py": {
       "path": "src/features/causal_structure.py",
-      "sha256": "2574f189cc4c08470d9c39a6e3f612e4f271dbef75ec7f7e0bb260c05b00d155"
+      "sha256": "ce6e0de24a8c4ed37f77bc640419745ae93708ad5a79fe3e09839a37a8da8969"
     },
     "registry_init.py": {
       "path": "src/features/registry/__init__.py",
@@ -259,6 +259,16 @@
       "parity_contract": "STRICT for Step 1 -- PRODUCTION_BEHAVIOR_CHANGED = NO. The generated CANONICAL_FEATURES tuple MUST equal the prior literal tuple byte-for-byte (same 48 names, same order); SCHEMA_HASH and FEATURE_ORDER_HASH MUST NOT move. Mints 5 new FM ids (FM-085..FM-089) and adds one new governed section, which changes the ontology SHA and engages frozen surface #3 (src/features/registry/**) via the validate_registry exemption branch -- but changes no formula, no impl resolution for any EXISTING identity, and no emitted value.",
       "user_authorization": "AskUserQuestion 2026-09-16: 'Bind names to identity first' (vs. only Step 1, vs. direct renames with no indirection); production call sites reference features by FM id (F.FM_021) not a readable alias or bare function call. Plan approved via ExitPlanMode the same session.",
       "impact_manifest": "docs/governance/build_manifests/CH-feature-name-identity-binding-step1.impact.json"
+    },
+    {
+      "id": "E01-LIFECYCLE-SWEEP-IDENTITY",
+      "phase": "config-gated corrected identities FM-090..093 (default legacy, byte-identical)",
+      "note": "user-approved 2026-10-03 (Step 6 plan): MKT-E01 lifecycle sweep identities behind feature_pipeline.sweep_semantics; activation NOT authorized"
+    },
+    {
+      "id": "E01-LIFECYCLE-RETEST-IDENTITY",
+      "phase": "config-gated transitive identities FM-094/095 (default legacy, byte-identical)",
+      "note": "user-approved 2026-10-03 ('Plan fm21 fix'): completes E01-LIFECYCLE-SWEEP-IDENTITY; activation NOT authorized"
     }
   ],
   "engineering_focus_after_freeze": "docs/implementation_plan/backtest-runtime-roadmap-2026-07-20.md",
@@ -603,6 +613,62 @@
       },
       "value_neutrality": "No key under crt_engine, feature_pipeline, or parent_crt (the sections FeaturePipeline/CRTStateResolver read) was touched, and none of the 4 drifted source files changed a CANONICAL_FEATURES entry, a derived_metrics formula, or an `active:`/`impl:` binding. tests/test_feature_layer_freeze.py::test_xauusd_window_vector_regression's vector_sha256 is unchanged from this pin's own regression_benchmarks block. Independently confirmed by a full-corpus oracle-label regeneration the same day: 565,884 rows x 32 value columns bit-identical (same sha256) across the pre-EPIC-84 bar matrix and a fresh bar matrix built on this commit.",
       "authority": "Config-declaration bookkeeping + comment-only source-drift attribution. Grants no activation authority, no G001, no ACTIVE_VERSION change, no CRT/feature closure reopening."
+    },
+    {
+      "date_utc": "2026-10-03",
+      "program_id": "E01-LIFECYCLE-SWEEP-IDENTITY",
+      "source_sha_refresh": [
+        "market_ontology.yaml",
+        "active_config",
+        "feature_pipeline.py",
+        "causal_structure.py",
+        "feature_schema.py"
+      ],
+      "what_changed": "Registered FM-090 liquidity_sweep_e01 / FM-091 sweep_detected_e01 / FM-092 double_sweep_e01 (structural_states) and FM-093 candles_since_sweep_e01 (rolling_indicators), all active:false, config_key feature_pipeline.sweep_semantics. feature_pipeline.py + causal_structure.py gained an e01_lifecycle arm (features.level_lifecycle.LevelBook) behind the new strict key; the default 'latest_unconsumed' arm is unchanged. Active config gained feature_pipeline.sweep_semantics = 'latest_unconsumed' (non-params, hash-neutral: params hash 7de09f62 unchanged).",
+      "pre_existing_drift_declared": {
+        "_doc": "NOT laundering (CLAUDE.md 6.2 rule 4): two pinned sources were ALREADY drifted before this program touched anything. (1) active_config equalled HEAD (git LF blob sha aaebad19415bcbab...) before this program's one-line edit, which is not the pinned value. (2) feature_schema.py was NOT edited by this program at all and is git-clean (equals HEAD after line-ending normalisation), yet its working-tree sha is not the pinned value. Most likely entered with merge ad2bddc6 (2026-09-30), which landed after the last pin refresh f45b740b; not proven here. market_ontology.yaml, feature_pipeline.py and causal_structure.py matched their pins at session open (CRLF/LF accounted for).",
+        "active_config": {
+          "pinned": "4d7d2b1c110d0f52fb869ff5606a349627b3b0afb706d755f210d6ddad96a8fd",
+          "live_pre_edit": "aaebad19415bcbabacb76b3ca7c3f03ba9a3af472a6428e30f88fa5d1bcf789a"
+        },
+        "feature_schema.py": {
+          "pinned": "ac0751b1f35390eb81dd5193a8a35c03b034bb38d6fe1b4dc07937302de0e7fd",
+          "live_untouched_by_this_program": "48a52845f0bce29ca800cd321dc623d5edc2471233595f761e3ef546e10a6ebb"
+        }
+      },
+      "bounding_evidence": "tests/test_feature_layer_freeze.py::test_xauusd_window_vector_regression PASSED after the edits (legacy default byte-identical); tests/test_e01_sweep_semantics.py proves batch == causal twin == live FeatureStore in e01_lifecycle mode.",
+      "previous_sha": {
+        "market_ontology.yaml": "132c92962abf97336ba943aba153785359a7b0ad2605dcbcb82f03a286e74ab9",
+        "active_config": "4d7d2b1c110d0f52fb869ff5606a349627b3b0afb706d755f210d6ddad96a8fd",
+        "feature_pipeline.py": "67377f36ff021e98364bfbbe1a3f49823bbcb06ef3aa9872efe91133b4a4505a",
+        "causal_structure.py": "2574f189cc4c08470d9c39a6e3f612e4f271dbef75ec7f7e0bb260c05b00d155",
+        "feature_schema.py": "ac0751b1f35390eb81dd5193a8a35c03b034bb38d6fe1b4dc07937302de0e7fd"
+      },
+      "new_sha": {
+        "market_ontology.yaml": "96ecc604c39ec6b59569bc9b6a1aaea90f2574f0abf52997b773518a12a8920f",
+        "active_config": "fbe40700330da01da29385110a8a58d7854cad73a1404b1bbf4cba6f12c96d7d",
+        "feature_pipeline.py": "e83d3059fa7aebce0c5b5c1f06291c64c14ed98aab60cd075cd0f0324163a52e",
+        "causal_structure.py": "ce6e0de24a8c4ed37f77bc640419745ae93708ad5a79fe3e09839a37a8da8969",
+        "feature_schema.py": "48a52845f0bce29ca800cd321dc623d5edc2471233595f761e3ef546e10a6ebb"
+      }
+    },
+    {
+      "date_utc": "2026-10-03",
+      "program_id": "E01-LIFECYCLE-RETEST-IDENTITY",
+      "source_sha_refresh": [
+        "market_ontology.yaml",
+        "feature_pipeline.py"
+      ],
+      "what_changed": "Registered FM-094 retest_flag_e01 (structural_states) and FM-095 retest_depth_e01 (derived_metrics, flat + additive), both active:false, config_key feature_pipeline.sweep_semantics: FM-061 / FM-021 fed by the MKT-E01 lifecycle sweep, which Step 6 changed without declaring. feature_pipeline.py: COMMENT ONLY (stale 'retest_flag ... no FM id' corrected); no logic change.",
+      "bounding_evidence": "tests/test_feature_layer_freeze.py::test_xauusd_window_vector_regression PASSED after the edits; tests/test_e01_sweep_semantics.py::test_live_feeder_matches_batch_at_every_prefix proves LiveRailFeeder == batch for retest_depth and the sweep slots in both modes.",
+      "previous_sha": {
+        "market_ontology.yaml": "96ecc604c39ec6b59569bc9b6a1aaea90f2574f0abf52997b773518a12a8920f",
+        "feature_pipeline.py": "e83d3059fa7aebce0c5b5c1f06291c64c14ed98aab60cd075cd0f0324163a52e"
+      },
+      "new_sha": {
+        "market_ontology.yaml": "bb6f7cd89f69c986762e7d490d338951c1feed2b180ac8174e5f07496d2f373e",
+        "feature_pipeline.py": "220575f5ab5ad7f49c0f7a975a99415b6712f058df01055e190ec4a014afd382"
+      }
     }
   ],
   "runtime_benchmarks": {

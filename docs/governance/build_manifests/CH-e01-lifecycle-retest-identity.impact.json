@@ -1,0 +1,48 @@
+{
+  "change_id": "CH-e01-lifecycle-retest-identity",
+  "date_utc": "2026-10-03",
+  "objective": "Complete CH-e01-lifecycle-sweep-identity (user-approved plan 'Plan fm21 fix', 2026-10-03). The downstream-consumer A/B (docs/analysis/e01-lifecycle-downstream-consumers-2026-10-03.md) showed that under feature_pipeline.sweep_semantics = e01_lifecycle FIVE vector values change, not four: FM-021 retest_depth (slot 34) moves on 17.4% of XAUUSD bars because it is gated on FM-061 retest_flag, which reads liquidity_sweep. Step 6 registered only FM-090..093 and its parity tests covered only the four sweep slots. This change registers the transitive identities FM-094 retest_flag_e01 and FM-095 retest_depth_e01 (active:false, config_key feature_pipeline.sweep_semantics), fixes stale 'retest_flag has no FM id' drift in a source comment and in concept_contracts.yaml, notes the identity-bearing key on the retest_depth representation, and adds tests that pin FM-094's formula to the code and prove LiveRailFeeder == batch for retest_depth and the sweep slots at every prefix in both modes. No emitted value changes; activation is NOT part of this change.",
+  "change_classes": [
+    "FORMULA_CHANGE",
+    "SEMANTIC_REGISTRY_CHANGE",
+    "MODEL_INPUT_CHANGE"
+  ],
+  "change_class_rationale": "FORMULA_CHANGE: two new registered identities FM-094/FM-095 (same formulas and impl as FM-061/FM-021, fed by FM-090), and a comment-only edit in feature_pipeline.py (no logic change; XAUUSD vector regression unchanged). SEMANTIC_REGISTRY_CHANGE: concept_contracts.yaml retest divergence row corrected (FM-061/FM-094, was 'no FM id'); representation_registry feature_pipeline.yaml retest_depth note. MODEL_INPUT_CHANGE: declared as POTENTIAL only — selecting e01_lifecycle changes the retest_depth slot that ZoneGate/RR/TradeNet artifacts and the planner/CRT scoring read; under the default nothing a model sees changes. No production config edited; params hash 7de09f62 unchanged.",
+  "completes_change": "CH-e01-lifecycle-sweep-identity",
+  "affected_files": [
+    "configs/formulas/market_ontology.yaml",
+    "configs/formulas/concept_contracts.yaml",
+    "configs/formulas/representation_registry/feature_pipeline.yaml",
+    "src/features/feature_pipeline.py",
+    "tests/test_e01_sweep_semantics.py",
+    "docs/governance/feature-layer-freeze-pin-2026-07-20.json",
+    "docs/current-findings.md",
+    "CLAUDE.md",
+    "docs/analysis/e01-lifecycle-downstream-consumers-2026-10-03.md",
+    "docs/topics/feature-schema.md",
+    "assistant_project.md"
+  ],
+  "required_checks_ack": [
+    "tests/test_candle_math.py",
+    "tests/test_derived_math.py",
+    "tests/test_formula_registry.py",
+    "tests/test_feature_math_lint.py",
+    "tests/test_geometry_census.py",
+    "tests/test_gate2b_closure.py",
+    "tests/test_active_models_registry.py",
+    "tests/test_semantic_registry.py",
+    "tests/test_feature_lineage.py",
+    "tests/test_semantic_grounding.py",
+    "tests/test_construction_protocol.py",
+    "tests/test_feature_layer_freeze.py",
+    "tests/test_e01_sweep_semantics.py",
+    "tests/test_live_rail_feeder.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Registry and comment only: no emitted value, config or artifact changes, so reverting is a plain revert of the listed files. Freeze-pin waiver entry E01-LIFECYCLE-RETEST-IDENTITY records previous and new SHAs of market_ontology.yaml and feature_pipeline.py.",
+  "pre_existing_floor_state": {
+    "note": "Governance GREEN_FLOOR at its 7 known pre-existing reds (schema_version_registry census, model_paths_literals x3, script_registry grandfather x2, corpus_read_lint) as recorded for CH-e01-lifecycle-sweep-identity earlier the same day. Also known and unrelated: test_research_family_registry (unbound F-096..F-110) and test_measurement_contract (MC instance extra keys).",
+    "captured_at": "2026-10-03T13:00:00Z"
+  },
+  "authority": "Grants NO activation authority (CLAUDE.md 6.5). FM-094/095 are registered and executable but active:false; ACTIVE_VERSION unchanged. Retest semantics remain PROPOSED (concept_contracts.yaml SP-003 / OQ7): these identities claim only 'FM-061/FM-021 fed by the MKT-E01 sweep', not the contract's retest meaning."
+}
