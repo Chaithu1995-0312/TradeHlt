@@ -1,0 +1,37 @@
+{
+  "scenario_id": "BM-SCENARIO-XAUUSD-M15-PHASE1",
+  "name": "XAUUSD M15 Phase-1 frozen corpus comparative baseline",
+  "dataset_id": "BM-XAUUSD-M15-PHASE1-FROZEN",
+  "engines": [
+    "OSS-TRADLATEST-BASELINE",
+    "OSS-QLIB",
+    "OSS-NAUTILUS",
+    "OSS-LEAN",
+    "OSS-FINRLX"
+  ],
+  "cost_modes": ["NO_COST", "WITH_COST"],
+  "fill_models": ["TL-FILL-INTRABAR-FIXED-V1"],
+  "required_metrics": [
+    "execution_speed",
+    "data_throughput",
+    "lookahead_safety",
+    "transaction_costs",
+    "slippage",
+    "fill_model",
+    "max_drawdown",
+    "profit_factor",
+    "expectancy",
+    "sharpe",
+    "mfe",
+    "mae",
+    "trade_count",
+    "latency",
+    "reproducibility"
+  ],
+  "triple_run": true,
+  "authority": "RESEARCH_LAB_ONLY",
+  "notes": [
+    "Engines without APPROVED_FOR_LAB remain NOT_RUN cells.",
+    "Do not fill missing cells with assumptions."
+  ]
+}

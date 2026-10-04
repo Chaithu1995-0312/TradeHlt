@@ -1,0 +1,141 @@
+{
+  "schema_version": "1.0.0",
+  "dataset_id": "XAUUSD_MT5_PHASE1_20260521",
+  "symbol": "XAUUSD",
+  "source_family": "mt5",
+  "clock_basis": "broker_local",
+  "volume_semantic": "TICK_VOLUME",
+  "decision_status": "FROZEN_CANDIDATE_PENDING_PHASE1_VALIDATION",
+  "parent_timeframe_source": "derived_h4",
+  "legacy_rewrite_target": true,
+  "canonical_artifact": {
+    "timeframe": "M15",
+    "path": "data/mt5/XAUUSD_M15.csv",
+    "sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+    "source": "native_fetch",
+    "admitted": true,
+    "rows": 47275,
+    "start": "2024-05-22T01:00:00",
+    "end": "2026-05-21T23:45:00",
+    "phase1_binding_ref": "docs/governance/xauusd_m15_phase1_frozen_candidate.json"
+  },
+  "timeframes": {
+    "M15": {
+      "role": "canonical_artifact",
+      "source": "native_fetch",
+      "admitted": true,
+      "path": "data/mt5/XAUUSD_M15.csv",
+      "sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+      "rows": 47275,
+      "start": "2024-05-22T01:00:00",
+      "end": "2026-05-21T23:45:00",
+      "producer": null,
+      "rule": "M15",
+      "parent": null,
+      "parent_sha256": null,
+      "derivation": null
+    },
+    "H1": {
+      "role": "projection",
+      "source": null,
+      "admitted": false,
+      "path": null,
+      "sha256": null,
+      "rows": null,
+      "start": null,
+      "end": null,
+      "producer": "features.parent_candle.ParentCandleBuilder",
+      "rule": "H1",
+      "parent": "M15",
+      "parent_sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+      "derivation": "direct"
+    },
+    "H4": {
+      "role": "projection",
+      "source": null,
+      "admitted": false,
+      "path": null,
+      "sha256": null,
+      "rows": null,
+      "start": null,
+      "end": null,
+      "producer": "features.parent_candle.ParentCandleBuilder",
+      "rule": "H4",
+      "parent": "M15",
+      "parent_sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+      "derivation": "direct"
+    },
+    "D1": {
+      "role": "projection",
+      "source": null,
+      "admitted": false,
+      "path": null,
+      "sha256": null,
+      "rows": null,
+      "start": null,
+      "end": null,
+      "producer": "features.parent_candle.ParentCandleBuilder",
+      "rule": "D1",
+      "parent": "M15",
+      "parent_sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+      "derivation": "direct"
+    },
+    "W1": {
+      "role": "projection",
+      "source": null,
+      "admitted": false,
+      "path": null,
+      "sha256": null,
+      "rows": null,
+      "start": null,
+      "end": null,
+      "producer": "features.parent_candle.ParentCandleBuilder",
+      "rule": "W1",
+      "parent": "M15",
+      "parent_sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+      "derivation": "direct"
+    },
+    "MN1": {
+      "role": "projection",
+      "source": null,
+      "admitted": false,
+      "path": null,
+      "sha256": null,
+      "rows": null,
+      "start": null,
+      "end": null,
+      "producer": "features.parent_candle.ParentCandleBuilder",
+      "rule": "MN1",
+      "parent": "M15",
+      "parent_sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+      "derivation": "direct"
+    }
+  },
+  "forensic_paths": [
+    "data/mt5/XAUUSD_H1.csv",
+    "data/mt5/XAUUSD_H4.csv",
+    "data/mt5/XAUUSD_M5.csv",
+    "data/_rejected/XAUUSD_H1.csv",
+    "data/_rejected/XAUUSD_H4.csv",
+    "data/XAUUSD_M15.csv",
+    "data/mt5/_rejected/XAUUSD_M15.csv",
+    "data/yfinance/XAUUSD_M15.csv"
+  ],
+  "load_policy": {
+    "require_hash_match": true,
+    "unbound_instruments": "path_passthrough",
+    "reject_forensic_as_canonical": true
+  },
+  "explicitly_not": [
+    "AUTHORITATIVE",
+    "VALIDATED",
+    "ECONOMICALLY_ADMISSIBLE",
+    "APPROVED"
+  ],
+  "notes": [
+    "Dataset Identity freeze CH-dataset-identity-star-v1. R3 CH-dataset-identity-r3-v1.",
+    "M15 is the canonical admitted artifact. H1/H4/D1/W1/MN1 are direct projections (star). MN1 parent must not be W1.",
+    "Parent CRT population is derived_h4: ParentCandleBuilder(rule=H4) on admitted M15. Native H4 CSVs are FORENSIC.",
+    "decision_status is FROZEN_CANDIDATE — not APPROVED. OHLCV_CLOSURE_STATUS remains BLOCKED:BC-1..BC-6."
+  ]
+}

@@ -4,7 +4,7 @@ import time
 from pathlib import Path
 
 from src.control_plane.jobs import JobManager
-from src.control_plane.types import ArgSpec, CommandSpec
+from src.control_plane.cp_types import ArgSpec, CommandSpec
 
 
 def _wait_for_terminal(manager: JobManager, run_id: str, timeout: float = 10.0) -> str:

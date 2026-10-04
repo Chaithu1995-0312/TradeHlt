@@ -1,0 +1,3386 @@
+{
+  "_doc": "M15 / F-054-CLOSURE-CENSUS \u2014 48-node feature completion & alignment census (READ-ONLY).",
+  "schema_version": "1.0",
+  "generated_at": "2026-07-14T06:54:00.983097+00:00",
+  "session": "M15",
+  "program": "F-054-CLOSURE-CENSUS",
+  "M15_STATUS": "COMPLETE_CENSUS",
+  "checkpoint": {
+    "M15_CHECKPOINT_HASH": "a85a3bc528d09f7b084787a04635cbd6861bf30d68aa836c2185c4b0c96b99d2",
+    "ACTIVE_VERSION": "v2_multi_2026_04",
+    "frontier": {
+      "TOTAL_DAG_NODES": 48,
+      "PROMOTED_PRODUCTION": 46,
+      "SUPERSEDED": 2,
+      "READY": 0,
+      "BLOCKED": 0,
+      "SUPERSEDED_FEATURES": [
+        "ema_spread",
+        "momentum_score"
+      ],
+      "PROMOTED_FEATURES": [
+        "atr",
+        "body_ratio",
+        "body_size",
+        "break_of_structure",
+        "candles_since_retest",
+        "close",
+        "disp_strength",
+        "disp_strength_atr_rescale",
+        "displacement_atr_ratio",
+        "displacement_retrace",
+        "double_sweep",
+        "ema_fast",
+        "ema_slow",
+        "ema_spread_atr",
+        "high",
+        "higher_high",
+        "hour_of_day",
+        "liquidity_distance",
+        "liquidity_pressure_score",
+        "liquidity_sweep",
+        "low",
+        "lower_low",
+        "lower_wick",
+        "macd_hist",
+        "macd_line",
+        "macd_signal",
+        "momentum_score_atr",
+        "open",
+        "retest_depth",
+        "rsi_14",
+        "session",
+        "sweep_detected",
+        "swing_high",
+        "swing_low",
+        "timestamp",
+        "total_wick",
+        "trend_bias",
+        "trend_strength",
+        "true_range",
+        "upper_wick",
+        "volatility_ratio",
+        "volatility_regime",
+        "volume",
+        "volume_ratio",
+        "volume_spike",
+        "wick_size"
+      ]
+    },
+    "live_dag_vs_artifact": "STRUCTURAL_MATCH",
+    "paths": {
+      "scripts/analysis/feature_dag_layers.py": {
+        "exists": true,
+        "sha256": "d3d914ca47c0ce08903b0219c28ffe069bc78c4a244da33adf17210d4d21d611",
+        "size": 15397,
+        "git_tracked": false
+      },
+      "docs/governance/feature_dag_layers-2026-07-14.json": {
+        "exists": true,
+        "sha256": "e7832afa4b103c3f2fa6d108f9db3a981128d84515c65681636a377b5138c0bd",
+        "size": 16689,
+        "git_tracked": false
+      },
+      "docs/governance/feature_certification_ledger.jsonl": {
+        "exists": true,
+        "sha256": "c7ee9f633bc53c8ac1917edf7acd3ac35c95ef62532132e76cad5a11f2d1a569",
+        "size": 92687,
+        "git_tracked": false
+      },
+      "src/features/feature_schema.py": {
+        "exists": true,
+        "sha256": "b4bfa6810ac0eb8a37e93d80217a1221b768a30ccdf6a1c213736342e12f521b",
+        "size": 14121,
+        "git_tracked": true
+      },
+      "configs/formulas/market_ontology.yaml": {
+        "exists": true,
+        "sha256": "ddf53562bf98175b70c1e44c221165330b8122d1beee9046919fe865197be3d5",
+        "size": 29556,
+        "git_tracked": true
+      },
+      "src/features/derived_math.py": {
+        "exists": true,
+        "sha256": "c88e62ab458317ae8b3454444fb583de815c9b2e6c1730a00538039822952605",
+        "size": 6915,
+        "git_tracked": true
+      },
+      "src/features/candle_math.py": {
+        "exists": true,
+        "sha256": "912ff1b41dd7f175eb76d6740dca64a9bc48339fb5b3d41a1b933e94dfde729c",
+        "size": 3347,
+        "git_tracked": true
+      },
+      "src/features/feature_pipeline.py": {
+        "exists": true,
+        "sha256": "7188051e3beeab6ae731b5bb99e4d1af53a130ce3a26f1d12ba446e01315c5dc",
+        "size": 42938,
+        "git_tracked": true
+      },
+      "src/features/registry/__init__.py": {
+        "exists": true,
+        "sha256": "a544138fddddc466881a4f1ae46ceb7e3b29cf14f0c3c0cf4b1a32b0559cf167",
+        "size": 6411,
+        "git_tracked": true
+      },
+      "src/features/registry/primitive_registry.py": {
+        "exists": true,
+        "sha256": "b5a52e1a77675c17e7b04407bc5197ed01410b31d92d65ca8789066f42cb1e86",
+        "size": 1115,
+        "git_tracked": true
+      },
+      "src/features/registry/derived_registry.py": {
+        "exists": true,
+        "sha256": "c1d951681a68b25fd7c64e44f03d85fc50ffa936289702ecb38782bb7de333d7",
+        "size": 2388,
+        "git_tracked": true
+      },
+      "src/features/registry/composition_registry.py": {
+        "exists": true,
+        "sha256": "c12e2be4b740020263242970ad9be6de2b4353ee708f5ac789d26f2af79aa805",
+        "size": 1684,
+        "git_tracked": true
+      },
+      "src/features/formula_registry.py": {
+        "exists": true,
+        "sha256": "9f46c9d70a6f7b82ad0df949419193b6736d1cb199a5a7c0b20416275474628a",
+        "size": 1398,
+        "git_tracked": true
+      },
+      "configs/production/v2_multi_2026_04.json": {
+        "exists": true,
+        "sha256": "03a3b8aa497d116a3bb32620253a2d1b6ce53737ec10e837d4bc83334f194990",
+        "size": 25058,
+        "git_tracked": true
+      },
+      "active_models.yaml": {
+        "exists": true,
+        "sha256": "76f9ee6930ca305e652552877684425e60f8318af77313fb8641f7104bc47b9c",
+        "size": 57445,
+        "git_tracked": true
+      },
+      "docs/governance/phase1_run1_feature_producer_consumer_graph-2026-07-10.json": {
+        "exists": true,
+        "sha256": "abe253bb1c1adb49759014432d641321686227ce1302d93c0a29e235e9471369",
+        "size": 26174,
+        "git_tracked": false
+      },
+      "docs/governance/feature_consumer_binding_manifest_fc05-2026-07-10.json": {
+        "exists": true,
+        "sha256": "b7c6468e6d0a3f802ee37ea2f019ee896c777faeea0d9cf993d8d58a0362976a",
+        "size": 10862,
+        "git_tracked": false
+      },
+      "docs/governance/feature_dependency_graph_fc05-2026-07-10.json": {
+        "exists": true,
+        "sha256": "c51dc938d0b024780a9975c492b3d2a4fc54f81426a2ebd8fc86adc12685434e",
+        "size": 59456,
+        "git_tracked": false
+      },
+      "docs/governance/phase1_feature_identity_registry-2026-07-10.json": {
+        "exists": true,
+        "sha256": "a491bc288da023759d64eb91adb41e2a6d7ffdd416c8dbcf1c9672dc5505e533",
+        "size": 19492,
+        "git_tracked": false
+      },
+      "docs/governance/closure_authority_index.json": {
+        "exists": true,
+        "sha256": "707ac48095f5143fcba8ed4742987028864f0cc68eb45a72ad58c79e46ae1644",
+        "size": 14416,
+        "git_tracked": false
+      }
+    }
+  },
+  "methodology": {
+    "population_source": "scripts/analysis/feature_dag_layers.py::build_dag() live",
+    "ledger_resolver": "scripts/governance/feature_certification_state.py::resolve_state",
+    "read_only": true,
+    "no_backtest_evidence": true,
+    "preserved_adjudications": [
+      "FM-021 retest_depth ALIGNED_WITH_SPLIT_IDENTITY; deps [atr,close,ema_fast,liquidity_sweep]",
+      "FM-027 displacement_retrace ROLE_LABEL_GROUNDING_ALIGNED; deps [open,close]",
+      "volatility_regime deps [close,high,low] after M14B",
+      "FM-025 UNRESOLVED_REMEDIATED provenance (M6R)",
+      "FM-026 independent discharge of FM-025 provenance (M7V) \u2014 no auto-taint",
+      "session deferred encoding debts (M12B)",
+      "trend_strength dual_engine name collision (M13B)",
+      "volatility_regime s05_grid string collision (M14B)"
+    ],
+    "dimension_definitions": {
+      "D1": "IDENTITY",
+      "D2": "FORMULA_ALIGNMENT",
+      "D3": "DEPENDENCY_ALIGNMENT",
+      "D4": "PIT_CAUSALITY",
+      "D5": "CERTIFICATION_EVIDENCE",
+      "D6": "PROVENANCE",
+      "D7": "PRODUCER_ALIGNMENT",
+      "D8": "CONSUMER_ALIGNMENT",
+      "D9": "PRODUCTION_BINDING",
+      "D10": "ACTIVATION_READINESS",
+      "D11": "DEBT_TOKENS",
+      "D12": "FINAL_COMPLETION_STATUS"
+    },
+    "D12_mapping_rules": "RAW\u2192RAW_AUTHORITY_COMPLETE; SUPERSEDED\u2192SUPERSEDED_CLOSED; hard blocking dim FAIL/MISSING producer/evidence\u2192INCOMPLETE; single material debt class\u2192PROMOTED_BUT_*; multiple\u2192PROMOTED_BUT_MULTIPLE_DEBTS; clean tracked evidence + no material debt\u2192COMPLETE; else COMPLETE_WITH_NONBLOCKING_DEBT."
+  },
+  "status_definitions": {
+    "D12": [
+      "COMPLETE",
+      "COMPLETE_WITH_NONBLOCKING_DEBT",
+      "PROMOTED_BUT_ALIGNMENT_DEBT",
+      "PROMOTED_BUT_PROVENANCE_DEBT",
+      "PROMOTED_BUT_CONSUMER_DEBT",
+      "PROMOTED_BUT_BINDING_DEBT",
+      "PROMOTED_BUT_MULTIPLE_DEBTS",
+      "SUPERSEDED_CLOSED",
+      "RAW_AUTHORITY_COMPLETE",
+      "INCOMPLETE"
+    ]
+  },
+  "nodes": [
+    {
+      "FEATURE_NAME": "close",
+      "DAG_LAYER": -1,
+      "DAG_LAYER_NAME": "RAW_INPUT",
+      "CANONICAL_INDEX": 3,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": null,
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [],
+      "DIRECT_DAG_CONSUMERS": [
+        "body_size",
+        "disp_strength",
+        "displacement_retrace",
+        "ema_fast",
+        "ema_slow",
+        "ema_spread_atr",
+        "liquidity_distance",
+        "lower_wick",
+        "macd_line",
+        "momentum_score",
+        "momentum_score_atr",
+        "retest_depth",
+        "rsi_14",
+        "trend_strength",
+        "true_range",
+        "upper_wick",
+        "volatility_ratio",
+        "volatility_regime"
+      ],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "NOT_APPLICABLE_RAW",
+      "D2_FORMULA": "NOT_APPLICABLE_RAW",
+      "D3_DEPENDENCY": "NOT_APPLICABLE_RAW",
+      "D4_PIT": "NOT_APPLICABLE_RAW",
+      "D5_EVIDENCE": "NOT_APPLICABLE_RAW",
+      "D6_PROVENANCE": "NOT_APPLICABLE_RAW",
+      "D7_PRODUCER": "NOT_APPLICABLE_RAW",
+      "D8_CONSUMER": "NOT_APPLICABLE_RAW",
+      "D9_PRODUCTION_BINDING": "NOT_APPLICABLE_RAW",
+      "D10_ACTIVATION_READINESS": "NOT_APPLICABLE_RAW",
+      "D11_DEBT": [
+        "NONE"
+      ],
+      "D12_FINAL_COMPLETION": "RAW_AUTHORITY_COMPLETE",
+      "INTENDED_QUANTITY": "raw OHLCV input: close",
+      "DEBT_IDS": [
+        "DEBT-018"
+      ]
+    },
+    {
+      "FEATURE_NAME": "high",
+      "DAG_LAYER": -1,
+      "DAG_LAYER_NAME": "RAW_INPUT",
+      "CANONICAL_INDEX": 1,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": null,
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [],
+      "DIRECT_DAG_CONSUMERS": [
+        "swing_high",
+        "true_range",
+        "upper_wick",
+        "volatility_regime",
+        "wick_size"
+      ],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "NOT_APPLICABLE_RAW",
+      "D2_FORMULA": "NOT_APPLICABLE_RAW",
+      "D3_DEPENDENCY": "NOT_APPLICABLE_RAW",
+      "D4_PIT": "NOT_APPLICABLE_RAW",
+      "D5_EVIDENCE": "NOT_APPLICABLE_RAW",
+      "D6_PROVENANCE": "NOT_APPLICABLE_RAW",
+      "D7_PRODUCER": "NOT_APPLICABLE_RAW",
+      "D8_CONSUMER": "NOT_APPLICABLE_RAW",
+      "D9_PRODUCTION_BINDING": "NOT_APPLICABLE_RAW",
+      "D10_ACTIVATION_READINESS": "NOT_APPLICABLE_RAW",
+      "D11_DEBT": [
+        "NONE"
+      ],
+      "D12_FINAL_COMPLETION": "RAW_AUTHORITY_COMPLETE",
+      "INTENDED_QUANTITY": "raw OHLCV input: high",
+      "DEBT_IDS": [
+        "DEBT-018"
+      ]
+    },
+    {
+      "FEATURE_NAME": "low",
+      "DAG_LAYER": -1,
+      "DAG_LAYER_NAME": "RAW_INPUT",
+      "CANONICAL_INDEX": 2,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": null,
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [],
+      "DIRECT_DAG_CONSUMERS": [
+        "lower_wick",
+        "swing_low",
+        "true_range",
+        "volatility_regime",
+        "wick_size"
+      ],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "NOT_APPLICABLE_RAW",
+      "D2_FORMULA": "NOT_APPLICABLE_RAW",
+      "D3_DEPENDENCY": "NOT_APPLICABLE_RAW",
+      "D4_PIT": "NOT_APPLICABLE_RAW",
+      "D5_EVIDENCE": "NOT_APPLICABLE_RAW",
+      "D6_PROVENANCE": "NOT_APPLICABLE_RAW",
+      "D7_PRODUCER": "NOT_APPLICABLE_RAW",
+      "D8_CONSUMER": "NOT_APPLICABLE_RAW",
+      "D9_PRODUCTION_BINDING": "NOT_APPLICABLE_RAW",
+      "D10_ACTIVATION_READINESS": "NOT_APPLICABLE_RAW",
+      "D11_DEBT": [
+        "NONE"
+      ],
+      "D12_FINAL_COMPLETION": "RAW_AUTHORITY_COMPLETE",
+      "INTENDED_QUANTITY": "raw OHLCV input: low",
+      "DEBT_IDS": [
+        "DEBT-018"
+      ]
+    },
+    {
+      "FEATURE_NAME": "open",
+      "DAG_LAYER": -1,
+      "DAG_LAYER_NAME": "RAW_INPUT",
+      "CANONICAL_INDEX": 0,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": null,
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [],
+      "DIRECT_DAG_CONSUMERS": [
+        "body_size",
+        "displacement_retrace",
+        "lower_wick",
+        "upper_wick"
+      ],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "NOT_APPLICABLE_RAW",
+      "D2_FORMULA": "NOT_APPLICABLE_RAW",
+      "D3_DEPENDENCY": "NOT_APPLICABLE_RAW",
+      "D4_PIT": "NOT_APPLICABLE_RAW",
+      "D5_EVIDENCE": "NOT_APPLICABLE_RAW",
+      "D6_PROVENANCE": "NOT_APPLICABLE_RAW",
+      "D7_PRODUCER": "NOT_APPLICABLE_RAW",
+      "D8_CONSUMER": "NOT_APPLICABLE_RAW",
+      "D9_PRODUCTION_BINDING": "NOT_APPLICABLE_RAW",
+      "D10_ACTIVATION_READINESS": "NOT_APPLICABLE_RAW",
+      "D11_DEBT": [
+        "NONE"
+      ],
+      "D12_FINAL_COMPLETION": "RAW_AUTHORITY_COMPLETE",
+      "INTENDED_QUANTITY": "raw OHLCV input: open",
+      "DEBT_IDS": [
+        "DEBT-018"
+      ]
+    },
+    {
+      "FEATURE_NAME": "timestamp",
+      "DAG_LAYER": -1,
+      "DAG_LAYER_NAME": "RAW_INPUT",
+      "CANONICAL_INDEX": null,
+      "IN_CANONICAL_VECTOR": false,
+      "FORMULA_ID": null,
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [],
+      "DIRECT_DAG_CONSUMERS": [
+        "hour_of_day",
+        "session"
+      ],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "NOT_APPLICABLE_RAW",
+      "D2_FORMULA": "NOT_APPLICABLE_RAW",
+      "D3_DEPENDENCY": "NOT_APPLICABLE_RAW",
+      "D4_PIT": "NOT_APPLICABLE_RAW",
+      "D5_EVIDENCE": "NOT_APPLICABLE_RAW",
+      "D6_PROVENANCE": "NOT_APPLICABLE_RAW",
+      "D7_PRODUCER": "NOT_APPLICABLE_RAW",
+      "D8_CONSUMER": "NOT_APPLICABLE_RAW",
+      "D9_PRODUCTION_BINDING": "NOT_APPLICABLE_RAW",
+      "D10_ACTIVATION_READINESS": "NOT_APPLICABLE_RAW",
+      "D11_DEBT": [
+        "NONE"
+      ],
+      "D12_FINAL_COMPLETION": "RAW_AUTHORITY_COMPLETE",
+      "INTENDED_QUANTITY": "raw OHLCV input: timestamp",
+      "DEBT_IDS": [
+        "DEBT-018"
+      ]
+    },
+    {
+      "FEATURE_NAME": "volume",
+      "DAG_LAYER": -1,
+      "DAG_LAYER_NAME": "RAW_INPUT",
+      "CANONICAL_INDEX": 4,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": null,
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [],
+      "DIRECT_DAG_CONSUMERS": [
+        "volume_ratio"
+      ],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "NOT_APPLICABLE_RAW",
+      "D2_FORMULA": "NOT_APPLICABLE_RAW",
+      "D3_DEPENDENCY": "NOT_APPLICABLE_RAW",
+      "D4_PIT": "NOT_APPLICABLE_RAW",
+      "D5_EVIDENCE": "NOT_APPLICABLE_RAW",
+      "D6_PROVENANCE": "NOT_APPLICABLE_RAW",
+      "D7_PRODUCER": "NOT_APPLICABLE_RAW",
+      "D8_CONSUMER": "NOT_APPLICABLE_RAW",
+      "D9_PRODUCTION_BINDING": "NOT_APPLICABLE_RAW",
+      "D10_ACTIVATION_READINESS": "NOT_APPLICABLE_RAW",
+      "D11_DEBT": [
+        "NONE"
+      ],
+      "D12_FINAL_COMPLETION": "RAW_AUTHORITY_COMPLETE",
+      "INTENDED_QUANTITY": "raw OHLCV input: volume",
+      "DEBT_IDS": [
+        "DEBT-018"
+      ]
+    },
+    {
+      "FEATURE_NAME": "body_size",
+      "DAG_LAYER": 0,
+      "DAG_LAYER_NAME": "L0_candle_primitive",
+      "CANONICAL_INDEX": 26,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": "FM-001",
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "close",
+        "open"
+      ],
+      "DIRECT_DAG_CONSUMERS": [
+        "body_ratio",
+        "disp_strength"
+      ],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "TRIVIAL_SAME_BAR",
+      "D5_EVIDENCE": "BOUND_EMPTY_HASH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "PASS",
+      "D9_PRODUCTION_BINDING": "BOUND_CANONICAL_VECTOR",
+      "D10_ACTIVATION_READINESS": "READY_WITH_DOCUMENTED_NONBLOCKING_DEBT",
+      "D11_DEBT": [
+        "EMPTY_SHA_HISTORY",
+        "PROVENANCE_DEBT",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_PROVENANCE_DEBT",
+      "INTENDED_QUANTITY": "abs(close - open)",
+      "DEBT_IDS": [
+        "DEBT-004",
+        "DEBT-005",
+        "DEBT-010",
+        "DEBT-014"
+      ]
+    },
+    {
+      "FEATURE_NAME": "lower_wick",
+      "DAG_LAYER": 0,
+      "DAG_LAYER_NAME": "L0_candle_primitive",
+      "CANONICAL_INDEX": null,
+      "IN_CANONICAL_VECTOR": false,
+      "FORMULA_ID": "FM-004",
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "close",
+        "low",
+        "open"
+      ],
+      "DIRECT_DAG_CONSUMERS": [
+        "total_wick"
+      ],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "TRIVIAL_SAME_BAR",
+      "D5_EVIDENCE": "BOUND_EMPTY_HASH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "PASS",
+      "D9_PRODUCTION_BINDING": "BOUND_COMPONENT_ONLY",
+      "D10_ACTIVATION_READINESS": "READY_WITH_DOCUMENTED_NONBLOCKING_DEBT",
+      "D11_DEBT": [
+        "EMPTY_SHA_HISTORY",
+        "PROVENANCE_DEBT",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_PROVENANCE_DEBT",
+      "INTENDED_QUANTITY": "min(open, close) - low",
+      "DEBT_IDS": [
+        "DEBT-004",
+        "DEBT-005",
+        "DEBT-008",
+        "DEBT-010",
+        "DEBT-014",
+        "DEBT-017"
+      ]
+    },
+    {
+      "FEATURE_NAME": "true_range",
+      "DAG_LAYER": 0,
+      "DAG_LAYER_NAME": "L0_candle_primitive",
+      "CANONICAL_INDEX": null,
+      "IN_CANONICAL_VECTOR": false,
+      "FORMULA_ID": "FM-040",
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "close",
+        "high",
+        "low"
+      ],
+      "DIRECT_DAG_CONSUMERS": [
+        "atr"
+      ],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "PASS_DIRECT",
+      "D5_EVIDENCE": "BOUND_EMPTY_HASH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "PASS",
+      "D9_PRODUCTION_BINDING": "BOUND_COMPONENT_ONLY",
+      "D10_ACTIVATION_READINESS": "READY_WITH_DOCUMENTED_NONBLOCKING_DEBT",
+      "D11_DEBT": [
+        "EMPTY_SHA_HISTORY",
+        "PROVENANCE_DEBT",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_PROVENANCE_DEBT",
+      "INTENDED_QUANTITY": "max(high-low, |high-prev_close|, |low-prev_close|) \u2014 absolute-price true range",
+      "DEBT_IDS": [
+        "DEBT-004",
+        "DEBT-005",
+        "DEBT-008",
+        "DEBT-010",
+        "DEBT-014",
+        "DEBT-017"
+      ]
+    },
+    {
+      "FEATURE_NAME": "upper_wick",
+      "DAG_LAYER": 0,
+      "DAG_LAYER_NAME": "L0_candle_primitive",
+      "CANONICAL_INDEX": null,
+      "IN_CANONICAL_VECTOR": false,
+      "FORMULA_ID": "FM-003",
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "close",
+        "high",
+        "open"
+      ],
+      "DIRECT_DAG_CONSUMERS": [
+        "total_wick"
+      ],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "TRIVIAL_SAME_BAR",
+      "D5_EVIDENCE": "BOUND_EMPTY_HASH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "PASS",
+      "D9_PRODUCTION_BINDING": "BOUND_COMPONENT_ONLY",
+      "D10_ACTIVATION_READINESS": "READY_WITH_DOCUMENTED_NONBLOCKING_DEBT",
+      "D11_DEBT": [
+        "EMPTY_SHA_HISTORY",
+        "PROVENANCE_DEBT",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_PROVENANCE_DEBT",
+      "INTENDED_QUANTITY": "high - max(open, close)",
+      "DEBT_IDS": [
+        "DEBT-004",
+        "DEBT-005",
+        "DEBT-008",
+        "DEBT-010",
+        "DEBT-014",
+        "DEBT-017"
+      ]
+    },
+    {
+      "FEATURE_NAME": "total_wick",
+      "DAG_LAYER": 0,
+      "DAG_LAYER_NAME": "L0_candle_primitive",
+      "CANONICAL_INDEX": null,
+      "IN_CANONICAL_VECTOR": false,
+      "FORMULA_ID": "FM-005",
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "lower_wick",
+        "upper_wick"
+      ],
+      "DIRECT_DAG_CONSUMERS": [],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "TRIVIAL_SAME_BAR",
+      "D5_EVIDENCE": "BOUND_EMPTY_HASH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "NO_CONSUMERS",
+      "D9_PRODUCTION_BINDING": "BOUND_COMPONENT_ONLY",
+      "D10_ACTIVATION_READINESS": "READY_WITH_DOCUMENTED_NONBLOCKING_DEBT",
+      "D11_DEBT": [
+        "EMPTY_SHA_HISTORY",
+        "PROVENANCE_DEBT",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_PROVENANCE_DEBT",
+      "INTENDED_QUANTITY": "upper_wick + lower_wick",
+      "DEBT_IDS": [
+        "DEBT-004",
+        "DEBT-005",
+        "DEBT-008",
+        "DEBT-010",
+        "DEBT-014",
+        "DEBT-017"
+      ]
+    },
+    {
+      "FEATURE_NAME": "wick_size",
+      "DAG_LAYER": 0,
+      "DAG_LAYER_NAME": "L0_candle_primitive",
+      "CANONICAL_INDEX": 27,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": "FM-002",
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "high",
+        "low"
+      ],
+      "DIRECT_DAG_CONSUMERS": [
+        "body_ratio",
+        "displacement_atr_ratio",
+        "volatility_ratio"
+      ],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "TRIVIAL_SAME_BAR",
+      "D5_EVIDENCE": "BOUND_EMPTY_HASH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "PASS",
+      "D9_PRODUCTION_BINDING": "BOUND_CANONICAL_VECTOR",
+      "D10_ACTIVATION_READINESS": "READY_WITH_DOCUMENTED_NONBLOCKING_DEBT",
+      "D11_DEBT": [
+        "EMPTY_SHA_HISTORY",
+        "PROVENANCE_DEBT",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_PROVENANCE_DEBT",
+      "INTENDED_QUANTITY": "high - low = candle_range (FULL RANGE; misnomer \u2014 wick magnitude is total_wick, FM-002)",
+      "DEBT_IDS": [
+        "DEBT-004",
+        "DEBT-005",
+        "DEBT-010",
+        "DEBT-014"
+      ]
+    },
+    {
+      "FEATURE_NAME": "ema_fast",
+      "DAG_LAYER": 1,
+      "DAG_LAYER_NAME": "L1_rolling_indicator",
+      "CANONICAL_INDEX": 7,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": "FM-043",
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "close"
+      ],
+      "DIRECT_DAG_CONSUMERS": [
+        "ema_spread",
+        "ema_spread_atr",
+        "retest_depth",
+        "trend_bias"
+      ],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "PASS_DIRECT",
+      "D5_EVIDENCE": "BOUND_EMPTY_HASH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "PASS",
+      "D9_PRODUCTION_BINDING": "BOUND_CANONICAL_VECTOR",
+      "D10_ACTIVATION_READINESS": "READY_WITH_DOCUMENTED_NONBLOCKING_DEBT",
+      "D11_DEBT": [
+        "EMPTY_SHA_HISTORY",
+        "PROVENANCE_DEBT",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_PROVENANCE_DEBT",
+      "INTENDED_QUANTITY": "EWM(span=9, adjust=False) of close",
+      "DEBT_IDS": [
+        "DEBT-004",
+        "DEBT-005",
+        "DEBT-010",
+        "DEBT-014"
+      ]
+    },
+    {
+      "FEATURE_NAME": "ema_slow",
+      "DAG_LAYER": 1,
+      "DAG_LAYER_NAME": "L1_rolling_indicator",
+      "CANONICAL_INDEX": 8,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": "FM-044",
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "close"
+      ],
+      "DIRECT_DAG_CONSUMERS": [
+        "ema_spread",
+        "ema_spread_atr",
+        "trend_bias"
+      ],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "PASS_DIRECT",
+      "D5_EVIDENCE": "BOUND_EMPTY_HASH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "PASS",
+      "D9_PRODUCTION_BINDING": "BOUND_CANONICAL_VECTOR",
+      "D10_ACTIVATION_READINESS": "READY_WITH_DOCUMENTED_NONBLOCKING_DEBT",
+      "D11_DEBT": [
+        "EMPTY_SHA_HISTORY",
+        "PROVENANCE_DEBT",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_PROVENANCE_DEBT",
+      "INTENDED_QUANTITY": "EWM(span=21, adjust=False) of close",
+      "DEBT_IDS": [
+        "DEBT-004",
+        "DEBT-005",
+        "DEBT-010",
+        "DEBT-014"
+      ]
+    },
+    {
+      "FEATURE_NAME": "macd_line",
+      "DAG_LAYER": 1,
+      "DAG_LAYER_NAME": "L1_rolling_indicator",
+      "CANONICAL_INDEX": 16,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": null,
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "close"
+      ],
+      "DIRECT_DAG_CONSUMERS": [
+        "macd_hist",
+        "macd_signal"
+      ],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "PASS_DIRECT",
+      "D5_EVIDENCE": "BOUND_VALID_HASH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "PASS",
+      "D9_PRODUCTION_BINDING": "BOUND_CANONICAL_VECTOR",
+      "D10_ACTIVATION_READINESS": "READY_WITH_DOCUMENTED_NONBLOCKING_DEBT",
+      "D11_DEBT": [
+        "PROVENANCE_DEBT",
+        "UNTRACKED_ARTIFACT_DEBT",
+        "ONTOLOGY_REGISTRATION_DEBT",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_MULTIPLE_DEBTS",
+      "INTENDED_QUANTITY": "EWM(12) - EWM(26) of close",
+      "DEBT_IDS": [
+        "DEBT-004",
+        "DEBT-006",
+        "DEBT-009",
+        "DEBT-010",
+        "DEBT-014",
+        "DEBT-015"
+      ]
+    },
+    {
+      "FEATURE_NAME": "macd_signal",
+      "DAG_LAYER": 1,
+      "DAG_LAYER_NAME": "L1_rolling_indicator",
+      "CANONICAL_INDEX": 17,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": null,
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "macd_line"
+      ],
+      "DIRECT_DAG_CONSUMERS": [
+        "macd_hist"
+      ],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "PASS_DIRECT",
+      "D5_EVIDENCE": "BOUND_VALID_HASH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "PASS",
+      "D9_PRODUCTION_BINDING": "BOUND_CANONICAL_VECTOR",
+      "D10_ACTIVATION_READINESS": "READY_WITH_DOCUMENTED_NONBLOCKING_DEBT",
+      "D11_DEBT": [
+        "PROVENANCE_DEBT",
+        "UNTRACKED_ARTIFACT_DEBT",
+        "ONTOLOGY_REGISTRATION_DEBT",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_MULTIPLE_DEBTS",
+      "INTENDED_QUANTITY": "EWM(9) of macd_line",
+      "DEBT_IDS": [
+        "DEBT-004",
+        "DEBT-006",
+        "DEBT-009",
+        "DEBT-010",
+        "DEBT-014",
+        "DEBT-015"
+      ]
+    },
+    {
+      "FEATURE_NAME": "rsi_14",
+      "DAG_LAYER": 1,
+      "DAG_LAYER_NAME": "L1_rolling_indicator",
+      "CANONICAL_INDEX": 15,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": "FM-042",
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "close"
+      ],
+      "DIRECT_DAG_CONSUMERS": [],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "PASS_DIRECT",
+      "D5_EVIDENCE": "BOUND_EMPTY_HASH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "PASS",
+      "D9_PRODUCTION_BINDING": "BOUND_CANONICAL_VECTOR",
+      "D10_ACTIVATION_READINESS": "READY_WITH_DOCUMENTED_NONBLOCKING_DEBT",
+      "D11_DEBT": [
+        "EMPTY_SHA_HISTORY",
+        "PROVENANCE_DEBT",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_PROVENANCE_DEBT",
+      "INTENDED_QUANTITY": "SMA(14) gain/loss, Wilder ratio form, clipped [0,100] (IND-002, B0/B1 F4)",
+      "DEBT_IDS": [
+        "DEBT-004",
+        "DEBT-005",
+        "DEBT-010",
+        "DEBT-014"
+      ]
+    },
+    {
+      "FEATURE_NAME": "swing_high",
+      "DAG_LAYER": 1,
+      "DAG_LAYER_NAME": "L1_rolling_indicator",
+      "CANONICAL_INDEX": 22,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": "FM-045",
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "high"
+      ],
+      "DIRECT_DAG_CONSUMERS": [
+        "break_of_structure",
+        "higher_high",
+        "liquidity_distance",
+        "liquidity_sweep"
+      ],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "PASS_DIRECT",
+      "D5_EVIDENCE": "BOUND_EMPTY_HASH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "PASS",
+      "D9_PRODUCTION_BINDING": "BOUND_CANONICAL_VECTOR",
+      "D10_ACTIVATION_READINESS": "READY_WITH_DOCUMENTED_NONBLOCKING_DEBT",
+      "D11_DEBT": [
+        "EMPTY_SHA_HISTORY",
+        "PROVENANCE_DEBT",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_PROVENANCE_DEBT",
+      "INTENDED_QUANTITY": "causal delayed swing-high publication (FC1-A, centered math published with delay)",
+      "DEBT_IDS": [
+        "DEBT-004",
+        "DEBT-005",
+        "DEBT-010",
+        "DEBT-014"
+      ]
+    },
+    {
+      "FEATURE_NAME": "swing_low",
+      "DAG_LAYER": 1,
+      "DAG_LAYER_NAME": "L1_rolling_indicator",
+      "CANONICAL_INDEX": 23,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": "FM-046",
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "low"
+      ],
+      "DIRECT_DAG_CONSUMERS": [
+        "break_of_structure",
+        "liquidity_distance",
+        "liquidity_sweep",
+        "lower_low"
+      ],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "PASS_DIRECT",
+      "D5_EVIDENCE": "BOUND_EMPTY_HASH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "PASS",
+      "D9_PRODUCTION_BINDING": "BOUND_CANONICAL_VECTOR",
+      "D10_ACTIVATION_READINESS": "READY_WITH_DOCUMENTED_NONBLOCKING_DEBT",
+      "D11_DEBT": [
+        "EMPTY_SHA_HISTORY",
+        "PROVENANCE_DEBT",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_PROVENANCE_DEBT",
+      "INTENDED_QUANTITY": "causal delayed swing-low publication (FC1-A)",
+      "DEBT_IDS": [
+        "DEBT-004",
+        "DEBT-005",
+        "DEBT-010",
+        "DEBT-014"
+      ]
+    },
+    {
+      "FEATURE_NAME": "atr",
+      "DAG_LAYER": 1,
+      "DAG_LAYER_NAME": "L1_rolling_indicator",
+      "CANONICAL_INDEX": 13,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": "FM-041",
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "true_range"
+      ],
+      "DIRECT_DAG_CONSUMERS": [
+        "disp_strength",
+        "disp_strength_atr_rescale",
+        "displacement_atr_ratio",
+        "ema_spread",
+        "ema_spread_atr",
+        "liquidity_distance",
+        "momentum_score",
+        "momentum_score_atr",
+        "retest_depth",
+        "volatility_ratio"
+      ],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "PASS_DIRECT",
+      "D5_EVIDENCE": "BOUND_EMPTY_HASH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "PASS",
+      "D9_PRODUCTION_BINDING": "BOUND_CANONICAL_VECTOR",
+      "D10_ACTIVATION_READINESS": "READY_WITH_DOCUMENTED_NONBLOCKING_DEBT",
+      "D11_DEBT": [
+        "EMPTY_SHA_HISTORY",
+        "PROVENANCE_DEBT",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_PROVENANCE_DEBT",
+      "INTENDED_QUANTITY": "SMA(14) of true_range, close-relative (atr_14_raw/close) \u2014 NOT Wilder, NOT absolute (IND-001, B0/B1 F3)",
+      "DEBT_IDS": [
+        "DEBT-004",
+        "DEBT-005",
+        "DEBT-010",
+        "DEBT-014"
+      ]
+    },
+    {
+      "FEATURE_NAME": "macd_hist",
+      "DAG_LAYER": 2,
+      "DAG_LAYER_NAME": "L2_direct_derived",
+      "CANONICAL_INDEX": 18,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": null,
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "macd_line",
+        "macd_signal"
+      ],
+      "DIRECT_DAG_CONSUMERS": [],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "TRIVIAL_SAME_BAR",
+      "D5_EVIDENCE": "BOUND_VALID_HASH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "PASS",
+      "D9_PRODUCTION_BINDING": "BOUND_CANONICAL_VECTOR",
+      "D10_ACTIVATION_READINESS": "READY_WITH_DOCUMENTED_NONBLOCKING_DEBT",
+      "D11_DEBT": [
+        "PROVENANCE_DEBT",
+        "UNTRACKED_ARTIFACT_DEBT",
+        "ONTOLOGY_REGISTRATION_DEBT",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_MULTIPLE_DEBTS",
+      "INTENDED_QUANTITY": "macd_line - macd_signal",
+      "DEBT_IDS": [
+        "DEBT-004",
+        "DEBT-006",
+        "DEBT-009",
+        "DEBT-010",
+        "DEBT-014",
+        "DEBT-015"
+      ]
+    },
+    {
+      "FEATURE_NAME": "trend_bias",
+      "DAG_LAYER": 2,
+      "DAG_LAYER_NAME": "L2_direct_derived",
+      "CANONICAL_INDEX": 10,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": "FM-TRB",
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "ema_fast",
+        "ema_slow"
+      ],
+      "DIRECT_DAG_CONSUMERS": [],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "TRIVIAL_SAME_BAR",
+      "D5_EVIDENCE": "BOUND_EMPTY_HASH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "PASS",
+      "D9_PRODUCTION_BINDING": "BOUND_CANONICAL_VECTOR",
+      "D10_ACTIVATION_READINESS": "READY_WITH_DOCUMENTED_NONBLOCKING_DEBT",
+      "D11_DEBT": [
+        "EMPTY_SHA_HISTORY",
+        "PROVENANCE_DEBT",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_PROVENANCE_DEBT",
+      "INTENDED_QUANTITY": "sign(ema_fast - ema_slow) \u2208 {-1,0,1}",
+      "DEBT_IDS": [
+        "DEBT-004",
+        "DEBT-005",
+        "DEBT-010",
+        "DEBT-014"
+      ]
+    },
+    {
+      "FEATURE_NAME": "disp_strength",
+      "DAG_LAYER": 2,
+      "DAG_LAYER_NAME": "L2_direct_derived",
+      "CANONICAL_INDEX": 32,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": "FM-020",
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "atr",
+        "body_size",
+        "close"
+      ],
+      "DIRECT_DAG_CONSUMERS": [
+        "disp_strength_atr_rescale"
+      ],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "PASS_DIRECT",
+      "D5_EVIDENCE": "BOUND_EMPTY_HASH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "PASS",
+      "D9_PRODUCTION_BINDING": "BOUND_CANONICAL_VECTOR",
+      "D10_ACTIVATION_READINESS": "READY_WITH_DOCUMENTED_NONBLOCKING_DEBT",
+      "D11_DEBT": [
+        "EMPTY_SHA_HISTORY",
+        "PROVENANCE_DEBT",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_PROVENANCE_DEBT",
+      "INTENDED_QUANTITY": "clip(body_size / (atr * close), 0.0, 3.0) if atr>0 and close>0 else nan",
+      "DEBT_IDS": [
+        "DEBT-004",
+        "DEBT-005",
+        "DEBT-010",
+        "DEBT-014"
+      ]
+    },
+    {
+      "FEATURE_NAME": "disp_strength_atr_rescale",
+      "DAG_LAYER": 2,
+      "DAG_LAYER_NAME": "L2_direct_derived",
+      "CANONICAL_INDEX": null,
+      "IN_CANONICAL_VECTOR": false,
+      "FORMULA_ID": "FM-029",
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "atr",
+        "disp_strength"
+      ],
+      "DIRECT_DAG_CONSUMERS": [],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "PASS_DIRECT",
+      "D5_EVIDENCE": "BOUND_EMPTY_HASH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "NO_CONSUMERS",
+      "D9_PRODUCTION_BINDING": "UNBOUND",
+      "D10_ACTIVATION_READINESS": "READY_WITH_DOCUMENTED_NONBLOCKING_DEBT",
+      "D11_DEBT": [
+        "EMPTY_SHA_HISTORY",
+        "PROVENANCE_DEBT",
+        "PRODUCTION_BINDING_DEBT",
+        "UNBOUND_CONSUMER_DEBT",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_MULTIPLE_DEBTS",
+      "INTENDED_QUANTITY": "disp_strength / atr; atr<=0 -> 0.0",
+      "DEBT_IDS": [
+        "DEBT-004",
+        "DEBT-005",
+        "DEBT-008",
+        "DEBT-010",
+        "DEBT-014",
+        "DEBT-017"
+      ]
+    },
+    {
+      "FEATURE_NAME": "ema_spread",
+      "DAG_LAYER": 2,
+      "DAG_LAYER_NAME": "L2_direct_derived",
+      "CANONICAL_INDEX": 9,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": "FM-022",
+      "CURRENT_LEDGER_STATE": "SUPERSEDED",
+      "CURRENT_DEPENDENCIES": [
+        "atr",
+        "ema_fast",
+        "ema_slow"
+      ],
+      "DIRECT_DAG_CONSUMERS": [],
+      "SUPERSESSION_STATUS": "SUPERSEDED_BY=ema_spread_atr(FM-030)",
+      "D1_IDENTITY": "SUPERSEDED",
+      "D2_FORMULA": "SUPERSEDED",
+      "D3_DEPENDENCY": "SUPERSEDED",
+      "D4_PIT": "SUPERSEDED",
+      "D5_EVIDENCE": "SUPERSEDED",
+      "D6_PROVENANCE": "SUPERSEDED",
+      "D7_PRODUCER": "SUPERSEDED",
+      "D8_CONSUMER": "SEMANTIC_COLLISION",
+      "D9_PRODUCTION_BINDING": "BOUND_CANONICAL_VECTOR",
+      "D10_ACTIVATION_READINESS": "SUPERSEDED",
+      "D11_DEBT": [
+        "SUPERSEDED_CLOSED",
+        "SUPERSEDED_STILL_BOUND_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "SUPERSEDED_CLOSED",
+      "INTENDED_QUANTITY": "(ema_fast - ema_slow) / atr if atr>0 else nan",
+      "DEBT_IDS": [
+        "DEBT-007",
+        "DEBT-019"
+      ]
+    },
+    {
+      "FEATURE_NAME": "ema_spread_atr",
+      "DAG_LAYER": 2,
+      "DAG_LAYER_NAME": "L2_direct_derived",
+      "CANONICAL_INDEX": null,
+      "IN_CANONICAL_VECTOR": false,
+      "FORMULA_ID": "FM-030",
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "atr",
+        "close",
+        "ema_fast",
+        "ema_slow"
+      ],
+      "DIRECT_DAG_CONSUMERS": [],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "PASS_DIRECT",
+      "D5_EVIDENCE": "BOUND_EMPTY_HASH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "NO_CONSUMERS",
+      "D9_PRODUCTION_BINDING": "UNBOUND",
+      "D10_ACTIVATION_READINESS": "READY_WITH_DOCUMENTED_NONBLOCKING_DEBT",
+      "D11_DEBT": [
+        "EMPTY_SHA_HISTORY",
+        "PROVENANCE_DEBT",
+        "PRODUCTION_BINDING_DEBT",
+        "UNBOUND_CONSUMER_DEBT",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_MULTIPLE_DEBTS",
+      "INTENDED_QUANTITY": "(ema_fast-ema_slow)/(atr*close) \u2014 scale-invariant dimensionless (FM-030, INTENDED correction of FM-022)",
+      "DEBT_IDS": [
+        "DEBT-004",
+        "DEBT-005",
+        "DEBT-008",
+        "DEBT-010",
+        "DEBT-014",
+        "DEBT-017"
+      ]
+    },
+    {
+      "FEATURE_NAME": "momentum_score",
+      "DAG_LAYER": 2,
+      "DAG_LAYER_NAME": "L2_direct_derived",
+      "CANONICAL_INDEX": 12,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": "FM-023",
+      "CURRENT_LEDGER_STATE": "SUPERSEDED",
+      "CURRENT_DEPENDENCIES": [
+        "atr",
+        "close"
+      ],
+      "DIRECT_DAG_CONSUMERS": [],
+      "SUPERSESSION_STATUS": "SUPERSEDED_BY=momentum_score_atr(FM-031)",
+      "D1_IDENTITY": "SUPERSEDED",
+      "D2_FORMULA": "SUPERSEDED",
+      "D3_DEPENDENCY": "SUPERSEDED",
+      "D4_PIT": "SUPERSEDED",
+      "D5_EVIDENCE": "SUPERSEDED",
+      "D6_PROVENANCE": "SUPERSEDED",
+      "D7_PRODUCER": "SUPERSEDED",
+      "D8_CONSUMER": "SEMANTIC_COLLISION",
+      "D9_PRODUCTION_BINDING": "BOUND_CANONICAL_VECTOR",
+      "D10_ACTIVATION_READINESS": "SUPERSEDED",
+      "D11_DEBT": [
+        "SUPERSEDED_CLOSED",
+        "SUPERSEDED_STILL_BOUND_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "SUPERSEDED_CLOSED",
+      "INTENDED_QUANTITY": "close_delta / atr if atr>0 else nan",
+      "DEBT_IDS": [
+        "DEBT-007",
+        "DEBT-019"
+      ]
+    },
+    {
+      "FEATURE_NAME": "momentum_score_atr",
+      "DAG_LAYER": 2,
+      "DAG_LAYER_NAME": "L2_direct_derived",
+      "CANONICAL_INDEX": null,
+      "IN_CANONICAL_VECTOR": false,
+      "FORMULA_ID": "FM-031",
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "atr",
+        "close"
+      ],
+      "DIRECT_DAG_CONSUMERS": [],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "PASS_DIRECT",
+      "D5_EVIDENCE": "BOUND_EMPTY_HASH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "NO_CONSUMERS",
+      "D9_PRODUCTION_BINDING": "UNBOUND",
+      "D10_ACTIVATION_READINESS": "READY_WITH_DOCUMENTED_NONBLOCKING_DEBT",
+      "D11_DEBT": [
+        "EMPTY_SHA_HISTORY",
+        "PROVENANCE_DEBT",
+        "PRODUCTION_BINDING_DEBT",
+        "UNBOUND_CONSUMER_DEBT",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_MULTIPLE_DEBTS",
+      "INTENDED_QUANTITY": "close_delta/(atr*close) \u2014 scale-invariant dimensionless (FM-031, INTENDED correction of FM-023)",
+      "DEBT_IDS": [
+        "DEBT-004",
+        "DEBT-005",
+        "DEBT-008",
+        "DEBT-010",
+        "DEBT-014",
+        "DEBT-017"
+      ]
+    },
+    {
+      "FEATURE_NAME": "volume_ratio",
+      "DAG_LAYER": 2,
+      "DAG_LAYER_NAME": "L2_direct_derived",
+      "CANONICAL_INDEX": 5,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": "FM-VOLR",
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "volume"
+      ],
+      "DIRECT_DAG_CONSUMERS": [
+        "volume_spike"
+      ],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "PASS_DIRECT",
+      "D5_EVIDENCE": "BOUND_EMPTY_HASH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "PASS",
+      "D9_PRODUCTION_BINDING": "BOUND_CANONICAL_VECTOR",
+      "D10_ACTIVATION_READINESS": "READY_WITH_DOCUMENTED_NONBLOCKING_DEBT",
+      "D11_DEBT": [
+        "EMPTY_SHA_HISTORY",
+        "PROVENANCE_DEBT",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_PROVENANCE_DEBT",
+      "INTENDED_QUANTITY": "volume / rolling(20) mean volume",
+      "DEBT_IDS": [
+        "DEBT-004",
+        "DEBT-005",
+        "DEBT-010",
+        "DEBT-014"
+      ]
+    },
+    {
+      "FEATURE_NAME": "volume_spike",
+      "DAG_LAYER": 2,
+      "DAG_LAYER_NAME": "L2_direct_derived",
+      "CANONICAL_INDEX": 37,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": "FM-VOLS",
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "volume_ratio"
+      ],
+      "DIRECT_DAG_CONSUMERS": [],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "PASS_DIRECT",
+      "D5_EVIDENCE": "BOUND_EMPTY_HASH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "PASS",
+      "D9_PRODUCTION_BINDING": "BOUND_CANONICAL_VECTOR",
+      "D10_ACTIVATION_READINESS": "READY_WITH_DOCUMENTED_NONBLOCKING_DEBT",
+      "D11_DEBT": [
+        "EMPTY_SHA_HISTORY",
+        "PROVENANCE_DEBT",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_PROVENANCE_DEBT",
+      "INTENDED_QUANTITY": "1 if volume_ratio above threshold",
+      "DEBT_IDS": [
+        "DEBT-004",
+        "DEBT-005",
+        "DEBT-010",
+        "DEBT-014"
+      ]
+    },
+    {
+      "FEATURE_NAME": "body_ratio",
+      "DAG_LAYER": 2,
+      "DAG_LAYER_NAME": "L2_direct_derived",
+      "CANONICAL_INDEX": 28,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": "FM-010",
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "body_size",
+        "wick_size"
+      ],
+      "DIRECT_DAG_CONSUMERS": [],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "TRIVIAL_SAME_BAR",
+      "D5_EVIDENCE": "BOUND_EMPTY_HASH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "PASS",
+      "D9_PRODUCTION_BINDING": "BOUND_CANONICAL_VECTOR",
+      "D10_ACTIVATION_READINESS": "READY_WITH_DOCUMENTED_NONBLOCKING_DEBT",
+      "D11_DEBT": [
+        "EMPTY_SHA_HISTORY",
+        "PROVENANCE_DEBT",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_PROVENANCE_DEBT",
+      "INTENDED_QUANTITY": "FM-010 body_size/candle_range (body_to_range_ratio) bounded [0,1] \u2014 ontology feature_compositions",
+      "DEBT_IDS": [
+        "DEBT-004",
+        "DEBT-005",
+        "DEBT-010",
+        "DEBT-014"
+      ]
+    },
+    {
+      "FEATURE_NAME": "displacement_atr_ratio",
+      "DAG_LAYER": 2,
+      "DAG_LAYER_NAME": "L2_direct_derived",
+      "CANONICAL_INDEX": null,
+      "IN_CANONICAL_VECTOR": false,
+      "FORMULA_ID": "FM-028",
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "atr",
+        "wick_size"
+      ],
+      "DIRECT_DAG_CONSUMERS": [],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "PASS_DIRECT",
+      "D5_EVIDENCE": "BOUND_EMPTY_HASH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "PASS",
+      "D9_PRODUCTION_BINDING": "BOUND_PRODUCTION_NONCANONICAL",
+      "D10_ACTIVATION_READINESS": "READY_WITH_DOCUMENTED_NONBLOCKING_DEBT",
+      "D11_DEBT": [
+        "EMPTY_SHA_HISTORY",
+        "PROVENANCE_DEBT",
+        "NONCANONICAL_PRODUCTION_BINDING",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_PROVENANCE_DEBT",
+      "INTENDED_QUANTITY": "candle_range / atr; atr<=0 -> 0.0",
+      "DEBT_IDS": [
+        "DEBT-004",
+        "DEBT-005",
+        "DEBT-010",
+        "DEBT-013",
+        "DEBT-014"
+      ]
+    },
+    {
+      "FEATURE_NAME": "volatility_ratio",
+      "DAG_LAYER": 2,
+      "DAG_LAYER_NAME": "L2_direct_derived",
+      "CANONICAL_INDEX": 14,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": "FM-024",
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "atr",
+        "close",
+        "wick_size"
+      ],
+      "DIRECT_DAG_CONSUMERS": [],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "PASS_DIRECT",
+      "D5_EVIDENCE": "BOUND_EMPTY_HASH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "PASS",
+      "D9_PRODUCTION_BINDING": "BOUND_CANONICAL_VECTOR",
+      "D10_ACTIVATION_READINESS": "READY_WITH_DOCUMENTED_NONBLOCKING_DEBT",
+      "D11_DEBT": [
+        "EMPTY_SHA_HISTORY",
+        "PROVENANCE_DEBT",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_PROVENANCE_DEBT",
+      "INTENDED_QUANTITY": "(high - low) / (atr * close) if atr>0 and close>0 else 1.0",
+      "DEBT_IDS": [
+        "DEBT-004",
+        "DEBT-005",
+        "DEBT-010",
+        "DEBT-014"
+      ]
+    },
+    {
+      "FEATURE_NAME": "displacement_retrace",
+      "DAG_LAYER": 3,
+      "DAG_LAYER_NAME": "L3_structural_event",
+      "CANONICAL_INDEX": null,
+      "IN_CANONICAL_VECTOR": false,
+      "FORMULA_ID": "FM-027",
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "close",
+        "open"
+      ],
+      "DIRECT_DAG_CONSUMERS": [],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ROLE_LABEL_GROUNDING_ALIGNED",
+      "D2_FORMULA": "PASS_ROLE_GROUNDED",
+      "D3_DEPENDENCY": "PASS_ROLE_GROUNDED",
+      "D4_PIT": "PASS_DIRECT",
+      "D5_EVIDENCE": "BOUND_VALID_HASH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "PASS",
+      "D9_PRODUCTION_BINDING": "BOUND_PRODUCTION_NONCANONICAL",
+      "D10_ACTIVATION_READINESS": "READY_WITH_DOCUMENTED_NONBLOCKING_DEBT",
+      "D11_DEBT": [
+        "PROVENANCE_DEBT",
+        "UNTRACKED_ARTIFACT_DEBT",
+        "ROLE_LABEL_GROUNDING_DOCUMENTED",
+        "NONCANONICAL_PRODUCTION_BINDING",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_PROVENANCE_DEBT",
+      "INTENDED_QUANTITY": "clip(|retest_close - disp_open| / |disp_close - disp_open|, 0.0, 1.0); disp body 0 -> skip",
+      "DEBT_IDS": [
+        "DEBT-004",
+        "DEBT-010",
+        "DEBT-012",
+        "DEBT-013",
+        "DEBT-014",
+        "DEBT-015"
+      ]
+    },
+    {
+      "FEATURE_NAME": "higher_high",
+      "DAG_LAYER": 3,
+      "DAG_LAYER_NAME": "L3_structural_event",
+      "CANONICAL_INDEX": 24,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": null,
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "swing_high"
+      ],
+      "DIRECT_DAG_CONSUMERS": [],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "PASS_DIRECT",
+      "D5_EVIDENCE": "BOUND_HASH_MISMATCH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "PASS",
+      "D9_PRODUCTION_BINDING": "BOUND_CANONICAL_VECTOR",
+      "D10_ACTIVATION_READINESS": "READY_WITH_DOCUMENTED_NONBLOCKING_DEBT",
+      "D11_DEBT": [
+        "PROVENANCE_DEBT",
+        "HASH_MISMATCH_DEBT",
+        "ONTOLOGY_REGISTRATION_DEBT",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_MULTIPLE_DEBTS",
+      "INTENDED_QUANTITY": "int8 {0,1}: high > prior causal swing-high ref (strict >) \u2014 bullish structure break-up",
+      "DEBT_IDS": [
+        "DEBT-004",
+        "DEBT-006",
+        "DEBT-009",
+        "DEBT-010",
+        "DEBT-014",
+        "DEBT-016"
+      ]
+    },
+    {
+      "FEATURE_NAME": "break_of_structure",
+      "DAG_LAYER": 3,
+      "DAG_LAYER_NAME": "L3_structural_event",
+      "CANONICAL_INDEX": 21,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": null,
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "swing_high",
+        "swing_low"
+      ],
+      "DIRECT_DAG_CONSUMERS": [
+        "liquidity_distance"
+      ],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "PASS_DIRECT",
+      "D5_EVIDENCE": "BOUND_HASH_MISMATCH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "PASS",
+      "D9_PRODUCTION_BINDING": "BOUND_CANONICAL_VECTOR",
+      "D10_ACTIVATION_READINESS": "READY_WITH_DOCUMENTED_NONBLOCKING_DEBT",
+      "D11_DEBT": [
+        "PROVENANCE_DEBT",
+        "HASH_MISMATCH_DEBT",
+        "ONTOLOGY_REGISTRATION_DEBT",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_MULTIPLE_DEBTS",
+      "INTENDED_QUANTITY": "int8 {-1,0,1}: +1 close>ref_high, -1 close<ref_low, else 0 (strict >/<) \u2014 directional structural break",
+      "DEBT_IDS": [
+        "DEBT-004",
+        "DEBT-006",
+        "DEBT-009",
+        "DEBT-010",
+        "DEBT-014",
+        "DEBT-016"
+      ]
+    },
+    {
+      "FEATURE_NAME": "liquidity_sweep",
+      "DAG_LAYER": 3,
+      "DAG_LAYER_NAME": "L3_structural_event",
+      "CANONICAL_INDEX": 20,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": null,
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "swing_high",
+        "swing_low"
+      ],
+      "DIRECT_DAG_CONSUMERS": [
+        "candles_since_retest",
+        "double_sweep",
+        "retest_depth",
+        "sweep_detected"
+      ],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "PASS_DIRECT",
+      "D5_EVIDENCE": "BOUND_HASH_MISMATCH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "PASS",
+      "D9_PRODUCTION_BINDING": "BOUND_CANONICAL_VECTOR",
+      "D10_ACTIVATION_READINESS": "READY_WITH_DOCUMENTED_NONBLOCKING_DEBT",
+      "D11_DEBT": [
+        "PROVENANCE_DEBT",
+        "HASH_MISMATCH_DEBT",
+        "ONTOLOGY_REGISTRATION_DEBT",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_MULTIPLE_DEBTS",
+      "INTENDED_QUANTITY": "int8 {-1,0,1}: +1 (high>ref_high AND close<=ref_high) sweep_high, -1 (low<ref_low AND close>=ref_low) sweep_low, else 0 \u2014 close-return INCLUSIVE <=/>=",
+      "DEBT_IDS": [
+        "DEBT-004",
+        "DEBT-006",
+        "DEBT-009",
+        "DEBT-010",
+        "DEBT-014",
+        "DEBT-016"
+      ]
+    },
+    {
+      "FEATURE_NAME": "candles_since_retest",
+      "DAG_LAYER": 3,
+      "DAG_LAYER_NAME": "L3_structural_event",
+      "CANONICAL_INDEX": 34,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": null,
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "liquidity_sweep"
+      ],
+      "DIRECT_DAG_CONSUMERS": [],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "PASS_DIRECT",
+      "D5_EVIDENCE": "BOUND_EMPTY_HASH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "PASS",
+      "D9_PRODUCTION_BINDING": "BOUND_CANONICAL_VECTOR",
+      "D10_ACTIVATION_READINESS": "READY_WITH_DOCUMENTED_NONBLOCKING_DEBT",
+      "D11_DEBT": [
+        "EMPTY_SHA_HISTORY",
+        "PROVENANCE_DEBT",
+        "ONTOLOGY_REGISTRATION_DEBT",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_MULTIPLE_DEBTS",
+      "INTENDED_QUANTITY": "int16 >=0: bars since the last liquidity_sweep!=0 event (grouped cumcount) \u2014 SWEEP bar publishes 0, each non-sweep bar +1, 0 before the first sweep. NAME MISNOMER: resets on the SWEEP, NOT on retest_f",
+      "DEBT_IDS": [
+        "DEBT-004",
+        "DEBT-005",
+        "DEBT-006",
+        "DEBT-009",
+        "DEBT-010",
+        "DEBT-014"
+      ]
+    },
+    {
+      "FEATURE_NAME": "double_sweep",
+      "DAG_LAYER": 3,
+      "DAG_LAYER_NAME": "L3_structural_event",
+      "CANONICAL_INDEX": 6,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": null,
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "liquidity_sweep"
+      ],
+      "DIRECT_DAG_CONSUMERS": [],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "PASS_DIRECT",
+      "D5_EVIDENCE": "BOUND_EMPTY_HASH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "PASS",
+      "D9_PRODUCTION_BINDING": "BOUND_CANONICAL_VECTOR",
+      "D10_ACTIVATION_READINESS": "READY_WITH_DOCUMENTED_NONBLOCKING_DEBT",
+      "D11_DEBT": [
+        "EMPTY_SHA_HISTORY",
+        "PROVENANCE_DEBT",
+        "ONTOLOGY_REGISTRATION_DEBT",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_MULTIPLE_DEBTS",
+      "INTENDED_QUANTITY": "int8 {0,1}: 1 iff BOTH a bullish-side sweep (liquidity_sweep>0) AND a bearish-side sweep (liquidity_sweep<0) occurred within the trailing 5-bar window (rolling(5,min_periods=1).max) \u2014 a DIRECTIONAL CO",
+      "DEBT_IDS": [
+        "DEBT-004",
+        "DEBT-005",
+        "DEBT-006",
+        "DEBT-009",
+        "DEBT-010",
+        "DEBT-014"
+      ]
+    },
+    {
+      "FEATURE_NAME": "lower_low",
+      "DAG_LAYER": 3,
+      "DAG_LAYER_NAME": "L3_structural_event",
+      "CANONICAL_INDEX": 25,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": null,
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "swing_low"
+      ],
+      "DIRECT_DAG_CONSUMERS": [],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "PASS_DIRECT",
+      "D5_EVIDENCE": "BOUND_HASH_MISMATCH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "PASS",
+      "D9_PRODUCTION_BINDING": "BOUND_CANONICAL_VECTOR",
+      "D10_ACTIVATION_READINESS": "READY_WITH_DOCUMENTED_NONBLOCKING_DEBT",
+      "D11_DEBT": [
+        "PROVENANCE_DEBT",
+        "HASH_MISMATCH_DEBT",
+        "ONTOLOGY_REGISTRATION_DEBT",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_MULTIPLE_DEBTS",
+      "INTENDED_QUANTITY": "int8 {0,1}: low < prior causal swing-low ref (strict <) \u2014 bearish structure break-down",
+      "DEBT_IDS": [
+        "DEBT-004",
+        "DEBT-006",
+        "DEBT-009",
+        "DEBT-010",
+        "DEBT-014",
+        "DEBT-016"
+      ]
+    },
+    {
+      "FEATURE_NAME": "sweep_detected",
+      "DAG_LAYER": 3,
+      "DAG_LAYER_NAME": "L3_structural_event",
+      "CANONICAL_INDEX": 19,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": null,
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "liquidity_sweep"
+      ],
+      "DIRECT_DAG_CONSUMERS": [],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "TRIVIAL_SAME_BAR",
+      "D5_EVIDENCE": "BOUND_EMPTY_HASH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "PASS",
+      "D9_PRODUCTION_BINDING": "BOUND_CANONICAL_VECTOR",
+      "D10_ACTIVATION_READINESS": "READY_WITH_DOCUMENTED_NONBLOCKING_DEBT",
+      "D11_DEBT": [
+        "EMPTY_SHA_HISTORY",
+        "PROVENANCE_DEBT",
+        "ONTOLOGY_REGISTRATION_DEBT",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_MULTIPLE_DEBTS",
+      "INTENDED_QUANTITY": "int8 {0,1}: 1 iff a liquidity sweep occurred this bar (liquidity_sweep != 0), else 0 \u2014 direction-agnostic sweep-presence flag over the directional liquidity_sweep; same-bar (feature_pipeline.py:590)",
+      "DEBT_IDS": [
+        "DEBT-004",
+        "DEBT-005",
+        "DEBT-006",
+        "DEBT-009",
+        "DEBT-010",
+        "DEBT-014"
+      ]
+    },
+    {
+      "FEATURE_NAME": "liquidity_distance",
+      "DAG_LAYER": 3,
+      "DAG_LAYER_NAME": "L3_structural_event",
+      "CANONICAL_INDEX": 35,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": "FM-025",
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "atr",
+        "break_of_structure",
+        "close",
+        "swing_high",
+        "swing_low"
+      ],
+      "DIRECT_DAG_CONSUMERS": [
+        "liquidity_pressure_score"
+      ],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "PASS_DIRECT",
+      "D5_EVIDENCE": "BOUND_REMEDIATED_UNRESOLVED",
+      "D6_PROVENANCE": "UNRESOLVED_REMEDIATED",
+      "D7_PRODUCER": "PASS_COMPOSITION_AUTHORITY",
+      "D8_CONSUMER": "PASS",
+      "D9_PRODUCTION_BINDING": "BOUND_CANONICAL_VECTOR",
+      "D10_ACTIVATION_READINESS": "BLOCKED_PROVENANCE",
+      "D11_DEBT": [
+        "PROVENANCE_DEBT",
+        "EMPTY_SHA_HISTORY",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_PROVENANCE_DEBT",
+      "INTENDED_QUANTITY": "FM-025 float32 >=0: ATR-normalized distance from close to the NEAREST of {prior swing-high ref, prior swing-low ref, last BOS level} = min_k |close-level_k|/(atr*close), clipped >=0; NaN when atr*clos",
+      "DEBT_IDS": [
+        "DEBT-004",
+        "DEBT-005",
+        "DEBT-010",
+        "DEBT-014"
+      ]
+    },
+    {
+      "FEATURE_NAME": "retest_depth",
+      "DAG_LAYER": 3,
+      "DAG_LAYER_NAME": "L3_structural_event",
+      "CANONICAL_INDEX": 33,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": "FM-021",
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "atr",
+        "close",
+        "ema_fast",
+        "liquidity_sweep"
+      ],
+      "DIRECT_DAG_CONSUMERS": [],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED_WITH_SPLIT_IDENTITY",
+      "D2_FORMULA": "PASS_COMPONENT_COMPOSITION",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "PASS_DIRECT",
+      "D5_EVIDENCE": "BOUND_VALID_HASH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_COMPOSITION_AUTHORITY",
+      "D8_CONSUMER": "PASS",
+      "D9_PRODUCTION_BINDING": "BOUND_CANONICAL_VECTOR",
+      "D10_ACTIVATION_READINESS": "READY_WITH_DOCUMENTED_NONBLOCKING_DEBT",
+      "D11_DEBT": [
+        "PROVENANCE_DEBT",
+        "UNTRACKED_ARTIFACT_DEBT",
+        "SPLIT_IDENTITY_DOCUMENTED",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_PROVENANCE_DEBT",
+      "INTENDED_QUANTITY": "GATED_PRODUCTION_COMPOSITION float32 [0,1] at canonical idx 33: recent_sweep = (liquidity_sweep!=0).rolling(10,min_periods=1).max (trailing causal, current bar included); near_fast_ema = |close-ema_fa",
+      "DEBT_IDS": [
+        "DEBT-004",
+        "DEBT-010",
+        "DEBT-011",
+        "DEBT-014",
+        "DEBT-015"
+      ]
+    },
+    {
+      "FEATURE_NAME": "hour_of_day",
+      "DAG_LAYER": 4,
+      "DAG_LAYER_NAME": "L4_composite_context",
+      "CANONICAL_INDEX": 31,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": null,
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "timestamp"
+      ],
+      "DIRECT_DAG_CONSUMERS": [],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "TRIVIAL_SAME_BAR",
+      "D5_EVIDENCE": "BOUND_VALID_HASH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "PASS",
+      "D9_PRODUCTION_BINDING": "BOUND_CANONICAL_VECTOR",
+      "D10_ACTIVATION_READINESS": "READY_WITH_DOCUMENTED_NONBLOCKING_DEBT",
+      "D11_DEBT": [
+        "PROVENANCE_DEBT",
+        "UNTRACKED_ARTIFACT_DEBT",
+        "ONTOLOGY_REGISTRATION_DEBT",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_MULTIPLE_DEBTS",
+      "INTENDED_QUANTITY": "int8 \u2208 {0..23} at canonical idx 31: wall-clock hour component of timestamp after pd.to_datetime(timestamp) with NO utc/tz conversion \u2014 uses the hour field of the stored datetime as-is (naive local wal",
+      "DEBT_IDS": [
+        "DEBT-004",
+        "DEBT-006",
+        "DEBT-009",
+        "DEBT-010",
+        "DEBT-014",
+        "DEBT-015"
+      ]
+    },
+    {
+      "FEATURE_NAME": "session",
+      "DAG_LAYER": 4,
+      "DAG_LAYER_NAME": "L4_composite_context",
+      "CANONICAL_INDEX": 30,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": null,
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "timestamp"
+      ],
+      "DIRECT_DAG_CONSUMERS": [],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "TRIVIAL_SAME_BAR",
+      "D5_EVIDENCE": "BOUND_VALID_HASH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "SEMANTIC_COLLISION",
+      "D9_PRODUCTION_BINDING": "BOUND_CANONICAL_VECTOR",
+      "D10_ACTIVATION_READINESS": "BLOCKED_CONSUMER_ALIGNMENT",
+      "D11_DEBT": [
+        "PROVENANCE_DEBT",
+        "UNTRACKED_ARTIFACT_DEBT",
+        "ONTOLOGY_REGISTRATION_DEBT",
+        "CONSUMER_ENCODING_DEBT",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_MULTIPLE_DEBTS",
+      "INTENDED_QUANTITY": "int8 canonical session code at idx 30 derived from pd.to_datetime(timestamp) wall-clock hour without timezone conversion: 0 for hours 00-07, 1 for 08-15, 2 for 16-23 (labels Asia/London/NY per pipelin",
+      "DEBT_IDS": [
+        "DEBT-001",
+        "DEBT-003",
+        "DEBT-004",
+        "DEBT-006",
+        "DEBT-009",
+        "DEBT-010",
+        "DEBT-014",
+        "DEBT-015"
+      ]
+    },
+    {
+      "FEATURE_NAME": "trend_strength",
+      "DAG_LAYER": 4,
+      "DAG_LAYER_NAME": "L4_composite_context",
+      "CANONICAL_INDEX": 11,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": null,
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "close"
+      ],
+      "DIRECT_DAG_CONSUMERS": [],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "PASS_DIRECT",
+      "D5_EVIDENCE": "BOUND_VALID_HASH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "SEMANTIC_COLLISION",
+      "D9_PRODUCTION_BINDING": "BOUND_CANONICAL_VECTOR",
+      "D10_ACTIVATION_READINESS": "BLOCKED_CONSUMER_ALIGNMENT",
+      "D11_DEBT": [
+        "PROVENANCE_DEBT",
+        "UNTRACKED_ARTIFACT_DEBT",
+        "ONTOLOGY_REGISTRATION_DEBT",
+        "NAME_COLLISION_DEBT",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_MULTIPLE_DEBTS",
+      "INTENDED_QUANTITY": "signed float64 nested trailing rolling metric over close at canonical idx 11: SMA20(close) window=20/min_periods=20, then one-bar first difference of that SMA, then SMA10 of the slope window=10/min_pe",
+      "DEBT_IDS": [
+        "DEBT-002",
+        "DEBT-004",
+        "DEBT-006",
+        "DEBT-009",
+        "DEBT-010",
+        "DEBT-014",
+        "DEBT-015"
+      ]
+    },
+    {
+      "FEATURE_NAME": "liquidity_pressure_score",
+      "DAG_LAYER": 4,
+      "DAG_LAYER_NAME": "L4_composite_context",
+      "CANONICAL_INDEX": 36,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": "FM-026",
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "liquidity_distance"
+      ],
+      "DIRECT_DAG_CONSUMERS": [],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS",
+      "D4_PIT": "PASS_DIRECT",
+      "D5_EVIDENCE": "BOUND_VALID_HASH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "PASS",
+      "D9_PRODUCTION_BINDING": "BOUND_CANONICAL_VECTOR",
+      "D10_ACTIVATION_READINESS": "READY_WITH_DOCUMENTED_NONBLOCKING_DEBT",
+      "D11_DEBT": [
+        "PROVENANCE_DEBT",
+        "UNTRACKED_ARTIFACT_DEBT",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_PROVENANCE_DEBT",
+      "INTENDED_QUANTITY": "clip(exp(-0.5 * liquidity_distance), 0.0, 1.0); nan distance -> treated as 10.0",
+      "DEBT_IDS": [
+        "DEBT-004",
+        "DEBT-010",
+        "DEBT-014",
+        "DEBT-015"
+      ]
+    },
+    {
+      "FEATURE_NAME": "volatility_regime",
+      "DAG_LAYER": 4,
+      "DAG_LAYER_NAME": "L4_composite_context",
+      "CANONICAL_INDEX": 29,
+      "IN_CANONICAL_VECTOR": true,
+      "FORMULA_ID": null,
+      "CURRENT_LEDGER_STATE": "PROMOTED_PRODUCTION",
+      "CURRENT_DEPENDENCIES": [
+        "close",
+        "high",
+        "low"
+      ],
+      "DIRECT_DAG_CONSUMERS": [],
+      "SUPERSESSION_STATUS": "ACTIVE",
+      "D1_IDENTITY": "ALIGNED",
+      "D2_FORMULA": "PASS",
+      "D3_DEPENDENCY": "PASS_RAW_SEMANTIC_ROOTS",
+      "D4_PIT": "PASS_DIRECT",
+      "D5_EVIDENCE": "BOUND_VALID_HASH",
+      "D6_PROVENANCE": "HASH_BOUND_UNTRACKED",
+      "D7_PRODUCER": "PASS_SINGLE_AUTHORITY",
+      "D8_CONSUMER": "SEMANTIC_COLLISION",
+      "D9_PRODUCTION_BINDING": "BOUND_CANONICAL_VECTOR",
+      "D10_ACTIVATION_READINESS": "BLOCKED_CONSUMER_ALIGNMENT",
+      "D11_DEBT": [
+        "PROVENANCE_DEBT",
+        "UNTRACKED_ARTIFACT_DEBT",
+        "ONTOLOGY_REGISTRATION_DEBT",
+        "CONSUMER_ENCODING_DEBT",
+        "L6_PENDING",
+        "ACTIVATION_EVIDENCE_DEBT"
+      ],
+      "D12_FINAL_COMPLETION": "PROMOTED_BUT_MULTIPLE_DEBTS",
+      "INTENDED_QUANTITY": "int8 categorical regime at canonical idx 29 from absolute-price ATR14 only: TR[t]=max(H-L,|H-C_prev|,|L-C_prev|) with TR[0]=NaN (np.maximum propagates NaN when prev close absent); ATR14=SMA14(TR) wind",
+      "DEBT_IDS": [
+        "DEBT-001",
+        "DEBT-003",
+        "DEBT-004",
+        "DEBT-006",
+        "DEBT-009",
+        "DEBT-010",
+        "DEBT-014",
+        "DEBT-015"
+      ]
+    }
+  ],
+  "dimension_counts": {
+    "IDENTITY_COMPLETE_COUNT": 48,
+    "FORMULA_ALIGNED_COUNT": 48,
+    "DEPENDENCY_ALIGNED_COUNT": 48,
+    "PIT_COMPLETE_COUNT": 48,
+    "EVIDENCE_BOUND_COUNT": 44,
+    "PROVENANCE_CLEAN_COUNT": 8,
+    "PRODUCER_ALIGNED_COUNT": 48,
+    "CONSUMER_ALIGNED_COUNT": 43,
+    "PRODUCTION_BOUND_COUNT": 45,
+    "ACTIVATION_READY_COUNT": 36,
+    "denominators": {
+      "IDENTITY_COMPLETE_COUNT": 48,
+      "FORMULA_ALIGNED_COUNT": 48,
+      "DEPENDENCY_ALIGNED_COUNT": 48,
+      "PIT_COMPLETE_COUNT": 48,
+      "EVIDENCE_BOUND_COUNT": 48,
+      "PROVENANCE_CLEAN_COUNT": 48,
+      "PRODUCER_ALIGNED_COUNT": 48,
+      "CONSUMER_ALIGNED_COUNT": 48,
+      "PRODUCTION_BOUND_COUNT": 48,
+      "ACTIVATION_READY_COUNT": 48,
+      "ACTIVATION_READINESS_PCT_DENOM": 40,
+      "IDENTITY_CERTIFICATION_DISPOSITION_PCT_DENOM": 48,
+      "CLEAN_COMPLETION_PCT_DENOM": 48,
+      "CONSUMER_ALIGNMENT_PCT_DENOM": 48,
+      "nonraw_promoted": 40,
+      "canonical_38": 38,
+      "raw": 6,
+      "superseded": 2
+    }
+  },
+  "completion_counts": {
+    "TOTAL_NODES": 48,
+    "RAW_AUTHORITY_COMPLETE": 6,
+    "SUPERSEDED_CLOSED": 2,
+    "PROMOTED_TOTAL": 46,
+    "COMPLETE": 0,
+    "COMPLETE_WITH_NONBLOCKING_DEBT": 0,
+    "PROMOTED_BUT_ALIGNMENT_DEBT": 0,
+    "PROMOTED_BUT_PROVENANCE_DEBT": 23,
+    "PROMOTED_BUT_CONSUMER_DEBT": 0,
+    "PROMOTED_BUT_BINDING_DEBT": 0,
+    "PROMOTED_BUT_MULTIPLE_DEBTS": 17,
+    "INCOMPLETE": 0
+  },
+  "percentages": {
+    "IDENTITY_CERTIFICATION_DISPOSITION_PCT": 100.0,
+    "CLEAN_COMPLETION_PCT": 0.0,
+    "CONSUMER_ALIGNMENT_PCT": 89.5833,
+    "ACTIVATION_READINESS_PCT": 90.0
+  },
+  "debt_registry": [
+    {
+      "DEBT_ID": "DEBT-001",
+      "SOURCE_FEATURE": "session",
+      "DEBT_TYPE": "CONSUMER_ENCODING_DEBT",
+      "SCOPE": "SYSTEMIC",
+      "DIRECTLY_AFFECTED_FEATURES": [
+        "session"
+      ],
+      "DIRECTLY_AFFECTED_CONSUMERS": [
+        "SESSION_MAP",
+        "dashboard SESSION_LABELS",
+        "CRT/live/backtest session paths"
+      ],
+      "TRANSITIVE_FEATURES": [],
+      "TRANSITIVE_CONSUMERS": [
+        "any consumer joining session codes across systems"
+      ],
+      "AUTHORITY_IMPACT": "WEAKENS_CROSS_SURFACE_INTERPRETATION",
+      "ACTIVATION_IMPACT": "BLOCKS_ACTIVATION_AS_SHARED_SESSION_FEATURE",
+      "RESEARCH_USE_IMPACT": "BLOCKS_CROSS_SYSTEM_RESEARCH_JOINS",
+      "PRODUCTION_BEHAVIOR_IMPACT": "NO_PIPELINE_MATH_CHANGE \u2014 encoding mismatch only",
+      "REMEDIATION_SCOPE": "reconcile SESSION_MAP/dashboard/CRT encodings to pipeline 0/1/2 OR introduce explicit adapter layer",
+      "NOTES": "Deferred from M12B session_certification deferred_encoding_debts"
+    },
+    {
+      "DEBT_ID": "DEBT-002",
+      "SOURCE_FEATURE": "trend_strength",
+      "DEBT_TYPE": "NAME_COLLISION_DEBT",
+      "SCOPE": "DOWNSTREAM_PROPAGATING",
+      "DIRECTLY_AFFECTED_FEATURES": [
+        "trend_strength"
+      ],
+      "DIRECTLY_AFFECTED_CONSUMERS": [
+        "dual_engine.detect_regime",
+        "s07/s08 thresholds"
+      ],
+      "TRANSITIVE_FEATURES": [],
+      "TRANSITIVE_CONSUMERS": [
+        "dual_engine regime path consumers"
+      ],
+      "AUTHORITY_IMPACT": "WEAKENS_NAME_BASED_AUTHORITY",
+      "ACTIVATION_IMPACT": "BLOCKS_ACTIVATION_UNDER_SHARED_NAME",
+      "RESEARCH_USE_IMPACT": "MISLEADS_RESEARCH_IF_NAME_ASSUMED_SHARED",
+      "PRODUCTION_BEHAVIOR_IMPACT": "dual_engine uses DIFFERENT quantity under same local name \u2014 live dual_engine path risk",
+      "REMEDIATION_SCOPE": "rename dual_engine local var OR bind dual_engine to canonical trend_strength with explicit formula",
+      "NOTES": "M13B KNOWN_DEBT"
+    },
+    {
+      "DEBT_ID": "DEBT-003",
+      "SOURCE_FEATURE": "volatility_regime",
+      "DEBT_TYPE": "CONSUMER_ENCODING_DEBT",
+      "SCOPE": "DOWNSTREAM_PROPAGATING",
+      "DIRECTLY_AFFECTED_FEATURES": [
+        "volatility_regime"
+      ],
+      "DIRECTLY_AFFECTED_CONSUMERS": [
+        "s05_grid"
+      ],
+      "TRANSITIVE_FEATURES": [],
+      "TRANSITIVE_CONSUMERS": [
+        "s05_grid dependent research paths"
+      ],
+      "AUTHORITY_IMPACT": "WEAKENS_CONSUMER_INTERPRETATION",
+      "ACTIVATION_IMPACT": "BLOCKS_ACTIVATION_FOR_S05_PATH",
+      "RESEARCH_USE_IMPACT": "STRING_INT_MISJOIN_RISK",
+      "PRODUCTION_BEHAVIOR_IMPACT": "NO change to pipeline int8 identity",
+      "REMEDIATION_SCOPE": "adapt s05_grid to int8 {0,1,2} or explicit map; do not change canonical",
+      "NOTES": "M14B consumer_collision_note"
+    },
+    {
+      "DEBT_ID": "DEBT-004",
+      "SOURCE_FEATURE": "liquidity_distance",
+      "DEBT_TYPE": "PROVENANCE_DEBT",
+      "SCOPE": "LOCAL",
+      "DIRECTLY_AFFECTED_FEATURES": [
+        "liquidity_distance"
+      ],
+      "DIRECTLY_AFFECTED_CONSUMERS": [],
+      "TRANSITIVE_FEATURES": [],
+      "TRANSITIVE_CONSUMERS": [],
+      "AUTHORITY_IMPACT": "BLOCKS_CLEAN_PROVENANCE_AUTHORITY_FOR_FM025_ONLY",
+      "ACTIVATION_IMPACT": "BLOCKS_ACTIVATION_OF_FM025_PROVENANCE_CLEANLINESS",
+      "RESEARCH_USE_IMPACT": "RESEARCH_MAY_USE_IDENTITY_BUT_NOT_CLAIM_HASH_RECONSTRUCTABLE_CERT",
+      "PRODUCTION_BEHAVIOR_IMPACT": "NO production math impact \u2014 executable identity unchanged",
+      "REMEDIATION_SCOPE": "re-bind CERTIFIED event with git-tracked artifact + valid SHA (append-only); optional recertify",
+      "NOTES": "M6R UNRESOLVED_REMEDIATED; M7V independent discharge of FM-026 preserved"
+    },
+    {
+      "DEBT_ID": "DEBT-005",
+      "SOURCE_FEATURE": "MULTIPLE",
+      "DEBT_TYPE": "EMPTY_SHA_HISTORY",
+      "SCOPE": "SYSTEMIC",
+      "DIRECTLY_AFFECTED_FEATURES": [
+        "body_size",
+        "lower_wick",
+        "true_range",
+        "upper_wick",
+        "total_wick",
+        "wick_size",
+        "ema_fast",
+        "ema_slow",
+        "rsi_14",
+        "swing_high",
+        "swing_low",
+        "atr",
+        "trend_bias",
+        "disp_strength",
+        "disp_strength_atr_rescale",
+        "ema_spread_atr",
+        "momentum_score_atr",
+        "volume_ratio",
+        "volume_spike",
+        "body_ratio",
+        "displacement_atr_ratio",
+        "volatility_ratio",
+        "candles_since_retest",
+        "double_sweep",
+        "sweep_detected",
+        "liquidity_distance"
+      ],
+      "DIRECTLY_AFFECTED_CONSUMERS": [],
+      "TRANSITIVE_FEATURES": [],
+      "TRANSITIVE_CONSUMERS": [],
+      "AUTHORITY_IMPACT": "WEAKENS_HISTORICAL_RECONSTRUCTION",
+      "ACTIVATION_IMPACT": "NONBLOCKING_IF_ARTIFACT_EXISTS_AND_FORMULA_STABLE",
+      "RESEARCH_USE_IMPACT": "LIMITS_EVIDENCE_REPLAY",
+      "PRODUCTION_BEHAVIOR_IMPACT": "NO executable impact",
+      "REMEDIATION_SCOPE": "append-only provenance remediation per feature or family re-cert with hashed artifacts",
+      "NOTES": "n=26 features with empty/placeholder ledger SHA"
+    },
+    {
+      "DEBT_ID": "DEBT-006",
+      "SOURCE_FEATURE": "macd_line",
+      "DEBT_TYPE": "ONTOLOGY_REGISTRATION_DEBT",
+      "SCOPE": "LOCAL",
+      "DIRECTLY_AFFECTED_FEATURES": [
+        "macd_line",
+        "macd_signal",
+        "macd_hist"
+      ],
+      "DIRECTLY_AFFECTED_CONSUMERS": [],
+      "TRANSITIVE_FEATURES": [],
+      "TRANSITIVE_CONSUMERS": [],
+      "AUTHORITY_IMPACT": "GOVERNANCE_DOC_ONLY",
+      "ACTIVATION_IMPACT": "NONBLOCKING_EXECUTABLE",
+      "RESEARCH_USE_IMPACT": "NONBLOCKING",
+      "PRODUCTION_BEHAVIOR_IMPACT": "NO \u2014 pipeline hardcoded periods remain authority",
+      "REMEDIATION_SCOPE": "register MACD family in market_ontology.yaml with FM ids; no math change",
+      "NOTES": "M8 certified without ontology FM registration"
+    },
+    {
+      "DEBT_ID": "DEBT-007",
+      "SOURCE_FEATURE": "ema_spread",
+      "DEBT_TYPE": "SUPERSEDED_STILL_BOUND_DEBT",
+      "SCOPE": "SYSTEMIC",
+      "DIRECTLY_AFFECTED_FEATURES": [
+        "ema_spread",
+        "momentum_score"
+      ],
+      "DIRECTLY_AFFECTED_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "Gaussian_v4_mirrored_38dim",
+        "Gaussian_live_heuristic"
+      ],
+      "TRANSITIVE_FEATURES": [
+        "any model trained on dims of ema_spread/momentum_score"
+      ],
+      "TRANSITIVE_CONSUMERS": [
+        "Gaussian",
+        "rr_model historical"
+      ],
+      "AUTHORITY_IMPACT": "BLOCKS_SUCCESSOR_ACTIVATION_WITHOUT_VECTOR_MIGRATION",
+      "ACTIVATION_IMPACT": "BLOCKS_L6_SWAP_TO_FM030_031",
+      "RESEARCH_USE_IMPACT": "MODELS_STILL_CONSUME_LEGACY_IDENTITY",
+      "PRODUCTION_BEHAVIOR_IMPACT": "CURRENT production continues legacy dims \u2014 intentional until vector migration",
+      "REMEDIATION_SCOPE": "vector migration plan: replace dims with FM-030/031 or dual-publish; retrain/revalidate consumers",
+      "NOTES": "F-054 successors promoted as non-vector; legacy SUPERSEDED but still in 38-dim"
+    },
+    {
+      "DEBT_ID": "DEBT-008",
+      "SOURCE_FEATURE": "ema_spread_atr",
+      "DEBT_TYPE": "PRODUCTION_BINDING_DEBT",
+      "SCOPE": "DOWNSTREAM_PROPAGATING",
+      "DIRECTLY_AFFECTED_FEATURES": [
+        "ema_spread_atr",
+        "momentum_score_atr"
+      ],
+      "DIRECTLY_AFFECTED_CONSUMERS": [],
+      "TRANSITIVE_FEATURES": [],
+      "TRANSITIVE_CONSUMERS": [
+        "future model consumers"
+      ],
+      "AUTHORITY_IMPACT": "NO_PRODUCTION_AUTHORITY_YET",
+      "ACTIVATION_IMPACT": "BLOCKS_ACTIVATION_UNTIL_VECTOR_BOUND",
+      "RESEARCH_USE_IMPACT": "CERTIFIED_BUT_NOT_ACTIVATABLE_IN_38VEC",
+      "PRODUCTION_BEHAVIOR_IMPACT": "NO current production use",
+      "REMEDIATION_SCOPE": "L6 binding decision + schema migration \u2014 out of M15 scope",
+      "NOTES": "FM-030/031 PROMOTED identity, not in CANONICAL_FEATURES"
+    },
+    {
+      "DEBT_ID": "DEBT-009",
+      "SOURCE_FEATURE": "trend_strength",
+      "DEBT_TYPE": "ONTOLOGY_REGISTRATION_DEBT",
+      "SCOPE": "LOCAL",
+      "DIRECTLY_AFFECTED_FEATURES": [
+        "trend_strength",
+        "volatility_regime",
+        "session",
+        "hour_of_day"
+      ],
+      "DIRECTLY_AFFECTED_CONSUMERS": [],
+      "TRANSITIVE_FEATURES": [],
+      "TRANSITIVE_CONSUMERS": [],
+      "AUTHORITY_IMPACT": "GOVERNANCE_DOC_ONLY",
+      "ACTIVATION_IMPACT": "NONBLOCKING",
+      "RESEARCH_USE_IMPACT": "NONBLOCKING",
+      "PRODUCTION_BEHAVIOR_IMPACT": "NO",
+      "REMEDIATION_SCOPE": "register L4 composite identities in ontology with formula strings matching certification",
+      "NOTES": "pipeline is executable authority today"
+    },
+    {
+      "DEBT_ID": "DEBT-010",
+      "SOURCE_FEATURE": "SYSTEM",
+      "DEBT_TYPE": "L6_PENDING",
+      "SCOPE": "SYSTEMIC",
+      "DIRECTLY_AFFECTED_FEATURES": [
+        "body_size",
+        "lower_wick",
+        "true_range",
+        "upper_wick",
+        "total_wick",
+        "wick_size",
+        "ema_fast",
+        "ema_slow",
+        "macd_line",
+        "macd_signal",
+        "rsi_14",
+        "swing_high",
+        "swing_low",
+        "atr",
+        "macd_hist",
+        "trend_bias",
+        "disp_strength",
+        "disp_strength_atr_rescale",
+        "ema_spread_atr",
+        "momentum_score_atr",
+        "volume_ratio",
+        "volume_spike",
+        "body_ratio",
+        "displacement_atr_ratio",
+        "volatility_ratio",
+        "displacement_retrace",
+        "higher_high",
+        "break_of_structure",
+        "liquidity_sweep",
+        "candles_since_retest",
+        "double_sweep",
+        "lower_low",
+        "sweep_detected",
+        "liquidity_distance",
+        "retest_depth",
+        "hour_of_day",
+        "session",
+        "trend_strength",
+        "liquidity_pressure_score",
+        "volatility_regime"
+      ],
+      "DIRECTLY_AFFECTED_CONSUMERS": [
+        "models",
+        "decision engines"
+      ],
+      "TRANSITIVE_FEATURES": [],
+      "TRANSITIVE_CONSUMERS": [],
+      "AUTHORITY_IMPACT": "NO_L6_MODEL_THRESHOLD_AUTHORITY_GRANTED",
+      "ACTIVATION_IMPACT": "BLOCKS_PROGRAM_L6_ACTIVATION",
+      "RESEARCH_USE_IMPACT": "RESEARCH_MAY_SHADOW_ONLY",
+      "PRODUCTION_BEHAVIOR_IMPACT": "NO \u2014 identity certification != activation",
+      "REMEDIATION_SCOPE": "separate L6 activation program after consumer alignment + binding remediation",
+      "NOTES": "Feature identity frontier exhausted; completion/activation frontier open"
+    },
+    {
+      "DEBT_ID": "DEBT-011",
+      "SOURCE_FEATURE": "DOCUMENTATION",
+      "DEBT_TYPE": "SPLIT_IDENTITY_DOCUMENTED",
+      "SCOPE": "LOCAL",
+      "DIRECTLY_AFFECTED_FEATURES": [
+        "retest_depth"
+      ],
+      "DIRECTLY_AFFECTED_CONSUMERS": [],
+      "TRANSITIVE_FEATURES": [],
+      "TRANSITIVE_CONSUMERS": [],
+      "AUTHORITY_IMPACT": "DOC_ONLY",
+      "ACTIVATION_IMPACT": "NONBLOCKING",
+      "RESEARCH_USE_IMPACT": "NONBLOCKING",
+      "PRODUCTION_BEHAVIOR_IMPACT": "NO",
+      "REMEDIATION_SCOPE": "Accepted FM-021 split identity adjudication",
+      "NOTES": "token registry completeness"
+    },
+    {
+      "DEBT_ID": "DEBT-012",
+      "SOURCE_FEATURE": "DOCUMENTATION",
+      "DEBT_TYPE": "ROLE_LABEL_GROUNDING_DOCUMENTED",
+      "SCOPE": "LOCAL",
+      "DIRECTLY_AFFECTED_FEATURES": [
+        "displacement_retrace"
+      ],
+      "DIRECTLY_AFFECTED_CONSUMERS": [],
+      "TRANSITIVE_FEATURES": [],
+      "TRANSITIVE_CONSUMERS": [],
+      "AUTHORITY_IMPACT": "DOC_ONLY",
+      "ACTIVATION_IMPACT": "NONBLOCKING",
+      "RESEARCH_USE_IMPACT": "NONBLOCKING",
+      "PRODUCTION_BEHAVIOR_IMPACT": "NO",
+      "REMEDIATION_SCOPE": "Accepted FM-027 role-label grounding adjudication",
+      "NOTES": "token registry completeness"
+    },
+    {
+      "DEBT_ID": "DEBT-013",
+      "SOURCE_FEATURE": "DOCUMENTATION",
+      "DEBT_TYPE": "NONCANONICAL_PRODUCTION_BINDING",
+      "SCOPE": "LOCAL",
+      "DIRECTLY_AFFECTED_FEATURES": [
+        "displacement_atr_ratio",
+        "displacement_retrace"
+      ],
+      "DIRECTLY_AFFECTED_CONSUMERS": [],
+      "TRANSITIVE_FEATURES": [],
+      "TRANSITIVE_CONSUMERS": [],
+      "AUTHORITY_IMPACT": "VARIES",
+      "ACTIVATION_IMPACT": "SEE_ROW",
+      "RESEARCH_USE_IMPACT": "NONBLOCKING",
+      "PRODUCTION_BEHAVIOR_IMPACT": "NO",
+      "REMEDIATION_SCOPE": "CRT non-vector production emission",
+      "NOTES": "token registry completeness"
+    },
+    {
+      "DEBT_ID": "DEBT-014",
+      "SOURCE_FEATURE": "DOCUMENTATION",
+      "DEBT_TYPE": "ACTIVATION_EVIDENCE_DEBT",
+      "SCOPE": "LOCAL",
+      "DIRECTLY_AFFECTED_FEATURES": [
+        "body_size",
+        "lower_wick",
+        "true_range",
+        "upper_wick",
+        "total_wick",
+        "wick_size",
+        "ema_fast",
+        "ema_slow",
+        "macd_line",
+        "macd_signal",
+        "rsi_14",
+        "swing_high",
+        "swing_low",
+        "atr",
+        "macd_hist",
+        "trend_bias",
+        "disp_strength",
+        "disp_strength_atr_rescale",
+        "ema_spread_atr",
+        "momentum_score_atr",
+        "volume_ratio",
+        "volume_spike",
+        "body_ratio",
+        "displacement_atr_ratio",
+        "volatility_ratio",
+        "displacement_retrace",
+        "higher_high",
+        "break_of_structure",
+        "liquidity_sweep",
+        "candles_since_retest",
+        "double_sweep",
+        "lower_low",
+        "sweep_detected",
+        "liquidity_distance",
+        "retest_depth",
+        "hour_of_day",
+        "session",
+        "trend_strength",
+        "liquidity_pressure_score",
+        "volatility_regime"
+      ],
+      "DIRECTLY_AFFECTED_CONSUMERS": [],
+      "TRANSITIVE_FEATURES": [],
+      "TRANSITIVE_CONSUMERS": [],
+      "AUTHORITY_IMPACT": "VARIES",
+      "ACTIVATION_IMPACT": "SEE_ROW",
+      "RESEARCH_USE_IMPACT": "NONBLOCKING",
+      "PRODUCTION_BEHAVIOR_IMPACT": "NO",
+      "REMEDIATION_SCOPE": "No L6 activation evidence package",
+      "NOTES": "token registry completeness"
+    },
+    {
+      "DEBT_ID": "DEBT-015",
+      "SOURCE_FEATURE": "DOCUMENTATION",
+      "DEBT_TYPE": "UNTRACKED_ARTIFACT_DEBT",
+      "SCOPE": "LOCAL",
+      "DIRECTLY_AFFECTED_FEATURES": [
+        "macd_line",
+        "macd_signal",
+        "macd_hist",
+        "displacement_retrace",
+        "retest_depth",
+        "hour_of_day",
+        "session",
+        "trend_strength",
+        "liquidity_pressure_score",
+        "volatility_regime"
+      ],
+      "DIRECTLY_AFFECTED_CONSUMERS": [],
+      "TRANSITIVE_FEATURES": [],
+      "TRANSITIVE_CONSUMERS": [],
+      "AUTHORITY_IMPACT": "VARIES",
+      "ACTIVATION_IMPACT": "SEE_ROW",
+      "RESEARCH_USE_IMPACT": "NONBLOCKING",
+      "PRODUCTION_BEHAVIOR_IMPACT": "NO",
+      "REMEDIATION_SCOPE": "Evidence artifact not git-tracked",
+      "NOTES": "token registry completeness"
+    },
+    {
+      "DEBT_ID": "DEBT-016",
+      "SOURCE_FEATURE": "DOCUMENTATION",
+      "DEBT_TYPE": "HASH_MISMATCH_DEBT",
+      "SCOPE": "LOCAL",
+      "DIRECTLY_AFFECTED_FEATURES": [
+        "higher_high",
+        "break_of_structure",
+        "liquidity_sweep",
+        "lower_low"
+      ],
+      "DIRECTLY_AFFECTED_CONSUMERS": [],
+      "TRANSITIVE_FEATURES": [],
+      "TRANSITIVE_CONSUMERS": [],
+      "AUTHORITY_IMPACT": "VARIES",
+      "ACTIVATION_IMPACT": "SEE_ROW",
+      "RESEARCH_USE_IMPACT": "NONBLOCKING",
+      "PRODUCTION_BEHAVIOR_IMPACT": "NO",
+      "REMEDIATION_SCOPE": "Ledger SHA does not match current artifact bytes",
+      "NOTES": "token registry completeness"
+    },
+    {
+      "DEBT_ID": "DEBT-017",
+      "SOURCE_FEATURE": "DOCUMENTATION",
+      "DEBT_TYPE": "UNBOUND_CONSUMER_DEBT",
+      "SCOPE": "LOCAL",
+      "DIRECTLY_AFFECTED_FEATURES": [
+        "lower_wick",
+        "true_range",
+        "upper_wick",
+        "total_wick",
+        "disp_strength_atr_rescale",
+        "ema_spread_atr",
+        "momentum_score_atr"
+      ],
+      "DIRECTLY_AFFECTED_CONSUMERS": [],
+      "TRANSITIVE_FEATURES": [],
+      "TRANSITIVE_CONSUMERS": [],
+      "AUTHORITY_IMPACT": "VARIES",
+      "ACTIVATION_IMPACT": "SEE_ROW",
+      "RESEARCH_USE_IMPACT": "NONBLOCKING",
+      "PRODUCTION_BEHAVIOR_IMPACT": "NO",
+      "REMEDIATION_SCOPE": "No production vector binding for consumer delivery",
+      "NOTES": "token registry completeness"
+    },
+    {
+      "DEBT_ID": "DEBT-018",
+      "SOURCE_FEATURE": "DOCUMENTATION",
+      "DEBT_TYPE": "NONE",
+      "SCOPE": "LOCAL",
+      "DIRECTLY_AFFECTED_FEATURES": [
+        "close",
+        "high",
+        "low",
+        "open",
+        "timestamp",
+        "volume"
+      ],
+      "DIRECTLY_AFFECTED_CONSUMERS": [],
+      "TRANSITIVE_FEATURES": [],
+      "TRANSITIVE_CONSUMERS": [],
+      "AUTHORITY_IMPACT": "DOC_ONLY",
+      "ACTIVATION_IMPACT": "NONBLOCKING",
+      "RESEARCH_USE_IMPACT": "NONBLOCKING",
+      "PRODUCTION_BEHAVIOR_IMPACT": "NO",
+      "REMEDIATION_SCOPE": "No debt",
+      "NOTES": "token registry completeness"
+    },
+    {
+      "DEBT_ID": "DEBT-019",
+      "SOURCE_FEATURE": "DOCUMENTATION",
+      "DEBT_TYPE": "SUPERSEDED_CLOSED",
+      "SCOPE": "LOCAL",
+      "DIRECTLY_AFFECTED_FEATURES": [
+        "ema_spread",
+        "momentum_score"
+      ],
+      "DIRECTLY_AFFECTED_CONSUMERS": [],
+      "TRANSITIVE_FEATURES": [],
+      "TRANSITIVE_CONSUMERS": [],
+      "AUTHORITY_IMPACT": "DOC_ONLY",
+      "ACTIVATION_IMPACT": "NONBLOCKING",
+      "RESEARCH_USE_IMPACT": "NONBLOCKING",
+      "PRODUCTION_BEHAVIOR_IMPACT": "NO",
+      "REMEDIATION_SCOPE": "Superseded identity closed",
+      "NOTES": "token registry completeness"
+    }
+  ],
+  "debt_propagation_graph": {
+    "edges": [
+      {
+        "from": "DEBT-001",
+        "scope": "SYSTEMIC",
+        "to_features": [
+          "session"
+        ],
+        "to_consumers": [
+          "SESSION_MAP",
+          "dashboard SESSION_LABELS",
+          "CRT/live/backtest session paths",
+          "any consumer joining session codes across systems"
+        ]
+      },
+      {
+        "from": "DEBT-002",
+        "scope": "DOWNSTREAM_PROPAGATING",
+        "to_features": [
+          "trend_strength"
+        ],
+        "to_consumers": [
+          "dual_engine.detect_regime",
+          "s07/s08 thresholds",
+          "dual_engine regime path consumers"
+        ]
+      },
+      {
+        "from": "DEBT-003",
+        "scope": "DOWNSTREAM_PROPAGATING",
+        "to_features": [
+          "volatility_regime"
+        ],
+        "to_consumers": [
+          "s05_grid",
+          "s05_grid dependent research paths"
+        ]
+      },
+      {
+        "from": "DEBT-004",
+        "scope": "LOCAL",
+        "to_features": [
+          "liquidity_distance"
+        ],
+        "to_consumers": []
+      },
+      {
+        "from": "DEBT-005",
+        "scope": "SYSTEMIC",
+        "to_features": [
+          "body_size",
+          "lower_wick",
+          "true_range",
+          "upper_wick",
+          "total_wick",
+          "wick_size",
+          "ema_fast",
+          "ema_slow",
+          "rsi_14",
+          "swing_high",
+          "swing_low",
+          "atr",
+          "trend_bias",
+          "disp_strength",
+          "disp_strength_atr_rescale",
+          "ema_spread_atr",
+          "momentum_score_atr",
+          "volume_ratio",
+          "volume_spike",
+          "body_ratio",
+          "displacement_atr_ratio",
+          "volatility_ratio",
+          "candles_since_retest",
+          "double_sweep",
+          "sweep_detected",
+          "liquidity_distance"
+        ],
+        "to_consumers": []
+      },
+      {
+        "from": "DEBT-006",
+        "scope": "LOCAL",
+        "to_features": [
+          "macd_line",
+          "macd_signal",
+          "macd_hist"
+        ],
+        "to_consumers": []
+      },
+      {
+        "from": "DEBT-007",
+        "scope": "SYSTEMIC",
+        "to_features": [
+          "ema_spread",
+          "momentum_score",
+          "any model trained on dims of ema_spread/momentum_score"
+        ],
+        "to_consumers": [
+          "FeaturePipeline",
+          "BacktestRunner",
+          "Gaussian_v4_mirrored_38dim",
+          "Gaussian_live_heuristic",
+          "Gaussian",
+          "rr_model historical"
+        ]
+      },
+      {
+        "from": "DEBT-008",
+        "scope": "DOWNSTREAM_PROPAGATING",
+        "to_features": [
+          "ema_spread_atr",
+          "momentum_score_atr"
+        ],
+        "to_consumers": [
+          "future model consumers"
+        ]
+      },
+      {
+        "from": "DEBT-009",
+        "scope": "LOCAL",
+        "to_features": [
+          "trend_strength",
+          "volatility_regime",
+          "session",
+          "hour_of_day"
+        ],
+        "to_consumers": []
+      },
+      {
+        "from": "DEBT-010",
+        "scope": "SYSTEMIC",
+        "to_features": [
+          "body_size",
+          "lower_wick",
+          "true_range",
+          "upper_wick",
+          "total_wick",
+          "wick_size",
+          "ema_fast",
+          "ema_slow",
+          "macd_line",
+          "macd_signal",
+          "rsi_14",
+          "swing_high",
+          "swing_low",
+          "atr",
+          "macd_hist",
+          "trend_bias",
+          "disp_strength",
+          "disp_strength_atr_rescale",
+          "ema_spread_atr",
+          "momentum_score_atr",
+          "volume_ratio",
+          "volume_spike",
+          "body_ratio",
+          "displacement_atr_ratio",
+          "volatility_ratio",
+          "displacement_retrace",
+          "higher_high",
+          "break_of_structure",
+          "liquidity_sweep",
+          "candles_since_retest",
+          "double_sweep",
+          "lower_low",
+          "sweep_detected",
+          "liquidity_distance",
+          "retest_depth",
+          "hour_of_day",
+          "session",
+          "trend_strength",
+          "liquidity_pressure_score",
+          "volatility_regime"
+        ],
+        "to_consumers": [
+          "models",
+          "decision engines"
+        ]
+      },
+      {
+        "from": "DEBT-011",
+        "scope": "LOCAL",
+        "to_features": [
+          "retest_depth"
+        ],
+        "to_consumers": []
+      },
+      {
+        "from": "DEBT-012",
+        "scope": "LOCAL",
+        "to_features": [
+          "displacement_retrace"
+        ],
+        "to_consumers": []
+      },
+      {
+        "from": "DEBT-013",
+        "scope": "LOCAL",
+        "to_features": [
+          "displacement_atr_ratio",
+          "displacement_retrace"
+        ],
+        "to_consumers": []
+      },
+      {
+        "from": "DEBT-014",
+        "scope": "LOCAL",
+        "to_features": [
+          "body_size",
+          "lower_wick",
+          "true_range",
+          "upper_wick",
+          "total_wick",
+          "wick_size",
+          "ema_fast",
+          "ema_slow",
+          "macd_line",
+          "macd_signal",
+          "rsi_14",
+          "swing_high",
+          "swing_low",
+          "atr",
+          "macd_hist",
+          "trend_bias",
+          "disp_strength",
+          "disp_strength_atr_rescale",
+          "ema_spread_atr",
+          "momentum_score_atr",
+          "volume_ratio",
+          "volume_spike",
+          "body_ratio",
+          "displacement_atr_ratio",
+          "volatility_ratio",
+          "displacement_retrace",
+          "higher_high",
+          "break_of_structure",
+          "liquidity_sweep",
+          "candles_since_retest",
+          "double_sweep",
+          "lower_low",
+          "sweep_detected",
+          "liquidity_distance",
+          "retest_depth",
+          "hour_of_day",
+          "session",
+          "trend_strength",
+          "liquidity_pressure_score",
+          "volatility_regime"
+        ],
+        "to_consumers": []
+      },
+      {
+        "from": "DEBT-015",
+        "scope": "LOCAL",
+        "to_features": [
+          "macd_line",
+          "macd_signal",
+          "macd_hist",
+          "displacement_retrace",
+          "retest_depth",
+          "hour_of_day",
+          "session",
+          "trend_strength",
+          "liquidity_pressure_score",
+          "volatility_regime"
+        ],
+        "to_consumers": []
+      },
+      {
+        "from": "DEBT-016",
+        "scope": "LOCAL",
+        "to_features": [
+          "higher_high",
+          "break_of_structure",
+          "liquidity_sweep",
+          "lower_low"
+        ],
+        "to_consumers": []
+      },
+      {
+        "from": "DEBT-017",
+        "scope": "LOCAL",
+        "to_features": [
+          "lower_wick",
+          "true_range",
+          "upper_wick",
+          "total_wick",
+          "disp_strength_atr_rescale",
+          "ema_spread_atr",
+          "momentum_score_atr"
+        ],
+        "to_consumers": []
+      },
+      {
+        "from": "DEBT-018",
+        "scope": "LOCAL",
+        "to_features": [
+          "close",
+          "high",
+          "low",
+          "open",
+          "timestamp",
+          "volume"
+        ],
+        "to_consumers": []
+      },
+      {
+        "from": "DEBT-019",
+        "scope": "LOCAL",
+        "to_features": [
+          "ema_spread",
+          "momentum_score"
+        ],
+        "to_consumers": []
+      }
+    ],
+    "non_propagation_rules": [
+      "FM-025 provenance does NOT transitively taint FM-026 (M7V independent discharge)",
+      "DAG edge alone does not propagate debt without semantic authority dependence"
+    ]
+  },
+  "known_ambiguities": [
+    {
+      "id": "AMB-001",
+      "topic": "HASHED_ARTIFACT_MISMATCH on LATEST pointers",
+      "detail": "Several early CERTIFIED events store sha256 of a LATEST pointer payload or a non-hex placeholder ('rolling_cert','b2a'). Current LATEST bytes may differ after pointer refresh. Census classifies these as BOUND_EMPTY_HASH or BOUND_HASH_MISMATCH rather than inventing PASS.",
+      "impact": "provenance reconstruction, not executable formula"
+    },
+    {
+      "id": "AMB-002",
+      "topic": "FC-0.5 consumer manifest staleness",
+      "detail": "feature_consumer_binding_manifest_fc05-2026-07-10.json predates M9\u2013M14B. Consumer collision detection for session/trend_strength/volatility_regime uses dedicated 2026-07-14 certification artifacts as authority for deferred debts.",
+      "impact": "may under-count newer consumers; known collisions still captured"
+    },
+    {
+      "id": "AMB-003",
+      "topic": "displacement_atr_ratio dual emission paths",
+      "detail": "CRT cached_features + possible pipeline presence; classified BOUND_PRODUCTION_NONCANONICAL with single-composition census note.",
+      "impact": "low \u2014 not in primary activation blockers"
+    }
+  ],
+  "remediation_frontier": [
+    {
+      "PRIORITY": 1,
+      "WORK_UNIT_ID": "M16-WU-SESSION-ENCODING",
+      "TARGET_FEATURES": [
+        "session"
+      ],
+      "TARGET_CONSUMERS": [
+        "SESSION_MAP",
+        "dashboard",
+        "CRT/live/backtest session paths"
+      ],
+      "DEFECT_CLASS": "CONSUMER_SEMANTIC_MISMATCH",
+      "WHY_IT_MATTERS": "Canonical session int8 0/1/2 is permuted/offset vs SESSION_MAP and dashboard; cross-surface joins are wrong.",
+      "REQUIRED_AUTHORITY": "consumer-alignment / encoding reconciliation (not formula recert)",
+      "EXPECTED_MUTATION_SURFACE": "session helpers, SESSION_MAP, dashboard labels, CRT/live session readers \u2014 NOT feature_pipeline identity",
+      "BLOCKS_ACTIVATION": true,
+      "BLOCKS_RESEARCH_USE": true,
+      "DOWNSTREAM_SCOPE": "all multi-surface session consumers",
+      "ESTIMATED_COMPLEXITY": "M",
+      "STOP_BOUNDARY": "Do not change FeaturePipeline session piecewise function without new certification; prefer adapter alignment.",
+      "DEBT_IDS": [
+        "DEBT-001"
+      ]
+    },
+    {
+      "PRIORITY": 2,
+      "WORK_UNIT_ID": "M16-WU-TREND-STRENGTH-COLLISION",
+      "TARGET_FEATURES": [
+        "trend_strength"
+      ],
+      "TARGET_CONSUMERS": [
+        "dual_engine.detect_regime",
+        "s07",
+        "s08"
+      ],
+      "DEFECT_CLASS": "NAME_COLLISION_SEMANTIC",
+      "WHY_IT_MATTERS": "dual_engine local trend_strength = abs(ema_spread) \u2260 canonical SMA10(diff(SMA20(close))).",
+      "REQUIRED_AUTHORITY": "consumer rename or explicit dual binding; optional dual_engine config",
+      "EXPECTED_MUTATION_SURFACE": "src/engines dual_engine (or equivalent) local variables + thresholds; NOT canonical trend_strength formula",
+      "BLOCKS_ACTIVATION": true,
+      "BLOCKS_RESEARCH_USE": true,
+      "DOWNSTREAM_SCOPE": "dual_engine regime consumers",
+      "ESTIMATED_COMPLEXITY": "M",
+      "STOP_BOUNDARY": "Do not silently redefine canonical trend_strength; keep M13B identity.",
+      "DEBT_IDS": [
+        "DEBT-002"
+      ]
+    },
+    {
+      "PRIORITY": 3,
+      "WORK_UNIT_ID": "M16-WU-VOLREGIME-S05",
+      "TARGET_FEATURES": [
+        "volatility_regime"
+      ],
+      "TARGET_CONSUMERS": [
+        "s05_grid"
+      ],
+      "DEFECT_CLASS": "CONSUMER_SEMANTIC_MISMATCH",
+      "WHY_IT_MATTERS": "s05_grid interprets string TRENDING; canonical is int8 tercile of absolute ATR14.",
+      "REQUIRED_AUTHORITY": "consumer adapter",
+      "EXPECTED_MUTATION_SURFACE": "s05_grid / research grid code only",
+      "BLOCKS_ACTIVATION": true,
+      "BLOCKS_RESEARCH_USE": true,
+      "DOWNSTREAM_SCOPE": "s05_grid paths",
+      "ESTIMATED_COMPLEXITY": "S",
+      "STOP_BOUNDARY": "Do not change M14B canonical int8 identity or deps [close,high,low].",
+      "DEBT_IDS": [
+        "DEBT-003"
+      ]
+    },
+    {
+      "PRIORITY": 4,
+      "WORK_UNIT_ID": "M16-WU-SUPERSEDED-VECTOR-MIGRATION",
+      "TARGET_FEATURES": [
+        "ema_spread",
+        "momentum_score",
+        "ema_spread_atr",
+        "momentum_score_atr"
+      ],
+      "TARGET_CONSUMERS": [
+        "FeaturePipeline vector",
+        "Gaussian_v4",
+        "Gaussian_live",
+        "future models"
+      ],
+      "DEFECT_CLASS": "PRODUCTION_BINDING_MISMATCH",
+      "WHY_IT_MATTERS": "Legacy SUPERSEDED dims remain in 38-vector; successors certified but UNBOUND. Blocks honest L6 activation of FM-030/031.",
+      "REQUIRED_AUTHORITY": "schema/vector migration + model revalidation authority",
+      "EXPECTED_MUTATION_SURFACE": "feature_schema CANONICAL_FEATURES, pipeline emission order, model retrain/rebind \u2014 major program",
+      "BLOCKS_ACTIVATION": true,
+      "BLOCKS_RESEARCH_USE": true,
+      "DOWNSTREAM_SCOPE": "all 38-dim model consumers",
+      "ESTIMATED_COMPLEXITY": "L",
+      "STOP_BOUNDARY": "No silent dim swap; requires migration plan + retrain gates; no economic claims in this unit.",
+      "DEBT_IDS": [
+        "DEBT-008",
+        "DEBT-007"
+      ]
+    },
+    {
+      "PRIORITY": 5,
+      "WORK_UNIT_ID": "M16-WU-FM025-PROVENANCE",
+      "TARGET_FEATURES": [
+        "liquidity_distance"
+      ],
+      "TARGET_CONSUMERS": [],
+      "DEFECT_CLASS": "PROVENANCE",
+      "WHY_IT_MATTERS": "FM-025 CERTIFIED with empty SHA; M6R remediation left UNRESOLVED (artifact untracked historically). Does NOT taint FM-026 (M7V).",
+      "REQUIRED_AUTHORITY": "append-only provenance remediation / optional recertify",
+      "EXPECTED_MUTATION_SURFACE": "ledger append only (PROVENANCE_REMEDIATED with binding) + git-track evidence artifact; no formula change",
+      "BLOCKS_ACTIVATION": true,
+      "BLOCKS_RESEARCH_USE": false,
+      "DOWNSTREAM_SCOPE": "FM-025 only (not FM-026)",
+      "ESTIMATED_COMPLEXITY": "S",
+      "STOP_BOUNDARY": "Do not auto-invalidate FM-026; preserve independent discharge.",
+      "DEBT_IDS": [
+        "DEBT-004"
+      ]
+    },
+    {
+      "PRIORITY": 6,
+      "WORK_UNIT_ID": "M16-WU-EMPTY-SHA-FAMILY",
+      "TARGET_FEATURES": [
+        "body_size",
+        "lower_wick",
+        "true_range",
+        "upper_wick",
+        "total_wick",
+        "wick_size",
+        "ema_fast",
+        "ema_slow",
+        "rsi_14",
+        "swing_high",
+        "swing_low",
+        "atr",
+        "trend_bias",
+        "disp_strength",
+        "disp_strength_atr_rescale",
+        "ema_spread_atr",
+        "momentum_score_atr",
+        "volume_ratio",
+        "volume_spike",
+        "body_ratio",
+        "displacement_atr_ratio",
+        "volatility_ratio",
+        "candles_since_retest",
+        "double_sweep",
+        "sweep_detected",
+        "liquidity_distance"
+      ],
+      "TARGET_CONSUMERS": [],
+      "DEFECT_CLASS": "PROVENANCE_GOVERNANCE",
+      "WHY_IT_MATTERS": "Historical CERTIFIED events lack binding hex SHA (empty or placeholder). Reconstruction incomplete.",
+      "REQUIRED_AUTHORITY": "batch provenance remediation",
+      "EXPECTED_MUTATION_SURFACE": "ledger append + evidence hashing; no math",
+      "BLOCKS_ACTIVATION": false,
+      "BLOCKS_RESEARCH_USE": false,
+      "DOWNSTREAM_SCOPE": "historical evidence only",
+      "ESTIMATED_COMPLEXITY": "M",
+      "STOP_BOUNDARY": "Do not re-open formula certification unless artifact missing.",
+      "DEBT_IDS": [
+        "DEBT-005"
+      ]
+    },
+    {
+      "PRIORITY": 7,
+      "WORK_UNIT_ID": "M16-WU-ONTOLOGY-REGISTRATION",
+      "TARGET_FEATURES": [
+        "break_of_structure",
+        "candles_since_retest",
+        "double_sweep",
+        "higher_high",
+        "hour_of_day",
+        "liquidity_sweep",
+        "lower_low",
+        "macd_hist",
+        "macd_line",
+        "macd_signal",
+        "session",
+        "sweep_detected",
+        "trend_strength",
+        "volatility_regime"
+      ],
+      "TARGET_CONSUMERS": [],
+      "DEFECT_CLASS": "ONTOLOGY_REGISTRATION",
+      "WHY_IT_MATTERS": "MACD family + several L3/L4 identities lack ontology FM registration; executable identity is pipeline-defined.",
+      "REQUIRED_AUTHORITY": "ontology registration (governance)",
+      "EXPECTED_MUTATION_SURFACE": "configs/formulas/market_ontology.yaml + registry bindings; hash-neutral to runtime if descriptive",
+      "BLOCKS_ACTIVATION": false,
+      "BLOCKS_RESEARCH_USE": false,
+      "DOWNSTREAM_SCOPE": "documentation/registry",
+      "ESTIMATED_COMPLEXITY": "M",
+      "STOP_BOUNDARY": "No formula change; registration must match certified identities.",
+      "DEBT_IDS": [
+        "DEBT-006",
+        "DEBT-009"
+      ]
+    },
+    {
+      "PRIORITY": 8,
+      "WORK_UNIT_ID": "M16-WU-L6-PREP",
+      "TARGET_FEATURES": [
+        "SYSTEM"
+      ],
+      "TARGET_CONSUMERS": [
+        "models",
+        "decision engines"
+      ],
+      "DEFECT_CLASS": "ACTIVATION_READINESS",
+      "WHY_IT_MATTERS": "Identity certification exhausted; L6 model/threshold activation requires consumer alignment + binding + clean provenance package.",
+      "REQUIRED_AUTHORITY": "new L6 activation program (not identity CERTIFY)",
+      "EXPECTED_MUTATION_SURFACE": "activation policy, model binding manifests, possibly schema \u2014 after M16 consumer work",
+      "BLOCKS_ACTIVATION": true,
+      "BLOCKS_RESEARCH_USE": true,
+      "DOWNSTREAM_SCOPE": "entire feature\u2192model surface",
+      "ESTIMATED_COMPLEXITY": "L",
+      "STOP_BOUNDARY": "Do not CERTIFY/PROMOTE further identities as substitute for activation; do not enable models without authority ladder.",
+      "DEBT_IDS": [
+        "DEBT-010"
+      ]
+    }
+  ],
+  "final_verdict": {
+    "FEATURE_IDENTITY_FRONTIER_EXHAUSTED": "YES",
+    "FEATURE_COMPLETION_FRONTIER_EXHAUSTED": "NO",
+    "FEATURE_PROGRAM_CLOSED": "NO",
+    "PRODUCTION_BEHAVIOR_CHANGED": "NO",
+    "LEDGER_MUTATED": "NO",
+    "DAG_MUTATED": "NO",
+    "PRODUCTION_CODE_MUTATED": "NO",
+    "NEXT_AUTHORIZED_ACTION": "STOP"
+  },
+  "authority": "research/governance only \u2014 descriptive census; grants no runtime/production authority (\u00a76.5)",
+  "phase9_validation": {
+    "1_matrix_rows_48": true,
+    "2_unique_names_48": true,
+    "3_all_dag_nodes": true,
+    "4_no_extra_nodes": true,
+    "5_46_promoted_2_superseded": true,
+    "6_promoted_nonraw_evidence": true,
+    "7_promoted_producer_status": true,
+    "8_all_consumer_status": true,
+    "9_all_activation_status": true,
+    "10_debt_tokens_registered": true,
+    "11_remediation_debt_ids": true,
+    "12_completion_sum_48": true,
+    "13_pct_recompute": true,
+    "14_adjudications_preserved": true,
+    "15_fm025_unresolved": true,
+    "16_fm026_independent": true,
+    "17_fm021_split": true,
+    "18_fm027_role": true,
+    "19_volregime_deps": true,
+    "20_no_source_mutations": true,
+    "body_ratio_identity_fixed": true,
+    "component_only_binding_fixed": true
+  },
+  "correction_note": "Post-pass fix: body_ratio FM-010 ontology composition => ALIGNED; L0 true_range/upper_wick/lower_wick/total_wick => BOUND_COMPONENT_ONLY (not UNBOUND)."
+}

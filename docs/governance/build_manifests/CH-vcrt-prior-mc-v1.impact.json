@@ -1,0 +1,51 @@
+{
+  "change_id": "CH-vcrt-prior-mc-v1",
+  "date_utc": "2026-08-28",
+  "objective": "User named Visual CRT as the next sparse population of the sparse-signal + SEM-028 prior class (P-EVID-01 mother-range instance already F-094). Freeze SEM-032: SEM-012 Arm A and Arm B entries (F-081 detector, including one-open suppression) resolved to clean_labels path MFE/time, with FM-054 agree as magnitude/time prior. Four diagnostic gates (A-S, A-T, B-S, B-T), Bonferroni 4. Same calendar split as MC-MRPRIOR. Not a retune of F-081 walk y, not a retune of F-094. Seal MC-VCRTPRIOR-XAUUSD-M15-V1 before holdout y, then single-pass. economic_claims_allowed false. P-GOAL-04 not opened. No G001.",
+  "change_classes": [
+    "SEMANTIC_REGISTRY_CHANGE",
+    "DOCUMENTATION_ONLY"
+  ],
+  "change_class_rationale": "New research-only SEM-032 node + sealed MC instance + isolated evidence runner. Not live-spine. Frozen runtime ontology sections untouched. DOCUMENTATION_ONLY covers spec/findings/session companions after the run.",
+  "affected_files": [
+    "configs/formulas/market_ontology.yaml",
+    "configs/research/measurement_contracts/instances/MC-VCRTPRIOR-XAUUSD-M15-V1.json",
+    "docs/governance/build_manifests/CH-vcrt-prior-mc-v1.impact.json",
+    "docs/governance/research_family_registry.json",
+    "docs/research/visual_crt_prior_object.md",
+    "docs/current-findings.md",
+    "docs/topics/research-measurement-contract.md",
+    "docs/analysis/readme.md",
+    "docs/analysis/visual-crt-prior-holdout-2026-08-28.md",
+    "CLAUDE.md",
+    "assistant_project.md",
+    ".grok/PENDING.md",
+    "src/research/evidence/visual_crt_prior.py",
+    "tests/research/test_visual_crt_prior.py",
+    "tests/test_semantic_registry.py",
+    "tests/test_research_family_registry.py",
+    "tests/test_measurement_contract.py",
+    "tests/test_current_findings.py"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": ["SEM-032"],
+  "required_checks_ack": [
+    "tests/test_semantic_registry.py",
+    "tests/test_feature_lineage.py",
+    "tests/test_semantic_grounding.py",
+    "tests/test_construction_protocol.py",
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/research/test_visual_crt_prior.py",
+    "tests/test_measurement_contract.py",
+    "tests/test_research_family_registry.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert SEM-032, MC instance, measurer, family row, floor test, docs. SEM-012 / SEM-028 / SEM-030 / F-081 / F-094 untouched. No production config touched.",
+  "authority_granted": "User 2026-08-28: named Visual CRT as the sparse signal for a new MC object in the sparse+prior class. Not a retune of mother-range P-EVID-01.",
+  "authority_NOT_granted": "No production, no G001, no economic_claims_allowed, no F-086 stride spend, no SEM-012/028/030 PRIMARY retune, no F-081/F-084 reopen, no P-GOAL-04, no live overlay, no side picker, no Sujan identity.",
+  "production_behavior_changed": "NO"
+}

@@ -1,0 +1,45 @@
+{
+  "change_id": "CH-gitignore-schema-v1",
+  "date_utc": "2026-09-03",
+  "objective": "Make RECOMPUTE != RECOVER a git-physical rule: classify every tree as TRACKED_BINDING vs LOCAL occupancy. Keep data/model/telemetry lineage out of git. Do not untrack MIXED residue this turn.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY"
+  ],
+  "change_class_rationale": "Schema + .gitignore rewrite + READMEs + pin test. No src/, no scripts/, no configs/production, no models/ bytes added, no data/logs/results committed. DOCUMENTATION_ONLY guard allows tests/ and docs/; blocks src/configs/models.",
+  "affected_files": [
+    ".gitignore",
+    "docs/governance/GITIGNORE_SCHEMA.md",
+    "docs/governance/identity_bindings/README.md",
+    "docs/governance/identity_bindings/.gitkeep",
+    "data/README.md",
+    "data/.gitkeep",
+    "logs/README.md",
+    "logs/.gitkeep",
+    "results/README.md",
+    "results/.gitkeep",
+    "models/README.md",
+    "docs/knowledge-map.md",
+    "docs/reference/conventions.md",
+    "docs/governance/PHYSICAL_STORAGE_ARCHITECTURE.md",
+    "docs/timeline.md",
+    "tests/test_gitignore_schema.py",
+    "docs/governance/build_manifests/CH-gitignore-schema-v1.impact.json",
+    "assistant_project.md",
+    ".grok/PENDING.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/test_gitignore_schema.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert .gitignore, GITIGNORE_SCHEMA.md, identity_bindings README, tree READMEs, pin test, and the four doc pointers. Do not add or delete occupancy blobs.",
+  "authority_granted": "User 2026-09-03: git / workspace sync / gitignore schema / cleanup. Constraints: no src or script code changes; no git-tracked data/model/telemetry lineage.",
+  "authority_NOT_granted": "git rm --cached of MIXED residue (models/ 32 files, reports/ 126 files). Committing OHLCV, models, logs, or results. Identity-store writers. G001. ACTIVE_VERSION.",
+  "production_behavior_changed": "NO"
+}

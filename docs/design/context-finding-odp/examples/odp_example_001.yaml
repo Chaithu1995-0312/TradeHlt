@@ -1,0 +1,29 @@
+# ILLUSTRATIVE — unmeasured until evidence-pinned.
+id: ODP-EXAMPLE-001
+finding_id: F-EXAMPLE-001
+contract_ref: MC-ODP-CTX-XAUUSD-M15-EXAMPLE
+condition:
+  parent_crt: null
+  objective: null
+  state_producer: engine
+  variant_id: null
+  state: SWEEP
+  structure:
+    breaker_present: true
+    order_block_present: true
+  transition: null
+  location:
+    instrument: XAUUSD
+    timeframe: M15
+  mechanism: null
+  mechanism_confidence: none
+lookahead_bars: 5
+outcome_metric: forward_return_atr
+quantiles: null
+n: 0
+confidence: none
+measurement_period: null
+corpus_pin: null
+mechanism: null
+mechanism_confidence: none
+notes: Fill only from a real measurement run under the named contract_ref.

@@ -1,0 +1,33 @@
+{
+  "change_id": "CH-canonical-layer-identity-accept",
+  "date_utc": "2026-08-23",
+  "objective": "User freeze-acceptance of Phase 1: mark LAYER_IDENTITY_STATUS=CLOSED / FROZEN v1.0.0, elevate RECOMPUTE != RECOVER to a repository invariant (identity contract + goal.md §3), bind the surface in the Closure & Authority Index, and tighten the Phase 2 citation gate so storage/writers/readers/migrations/replay cannot start without citing CANONICAL_LAYER_IDENTITY_CONTRACT.md v1.0.0 / CH-canonical-layer-identity.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY"
+  ],
+  "change_class_rationale": "Acceptance stamp on an existing identity specification plus navigation (closure index, CLAUDE.md thin table, goal.md invariant 8, knowledge-map). No src/, configs/, scripts/, tests/, or models/ edit. No ontology node, no Semantic OS id, no FM-id, no F-id (design law lives in goal.md, not findings).",
+  "affected_files": [
+    "docs/governance/CANONICAL_LAYER_IDENTITY_CONTRACT.md",
+    "docs/governance/closure_authority_index.json",
+    "docs/governance/build_manifests/CH-canonical-layer-identity-accept.impact.json",
+    "docs/architecture/goal.md",
+    "docs/knowledge-map.md",
+    "CLAUDE.md",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/test_closure_authority_index.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert the acceptance stamp, closure-index surface, CLAUDE.md row, goal.md invariant 8, and knowledge-map wording. Identity spec v1.0.0 keys remain as written in CH-canonical-layer-identity.",
+  "authority_granted": "User 2026-08-23: treat Phase 1 as CLOSED / FROZEN; formally accept Recompute ≠ Recover as a repository invariant; Phase 2 proposals must cite the freeze and answer how storage preserves identity. No Phase 2 implementation.",
+  "authority_NOT_granted": "No storage, no writers, no readers, no migrations, no replay engines, no G001, no promotion, no ACTIVE_VERSION change, no Semantic OS id, no F-id.",
+  "production_behavior_changed": "NO"
+}

@@ -50,12 +50,14 @@ def test_no_duplicates():
         seen.add(f)
 
 
-# ── 3. Exactly 35 features ────────────────────────────────────────────────────
+# ── 3. Exactly 39 features (schema v4.0 — the MACD histogram split adds
+#          macd_hist_raw at index 18 alongside macd_hist_z at 19; v3.0 was 38)
 def test_feature_count():
-    from features.feature_schema import CANONICAL_FEATURES
-    assert len(CANONICAL_FEATURES) == 35, (
-        f"Expected 35 canonical features, got {len(CANONICAL_FEATURES)}"
+    from features.feature_schema import CANONICAL_FEATURES, CANONICAL_FEATURE_DIM
+    assert len(CANONICAL_FEATURES) == 48, (
+        f"Expected 48 canonical features (schema v5.0), got {len(CANONICAL_FEATURES)}"
     )
+    assert CANONICAL_FEATURE_DIM == 48
 
 
 # ── 4. FEATURE_INDEX_MAP consistency ─────────────────────────────────────────

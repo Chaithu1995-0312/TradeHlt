@@ -1,0 +1,1682 @@
+[
+  {
+    "class": "HubStory",
+    "id": "STORY-1.1",
+    "in_degree": 6,
+    "layer": "config_layer",
+    "out_degree": 22,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-1.2",
+    "in_degree": 31,
+    "layer": "core",
+    "out_degree": 70,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-1.3",
+    "in_degree": 51,
+    "layer": "config_layer",
+    "out_degree": 54,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-1.4",
+    "in_degree": 65,
+    "layer": "core",
+    "out_degree": 69,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-2.1",
+    "in_degree": 141,
+    "layer": "governance",
+    "out_degree": 23,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-2.3",
+    "in_degree": 31,
+    "layer": "config_layer",
+    "out_degree": 70,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-2.4",
+    "in_degree": 31,
+    "layer": "governance",
+    "out_degree": 70,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-2.5",
+    "in_degree": 164,
+    "layer": "config_layer",
+    "out_degree": 19,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-3.1",
+    "in_degree": 31,
+    "layer": "governance",
+    "out_degree": 1,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-3.2",
+    "in_degree": 170,
+    "layer": "sidecar",
+    "out_degree": 137,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-4.2",
+    "in_degree": 30,
+    "layer": "governance",
+    "out_degree": 14,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-4.3",
+    "in_degree": 30,
+    "layer": "governance",
+    "out_degree": 14,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-4.4",
+    "in_degree": 30,
+    "layer": "core",
+    "out_degree": 14,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-5.4",
+    "in_degree": 31,
+    "layer": "core",
+    "out_degree": 70,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-6.3",
+    "in_degree": 62,
+    "layer": "operator",
+    "out_degree": 102,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-8.2",
+    "in_degree": 31,
+    "layer": "core",
+    "out_degree": 70,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-8.3",
+    "in_degree": 53,
+    "layer": "core",
+    "out_degree": 70,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-9.1",
+    "in_degree": 30,
+    "layer": "governance",
+    "out_degree": 14,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-10.2",
+    "in_degree": 30,
+    "layer": "governance",
+    "out_degree": 14,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-10.3",
+    "in_degree": 60,
+    "layer": "operator",
+    "out_degree": 81,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-12.4",
+    "in_degree": 39,
+    "layer": "governance",
+    "out_degree": 97,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-23.1",
+    "in_degree": 174,
+    "layer": "sidecar",
+    "out_degree": 142,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-37.1",
+    "in_degree": 61,
+    "layer": "sidecar",
+    "out_degree": 55,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-23.2",
+    "in_degree": 29,
+    "layer": "governance",
+    "out_degree": 28,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-18.1",
+    "in_degree": 228,
+    "layer": "sidecar",
+    "out_degree": 166,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-29.1",
+    "in_degree": 111,
+    "layer": "data_ingestion",
+    "out_degree": 37,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-20.1",
+    "in_degree": 140,
+    "layer": "core",
+    "out_degree": 90,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-25.1",
+    "in_degree": 39,
+    "layer": "operator",
+    "out_degree": 98,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-14.2",
+    "in_degree": 119,
+    "layer": "operator",
+    "out_degree": 184,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-33.1",
+    "in_degree": 60,
+    "layer": "operator",
+    "out_degree": 145,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-23.3",
+    "in_degree": 23,
+    "layer": "research",
+    "out_degree": 28,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-36.1",
+    "in_degree": 45,
+    "layer": "research",
+    "out_degree": 84,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-37.2",
+    "in_degree": 193,
+    "layer": "operator",
+    "out_degree": 54,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-30.1",
+    "in_degree": 32,
+    "layer": "research",
+    "out_degree": 143,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-25.3",
+    "in_degree": 62,
+    "layer": "sidecar",
+    "out_degree": 58,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-16.1",
+    "in_degree": 73,
+    "layer": "sidecar",
+    "out_degree": 65,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-31.1",
+    "in_degree": 152,
+    "layer": "sidecar",
+    "out_degree": 97,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-31.2",
+    "in_degree": 23,
+    "layer": "sidecar",
+    "out_degree": 50,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-23.4",
+    "in_degree": 220,
+    "layer": "governance",
+    "out_degree": 75,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-36.2",
+    "in_degree": 184,
+    "layer": "governance",
+    "out_degree": 93,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-20.5",
+    "in_degree": 200,
+    "layer": "sidecar",
+    "out_degree": 129,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-41.4",
+    "in_degree": 88,
+    "layer": "sidecar",
+    "out_degree": 85,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-20.6",
+    "in_degree": 120,
+    "layer": "features",
+    "out_degree": 104,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-30.2",
+    "in_degree": 110,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-33.5",
+    "in_degree": 220,
+    "layer": "operator",
+    "out_degree": 98,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-18.2",
+    "in_degree": 170,
+    "layer": "core",
+    "out_degree": 122,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-19.2",
+    "in_degree": 31,
+    "layer": "governance",
+    "out_degree": 70,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-36.3",
+    "in_degree": 104,
+    "layer": "operator",
+    "out_degree": 128,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-31.3",
+    "in_degree": 67,
+    "layer": "core",
+    "out_degree": 105,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-31.4",
+    "in_degree": 42,
+    "layer": "sidecar",
+    "out_degree": 97,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-25.4",
+    "in_degree": 210,
+    "layer": "sidecar",
+    "out_degree": 115,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-28.1",
+    "in_degree": 39,
+    "layer": "runtime",
+    "out_degree": 111,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-31.5",
+    "in_degree": 161,
+    "layer": "config_layer",
+    "out_degree": 78,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-36.4",
+    "in_degree": 6,
+    "layer": "sidecar",
+    "out_degree": 26,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-41.11",
+    "in_degree": 117,
+    "layer": "sidecar",
+    "out_degree": 122,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-30.3",
+    "in_degree": 51,
+    "layer": "research",
+    "out_degree": 118,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-41.13",
+    "in_degree": 110,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-31.6",
+    "in_degree": 130,
+    "layer": "operator",
+    "out_degree": 122,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-31.7",
+    "in_degree": 56,
+    "layer": "research",
+    "out_degree": 41,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-14.3",
+    "in_degree": 51,
+    "layer": "sidecar",
+    "out_degree": 93,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-27.1",
+    "in_degree": 118,
+    "layer": "config_layer",
+    "out_degree": 111,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-30.4",
+    "in_degree": 128,
+    "layer": "sidecar",
+    "out_degree": 52,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-14.4",
+    "in_degree": 28,
+    "layer": "operator",
+    "out_degree": 23,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-36.5",
+    "in_degree": 219,
+    "layer": "sidecar",
+    "out_degree": 142,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-33.7",
+    "in_degree": 84,
+    "layer": "operator",
+    "out_degree": 65,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-15.1",
+    "in_degree": 46,
+    "layer": "research",
+    "out_degree": 60,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-37.3",
+    "in_degree": 48,
+    "layer": "sidecar",
+    "out_degree": 79,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-25.5",
+    "in_degree": 90,
+    "layer": "sidecar",
+    "out_degree": 39,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-25.6",
+    "in_degree": 219,
+    "layer": "sidecar",
+    "out_degree": 84,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-25.8",
+    "in_degree": 105,
+    "layer": "research",
+    "out_degree": 97,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-31.10",
+    "in_degree": 71,
+    "layer": "core",
+    "out_degree": 105,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-20.13",
+    "in_degree": 39,
+    "layer": "config_layer",
+    "out_degree": 97,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-36.6",
+    "in_degree": 9,
+    "layer": "governance",
+    "out_degree": 49,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-18.3",
+    "in_degree": 62,
+    "layer": "sidecar",
+    "out_degree": 62,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-20.14",
+    "in_degree": 108,
+    "layer": "operator",
+    "out_degree": 66,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-37.4",
+    "in_degree": 50,
+    "layer": "research",
+    "out_degree": 147,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-31.11",
+    "in_degree": 31,
+    "layer": "research",
+    "out_degree": 75,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-25.9",
+    "in_degree": 128,
+    "layer": "governance",
+    "out_degree": 109,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-20.16",
+    "in_degree": 171,
+    "layer": "config_layer",
+    "out_degree": 152,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-21.1",
+    "in_degree": 155,
+    "layer": "sidecar",
+    "out_degree": 83,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-32.1",
+    "in_degree": 80,
+    "layer": "sidecar",
+    "out_degree": 113,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-31.12",
+    "in_degree": 179,
+    "layer": "engines",
+    "out_degree": 91,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-14.5",
+    "in_degree": 8,
+    "layer": "governance",
+    "out_degree": 98,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-25.12",
+    "in_degree": 239,
+    "layer": "sidecar",
+    "out_degree": 130,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-16.2",
+    "in_degree": 36,
+    "layer": "config_layer",
+    "out_degree": 86,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-25.13",
+    "in_degree": 118,
+    "layer": "data_ingestion",
+    "out_degree": 60,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-25.14",
+    "in_degree": 11,
+    "layer": "sidecar",
+    "out_degree": 19,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-25.15",
+    "in_degree": 58,
+    "layer": "sidecar",
+    "out_degree": 7,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-29.2",
+    "in_degree": 231,
+    "layer": "data_ingestion",
+    "out_degree": 163,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-36.8",
+    "in_degree": 49,
+    "layer": "sidecar",
+    "out_degree": 60,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-16.3",
+    "in_degree": 132,
+    "layer": "config_layer",
+    "out_degree": 61,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-25.16",
+    "in_degree": 65,
+    "layer": "sidecar",
+    "out_degree": 55,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-25.17",
+    "in_degree": 208,
+    "layer": "features",
+    "out_degree": 141,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-31.13",
+    "in_degree": 71,
+    "layer": "operator",
+    "out_degree": 42,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-30.5",
+    "in_degree": 89,
+    "layer": "operator",
+    "out_degree": 156,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-37.6",
+    "in_degree": 69,
+    "layer": "sidecar",
+    "out_degree": 80,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-25.18",
+    "in_degree": 224,
+    "layer": "data_ingestion",
+    "out_degree": 111,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-20.20",
+    "in_degree": 206,
+    "layer": "sidecar",
+    "out_degree": 134,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-36.12",
+    "in_degree": 220,
+    "layer": "operator",
+    "out_degree": 138,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-33.8",
+    "in_degree": 31,
+    "layer": "operator",
+    "out_degree": 75,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-16.4",
+    "in_degree": 196,
+    "layer": "operator",
+    "out_degree": 138,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-20.21",
+    "in_degree": 70,
+    "layer": "sidecar",
+    "out_degree": 39,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-19.3",
+    "in_degree": 19,
+    "layer": "governance",
+    "out_degree": 8,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-20.22",
+    "in_degree": 127,
+    "layer": "sidecar",
+    "out_degree": 136,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-31.16",
+    "in_degree": 209,
+    "layer": "sidecar",
+    "out_degree": 74,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-33.9",
+    "in_degree": 14,
+    "layer": "sidecar",
+    "out_degree": 64,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-41.30",
+    "in_degree": 12,
+    "layer": "operator",
+    "out_degree": 15,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-33.10",
+    "in_degree": 43,
+    "layer": "governance",
+    "out_degree": 100,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-20.24",
+    "in_degree": 44,
+    "layer": "governance",
+    "out_degree": 97,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-36.14",
+    "in_degree": 127,
+    "layer": "config_layer",
+    "out_degree": 124,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-41.31",
+    "in_degree": 95,
+    "layer": "operator",
+    "out_degree": 150,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-20.25",
+    "in_degree": 13,
+    "layer": "sidecar",
+    "out_degree": 81,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-25.20",
+    "in_degree": 224,
+    "layer": "operator",
+    "out_degree": 105,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-20.26",
+    "in_degree": 228,
+    "layer": "research",
+    "out_degree": 125,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-25.21",
+    "in_degree": 170,
+    "layer": "sidecar",
+    "out_degree": 159,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-41.33",
+    "in_degree": 139,
+    "layer": "engines",
+    "out_degree": 78,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-30.6",
+    "in_degree": 101,
+    "layer": "operator",
+    "out_degree": 142,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-41.34",
+    "in_degree": 110,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-36.17",
+    "in_degree": 62,
+    "layer": "research",
+    "out_degree": 84,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-25.22",
+    "in_degree": 61,
+    "layer": "features",
+    "out_degree": 7,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-34.1",
+    "in_degree": 9,
+    "layer": "sidecar",
+    "out_degree": 39,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-33.11",
+    "in_degree": 52,
+    "layer": "governance",
+    "out_degree": 3,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-27.2",
+    "in_degree": 185,
+    "layer": "config_layer",
+    "out_degree": 106,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-25.23",
+    "in_degree": 66,
+    "layer": "sidecar",
+    "out_degree": 91,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-36.19",
+    "in_degree": 66,
+    "layer": "research",
+    "out_degree": 39,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-36.21",
+    "in_degree": 117,
+    "layer": "operator",
+    "out_degree": 124,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-36.22",
+    "in_degree": 100,
+    "layer": "sidecar",
+    "out_degree": 98,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-34.2",
+    "in_degree": 62,
+    "layer": "sidecar",
+    "out_degree": 81,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-31.19",
+    "in_degree": 238,
+    "layer": "sidecar",
+    "out_degree": 90,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-25.24",
+    "in_degree": 25,
+    "layer": "sidecar",
+    "out_degree": 30,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-41.38",
+    "in_degree": 160,
+    "layer": "research",
+    "out_degree": 149,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-20.27",
+    "in_degree": 115,
+    "layer": "sidecar",
+    "out_degree": 50,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-31.20",
+    "in_degree": 257,
+    "layer": "sidecar",
+    "out_degree": 150,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-18.5",
+    "in_degree": 81,
+    "layer": "config_layer",
+    "out_degree": 15,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-37.7",
+    "in_degree": 73,
+    "layer": "operator",
+    "out_degree": 139,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-41.40",
+    "in_degree": 18,
+    "layer": "operator",
+    "out_degree": 24,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-37.8",
+    "in_degree": 61,
+    "layer": "sidecar",
+    "out_degree": 36,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-25.25",
+    "in_degree": 93,
+    "layer": "data_ingestion",
+    "out_degree": 19,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-23.6",
+    "in_degree": 44,
+    "layer": "core",
+    "out_degree": 106,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-41.41",
+    "in_degree": 5,
+    "layer": "operator",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-20.28",
+    "in_degree": 81,
+    "layer": "sidecar",
+    "out_degree": 4,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-18.6",
+    "in_degree": 6,
+    "layer": "sidecar",
+    "out_degree": 16,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-36.23",
+    "in_degree": 151,
+    "layer": "sidecar",
+    "out_degree": 69,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-25.26",
+    "in_degree": 79,
+    "layer": "features",
+    "out_degree": 41,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-18.7",
+    "in_degree": 46,
+    "layer": "config_layer",
+    "out_degree": 103,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-18.8",
+    "in_degree": 177,
+    "layer": "sidecar",
+    "out_degree": 141,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-29.4",
+    "in_degree": 102,
+    "layer": "sidecar",
+    "out_degree": 129,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-37.9",
+    "in_degree": 24,
+    "layer": "operator",
+    "out_degree": 13,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-18.9",
+    "in_degree": 147,
+    "layer": "sidecar",
+    "out_degree": 21,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-31.22",
+    "in_degree": 111,
+    "layer": "sidecar",
+    "out_degree": 92,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-25.27",
+    "in_degree": 8,
+    "layer": "features",
+    "out_degree": 67,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-31.23",
+    "in_degree": 36,
+    "layer": "sidecar",
+    "out_degree": 114,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-29.5",
+    "in_degree": 141,
+    "layer": "sidecar",
+    "out_degree": 19,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-20.29",
+    "in_degree": 160,
+    "layer": "sidecar",
+    "out_degree": 126,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-41.44",
+    "in_degree": 11,
+    "layer": "research",
+    "out_degree": 50,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-25.28",
+    "in_degree": 197,
+    "layer": "sidecar",
+    "out_degree": 78,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-41.46",
+    "in_degree": 104,
+    "layer": "operator",
+    "out_degree": 113,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-25.29",
+    "in_degree": 217,
+    "layer": "sidecar",
+    "out_degree": 133,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-29.6",
+    "in_degree": 11,
+    "layer": "operator",
+    "out_degree": 22,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-18.10",
+    "in_degree": 175,
+    "layer": "governance",
+    "out_degree": 152,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-16.5",
+    "in_degree": 184,
+    "layer": "sidecar",
+    "out_degree": 149,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-33.14",
+    "in_degree": 141,
+    "layer": "governance",
+    "out_degree": 19,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-14.8",
+    "in_degree": 217,
+    "layer": "governance",
+    "out_degree": 181,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-38.2",
+    "in_degree": 203,
+    "layer": "sidecar",
+    "out_degree": 111,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-20.30",
+    "in_degree": 148,
+    "layer": "governance",
+    "out_degree": 109,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-18.11",
+    "in_degree": 203,
+    "layer": "sidecar",
+    "out_degree": 162,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-25.30",
+    "in_degree": 63,
+    "layer": "governance",
+    "out_degree": 44,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-33.15",
+    "in_degree": 117,
+    "layer": "governance",
+    "out_degree": 108,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-31.25",
+    "in_degree": 93,
+    "layer": "sidecar",
+    "out_degree": 98,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-18.12",
+    "in_degree": 218,
+    "layer": "operator",
+    "out_degree": 176,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-21.2",
+    "in_degree": 152,
+    "layer": "sidecar",
+    "out_degree": 127,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-33.16",
+    "in_degree": 128,
+    "layer": "governance",
+    "out_degree": 112,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-14.9",
+    "in_degree": 233,
+    "layer": "config_layer",
+    "out_degree": 132,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-32.2",
+    "in_degree": 162,
+    "layer": "sidecar",
+    "out_degree": 42,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-41.50",
+    "in_degree": 39,
+    "layer": "operator",
+    "out_degree": 97,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-41.51",
+    "in_degree": 8,
+    "layer": "governance",
+    "out_degree": 77,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-35.2",
+    "in_degree": 207,
+    "layer": "operator",
+    "out_degree": 124,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-38.3",
+    "in_degree": 140,
+    "layer": "sidecar",
+    "out_degree": 153,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-41.52",
+    "in_degree": 111,
+    "layer": "operator",
+    "out_degree": 61,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-26.1",
+    "in_degree": 71,
+    "layer": "core",
+    "out_degree": 53,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-37.10",
+    "in_degree": 69,
+    "layer": "operator",
+    "out_degree": 64,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-15.2",
+    "in_degree": 127,
+    "layer": "sidecar",
+    "out_degree": 131,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-34.3",
+    "in_degree": 65,
+    "layer": "core",
+    "out_degree": 69,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-41.55",
+    "in_degree": 39,
+    "layer": "operator",
+    "out_degree": 102,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-20.31",
+    "in_degree": 40,
+    "layer": "operator",
+    "out_degree": 100,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-41.56",
+    "in_degree": 62,
+    "layer": "operator",
+    "out_degree": 129,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-20.32",
+    "in_degree": 153,
+    "layer": "config_layer",
+    "out_degree": 101,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-23.8",
+    "in_degree": 185,
+    "layer": "config_layer",
+    "out_degree": 131,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-33.17",
+    "in_degree": 43,
+    "layer": "governance",
+    "out_degree": 98,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-21.3",
+    "in_degree": 43,
+    "layer": "runtime",
+    "out_degree": 127,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-33.18",
+    "in_degree": 147,
+    "layer": "config_layer",
+    "out_degree": 124,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-41.59",
+    "in_degree": 40,
+    "layer": "runtime",
+    "out_degree": 104,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-18.13",
+    "in_degree": 235,
+    "layer": "sidecar",
+    "out_degree": 111,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-18.14",
+    "in_degree": 170,
+    "layer": "config_layer",
+    "out_degree": 99,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-37.12",
+    "in_degree": 202,
+    "layer": "operator",
+    "out_degree": 106,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-33.20",
+    "in_degree": 64,
+    "layer": "operator",
+    "out_degree": 129,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-37.13",
+    "in_degree": 42,
+    "layer": "operator",
+    "out_degree": 63,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-25.32",
+    "in_degree": 195,
+    "layer": "sidecar",
+    "out_degree": 56,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-38.6",
+    "in_degree": 235,
+    "layer": "sidecar",
+    "out_degree": 78,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-14.10",
+    "in_degree": 152,
+    "layer": "sidecar",
+    "out_degree": 134,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-43.2",
+    "in_degree": 8,
+    "layer": "sidecar",
+    "out_degree": 3,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-44.1",
+    "in_degree": 11,
+    "layer": "sidecar",
+    "out_degree": 19,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-44.3",
+    "in_degree": 9,
+    "layer": "operator",
+    "out_degree": 4,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-47.4",
+    "in_degree": 31,
+    "layer": "core",
+    "out_degree": 70,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-25.33",
+    "in_degree": 63,
+    "layer": "config_layer",
+    "out_degree": 44,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-36.26",
+    "in_degree": 22,
+    "layer": "research",
+    "out_degree": 110,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-41.69",
+    "in_degree": 52,
+    "layer": "operator",
+    "out_degree": 128,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-60.17",
+    "in_degree": 8,
+    "layer": "governance",
+    "out_degree": 11,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-60.7",
+    "in_degree": 17,
+    "layer": "config_layer",
+    "out_degree": 19,
+    "runtime_reachable": true
+  },
+  {
+    "class": "HubStory",
+    "id": "STORY-80.1",
+    "in_degree": 17,
+    "layer": "operator",
+    "out_degree": 12,
+    "runtime_reachable": true
+  }
+]

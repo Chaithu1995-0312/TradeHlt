@@ -1,0 +1,62 @@
+# DESIGN ONLY — Finding Registry catalog (facts).
+# Complements docs/current-findings.md. Does not store trade rules.
+
+schema_version: "0.3.0"
+artifact: FindingRegistry
+status: design_draft
+
+authority:
+  stores: measured_facts_and_governance_metadata
+  does_not_store: [size_multiplier, stop_distance, target_multiplier, participation_rules]
+  separate_artifact: ExecutionPolicy
+
+entry_fields:
+  id:
+    type: string
+    pattern: "^F-[0-9]{3,4}$"
+    required: true
+  title: { type: string, required: true }
+  type:
+    type: string
+    enum: [ARCHITECTURE, ECONOMIC, GOVERNANCE, OPERATIONAL, RISK, MEASUREMENT]
+    required: true
+  family: { type: string | null }
+  contract_ref:
+    type: string | null
+    description: |
+      MC-* id (measurement_contract.schema.yaml) or sealed MC path.
+      UNKNOWN is still allowed for honesty (current-findings.md) but
+      carries no comparability and settles nothing. Prefer contract_ref over bare UNKNOWN
+      for any MEASUREMENT / distribution finding before promotion.
+    pattern_or_unknown: "MC-* | UNKNOWN | null"
+  status:
+    type: string
+    enum: [VALIDATED, OPEN, DURABLE, SUPERSEDED, RETIRED]
+    required: true
+  confidence:
+    type: string
+    enum: [Certain, Likely, Possible]
+    required: true
+  validated: { type: date, required: true }
+  revalidate_by: { type: date, required: true }
+  evidence: { type: "list[string]", required: true, min_items: 1 }
+  supersedes: { type: string | null }
+  reversal: { type: string | null }
+  owner: { type: string, enum: [user, claude, agent], required: true }
+  context_selector: { type: Context | null }
+  odp_ref: { type: string | null }
+  claim_kind:
+    type: string
+    enum: [distribution, falsification, architecture, process, other]
+    required: true
+  mechanism: { type: string | null, default: null }
+  mechanism_confidence: { type: string, enum: [none, provisional, confirmed], default: none }
+
+comparability_rules:
+  - Two Findings/ODPs are comparable only when contract_ref is equal and SEALED (or both DRAFT with explicit note).
+  - contract_ref UNKNOWN ⇒ not comparable; does not settle promotion.
+
+forbidden:
+  - Embedding ExecutionPolicy rules inside a Finding
+  - TT / story labels as context_selector keys
+  - Synthetic measured-looking fields without an ODP row

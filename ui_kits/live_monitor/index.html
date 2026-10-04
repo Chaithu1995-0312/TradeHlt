@@ -1,0 +1,103 @@
+﻿<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/>
+<title>Live workflow — Control Plane architecture</title>
+<meta http-equiv="refresh" content="30"/>
+<style>
+ body{font-family:Inter,system-ui,sans-serif;background:#0a1020;color:#e8eef7;margin:0;padding:24px;line-height:1.45}
+ a{color:#22d3ee} .card{background:#121a2b;border:1px solid #243044;border-radius:12px;padding:16px;margin:12px 0}
+ .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#16303a;color:#22d3ee;font-size:12px;margin:0 6px 6px 0}
+ code,.mono{color:#fbbf24;font-family:ui-monospace,Consolas,monospace;font-size:12.5px}
+ h1{font-size:20px;margin:0 0 8px} h3{margin:0 0 8px;font-size:14px;color:#9fb0c7}
+ pre{background:#0a1020;border:1px solid #243044;border-radius:8px;padding:12px;overflow:auto;max-height:320px;font-size:12px}
+ .ok{color:#22c55e}.warn{color:#facc15}.bad{color:#ef4444}
+</style></head><body>
+<h1>Live monitoring — built architecture</h1>
+<p>Cloud Agents: <span class="bad">unavailable on plan</span>. Using Control Plane Workflow + <code>/flows</code> + <code>/workflow/nodes/…/context</code>.</p>
+<div class="card">
+ <span class="pill">Workflow stage: Live Runner</span>
+ <span class="pill">command: live.inout_runner</span>
+ <span class="pill">flow: runtime (Signal Spine)</span>
+ <span class="pill">paper rail: F-073</span>
+ <p><b>Open the real UI surfaces:</b></p>
+ <ul>
+  <li><a href="/ui_kits/control_plane/" target="_blank">Control Plane — WorkflowPanel</a></li>
+  <li><a href="/workflow/nodes/live.inout_runner/context" target="_blank">Live Runner node context (AST + architecture prompt)</a></li>
+  <li><a href="/flows/runtime/context" target="_blank">Runtime flow context (12 code modules + graph)</a></li>
+  <li><a href="/flows" target="_blank">All architecture flows</a></li>
+  <li><a href="/ui_kits/crt_dashboard/" target="_blank">CRT Dashboard (state spine / Trade Chart)</a></li>
+ </ul>
+</div>
+<div class="card">
+ <h3>Architecture map (from module_role / runtime flow)</h3>
+ <ol>
+  <li><code>features.feature_pipeline</code> → <code>core.feature_store</code></li>
+  <li><code>core.engine_runner</code> → fusion / decision</li>
+  <li><code>config_layer.execution_planner</code> → <code>core.ultron_risk_gate</code> → <code>core.collector</code></li>
+ </ol>
+ <p>Paper live-rail we started sits beside that: <code>runtime.live_rail_orchestrator</code> (role: <em>F-073 repair, paper only</em>) → <code>live_rail_feeder</code> → <code>live_engine_hook</code> → <code>engine_runner</code>. It does <b>not</b> drive <code>CRTEngine.process_candle</code> (Trade Chart colors).</p>
+</div>
+
+<div class="card" id="alertsCard">
+ <h3>Live alerts (<code>live_alert_v1</code>)</h3>
+ <p><span class="pill" id="alertCountPill">alerts</span>
+    <span class="pill" id="alertActionPill">action</span>
+    <span class="pill" id="alertBlockPill">blockers</span></p>
+ <pre id="alertsSnap" style="max-height:220px">loading alerts.json…</pre>
+</div>
+<div class="card" id="chartStatusCard">
+ <h3>Trade Chart bind status (REM-CRT-01)</h3>
+ <p><span class="pill" id="boundPill">checking…</span>
+    <span class="pill" id="costPill">cost</span>
+    <span class="pill" id="playbookPill">playbook</span></p>
+ <p class="mono" id="unboundReason"></p>
+ <p id="unboundDetail" style="color:#9fb0c7;font-size:13px"></p>
+ <p>Trade Chart: <a id="chartLink" href="/ui_kits/crt_dashboard/" target="_blank">crt_dashboard</a></p>
+ <p class="mono" id="chartBindLine"></p>
+ <p style="color:#9fb0c7;font-size:13px">Schema: <code>live_chart_bind_v1</code> — desk chart binds engine occupancy; live rail stays unbound until REM-CRT-02.</p>
+</div>
+<div class="card">
+ <h3>Live paper-run snapshot</h3>
+ <pre id="snap">loading state.json…</pre>
+</div>
+<script>
+async function tick(){
+  try{
+    const r=await fetch('./state.json',{cache:'no-store'});
+    const j=await r.json();
+    document.getElementById('snap').textContent=JSON.stringify(j,null,2);
+    const bound = !!j.chart_bound;
+    const bp = document.getElementById('boundPill');
+    if (bp) {
+      bp.textContent = bound ? 'chart_bound' : ('UNBOUND: ' + (j.chart_unbound_reason || 'unknown'));
+      bp.style.background = bound ? '#14532d' : '#713f12';
+      bp.style.color = bound ? '#22c55e' : '#facc15';
+    }
+    const cp = document.getElementById('costPill');
+    if (cp) cp.textContent = 'cost: ' + (j.cost_model_id || 'UNSTAMPED');
+    const pp = document.getElementById('playbookPill');
+    if (pp) pp.textContent = 'playbook← ' + (j.playbook_source_run_id || 'n/a');
+    const ur = document.getElementById('unboundReason');
+    if (ur) ur.textContent = j.chart_unbound_reason || '';
+    const ud = document.getElementById('unboundDetail');
+    if (ud) ud.textContent = j.chart_unbound_detail || '';
+    const cl = document.getElementById('chartLink');
+    if (cl && j.architecture && j.architecture.urls && j.architecture.urls.trade_chart) {
+      cl.href = j.architecture.urls.trade_chart;
+    }
+    const bl = document.getElementById("chartBindLine");
+    if (bl && j.chart_bind) {
+      bl.textContent = "bind " + (j.chart_bind.instrument||"") + " / api_run_id=" + (j.chart_bind.api_run_id||"") +
+        " / constructor=" + (j.chart_bind.constructor_id||"") + " / payload_ok=" + j.chart_bind.chart_payload_ok;
+    }
+    const rail = j.live_rail_chart_bound === false ? ("rail UNBOUND: " + (j.live_rail_chart_unbound_reason||"")) : "";
+    if (bl && rail) bl.textContent += " | " + rail;
+  }catch(e){ document.getElementById('snap').textContent=String(e); }
+});
+    const j=await r.json();
+    document.getElementById('snap').textContent=JSON.stringify(j,null,2);
+  }catch(e){ document.getElementById('snap').textContent=String(e); }
+}
+tick(); setInterval(tick,4000);
+</script>
+</body></html>
+

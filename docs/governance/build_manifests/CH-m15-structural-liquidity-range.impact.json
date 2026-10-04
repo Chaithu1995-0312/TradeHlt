@@ -1,0 +1,51 @@
+{
+  "change_id": "CH-m15-structural-liquidity-range",
+  "date_utc": "2026-08-17",
+  "objective": "Give the M15 CRT sweep envelope a first-class named object (M15 structural liquidity range) distinct from HTFBuilder, which remains the reset clock only. Geometry of h_ref/l_ref is UNCHANGED (max high / min low of the supplied child window; first seed 16-bar HTFBuilder list, later rebuilds last atr_period=14). No calendar-H4 substitution. No G001. User-authorized 2026-08-17 after the incomplete-contract review of the count/14-bar envelope.",
+  "change_classes": [
+    "RUNTIME_DECISION_PATH_CHANGE",
+    "DOCUMENTATION_ONLY"
+  ],
+  "change_class_rationale": "RUNTIME_DECISION_PATH_CHANGE because the CRT sweep envelope type/identity lives on the process_candle path; PRODUCTION_BEHAVIOR_CHANGED=NO (same h_ref/l_ref, same clock compare). DOCUMENTATION_ONLY for ontology SEM-011, topics, schemas, monthly report. Not FEATURE_IDENTITY_CHANGE: no FM-id, no vector slot.",
+  "affected_files": [
+    "src/config_layer/m15_structural_range.py",
+    "src/config_layer/crt_engine_v2.py",
+    "src/runtime/backtest_v2.py",
+    "configs/formulas/market_ontology.yaml",
+    "configs/formulas/market_crt_states.yaml",
+    "active_models.yaml",
+    "tests/test_m15_structural_range.py",
+    "docs/topics/crt-spine.md",
+    "docs/reference/schemas.md",
+    "reports/monthly_tv_vs_active_production_semantic_comparison.md",
+    "reports/monthly_tv_vs_active_production_semantic_comparison.json",
+    "docs/governance/build_manifests/CH-m15-structural-liquidity-range.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none — no vector slot, no model I/O",
+  "affected_production_config": "none (hash-neutral; no new config key; window sizes still htf_candles_per_range and atr_period)",
+  "required_checks_ack": [
+    "tests/test_feature_math_lint.py",
+    "tests/test_geometry_census.py",
+    "tests/test_current_findings.py",
+    "tests/test_semantic_registry.py",
+    "tests/test_active_models_registry.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/test_m15_structural_range.py",
+    "tests/test_parent_crt_wiring.py",
+    "tests/test_shadow_ttl_lifecycle.py"
+  ],
+  "unknowns": [
+    {
+      "question": "Whether the trailing-window H/L construction should later be replaced by a domain CRT range (session / calendar H4 / marked consolidation).",
+      "blocking": false,
+      "resolution": "Out of this change. This change NAMEs the current envelope and SEPARATES it from the reset clock. Binding a different geometry is USER AUTHORIZATION REQUIRED.",
+      "followup": "Do not treat the new name as domain certification of institutional liquidity."
+    }
+  ],
+  "rollback_boundary": "Delete m15_structural_range.py; restore Range dataclass inline in crt_engine_v2; revert alias/docs/ontology SEM-011. No config hash change.",
+  "authority_granted": "User authorized a distinct named range object while leaving HTFBuilder as the reset clock (2026-08-17). Grants no G001, no promotion, no calendar-H4 substitution, no objective_gate flip.",
+  "production_behavior_changed": "NO"
+}

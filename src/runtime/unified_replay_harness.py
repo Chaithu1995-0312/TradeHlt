@@ -88,14 +88,25 @@ def _materialize_month_window_csv(data_path: str, months: int, output_dir: str) 
 
 
 def _build_backtest_v2_config(config: dict, instrument: str) -> BacktestConfig:
-    params = config.get("params", {}) if isinstance(config, dict) else {}
+    # F-057 fix (2026-07-29): route through the governed loader (production JSON
+    # params/crt_engine merge) instead of the bare router profile, so this
+    # programmatic path matches what the CLI would build for the same instrument.
+    from config_layer.production_config import load_prod_config_from_registry, PROD_VERSION
+    from config_layer.strict_config import require_section
+    # EPIC-84: `config` is a production config JSON; its `params` section is required.
+    params = dict(require_section(config, "params", consumer="unified_replay_harness"))
 
-    crt_cfg = ConfigBuilder.build(instrument, overrides=params) if params else ConfigBuilder.build(instrument)
+    crt_cfg = load_prod_config_from_registry(PROD_VERSION, instrument)
+    if params:
+        crt_cfg = ConfigBuilder.from_existing(instrument, crt_cfg, extra_overrides=params)
 
     return BacktestConfig.from_prod_config(
         instrument=instrument,
         pip_size=INSTRUMENT_PIP.get(instrument, 0.0001),
         crt_config=crt_cfg,
+        scorer_mode="calibrated",
+        allow_router_crt_config=False,
+        strategy_id="",
     )
 
 
@@ -176,10 +187,9 @@ def run_unified_replay(
         output_dir=str(out_base / f"{instrument}_{ts}_v2_truth"),
     )
 
-    # Layer B: gate-mode comparisons (skipped if BitNet model file is missing)
+    # Layer B: gate-mode comparisons (raises if BitNet model file is missing)
     modes = ["hard_gate", "score_only_audit", "force_accept_baseline"]
     gate_results = {}
-    bitnet_skip_reason = None
     try:
         for mode in modes:
             rows = run_backtest_bitnet(config, effective_data_path, gate_mode=mode, months=None)
@@ -188,9 +198,10 @@ def run_unified_replay(
                 "sample_rows": rows[:25],
             }
     except FileNotFoundError as exc:
-        bitnet_skip_reason = str(exc)
-        import logging as _logging
-        _logging.getLogger(__name__).warning("Layer B skipped — BitNet model not found: %s", exc)
+        raise FileNotFoundError(
+            f"Unified replay requires a BitNet model but none was found: {exc}. "
+            f"Train one with: python scripts/training/train_bitnet.py --csv data/*.csv"
+        ) from exc
 
     report = {
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -202,7 +213,6 @@ def run_unified_replay(
         "config_version": config.get("version"),
         "execution_truth_v2": metrics_v2.to_dict(),
         "gate_modes": gate_results,
-        "bitnet_skip_reason": bitnet_skip_reason,
     }
 
     out_path = out_base / f"{instrument}_{ts}_unified_report.json"

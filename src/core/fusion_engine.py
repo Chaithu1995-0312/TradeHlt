@@ -24,8 +24,10 @@ Architecture principle:
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field, asdict
-from typing import Optional, Callable
+from dataclasses import dataclass, asdict
+from typing import Callable, Optional
+
+from config_layer.strict_config import ConfigKeyMissingError, require_all
 
 logger = logging.getLogger("FusionEngine")
 
@@ -100,6 +102,29 @@ def _clamp(x: float, lo: float = 0.0, hi: float = 1.0) -> float:
     return max(lo, min(hi, x))
 
 
+# Sentinel for compute(..., regime=...) — distinguishes "no regime argument
+# passed" from "regime explicitly set to UNKNOWN". The former preserves the
+# pre-patch scalar-weight behaviour; the latter actively selects the UNKNOWN
+# regime profile from cfg.regime_fusion_weights.
+_REGIME_NOT_PROVIDED: str = "__not_provided__"
+
+
+# Normalises regime labels from any upstream source (detect_regime returns
+# lowercase trend/range/neutral; RegimeClassifier returns uppercase
+# TRENDING/RANGING/HIGH_VOLATILITY). Anything not listed falls back to
+# "UNKNOWN" inside compute() and triggers a FUSION_UNKNOWN_REGIME event.
+_REGIME_NORM = {
+    "trend":           "TRENDING",
+    "range":           "RANGING",
+    "neutral":         "UNKNOWN",
+    "high_volatility": "VOLATILE",
+    "volatile":        "VOLATILE",
+    "trending":        "TRENDING",
+    "ranging":         "RANGING",
+    "unknown":         "UNKNOWN",
+}
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # CONFIG
 # ─────────────────────────────────────────────────────────────────────────────
@@ -109,30 +134,83 @@ class FusionConfig:
     """
     Controls layer weights and LLM activation band.
 
-    Defaults mirror configs/production/v1_multi_2026_03.json fusion_engine section.
-    Override individual fields as needed for testing or experimental configs.
+    EPIC-84 STORY-84.2: NO field defaults. Every field is a declared key of the
+    ``fusion_engine`` config section; build it with ``FusionConfig.from_section(section)``
+    (one ``require_all`` — a missing key raises ``ConfigKeyMissingError`` naming it).
     """
     # Layer weights
-    gaussian_weight: float = 0.6
-    neural_weight:   float = 0.4
-    llm_weight:      float = 0.2
-    llm_lower_band:  float = 0.45
-    llm_upper_band:  float = 0.65
-    enable_llm:      bool  = True
+    gaussian_weight: float
+    neural_weight:   float
+    llm_weight:      float
+    llm_lower_band:  float
+    llm_upper_band:  float
+    enable_llm:      bool
 
     # Risk tiers — map final_score to risk multiplier
-    tier_full:    float = 0.75  # score >= tier_full  → risk 1.0×
-    tier_half:    float = 0.60  # score >= tier_half  → risk 0.5×
-    tier_quarter: float = 0.50  # score >= tier_quarter → risk 0.25×
+    tier_full:    float  # score >= tier_full  → risk 1.0×
+    tier_half:    float  # score >= tier_half  → risk 0.5×
+    tier_quarter: float  # score >= tier_quarter → risk 0.25×
 
     # Per-engine weights used by compute() to aggregate multi-engine scores.
-    weight_crt:       float = 0.30
-    weight_gaussian:  float = 0.25
-    weight_zone_gate: float = 0.25
-    weight_rr:        float = 0.20
+    weight_crt:                  float
+    weight_ema_momentum_kernel:  float
+    weight_feature_cluster_similarity: float
+    weight_candle_commitment:    float
+    # 5th engine — StrategyOrchestrator consensus. 0.0 means disabled.
+    weight_strategy_consensus:   float
+
+    # Regime-aware weight profiles. compute() looks these up by normalised
+    # regime label ONLY when an explicit `regime=` argument is passed.
+    regime_fusion_weights: dict
+
+    # Consensus gates for fuse_strategy_results()
+    min_consensus_signals:   int    # completeness gate: minimum actionable strategies
+    min_consensus_agreement: float  # fraction of actionable that must agree
 
     # Conflict resolution policy — "conservative" or "majority"
-    conflict_resolution_policy: str = "conservative"
+    conflict_resolution_policy: str
+
+    #: Every key the ``fusion_engine`` section must declare (== the dataclass fields).
+    # (plain class attribute, not annotated -> not a dataclass field)
+    REQUIRED_KEYS = (
+        "gaussian_weight", "neural_weight", "llm_weight", "llm_lower_band",
+        "llm_upper_band", "enable_llm", "tier_full", "tier_half", "tier_quarter",
+        "weight_crt", "weight_ema_momentum_kernel", "weight_feature_cluster_similarity", "weight_candle_commitment",
+        "weight_strategy_consensus", "regime_fusion_weights",
+        "min_consensus_signals", "min_consensus_agreement", "conflict_resolution_policy",
+    )
+
+    @classmethod
+    def from_section(cls, section: dict) -> "FusionConfig":
+        """Strict constructor from the ``fusion_engine`` config section (no defaults)."""
+        v = require_all(section, cls.REQUIRED_KEYS,
+                        section_name="fusion_engine", consumer="FusionConfig")
+        rfw = v["regime_fusion_weights"]
+        if not isinstance(rfw, dict):
+            raise TypeError(
+                "fusion_engine.regime_fusion_weights must be a mapping, got "
+                f"{type(rfw).__name__}"
+            )
+        return cls(
+            gaussian_weight=float(v["gaussian_weight"]),
+            neural_weight=float(v["neural_weight"]),
+            llm_weight=float(v["llm_weight"]),
+            llm_lower_band=float(v["llm_lower_band"]),
+            llm_upper_band=float(v["llm_upper_band"]),
+            enable_llm=bool(v["enable_llm"]),
+            tier_full=float(v["tier_full"]),
+            tier_half=float(v["tier_half"]),
+            tier_quarter=float(v["tier_quarter"]),
+            weight_crt=float(v["weight_crt"]),
+            weight_ema_momentum_kernel=float(v["weight_ema_momentum_kernel"]),
+            weight_feature_cluster_similarity=float(v["weight_feature_cluster_similarity"]),
+            weight_candle_commitment=float(v["weight_candle_commitment"]),
+            weight_strategy_consensus=float(v["weight_strategy_consensus"]),
+            regime_fusion_weights={str(k): dict(w) for k, w in rfw.items()},
+            min_consensus_signals=int(v["min_consensus_signals"]),
+            min_consensus_agreement=float(v["min_consensus_agreement"]),
+            conflict_resolution_policy=str(v["conflict_resolution_policy"]),
+        )
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -160,7 +238,7 @@ class FusionResult:
     def to_dict(self) -> dict:
         return {
             "final_score":      round(self.final_score,      4),
-            "gaussian":         round(self.gaussian,         4),
+            "ema_momentum_kernel": round(self.gaussian,         4),
             "neural":           round(self.neural,    4) if self.neural is not None else None,
             "llm":              round(self.llm,       4) if self.llm    is not None else None,
             "llm_fired":        self.llm_fired,
@@ -236,7 +314,10 @@ class FusionEngine:
         convergence_controller=None,
     ) -> None:
         if config is None:
-            config = FusionConfig()
+            # EPIC-84 STORY-84.2: no FusionConfig() default — the fusion_engine section is required.
+            raise ConfigKeyMissingError(
+                ["<section>"], section="fusion_engine", consumer="FusionEngine",
+            )
         self.gaussian     = gaussian_adapter
         self.neural       = neural_fn
         self.llm_fn       = llm_fn
@@ -250,42 +331,72 @@ class FusionEngine:
         self._health_neural   = EngineHealthTracker()
         self._health_zonegate = EngineHealthTracker()
 
-    def compute(self, engine_results: dict, trade=None, weights=None) -> dict:
+    def compute(self, engine_results: dict, trade=None, weights=None, regime: str = _REGIME_NOT_PROVIDED) -> dict:
         """
         Aggregate multi-engine outputs only.
-        Expects engine_results with keys: crt, gaussian, zone_gate, rr.
-        
+        Expects engine_results with keys: crt, gaussian, feature_cluster_similarity, rr.
+
         Parameters
         ----------
-        weights : optional dict with keys "crt", "gaussian", "zone", "rr"
-                  If provided, overrides config weights. Must sum to 1.0 ±0.01.
+        weights : optional dict with keys "crt", "ema_momentum_kernel", "zone"|"feature_cluster_similarity",
+                  "candle_commitment" (and optionally "strategy_consensus"). If provided,
+                  overrides config and regime weights. Must sum to 1.0 ±0.01.
+        regime  : optional regime label ("TRENDING" / "RANGING" / "VOLATILE" /
+                  "UNKNOWN" — lowercase variants accepted via _REGIME_NORM).
+                  When omitted, the static FusionConfig scalar weights are used
+                  (backward-compatible path). When set, the matching profile
+                  from `cfg.regime_fusion_weights` is selected.
         """
-        expected = ("crt", "gaussian", "zone_gate", "rr")
+        expected = ("crt", "ema_momentum_kernel", "feature_cluster_similarity", "candle_commitment")
         missing = [name for name in expected if name not in engine_results]
         if missing:
             return {
                 "final_score": 0.0,
-                "scores": {"crt": 0.0, "gaussian": 0.0, "zone_gate": 0.0, "rr": 0.0},
+                "scores": {"crt": 0.0, "ema_momentum_kernel": 0.0, "feature_cluster_similarity": 0.0, "candle_commitment": 0.0},
                 "missing_engines": missing,
                 "reason": "missing_engine_outputs",
             }
-            
+
+        # Regime-aware weight resolution.
+        # Priority: explicit `weights=` override → explicit `regime=` lookup →
+        # scalar config defaults (preserved for callers that pass neither).
+        regime_weights = None
+        if weights is None and regime is not _REGIME_NOT_PROVIDED:
+            regime_weights_table = self.cfg.regime_fusion_weights
+            regime_key = _REGIME_NORM.get(str(regime).lower().strip(), "UNKNOWN")
+            regime_weights = regime_weights_table.get(regime_key)
+            if regime_weights is not None:
+                weights = regime_weights
+                raw = str(regime).strip()
+                if raw and raw.lower() not in _REGIME_NORM and regime_key == "UNKNOWN":
+                    try:
+                        from src.utils.integrity_events import emit_integrity_event
+                        emit_integrity_event(
+                            "FUSION_UNKNOWN_REGIME", "WARNING", "fusion_engine",
+                            {"regime_received": raw, "fallback": "UNKNOWN"},
+                        )
+                    except Exception:
+                        pass  # telemetry must never break fusion
+
         # Resolve weights
         if weights is None:
             w_crt = self.cfg.weight_crt
-            w_gaussian = self.cfg.weight_gaussian
-            w_zone = self.cfg.weight_zone_gate
-            w_rr = self.cfg.weight_rr
+            w_gaussian = self.cfg.weight_ema_momentum_kernel
+            w_zone = self.cfg.weight_feature_cluster_similarity
+            w_rr = self.cfg.weight_candle_commitment
+            w_consensus_override = None
         else:
-            if not all(k in weights for k in ("crt", "gaussian", "zone", "rr")):
-                raise ValueError("Weights dict must contain keys: crt, gaussian, zone, rr")
-            weight_sum = sum(weights.values())
+            required = ("crt", "ema_momentum_kernel", "feature_cluster_similarity", "candle_commitment")
+            if not all(k in weights for k in required):
+                raise ValueError(f"Weights dict must contain keys: {required}")
+            weight_sum = sum(float(v) for v in weights.values())
             if abs(weight_sum - 1.0) > 0.01:
                 raise ValueError(f"Weights sum to {weight_sum:.3f}, must be 1.0 ±0.01")
             w_crt = weights["crt"]
-            w_gaussian = weights["gaussian"]
-            w_zone = weights["zone"]
-            w_rr = weights["rr"]
+            w_gaussian = weights["ema_momentum_kernel"]
+            w_zone = weights["feature_cluster_similarity"]
+            w_rr = weights["candle_commitment"]
+            w_consensus_override = weights.get("strategy_consensus")  # may be None
 
         def _extract_score(payload: dict, preferred_keys: tuple[str, ...]) -> float:
             if not isinstance(payload, dict):
@@ -300,17 +411,22 @@ class FusionEngine:
 
         score_crt = _extract_score(engine_results.get("crt", {}), ("score", "final_score", "final"))
         score_gaussian = _extract_score(
-            engine_results.get("gaussian", {}),
+            engine_results.get("ema_momentum_kernel", {}),
             ("score", "final_score", "final"),
         )
-        score_zonegate = _extract_score(engine_results.get("zone_gate", {}), ("score", "zone", "final_score"))
-        score_rr = _extract_score(engine_results.get("rr", {}), ("score", "rr", "final_score"))
+        score_zonegate = _extract_score(engine_results.get("feature_cluster_similarity", {}), ("score", "zone", "final_score"))
+        score_rr = _extract_score(engine_results.get("candle_commitment", {}), ("score", "rr", "final_score"))
+        # 5th engine — StrategyOrchestrator consensus score (optional, 0.0 if absent)
+        score_consensus = _extract_score(
+            engine_results.get("strategy_consensus", {}),
+            ("score", "confidence", "final_score"),
+        )
 
-        # FIX 3 — track zone_gate health; exclude if always-zero (dead engine)
+        # FIX 3 — track feature_cluster_similarity health; exclude if always-zero (dead engine)
         self._health_zonegate.push(score_zonegate)
-        zone_gate_dead = self._health_zonegate.is_dead()
-        if zone_gate_dead:
-            logger.warning("zone_gate engine dead (mean=0, var=0) — excluded from fusion weights.")
+        feature_cluster_similarity_dead = self._health_zonegate.is_dead()
+        if feature_cluster_similarity_dead:
+            logger.warning("feature_cluster_similarity engine dead (mean=0, var=0) — excluded from fusion weights.")
 
         # ── Conflict detection ────────────────────────────────────────────────
         # Extract non-zero direction signals (1=BUY, -1=SELL, 0=no opinion).
@@ -325,7 +441,7 @@ class FusionEngine:
 
         active_directions = [
             _dir(engine_results.get(k, {}))
-            for k in ("crt", "gaussian", "zone_gate", "rr")
+            for k in ("crt", "ema_momentum_kernel", "feature_cluster_similarity", "candle_commitment")
         ]
         active_directions = [d for d in active_directions if d != 0]
         has_conflict = bool(active_directions) and (
@@ -343,9 +459,9 @@ class FusionEngine:
                     "final_score": 0.0,
                     "scores": {
                         "crt":       round(score_crt,      4),
-                        "gaussian":  round(score_gaussian, 4),
-                        "zone_gate": round(score_zonegate, 4),
-                        "rr":        round(score_rr,       4),
+                        "ema_momentum_kernel":  round(score_gaussian, 4),
+                        "feature_cluster_similarity": round(score_zonegate, 4),
+                        "candle_commitment":        round(score_rr,       4),
                     },
                     "missing_engines": [],
                     "conflict_resolution_policy": policy,
@@ -363,9 +479,9 @@ class FusionEngine:
                         "final_score": 0.0,
                         "scores": {
                             "crt":       round(score_crt,      4),
-                            "gaussian":  round(score_gaussian, 4),
-                            "zone_gate": round(score_zonegate, 4),
-                            "rr":        round(score_rr,       4),
+                            "ema_momentum_kernel":  round(score_gaussian, 4),
+                            "feature_cluster_similarity": round(score_zonegate, 4),
+                            "candle_commitment":        round(score_rr,       4),
                         },
                         "missing_engines": [],
                         "conflict_resolution_policy": policy,
@@ -386,9 +502,9 @@ class FusionEngine:
                     "final_score": 0.0,
                     "scores": {
                         "crt":       round(score_crt,      4),
-                        "gaussian":  round(score_gaussian, 4),
-                        "zone_gate": round(score_zonegate, 4),
-                        "rr":        round(score_rr,       4),
+                        "ema_momentum_kernel":  round(score_gaussian, 4),
+                        "feature_cluster_similarity": round(score_zonegate, 4),
+                        "candle_commitment":        round(score_rr,       4),
                     },
                     "missing_engines": [],
                     "conflict_resolution_policy": policy,
@@ -396,19 +512,25 @@ class FusionEngine:
                 }
 
         # ── Weighted aggregation (always computed) ───────────────────────────
-        # FIX 3: exclude zone_gate weight when it is detected as dead so a
+        # FIX 3: exclude feature_cluster_similarity weight when it is detected as dead so a
         # permanently-zero engine cannot suppress all signals.
-        w_zonegate = 0.0 if zone_gate_dead else self.cfg.weight_zone_gate
+        # 5th engine (strategy_consensus) included only when its weight > 0.
+        # Weights come from `weights=` override → regime profile → config defaults.
+        w_zonegate  = 0.0 if feature_cluster_similarity_dead else w_zone
+        w_consensus = (
+            w_consensus_override if w_consensus_override is not None
+            else self.cfg.weight_strategy_consensus
+        )
         total_w = (
-            self.cfg.weight_crt + self.cfg.weight_gaussian +
-            w_zonegate + self.cfg.weight_rr
+            w_crt + w_gaussian + w_zonegate + w_rr + w_consensus
         ) or 1.0  # guard: all-zero weights → equal contribution
         weighted_fusion_score = _clamp(
             (
-                self.cfg.weight_crt      * score_crt +
-                self.cfg.weight_gaussian * score_gaussian +
-                w_zonegate               * score_zonegate +
-                self.cfg.weight_rr       * score_rr
+                w_crt       * score_crt +
+                w_gaussian  * score_gaussian +
+                w_zonegate  * score_zonegate +
+                w_rr        * score_rr +
+                w_consensus * score_consensus
             ) / total_w
         )
 
@@ -419,9 +541,9 @@ class FusionEngine:
         if self._convergence is not None:
             raw_scores = {
                 "crt":       score_crt,
-                "gaussian":  score_gaussian,
-                "zone_gate": score_zonegate,
-                "rr":        score_rr,
+                "ema_momentum_kernel":  score_gaussian,
+                "feature_cluster_similarity": score_zonegate,
+                "candle_commitment":        score_rr,
             }
             conv = self._convergence.apply(
                 raw_scores,
@@ -432,9 +554,9 @@ class FusionEngine:
             # Use calibrated scores for the returned scores dict
             cal = conv.get("scores", {})
             score_crt       = cal.get("crt",       score_crt)
-            score_gaussian  = cal.get("gaussian",  score_gaussian)
-            score_zonegate  = cal.get("zone_gate", score_zonegate)
-            score_rr        = cal.get("rr",        score_rr)
+            score_gaussian  = cal.get("ema_momentum_kernel",  score_gaussian)
+            score_zonegate  = cal.get("feature_cluster_similarity", score_zonegate)
+            score_rr        = cal.get("candle_commitment",        score_rr)
             conv_debug = {
                 "variance":  conv.get("variance"),
                 "entropy":   conv.get("entropy"),
@@ -447,17 +569,21 @@ class FusionEngine:
         # FIX 2 — normalise compressed score to [0, 1] before returning
         normalized = self._normalizer.push_and_normalize(final_score)
 
+        scores_dict: dict = {
+            "crt":       round(score_crt,       4),
+            "ema_momentum_kernel":  round(score_gaussian,  4),
+            "feature_cluster_similarity": round(score_zonegate,  4),
+            "candle_commitment":        round(score_rr,        4),
+        }
+        if w_consensus > 0.0:
+            scores_dict["strategy_consensus"] = round(score_consensus, 4)
+
         return {
             "final_score":      round(final_score, 4),
             "normalized_score": round(normalized,  4),   # FIX 5 — always present
-            "scores": {
-                "crt":       round(score_crt,       4),
-                "gaussian":  round(score_gaussian,  4),
-                "zone_gate": round(score_zonegate,  4),
-                "rr":        round(score_rr,         4),
-            },
+            "scores":           scores_dict,
             "missing_engines": [],
-            "zone_gate_dead":   zone_gate_dead,           # FIX 5 — signals dead engine state
+            "feature_cluster_similarity_dead":   feature_cluster_similarity_dead,           # FIX 5 — signals dead engine state
             **conv_debug,
         }
 
@@ -588,3 +714,92 @@ class FusionEngine:
             return "TRADE", 0.25
         else:
             return "REJECT", 0.0
+
+    # ── Multi-strategy fusion (Sprint 4 extension — non-breaking) ─────────────
+
+    def fuse_strategy_results(
+        self,
+        results: list,
+        weights: Optional[dict] = None,
+        min_signals: int = 2,
+        min_agreement: float = 0.60,
+    ) -> dict:
+        """
+        Aggregate a list of StrategyResult objects into a scored fusion dict.
+
+        Designed to be called with the output of StrategyOrchestrator.compute()
+        (all_results list) to produce a score compatible with FusionEngine.compute()
+        consumers.
+
+        Parameters
+        ----------
+        results      : list[StrategyResult] — all strategy outputs for one candle
+        weights      : {strategy_id: weight} — defaults to equal weighting
+        min_signals  : completeness gate — minimum actionable strategies required
+        min_agreement: consensus gate — fraction of actionable that must agree
+
+        Returns
+        -------
+        dict with keys: final_score, signal, confidence, signal_count,
+                        agree_count, agreement_ratio, action, strategy_scores
+        """
+        actionable = [r for r in results if r.signal in ("BUY", "SELL") and r.confidence > 0.0]
+        n_total = len(results)
+        n_signal = len(actionable)
+
+        def _reject(reason: str) -> dict:
+            return {
+                "final_score": 0.0, "signal": "NO_TRADE",
+                "confidence": 0.0, "signal_count": n_signal,
+                "agree_count": 0, "agreement_ratio": 0.0,
+                "action": "REJECT", "reason": reason,
+                "strategy_scores": {},
+            }
+
+        if n_signal < min_signals:
+            return _reject(f"completeness_gate:{n_signal}<{min_signals}")
+
+        buy_r  = [r for r in actionable if r.signal == "BUY"]
+        sell_r = [r for r in actionable if r.signal == "SELL"]
+        consensus = "BUY" if len(buy_r) >= len(sell_r) else "SELL"
+        agree_r = buy_r if consensus == "BUY" else sell_r
+        n_agree = len(agree_r)
+        agreement_ratio = n_agree / n_signal
+
+        if agreement_ratio < min_agreement:
+            return _reject(f"consensus_gate:{agreement_ratio:.0%}<{min_agreement:.0%}")
+
+        # Weighted aggregation over agreeing results
+        eq_w = 1.0 / n_agree
+        total_w = 0.0
+        w_score = 0.0
+        w_conf = 0.0
+        strategy_scores: dict = {}
+
+        for r in agree_r:
+            w = float(weights.get(r.strategy_id, eq_w)) if weights else eq_w
+            w_score += r.score * w
+            w_conf += r.confidence * w
+            total_w += w
+            strategy_scores[r.strategy_id] = round(r.score, 4)
+
+        if total_w > 0:
+            w_score /= total_w
+            w_conf /= total_w
+
+        final_score = _clamp(w_score)
+        normalized = self._normalizer.push_and_normalize(final_score)
+        action, risk_mult = self._decide(normalized)
+
+        return {
+            "final_score":      round(final_score, 4),
+            "normalized_score": round(normalized,  4),
+            "signal":           consensus,
+            "confidence":       round(_clamp(w_conf), 4),
+            "signal_count":     n_signal,
+            "agree_count":      n_agree,
+            "agreement_ratio":  round(agreement_ratio, 4),
+            "action":           action,
+            "risk_mult":        risk_mult,
+            "strategy_scores":  strategy_scores,
+        }

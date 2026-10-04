@@ -1,0 +1,34 @@
+# REP shard — producer: live_rail (config_layer.execution_planner.ExecutionPlannerV1_2 +
+# core.ultron_risk_gate.UltronRiskGate). The live rail never reaches the CRT engine and the
+# backtest rail never reaches this one (F-103); the DEX-04 `rail` parameter keeps them apart.
+
+schema: representation_registry/v1
+producer_id: live_rail
+schema_version: "live_rail/1"
+
+representations:
+
+  UltronRiskGate.evaluate:
+    concept_id: DEX-04
+    encoding: "dict decision APPROVE | REJECT with reason (final verdict of the planner + Ultron rail)"
+    parameterization: {rail: planner_ultron}
+    divergence_ref: "DEX-04 planner_ultron on XAUUSD"
+    absence: "n/a"
+
+  "UltronRiskGate.evaluate[over_exposure]":
+    concept_id: DEX-02
+    encoding: "REJECT reason over_exposure (check 5, open-risk cap)"
+    parameterization: {max_open_risk: ultron_risk_gate.max_portfolio_risk_pct}   # 5.0 = a PERCENT
+    divergence_ref: "DEX-02 UltronRiskGate.evaluate check 5"
+    absence: "n/a"
+
+  "ExecutionPlannerV1_2.plan[risk_percent]":
+    concept_id: DEX-01
+    encoding: "float risk_percent on the plan dict"
+    parameterization: {risk_fraction: execution_planner.risk_percent}   # 1.0 = a PERCENT
+    divergence_ref: "DEX-01 execution_planner.risk_percent"
+    absence: "n/a"
+
+# Shrink-only ratchet.
+unmapped:
+  PortfolioAllocator.allocate: "trims risk to fit the cap and sizes from confidence: not DEX-02's meaning (divergence recorded); orphaned (F-013)"

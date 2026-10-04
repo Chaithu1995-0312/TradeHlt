@@ -1,0 +1,49 @@
+{
+  "change_id": "CH-magnitude-prior-mc-v1",
+  "date_utc": "2026-08-24",
+  "objective": "Freeze SEM-028: FM-054 trend_bias as a magnitude/time prior on a given side (not a side picker, not a retune of SEM-027 PRIMARY). Seal MC-MAGPRIOR-XAUUSD-M15-V1 with two pre-registered arms (S=y_mfe_r, T=y_time_to_mfe), then single-pass holdout. Same split as MC-ASYM. F-086 stride unspent. P-GOAL-04 not opened. No G001. No production.",
+  "change_classes": [
+    "SEMANTIC_REGISTRY_CHANGE"
+  ],
+  "change_class_rationale": "New research-only SEM node + MC instance + isolated measurer under src/research/evidence/. Not live-spine. Frozen formula sections untouched. No new scripts/** path (python -m research.evidence.magnitude_prior). Not SCRIPT_LIFECYCLE_CHANGE.",
+  "affected_files": [
+    "configs/formulas/market_ontology.yaml",
+    "configs/research/measurement_contracts/instances/MC-MAGPRIOR-XAUUSD-M15-V1.json",
+    "docs/research/magnitude_prior_object.md",
+    "docs/governance/research_family_registry.json",
+    "docs/governance/build_manifests/CH-magnitude-prior-mc-v1.impact.json",
+    "src/research/evidence/magnitude_prior.py",
+    "tests/research/test_magnitude_prior.py",
+    "tests/test_research_family_registry.py",
+    "docs/topics/research-measurement-contract.md",
+    "docs/analysis/readme.md",
+    "docs/analysis/magnitude-prior-holdout-2026-08-24.md",
+    "docs/current-findings.md",
+    "CLAUDE.md",
+    "docs/research-readiness/magnitude_prior/mc_magprior_xauusd_m15_v1/metrics.json",
+    "docs/research-readiness/magnitude_prior/mc_magprior_xauusd_m15_v1/split_manifest.json",
+    "docs/research-readiness/magnitude_prior/mc_magprior_xauusd_m15_v1/population_fingerprint.json",
+    "docs/research-readiness/magnitude_prior/mc_magprior_xauusd_m15_v1/mt00.json",
+    "docs/research-readiness/magnitude_prior/mc_magprior_xauusd_m15_v1/mt01.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": ["SEM-028"],
+  "required_checks_ack": [
+    "tests/test_semantic_registry.py",
+    "tests/test_feature_lineage.py",
+    "tests/test_semantic_grounding.py",
+    "tests/test_construction_protocol.py",
+    "tests/research/test_magnitude_prior.py",
+    "tests/test_measurement_contract.py",
+    "tests/test_research_family_registry.py",
+    "tests/test_topic_docs.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert SEM-028, MC instance, measurer, family row, tests, docs. SEM-027 / MC-ASYM untouched. F-086 stride remains unspent. No production config.",
+  "authority_granted": "User 2026-08-24: size/time using trend_bias as a magnitude prior.",
+  "authority_NOT_granted": "No production, no G001, no P-GOAL-04, no SEM-027 PRIMARY retune, no side picker, no hour/session PRIMARY (F-066), no F-086 stride, no treating y_mfe_r as book PnL, no live size/time overlay on the spine.",
+  "production_behavior_changed": "NO"
+}

@@ -1,0 +1,15 @@
+{
+  "contract_id": "MC-VCRTPRIOR-XAUUSD-M15-V1",
+  "n": 1403,
+  "sha256": "0af1c629b03b6f5e179071c11ffacfd623ba3d4ddbc027f6177dc4180b00a0c4",
+  "population_hash_inputs": [
+    "instrument",
+    "entry_ts",
+    "side",
+    "visual_arm",
+    "y_mfe_r",
+    "corpus_path",
+    "corpus_sha256",
+    "contract_id"
+  ]
+}

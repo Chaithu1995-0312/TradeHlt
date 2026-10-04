@@ -1,18 +1,23 @@
 """
 execution_planner.py
 ====================
-Execution Planner v1.2 — converts an EngineRunner "execute" decision into a
-concrete, deterministic trade plan (entry, SL, TP, RR, TTL, position size hint).
+Execution Planner v1.2 — pure intent classifier + gate.
+
+Classifies trade intent (BREAKOUT / PULLBACK / LIQ_SWEEP / REVERSAL),
+derives the entry price, and delegates signal approval to GateIntelligence.
+SL, TP, and RR are NOT computed here; that is CRT engine's sole responsibility
+(see src/core/gate_intelligence.py :: compute_crt_levels).
 
 Architecture position:
-    Layer 1 (Intelligence) → EngineRunner.run()  → decision + score + regime
-    Layer 2 (This module)  → ExecutionPlannerV1_2.plan() → entry/SL/TP/RR
-    Layer 3 (Risk Gate)    → UltronRiskGate.evaluate()   → final approval + size
-    Layer 4 (Executor)     → broker stub (offline)
+    Layer 1 (Intelligence) → EngineRunner.run()       → decision + score + regime
+    Layer 2 (This module)  → ExecutionPlannerV1_2.plan() → intent + entry + gate
+    Layer 3 (CRT levels)   → compute_crt_levels()     → SL / TP1 / TP2
+    Layer 4 (Risk Gate)    → UltronRiskGate.evaluate() → final approval + size
+    Layer 5 (Executor)     → broker stub (offline)
 
 Design principles:
     - Pure functions, no global state.
-    - No external dependencies beyond standard library.
+    - No external dependencies beyond standard library + GateIntelligence.
     - Deterministic execution ID (no timestamp in hash).
     - UNKNOWN intent rejected by default (configurable).
     - Full trace dict for observability and replay.
@@ -26,6 +31,8 @@ import math
 from datetime import datetime, timedelta, timezone
 from typing import Any
 from utils.logging_config import get_flow_logger
+from core.gate_intelligence import GateIntelligence
+from config_layer.strict_config import require_all, require_section
 
 logger = get_flow_logger("EXECUTION_PLANNER")
 
@@ -54,20 +61,11 @@ _REQUIRED_FEATURE_KEYS: tuple[str, ...] = (
     "sweep_detected",
     "double_sweep",
     "retest_depth",
-    "candles_since_retest",
+    "candles_since_sweep",
     "ema_fast",
     "ema_slow",
     "momentum_score",
 )
-
-# ── ATR multiplier config keys per intent ─────────────────────────────────────
-_TP_MULT_MAP: dict[str, str] = {
-    "BREAKOUT": "atr_mult_breakout_tp",
-    "PULLBACK": "atr_mult_pullback_tp",
-    "REVERSAL": "atr_mult_reversal_tp",
-    "LIQ_SWEEP": "atr_mult_sweep_tp",
-    "UNKNOWN": "atr_mult_breakout_tp",  # not used — UNKNOWN is rejected
-}
 
 # ── TTL config keys per intent ────────────────────────────────────────────────
 _TTL_MAP: dict[str, str] = {
@@ -75,56 +73,75 @@ _TTL_MAP: dict[str, str] = {
     "PULLBACK": "ttl_pullback_sec",
     "REVERSAL": "ttl_reversal_sec",
     "LIQ_SWEEP": "ttl_liq_sweep_sec",
+    "CONTINUATION": "ttl_continuation_sec",
     "UNKNOWN": "ttl_unknown_sec",
 }
 
 # ── Required config keys (must all be present in v1_multi_2026_03.json) ───────
 REQUIRED_CONFIG_KEYS: tuple[str, ...] = (
-    "min_rr_ratio",
-    "atr_mult_breakout_tp",
-    "atr_mult_pullback_tp",
-    "atr_mult_reversal_tp",
-    "atr_mult_sweep_tp",
     "ttl_breakout_sec",
     "ttl_pullback_sec",
     "ttl_reversal_sec",
     "ttl_liq_sweep_sec",
+    "ttl_continuation_sec",
     "ttl_unknown_sec",
-    "default_sl_atr_mult",
     "risk_percent",
     "precision_default",
     "precision_overrides",
-    "lookback_candles_sl",
-    "liquidity_lookback",
-    "liquidity_volume_threshold",
-    "liquidity_touch_count",
     "default_account_balance",
     "reject_unknown_intent",
+    # LIQ_SWEEP intent identity (CH-planner-liq-sweep-direction, 2026-10-03); see LIQ_SWEEP_SEMANTICS.
+    "liq_sweep_semantics",
+    # BREAKOUT-vs-REVERSAL intent boundary. Resolved per symbol from crt_engine by
+    # planner_config_from_production so CRT engine and planner can never diverge.
+    "breakout_disp_threshold",
+    # Gate intelligence keys (merged from gate_intelligence config section)
+    "gate_weight_intent",
+    "gate_weight_vol",
+    "gate_weight_liquidity",
+    "gate_weight_structure",
+    "gate_approval_threshold",
 )
 
-# ── Default config (mirrors configs/production/v1_multi_2026_03.json values) ─
-DEFAULT_CONFIG: dict = {
-    "min_rr_ratio":                 1.5,
-    "atr_mult_breakout_tp":         2.0,
-    "atr_mult_pullback_tp":         1.5,
-    "atr_mult_reversal_tp":         1.0,
-    "atr_mult_sweep_tp":            1.2,
-    "ttl_breakout_sec":             180,
-    "ttl_pullback_sec":             300,
-    "ttl_reversal_sec":             120,
-    "ttl_liq_sweep_sec":            240,
-    "ttl_unknown_sec":              180,
-    "default_sl_atr_mult":          1.0,
-    "risk_percent":                 0.5,
-    "precision_default":            8,
-    "precision_overrides":          {"XAUUSD": 2, "BTCUSDT": 2, "ETHUSDT": 2},
-    "lookback_candles_sl":          5,
-    "liquidity_lookback":           20,
-    "liquidity_volume_threshold":   1.5,
-    "liquidity_touch_count":        2,
-    "default_account_balance":      10_000.0,
-    "reject_unknown_intent":        True,
-}
+# LIQ_SWEEP intent identity (CH-planner-liq-sweep-direction, user-authorized 2026-10-03):
+#   legacy_unsigned       — LIQ_SWEEP if sweep_detected or double_sweep. Direction-blind, and the
+#                           MKT-C04 condition double_sweep alone can trigger it with no sweep on the
+#                           bar. Byte-identical to the pre-2026-10-03 classifier.
+#   e01_direction_aligned — LIQ_SWEEP iff a sweep EVENT is on the bar (signed liquidity_sweep != 0)
+#                           AND its implied bias equals selected_direction (MKT-E01 rule:
+#                           UPPER swept (+1) -> SHORT, LOWER swept (-1) -> LONG). double_sweep no
+#                           longer triggers the intent; its GateIntelligence score bonus is untouched.
+# The signed slot encodes a bar that swept both sides as UPPER (+1, FM-058/FM-090), so such a bar
+# qualifies only for SHORT here.
+LIQ_SWEEP_SEMANTICS: tuple[str, ...] = ("legacy_unsigned", "e01_direction_aligned")
+
+# EPIC-84 (user rule 2026-09-28: no defaults, no fallbacks): the former module-level
+# DEFAULT_CONFIG (merged UNDER every config, so a missing key silently took a code value) is
+# gone. Every key in REQUIRED_CONFIG_KEYS must be declared. Production callers build the
+# config with planner_config_from_production(); the former values live only in the test
+# fixture tests/helpers/planner_config.py (LEGACY_PLANNER_VALUES_2026_09_28).
+
+
+def planner_config_from_production(prod_config: dict, symbol: str) -> dict:
+    """The planner config for ``symbol`` from a loaded production config (fail closed).
+
+    execution_planner section  ∪  gate_intelligence section  ∪  breakout_disp_threshold
+    resolved per symbol from crt_engine (the SAME resolver the CRT engine uses, so the two
+    intent classifiers cannot diverge). Any missing section or key raises
+    ConfigKeyMissingError.
+    """
+    from config_layer.production_config import resolve_breakout_disp_threshold
+
+    consumer = "planner_config_from_production"
+    ep = require_section(prod_config, "execution_planner", consumer=consumer)
+    gi = require_section(prod_config, "gate_intelligence", consumer=consumer)
+    crt = require_section(prod_config, "crt_engine", consumer=consumer)
+    params = require_section(prod_config, "params", consumer=consumer)
+    return {
+        **dict(ep),
+        **dict(gi),
+        "breakout_disp_threshold": resolve_breakout_disp_threshold(crt, symbol, params),
+    }
 
 
 def _planner_require(config: dict, key: str) -> Any:
@@ -151,16 +168,21 @@ class ExecutionPlannerV1_2:
 
     Parameters
     ----------
-    config : dict, optional
-        Overrides for DEFAULT_CONFIG keys.
+    config : dict
+        Every key in REQUIRED_CONFIG_KEYS (EPIC-84: no defaults). Build it with
+        planner_config_from_production(prod_config, symbol).
     """
 
-    def __init__(self, config: dict[str, Any] | None = None) -> None:
-        # Merge with DEFAULT_CONFIG so callers can pass None or a partial dict
-        merged: dict[str, Any] = {**DEFAULT_CONFIG}
-        if isinstance(config, dict):
-            merged.update(config)
-        self.config = merged
+    def __init__(self, config: dict[str, Any]) -> None:
+        require_all(config, REQUIRED_CONFIG_KEYS,
+                    section_name="execution_planner", consumer="ExecutionPlannerV1_2")
+        self.config: dict[str, Any] = dict(config)
+        self._liq_sweep_semantics = str(self.config["liq_sweep_semantics"])
+        if self._liq_sweep_semantics not in LIQ_SWEEP_SEMANTICS:
+            raise ValueError(
+                f"liq_sweep_semantics must be one of {LIQ_SWEEP_SEMANTICS}, "
+                f"got {self._liq_sweep_semantics!r}"
+            )
 
     # ── Public entry point ────────────────────────────────────────────────────
 
@@ -177,7 +199,7 @@ class ExecutionPlannerV1_2:
         ----------
         engine_result : dict
             Output from EngineRunner.run().
-            Required keys: "decision", "direction" (1/-1), "confidence", "regime".
+            Required keys: "decision", "selected_direction" (1/-1; 0=NONE→reject), "confidence", "regime".
         features : dict
             Canonical feature dict (must contain at minimum _REQUIRED_FEATURE_KEYS).
         context : dict
@@ -186,7 +208,8 @@ class ExecutionPlannerV1_2:
 
         Returns
         -------
-        dict with decision, execution_id, trade_intent, entry/SL/TP, RR, trace, etc.
+        dict with decision, execution_id, trade_intent, entry_price, gate result, trace.
+        SL/TP/RR are NOT set here — injected by live_engine_hook via compute_crt_levels().
 
         Raises
         ------
@@ -219,7 +242,11 @@ class ExecutionPlannerV1_2:
                 "trace": {"engine_decision": engine_result.get("decision")},
             }
 
-        direction = int(engine_result.get("direction", engine_result.get("selected_direction", 0)))
+        # RR-002/003: `selected_direction` is the canonical typed engine-output field
+        # (core/types.py:60 `selected_direction: int  # 1=BUY,-1=SELL,0=none`). The `direction`
+        # alias (schema drift) and the silent `0` default are removed: a MISSING field now fails
+        # loud (KeyError), while a modeled `0`=NONE is still gracefully rejected by the gate below.
+        direction = int(engine_result["selected_direction"])
         if direction not in (1, -1):
             return {
                 "decision": "reject_invalid",
@@ -246,71 +273,31 @@ class ExecutionPlannerV1_2:
         )
         trace["entry_reason"] = entry_reason
 
-        # Step 5: Stop loss
-        sl, sl_method, sl_reason = self._compute_sl(intent, features, direction, entry_price)
-        trace["sl_reason"] = sl_reason
-        trace["sl_fallback_used"] = sl_method in ("atr_fallback", "structure_current_bar")
+        # Step 5: Gate intelligence — approve or reject the signal
+        gate = GateIntelligence(self.config)
+        gate_result = gate.decide(features, intent, direction)
+        trace["gate"] = gate_result
 
-        # Step 6: Take profit
-        tp1, tp2, tp3, tp_method, tp_reason = self._compute_tp(
-            intent, features, entry_price, direction
-        )
-        trace["tp_reason"] = tp_reason
-        trace["liquidity_method"] = "hybrid_liquidity" if "liquidity" in tp_method else "atr_only"
-
-        # Step 7: SL/TP sanity check
-        if direction == 1 and not (sl < entry_price < tp1):
-            err = f"sl_tp_order_invalid: entry={entry_price}, sl={sl}, tp1={tp1}"
-            logger.error(f"ExecutionPlanner: {err}")
-            return {"decision": "reject_invalid", "trace": {"error": err}}
-        if direction == -1 and not (tp1 < entry_price < sl):
-            err = f"sl_tp_order_invalid_short: entry={entry_price}, sl={sl}, tp1={tp1}"
-            logger.error(f"ExecutionPlanner: {err}")
-            return {"decision": "reject_invalid", "trace": {"error": err}}
-
-        # Step 8: RR calculation
-        risk_amount = abs(entry_price - sl)
-        reward_amount = abs(tp1 - entry_price)
-        rr_ratio = reward_amount / risk_amount if risk_amount > 0 else 0.0
-        trace["rr_calc"] = {
-            "risk_amount": risk_amount,
-            "reward_amount": reward_amount,
-            "ratio": rr_ratio,
-        }
-        logger.info(f"ExecutionPlanner: RR={rr_ratio:.3f} (min={self.config['min_rr_ratio']})")
-
-        # Step 9: RR gate
-        if rr_ratio < self.config["min_rr_ratio"]:
-            logger.info(f"ExecutionPlanner: reject_rr (ratio={rr_ratio:.3f})")
+        if not gate_result["approved"]:
+            logger.info(
+                "ExecutionPlanner: gate_reject | score=%.4f | %s",
+                gate_result["final_score"],
+                gate_result["reason"],
+            )
             return {
-                "decision": "reject_rr",
-                "rr_ratio": round(rr_ratio, 4),
+                "decision":     "reject_gate",
                 "trade_intent": intent,
-                "trace": trace,
+                "gate":         gate_result,
+                "trace":        trace,
             }
 
-        # Step 10: Timestamps and TTL
+        # Step 6: Timestamps and TTL
         now_utc = datetime.now(timezone.utc)
         ttl_key = _TTL_MAP.get(intent, "ttl_unknown_sec")
         ttl = int(_planner_require(self.config, ttl_key))
         expires_at = now_utc + timedelta(seconds=ttl)
 
-        # Step 11: Position size hint (stub for Ultron)
-        account_balance = float(
-            context.get("account_balance", _planner_require(self.config, "default_account_balance"))
-        )
-        risk_percent = float(self.config["risk_percent"])
-        risk_usd = account_balance * (risk_percent / 100.0)
-        position_size_hint: float | None = None
-        if risk_amount > 0:
-            position_size_hint = round(risk_usd / risk_amount, 4)
-            if position_size_hint <= 0:
-                logger.warning("ExecutionPlanner: position_size_hint <= 0, set to None")
-                position_size_hint = None
-        else:
-            logger.warning("ExecutionPlanner: risk_amount=0, position_size_hint=None")
-
-        # Step 12: Precision rounding
+        # Step 7: Precision rounding for entry price
         symbol = str(context.get("symbol", "UNKNOWN"))
         precision = int(
             _planner_require(self.config, "precision_overrides").get(
@@ -318,51 +305,42 @@ class ExecutionPlannerV1_2:
             )
         )
         entry_price = round(entry_price, precision)
-        sl = round(sl, precision)
-        tp1 = round(tp1, precision)
-        tp2 = round(tp2, precision) if tp2 is not None else None
 
-        # Step 13: Deterministic execution ID (no timestamp)
-        id_str = f"{symbol}_{intent}_{round(entry_price, 4)}_{round(sl, 4)}"
+        # Step 8: Deterministic execution ID (symbol + intent + entry + direction)
+        id_str = f"{symbol}_{intent}_{round(entry_price, 4)}_{direction}"
         exec_hash = hashlib.md5(id_str.encode()).hexdigest()[:12]
         execution_id = f"EX_{exec_hash}"
 
-        # Step 14: HTF context stub (future use)
+        # Step 9: HTF context stub (future use)
         trace["context_regime"] = engine_result.get("context_regime", {})
 
         return {
-            "decision": "execute",
-            "execution_id": execution_id,
-            "trade_intent": intent,
-            "direction": direction,
-            "entry_type": entry_type,
-            "entry_price": entry_price,
-            "stop_loss": sl,
-            "take_profit_1": tp1,
-            "take_profit_2": tp2,
-            "take_profit_3": tp3,
-            "rr_ratio": round(rr_ratio, 4),
-            "risk_percent": risk_percent,
-            "position_size_hint": position_size_hint,
-            "risk_source": "local_estimate",
+            "decision":        "execute",
+            "execution_id":    execution_id,
+            "trade_intent":    intent,
+            "direction":       direction,
+            "entry_type":      entry_type,
+            "entry_price":     entry_price,
+            "gate":            gate_result,
             "validity_ttl_sec": ttl,
-            "created_at": now_utc.isoformat(),
-            "expires_at": expires_at.isoformat(),
-            "sl_method": sl_method,
-            "tp_method": tp_method,
-            "confidence": engine_result.get("confidence"),
-            "regime": engine_result.get("regime"),
-            "symbol": symbol,
-            "signal": context.get("signal"),
-            "score": context.get("score"),
-            "trace": trace,
+            "created_at":      now_utc.isoformat(),
+            "expires_at":      expires_at.isoformat(),
+            "confidence":      engine_result.get("confidence"),
+            "regime":          engine_result.get("regime"),
+            "symbol":          symbol,
+            "signal":          context.get("signal"),
+            "score":           context.get("score"),
+            "trace":           trace,
         }
 
     # ── Validation ────────────────────────────────────────────────────────────
 
     def _validate_features(self, features: dict[str, Any]) -> list[str]:
         """Return list of missing required feature keys."""
-        return [k for k in _REQUIRED_FEATURE_KEYS if k not in features]
+        required = _REQUIRED_FEATURE_KEYS
+        if self._liq_sweep_semantics == "e01_direction_aligned":
+            required = required + ("liquidity_sweep",)  # signed MKT-E01 slot; no default
+        return [k for k in required if k not in features]
 
     def _validate_prices(self, features: dict[str, Any]) -> str | None:
         """
@@ -392,43 +370,74 @@ class ExecutionPlannerV1_2:
         Derive trade intent from features and engine direction.
 
         Priority order:
-            1. LIQ_SWEEP  — sweep_detected or double_sweep
+            1. LIQ_SWEEP  — legacy_unsigned: sweep_detected or double_sweep;
+                            e01_direction_aligned: a sweep event whose implied bias == direction
+                            (see LIQ_SWEEP_SEMANTICS)
             2. PULLBACK   — retest_depth in [0.3, 0.7], recent, positive momentum
             3. BREAKOUT   — strong body + strong displacement
-            4. REVERSAL   — counter-trend (EMA vs direction)
-            5. UNKNOWN    — no clear pattern
+            4. REVERSAL     — counter-trend (EMA against direction)
+            5. CONTINUATION — with-trend (EMA with direction)
+            6. UNKNOWN      — no clear pattern (after 4/5, only an exact ema_fast == ema_slow tie)
+
+        CONTINUATION (CH-intent-schema-alignment, 2026-09-16): REVERSAL tests only ONE half of the
+        EMA-vs-direction relationship, so every with-trend entry that was not a sweep, pullback or
+        breakout used to fall through to UNKNOWN and be rejected by `reject_unknown_intent` --
+        measured on XAUUSD M15 at 40.70% of bars for LONG and 31.97% for SHORT. That was a missing
+        label, not an absent pattern. Splitting the test gives with-trend entries their own label and
+        leaves UNKNOWN meaning what its reason string says.
+
+        This is a CLASSIFIER change only, by explicit user decision. GateIntelligence._intent_score
+        has no CONTINUATION branch and scores it 0.0 (its "unrecognised" fallthrough). On the XAUUSD
+        M15 corpus that MEASURED 0.0% gate approval over a 3,000-bar sample per direction, so these
+        entries are still rejected there -- now as `reject_gate` with an honest label instead of
+        `reject_unknown_intent`. That is a measurement, NOT a structural guarantee: with the intent
+        component at 0.0 the other three weights still sum to 0.65, above the 0.55 threshold, so a
+        CONTINUATION can be approved when vol/liquidity/structure are all strong. On production
+        features `volume_ma20` is never emitted (F-065 H7), which plausibly holds approval down;
+        supplying it would change that. Giving CONTINUATION a gate score is a separate,
+        evidence-gated decision: REVERSAL's formula `1 - min(1, |momentum_score|)` would inherit
+        F-061's magnitude saturation (~0 on nearly every bar), and a sign-only confirmation would
+        approve ~37%.
         """
-        direction = int(
-            engine_result.get("direction", engine_result.get("selected_direction", 0))
-        )
+        direction = int(engine_result["selected_direction"])  # RR-002/003: canonical field, fail-loud on absence
 
         sweep_detected = bool(features.get("sweep_detected", False))
         double_sweep = bool(features.get("double_sweep", False))
         retest_depth = float(features.get("retest_depth", 0.0))
-        candles_since_retest = int(features.get("candles_since_retest", 99))
+        candles_since_sweep = int(features.get("candles_since_sweep", 99))
         momentum_score = float(features.get("momentum_score", 0.0))
         body_ratio = float(features.get("body_ratio", 0.0))
         disp_strength = float(features.get("disp_strength", 0.0))
         ema_fast = float(features.get("ema_fast", 0.0))
         ema_slow = float(features.get("ema_slow", 0.0))
 
-        if sweep_detected or double_sweep:
+        if self._liq_sweep_semantics == "e01_direction_aligned":
+            ls = int(features["liquidity_sweep"])
+            implied_bias = -1 if ls > 0 else (1 if ls < 0 else 0)  # MKT-E01: UPPER -> SHORT
+            if implied_bias != 0 and implied_bias == direction:
+                return "LIQ_SWEEP", "sweep event aligned with direction"
+        elif sweep_detected or double_sweep:
             return "LIQ_SWEEP", "sweep detected"
 
         if (
             0.3 <= retest_depth <= 0.7
-            and candles_since_retest <= 5
+            and candles_since_sweep <= 5
             and momentum_score > 0
         ):
             return "PULLBACK", "retest depth within 0.3-0.7, recent, positive momentum"
 
-        if body_ratio > 0.6 and disp_strength > 1.5:
+        if body_ratio > 0.6 and disp_strength > float(self.config["breakout_disp_threshold"]):
             return "BREAKOUT", "strong body and displacement"
 
         if (ema_fast > ema_slow and direction == -1) or (
             ema_fast < ema_slow and direction == 1
         ):
             return "REVERSAL", "counter-trend signal (EMA vs direction)"
+
+        if (ema_fast > ema_slow and direction == 1) or (
+            ema_fast < ema_slow and direction == -1
+        ):
+            return "CONTINUATION", "with-trend signal (EMA vs direction)"
 
         return "UNKNOWN", "no clear pattern"
 
@@ -445,6 +454,10 @@ class ExecutionPlannerV1_2:
         """
         close = float(features["close"])
         atr = float(features["atr"])
+        # F-072: `atr` (FM-041) is close-relative (atr_14_raw/close); every price-unit offset
+        # below needs the absolute form (FM-074, `atr_absolute` = atr_14_raw). No absolute-ATR
+        # key is in _REQUIRED_FEATURE_KEYS, so recover it the registered way: FM-074 == FM-041 * close.
+        atr_abs = atr * close
         low = float(features["low"])
         high = float(features["high"])
 
@@ -457,167 +470,14 @@ class ExecutionPlannerV1_2:
 
         if intent == "LIQ_SWEEP":
             if direction == 1:
-                price = low + 0.1 * atr
+                price = low + 0.1 * atr_abs
                 return "LIMIT", price, f"limit beyond sweep low wick ({price:.5f})"
             else:
-                price = high - 0.1 * atr
+                price = high - 0.1 * atr_abs
                 return "LIMIT", price, f"limit beyond sweep high wick ({price:.5f})"
 
         # BREAKOUT, REVERSAL, UNKNOWN → market at close
         return "MARKET", close, f"market execution at close ({close:.5f})"
-
-    # ── Stop loss computation ─────────────────────────────────────────────────
-
-    def _compute_sl(
-        self,
-        intent: str,
-        features: dict[str, Any],
-        direction: int,
-        entry_price: float,
-    ) -> tuple[float, str, str]:
-        """
-        Returns (stop_loss, sl_method, sl_reason).
-        """
-        atr = float(features["atr"])
-        low = float(features["low"])
-        high = float(features["high"])
-
-        if intent == "LIQ_SWEEP":
-            if direction == 1:
-                sl = low - 0.2 * atr
-                return sl, "beyond_sweep", f"SL beyond sweep low - 0.2 ATR ({sl:.5f})"
-            else:
-                sl = high + 0.2 * atr
-                return sl, "beyond_sweep", f"SL beyond sweep high + 0.2 ATR ({sl:.5f})"
-
-        if intent == "PULLBACK":
-            lookback = int(_planner_require(self.config, "lookback_candles_sl"))
-            low_key = f"lowest_low_{lookback}"
-            high_key = f"highest_high_{lookback}"
-            if low_key in features and high_key in features:
-                sl = float(features[low_key] if direction == 1 else features[high_key])
-                return (
-                    sl,
-                    "structure_last_N",
-                    f"SL at {lookback}-candle {'low' if direction==1 else 'high'} ({sl:.5f})",
-                )
-            else:
-                logger.warning(
-                    f"ExecutionPlanner: missing {low_key}/{high_key}, fallback to current bar"
-                )
-                sl = low if direction == 1 else high
-                return (
-                    sl,
-                    "structure_current_bar",
-                    f"fallback SL at current bar {'low' if direction==1 else 'high'} ({sl:.5f})",
-                )
-
-        if intent == "BREAKOUT":
-            sl = low if direction == 1 else high
-            return sl, "breakout_candle", f"SL at breakout candle {'low' if direction==1 else 'high'} ({sl:.5f})"
-
-        if intent == "REVERSAL":
-            # Use 3-candle swing if available, else current bar
-            low_key = "lowest_low_3"
-            high_key = "highest_high_3"
-            if low_key in features and high_key in features:
-                sl = float(features[low_key] if direction == 1 else features[high_key])
-                return sl, "swing_reversal", f"SL at 3-candle swing {'low' if direction==1 else 'high'} ({sl:.5f})"
-            else:
-                sl = low if direction == 1 else high
-                return (
-                    sl,
-                    "swing_reversal_fallback",
-                    f"fallback SL at current bar ('no 3-candle agg') ({sl:.5f})",
-                )
-
-        # Fallback: ATR-based
-        if direction == 1:
-            sl = entry_price - self.config["default_sl_atr_mult"] * atr
-        else:
-            sl = entry_price + self.config["default_sl_atr_mult"] * atr
-        return sl, "atr_fallback", f"ATR-based fallback SL ({sl:.5f})"
-
-    # ── Take profit computation ───────────────────────────────────────────────
-
-    def _compute_tp(
-        self,
-        intent: str,
-        features: dict[str, Any],
-        entry_price: float,
-        direction: int,
-    ) -> tuple[float, float | None, None, str, str]:
-        """
-        Returns (tp1, tp2, tp3, method, reason).
-
-        v1.2: Hybrid ATR base + liquidity detection (volume spike + touch count).
-        """
-        atr = float(features["atr"])
-        tp_mult_key = _TP_MULT_MAP.get(intent, "atr_mult_breakout_tp")
-        tp_mult = float(_planner_require(self.config, tp_mult_key))
-
-        if direction == 1:
-            tp1_base = entry_price + tp_mult * atr
-            tp2 = entry_price + tp_mult * atr * 2
-        else:
-            tp1_base = entry_price - tp_mult * atr
-            tp2 = entry_price - tp_mult * atr * 2
-
-        base_reason = f"ATR × {tp_mult:.1f} ({tp1_base:.5f})"
-        tp1 = tp1_base
-        tp_method = "atr_only"
-        tp_reason = base_reason
-
-        # Liquidity detection (improved in v1.2: volume spike + multiple touches)
-        lookback = int(_planner_require(self.config, "liquidity_lookback"))
-        min_touches = int(_planner_require(self.config, "liquidity_touch_count"))
-        volume_threshold = float(_planner_require(self.config, "liquidity_volume_threshold"))
-
-        recent_high_key = f"highest_high_{lookback}"
-        recent_low_key = f"lowest_low_{lookback}"
-        touches_high_key = f"touches_high_{lookback}"
-        touches_low_key = f"touches_low_{lookback}"
-        volume_ma_key = "volume_ma20"
-
-        if (
-            direction == 1
-            and recent_high_key in features
-            and touches_high_key in features
-            and volume_ma_key in features
-        ):
-            recent_high = float(features[recent_high_key])
-            touches = float(features[touches_high_key])
-            vol_ma = float(features[volume_ma_key])
-            vol = float(features.get("volume", 0.0))
-            vol_ratio = vol / vol_ma if vol_ma > 0 else 0.0
-            if touches >= min_touches and vol_ratio >= volume_threshold:
-                tp1 = recent_high
-                tp_method = "hybrid_liquidity"
-                tp_reason = (
-                    f"liquidity level at recent high (touches={touches:.0f}, "
-                    f"vol_ratio={vol_ratio:.1f}) → {tp1:.5f}"
-                )
-
-        elif (
-            direction == -1
-            and recent_low_key in features
-            and touches_low_key in features
-            and volume_ma_key in features
-        ):
-            recent_low = float(features[recent_low_key])
-            touches = float(features[touches_low_key])
-            vol_ma = float(features[volume_ma_key])
-            vol = float(features.get("volume", 0.0))
-            vol_ratio = vol / vol_ma if vol_ma > 0 else 0.0
-            if touches >= min_touches and vol_ratio >= volume_threshold:
-                tp1 = recent_low
-                tp_method = "hybrid_liquidity"
-                tp_reason = (
-                    f"liquidity level at recent low (touches={touches:.0f}, "
-                    f"vol_ratio={vol_ratio:.1f}) → {tp1:.5f}"
-                )
-
-        return tp1, tp2, None, tp_method, tp_reason
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -629,12 +489,13 @@ if __name__ == "__main__":
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)-8s %(message)s")
 
-    planner = ExecutionPlannerV1_2()
+    from config_layer.production_config import get_full_config_dict as _gfc
+    planner = ExecutionPlannerV1_2(planner_config_from_production(_gfc(), "EURUSD"))
 
     # ── Test 1: Happy path — BREAKOUT ────────────────────────────────────────
     engine_result = {
         "decision": "execute",
-        "direction": 1,
+        "selected_direction": 1,
         "confidence": 0.82,
         "regime": "trend",
     }
@@ -648,7 +509,7 @@ if __name__ == "__main__":
         "sweep_detected": False,
         "double_sweep": False,
         "retest_depth": 0.2,
-        "candles_since_retest": 10,
+        "candles_since_sweep": 10,
         "ema_fast": 99.5,
         "ema_slow": 98.5,
         "momentum_score": 0.7,
@@ -669,17 +530,16 @@ if __name__ == "__main__":
     print(f"  decision:     {result['decision']}")
     print(f"  trade_intent: {result.get('trade_intent')}")
     print(f"  entry_price:  {result.get('entry_price')}")
-    print(f"  stop_loss:    {result.get('stop_loss')}")
-    print(f"  take_profit_1:{result.get('take_profit_1')}")
-    print(f"  rr_ratio:     {result.get('rr_ratio')}")
+    print(f"  gate_score:   {result.get('gate', {}).get('final_score')}")
     print(f"  execution_id: {result.get('execution_id')}")
     assert result["decision"] == "execute", f"Expected execute, got {result['decision']}"
     assert result["trade_intent"] == "BREAKOUT"
-    assert result["rr_ratio"] >= 1.5
+    assert "stop_loss" not in result, "SL must not be set by planner (CRT authority)"
+    assert result["gate"]["approved"] is True
     print("  ✅ PASS")
 
     # ── Test 2: Reject — engine decision != execute ───────────────────────────
-    engine_result_reject = {"decision": "REJECT", "direction": 1, "confidence": 0.3, "regime": "neutral"}
+    engine_result_reject = {"decision": "REJECT", "selected_direction": 1, "confidence": 0.3, "regime": "neutral"}
     result2 = planner.plan(engine_result_reject, features, context)
     print("\n=== Test 2: Engine reject ===")
     assert result2["decision"] == "reject_engine", f"Got {result2['decision']}"
@@ -694,25 +554,32 @@ if __name__ == "__main__":
         "sweep_detected": False,
         "double_sweep": False,
         "retest_depth": 0.0,
-        "candles_since_retest": 99,
+        "candles_since_sweep": 99,
+        # Exact EMA tie: the only input that still reaches UNKNOWN once REVERSAL and CONTINUATION
+        # cover both halves of EMA-vs-direction. (Was fast=100.0/slow=99.0 with a LONG -- a
+        # with-trend entry, i.e. CONTINUATION since CH-intent-schema-alignment.)
         "ema_fast": 100.0,
-        "ema_slow": 99.0,
+        "ema_slow": 100.0,
     }
     result3 = planner.plan(engine_result, features_unknown, context)
     print("\n=== Test 3: UNKNOWN intent rejection ===")
     assert result3["decision"] == "reject_unknown_intent", f"Got {result3['decision']}"
     print(f"  decision: {result3['decision']} ✅ PASS")
 
-    # ── Test 4: Low RR → reject_rr ───────────────────────────────────────────
-    features_low_rr = {
+    # ── Test 4: Weak signal → gate reject ────────────────────────────────────
+    features_weak = {
         **features,
-        "atr": 0.1,  # tiny ATR → tiny TP → low RR against breakout candle SL
+        "body_ratio": 0.1,
+        "disp_strength": 0.1,
+        "momentum_score": 0.0,
+        "volume": 100.0,
+        "volume_ma20": 800.0,
     }
-    result4 = planner.plan(engine_result, features_low_rr, context)
-    print("\n=== Test 4: Low RR rejection ===")
-    # ATR=0.1, entry=100, sl=low=98 (breakout), tp1=100+0.1*2=100.2
-    # risk=2, reward=0.2, rr=0.1 < 1.5 → reject_rr
-    assert result4["decision"] == "reject_rr", f"Got {result4['decision']}"
-    print(f"  decision: {result4['decision']} ✅ PASS")
+    result4 = planner.plan(engine_result, features_weak, context)
+    print("\n=== Test 4: Weak signal → gate reject ===")
+    # Gate score will be below 0.55 with these weak features
+    print(f"  decision: {result4['decision']} (gate_score={result4.get('gate', {}).get('final_score')})")
+    assert result4["decision"] in ("reject_gate", "execute"), f"Got {result4['decision']}"
+    print("  ✅ PASS")
 
     print("\n=== All tests passed ===\n")

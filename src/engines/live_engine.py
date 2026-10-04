@@ -32,17 +32,27 @@ from typing import Optional
 
 log = logging.getLogger("LiveEngine")
 
+try:
+    from utils.registry_refresh import RegistryWatcher
+except Exception:  # pragma: no cover — keep live engine importable in stripped envs
+    class RegistryWatcher:  # type: ignore[no-redef]
+        def __init__(self, *_a, **_kw): pass
+        def needs_reload(self) -> bool: return False
+        def mark_loaded(self) -> None: pass
+
 LOGS_DIR       = Path("logs")
 ALERT_LOG_PATH = LOGS_DIR / "live_alerts.jsonl"
 
-# Default zone registry path (written by BitNetSearchEngine)
-ZONE_REGISTRY_PATH = "models/zone_registry.json"
+# Default zone runtime artifact — layout owned by ModelPaths (Phase 0).
+# Version selection remains models/zone_gate_registry.json via ModelResolver.
+from config_layer.model_paths import ModelPaths as _ModelPaths
+ZONE_REGISTRY_PATH = str(_ModelPaths.ZONE_GATE_RUNTIME_ALIAS)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # BITNET ZONE GATE
 # ─────────────────────────────────────────────────────────────────────────────
 
-def get_zone_registry_path(instrument: str, base_dir: str = "models/bitnet") -> str:
+def get_feature_cluster_similarity_registry_path(instrument: str, base_dir: str = "models/bitnet") -> str:
     """
     Return the per-instrument BitNet registry path if it exists,
     otherwise fall back to the global registry.
@@ -52,7 +62,16 @@ def get_zone_registry_path(instrument: str, base_dir: str = "models/bitnet") -> 
         cand = os.path.join(base_dir, inst, "zone_registry.json")
         if os.path.exists(cand):
             return cand
-    return "models/zone_registry.json"
+    return ZONE_REGISTRY_PATH
+
+
+class ZoneFeatureOrderError(RuntimeError):
+    """The zone registry's trained `feature_order` cannot be aligned to the live feature schema.
+
+    Raised at LOAD time, never per-bar, and never swallowed by the fail-open registry handlers.
+    A hard gate (F-041) that scores a misaligned vector decides confidently and wrongly, which is
+    strictly worse than not starting.
+    """
 
 
 class BitNetZoneGate:
@@ -83,6 +102,7 @@ class BitNetZoneGate:
         zones:     list = None,
         zone_path: str  = ZONE_REGISTRY_PATH,
         enabled:   bool = True,
+        config:    dict = None,
     ):
         """
         Parameters
@@ -90,10 +110,29 @@ class BitNetZoneGate:
         zones     : pre-loaded zone list (if None, loaded from zone_path)
         zone_path : path to zone_registry.json (default ZONE_REGISTRY_PATH)
         enabled   : if False, gate is a no-op pass-through (default True)
+        config    : optional config dict. Supports:
+                    ``feature_cluster_similarity_min_samples`` (int, default 50) — if the total
+                    training sample count across all zones is below this
+                    threshold, the gate auto-bypasses with reason
+                    "underpowered_zone_registry" rather than producing
+                    spurious rejections from an under-trained registry.
         """
-        self.enabled   = enabled
+        self.enabled    = enabled
         self._zone_path = zone_path
         self._zones: list = []
+        self._underpowered: bool = False
+        # SCHEMA-V4 SAFETY NET (2026-07-22): the feature-name order the on-disk zone vectors
+        # (`mu`/`sigma`/`weights`) are aligned to. Read from the registry's own top-level
+        # `feature_order`; None means the registry predates the field and the caller must fall
+        # back to the ambient canonical order. See _validate_feature_order.
+        self.feature_order: list | None = None
+        # Number of top zone scores surfaced as ``top_scores`` for cluster weighting.
+        # The live spine enforces this fail-fast at the engine_runner config boundary
+        # (engine_runner.feature_cluster_similarity.top_k); the soft default here serves only standalone /
+        # manual callers (direct instantiation, _smoke_test.py). Default 3 = historical.
+        self._top_n: int = int((config or {}).get("zone_gate_top_k", 3))
+        # Hot-reload watcher: detects discover_zones promotion mid-session.
+        self._watcher = RegistryWatcher(zone_path)
 
         if not enabled:
             log.info("BitNetZoneGate: disabled (pass-through mode)")
@@ -103,8 +142,35 @@ class BitNetZoneGate:
             self._zones = zones
         else:
             self._load_registry(zone_path)
+        self._watcher.mark_loaded()
 
         log.info(f"BitNetZoneGate: loaded {len(self._zones)} zones from {zone_path}")
+
+        # ── Underpowered-registry guard ─────────────────────────────────────
+        # The zone "weight" field tracks the number of training samples in each
+        # cluster.  If the total is below feature_cluster_similarity_min_samples the registry was
+        # built from too few trades (often a cross-instrument bootstrap) and
+        # will produce noisy similarity scores.  In that case the gate
+        # auto-bypasses rather than injecting spurious rejections.
+        _cfg = config or {}
+        # T-22: NOT a silent config default. This is the standalone/unit-test tier of the
+        # same two-tier pattern used by core.acceptance_controller.__init__ — the live path
+        # always arrives via get_zone_gate(), which is fed from engine_runner's fail-fast
+        # _cfg_require("feature_cluster_similarity_min_samples"). A caller that constructs this class directly with
+        # no config is by definition not the configured spine, so there is no config to
+        # silently fall back FROM. Do not "fix" this to a strict read: it would break
+        # standalone construction without closing any real config-drift hole.
+        _min_samples = float(_cfg.get("feature_cluster_similarity_min_samples", 50))
+        _total_samples = sum(float(z.get("weight", 0)) for z in self._zones)
+        if self._zones and _total_samples < _min_samples:
+            self._underpowered = True
+            log.warning(
+                "BitNetZoneGate: registry has only %.0f training samples "
+                "(threshold %.0f).  Gate will auto-bypass with reason "
+                "'underpowered_zone_registry'.  Rebuild the registry with "
+                ">= %.0f per-instrument profitable trades to re-activate.",
+                _total_samples, _min_samples, _min_samples,
+            )
 
     @classmethod
     def from_path(cls, path: str = ZONE_REGISTRY_PATH) -> "BitNetZoneGate":
@@ -116,10 +182,56 @@ class BitNetZoneGate:
         """Factory: create a disabled gate (always allows trades)."""
         return cls(enabled=False)
 
-    def _load_registry(self, path: str) -> None:
-        """Load zone registry from JSON. Fail-safe: empty zones on any error."""
+    def _validate_feature_order(self, path: str) -> None:
+        """Read + validate the registry's `feature_order` against the live schema (FAIL-CLOSED).
+
+        WHY THIS EXISTS (2026-07-22). `models/zone_registry.json` has always stored a
+        `feature_order` name list alongside the zone vectors, but NOTHING read it: the scoring
+        vector was built from the ambient `CANONICAL_FEATURE_ORDER` and
+        `feature_cluster_similarity._extract_vector` SILENTLY TRUNCATED anything longer (a v2.0(35)->v3.0(38)
+        back-compat path). ZoneGate is the only LIVE hard gate (F-041, feature_cluster_similarity_mode=hard) and every
+        other trained consumer is inert or off (F-004/F-005/F-038/F-060), so a schema change that
+        reordered or extended the vector would have made this gate score against misaligned
+        `mu`/`sigma` and raise nothing at all.
+
+        A misalignment is NOT fail-open. Failing open would silently disable a hard gate; failing
+        closed per-bar would be a silent outage. So this raises ONCE, at load, and refuses to
+        construct — the process does not start rather than mis-decide.
+        """
         try:
-            from bitnet.search_engine import load_zone_registry
+            with open(path, encoding="utf-8") as fh:
+                raw = json.load(fh)
+        except (OSError, json.JSONDecodeError):
+            return   # generic load failure is handled (fail-open) by the caller's except blocks
+
+        order = raw.get("feature_order")
+        if not order:
+            log.warning(
+                "BitNetZoneGate: registry %s has no `feature_order`; falling back to the ambient "
+                "canonical order. This is only safe while the schema is unchanged since training.",
+                path,
+            )
+            return
+
+        from features.feature_schema import CANONICAL_FEATURE_ORDER
+        live = set(CANONICAL_FEATURE_ORDER)
+        missing = [n for n in order if n not in live]
+        if missing:
+            raise ZoneFeatureOrderError(
+                f"zone registry {path} was trained on feature(s) absent from the live schema: "
+                f"{missing}. The registry must be remapped or retrained before this gate can "
+                f"score — refusing to start rather than score against a misaligned vector."
+            )
+        self.feature_order = list(order)
+
+    def _load_registry(self, path: str) -> None:
+        """Load zone registry from JSON. Fail-safe: empty zones on any error.
+
+        EXCEPTION: `ZoneFeatureOrderError` is deliberately NOT caught — see _validate_feature_order.
+        """
+        try:
+            from bitnet.zone_cosine_searcher import load_zone_registry
+            self._validate_feature_order(path)
             zones = load_zone_registry(path)
             # Validate expected BitNet schema (mu/sigma/weights/threshold)
             valid = [
@@ -143,6 +255,10 @@ class BitNetZoneGate:
                         f"from registry {path}"
                     )
                 self._zones = valid
+        except ZoneFeatureOrderError:
+            # Vector-alignment failure — NEVER fail open. A hard gate scoring a misaligned vector
+            # is worse than no gate, because it decides confidently and wrongly.
+            raise
         except ImportError:
             # bitnet module not yet installed — fail open
             log.warning("BitNetZoneGate: bitnet module not available, gate disabled")
@@ -173,35 +289,64 @@ class BitNetZoneGate:
             zone_id   : str   — ID of the best-matching zone
             reason    : str   — human-readable gate decision reason
         """
+        # Hot-reload: if zone_registry.json was rewritten since last check,
+        # refresh in place. Cheap stat() per candle.
+        if self.enabled and self._watcher.needs_reload():
+            log.info("BitNetZoneGate: registry changed at %s; reloading", self._zone_path)
+            self.reload()
+
         # Gate explicitly disabled → always allow
         if not self.enabled:
             return {
                 "allowed":   True,
                 "score":     1.0,
                 "threshold": 0.0,
-                "zone_id":   "none",
+                "zone_id":   None,
                 "reason":    "gate_disabled",
             }
 
-        # No zones loaded → CRITICAL log + fail-open with visible warning
-        # (fail-open retained for safety; highly visible in logs)
-        if not self._zones:
-            log.critical(
-                "BitNetZoneGate: no zones loaded — gate in pass-through mode. "
-                "Run BitNetSearchEngine.run_search() + save_zones() first. "
-                "All trades are passing unfiltered."
-            )
+        # Underpowered registry → auto-bypass (avoid spurious rejections from
+        # a registry built on too few / cross-instrument training samples).
+        if self._underpowered:
             return {
                 "allowed":   True,
+                "score":     1.0,
+                "threshold": 0.0,
+                "zone_id":   None,
+                "reason":    "underpowered_zone_registry",
+                "top_scores": [],
+            }
+
+        # No zones loaded → CRITICAL log + fail-CLOSED.
+        #
+        # NAMING CORRECTED (was "no_zones_fail_open", which stated the opposite of the
+        # behaviour): omitting `top_scores` below makes zone_cluster_score._model_fn fall
+        # through to `result.get("score", 0.5)` → 0.0, which fails any positive
+        # feature_cluster_similarity_cluster_threshold (0.25 on the active config) → every candle BLOCKS.
+        # The omission is deliberate and load-bearing — do not add `top_scores` here
+        # without deciding the pass/block question explicitly.
+        #
+        # Contrast with the two branches above, which DO pass: `gate_disabled` and
+        # `underpowered_zone_registry` both return score 1.0. Blocking on an empty
+        # registry is the intended asymmetry — an unloadable registry must not silently
+        # admit unfiltered trades.
+        if not self._zones:
+            log.critical(
+                "BitNetZoneGate: no zones loaded — gate is BLOCKING all trades "
+                "(fail-closed). Run BitNetSearchEngine.run_search() + save_zones() "
+                "first. No trade can pass the zone gate until the registry loads."
+            )
+            return {
+                "allowed":   False,
                 "score":     0.0,
                 "threshold": 0.0,
                 "zone_id":   "none",
-                "reason":    "no_zones_fail_open",
+                "reason":    "no_zones_fail_closed",
             }
 
         # Score against all zones; allow if ANY zone passes
         try:
-            from bitnet.search_engine import compute_gaussian_score as _cgs
+            from bitnet.zone_cosine_searcher import compute_gaussian_score as _cgs
         except ImportError:
             return {
                 "allowed": True, "score": 1.0, "threshold": 0.0,
@@ -214,9 +359,20 @@ class BitNetZoneGate:
         allowed       = False
         all_scores: list = []
 
+        # NOTE: the per-zone `allowed`/`reason` decision computed below is part of this
+        # method's standalone return contract, but it is BYPASSED by the live spine. The
+        # real gate decision is made in engines.zone_cluster_score.score_zone_cluster:
+        #   compute_weighted_cluster_score(top_scores) >= feature_cluster_similarity_cluster_threshold.
+
+        # `top_scores` (length = self._top_n, config: engine_runner.feature_cluster_similarity.top_k) is the
+        # only field the live path consumes from this result.
         for zone in self._zones:
             try:
                 score  = _cgs(features, zone)
+                # EPIC-84 KEPT: per the comment above, this loop's
+                # allowed/threshold/id fields feed only the standalone
+                # (non-live-consumed) return contract; also inside a
+                # try/except whose own except is a debug-log-only fallback.
                 thresh = float(zone.get("threshold", 0.7))
                 zid    = zone.get("id", "unknown")
                 all_scores.append(float(score))
@@ -232,8 +388,8 @@ class BitNetZoneGate:
             except Exception as e:
                 log.debug(f"Zone scoring error for {zone.get('id', '?')}: {e}")
 
-        # Return top-3 scores for nearest-neighbour cluster weighting
-        top_scores = sorted(all_scores, reverse=True)[:3]
+        # Return top-k scores for nearest-neighbour cluster weighting (k = self._top_n)
+        top_scores = sorted(all_scores, reverse=True)[: self._top_n]
 
         reason = "zone_passed" if allowed else "zone_rejected"
         return {
@@ -256,16 +412,35 @@ class BitNetZoneGate:
 _ZONE_GATE: Optional["BitNetZoneGate"] = None
 
 
-def get_zone_gate(path: str = ZONE_REGISTRY_PATH) -> "BitNetZoneGate":
+def get_zone_gate(
+    path: str = ZONE_REGISTRY_PATH,
+    min_samples: int = 50,
+    top_n: int = 3,
+) -> "BitNetZoneGate":
     """
     Get (or create) the singleton BitNetZoneGate.
 
     Lazy-loads on first call. Subsequent calls return the same instance.
     Call get_zone_gate().reload() to force refresh from disk.
+
+    Parameters
+    ----------
+    path        : Path to zone registry JSON.
+    min_samples : Minimum total training samples required before the gate is
+                  active.  Registries with fewer samples auto-bypass.
+                  Mirrors ``engine_runner.feature_cluster_similarity_min_samples`` in the prod config.
+    top_n       : Number of top-scoring zones returned as ``top_scores`` for the
+                  downstream cluster-weighting step.  Mirrors
+                  ``engine_runner.feature_cluster_similarity.top_k`` in the prod config; the spine
+                  always supplies it via fail-fast _cfg_require (default 3 here
+                  preserves the historical behaviour for standalone callers).
     """
     global _ZONE_GATE
     if _ZONE_GATE is None:
-        _ZONE_GATE = BitNetZoneGate.from_path(path)
+        _ZONE_GATE = BitNetZoneGate(
+            zone_path=path,
+            config={"feature_cluster_similarity_min_samples": min_samples, "zone_gate_top_k": top_n},
+        )
     return _ZONE_GATE
 
 
@@ -289,6 +464,14 @@ class LiveEngineConfig:
         LIVE_COOLDOWN_SECONDS    : per-symbol alert cooldown (default 60)
         LIVE_DEDUP_CANDLES       : same setup dedup window in candles (default 4)
     """
+    # EPIC-84: these dataclass defaults are KEPT (not removed) — LiveEngineConfig
+    # is constructed directly with only `enabled=False` at several call sites
+    # this lane does not own (src/runtime/live_rail_orchestrator.py,
+    # src/agent/modes/pipeline_mode.py, this module's own `config or
+    # LiveEngineConfig()` at HookedLiveEngine construction) to build an inert,
+    # disabled engine for tests/paper-trading wiring, where the threshold
+    # values are irrelevant because the engine never fires. from_env() below —
+    # the one path that loads REAL values — no longer substitutes any of them.
     bot_token:              str   = ""
     chat_id:                str   = ""
     enabled:                bool  = False
@@ -299,18 +482,40 @@ class LiveEngineConfig:
     alert_cooldown_seconds: int   = 60
     dedup_candles:          int   = 4
 
+    #: Behavioural tunables from_env() requires (EPIC-84 trade-time rule does not
+    #: apply here — there is no per-trade fallback story for a magic threshold).
+    _ENV_REQUIRED = (
+        "LIVE_ENGINE_ENABLED", "LIVE_RR_THRESHOLD", "LIVE_CONF_MIN",
+        "LIVE_CONF_STRONG", "LIVE_ML_OVERRIDE", "LIVE_COOLDOWN_SECONDS",
+        "LIVE_DEDUP_CANDLES",
+    )
+
     @classmethod
     def from_env(cls) -> "LiveEngineConfig":
+        """EPIC-84: every behavioural tunable is required — a missing one used
+        to silently substitute a magic-number literal (e.g. LIVE_RR_THRESHOLD
+        absent -> 1.5); it now raises ConfigKeyMissingError naming it.
+
+        TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID stay genuinely optional: this
+        class's own validate() already documents their absence as a supported,
+        non-fatal "alerts logged only" mode (unlike TelegramBridge in
+        src/live, this module has no production config section to declare
+        them in — env is its only source).
+        """
+        from config_layer.strict_config import ConfigKeyMissingError, missing_keys
+        absent = missing_keys(os.environ, cls._ENV_REQUIRED)
+        if absent:
+            raise ConfigKeyMissingError(absent, section="env", consumer="LiveEngineConfig.from_env")
         return cls(
-            bot_token              = os.environ.get("TELEGRAM_BOT_TOKEN", "8540111634:AAF29RTVnbIiBBMxITfSJ50WnwiQVGaZqhY"),
-            chat_id                = os.environ.get("TELEGRAM_CHAT_ID",   "1103644701"),
-            enabled                = os.environ.get("LIVE_ENGINE_ENABLED", "0") == "1",
-            rr_threshold           = float(os.environ.get("LIVE_RR_THRESHOLD",    "1.5")),
-            confidence_min         = float(os.environ.get("LIVE_CONF_MIN",        "0.55")),
-            confidence_strong      = float(os.environ.get("LIVE_CONF_STRONG",     "0.60")),
-            ml_override_threshold  = float(os.environ.get("LIVE_ML_OVERRIDE",     "0.75")),
-            alert_cooldown_seconds = int(os.environ.get("LIVE_COOLDOWN_SECONDS",  "60")),
-            dedup_candles          = int(os.environ.get("LIVE_DEDUP_CANDLES",     "4")),
+            bot_token              = os.environ.get("TELEGRAM_BOT_TOKEN", ""),
+            chat_id                = os.environ.get("TELEGRAM_CHAT_ID",   ""),
+            enabled                = os.environ["LIVE_ENGINE_ENABLED"] == "1",
+            rr_threshold           = float(os.environ["LIVE_RR_THRESHOLD"]),
+            confidence_min         = float(os.environ["LIVE_CONF_MIN"]),
+            confidence_strong      = float(os.environ["LIVE_CONF_STRONG"]),
+            ml_override_threshold  = float(os.environ["LIVE_ML_OVERRIDE"]),
+            alert_cooldown_seconds = int(os.environ["LIVE_COOLDOWN_SECONDS"]),
+            dedup_candles          = int(os.environ["LIVE_DEDUP_CANDLES"]),
         )
 
     def validate(self) -> list[str]:
@@ -535,6 +740,71 @@ def _log_alert(entry: dict) -> None:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# TRAINING-TRIGGER (throttled live-mode evaluation)
+# ─────────────────────────────────────────────────────────────────────────────
+# Module-level counter — TrainingTrigger.should_trigger() walks the integrity
+# log + opportunity glob, which is disk-heavy. We piggyback on LiveEngine.process
+# (called every M15 candle) but only do the full check every N invocations.
+_BYPASS_CHECK_COUNTER: int = 0
+_BYPASS_CHECK_EVERY_N: int = 50  # ~12.5h between checks at 1 candle/15min
+
+
+def _maybe_telegram_training_alert(
+    symbol:     str,
+    instrument: str,
+    bot_token:  str,
+    chat_id:    str,
+) -> None:
+    """Throttled TrainingTrigger evaluation. On fire: send a Telegram message
+    with the pre-filled CLI command and emit TRAINING_RECOMMENDED.
+
+    Cheap counter path runs every call; the heavy gate check + Telegram +
+    emit only fires once per _BYPASS_CHECK_EVERY_N invocations. Never raises
+    — failure to evaluate the trigger must not break the live decision loop.
+    """
+    global _BYPASS_CHECK_COUNTER
+    _BYPASS_CHECK_COUNTER += 1
+    if _BYPASS_CHECK_COUNTER < _BYPASS_CHECK_EVERY_N:
+        return
+    _BYPASS_CHECK_COUNTER = 0
+    try:
+        from training.training_trigger import TrainingTrigger
+        from utils.integrity_events import emit_integrity_event
+        trig = TrainingTrigger.from_prod_config()
+        if not trig.should_trigger():
+            return
+        run_id = time.strftime("%Y%m%d_%H%M%S")
+        cli_cmd = (
+            "python scripts/auto_train_from_opportunities.py "
+            f"--instruments {instrument} --refresh-zones "
+            f"--promote-if-approved --run-id {run_id}"
+        )
+        message = (
+            "📊 *Training Recommended*\n"
+            f"Symbol: `{symbol}`\n"
+            "RR fusion bypass threshold exceeded.\n\n"
+            "Run:\n"
+            f"`{cli_cmd}`"
+        )
+        sent, err = send_telegram_alert(
+            message=message, bot_token=bot_token, chat_id=chat_id,
+        )
+        emit_integrity_event(
+            "TRAINING_RECOMMENDED", "WARNING", "live_engine",
+            {"instrument":     instrument,
+             "symbol":         symbol,
+             "trigger_source": "live_rr_drift",
+             "telegram_sent":  bool(sent),
+             "telegram_error": err,
+             "cli_cmd":        cli_cmd,
+             "run_id":         run_id},
+        )
+        trig.mark_fired()
+    except Exception as exc:  # noqa: BLE001 — never block the live loop
+        log.debug("TrainingTrigger live-check failed (non-fatal): %s", exc)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # LIVE ENGINE
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -592,8 +862,36 @@ class LiveEngine:
         -------
         dict: {decision, reason, expected_rr, confidence, ml_score, sent, suppressed_reason}
         """
-        symbol  = str(trade_data.get("symbol", "UNKNOWN"))
-        session = str(trade_data.get("session", "UNKNOWN"))
+        # EPIC-84 trade-time rule: symbol (identity) and session (a canonical
+        # feature — also hard-required by TrapValidatorEngine.CANONICAL_REQUIRED)
+        # are read before any downstream validation; a trade_data missing either
+        # is REJECTED here rather than silently alerted on as "UNKNOWN". regime
+        # stays a genuinely optional contextual tag (KEPT below — not a
+        # canonical feature, no established "always present" contract).
+        from config_layer.strict_config import missing_keys, missing_reason
+        _absent = missing_keys(trade_data, ("symbol", "session"))
+        if _absent:
+            _reason = missing_reason("trade_data", _absent)
+            log.warning(f"LiveEngine.process: REJECTED — {_reason}")
+            return {
+                "timestamp":        time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                "symbol":           str(trade_data.get("symbol", "")),
+                "decision":         "BLOCK",
+                "reason":           _reason,
+                "expected_rr":      0.0,
+                "confidence":       0.0,
+                "ml_score":         None,
+                "ml_info":          None,
+                "probabilities":    None,
+                "sent":             False,
+                "suppressed_reason": None,
+            }
+
+        symbol  = str(trade_data["symbol"])
+        session = str(trade_data["session"])
+        # EPIC-84 KEPT: regime is not a canonical feature and has no
+        # established "always present" contract elsewhere — "NEUTRAL" is a
+        # legitimate catch-all classification, not a masked required value.
         regime  = str(trade_data.get("regime",  "NEUTRAL"))
 
         result = {
@@ -620,6 +918,7 @@ class LiveEngine:
         # ── Step 1: Build + validate feature vector ───────────────────────────
         try:
             from features.dataset_builder import build_feature_vector, validate_feature_vector
+            from features.feature_schema import CANONICAL_FEATURES
             vec = build_feature_vector(trade_data, lambda_decay=0.05)
             validate_feature_vector(vec, context="LiveEngine.process")
         except Exception as e:
@@ -627,6 +926,26 @@ class LiveEngine:
             result["reason"] = f"feature_error: {e}"
             _log_alert(result)
             return result
+
+        # Snapshot the canonical feature dict + a stable alert_id into the
+        # result so logs/live_alerts.jsonl carries the decision context.
+        # ingest_live_outcomes.py pairs outcomes against alert_id later.
+        feature_snapshot = {
+            k: float(trade_data[k])
+            for k in CANONICAL_FEATURES
+            if k in trade_data
+        }
+        result["features"]  = feature_snapshot
+        # EPIC-84 KEPT: direction/candle_ts feed only the dedup alert_id hash
+        # and result reporting below, not the trade decision itself (that was
+        # already computed from the Gaussian model's expected_rr/confidence);
+        # neither is a canonical feature with an established required contract.
+        result["direction"] = str(trade_data.get("direction", ""))
+        result["candle_ts"] = trade_data.get("timestamp") or trade_data.get("candle_ts")
+        # Stable per-(symbol, candle_ts, regime, direction) ID — collisions only
+        # within the same decision context, which is the dedup level we want.
+        _id_seed = f"{symbol}|{result['candle_ts']}|{regime}|{session}|{result['direction']}"
+        result["alert_id"] = hashlib.sha1(_id_seed.encode("utf-8")).hexdigest()[:16]
 
         # ── Step 2: Scale ─────────────────────────────────────────────────────
         try:
@@ -659,10 +978,10 @@ class LiveEngine:
             _rr_layer = _get_rr_layer()
             if _rr_layer.is_loaded:
                 # Augment trade_data with Gaussian results for fusion formula.
-                # gaussian_score = Gaussian confidence (0-1 normalized).
+                # ema_momentum_kernel_score = Gaussian confidence (0-1 normalized).
                 # gaussian_p_win = max class probability from Gaussian model.
                 _aug = dict(trade_data)
-                _aug["gaussian_score"] = confidence
+                _aug["ema_momentum_kernel_score"] = confidence
                 _aug["gaussian_p_win"] = (
                     max(probabilities) if probabilities else 0.5
                 )
@@ -710,8 +1029,11 @@ class LiveEngine:
             return result
 
         # ── Step 7: Format message ────────────────────────────────────────────
+        # EPIC-84 KEPT: the trade decision (decision/reason/expected_rr/
+        # confidence) is already final by this point — time_decay only affects
+        # the displayed alert text below, not whether or what fires.
         time_decay = float(trade_data.get("time_decay_feature",
-                    math.exp(-0.05 * int(trade_data.get("candles_since_retest", 0)))))
+                    math.exp(-0.05 * int(trade_data.get("candles_since_sweep", 0)))))
 
         message = format_alert_message(
             symbol        = symbol,
@@ -747,6 +1069,16 @@ class LiveEngine:
 
         # ── Step 9: Audit log ─────────────────────────────────────────────────
         _log_alert(result)
+
+        # ── Step 10: Throttled training-trigger evaluation ────────────────────
+        # Cheap per-candle (counter increment); full disk-walk + Telegram only
+        # on every Nth call. Never raises.
+        _maybe_telegram_training_alert(
+            symbol     = symbol,
+            instrument = symbol,
+            bot_token  = self.config.bot_token,
+            chat_id    = self.config.chat_id,
+        )
         return result
 
     def dry_run(

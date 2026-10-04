@@ -18,12 +18,16 @@ ENGINE COMPLETENESS POLICY:
 import logging
 import math
 import os
-from engines.adapter_engine import TrapValidatorEngine
+import json as _json
+from pathlib import Path as _Path
+from typing import Optional
+from engines.trap_validator_engine import TrapValidatorEngine
 from engines.crt_engine import compute as crt_compute
-from engines.heuristic_gaussian_engine import HeuristicGaussianEngine
-from engines.ml_gaussian_engine import MLGaussianEngine
-from engines.zone_gate_engine import run_zone_gate_engine, _compute_soft_zone_score, compute_weighted_cluster_score
-from engines.rr_engine import RREngine
+from engines.ema_momentum_kernel import EmaMomentumKernel
+from engines.feature_cluster_similarity import _compute_soft_zone_score
+from engines.zone_cluster_score import score_zone_cluster
+from engines.candle_commitment import CandleCommitment
+from features.feature_schema import CANONICAL_FEATURES
 from core.fusion_engine import FusionEngine, GaussianAdapter
 from core.decision_engine import DecisionEngine
 from core.signal_audit import SignalAuditRecorder
@@ -32,10 +36,17 @@ from core.convergence_controller import ConvergenceController
 from core.collector import Collector
 from engines.live_engine import get_zone_gate
 from utils.logging_config import get_flow_logger
+from config_layer.strict_config import (
+    ConfigKeyMissingError,  # noqa: F401  (re-exported for callers/tests)
+    missing_keys,
+    missing_reason,
+    require,
+    require_all,
+)
 # RegimeGovernor = Step-6 signal-quality filter (canonical name).
 # UltronGovernor = backward-compat alias for the same class.
 # NOT the capital-protection layer — that is UltronRiskGate (ultron_risk_gate.py).
-from core.ultron_gate import UltronGovernor, RegimeGovernor  # noqa: F401  both exported for callers
+from core.regime_governor import UltronGovernor, RegimeGovernor  # noqa: F401  both exported for callers
 
 try:
     from config_layer.rr.rr_fusion import RRFusionLayer
@@ -46,7 +57,30 @@ except Exception as _rr_fusion_import_exc:  # pragma: no cover - defensive impor
 
 logger = get_flow_logger("ENGINE_RUNNER")
 
-EXPECTED_ENGINES = {"crt", "gaussian", "zone_gate", "rr"}
+EXPECTED_ENGINES = {"crt", "ema_momentum_kernel", "feature_cluster_similarity", "candle_commitment"}
+
+# M2 — curated enveloped telemetry streams (additive; observation-only; mirrors M1 idiom).
+_FEATURE_SNAPSHOT_LOG      = _Path("logs/feature_snapshots.jsonl")
+_REGIME_CLASSIFICATION_LOG = _Path("logs/regime_classifications.jsonl")
+
+
+def _emit_enveloped_jsonl(event_type_name: str, instrument: str, payload: dict, path: "_Path") -> None:
+    """M2 curated telemetry: append one canonical envelope to `path`. Observation only —
+    never gates a decision. Fail-open: any error (incl. absent event fabric) is swallowed
+    so the decision path is never disrupted."""
+    try:
+        from events.event_fabric import make_event_envelope, EventType  # noqa: PLC0415
+        env = make_event_envelope(
+            event_type = EventType[event_type_name].value,
+            instrument = instrument,
+            source     = "EngineRunner",
+            payload    = payload,
+        )
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(path, "a", encoding="utf-8") as fh:
+            fh.write(_json.dumps(env) + "\n")
+    except Exception:  # noqa: BLE001
+        pass
 
 # Default dual-engine thresholds (mirrors production config values)
 DUAL_ENGINE_DEFAULTS: dict = {
@@ -64,22 +98,51 @@ ENGINE_RUNNER_DEFAULTS: dict = {
     "model_path":               "model_export_format.json",
     "min_atr":                  0.0003,
     "allowed_sessions":         ["london", "new_york", "overlap"],
-    "bitnet_zone_threshold":    0.25,
-    "zone_registry_path":       "models/zone_registry.json",
-    "zone_gate_execution_mode": "normal",
-    "zone_mode":                "hard",
+    "feature_cluster_similarity_cluster_threshold":    0.25,
+    "feature_cluster_similarity_registry_path":       "models/zone_registry.json",
+    "feature_cluster_similarity_execution_mode": "normal",
+    "feature_cluster_similarity_mode":                "hard",
+    "feature_cluster_similarity_min_samples":         50,
+    "feature_cluster_similarity":                {"top_k": 3, "cluster_min_n": 2, "cluster_spread_max": 0.15},
     "debug_mode":               False,
-    "gaussian_impl":            "heuristic",
     "convergence_window":       500,
     "fusion_compare_evaluate":  True,
     "fusion_use_evaluate":      False,
     "dual_engine":              DUAL_ENGINE_DEFAULTS,
-    "rr_fusion":                {"enabled": False, "model_path": "", "threshold": 0.5},
+    "rr_fusion":                {"enabled": False, "model_path": "", "threshold": 0.5, "full_feature_vector": False},
+    # TEST FIXTURE ONLY — not a runtime authority. The runtime reads every fusion weight
+    # strictly via _cfg_require from the production config (see __init__, ~:384-387), which
+    # fails fast if a key is absent. These values only seed direct-construction tests and may
+    # differ from the active config (which is the sole source of truth). Locked by
+    # tests/test_fusion_weights_config_only.py.
     "fusion_engine": {
-        "weight_crt": 0.4, "weight_gaussian": 0.3,
-        "weight_zone_gate": 0.2, "weight_rr": 0.1,
+        "weight_crt": 0.4, "weight_ema_momentum_kernel": 0.3,
+        "weight_feature_cluster_similarity": 0.2, "weight_candle_commitment": 0.1,
     },
 }
+
+
+#: Every ``engine_runner`` config key EngineRunner itself reads (EPIC-84 STORY-84.2). Checked
+#: once, all together, at construction by ``require_all`` — one error lists every absent key.
+#: (Engine-owned keys such as min_atr / allowed_sessions are validated by their engines.)
+_ENGINE_RUNNER_REQUIRED_KEYS: tuple[str, ...] = (
+    "rr_fusion",
+    "convergence_window",
+    "fusion_engine",
+    "dual_engine",
+    "fusion_use_evaluate",
+    "fusion_compare_evaluate",
+    "feature_cluster_similarity_registry_path",
+    "feature_cluster_similarity_min_samples",
+    "feature_cluster_similarity",
+    "feature_cluster_similarity_cluster_threshold",
+    "feature_cluster_similarity_execution_mode",
+    "feature_cluster_similarity_mode",
+    "debug_mode",
+    "ultron_gate_enabled",
+    "signal_belief",
+    "cognitive_layer",
+)
 
 
 def _cfg_require(cfg: dict, key: str, section: str = "") -> object:
@@ -113,12 +176,17 @@ def _signed_direction(value: float) -> int:
 
 
 def detect_regime(features: dict, cfg: dict) -> str:
-    trend_strength = abs(_safe_float(features.get("ema_spread"), 0.0))
+    # NOTE (2026-07-31): local named `ema_spread_abs`, NOT `trend_strength_z` — this is abs(ema_spread),
+    # an unrelated regime-detection quantity distinct from the ontology's registered FM-064
+    # `trend_strength_z` (a rolling z-score of the ma_20 slope). The two shared a bare name before
+    # FM-064 was registered; renaming this local resolves that collision (zero behavior change —
+    # only the local variable's name differs, not its value or the threshold comparison below).
+    ema_spread_abs = abs(_safe_float(features.get("ema_spread"), 0.0))
     momentum = abs(_safe_float(features.get("momentum_score"), 0.0))
     volatility = _safe_float(features.get("volatility_ratio"), 1.0)
 
     if (
-        trend_strength >= _safe_float(_cfg_require(cfg, "trend_strength_threshold", "dual_engine"), 0.0)
+        ema_spread_abs >= _safe_float(_cfg_require(cfg, "trend_strength_threshold", "dual_engine"), 0.0)
         and momentum >= _safe_float(_cfg_require(cfg, "momentum_threshold", "dual_engine"), 0.0)
     ):
         return "trend"
@@ -257,48 +325,68 @@ def _regime_governor_legacy(regime: str, dual_results: dict, cfg: dict) -> dict:
 
 class EngineRunner:
 
-    @staticmethod
-    def _get_gaussian_engine(config: dict):
-        """
-        Instantiate the correct Gaussian engine based on GAUSSIAN_IMPL env var.
-
-        Priority: env var GAUSSIAN_IMPL > config["gaussian_impl"]
-        config["gaussian_impl"] is required (no default) — must be set in JSON.
-
-        Values:
-          "heuristic" → HeuristicGaussianEngine (EMA/momentum kernel)
-          "ml"        → MLGaussianEngine (GaussianNBModel, 32-dim)
-        """
-        cfg_impl = config.get("gaussian_impl", "heuristic") if isinstance(config, dict) else "heuristic"
-        impl = os.getenv("GAUSSIAN_IMPL", str(cfg_impl))
-        impl = impl.lower()
-
-        if impl == "ml":
-            logger.info("EngineRunner: using MLGaussianEngine (GAUSSIAN_IMPL=ml)")
-            return MLGaussianEngine(config)
-        else:
-            logger.info("EngineRunner: using HeuristicGaussianEngine (GAUSSIAN_IMPL=%s)", impl)
-            return HeuristicGaussianEngine(config)
-
     def __init__(self, config: dict):
         if not isinstance(config, dict):
             raise TypeError("EngineRunner requires a dict config. Got: %s" % type(config))
+        # EPIC-84 STORY-84.2: every engine_runner key is required up front — no literal defaults.
+        require_all(config, _ENGINE_RUNNER_REQUIRED_KEYS,
+                    section_name="engine_runner", consumer="EngineRunner")
         self.config = config
 
         self.adapter = TrapValidatorEngine(config)
-        self.gaussian = self._get_gaussian_engine(config)
-        self.rr = RREngine(config)
+        # Fusion slot is EmaMomentumKernel. The NB classifier is nb_outcome_classifier,
+        # not this slot. gaussian_shadow stays an attribute so callers can read it;
+        # the fixed slot never constructs a shadow engine.
+        self.gaussian = EmaMomentumKernel(config)
+        self.gaussian_shadow = None
+        self.rr = CandleCommitment(config)
+        # Contract B (trained rr_fusion): default inert / shadow-only.
+        # Only mutates the RR fusion slot when engine_runner.rr_fusion.enabled=true
+        # (authority: F-038 disabled on active config; do not re-enable without ΔG001).
         self.rr_fusion = None
         self._rr_fusion_enabled = False
 
         rr_fusion_cfg = _cfg_require(config, "rr_fusion", "engine_runner")
+        # F-038 Fix A (configurable): when true, feed rr_fusion the FULL canonical feature vector
+        # (via RRFusionLayer.score) instead of the 3-feature score_dict stub that starves the model
+        # (→ confidence≈1e-88 → 100% gaussian bypass). Required key (EPIC-84: no soft default).
+        self._rr_fusion_full_vector = bool(require(
+            rr_fusion_cfg, "full_feature_vector",
+            section_name="engine_runner.rr_fusion", consumer="EngineRunner",
+        ))
+        self._rr_resolved = None
         if bool(_cfg_require(rr_fusion_cfg, "enabled", "engine_runner.rr_fusion")):
             if RRFusionLayer is None:
                 logger.warning("EngineRunner: rr_fusion requested but import failed: %s", _RR_FUSION_IMPORT_ERROR)
             else:
                 try:
+                    # Phase 0: resolve identity/registry; load still uses HOW model_path
+                    # (registry active model_file may differ from rr_model.json alias — no silent swap).
+                    _rr_how = str(_cfg_require(rr_fusion_cfg, "model_path", "engine_runner.rr_fusion"))
+                    try:
+                        from config_layer.model_resolver import resolve_model as _resolve_model
+                        self._rr_resolved = _resolve_model(
+                            "rr",
+                            how_path=_rr_how,
+                            require_artifact=False,
+                            require_how_match=False,
+                            require_identity_parity=True,
+                        )
+                        if (
+                            self._rr_resolved.artifact_path is not None
+                            and self._rr_resolved.how_path is not None
+                            and self._rr_resolved.artifact_path != self._rr_resolved.how_path
+                        ):
+                            logger.warning(
+                                "EngineRunner: rr_fusion HOW path %s != registry artifact %s "
+                                "(loading HOW path; unify under ModelPaths later)",
+                                self._rr_resolved.how_path,
+                                self._rr_resolved.artifact_path,
+                            )
+                    except Exception as _res_exc:
+                        logger.warning("EngineRunner: rr resolve failed (non-fatal while enabled): %s", _res_exc)
                     self.rr_fusion = RRFusionLayer(
-                        model_path=str(_cfg_require(rr_fusion_cfg, "model_path", "engine_runner.rr_fusion")),
+                        model_path=_rr_how,
                         threshold=float(_cfg_require(rr_fusion_cfg, "threshold", "engine_runner.rr_fusion")),
                         enabled=True,
                     )
@@ -318,28 +406,17 @@ class EngineRunner:
         # uses a real scorer instead of a neutral 0.5 stub.
         self._gaussian_adapter = GaussianAdapter(self.gaussian)
 
-        # Convergence layer — injected into FusionEngine.compute()
+        # Convergence layer — injected into FusionEngine.compute().
+        # Config-first: stability/threshold BEHAVIORAL knobs read fail-fast from the
+        # convergence_controller section (window_size stays an engine_runner knob).
         convergence_window = int(_cfg_require(config, "convergence_window", "engine_runner"))
-        self._convergence = ConvergenceController(window_size=convergence_window)
+        self._convergence = ConvergenceController.from_prod_config(window_size=convergence_window)
 
         _fusion_cfg_dict = _cfg_require(config, "fusion_engine", "engine_runner")
         from core.fusion_engine import FusionConfig
-        _fusion_config = FusionConfig(
-            weight_crt=float(_cfg_require(_fusion_cfg_dict, "weight_crt", "fusion_engine")),
-            weight_gaussian=float(_cfg_require(_fusion_cfg_dict, "weight_gaussian", "fusion_engine")),
-            weight_zone_gate=float(_cfg_require(_fusion_cfg_dict, "weight_zone_gate", "fusion_engine")),
-            weight_rr=float(_cfg_require(_fusion_cfg_dict, "weight_rr", "fusion_engine")),
-            conflict_resolution_policy=str(_cfg_require(_fusion_cfg_dict, "conflict_resolution_policy", "fusion_engine")),
-            gaussian_weight=float(_cfg_require(_fusion_cfg_dict, "gaussian_weight", "fusion_engine")),
-            neural_weight=float(_cfg_require(_fusion_cfg_dict, "neural_weight", "fusion_engine")),
-            llm_weight=float(_cfg_require(_fusion_cfg_dict, "llm_weight", "fusion_engine")),
-            llm_lower_band=float(_cfg_require(_fusion_cfg_dict, "llm_lower_band", "fusion_engine")),
-            llm_upper_band=float(_cfg_require(_fusion_cfg_dict, "llm_upper_band", "fusion_engine")),
-            enable_llm=bool(_cfg_require(_fusion_cfg_dict, "enable_llm", "fusion_engine")),
-            tier_full=float(_cfg_require(_fusion_cfg_dict, "tier_full", "fusion_engine")),
-            tier_half=float(_cfg_require(_fusion_cfg_dict, "tier_half", "fusion_engine")),
-            tier_quarter=float(_cfg_require(_fusion_cfg_dict, "tier_quarter", "fusion_engine")),
-        )
+        # EPIC-84 STORY-84.2: one strict read of the whole fusion_engine section (all 18 keys,
+        # incl. weight_strategy_consensus + regime_fusion_weights, formerly dataclass defaults).
+        _fusion_config = FusionConfig.from_section(_fusion_cfg_dict)
         self.fusion = FusionEngine(
             gaussian_adapter=self._gaussian_adapter,
             convergence_controller=self._convergence,
@@ -349,24 +426,97 @@ class EngineRunner:
         self.decision = DecisionEngine(config)
         self.collector = Collector()
 
+        from config_layer.production_config import PROD_VERSION as _pv
+        logger.info("Production config version: %s", _pv)
+
         dual_cfg = _cfg_require(config, "dual_engine", "engine_runner")
         self.dual_cfg = dual_cfg  # no fallback — all keys must be in JSON
 
         self._fusion_use_evaluate = bool(_cfg_require(config, "fusion_use_evaluate", "engine_runner"))
         self._fusion_compare_evaluate = bool(_cfg_require(config, "fusion_compare_evaluate", "engine_runner"))
 
-        # BitNet zone gate — lazy-loaded singleton; fail-open if registry missing
-        zone_registry_path = str(_cfg_require(config, "zone_registry_path", "engine_runner"))
-        self._zone_gate = get_zone_gate(zone_registry_path)
+        # BitNet zone gate — path derived via ModelResolver (Phase 0):
+        # registry active.model_file + ModelPaths layout + WHO identity parity;
+        # HOW feature_cluster_similarity_registry_path must match the resolved artifact (fail-closed).
+        # feature_cluster_similarity BEHAVIORAL knobs (top_k / cluster_min_n / cluster_spread_max) are
+        # read fail-fast from the nested engine_runner.feature_cluster_similarity section (§6.5 A1 rule).
+        feature_cluster_similarity_registry_path = str(_cfg_require(config, "feature_cluster_similarity_registry_path", "engine_runner"))
+        from config_layer.model_resolver import resolve_zone_gate_runtime
+        self._zone_resolved = resolve_zone_gate_runtime(how_path=feature_cluster_similarity_registry_path)
+        feature_cluster_similarity_registry_path = str(self._zone_resolved.require_artifact())
+        _feature_cluster_similarity_min_samples  = int(_cfg_require(config, "feature_cluster_similarity_min_samples", "engine_runner"))
+        _zone_gate_cfg     = _cfg_require(config, "feature_cluster_similarity", "engine_runner")
+        _zone_top_k        = int(_cfg_require(_zone_gate_cfg, "top_k", "engine_runner.feature_cluster_similarity"))
+        self._zone_gate = get_zone_gate(
+            feature_cluster_similarity_registry_path, min_samples=_feature_cluster_similarity_min_samples, top_n=_zone_top_k,
+        )
+
+        # [IC-007 / PLAN-002] engines-path CRT component weights (sweep, breakout, retest, time).
+        # HOW-owned via the crt_engine section (unhashed defaults layer); strict read — a missing
+        # key is an error (§6.5 no-silent-defaults). DISTINCT identity from CRTConfig.
+        # risk_score_weights (RiskScore.final) and conf_weights — never alias.
+        from config_layer.production_config import get_prod_section as _get_prod_section
+        _crt_sec = _get_prod_section("crt_engine")
+        if "score_component_weights" not in _crt_sec:
+            raise KeyError(
+                "crt_engine.score_component_weights missing from production config "
+                "(PLAN-002 strict HOW key — no silent CODE default in production)"
+            )
+        _scw = _crt_sec["score_component_weights"]
+        if not isinstance(_scw, (list, tuple)) or len(_scw) != 4 or any(
+            isinstance(c, bool) or not isinstance(c, (int, float))
+            or not math.isfinite(float(c)) or float(c) < 0.0
+            for c in _scw
+        ):
+            raise ValueError(
+                f"crt_engine.score_component_weights must be 4 finite non-negative reals, got {_scw!r}"
+            )
+        self._score_component_weights = tuple(float(c) for c in _scw)
 
         # Observability + adaptive control
         debug_mode = bool(_cfg_require(config, "debug_mode", "engine_runner"))
-        self._audit      = SignalAuditRecorder(debug_mode=debug_mode)
-        self._acceptance = AcceptanceController(config)
+        # Config-first: the three leak-detection thresholds read fail-fast from the
+        # signal_audit section (§6.5 A1); debug_mode stays engine_runner-scoped.
+        self._audit      = SignalAuditRecorder.from_prod_config(debug_mode=debug_mode)
+        # Config-first: theta bounds / min-history / fusion-percentile read fail-fast from the
+        # acceptance_controller section (merged into the base engine config).
+        self._acceptance = AcceptanceController.from_prod_config(config)
         # RegimeGovernor = Step-6 signal-quality filter (canonical name; class is UltronGovernor).
         # ultron_gate_enabled controls RegimeGovernor, NOT UltronRiskGate (capital protection layer).
-        self._regime_governor = RegimeGovernor()
+        # Config-first: BEHAVIORAL knobs read fail-fast from the regime_governor section.
+        self._regime_governor = RegimeGovernor.from_prod_config()
         self._regime_governor_enabled = bool(_cfg_require(config, "ultron_gate_enabled", "engine_runner"))
+
+        # SignalBeliefTracker gate — accumulates post-fusion conviction over consecutive candles.
+        # Registry injected by BacktestRunner/LiveRunner — EngineRunner reads only, never owns.
+        _belief_cfg = config["signal_belief"]
+        self._belief_enabled = bool(require(
+            _belief_cfg, "enabled",
+            section_name="engine_runner.signal_belief", consumer="EngineRunner",
+        ))
+
+        # ── Cognitive Bus (async, advisory only — steps 8-10) ─────────────────
+        # Runs in a background daemon thread. NEVER blocks the execution path.
+        # Cognitive output is written to logs/cognitive_telemetry.jsonl only.
+        # The "cognitive" key is NOT in the run() return dict.
+        self._cognitive_bus: Optional["CognitiveBus"] = None
+        # M2 — last emitted regime, for on-change REGIME_CLASSIFICATION telemetry.
+        self._last_regime: Optional[str] = None
+        _cognitive_cfg = config["cognitive_layer"]
+        if bool(require(
+            _cognitive_cfg, "enabled",
+            section_name="engine_runner.cognitive_layer", consumer="EngineRunner",
+        )):
+            try:
+                from cognitive.cognitive_bus import CognitiveBus as _CognitiveBus  # noqa
+                self._cognitive_bus = _CognitiveBus(config)
+                self._cognitive_bus.start()
+                logger.info("EngineRunner: CognitiveBus started")
+            except Exception as _cbus_exc:
+                logger.warning(
+                    "EngineRunner: CognitiveBus init failed (non-blocking): %s",
+                    _cbus_exc,
+                )
 
     def _reject(
         self,
@@ -385,8 +535,8 @@ class EngineRunner:
             if r.startswith("adapter_") or r.startswith("data_integrity") or r.startswith("missing_fields") \
                or r.startswith("invalid_session") or r.startswith("low_atr") or r.startswith("non_positive_atr"):
                 return "adapter"
-            if r.startswith("zone_gate"):
-                return "zone_gate"
+            if r.startswith("feature_cluster_similarity"):
+                return "feature_cluster_similarity"
             if r.startswith("ultron_gate"):
                 return "ultron"
             if r.startswith("incomplete_engine_execution") or r.startswith("fusion_missing_engines") \
@@ -431,12 +581,12 @@ class EngineRunner:
         fusion result unless config["use_weighted_vote"] is True.
         Weights are read from FusionConfig so they stay in sync with compute().
         """
-        cfg = getattr(self.fusion, "cfg", None)
+        cfg = self.fusion.cfg  # FusionConfig — every weight is a required field (EPIC-84)
         weights = {
-            "crt": _safe_float(getattr(cfg, "weight_crt", 0.30), 0.30),
-            "gaussian": _safe_float(getattr(cfg, "weight_gaussian", 0.25), 0.25),
-            "zone_gate": _safe_float(getattr(cfg, "weight_zone_gate", 0.25), 0.25),
-            "rr": _safe_float(getattr(cfg, "weight_rr", 0.20), 0.20),
+            "crt": float(cfg.weight_crt),
+            "ema_momentum_kernel": float(cfg.weight_ema_momentum_kernel),
+            "feature_cluster_similarity": float(cfg.weight_feature_cluster_similarity),
+            "candle_commitment": float(cfg.weight_candle_commitment),
         }
         total = 0.0
         for name, w in weights.items():
@@ -498,9 +648,13 @@ class EngineRunner:
         
         zonegate_input = {**input_data, **(context or {})}
 
-        _zone_threshold = float(_cfg_require(self.config, "bitnet_zone_threshold", "engine_runner"))
-        _exec_mode = str(_cfg_require(self.config, "zone_gate_execution_mode", "engine_runner"))
+        _zone_threshold = float(_cfg_require(self.config, "feature_cluster_similarity_cluster_threshold", "engine_runner"))
+        _exec_mode = str(_cfg_require(self.config, "feature_cluster_similarity_execution_mode", "engine_runner"))
         _debug_mode = bool(_cfg_require(self.config, "debug_mode", "engine_runner"))
+        # feature_cluster_similarity cluster-aggregation knobs (fail-fast nested read — §6.5 A1 rule)
+        _zone_gate_cfg = _cfg_require(self.config, "feature_cluster_similarity", "engine_runner")
+        _cluster_min_n = int(_cfg_require(_zone_gate_cfg, "cluster_min_n", "engine_runner.feature_cluster_similarity"))
+        _cluster_spread_max = float(_cfg_require(_zone_gate_cfg, "cluster_spread_max", "engine_runner.feature_cluster_similarity"))
         _zone_debug_config = {
             "zones_loaded_count": len(getattr(self._zone_gate, "_zones", []) or []),
             "inside_zone":        False,
@@ -509,29 +663,24 @@ class EngineRunner:
             "distance_to_nearest":zonegate_input.get("zone_distance"),
         } if _debug_mode else None
 
-        def _zone_model_fn(vector: list) -> float:
-            """Score via BitNetZoneGate using weighted cluster score (top-3 zones).
-            Returns 0.5 on any error (neutral, non-blocking)."""
-            try:
-                result = self._zone_gate.check(vector)
-                top_scores = result.get("top_scores")
-                if top_scores and len(top_scores) >= 2:
-                    return compute_weighted_cluster_score(top_scores)
-                return float(result.get("score", 0.5))
-            except Exception as _e:
-                logger.debug(f"ZoneGate scoring fallback (0.5): {_e}")
-                return 0.5
-
-        zone_raw = run_zone_gate_engine(
-            raw_features=zonegate_input,
-            model_fn=_zone_model_fn,
-            threshold=_zone_threshold,
+        # Hard-path cluster score — shared helper (HistoricalZoneMapper parity).
+        # Soft mode still applied below as a score-only override.
+        _zone_scored = score_zone_cluster(
+            zonegate_input,
+            self._zone_gate,
+            feature_cluster_similarity_cluster_threshold=_zone_threshold,
+            cluster_min_n=_cluster_min_n,
+            cluster_spread_max=_cluster_spread_max,
             execution_mode=_exec_mode,
             zone_debug_config=_zone_debug_config,
         )
+        zone_raw = dict(_zone_scored.get("meta") or {})
+        if "score" not in zone_raw:
+            zone_raw["score"] = _zone_scored["score"]
+            zone_raw["passed"] = _zone_scored["passed"]
 
         # Soft zone scoring (optional override of score only — pass/fail still from hard gate)
-        _zone_mode = str(_cfg_require(self.config, "zone_mode", "engine_runner"))
+        _zone_mode = str(_cfg_require(self.config, "feature_cluster_similarity_mode", "engine_runner"))
         if _zone_mode == "soft":
             soft_score = _compute_soft_zone_score(zonegate_input)
             zone_raw = {**zone_raw, "score": soft_score}
@@ -540,34 +689,96 @@ class EngineRunner:
         self._audit.record_zone(zone_raw)
 
         zone_result = {
-            "engine": "zone_gate",
+            "engine": "feature_cluster_similarity",
             "score": float(zone_raw.get("score", 0.0)),
             "direction": 1 if zone_raw.get("passed") else 0,
             "meta": zone_raw,
         }
-        crt_result = crt_compute(trade_id="Test:", features=input_data, context={})
-        gaussian_result = self.gaussian.compute(input_data)
+        # [IC-007 / PLAN-002] inject the HOW-owned engines-path weights (previously context={}
+        # meant the CODE default tuple in engines.crt_engine always won — the dual-path gap).
+        crt_result = crt_compute(
+            trade_id="Test:", features=input_data,
+            context={"score_component_weights": self._score_component_weights},
+        )
+        # Extract CRT-determined direction so the gaussian engine can apply
+        # feature mirroring for short trades (MLGaussianEngine / direction-aware path).
+        # input_data["direction"] is an int (1=LONG, -1=SHORT) set by backtest_v2.py
+        # lines 1639-1641 before calling engine_runner.run().
+        # EPIC-84 STORY-84.2: direction is a per-trade value. It no longer falls back to
+        # "long" when absent/unusable — the candle is REJECTED with a named reason and the
+        # engine keeps running (``signal_dir`` remains the accepted alias).
+        _dir_key = "direction" if "direction" in input_data else "signal_dir"
+        if not missing_keys(input_data, (_dir_key,)):
+            try:
+                _dir_raw = int(input_data[_dir_key])
+            except (TypeError, ValueError):
+                _dir_raw = 0
+        else:
+            _dir_raw = None
+        if not _dir_raw:
+            reason = (
+                missing_reason("input_data", ["direction"]) if _dir_raw is None
+                else "input_data_invalid_direction"
+            )
+            self._audit.finalize("REJECT", reason)
+            self._audit.flush()
+            return self._reject(
+                reason,
+                input_data=input_data,
+                actual_pnl=actual_pnl,
+                adapter_result=adapter_result,
+            )
+        _gauss_dir = "short" if _dir_raw < 0 else "long"
+        gaussian_result = self.gaussian.compute(input_data, direction=_gauss_dir)
+
+        # Shadow ML comparison (shadow_ml mode only).
+        # Heuristic score already in gaussian_result["score"] → enters fusion unchanged.
+        # ML score attached under ["shadow"] → logged to engines_raw, never in fusion.
+        if self.gaussian_shadow is not None:
+            try:
+                _sh = self.gaussian_shadow.compute(input_data, direction=_gauss_dir)
+                gaussian_result["shadow"] = {
+                    "score":     _sh["score"],
+                    "reason":    _sh.get("reason", "shadow_ml"),
+                    "meta":      _sh.get("meta", {}),
+                    "delta":     round(_sh["score"] - gaussian_result["score"], 4),
+                    "agreement": bool((_sh["score"] >= 0.5) == (gaussian_result["score"] >= 0.5)),
+                }
+            except Exception as _se:
+                logger.debug("EngineRunner: shadow gaussian compute failed — %s", _se)
+
         rr_result = self.rr.compute(input_data)
         base_rr_score = _safe_float(rr_result.get("score"), 0.0)
 
-        # Optional RR enhancement layer: after RREngine, before FusionEngine.
+        # Optional RR enhancement layer: after CandleCommitment, before FusionEngine.
         if self.rr_fusion and self.rr_fusion.is_loaded:
             try:
-                rr_fusion_result = self.rr_fusion.score_dict(
-                    depth=_safe_float(input_data.get("retest_depth"), 0.0),
-                    body=_safe_float(input_data.get("body_ratio"), 0.0),
-                    disp=_safe_float(input_data.get("disp_strength"), 0.0),
-                    gaussian_score=_safe_float(gaussian_result.get("score"), 0.5),
-                    gaussian_p_win=_safe_float(gaussian_result.get("score"), 0.5),
-                    is_asia=_safe_float(input_data.get("is_asia"), 0.0),
-                    is_london=_safe_float(input_data.get("is_london"), 0.0),
-                    is_newyork=_safe_float(input_data.get("is_newyork"), 0.0),
-                    hour=int(_safe_float(input_data.get("hour"), _safe_float((context or {}).get("hour"), 0.0))),
-                    threshold=float(_cfg_require(
-                        _cfg_require(self.config, "rr_fusion", "engine_runner"),
-                        "threshold", "engine_runner.rr_fusion"
-                    )),
-                )
+                _rr_thr = float(_cfg_require(
+                    _cfg_require(self.config, "rr_fusion", "engine_runner"),
+                    "threshold", "engine_runner.rr_fusion"
+                ))
+                if self._rr_fusion_full_vector:
+                    # F-038 Fix A: feed the FULL canonical vector so the model evaluates real inputs
+                    # (RRFusionLayer.score → build_feature_vector → predict), instead of the 3-feature
+                    # score_dict stub that forces a ~100% low-confidence gaussian bypass.
+                    _g = _safe_float(gaussian_result.get("score"), 0.5)
+                    _rr_trade = {k: _safe_float(input_data.get(k), 0.0) for k in CANONICAL_FEATURES}
+                    _rr_trade["ema_momentum_kernel_score"] = _g
+                    _rr_trade["gaussian_p_win"] = _g
+                    rr_fusion_result = self.rr_fusion.score(_rr_trade, threshold=_rr_thr)
+                else:
+                    rr_fusion_result = self.rr_fusion.score_dict(
+                        depth=_safe_float(input_data.get("retest_depth"), 0.0),
+                        body=_safe_float(input_data.get("body_ratio"), 0.0),
+                        disp=_safe_float(input_data.get("disp_strength"), 0.0),
+                        ema_momentum_kernel_score=_safe_float(gaussian_result.get("score"), 0.5),
+                        gaussian_p_win=_safe_float(gaussian_result.get("score"), 0.5),
+                        is_asia=_safe_float(input_data.get("is_asia"), 0.0),
+                        is_london=_safe_float(input_data.get("is_london"), 0.0),
+                        is_newyork=_safe_float(input_data.get("is_newyork"), 0.0),
+                        hour=int(_safe_float(input_data.get("hour"), _safe_float((context or {}).get("hour"), 0.0))),
+                        threshold=_rr_thr,
+                    )
                 fused_rr_score = float(rr_fusion_result.get("final_score", rr_result.get("score", 0.0)))
                 if not math.isfinite(fused_rr_score):
                     raise ValueError("rr_fusion produced non-finite final_score")
@@ -587,10 +798,23 @@ class EngineRunner:
 
         engine_results = {
             "crt": crt_result,
-            "gaussian": gaussian_result,
-            "zone_gate": zone_result,
-            "rr": rr_result,
+            "ema_momentum_kernel": gaussian_result,
+            "feature_cluster_similarity": zone_result,
+            "candle_commitment": rr_result,
         }
+
+        # 5th engine — StrategyOrchestrator consensus (injected via context dict).
+        # live_engine_hook calls StrategyOrchestrator BEFORE EngineRunner and injects
+        # the consensus score under context["strategy_consensus_score"].
+        # FusionEngine picks it up only when FusionConfig.weight_strategy_consensus > 0.
+        _consensus_score = _safe_float(
+            (context or {}).get("strategy_consensus_score"), -1.0
+        )
+        if _consensus_score >= 0.0:
+            engine_results["strategy_consensus"] = {
+                "score": max(0.0, min(1.0, _consensus_score)),
+                "direction": int((context or {}).get("strategy_consensus_direction", 0)),
+            }
 
         # Audit: record all engine scores
         self._audit.record_engines(engine_results)
@@ -613,7 +837,21 @@ class EngineRunner:
         # ------------------------------------------------------------------ #
         # Step 4: Fusion                                                      #
         # ------------------------------------------------------------------ #
-        fusion_result = self.fusion.compute(engine_results)
+        # Detect regime up-front so fusion weights can adapt to it. Same value
+        # is reused at Step 6 by RegimeGovernor — avoids a second computation.
+        current_regime = detect_regime(input_data, self.dual_cfg)
+        # M2 — emit REGIME_CLASSIFICATION on change only (regime is a deterministic
+        # function of features and stable across many bars; per-bar emission would be
+        # noise). Observation-only; does not feed fusion.
+        if current_regime != self._last_regime:
+            _emit_enveloped_jsonl(
+                "REGIME_CLASSIFICATION",
+                str(input_data.get("instrument", "")),
+                {"regime": current_regime, "prev_regime": self._last_regime},
+                _REGIME_CLASSIFICATION_LOG,
+            )
+            self._last_regime = current_regime
+        fusion_result = self.fusion.compute(engine_results, regime=current_regime)
         use_evaluate = bool(getattr(self, "_fusion_use_evaluate", False))
         compare_evaluate = bool(getattr(self, "_fusion_compare_evaluate", False))
         if use_evaluate or compare_evaluate:
@@ -679,12 +917,41 @@ class EngineRunner:
             )
 
         # ------------------------------------------------------------------ #
+        # Step 5b: Belief gate — temporal conviction accumulator              #
+        # Accumulates post-fusion score over consecutive same-direction        #
+        # candles before allowing DecisionEngine to proceed.                  #
+        # Gate: abs(belief) >= HIGH_CONVICTION OR confirm_count >= MIN_CONFS  #
+        # Registry injected by BacktestRunner/LiveRunner — never owned here.  #
+        # ------------------------------------------------------------------ #
+        _belief_registry = context.get("belief_registry")
+        _fusion_dir = int(context.get("strategy_consensus_direction", 0))
+        if _belief_registry is not None and self._belief_enabled:
+            _instrument   = str(context.get("instrument", "UNKNOWN"))
+            _timeframe    = str(context.get("timeframe", "M15"))
+            _tracker      = _belief_registry.get(_instrument, _timeframe)
+            _belief_state = _tracker.update(final_score, _fusion_dir)
+            logger.debug(
+                "BELIEF_GATE: instrument=%s tf=%s belief=%.4f direction=%d "
+                "confirm_count=%d approved=%s reason=%s",
+                _instrument, _timeframe, _belief_state.belief, _fusion_dir,
+                _belief_state.confirm_count, _belief_state.approved, _belief_state.reason,
+            )
+            if not _belief_state.approved:
+                return {
+                    "decision":      "HOLD",
+                    "stage":         "BELIEF_GATE",
+                    "reason":        _belief_state.reason,
+                    "belief":        round(_belief_state.belief, 4),
+                    "confirm_count": _belief_state.confirm_count,
+                }
+
+        # ------------------------------------------------------------------ #
         # Step 6: Dual-engine regime gate (RegimeGovernor)                    #
         # Controlled by engine_runner.ultron_gate_enabled in production JSON. #
         # false → training/backtest path (no quota or percentile filtering).  #
         # true  → live trading path (full RegimeGovernor active).             #
         # ------------------------------------------------------------------ #
-        regime = detect_regime(input_data, self.dual_cfg)
+        regime = current_regime  # already computed before Step 4 fusion
         dual_results = {
             "breakout": breakout_engine(input_data, self.dual_cfg),
             "trap":     trap_engine(input_data, self.dual_cfg),
@@ -745,19 +1012,28 @@ class EngineRunner:
         # ------------------------------------------------------------------ #
         selected = gate_result.get("selected", {})
         p_win = _safe_float(
-            engine_results.get("gaussian", {}).get("score"), 0.5
+            engine_results.get("ema_momentum_kernel", {}).get("score"), 0.5
         )
         zone_gate_ctx = {
             "valid": bool(zone_result.get("passed", False)),
             "score": _safe_float(zone_result.get("score"), 0.0),
         }
-        fusion_ctx = {
-            # DecisionEngine expects a true RR ratio (e.g. >= 1.2),
-            # not the normalized RR score used by fusion averaging.
-            "rr": _safe_float(
-                engine_results.get("rr", {}).get("rr_ratio"),
-                _safe_float(engine_results.get("rr", {}).get("score"), 0.0),
+        # F-048 RESOLVED 2026-07-24 — RR ownership split, DecisionEngine is semantic-only:
+        #   A — CandleCommitment polarity score feeds FusionEngine averaging (weight_candle_commitment), upstream of here.
+        #   C — DecisionEngine has NO economic RR gate anymore, so it reads no rr/rr_semantic here.
+        #   D — True RR is enforced by UltronRiskGate after SL/TP (live_engine_hook).
+        #   B — rr_fusion stays off unless explicitly enabled (shadow/inert by default).
+        # candle_polarity retained on the ctx for the collector audit record ONLY (non-decision);
+        # the former "rr"/"rr_semantic" shim keys are gone — nothing consumes them now.
+        _polarity = _safe_float(
+            engine_results.get("candle_commitment", {}).get("candle_polarity"),
+            _safe_float(
+                engine_results.get("candle_commitment", {}).get("rr_ratio"),
+                _safe_float(engine_results.get("candle_commitment", {}).get("score"), 0.0),
             ),
+        )
+        fusion_ctx = {
+            "candle_polarity": _polarity,   # audit only — not read by DecisionEngine
             "weak_component": max(
                 0.0,
                 1.0 - _safe_float(fusion_result.get("final_score"), 0.0),
@@ -766,12 +1042,12 @@ class EngineRunner:
 
         # Inject adaptive thresholds into config — DecisionEngine reads from config
         adaptive_thresholds = self._acceptance.get_thresholds()
-        effective_config = {**(self.config or {}), **adaptive_thresholds}
+        effective_config = {**self.config, **adaptive_thresholds}
 
         decision_result = self.decision.evaluate(
             score=final_score,
             p_win=p_win,
-            zone_gate=zone_gate_ctx,
+            feature_cluster_similarity=zone_gate_ctx,
             fusion=fusion_ctx,
             config=effective_config,
         )
@@ -823,5 +1099,67 @@ class EngineRunner:
             reason=str(decision_result.get("reason", "")),
         )
         self._audit.flush()
+
+        # M2 — FEATURE_SNAPSHOT on decision bars (one per scored decision; same cadence
+        # as DECISION_SNAPSHOT below). Curated, not per-bar: this point is reached only
+        # after fusion + decision, so the feature vector is complete and was scored.
+        # Observation-only; never feeds a decision.
+        _emit_enveloped_jsonl(
+            "FEATURE_SNAPSHOT",
+            str(input_data.get("instrument", "")),
+            {
+                "decision": str(decision_result.get("decision", "")),
+                "regime":   current_regime,
+                "features": dict(input_data),
+            },
+            _FEATURE_SNAPSHOT_LOG,
+        )
+
+        # ── Fire-and-forget: emit decision snapshot to async CognitiveBus ─────
+        # Executes AFTER all decision logic is complete. Non-blocking.
+        # Drops silently on queue full. cognitive key is NOT in return dict.
+        if getattr(self, "_cognitive_bus", None) is not None:
+            try:
+                import uuid as _uuid  # noqa
+                import time as _t      # noqa
+                from cognitive.cognitive_bus import DecisionSnapshot as _DS  # noqa
+                from events.event_fabric import make_event_envelope, EventType  # noqa
+                _did = _uuid.uuid4().hex[:8]
+                _env = make_event_envelope(
+                    event_type = EventType.DECISION_SNAPSHOT,
+                    instrument = str(input_data.get("instrument", "")),
+                    source     = "EngineRunner",
+                    payload    = {
+                        "decision_id": _did,
+                        "decision":    str(decision_result.get("decision", "")),
+                        "score":       round(float(decision_result.get("final_score", 0.0)), 4),
+                        "cluster_id":  int(
+                            engine_results.get("feature_cluster_similarity", {}).get("cluster_id", -1)
+                            if isinstance(engine_results.get("feature_cluster_similarity"), dict) else -1
+                        ),
+                    },
+                )
+                _zone_r = engine_results.get("feature_cluster_similarity") or {}
+                _gauss_r = engine_results.get("ema_momentum_kernel") or {}
+                _rr_r   = engine_results.get("candle_commitment") or {}
+                self._cognitive_bus.emit(_DS(
+                    decision_id     = _did,
+                    event_id        = _env["event_id"],
+                    generation      = _env["generation"],
+                    timestamp       = _env["timestamp"],
+                    instrument      = str(input_data.get("instrument", "")),
+                    schema_hash     = _env["schema_hash"],
+                    features        = dict(input_data),
+                    zone_result     = dict(_zone_r) if isinstance(_zone_r, dict) else {},
+                    gaussian_result = dict(_gauss_r) if isinstance(_gauss_r, dict) else {},
+                    rr_result       = dict(_rr_r)   if isinstance(_rr_r, dict) else {},
+                    fusion_result   = dict(fusion_result) if isinstance(fusion_result, dict) else {},
+                    decision        = str(decision_result.get("decision", "")),
+                    cluster_id      = int(
+                        _zone_r.get("cluster_id", -1) if isinstance(_zone_r, dict) else -1
+                    ),
+                ))
+            except Exception:
+                pass  # cognitive bus emit never blocks or raises
 
         return decision_result

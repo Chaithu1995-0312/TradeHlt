@@ -1,0 +1,32 @@
+{
+  "change_id": "CH-physical-storage-architecture-assess",
+  "date_utc": "2026-08-23",
+  "objective": "Record user assessment of Phase 3: PROPOSED, Admissibility PASS against both frozen contracts, freeze awaiting acceptance (not CLOSED). Make the three object classes explicit (A declaration, B identity record, C binding). Name the next review as Phase 4 Identity Check without recompute paths. Do not implement writers. Do not reopen identity or preservation.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY"
+  ],
+  "change_class_rationale": "Status stamp and class naming on an existing architecture spec plus navigation. No Closure Index CLOSED claim. No src/configs/scripts/tests/models edit.",
+  "affected_files": [
+    "docs/governance/PHYSICAL_STORAGE_ARCHITECTURE.md",
+    "docs/governance/STORAGE_PRESERVATION_CONTRACT.md",
+    "docs/governance/CANONICAL_LAYER_IDENTITY_CONTRACT.md",
+    "docs/governance/build_manifests/CH-physical-storage-architecture-assess.impact.json",
+    "docs/knowledge-map.md",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/test_closure_authority_index.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert the PROPOSED/PASS stamp, Class A/B/C naming, and knowledge-map wording. Architecture spec remains. Identity and preservation stay CLOSED.",
+  "authority_granted": "User 2026-08-23: architecture does not violate the frozen contracts; classify Phase 3 as PROPOSED / Admissibility PASS / awaiting acceptance. Next question is Phase 4 Identity Check without recompute. No Phase 4 implementation.",
+  "authority_NOT_granted": "No CLOSED freeze, no writers, readers, migrations, replay, G001, promotion, Semantic OS id, F-id, and no reopen of identity or preservation.",
+  "production_behavior_changed": "NO"
+}

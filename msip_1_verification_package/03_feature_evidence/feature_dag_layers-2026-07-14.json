@@ -1,0 +1,732 @@
+{
+  "probe": "feature_dag_layers",
+  "generated_at": "2026-07-14T06:37:27.083563+00:00",
+  "authority": "research/governance only \u2014 structural DAG + semantic layering for bottom-up certification order. No feature math. Grants no authority (\u00a76.5).",
+  "layer_names": {
+    "-1": "RAW_INPUT",
+    "0": "L0_candle_primitive",
+    "1": "L1_rolling_indicator",
+    "2": "L2_direct_derived",
+    "3": "L3_structural_event",
+    "4": "L4_composite_context",
+    "5": "L5_temporal_market_reality",
+    "6": "L6_model_threshold_decision"
+  },
+  "n_nodes": 48,
+  "n_canonical_covered": 38,
+  "missing_canonical": [],
+  "undefined_dependency_nodes": [],
+  "is_dag": true,
+  "cycle_nodes": [],
+  "ungrounded_nodes": [],
+  "layer_monotonicity_violations": [],
+  "layer_histogram": {
+    "RAW_INPUT": 6,
+    "L0_candle_primitive": 6,
+    "L1_rolling_indicator": 8,
+    "L2_direct_derived": 13,
+    "L3_structural_event": 10,
+    "L4_composite_context": 5
+  },
+  "topological_order": [
+    "close",
+    "ema_fast",
+    "ema_slow",
+    "high",
+    "low",
+    "macd_line",
+    "macd_signal",
+    "macd_hist",
+    "open",
+    "body_size",
+    "displacement_retrace",
+    "lower_wick",
+    "rsi_14",
+    "swing_high",
+    "higher_high",
+    "swing_low",
+    "break_of_structure",
+    "liquidity_sweep",
+    "candles_since_retest",
+    "double_sweep",
+    "lower_low",
+    "sweep_detected",
+    "timestamp",
+    "hour_of_day",
+    "session",
+    "trend_bias",
+    "trend_strength",
+    "true_range",
+    "atr",
+    "disp_strength",
+    "disp_strength_atr_rescale",
+    "ema_spread",
+    "ema_spread_atr",
+    "liquidity_distance",
+    "liquidity_pressure_score",
+    "momentum_score",
+    "momentum_score_atr",
+    "retest_depth",
+    "upper_wick",
+    "total_wick",
+    "volatility_regime",
+    "volume",
+    "volume_ratio",
+    "volume_spike",
+    "wick_size",
+    "body_ratio",
+    "displacement_atr_ratio",
+    "volatility_ratio"
+  ],
+  "ontology_crosscheck": [
+    {
+      "feature": "retest_depth",
+      "ontology_only": [],
+      "dag_only": [
+        "liquidity_sweep"
+      ]
+    },
+    {
+      "feature": "momentum_score",
+      "ontology_only": [
+        "close_delta"
+      ],
+      "dag_only": [
+        "close"
+      ]
+    },
+    {
+      "feature": "liquidity_distance",
+      "ontology_only": [
+        "bos_level",
+        "ref_high",
+        "ref_low"
+      ],
+      "dag_only": [
+        "break_of_structure",
+        "swing_high",
+        "swing_low"
+      ]
+    },
+    {
+      "feature": "displacement_retrace",
+      "ontology_only": [
+        "disp_close",
+        "disp_open",
+        "retest_close"
+      ],
+      "dag_only": [
+        "close",
+        "open"
+      ]
+    }
+  ],
+  "bugfixes_applied": {
+    "disp_strength_body_size_close_edge": true,
+    "double_sweep_single_entry": true
+  },
+  "nodes": [
+    {
+      "name": "atr",
+      "layer": 1,
+      "layer_name": "L1_rolling_indicator",
+      "topo_index": 28,
+      "deps": [
+        "true_range"
+      ],
+      "formula_id": "FM-041",
+      "in_canonical_vector": true,
+      "canonical_index": 13
+    },
+    {
+      "name": "body_ratio",
+      "layer": 2,
+      "layer_name": "L2_direct_derived",
+      "topo_index": 45,
+      "deps": [
+        "body_size",
+        "wick_size"
+      ],
+      "formula_id": "FM-010",
+      "in_canonical_vector": true,
+      "canonical_index": 28
+    },
+    {
+      "name": "body_size",
+      "layer": 0,
+      "layer_name": "L0_candle_primitive",
+      "topo_index": 9,
+      "deps": [
+        "close",
+        "open"
+      ],
+      "formula_id": "FM-001",
+      "in_canonical_vector": true,
+      "canonical_index": 26
+    },
+    {
+      "name": "break_of_structure",
+      "layer": 3,
+      "layer_name": "L3_structural_event",
+      "topo_index": 16,
+      "deps": [
+        "swing_high",
+        "swing_low"
+      ],
+      "formula_id": null,
+      "in_canonical_vector": true,
+      "canonical_index": 21
+    },
+    {
+      "name": "candles_since_retest",
+      "layer": 3,
+      "layer_name": "L3_structural_event",
+      "topo_index": 18,
+      "deps": [
+        "liquidity_sweep"
+      ],
+      "formula_id": null,
+      "in_canonical_vector": true,
+      "canonical_index": 34
+    },
+    {
+      "name": "close",
+      "layer": -1,
+      "layer_name": "RAW_INPUT",
+      "topo_index": 0,
+      "deps": [],
+      "formula_id": null,
+      "in_canonical_vector": true,
+      "canonical_index": 3
+    },
+    {
+      "name": "disp_strength",
+      "layer": 2,
+      "layer_name": "L2_direct_derived",
+      "topo_index": 29,
+      "deps": [
+        "atr",
+        "body_size",
+        "close"
+      ],
+      "formula_id": "FM-020",
+      "in_canonical_vector": true,
+      "canonical_index": 32
+    },
+    {
+      "name": "disp_strength_atr_rescale",
+      "layer": 2,
+      "layer_name": "L2_direct_derived",
+      "topo_index": 30,
+      "deps": [
+        "atr",
+        "disp_strength"
+      ],
+      "formula_id": "FM-029",
+      "in_canonical_vector": false,
+      "canonical_index": null
+    },
+    {
+      "name": "displacement_atr_ratio",
+      "layer": 2,
+      "layer_name": "L2_direct_derived",
+      "topo_index": 46,
+      "deps": [
+        "atr",
+        "wick_size"
+      ],
+      "formula_id": "FM-028",
+      "in_canonical_vector": false,
+      "canonical_index": null
+    },
+    {
+      "name": "displacement_retrace",
+      "layer": 3,
+      "layer_name": "L3_structural_event",
+      "topo_index": 10,
+      "deps": [
+        "close",
+        "open"
+      ],
+      "formula_id": "FM-027",
+      "in_canonical_vector": false,
+      "canonical_index": null
+    },
+    {
+      "name": "double_sweep",
+      "layer": 3,
+      "layer_name": "L3_structural_event",
+      "topo_index": 19,
+      "deps": [
+        "liquidity_sweep"
+      ],
+      "formula_id": null,
+      "in_canonical_vector": true,
+      "canonical_index": 6
+    },
+    {
+      "name": "ema_fast",
+      "layer": 1,
+      "layer_name": "L1_rolling_indicator",
+      "topo_index": 1,
+      "deps": [
+        "close"
+      ],
+      "formula_id": "FM-043",
+      "in_canonical_vector": true,
+      "canonical_index": 7
+    },
+    {
+      "name": "ema_slow",
+      "layer": 1,
+      "layer_name": "L1_rolling_indicator",
+      "topo_index": 2,
+      "deps": [
+        "close"
+      ],
+      "formula_id": "FM-044",
+      "in_canonical_vector": true,
+      "canonical_index": 8
+    },
+    {
+      "name": "ema_spread",
+      "layer": 2,
+      "layer_name": "L2_direct_derived",
+      "topo_index": 31,
+      "deps": [
+        "atr",
+        "ema_fast",
+        "ema_slow"
+      ],
+      "formula_id": "FM-022",
+      "in_canonical_vector": true,
+      "canonical_index": 9
+    },
+    {
+      "name": "ema_spread_atr",
+      "layer": 2,
+      "layer_name": "L2_direct_derived",
+      "topo_index": 32,
+      "deps": [
+        "atr",
+        "close",
+        "ema_fast",
+        "ema_slow"
+      ],
+      "formula_id": "FM-030",
+      "in_canonical_vector": false,
+      "canonical_index": null
+    },
+    {
+      "name": "high",
+      "layer": -1,
+      "layer_name": "RAW_INPUT",
+      "topo_index": 3,
+      "deps": [],
+      "formula_id": null,
+      "in_canonical_vector": true,
+      "canonical_index": 1
+    },
+    {
+      "name": "higher_high",
+      "layer": 3,
+      "layer_name": "L3_structural_event",
+      "topo_index": 14,
+      "deps": [
+        "swing_high"
+      ],
+      "formula_id": null,
+      "in_canonical_vector": true,
+      "canonical_index": 24
+    },
+    {
+      "name": "hour_of_day",
+      "layer": 4,
+      "layer_name": "L4_composite_context",
+      "topo_index": 23,
+      "deps": [
+        "timestamp"
+      ],
+      "formula_id": null,
+      "in_canonical_vector": true,
+      "canonical_index": 31
+    },
+    {
+      "name": "liquidity_distance",
+      "layer": 3,
+      "layer_name": "L3_structural_event",
+      "topo_index": 33,
+      "deps": [
+        "atr",
+        "break_of_structure",
+        "close",
+        "swing_high",
+        "swing_low"
+      ],
+      "formula_id": "FM-025",
+      "in_canonical_vector": true,
+      "canonical_index": 35
+    },
+    {
+      "name": "liquidity_pressure_score",
+      "layer": 4,
+      "layer_name": "L4_composite_context",
+      "topo_index": 34,
+      "deps": [
+        "liquidity_distance"
+      ],
+      "formula_id": "FM-026",
+      "in_canonical_vector": true,
+      "canonical_index": 36
+    },
+    {
+      "name": "liquidity_sweep",
+      "layer": 3,
+      "layer_name": "L3_structural_event",
+      "topo_index": 17,
+      "deps": [
+        "swing_high",
+        "swing_low"
+      ],
+      "formula_id": null,
+      "in_canonical_vector": true,
+      "canonical_index": 20
+    },
+    {
+      "name": "low",
+      "layer": -1,
+      "layer_name": "RAW_INPUT",
+      "topo_index": 4,
+      "deps": [],
+      "formula_id": null,
+      "in_canonical_vector": true,
+      "canonical_index": 2
+    },
+    {
+      "name": "lower_low",
+      "layer": 3,
+      "layer_name": "L3_structural_event",
+      "topo_index": 20,
+      "deps": [
+        "swing_low"
+      ],
+      "formula_id": null,
+      "in_canonical_vector": true,
+      "canonical_index": 25
+    },
+    {
+      "name": "lower_wick",
+      "layer": 0,
+      "layer_name": "L0_candle_primitive",
+      "topo_index": 11,
+      "deps": [
+        "close",
+        "low",
+        "open"
+      ],
+      "formula_id": "FM-004",
+      "in_canonical_vector": false,
+      "canonical_index": null
+    },
+    {
+      "name": "macd_hist",
+      "layer": 2,
+      "layer_name": "L2_direct_derived",
+      "topo_index": 7,
+      "deps": [
+        "macd_line",
+        "macd_signal"
+      ],
+      "formula_id": null,
+      "in_canonical_vector": true,
+      "canonical_index": 18
+    },
+    {
+      "name": "macd_line",
+      "layer": 1,
+      "layer_name": "L1_rolling_indicator",
+      "topo_index": 5,
+      "deps": [
+        "close"
+      ],
+      "formula_id": null,
+      "in_canonical_vector": true,
+      "canonical_index": 16
+    },
+    {
+      "name": "macd_signal",
+      "layer": 1,
+      "layer_name": "L1_rolling_indicator",
+      "topo_index": 6,
+      "deps": [
+        "macd_line"
+      ],
+      "formula_id": null,
+      "in_canonical_vector": true,
+      "canonical_index": 17
+    },
+    {
+      "name": "momentum_score",
+      "layer": 2,
+      "layer_name": "L2_direct_derived",
+      "topo_index": 35,
+      "deps": [
+        "atr",
+        "close"
+      ],
+      "formula_id": "FM-023",
+      "in_canonical_vector": true,
+      "canonical_index": 12
+    },
+    {
+      "name": "momentum_score_atr",
+      "layer": 2,
+      "layer_name": "L2_direct_derived",
+      "topo_index": 36,
+      "deps": [
+        "atr",
+        "close"
+      ],
+      "formula_id": "FM-031",
+      "in_canonical_vector": false,
+      "canonical_index": null
+    },
+    {
+      "name": "open",
+      "layer": -1,
+      "layer_name": "RAW_INPUT",
+      "topo_index": 8,
+      "deps": [],
+      "formula_id": null,
+      "in_canonical_vector": true,
+      "canonical_index": 0
+    },
+    {
+      "name": "retest_depth",
+      "layer": 3,
+      "layer_name": "L3_structural_event",
+      "topo_index": 37,
+      "deps": [
+        "atr",
+        "close",
+        "ema_fast",
+        "liquidity_sweep"
+      ],
+      "formula_id": "FM-021",
+      "in_canonical_vector": true,
+      "canonical_index": 33
+    },
+    {
+      "name": "rsi_14",
+      "layer": 1,
+      "layer_name": "L1_rolling_indicator",
+      "topo_index": 12,
+      "deps": [
+        "close"
+      ],
+      "formula_id": "FM-042",
+      "in_canonical_vector": true,
+      "canonical_index": 15
+    },
+    {
+      "name": "session",
+      "layer": 4,
+      "layer_name": "L4_composite_context",
+      "topo_index": 24,
+      "deps": [
+        "timestamp"
+      ],
+      "formula_id": null,
+      "in_canonical_vector": true,
+      "canonical_index": 30
+    },
+    {
+      "name": "sweep_detected",
+      "layer": 3,
+      "layer_name": "L3_structural_event",
+      "topo_index": 21,
+      "deps": [
+        "liquidity_sweep"
+      ],
+      "formula_id": null,
+      "in_canonical_vector": true,
+      "canonical_index": 19
+    },
+    {
+      "name": "swing_high",
+      "layer": 1,
+      "layer_name": "L1_rolling_indicator",
+      "topo_index": 13,
+      "deps": [
+        "high"
+      ],
+      "formula_id": "FM-045",
+      "in_canonical_vector": true,
+      "canonical_index": 22
+    },
+    {
+      "name": "swing_low",
+      "layer": 1,
+      "layer_name": "L1_rolling_indicator",
+      "topo_index": 15,
+      "deps": [
+        "low"
+      ],
+      "formula_id": "FM-046",
+      "in_canonical_vector": true,
+      "canonical_index": 23
+    },
+    {
+      "name": "timestamp",
+      "layer": -1,
+      "layer_name": "RAW_INPUT",
+      "topo_index": 22,
+      "deps": [],
+      "formula_id": null,
+      "in_canonical_vector": false,
+      "canonical_index": null
+    },
+    {
+      "name": "total_wick",
+      "layer": 0,
+      "layer_name": "L0_candle_primitive",
+      "topo_index": 39,
+      "deps": [
+        "lower_wick",
+        "upper_wick"
+      ],
+      "formula_id": "FM-005",
+      "in_canonical_vector": false,
+      "canonical_index": null
+    },
+    {
+      "name": "trend_bias",
+      "layer": 2,
+      "layer_name": "L2_direct_derived",
+      "topo_index": 25,
+      "deps": [
+        "ema_fast",
+        "ema_slow"
+      ],
+      "formula_id": "FM-TRB",
+      "in_canonical_vector": true,
+      "canonical_index": 10
+    },
+    {
+      "name": "trend_strength",
+      "layer": 4,
+      "layer_name": "L4_composite_context",
+      "topo_index": 26,
+      "deps": [
+        "close"
+      ],
+      "formula_id": null,
+      "in_canonical_vector": true,
+      "canonical_index": 11
+    },
+    {
+      "name": "true_range",
+      "layer": 0,
+      "layer_name": "L0_candle_primitive",
+      "topo_index": 27,
+      "deps": [
+        "close",
+        "high",
+        "low"
+      ],
+      "formula_id": "FM-040",
+      "in_canonical_vector": false,
+      "canonical_index": null
+    },
+    {
+      "name": "upper_wick",
+      "layer": 0,
+      "layer_name": "L0_candle_primitive",
+      "topo_index": 38,
+      "deps": [
+        "close",
+        "high",
+        "open"
+      ],
+      "formula_id": "FM-003",
+      "in_canonical_vector": false,
+      "canonical_index": null
+    },
+    {
+      "name": "volatility_ratio",
+      "layer": 2,
+      "layer_name": "L2_direct_derived",
+      "topo_index": 47,
+      "deps": [
+        "atr",
+        "close",
+        "wick_size"
+      ],
+      "formula_id": "FM-024",
+      "in_canonical_vector": true,
+      "canonical_index": 14
+    },
+    {
+      "name": "volatility_regime",
+      "layer": 4,
+      "layer_name": "L4_composite_context",
+      "topo_index": 40,
+      "deps": [
+        "close",
+        "high",
+        "low"
+      ],
+      "formula_id": null,
+      "in_canonical_vector": true,
+      "canonical_index": 29
+    },
+    {
+      "name": "volume",
+      "layer": -1,
+      "layer_name": "RAW_INPUT",
+      "topo_index": 41,
+      "deps": [],
+      "formula_id": null,
+      "in_canonical_vector": true,
+      "canonical_index": 4
+    },
+    {
+      "name": "volume_ratio",
+      "layer": 2,
+      "layer_name": "L2_direct_derived",
+      "topo_index": 42,
+      "deps": [
+        "volume"
+      ],
+      "formula_id": "FM-VOLR",
+      "in_canonical_vector": true,
+      "canonical_index": 5
+    },
+    {
+      "name": "volume_spike",
+      "layer": 2,
+      "layer_name": "L2_direct_derived",
+      "topo_index": 43,
+      "deps": [
+        "volume_ratio"
+      ],
+      "formula_id": "FM-VOLS",
+      "in_canonical_vector": true,
+      "canonical_index": 37
+    },
+    {
+      "name": "wick_size",
+      "layer": 0,
+      "layer_name": "L0_candle_primitive",
+      "topo_index": 44,
+      "deps": [
+        "high",
+        "low"
+      ],
+      "formula_id": "FM-002",
+      "in_canonical_vector": true,
+      "canonical_index": 27
+    }
+  ],
+  "permanent_floor": "tests/test_feature_dag_layers.py"
+}

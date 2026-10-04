@@ -1,0 +1,17 @@
+﻿{
+  "change_id": "CH-rem-cost-04-l5-vocab",
+  "title": "Add backtest_g1g2_v2 (+ reserve backtest_zero_cost) to L5 COST_MODEL_IDS",
+  "date": "2026-09-16",
+  "authority": "REM-COST-04 governance; user continue on live-alerts remediation arc",
+  "pnl_math_changed": false,
+  "files": [
+    "src/identity/tokens.py",
+    "tests/test_cost_model_ids_l5_rem_cost_04.py",
+    "docs/research/REM_COST_04_L5_VOCAB_PROPOSAL_2026-09-16.md",
+    "docs/governance/CANONICAL_LAYER_IDENTITY_CONTRACT.md"
+  ],
+  "rationale": "Fresh stamped ledger uses backtest_g1g2_v2; L5 closed set omitted it so outcomes could not be certified under the cost surface actually charged.",
+  "aliases_not_merged": {
+    "metals_mt5_v1": "sem015_component_xauusd (doc alias only)"
+  }
+}

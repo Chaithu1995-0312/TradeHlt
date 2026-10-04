@@ -1,0 +1,49 @@
+{
+  "G-MIG-01": "CLOSED",
+  "G-PARITY-01_suggested": "PARTIAL_TRANSFORM_REGISTRY_INCOMPLETE",
+  "authorization": "measurement only; does NOT authorize CRT consumer migration",
+  "corpus_path": "data\\mt5\\XAUUSD_M15.csv",
+  "corpus_sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+  "enriched_bars": 1922,
+  "generated_at_utc": "2026-07-14T11:08:59.898186+00:00",
+  "migration_authorized": false,
+  "quantities": {
+    "atr": {
+      "blocks_migration": true,
+      "max_abs_err_pipe_vs_crt_abs_over_close": 0.002827292272306337,
+      "n_compare": 1922,
+      "note": "max|pipe_atr - crt_abs/close|=0.002827292272306337; not assumed equal without registry",
+      "pass_criterion": "document scale relationship; FAIL if assumed equal without transform proof",
+      "verdict": "TRANSFORM_CANDIDATE_OR_FAIL"
+    },
+    "body_ratio": {
+      "blocks_migration": true,
+      "crt_vs_candle_math_max_abs_err": 0.0,
+      "pass_criterion": "max abs err <= 1e-9",
+      "pipeline_vs_candle_math_max_abs_err": 2.969915768868958e-08,
+      "verdict": "PASS"
+    },
+    "ema_fast_ema_slow": {
+      "blocks_migration": true,
+      "crt_params": {
+        "alpha": "2/(N+1)",
+        "fast": 2,
+        "slow": 5
+      },
+      "max_abs_err_ema_fast": 13.650698258905322,
+      "max_abs_err_ema_slow": 16.93828362479917,
+      "note": "CRT uses span (2,5) seed-from-first-close; max|\u0394ema_fast|=13.650698258905322, max|\u0394ema_slow|=16.93828362479917; do not bind as identical without span proof",
+      "verdict": "TRANSFORM_OR_MISMATCH"
+    },
+    "wick_size": {
+      "blocks_migration": true,
+      "crt_vs_candle_math_max_abs_err": 0.0,
+      "pass_criterion": "exact high-low identity",
+      "pipeline_vs_candle_math_max_abs_err": 0.0,
+      "verdict": "PASS"
+    }
+  },
+  "sample_bars": 2000,
+  "schema_id": "CRT_LOCAL_MATH_PARITY_AUDIT_RESULT_V1",
+  "task_class": "OBSERVATION_ONLY"
+}

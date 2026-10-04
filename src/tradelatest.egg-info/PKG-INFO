@@ -2,3 +2,20 @@ Metadata-Version: 2.4
 Name: tradelatest
 Version: 1.0.0
 Requires-Python: >=3.10
+Provides-Extra: hummingbot
+Requires-Dist: hummingbot>=2.0.0; extra == "hummingbot"
+Provides-Extra: parquet
+Requires-Dist: pyarrow; extra == "parquet"
+Requires-Dist: duckdb; extra == "parquet"
+Provides-Extra: charts
+Requires-Dist: mplfinance; extra == "charts"
+Provides-Extra: live-rail
+Requires-Dist: websockets>=12; extra == "live-rail"
+Provides-Extra: mt5-analytics
+Requires-Dist: MetaTrader5; extra == "mt5-analytics"
+Requires-Dist: pandas; extra == "mt5-analytics"
+Requires-Dist: pyarrow; extra == "mt5-analytics"
+Requires-Dist: duckdb; extra == "mt5-analytics"
+Requires-Dist: streamlit; extra == "mt5-analytics"
+Requires-Dist: scipy; extra == "mt5-analytics"
+Requires-Dist: scikit-learn; extra == "mt5-analytics"

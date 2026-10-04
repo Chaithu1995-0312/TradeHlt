@@ -1,0 +1,60 @@
+{
+  "change_id": "CH-closed-semantic-environment",
+  "objective": "Turn the repository into a closed semantic environment: LLM reasoning/prose stay free, but every repository noun, relationship, implementation claim, and evidence claim must resolve through a fail-closed grounder that returns only tool-backed records (GROUNDED / UNKNOWN / AMBIGUOUS / UNANSWERABLE). Extends Semantic OS L5 (semantic_query) — does not add a seventh first-class entity, does not invent inventory, does not grant production authority. Ships SemanticGrounder + query_semantic_os CLI (also fulfilling the missing v2 L5 CLI) + truth.ground_claim agent tool + CT-008 + protocol in SEMANTIC_OS_CONTRACT / CLAUDE.md §6.7.",
+  "change_classes": [
+    "SCRIPT_LIFECYCLE_CHANGE",
+    "DOCUMENTATION_ONLY"
+  ],
+  "affected_files": [
+    "src/governance/semantic_grounding.py",
+    "src/governance/semantic_query.py",
+    "src/agent/modes/truth_mode.py",
+    "src/agent/plan_compiler.py",
+    "scripts/governance/query_semantic_os.py",
+    "scripts/governance/seed_script_registry.py",
+    "docs/governance/script_registry_stubs.jsonl",
+    "docs/governance/script_registry_grandfather.json",
+    "docs/reference/script-matrix.md",
+    "docs/governance/semantic_os/contracts.yaml",
+    "docs/governance/semantic_os/boundaries.yaml",
+    "docs/governance/semantic_os/file_identities.yaml",
+    "docs/governance/SEMANTIC_OS_CONTRACT.md",
+    "docs/governance/SEMANTIC_OS_V1_DESIGN.md",
+    "docs/reference/schemas.md",
+    "docs/reference/agent-reference.md",
+    "docs/topics/ai-automation-agent.md",
+    "docs/memory/governance-memory.md",
+    "docs/memory/agent-memory.md",
+    "CLAUDE.md",
+    "tests/test_semantic_grounding.py",
+    "tests/test_semantic_query.py",
+    "scripts/maintenance/check_governance_invariants.py",
+    "docs/governance/build_manifests/CH-closed-semantic-environment.impact.json",
+    "docs/governance/build_manifests/CH-closed-semantic-environment.completion.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none — advisory grounding layer only; no model input/training/artifact touched",
+  "affected_production_config": "none (hash-neutral; no configs/production/* file touched)",
+  "required_checks_ack": [
+    "tests/test_script_registry.py",
+    "tests/test_script_matrix_sync.py",
+    "tests/test_construction_protocol.py",
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/test_semantic_os.py",
+    "tests/test_semantic_grounding.py",
+    "tests/test_semantic_query.py"
+  ],
+  "unknowns": [
+    {
+      "question": "No GOVERNANCE_REGISTRY_ADDITION change class exists yet (tracked follow-up from CH-semantic-os-v2). This build reuses SCRIPT_LIFECYCLE_CHANGE + DOCUMENTATION_ONLY, which covers scripts/ and docs/ but under-describes src/governance/semantic_grounding.py and the agent-tool edit.",
+      "blocking": false,
+      "resolution": "Reuse the 2026-08-08 user decision from CH-semantic-os-v2: existing classes + every src path declared in affected_files. GOVERNANCE_REGISTRY_ADDITION remains a tracked follow-up, not opened here.",
+      "followup": "GOVERNANCE_REGISTRY_ADDITION change class + paired case in tests/test_construction_protocol.py"
+    }
+  ],
+  "rollback_boundary": "Single additive commit. Revert = delete src/governance/semantic_grounding.py, scripts/governance/query_semantic_os.py, tests/test_semantic_grounding.py, tests/test_semantic_query.py, the two build manifests, CT-008 + BD-010 contract_ids pointer, CLAUDE.md §6.7, contract/design/schema/agent-reference/topic/memory edits, truth.ground_claim + semantic_ground intent, the SITS overlay/stubs/matrix rows, and the GREEN_FLOOR pin. No runtime, config, or model surface is touched.",
+  "authority_granted": "NONE. Grounding is advisory navigability. UNKNOWN/AMBIGUOUS/UNANSWERABLE never become invented nouns. Does not execute trades, does not close any Closure Index surface, does not grant G001/production authority (§6.5)."
+}

@@ -1,0 +1,219 @@
+{
+  "_doc": "Measurement PROFILE — metals (MT5). A reusable per-asset-class set of DEFAULTS for the surface fields of a sealed MC-* MeasurementContract instance. NOT a contract instance and NOT an admissibility seal. Charter: docs/governance/MEASUREMENT_CONTRACT.md section 9.",
+  "schema_version": "1.0.0",
+  "profile_id": "MP-METALS-MT5",
+  "version": "v1",
+  "lifecycle": "DRAFT",
+  "profile_hash": null,
+  "created_utc": "2026-08-06T00:00:00Z",
+  "subordinate_to": {
+    "charter": "docs/governance/MEASUREMENT_CONTRACT.md",
+    "schema": "docs/governance/measurement_contract.schema.json",
+    "schema_version": "1.0.0",
+    "relationship": "Profiles supply reusable per-asset-class DEFAULTS that a sealed MC-* instance inherits. Every enumerated value below is drawn from the frozen schema's own enums so that subordination is mechanically checkable. A profile never overrides the charter, never relaxes the E0-E4 bar, and never sets trust_status. OVERRIDE PRECEDENCE (2026-08-06, engine_gate discussion): an MC-* instance ALWAYS WINS on any field the frozen schema scopes per-experiment rather than per-asset-class -- concretely pipeline_identity.engine_gate_mode, pipeline_identity.dataset_integrity_level, splits.*, and metrics.multiplicity/control-protocol. This profile's surface_defaults for those fields are non-binding suggestions only, retained for convenience; the sealed instance's own declared value is authoritative. This was made explicit after F-058 showed gate mode is pipeline IDENTITY (which object was measured), not an asset-class property -- a profile default must never be mistaken for that identity."
+  },
+  "profile": {
+    "asset_class": "metals_mt5",
+    "provider": "mt5",
+    "rationale": "The repo's second active laboratory (XAUUSD/MT5) alongside crypto majors. Separated from fx_majors for two concrete reasons: XAUUSD REJECTs the FX holiday-gap gate (F-035), and the broker-clock defect measurably mislabels 53.36% of its bars (F-066) — the profile where the timestamp term is most load-bearing."
+  },
+  "surface_defaults": {
+    "population": {
+      "instruments": [
+        "XAUUSD"
+      ],
+      "timeframe": "M15",
+      "unit_of_analysis": "trade_decision",
+      "detection_vs_trade": "trade_ledger",
+      "n_declared_min": 30,
+      "gap_policy": null,
+      "gap_policy_note": "REQUIRES_DECISION. F-035 excluded XAUUSD from the FX program because the holiday gap REJECTs the FX gap gate. This profile must state its own gap policy rather than inherit one that already rejected it."
+    },
+    "features": {
+      "formula_authority": "market_ontology",
+      "normalization_basis": "atr_relative",
+      "normalization_note": "F-064: on XAUUSD the legacy basis degenerates hard — |tanh(momentum_score)| > 0.999 on 99.70% of bars and an exact 100.000x scale ratio under a synthetic price shift. Measured and deliberately NOT activated. Choosing atr_relative here is choosing a knowingly degenerate channel; that must be a decision, not an accident.",
+      "session_timestamp_basis": null,
+      "session_note": "REQUIRES_DECISION and the most consequential term in this profile. F-066: 53.36% of XAUUSD bars carry the wrong session label under broker_local, confirmed by two independent tests (BTCUSDT cross-correlation showing an exact on-the-hour shift; NFP-release alignment at a season-invariant 15:30 server time). The broker tracks US DST, not EU. broker_local is byte-identical to all historical work but knowingly mislabelled; utc_corrected is correct but severs comparability with every prior XAU claim. Exactly the choice a contract exists to make explicit.",
+      "point_in_time_rule": null,
+      "point_in_time_note": "REQUIRES_DECISION per F-051."
+    },
+    "labels": {
+      "label_family": "forward_walk_economic",
+      "derivation_authority": "forward_walk.intrabar_fixed",
+      "stream_fields_banned_for_economic_claims": [
+        "opportunities.outcome",
+        "opportunities.rr",
+        "trade.rr_achieved"
+      ],
+      "note": "Byte-identical across all three profiles by design."
+    },
+    "costs": {
+      "cost_model_id": "component_measured.v1",
+      "components": [
+        {
+          "name": "round_trip",
+          "bps_or_formula": "DERIVED: k * median(bar_range_pct) computed per instrument from its own M15 corpus; k pending calibration",
+          "applied_on": "round_trip"
+        },
+        {
+          "name": "half_spread",
+          "bps_or_formula": "MEASURED 0.0450 USD/oz",
+          "applied_on": "entry"
+        },
+        {
+          "name": "half_spread",
+          "bps_or_formula": "MEASURED 0.0450 USD/oz",
+          "applied_on": "exit"
+        },
+        {
+          "name": "commission",
+          "bps_or_formula": "MEASURED 0.0400 USD/oz (MT5 reports it signed-negative; abs() applied)",
+          "applied_on": "entry"
+        },
+        {
+          "name": "commission",
+          "bps_or_formula": "MEASURED 0.0400 USD/oz",
+          "applied_on": "exit"
+        },
+        {
+          "name": "entry_slippage",
+          "bps_or_formula": "PROXY_FROM_STOP 0.0900 USD/oz - MARKET-order slippage is INSUFFICIENT_DATA (n=0 fills), so the measured STOP median is used as a conservative proxy; never defaulted to zero",
+          "applied_on": "entry"
+        },
+        {
+          "name": "stop_slippage",
+          "bps_or_formula": "MEASURED 0.0900 USD/oz median (n=7, p90 0.3200) - charged ONLY on a stop exit; a take-profit limit order does not slip favourably",
+          "applied_on": "exit"
+        },
+        {
+          "name": "swap",
+          "bps_or_formula": "MEASURED long -0.5601 / short 0.3834 USD/oz/night - only a DEBIT is charged; a credit is not netted off a directional trade (that is the carry-harvest payoff, falsified as F-034)",
+          "applied_on": "funding_interval"
+        }
+      ],
+      "gross_vs_net": {
+        "report_gross": true,
+        "report_net": true,
+        "promotable": "net_only"
+      },
+      "success_gate_uses": "net",
+      "legacy_constant_bps": 12,
+      "legacy_note": "Retained as provenance only. SUPERSEDED 2026-08-19 by cost_model_id 'component_measured.v1'; prior id 'derived_per_instrument.v1' and its volatility-proxy component (k * median(bar_range_pct)) are preserved above as the first components entry per CLAUDE.md 6.2 rule 4. The proxy derived cost from VOLATILITY; trading cost is a BROKER property (spread/commission/order-type slippage/swap). Adjudication tracked as UNK-COST-02 in docs/governance/build_manifests/CH-cost-model-broker-truth.impact.json.",
+      "calibration": {
+        "status": "MEASURED",
+        "measured_utc": "2026-08-06T13:42:55+00:00",
+        "instrument": "XAUUSD",
+        "ontology_id": "SEM-015",
+        "source_manifest": "results/research/xauusd_mt5_cost_calibration/xauusd_mt5_cost_calibration_manifest_20260806T134255Z.json",
+        "source_manifest_sha256": "6ce4abf5cd76e37e24102b317588a5ebc188a320b84983c0a176ff52b1bb8e62",
+        "broker": "ICMarketsSC-Demo (Raw Trading Ltd), DEMO account",
+        "k": null,
+        "k_note": "Not applicable: k belonged to the superseded volatility-proxy model.",
+        "values_usd_per_oz": {
+          "half_spread": 0.04500000000007276,
+          "commission": 0.04,
+          "entry_slippage": 0.09000000000014552,
+          "stop_slippage": 0.09000000000014552,
+          "swap_long_per_night": -0.5601400000000001,
+          "swap_short_per_night": 0.38338
+        },
+        "entry_slippage_basis": "PROXY_FROM_STOP",
+        "leg_model": "entry_leg = half_spread + commission + entry_slippage (market order); exit_leg = half_spread + commission + stop_slippage on a stop exit, else half_spread + commission (limit order). NOT 2 * c_per_side: the source manifest's c_per_side bundles stop slippage into every side because ZONE-X, which commissioned the measurement, places stops on both legs. That is the wrong convention for this architecture, which enters on a market order.",
+        "caveats": [
+          "Stop slippage rests on n=7 near-market DEMO stop fills; it likely UNDERSTATES gap-driven barrier slip. p90 is 0.3200 against a 0.0900 median.",
+          "MARKET-order slippage was INSUFFICIENT_DATA (n=0 fills); entry slippage is a declared conservative proxy, not a measurement.",
+          "Measured on a DEMO account; transfer to a funded account is unverified.",
+          "Seeding these values grants NO economic admissibility. Only E-MT-00 PASS + E-MT-01 COMPLETE can (MEASUREMENT_CONTRACT.md section 2, E4). Profile lifecycle stays DRAFT."
+        ]
+      }
+    },
+    "exits": {
+      "exit_family": "intrabar_fixed_sl_tp",
+      "intrabar_rule": null,
+      "intrabar_note": "REQUIRES_DECISION per the crypto profile."
+    },
+    "splits": {
+      "scheme": null,
+      "overlap_policy": "forbid_overlapping_labels",
+      "note": "REQUIRES_DECISION."
+    },
+    "metrics": {
+      "authority_ladder": {
+        "info_not_value": true,
+        "value_not_authority": true,
+        "insufficient_not_harmful": true
+      },
+      "multiplicity": {
+        "n_permutations": 2000,
+        "control_set": [
+          "random_entry",
+          "long_only",
+          "market"
+        ]
+      },
+      "forbidden_metric_substitutions": [
+        "p_value_as_edge",
+        "gross_as_success",
+        "n_detections_as_n_trades"
+      ],
+      "provenance": "Inherited from the historical M4 gate, UNVERIFIED."
+    },
+    "pipeline_identity": {
+      "engine_gate_mode": null,
+      "engine_gate_note": "REQUIRES_DECISION per F-037/F-058.",
+      "dataset_integrity_level": null,
+      "dataset_integrity_note": "REQUIRES_DECISION per F-039."
+    }
+  },
+  "unresolved_terms": [
+    {
+      "term": "population.gap_policy",
+      "blocks_freeze": true,
+      "refs": [
+        "F-035"
+      ]
+    },
+    {
+      "term": "features.session_timestamp_basis",
+      "blocks_freeze": true,
+      "refs": [
+        "F-066"
+      ]
+    },
+    {
+      "term": "features.point_in_time_rule",
+      "blocks_freeze": true,
+      "refs": [
+        "F-051"
+      ]
+    },
+    {
+      "term": "exits.intrabar_rule",
+      "blocks_freeze": true,
+      "refs": [
+        "F-025"
+      ]
+    },
+    {
+      "term": "splits.scheme",
+      "blocks_freeze": true,
+      "refs": []
+    },
+    {
+      "term": "pipeline_identity.engine_gate_mode",
+      "blocks_freeze": true,
+      "refs": [
+        "F-037",
+        "F-058"
+      ]
+    },
+    {
+      "term": "pipeline_identity.dataset_integrity_level",
+      "blocks_freeze": true,
+      "refs": [
+        "F-039"
+      ]
+    }
+  ]
+}

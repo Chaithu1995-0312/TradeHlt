@@ -1,0 +1,39 @@
+{
+  "manifest_id": "CH-oss-lab-scaffold",
+  "change_title": "OSS Integration Lab scaffold — registry, contracts, baseline adapter, metrics",
+  "change_classes": ["DOCUMENTATION_ONLY"],
+  "production_behavior_changed": false,
+  "surfaces_touched": [
+    "oss_lab/**",
+    "docs/governance/OSS_INTEGRATION_ARCHITECTURE.md",
+    "docs/implementation_plan/oss-integration-benchmark-lab.md",
+    "tests/test_oss_lab.py"
+  ],
+  "authorities_inspected": [
+    "docs/governance/CORPUS_AUTHORITY.md",
+    "docs/governance/xauusd_m15_phase1_frozen_candidate.json",
+    "docs/governance/runtime-benchmark-suite-2026-07-20.md",
+    "docs/governance/MEASUREMENT_CONTRACT.md",
+    "src/research/measurement/metrics.py",
+    "src/research/costs.py",
+    "src/research/experiment_spec.py",
+    "src/research/provenance.py",
+    "src/journal/schema.py",
+    "docs/reference/conventions.md"
+  ],
+  "explicit_non_goals": [
+    "No production spine wiring",
+    "No pip install of qlib/nautilus/finrl",
+    "No T4 authority for external OSS",
+    "No replacement of ontology/CRT/Fusion/Decision/Ultron",
+    "No Semantic OS live YAML mutation this change"
+  ],
+  "unknowns": [
+    "U-OSS-001 Qlib pin",
+    "U-OSS-002 Nautilus fill parity",
+    "U-OSS-003 FinRL license",
+    "U-OSS-004 schema_hash bind"
+  ],
+  "rollback_boundary": "delete oss_lab/ + docs + tests/test_oss_lab.py in one commit",
+  "required_checks_declared": ["tests/test_oss_lab.py"]
+}

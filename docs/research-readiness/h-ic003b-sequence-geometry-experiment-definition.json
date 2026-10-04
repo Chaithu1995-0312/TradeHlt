@@ -1,0 +1,121 @@
+{
+  "schema_id": "H_IC003B_SEQUENCE_GEOMETRY_EXPERIMENT_DEFINITION_V1",
+  "program_alias": "H-IC003B-001",
+  "ic_alias": "IC-003B",
+  "successor_of": "H-IC003-001",
+  "not_an_amendment_of": "H-IC003-001_G1",
+  "title": "SEQUENCE_GEOMETRY_SHAPE_LIBRARY",
+  "status": "PRE_REGISTERED_OPEN_NOT_RUN",
+  "task_class": "EXPLORATORY_RESEARCH",
+  "authority": "research",
+  "created_at_utc": "2026-07-17T00:00:00Z",
+  "pre_registered_before_outcome_measurement": true,
+  "human_doc": "docs/research-readiness/h-ic003b-sequence-geometry-preregistration.md",
+  "parent_docs": [
+    "docs/research-readiness/ic-003-lessons-learned.md",
+    "docs/research-readiness/h-ic003-shape-library-preregistration.md",
+    "docs/research-readiness/h-ic002-entry-evolution-preregistration.md"
+  ],
+  "hard_flags": {
+    "PRODUCTION_BEHAVIOR_CHANGED": false,
+    "NEW_ENGINES": false,
+    "IC001_REOPEN": false,
+    "IC003_GATE_AMENDMENT": false,
+    "ENTRY_TIME_SHAPE_FILTERS": false,
+    "EXPECTANCY_PROMOTE_FROM_PURITY": false,
+    "FREE_HYPERPARAMETER_SEARCH": false,
+    "AUTO_PROMOTE_CONFIG": false
+  },
+  "hypothesis": {
+    "H_S": "Path-summary (7 stats x D) Euclidean library passes IC-003 v1 G1-G5 (G1<=0.85) on N in {4,16}",
+    "H_S0": "LIBRARY_FAIL under those gates",
+    "H_T": "DTW + k-medoids on 3-channel path passes DTW-adapted G1_T-G5 on N in {4,16}",
+    "H_T0": "LIBRARY_FAIL under DTW gates",
+    "H_C_diagnostic": "PCA continuum evidence (cumvar_4>=0.50 and max_sil<0.05 on PC1-4) for continuous manifold note"
+  },
+  "inputs": {
+    "trajectory_root": "results/research/ic_002/",
+    "primary_N": [4, 16],
+    "diagnostic_N": [8],
+    "path_relative": true,
+    "feature_ids": "IC002_TRAJECTORY_FEATURE_IDS",
+    "dtw_channels": ["body_ratio", "disp_strength", "rsi_14"]
+  },
+  "arms": {
+    "S_path_summary": {
+      "primary": true,
+      "stats_per_dim": ["mean", "std", "first", "last", "min", "max", "slope"],
+      "vector_length": 105,
+      "cluster": "MiniBatchKMeans",
+      "k_grid": [4, 6, 8, 12],
+      "gates": {
+        "G1_sse_ratio_max": 0.85,
+        "G2_silhouette_min": 0.05,
+        "G3_oos_z_max": 2.0,
+        "G4_min_n_is": 50,
+        "G4_min_n_oos": 20,
+        "G5_docs": true
+      }
+    },
+    "T_dtw_medoids": {
+      "primary": false,
+      "distance": "DTW_euclidean",
+      "sakoe_chiba_radius_frac": 0.2,
+      "cluster": "k_medoids_PAM",
+      "k_grid": [4, 6, 8, 12],
+      "is_subsample_max": 3000,
+      "gates": {
+        "G1_T_within_cost_ratio_max": 0.85,
+        "G2_T_silhouette_min": 0.05,
+        "G3_T_oos_distance_stability": true,
+        "G4_min_n_is": 50,
+        "G4_min_n_oos": 20,
+        "G5_docs": true
+      }
+    },
+    "C_continuum": {
+      "primary": false,
+      "library_verdict": false,
+      "pca_on": ["M-FLAT", "Arm_S"],
+      "n_components_report": 4,
+      "CONTINUUM_NOTE_if": {
+        "cumvar_4_min": 0.5,
+        "max_kmeans_sil_on_pc_lt": 0.05,
+        "must_hold_for": "both_representations"
+      },
+      "DISCRETE_HINT_if": "either_repr max_sil >= 0.05"
+    }
+  },
+  "program_verdicts": [
+    "IC003B_LIBRARY_OK",
+    "IC003B_PARTIAL",
+    "IC003B_FAIL",
+    "CONTINUUM_NOTE",
+    "DISCRETE_HINT"
+  ],
+  "forbidden_without_new_prereg": [
+    "reuse_IC003_MFLAT_only_as_003B",
+    "g1_loosen_post_hoc",
+    "entry_time_shape_filters",
+    "expectancy_promote_from_purity",
+    "free_dtw_window_or_channel_search",
+    "new_engines"
+  ],
+  "priors": [
+    "IC003_MFLAT_euclidean_failed",
+    "IC002_path_info_exists_independent",
+    "continuum_manifold_plausible",
+    "dtw_expensive_secondary"
+  ],
+  "artifacts_on_run": {
+    "root": "results/research/ic_003b/",
+    "report_md": "results/research/ic_003b/REPORT.md",
+    "library_md": "results/research/ic_003b/SHAPE_LIBRARY.md",
+    "manifest": "results/research/ic_003b/manifest.json"
+  },
+  "stop_rule": "one_full_pass_arms_S_T_C_primary_N_then_stop",
+  "implementation_map": {
+    "package": "src/research/ic003b_sequence_geometry/",
+    "script": "scripts/research/ic003b_build.py"
+  }
+}

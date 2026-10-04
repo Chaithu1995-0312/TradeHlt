@@ -1,0 +1,779 @@
+{
+  "generated_at": "2026-07-11T12:08:27.242209+00:00",
+  "active_version": "v2_multi_2026_04",
+  "probe": "pit_phaseC_feature_certification",
+  "behavior_changed": false,
+  "prefix_invariance": [
+    {
+      "corpus": "BNBUSDT_M15",
+      "bars": 30000,
+      "cuts": [
+        {
+          "cut_fraction": 0.5,
+          "cut_bars": 15000,
+          "shared_rows": 14922
+        },
+        {
+          "cut_fraction": 0.75,
+          "cut_bars": 22500,
+          "shared_rows": 22422
+        }
+      ],
+      "per_feature": {
+        "open": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        },
+        "high": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        },
+        "low": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        },
+        "close": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        },
+        "volume": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        },
+        "volume_ratio": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        },
+        "double_sweep": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        },
+        "ema_fast": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        },
+        "ema_slow": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        },
+        "ema_spread": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        },
+        "trend_bias": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        },
+        "trend_strength": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        },
+        "momentum_score": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        },
+        "atr": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        },
+        "volatility_ratio": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        },
+        "rsi_14": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        },
+        "macd_line": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        },
+        "macd_signal": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        },
+        "macd_hist": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        },
+        "sweep_detected": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        },
+        "liquidity_sweep": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        },
+        "break_of_structure": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        },
+        "swing_high": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        },
+        "swing_low": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        },
+        "higher_high": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        },
+        "lower_low": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        },
+        "body_size": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        },
+        "wick_size": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        },
+        "body_ratio": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        },
+        "volatility_regime": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        },
+        "session": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        },
+        "hour_of_day": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        },
+        "disp_strength": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        },
+        "retest_depth": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        },
+        "candles_since_retest": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        },
+        "liquidity_distance": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        },
+        "liquidity_pressure_score": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        },
+        "volume_spike": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 2,
+          "worst_example": null
+        }
+      },
+      "variant_features": [],
+      "all_prefix_invariant": true
+    },
+    {
+      "corpus": "synthetic_1200",
+      "bars": 1200,
+      "cuts": [
+        {
+          "cut_fraction": 0.6,
+          "cut_bars": 720,
+          "shared_rows": 642
+        }
+      ],
+      "per_feature": {
+        "open": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        },
+        "high": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        },
+        "low": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        },
+        "close": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        },
+        "volume": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        },
+        "volume_ratio": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        },
+        "double_sweep": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        },
+        "ema_fast": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        },
+        "ema_slow": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        },
+        "ema_spread": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        },
+        "trend_bias": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        },
+        "trend_strength": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        },
+        "momentum_score": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        },
+        "atr": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        },
+        "volatility_ratio": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        },
+        "rsi_14": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        },
+        "macd_line": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        },
+        "macd_signal": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        },
+        "macd_hist": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        },
+        "sweep_detected": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        },
+        "liquidity_sweep": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        },
+        "break_of_structure": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        },
+        "swing_high": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        },
+        "swing_low": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        },
+        "higher_high": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        },
+        "lower_low": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        },
+        "body_size": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        },
+        "wick_size": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        },
+        "body_ratio": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        },
+        "volatility_regime": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        },
+        "session": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        },
+        "hour_of_day": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        },
+        "disp_strength": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        },
+        "retest_depth": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        },
+        "candles_since_retest": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        },
+        "liquidity_distance": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        },
+        "liquidity_pressure_score": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        },
+        "volume_spike": {
+          "verdict": "PREFIX_INVARIANT",
+          "mismatch_bars": 0,
+          "cuts_checked": 1,
+          "worst_example": null
+        }
+      },
+      "variant_features": [],
+      "all_prefix_invariant": true
+    }
+  ],
+  "warmup_census": {
+    "rows_pre_finalize": 29922,
+    "rows_post_finalize": 29922,
+    "rows_dropped_by_finalize": 0,
+    "per_feature": {
+      "open": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "float64"
+      },
+      "high": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "float64"
+      },
+      "low": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "float64"
+      },
+      "close": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "float64"
+      },
+      "volume": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "float64"
+      },
+      "volume_ratio": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "float64"
+      },
+      "double_sweep": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "int8"
+      },
+      "ema_fast": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "float32"
+      },
+      "ema_slow": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "float32"
+      },
+      "ema_spread": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "float32"
+      },
+      "trend_bias": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "float32"
+      },
+      "trend_strength": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "float64"
+      },
+      "momentum_score": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "float32"
+      },
+      "atr": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "float32"
+      },
+      "volatility_ratio": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "float32"
+      },
+      "rsi_14": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "float64"
+      },
+      "macd_line": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "float64"
+      },
+      "macd_signal": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "float64"
+      },
+      "macd_hist": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "float64"
+      },
+      "sweep_detected": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "int8"
+      },
+      "liquidity_sweep": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "int8"
+      },
+      "break_of_structure": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "int8"
+      },
+      "swing_high": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "int8"
+      },
+      "swing_low": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "int8"
+      },
+      "higher_high": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "int8"
+      },
+      "lower_low": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "int8"
+      },
+      "body_size": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "float64"
+      },
+      "wick_size": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "float64"
+      },
+      "body_ratio": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "float32"
+      },
+      "volatility_regime": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "int8"
+      },
+      "session": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "int8"
+      },
+      "hour_of_day": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "int8"
+      },
+      "disp_strength": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "float32"
+      },
+      "retest_depth": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "float32"
+      },
+      "candles_since_retest": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "int16"
+      },
+      "liquidity_distance": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "float32"
+      },
+      "liquidity_pressure_score": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "float32"
+      },
+      "volume_spike": {
+        "present_pre_finalize": true,
+        "first_valid_row": 0,
+        "nan_rows_pre_finalize": 0,
+        "dtype": "int8"
+      }
+    },
+    "note": "finalize() dropna(subset=CANONICAL_FEATURES) removes warmup rows; a NaN policy is therefore a ROW-DROP policy for the production vector"
+  },
+  "global_fit_scan": {
+    "rank_quantile_sites": [
+      {
+        "line": 335,
+        "op": "rank",
+        "windowed": false,
+        "chain": []
+      },
+      {
+        "line": 339,
+        "op": "rank",
+        "windowed": true,
+        "chain": [
+          "expanding"
+        ]
+      },
+      {
+        "line": 343,
+        "op": "rank",
+        "windowed": true,
+        "chain": [
+          "rolling"
+        ]
+      },
+      {
+        "line": 744,
+        "op": "quantile",
+        "windowed": true,
+        "chain": [
+          "rolling"
+        ]
+      }
+    ],
+    "unwindowed_sites": [
+      {
+        "line": 335,
+        "op": "rank",
+        "windowed": false,
+        "chain": []
+      }
+    ],
+    "note": "unwindowed rank/quantile = full-frame fit. Post-FC1-D the only such site must feed research-only columns (volatility_regime_global_batch), never a production canonical column \u2014 section 1 is the empirical proof."
+  },
+  "permanent_floor": "tests/test_pit_prefix_invariance.py"
+}

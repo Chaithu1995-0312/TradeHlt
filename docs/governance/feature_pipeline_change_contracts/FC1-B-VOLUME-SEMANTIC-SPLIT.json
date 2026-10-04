@@ -1,0 +1,45 @@
+{
+  "change_id": "FC1-B-VOLUME-SEMANTIC-SPLIT",
+  "phase": "FC-1",
+  "title": "Separate T-003 volume proxy identity from source volume",
+  "status": "DRAFTED_FC0_NOT_IMPLEMENTED",
+  "affected_feature_ids": [
+    "FEAT-VOLUME",
+    "FEAT-VOLUME_RATIO",
+    "FEAT-VOLUME_SPIKE",
+    "FEAT-VOLUME_RANGE_PROXY"
+  ],
+  "legacy_semantics": {
+    "source_xauusd": "MT5 tick_volume → column volume",
+    "t003": "if all volume zero/NaN: volume := high-low under same name"
+  },
+  "new_semantics": {
+    "volume": "source semantic only; XAUUSD = TICK_VOLUME",
+    "volume_range_proxy": "optional synthetic; is_synthetic=true; distinct feature_id",
+    "consumer_rule": "declare accepted volume semantic; fail closed on mismatch"
+  },
+  "reason": "PASS-A TARGET_B MIXED_BY_CORPUS; same-name substitution kills semantic identity",
+  "evidence": [
+    "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+    "src/features/feature_pipeline.py compute_volume_features",
+    "src/inout/mt5_candle_fetcher.py tick_volume"
+  ],
+  "expected_population_impact": "XAU tick path unchanged; all-zero volume corpora change volume_ratio/spike",
+  "required_tests": [
+    "XAU volume identity through pipeline",
+    "T-003 mutant must not write volume column",
+    "consumer semantic declaration gate"
+  ],
+  "required_mutants": [
+    "volume same-name substitution",
+    "wrong volume semantic"
+  ],
+  "affected_consumers": [
+    "FeaturePipeline",
+    "models using volume/volume_ratio/volume_spike",
+    "any research path assuming traded volume"
+  ],
+  "affected_artifacts": ["models trained on proxy-as-volume need retrain or explicit acceptance"],
+  "migration_retraining_required": true,
+  "rollback_path": "restore T-003 branch under LEGACY freeze for shadow only"
+}

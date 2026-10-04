@@ -1,0 +1,32 @@
+{
+  "registry_id": "MEASUREMENT_OBJECT_REGISTRY",
+  "authority_finding": "L-003L",
+  "version": "L-003L.v1",
+  "run_id": "l003l_joint_state_space_measurement_objects_20260907_200006",
+  "generated_at_utc": "2026-09-07T20:00:06Z",
+  "git_commit_sha": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+  "title": "MEASUREMENT_OBJECTS_REGISTERED_IDENTITY",
+  "summary": {
+    "registered": [
+      "Y_scanner",
+      "Y_oracle",
+      "Y_joint"
+    ],
+    "status_each": "REGISTERED_IDENTITY",
+    "promotion_class": "identity / ontology correction (what is measured)",
+    "not_promoted": "edges / attribution / analytics schema columns / evidence_class"
+  },
+  "flags": {
+    "measurement_objects_registered": true,
+    "edge_claims": false,
+    "attribution_unblocked": false,
+    "schema_column_promoted": false,
+    "src_edits": false,
+    "new_measurements": false
+  },
+  "artifacts": [
+    "docs/governance/MEASUREMENT_OBJECT_REGISTRY.md",
+    "docs/governance/measurement_object_registry.json",
+    "docs/governance/measurement_object_registry_impact-2026-09-07.json"
+  ]
+}

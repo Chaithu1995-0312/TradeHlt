@@ -1,0 +1,85 @@
+# DESIGN ONLY — observation graph hierarchy for Context / ODP conditioning.
+# Aligns with CRT identity: execution graph ≠ parent graph (disjoint).
+# Aligns with htf_state.py: ObjectiveStatus is orthogonal to C1/C2/C3 and NOT CRTState.
+
+schema_version: "0.3.0"
+artifact: ObservationHierarchy
+status: design_draft
+
+levels:
+  L1_parent_crt:
+    identity: true
+    owner: config_layer.parent_crt.ParentCRTTrack
+    values: [RANGE_C1, MANIPULATION_C2, DISTRIBUTION_C3]
+    notes: |
+      Parent identities. Do NOT collapse with execution RANGE / DISTRIBUTION.
+      Do NOT add these to CRTState execution enum as interchangeable selectors.
+
+  L2_objective_status:
+    identity: false
+    intermediate_state: true
+    owner: config_layer.htf_state.ObjectiveStatus / resolve_objective
+    values: [NONE, EXISTS, ACHIEVED, INVALIDATED]
+    related:
+      direction: Direction  # LONG / SHORT / NONE on Objective
+      htf_state: HTFState   # EXPANSION / ACCUMULATION / DISTRIBUTION / REVERSAL / UNKNOWN
+                            # HTFState.DISTRIBUTION ≠ CRTState.DISTRIBUTION_C3 (F-077)
+    notes: |
+      Intermediate state layer between Parent CRT and Execution CRT.
+      Example narrative: MANIPULATION_C2 → Objective EXISTS (e.g. seeking upper liquidity)
+      → raises P(SWEEP) — does not redefine parent from structure.
+
+  L3_execution_crt:
+    identity: true
+    owner: CRTEngine / state_identity.CRTState (EXECUTION_TIMEFRAME_STATES)
+    values:
+      - RANGE
+      - SWEEP
+      - DISPLACEMENT
+      - EXPANSION
+      - RETEST
+      - EXECUTION
+      - RESOLUTION
+      - SHADOW_PENDING
+      - EXPIRED
+    notes: Authoritative S_t. Disjoint from L1.
+
+  L4_structure_atoms:
+    identity: false
+    observation: true
+    owners:
+      - configs/formulas/market_ontology.yaml
+      - features.smc.*
+      - structure/predicates.py
+    atoms:
+      - breaker_present
+      - order_block_present
+      - double_sweep
+      - liquidity_sweep_direction
+      - break_of_structure_present
+      - choch_present   # observation only; never promotes to L1 identity
+    forbidden_as_identity: [TT, twin_towers, setup_name, story_label]
+
+  L5_outcome_distribution:
+    identity: false
+    measurement: true
+    owner: ODP artifact (design)
+    requires: [Context, MeasurementContract]
+
+conditioning_rules:
+  - "Higher layers may condition lower layers."
+  - "Lower layers may not redefine higher layers."
+  - "P(Objective | Parent CRT) is valid."
+  - "P(Execution CRT | Objective) is valid."
+  - "P(Structure | Execution CRT) is valid."
+  - "P(Outcome | Context) is valid where Context respects level order."
+  - "P(Structure | Parent CRT) mixing abstraction levels is discouraged as a primary claim."
+  - "CHoCH/OB/Breaker/Sweep observations must not rewrite MANIPULATION_C2 / DISTRIBUTION_C3."
+
+causal_observation_chain_example:
+  parent_crt: MANIPULATION_C2
+  objective_status: EXISTS
+  objective_direction: LONG   # e.g. seeking upper liquidity — label is descriptive, not a new ontology key
+  execution_crt: SWEEP
+  structures: [breaker_present, order_block_present]
+  then: ODP under MeasurementContract

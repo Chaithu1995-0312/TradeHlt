@@ -1,0 +1,11 @@
+{
+  "work_item_id": "WI-002",
+  "intended_entrypoint": "scripts/research/story_library_build.py",
+  "validation_lens": "synthetic_story_golden",
+  "exit_model": "intrabar_fixed",
+  "cost_model_bps": 0,
+  "label_source": "forward_walk_intrabar_fixed",
+  "instruments": ["SYNTHUSDT"],
+  "allow_network": false,
+  "allow_broker": false
+}

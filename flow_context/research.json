@@ -1,0 +1,22 @@
+{
+  "flow": "research",
+  "title": "Edge Discovery / Research Platform",
+  "doc": "docs/architecture/pipeline-linkage-spine-as-hypothesis.md",
+  "service_ids": ["S6"],
+  "entrypoint": "research.runner",
+  "modules": [
+    "research.runner",
+    "research.cli",
+    "research.registry",
+    "research.contracts",
+    "research.measurement.forward_walk",
+    "research.qualification",
+    "research.costs",
+    "research.controls"
+  ],
+  "keywords": ["research", "hypothesis", "forward_walk", "qualification", "edge"],
+  "command_ids": ["research.runner"],
+  "inputs": ["hypothesis spec + M15 CSV / native panel data (intrabar + 12bps costs)"],
+  "outputs": ["edge_report / findings (qualify verdicts PROMOTE·REJECT·INSUFFICIENT)",
+              "byte-identical replay artifacts (deterministic, pre-registered)"]
+}

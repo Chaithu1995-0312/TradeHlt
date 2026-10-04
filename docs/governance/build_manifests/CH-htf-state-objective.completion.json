@@ -1,0 +1,49 @@
+{
+  "change_id": "CH-htf-state-objective",
+  "completed_utc": "2026-08-16T02:10:00Z",
+  "completion_status": "PARTIAL",
+  "repo_state_hash": "PENDING",
+  "declared_files": [
+    "src/config_layer/htf_state.py",
+    "src/config_layer/parent_crt.py",
+    "src/config_layer/crt_engine_v2.py",
+    "src/runtime/parent_crt_feed.py",
+    "src/runtime/backtest_v2.py",
+    "configs/formulas/market_ontology.yaml",
+    "configs/production/v2_htfcrt_2026_08.json",
+    "configs/production/v2_multi_2026_04.json",
+    "tests/test_htf_state.py",
+    "tests/test_htf_objective.py",
+    "tests/test_htf_objective_gate.py",
+    "tests/test_parent_crt_feed.py",
+    "docs/current-findings.md",
+    "CLAUDE.md",
+    "docs/topics/crt-spine.md",
+    "docs/governance/research_family_registry.json",
+    "docs/governance/build_manifests/CH-htf-state-objective.impact.json",
+    "docs/governance/build_manifests/CH-htf-state-objective.completion.json",
+    "assistant_project.md",
+    ".grok/PENDING.md"
+  ],
+  "checks_executed": [
+    "tests/test_htf_state.py",
+    "tests/test_htf_objective.py",
+    "tests/test_htf_objective_gate.py",
+    "tests/test_parent_crt_feed.py",
+    "tests/test_parent_crt_wiring.py",
+    "tests/test_semantic_registry.py",
+    "tests/test_current_findings.py",
+    "tests/test_findings_export.py",
+    "tests/test_research_family_registry.py",
+    "tests/test_topic_docs.py"
+  ],
+  "check_results": {
+    "this_change_htf_tests": "GREEN 44/44 (htf_state + htf_objective + htf_objective_gate + parent_crt_feed + parent_crt_wiring + semantic_registry)",
+    "findings_family_topic": "GREEN 34/34 (current_findings + findings_export + research_family_registry + topic_docs)",
+    "test_feature_math_lint.py": "RED pre-existing — msip_1_verification_package + dirty-tree math; htf_state.py is not ungoverned feature math",
+    "test_geometry_census.py": "RED pre-existing — dirty-tree NEW/REMOVED; htf_state classifier is parent-range ratio, not a census geometry site",
+    "test_reachability_golden.py": "RED — golden still pinned to v2_multi_2026_04 (active_version + verdict_counts). Drift is the earlier ACTIVE_VERSION flip to v2_htfcrt_2026_08 plus accumulated unread keys, not uniquely Stage 3. Regenerating would mix unrelated dirty-tree drift. Out of scope."
+  },
+  "completion_status_reason": "This change's own tests and findings/topic/family floors are green. validate-completion cannot be COMPLETE: (1) working tree is already dirty from concurrent/prior work so undeclared governed surfaces fail the diff check; (2) class-required lint/census floors are pre-existing RED; (3) reachability goldens are stale on the earlier v2_htfcrt ACTIVE_VERSION flip. Honest PARTIAL, not forced green. Gate-off identity is structural (elif unreachable when objective_gate.enabled=false) plus unit-tested; a full 47k XAUUSD ledger hash was not re-run this close-out.",
+  "BEHAVIOR_NOTE": "HTFState + ObjectiveStatus are computed whenever parent_crt.enabled (feed always classifies). process_candle parent_objective elif is live in code but default OFF on v2_htfcrt_2026_08 and v2_multi_2026_04. Parent-bias veto unchanged. No params hash change. No G001. CRT stays REOPENED. Flipping objective_gate.enabled is a separate authorized step."
+}

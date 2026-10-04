@@ -1,0 +1,121 @@
+{
+  "change_id": "CH-vcrt-remeasure-v2",
+  "date_utc": "2026-08-19",
+  "declared_files": [
+    "configs/research/measurement_contracts/instances/MC-VCRT-XAUUSD-M15-V2.json",
+    "src/research/visual_crt/driver.py",
+    "src/research/visual_crt/controls.py",
+    "src/research/visual_crt/measure.py",
+    "scripts/research/vcrt_remeasure_v2.py",
+    "scripts/governance/seed_script_registry.py",
+    "tests/research/test_vcrt_v2_contract.py",
+    "docs/current-findings.md",
+    "CLAUDE.md",
+    "docs/governance/script_registry_stubs.jsonl",
+    "docs/reference/script-matrix.md",
+    "docs/governance/build_manifests/CH-vcrt-remeasure-v2.impact.json",
+    "assistant_project.md"
+  ],
+  "checks_executed": [
+    {
+      "check": "GATE 1 — V1 byte reproduction",
+      "result": "PASS",
+      "detail": "Ledgers regenerated with the refactored driver match the committed V1 artifacts byte-for-byte (A n=944 gross +0.00798263 net -0.55588555; B n=462 gross -0.08352186 net -1.26166572). Re-verified AFTER every subsequent change. V1 re-run through the new measure.py pipeline also reproduced its published metrics.json to 6 decimals."
+    },
+    {
+      "check": "tests/research/test_vcrt_v2_contract.py",
+      "result": "PASS",
+      "detail": "24 tests"
+    },
+    {
+      "check": "tests/research/test_visual_crt_trade_object.py",
+      "result": "PASS",
+      "detail": "29 tests, unchanged"
+    },
+    {
+      "check": "tests/test_measurement_contract.py",
+      "result": "PASS",
+      "detail": "16 tests; V2 validates against the FROZEN schema"
+    },
+    {
+      "check": "tests/test_current_findings.py",
+      "result": "PASS",
+      "detail": "F-083 + F-084 agree with the CLAUDE.md index"
+    },
+    {
+      "check": "tests/test_doc_citations.py",
+      "result": "PASS"
+    },
+    {
+      "check": "tests/test_topic_docs.py",
+      "result": "PASS"
+    },
+    {
+      "check": "tests/test_construction_protocol.py",
+      "result": "PASS"
+    },
+    {
+      "check": "tests/test_semantic_registry.py",
+      "result": "PASS"
+    },
+    {
+      "check": "tests/test_component_cost_model.py + test_forward_walk_adverse_fill.py + test_cost_model_parity.py + test_measurement_profile_calibration.py",
+      "result": "PASS",
+      "detail": "F-082 floors still green"
+    },
+    {
+      "check": "aggregate",
+      "result": "PASS",
+      "detail": "182 passed"
+    },
+    {
+      "check": "F-082 PARITY GATE (re-verified after this change)",
+      "result": "PASS",
+      "detail": "forward_walk default path still bit-identical (sha 7019b32e...); all 29 research config_sha256 unchanged; SCHEMA_HASH f52bf5d3... and CANONICAL_FEATURE_DIM=48 unchanged; active config_hash 7de09f62... unchanged."
+    },
+    {
+      "check": "tests/test_script_registry.py + test_script_matrix_sync.py",
+      "result": "PRE_EXISTING_FAIL",
+      "detail": "2 failures. scripts/research/vcrt_remeasure_v2.py IS registered (overlay added, EXTRACTED_TO_SRC) and appears ZERO times in the failure output; the ratchet reports unregistered:[] and unclassified:[4 scripts] — crt_episode_number_trace.py, run_crt_trace_workflow.py, session_filter_funnel_probe.py, xauusd_excel_feature_state_trace.py — all untracked files belonging to concurrently-running sessions. Writing overlays for them would mean inventing a purpose for another session's work."
+    }
+  ],
+  "repo_state_hash": "84fff5176f57+870d017b890d",
+  "completion_status": "WORK_COMPLETE_GATE_BLOCKED_BY_SHARED_DIRTY_TREE",
+  "completion_status_explanation": "Same mechanical limitation recorded under CH-cost-model-broker-truth: validate-completion scopes to the entire `git status --porcelain`, so it counts undeclared governed paths that belong to pre-existing modifications and to concurrently-running sessions. Those were NOT added to declared_files. All declared work is complete and every check this change can affect is green.",
+  "production_behavior_changed": "NO",
+  "result_summary": {
+    "conclusion": "0 PROMOTE. Both pre-registered arms REJECT under the corrected measurement basis.",
+    "arm_A": {
+      "n": 944,
+      "gross_R": -0.000396,
+      "net_R": -0.048701,
+      "gross_ci_crosses_zero": true,
+      "v1_gross_R": 0.00798263,
+      "v1_net_R": -0.55588555
+    },
+    "arm_B": {
+      "n": 462,
+      "gross_R": -0.104971,
+      "net_R": -0.210696,
+      "gross_ci_crosses_zero": true,
+      "v1_gross_R": -0.08352186,
+      "v1_net_R": -1.26166572
+    },
+    "pre_registered_prediction": "CONFIRMED on 3 of 4 declared ranges; arm A gross came in at -0.000396 against a predicted floor of 0.000, marginally below and still indistinguishable from zero.",
+    "load_bearing_claim": "The Visual CRT null is INFORMATION-driven, not a cost artifact."
+  },
+  "deviations_from_impact_manifest": [
+    "The frozen measurement_contract.schema.json carries additionalProperties:false on every object and has NO slot for cost provenance, control configuration, or an execution note. The first V2 draft used new keys (supersedes, supersedes_note, costs.source_manifest, costs.ontology_id, splits.execution_note, metrics.controls) and failed schema validation. Rather than amend a frozen schema, every statement was folded into the free-text field the schema does allow (costs.components[].bps_or_formula, exits.intrabar_rule, metrics.success_gate, authority.note). Nothing was dropped, and the manifest sha256 is still recomputed and verified at bind time.",
+    "Consequently the random_entry control seed is splits.seed (20260817, V1's own declared seed) rather than the 20260819 named in the first draft — the schema has no slot for a separate control seed. This changed only the random_entry draw; arms and long_only are deterministic and bit-identical across both runs.",
+    "LedgerRow was deliberately NOT extended (the impact manifest allowed either option). Split membership is recorded in split_manifest.json — which is what the contract asks for — and model ids in run-level provenance. This makes V1 byte-identity structural rather than something a compatibility path has to preserve.",
+    "src/research/visual_crt/measure.py was added (not named in the impact manifest's affected_files) to keep the runner a thin CLI wrapper per CLAUDE.md 3.3; controls.py alone would have forced orchestration into the script.",
+    "An unplanned 100-seed stability diagnostic was run on the random_entry control after the seed change flipped Arm B's comparison. It is descriptive, not the gate, and is recorded in F-084."
+  ],
+  "residual_open_items": [
+    "UNK-COST-01 (non-blocking, carried): no registered change class for the research measurement harness.",
+    "UNK-VCRT-01 resolved by execution and registered as F-083; the RECOMMENDED generic floor (assert every sealed MC-* instance's non-null evidence_artifacts paths resolve, or carry an explicit UNRUN declaration) is NOT written — it would fail immediately on other sealed instances this turn has no authority to adjudicate.",
+    "The V1/V2 control specification gates on a SINGLE seeded random_entry draw. Measured to be too noisy at this n (control sd 0.0885 on Arm B against a mean of -0.146; Arm B beats it in 22/100 draws while the single declared draw says it does). Changing the specification requires a V3.",
+    "The 2 SITS floor failures are 4 concurrent-session scripts lacking overlays. Not this change's to author.",
+    "test_session_log.py entry-count cap remains exceeded (pre-existing); rotation rewrites a file other sessions append to, so it stays flagged rather than run unilaterally."
+  ]
+}

@@ -1,4 +1,4 @@
-﻿"""
+"""
 backtest_bitnet.py
 ==============
 Row-by-row backtest runner with BitNet as HARD GATEKEEPER.
@@ -120,7 +120,7 @@ def _build_engine_runner_config(config: dict) -> dict:
     resolved["execution_planner"] = config["execution_planner"]
     resolved["ultron_risk_gate"]  = config["ultron_risk_gate"]
 
-    # Keep RR threshold consistent across DecisionEngine and RREngine.
+    # Keep RR threshold consistent across DecisionEngine and CandleCommitment.
     if "rr_threshold" in resolved and "min_rr" not in resolved:
         resolved["min_rr"] = resolved["rr_threshold"]
 
@@ -183,7 +183,13 @@ def run_backtest(
     if gate_mode not in {"hard_gate", "score_only_audit", "force_accept_baseline"}:
         raise ValueError(f"Unsupported gate_mode: {gate_mode}")
 
-    runner = EngineRunner(_build_engine_runner_config(config))
+    # Instrument-aware Gaussian lookup (mirrors backtest_v2.py's
+    # `_er_cfg["instrument"] = self.cfg.instrument`, ~:3352) — symbol is derived early so it
+    # can be threaded into the EngineRunner config.
+    symbol = _derive_symbol_from_data_path(data_path)
+    _engine_runner_cfg = _build_engine_runner_config(config)
+    _engine_runner_cfg["instrument"] = symbol
+    runner = EngineRunner(_engine_runner_cfg)
     # Shared collector so exception records appear in the same audit file
     # as all accept/reject decisions written by engine_runner.
     collector = runner.collector
@@ -191,7 +197,6 @@ def run_backtest(
 
     # Create unique decision log file for this run
     timestamp = time.strftime("%Y%m%d_%H%M%S")
-    symbol = _derive_symbol_from_data_path(data_path)
     log_filename = f"logs/backtest_decisions_{symbol}_{timestamp}.jsonl"
     decision_log = open(log_filename, 'w', encoding='utf-8')
     logger.info("Writing all decision records to: %s", log_filename)
@@ -233,7 +238,8 @@ def run_backtest(
     # ──────────────────────────────────────────────────────────────────────────────────
 
     # ── Load BitNet runner ───────────────────────────────────────────────────────────
-    _er_section = config.get("engine_runner") or {}
+    from config_layer.strict_config import require_section
+    _er_section = require_section(config, "engine_runner", consumer="backtest_bitnet")  # EPIC-84
     model_path = _er_section.get("model_path")
     if not model_path:
         raise KeyError(

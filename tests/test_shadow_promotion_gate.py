@@ -28,13 +28,17 @@ from governance.shadow_promotion_gate import ShadowPromotionGate, _DEFAULT_MIN_S
 # Helpers
 # ---------------------------------------------------------------------------
 
+# EPIC-84: shadow_data_csv / shadow_output_csv are required governance keys (no defaults).
+_GOV_IO = {"shadow_data_csv": "data/shadow_input.csv", "shadow_output_csv": "results/shadow_output.csv"}
+
+
 def _make_gate(tmp_path: Path, min_trades: int = 30) -> ShadowPromotionGate:
     """Create a ShadowPromotionGate with injected governance config."""
     cfg_path = tmp_path / "prod.json"
-    cfg_path.write_text(json.dumps({"governance": {"min_shadow_trades": min_trades}}))
+    cfg_path.write_text(json.dumps({"governance": {"min_shadow_trades": min_trades, **_GOV_IO}}))
     return ShadowPromotionGate(
         active_config_path=str(cfg_path),
-        governance_config={"min_shadow_trades": min_trades},
+        governance_config={"min_shadow_trades": min_trades, **_GOV_IO},
     )
 
 
@@ -74,7 +78,7 @@ def test_init_validates_min_trades_negative(tmp_path):
 
 def test_init_accepts_float_whole_number():
     """30.0 should be coerced to 30 without error."""
-    gate = ShadowPromotionGate(governance_config={"min_shadow_trades": 30.0})
+    gate = ShadowPromotionGate(governance_config={"min_shadow_trades": 30.0, **_GOV_IO})
     assert gate.min_shadow_trades == 30
 
 

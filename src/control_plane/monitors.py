@@ -1,3 +1,5 @@
+"""Control-plane dashboard monitor specs (jsonl-tail/json/regex/file-stat sources)."""
+
 from __future__ import annotations
 
 import glob
@@ -8,6 +10,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Literal, Mapping
+from config_layer.strict_config import ConfigKeyMissingError, require, require_all
 
 MonitorSource = Literal["jsonl_tail", "json_file", "log_regex", "file_stat"]
 MonitorFormat = Literal["int", "float", "str", "duration", "timestamp"]
@@ -185,7 +188,7 @@ def _walk_jsonpath(obj: Any, jsonpath: str) -> Any:
 
 
 def _extract_jsonl_tail(path: Path, cfg: Mapping[str, Any]) -> Any:
-    key = str(cfg.get("key", ""))
+    key = str(require(cfg, "key", section_name="control_plane", consumer="monitors"))
     if not key:
         raise ValueError("jsonl_tail requires 'key'")
     size = path.stat().st_size
@@ -202,7 +205,7 @@ def _extract_jsonl_tail(path: Path, cfg: Mapping[str, Any]) -> Any:
 
 
 def _extract_json_file(path: Path, cfg: Mapping[str, Any]) -> Any:
-    jsonpath = str(cfg.get("jsonpath", ""))
+    jsonpath = str(require(cfg, "jsonpath", section_name="control_plane", consumer="monitors"))
     data = json.loads(path.read_text(encoding="utf-8"))
     return _walk_jsonpath(data, jsonpath)
 
@@ -211,8 +214,8 @@ def _extract_log_regex(path: Path, cfg: Mapping[str, Any]) -> Any:
     pattern = cfg.get("pattern")
     if not pattern:
         raise ValueError("log_regex requires 'pattern'")
-    group = int(cfg.get("group", 1))
-    scan = cfg.get("scan", "tail_last")
+    group = int(require(cfg, "group", section_name="control_plane", consumer="monitors"))
+    scan = require(cfg, "scan", section_name="control_plane", consumer="monitors")
     size = path.stat().st_size
     if scan == "first":
         read_from = 0
@@ -233,7 +236,7 @@ def _extract_log_regex(path: Path, cfg: Mapping[str, Any]) -> Any:
 
 
 def _extract_file_stat(path: Path, cfg: Mapping[str, Any]) -> Any:
-    attr = cfg.get("attr", "size")
+    attr = require(cfg, "attr", section_name="control_plane", consumer="monitors")
     if attr == "exists":
         return path.exists()
     st = path.stat()

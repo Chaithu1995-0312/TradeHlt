@@ -1,0 +1,44 @@
+{
+  "change_id": "CH-canonical-layer-identity",
+  "date_utc": "2026-08-23",
+  "objective": "Phase 1 only: freeze the canonical identity contract for OHLC, Feature Values, Feature States, CRT States, Geometry, and Outcome (primary keys, lineage keys, immutability, schema versioning, archive rules). No storage, no writers, no readers, no migrations, no code. Implementation of persistence is forbidden until this freeze is cited unchanged or amended under a new change id.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY"
+  ],
+  "change_class_rationale": "New living governance identity specification plus navigation pointers. No src/, configs/, scripts/, tests/, or models/ edit. No ontology node, no Semantic OS id, no FM-id, no F-id. Predecessor census stays point-in-time; this document owns identity going forward.",
+  "affected_files": [
+    "docs/governance/CANONICAL_LAYER_IDENTITY_CONTRACT.md",
+    "docs/governance/build_manifests/CH-canonical-layer-identity.impact.json",
+    "docs/knowledge-map.md",
+    "docs/analysis/feature_state_lineage_census.md",
+    "docs/governance/build_manifests/CH-canonical-layer-identity.completion.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py"
+  ],
+  "unknowns": [
+    {
+      "question": "Whether a later phase should allocate a Semantic OS Contract id (next free CT-010) for this freeze.",
+      "blocking": false,
+      "resolution": "Not this turn. CLAUDE.md §6.7 / GROK.md: do not invent CT-ids. Cite existing CN-001 / CT-001 / CORPUS_AUTHORITY / MEASUREMENT_CONTRACT only.",
+      "followup": "Optional Phase-2-adjacent documentation change, not required to freeze identity."
+    },
+    {
+      "question": "Whether a derived CRT setup/cycle id should be a seventh primary object.",
+      "blocking": false,
+      "resolution": "Explicitly not allocated. Occupancy + transition event are the L3 objects. Trade.id is L4 lineage. A setup grouping is a later amendment if authorized.",
+      "followup": "Only if a persistence design cannot join occupancies without it."
+    }
+  ],
+  "rollback_boundary": "Delete docs/governance/CANONICAL_LAYER_IDENTITY_CONTRACT.md and this manifest; revert the knowledge-map row and the census successor pointer. No src/config to revert.",
+  "authority_granted": "User 2026-08-23: Implement Phase 1 only — identity specification document. Implementation phase cannot begin until identity is frozen.",
+  "authority_NOT_granted": "No storage, no writers, no readers, no migrations, no code, no G001, no promotion, no ACTIVE_VERSION change, no Semantic OS id, no FM-id, no F-id, no CRT recertification.",
+  "production_behavior_changed": "NO"
+}

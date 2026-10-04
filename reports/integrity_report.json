@@ -1,0 +1,406 @@
+{
+  "bucket_version": 1,
+  "builder_version": "stage1.v1",
+  "duration_bucket_distribution": {
+    "EXTENDED": 68,
+    "FAST": 172048,
+    "NORMAL": 29660,
+    "SWING": 1812
+  },
+  "duration_seconds": 57.469,
+  "feature_dim": 38,
+  "feature_hash": "235553310100a340",
+  "input_pairs": 6,
+  "min_feature_quality": 0.7,
+  "missing_compressed_json": 4,
+  "missing_trades_csv": 6,
+  "output_path": "data/master_crypto_training.jsonl",
+  "output_sha256": "72e650bbb1f14bcf0a78c9da687b178c38c0f69541c2f973d34f04f46e86ccbb",
+  "per_instrument_accepted": {
+    "ETHUSDT": 203588
+  },
+  "regime_distribution": {
+    "RANGING": 76704,
+    "TRENDING": 126884
+  },
+  "rejection_samples": [
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 2
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 3
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 4
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 5
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 6
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 7
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 8
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 9
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 10
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 11
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 12
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 13
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 14
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 15
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 16
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 17
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 18
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 19
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 20
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 21
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 22
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 23
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 24
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 25
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 26
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 27
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 28
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 29
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 30
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 31
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 32
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 33
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 34
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 35
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 36
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 37
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 38
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 39
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 40
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 41
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 42
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 43
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 44
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 45
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 46
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 47
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 48
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 49
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 50
+      }
+    },
+    {
+      "reason": "missing_features",
+      "record": {
+        "instrument": "ETHUSDT",
+        "line": 51
+      }
+    }
+  ],
+  "replay_version": 1,
+  "rr_bucket_distribution": {
+    "BASE": 12906,
+    "LOSS": 68844,
+    "SCRATCH": 112538,
+    "STRONG": 9300
+  },
+  "schema_version": "3.0",
+  "scope_effective": "crypto",
+  "scope_requested": "crypto",
+  "strict_layout": false,
+  "timestamp": "2026-05-22T15:55:33Z",
+  "totals": {
+    "accepted": 203588,
+    "rejected": {
+      "duplicate": 0,
+      "low_feature_quality": 0,
+      "malformed_json": 0,
+      "missing_features": 305382,
+      "no_outcome": 0,
+      "out_of_scope": 101794,
+      "schema_mismatch": 0,
+      "type_mismatch": 0
+    },
+    "rejected_total": 407176,
+    "replay_ready": 203588
+  },
+  "validation_level": "WARN"
+}

@@ -1,0 +1,61 @@
+{
+  "change_id": "CH-live-rail-cert-replay",
+  "objective": "Certify the live decision rail against deterministic historical replay. Phase 0: split the two colliding FEATURE_REJECT audit kinds (feeder vs engine), add process_attempts, per-run report dir. Phase 1: historical replay source, two arms (bar injection / tick replay with round-trip assertion). Phase 2: CONFIRMED DEFECT \u2014 live_engine_hook._load_engine_config assigns _feature_store without declaring it global (:279), so the module singleton stays None and the FeatureStore canonical ingestion boundary never runs on the live path; ZoneGate then receives 19 of 48 canonical keys and raises. Fix the global + fail closed when the store is available but unbuilt. User authorized 2026-08-19.",
+  "change_classes": [
+    "RUNTIME_DECISION_PATH_CHANGE",
+    "DOCUMENTATION_TRUTH_CHANGE"
+  ],
+  "production_behavior_changed": false,
+  "production_behavior_note": "The hook live path gains the FeatureStore validation it was always documented to run. Strictly stricter (fail-closed), never looser. F-073: no production live loop exists, so no production caller is affected. Backtests use backtest_v2's own path and do not read _feature_store.",
+  "affected_files": [
+    "assistant_project.md",
+    "docs/governance/build_manifests/CH-live-rail-cert-replay.impact.json",
+    "docs/governance/script_registry_stubs.jsonl",
+    "scripts/governance/seed_script_registry.py",
+    "scripts/live/run_live_rail.py",
+    "src/core/feature_store.py",
+    "src/features/feature_builder.py",
+    "src/features/feature_pipeline.py",
+    "src/inout/live_rail/__init__.py",
+    "src/inout/live_rail/ohlcv_replay_port.py",
+    "src/runtime/live_engine_hook.py",
+    "src/runtime/live_rail_orchestrator.py",
+    "tests/test_live_rail_orchestrator.py",
+    "tests/test_live_rail_replay_cert.py"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "required_checks_ack": [
+    "tests/test_live_rail_orchestrator.py",
+    "tests/test_live_rail_feeder.py",
+    "tests/test_live_rail_replay_cert.py",
+    "tests/test_live_rail_hook_xor.py",
+    "tests/test_live_rail_dm001_atr.py",
+    "tests/test_feature_math_lint.py",
+    "tests/test_doc_citations.py"
+  ],
+  "unknowns": [
+    {
+      "question": "After the _feature_store global fix, does a bar reach a decision, or is there a further seam?",
+      "blocking": false,
+      "resolution": "PRE-REGISTERED PREDICTION (recorded before the run): _build_ohlcv_and_auxiliary documents auxiliary as all remaining CANONICAL_FEATURES, every one MANDATORY, and LiveRailFeeder already supplies all 48, so Phase 2 alone is predicted sufficient. Any further seam is recorded as its own row and fixed one at a time.",
+      "followup": "Never widen a contract to make a run pass.",
+      "outcome": "PREDICTION FAILED. The global fix alone did NOT carry a bar to a decision. Two further seams surfaced and were fixed one at a time: (1) _build_ohlcv_and_auxiliary omitted all 12 schema-v5.0 SMC/liquidity keys -- FeatureStore reported missing:[12]; (2) it also passed 3 NON-canonical keys (wick_size, body_to_total_wick_ratio, body_to_range_ratio) which the store rejects as extras. The docstring's 'all remaining CANONICAL_FEATURES' described intent; the hardcoded literal had drifted. A third seam (session ordinal 4 = SessionOrdinal.CLOSED, unmapped in the hook) accounted for the remaining 24/122 bars. No contract was widened to make the run pass."
+    },
+    {
+      "question": "Can a paper run write production state (logs/kill_switch_state.json)?",
+      "blocking": false,
+      "resolution": "Checked in Phase 0; report artifacts move to results/live_rail_cert/<run_id>/ regardless.",
+      "followup": "If the kill switch can write, point it at the run dir."
+    },
+    {
+      "question": "Stale '39-dim / 39 names' claims remain in 4 more modules.",
+      "blocking": false,
+      "resolution": "DECLARED RESIDUAL, deliberately not edited here: crt_state_resolver.py (:7,:65,:324,:804), feature_pipeline.py:957, gaussian_schema_contract.py (:9,:21). feature_schema.py:146-150 and rr_pattern_miner.py:446 are CORRECT as written -- they describe the v4.0/v3 era on purpose. Expanding this change into 4 more modules would dilute its boundary.",
+      "followup": "Separate doc-drift sweep. Recorded in the session log, not silently fixed."
+    }
+  ],
+  "rollback_boundary": "Revert the one-word global declaration and the :817 raise; delete ohlcv_replay_port.py and tests/test_live_rail_replay_cert.py; restore the single FEATURE_REJECT audit kind. No params hash, no config, no ACTIVE_VERSION.",
+  "authority_granted": "User approved the certification plan 2026-08-19. Does NOT authorize a live venue, dry_run=false, auto_execute, promotion, or any G001 / economic claim. F-073 and F-010 stay OPEN."
+}

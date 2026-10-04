@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "docs/research/reports/schemas/measurement_object.schema.json",
+  "title": "MeasurementObject",
+  "type": "object",
+  "required": [
+    "object_id",
+    "formula_map",
+    "producer",
+    "value_domain",
+    "status"
+  ],
+  "properties": {
+    "object_id": {
+      "type": "string",
+      "description": "Canonical MeasurementObject id, e.g. Y_scanner"
+    },
+    "formula_map": {
+      "type": "object",
+      "description": "Mathematical map declaration: domain -> codomain",
+      "required": [
+        "domain",
+        "codomain",
+        "notation"
+      ],
+      "properties": {
+        "domain": {
+          "type": "string",
+          "description": "Domain set id, e.g. Omega_anatomy_opportunity"
+        },
+        "codomain": {
+          "type": "string",
+          "description": "Codomain set id, e.g. OutcomeLabel or S=L\u00d7L"
+        },
+        "notation": {
+          "type": "string",
+          "description": "Compact type, e.g. Omega -> OutcomeLabel"
+        },
+        "definition": {
+          "type": "string"
+        }
+      }
+    },
+    "producer": {
+      "type": "object",
+      "required": [
+        "kind",
+        "ref"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "ExitProcess",
+            "MeasurementProcess",
+            "Composition",
+            "Other"
+          ]
+        },
+        "ref": {
+          "type": "string"
+        },
+        "symbol": {
+          "type": "string"
+        },
+        "params": {
+          "type": "object"
+        }
+      }
+    },
+    "value_domain": {
+      "oneOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "projections": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "Artifact/column projections; not the object itself"
+    },
+    "status": {
+      "type": "string"
+    },
+    "edge_claim": {
+      "type": "boolean"
+    },
+    "attribution_eligible": {
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": true
+}

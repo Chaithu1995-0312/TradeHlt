@@ -1,0 +1,41 @@
+name: erp-test-harness
+
+# ERP P1 / T0 — anti-hallucination harness + story-library goldens.
+#
+# DESIGN CONSTRAINT — this job runs a PATH-SCOPED green subset, NOT the whole pytest suite. The full
+# suite carries ~66 known F-018 reds (config split-brain / branch-TP3 / LLM-env); running it would be
+# permanently red and enforce nothing. This subset (tests/harness + the story-library goldens) is
+# green and grows as the harness expands. The governance green-floor (governance.yml) is separate and
+# untouched. Rationale: docs/research-readiness/edge-research-platform-testing-plan.md §8 (T0).
+#
+# 2026-08-21: tests/research/test_stop_policy.py joined the subset to enforce the SEM-017 guard
+# (the production TP1 trail lands HALF-WAY to TP1, not at breakeven, despite the config key being
+# named partial_tp_breakeven_enabled). Mutation-verified: rewriting the trail to real breakeven
+# fails 4 of its tests. Its import closure (src/research/oracle/{__init__,multi_tp_walk,
+# reference_walker,stop_policy}.py) was tracked in the same change; it needs only numpy+pytest.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  harness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install
+        # The project declares no base deps (only optional extras); install the runtime libs the
+        # goldens/harness import so collection succeeds on CI.
+        run: pip install -e . && pip install pandas pyyaml numpy
+      - name: ERP test harness (path-scoped green subset)
+        # -m "not slow" excludes the opt-in XAUUSD research smoke (forward_walk is O(bars)).
+        run: >-
+          pytest -q -m "not slow"
+          tests/harness
+          tests/research/test_story_library_golden.py
+          tests/research/test_story_ontology.py
+          tests/research/test_xauusd_corpus_certification.py
+          tests/research/test_stop_policy.py

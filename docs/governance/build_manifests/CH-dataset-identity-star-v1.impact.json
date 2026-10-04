@@ -1,0 +1,51 @@
+{
+  "change_id": "CH-dataset-identity-star-v1",
+  "date_utc": "2026-09-02",
+  "objective": "Freeze Dataset Identity as the CORPUS_AUTHORITY object: one canonical admitted artifact (M15 for the XAUUSD Phase-1 dataset) and direct ParentCandleBuilder projections (H1/H4/D1/W1/MN1 as a star from that artifact, never a cascade). Formalizes the F-075 Parent CRT population as derived_h4. No loader, no schema migration, no byte move, no APPROVED, no OHLCV CLOSED.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY"
+  ],
+  "change_class_rationale": "Doctrine expansion of the existing CORPUS_AUTHORITY.md plus navigation + a pin in the existing corpus-authority test. No src/, configs/, or models/ edit. Does not reopen Canonical Layer Identity L0-L5. Does not migrate CAD-* JSONL (SYMBOL_TIMEFRAME archive stays). No ontology node, no Semantic OS id, no FM-id, no F-id.",
+  "affected_files": [
+    "docs/governance/CORPUS_AUTHORITY.md",
+    "docs/governance/build_manifests/CH-dataset-identity-star-v1.impact.json",
+    "docs/knowledge-map.md",
+    "docs/topics/crt-spine.md",
+    "tests/test_corpus_authority_decisions.py",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/test_corpus_authority_decisions.py"
+  ],
+  "unknowns": [
+    {
+      "question": "When to migrate CAD-* rows from logical_corpus_id SYMBOL_TIMEFRAME to dataset_id + timeframe slots (R3 schema).",
+      "blocking": false,
+      "resolution": "Not this turn. Archive in place. Schema change is a later authorized IDENTITY/governance change, not this freeze.",
+      "followup": "R3 binding manifest + admission gate under a new change id."
+    },
+    {
+      "question": "Whether native HTF CSVs are listed as FORENSIC inventory rows on the dataset record or omitted entirely.",
+      "blocking": false,
+      "resolution": "This freeze classifies them FORENSIC / NOT_ADMITTED. Listing vs omission is inventory, not identity.",
+      "followup": "Optional on the first dataset record when R3 is authorized."
+    },
+    {
+      "question": "Whether Canonical Layer Identity L0 lineage should add dataset_id as a named lineage key.",
+      "blocking": false,
+      "resolution": "Not this turn. LAYER_IDENTITY_STATUS stays CLOSED. This freeze sits upstream of L0 and does not reopen that contract.",
+      "followup": "Only via a new identity-contract amendment if a writer cannot join without it."
+    }
+  ],
+  "rollback_boundary": "Revert CORPUS_AUTHORITY.md, this manifest, knowledge-map row, crt-spine Discussion bullet, and the test pin. CAD-* JSONL, XAUUSD Phase-1 binding, CandleLoader guard, and L0-L5 contracts stay.",
+  "authority_granted": "User 2026-09-02: freeze Dataset Identity / canonical M15 artifact / direct projections (star). Formalize F-075 derived_h4 as the Parent CRT population. Native HTF files forensic-only.",
+  "authority_NOT_granted": "No CandleLoader rewrite, no R3 admission gate, no CAD schema migration, no APPROVED status, no OHLCV_CLOSURE_STATUS change, no G001, no promotion, no ACTIVE_VERSION, no Semantic OS id, no FM-id, no F-id, no reopen of Canonical Layer Identity / Storage Preservation / Physical Storage, no second L0-L5 ladder, no CalendarHTFBuilder.",
+  "production_behavior_changed": "NO"
+}

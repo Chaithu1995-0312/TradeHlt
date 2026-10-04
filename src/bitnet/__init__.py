@@ -11,7 +11,7 @@ A TRADE FILTER: discovers which feature regions yield positive expected RR.
 
 Modules
 -------
-search_engine     : Core evolutionary parameter search
+zone_cosine_searcher : Core evolutionary parameter search (cosine-similarity zone lookup)
 zone_validator    : Accept/reject zones by quality criteria
 stability_checker : Temporal split stability check (anti-overfitting)
 forward_tester    : Out-of-sample validation
@@ -19,7 +19,7 @@ forward_tester    : Out-of-sample validation
 Quick Start
 -----------
     from config_layer.rr.rr_dataset_builder import load_dataset
-    from bitnet.search_engine import BitNetSearchEngine
+    from bitnet.zone_cosine_searcher import BitNetSearchEngine
 
     X, y_rr, y_win = load_dataset()
     engine = BitNetSearchEngine(X, y_rr, y_win)
@@ -27,7 +27,7 @@ Quick Start
     engine.save_zones(zones)
 """
 
-from bitnet.search_engine import BitNetSearchEngine, ZoneCandidate, ZoneResult, compute_gaussian_score_from_candidate
+from bitnet.zone_cosine_searcher import BitNetSearchEngine, ZoneCandidate, ZoneResult, compute_gaussian_score_from_candidate
 from bitnet.zone_validator import ZoneValidator
 from bitnet.stability_checker import StabilityChecker
 from bitnet.forward_tester import ForwardTester, run_forward_test

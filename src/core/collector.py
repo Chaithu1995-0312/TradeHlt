@@ -10,6 +10,8 @@ from pathlib import Path
 
 Path("logs").mkdir(exist_ok=True)
 from utils.logging_config import get_flow_logger
+from config_layer.strict_config import ConfigKeyMissingError, require
+from config_layer.production_config import PROD_VERSION as _COLLECTOR_PROD_VERSION
 _log = get_flow_logger("COLLECTOR")
 
 
@@ -49,8 +51,33 @@ def _engine_value(engine_payload, keys: tuple[str, ...], default: float = 0.0) -
     return default
 
 
+_ZONEGATE_SCORE_KEY_CACHE: str | None = None
+
+
+def _declared_zonegate_score_key() -> str:
+    """The declared ``collector.zonegate_score_key`` (EPIC-84 STORY-84.2: was the literal
+    env default 'zone'). A missing section/key raises ConfigKeyMissingError. Cached per process."""
+    global _ZONEGATE_SCORE_KEY_CACHE
+    if _ZONEGATE_SCORE_KEY_CACHE is None:
+        from config_layer.production_config import get_prod_section
+        try:
+            section = get_prod_section("collector")
+        except RuntimeError as exc:  # section absent from the production config
+            raise ConfigKeyMissingError(
+                ["collector"], section="<root>", consumer="Collector",
+            ) from exc
+        _ZONEGATE_SCORE_KEY_CACHE = str(require(
+            section, "zonegate_score_key", section_name="collector", consumer="Collector",
+        ))
+    return _ZONEGATE_SCORE_KEY_CACHE
+
+
 def _zonegate_value_keys() -> tuple[str, str]:
-    preferred = str(os.environ.get("COLLECTOR_ZONEGATE_SCORE_KEY", "zone")).strip().lower()
+    # COLLECTOR_ZONEGATE_SCORE_KEY stays an explicit operator override; when it is NOT set the
+    # declared config key is the authority (no literal default).
+    override = os.environ.get("COLLECTOR_ZONEGATE_SCORE_KEY")
+    raw = override if override is not None else _declared_zonegate_score_key()
+    preferred = str(raw).strip().lower()
     if preferred in {"score", "zonegate.score"}:
         return ("score", "zone")
     return ("zone", "score")
@@ -93,19 +120,20 @@ def collect(
 
     engines_flat = {
         "crt": _engine_value(engine_outputs.get("crt"), ("score",)),
-        "gaussian": _engine_value(engine_outputs.get("gaussian"), ("score",)),
+        "ema_momentum_kernel": _engine_value(engine_outputs.get("ema_momentum_kernel"), ("score",)),
         "adapter": _engine_value(engine_outputs.get("adapter"), ("score",)),
-        "rr": _engine_value(engine_outputs.get("rr"), ("score",)),
-        "zone_gate": _engine_value(engine_outputs.get("zone_gate"), _zonegate_value_keys()),
+        "candle_commitment": _engine_value(engine_outputs.get("candle_commitment"), ("score",)),
+        "feature_cluster_similarity": _engine_value(engine_outputs.get("feature_cluster_similarity"), _zonegate_value_keys()),
         "llm": _engine_value(engine_outputs.get("llm"), ("score",)),
     }
-    gaussian_score = _to_float(
-        context.get("gaussian_score", context.get("score", engines_flat.get("gaussian", 0.0))),
+    ema_momentum_kernel_score = _to_float(
+        context.get("ema_momentum_kernel_score", context.get("score", engines_flat.get("ema_momentum_kernel", 0.0))),
         0.0,
     )
 
     record = {
         "t": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "config_version": _COLLECTOR_PROD_VERSION,
         "id": trade_id,
         "features": {
             "body_ratio": _to_float(features.get("body_ratio", 0.0), 0.0),
@@ -113,12 +141,12 @@ def collect(
             "displacement": _to_float(features.get("displacement", 0.0), 0.0),
         },
         "context": {
-            "gaussian_score": gaussian_score,
+            "ema_momentum_kernel_score": ema_momentum_kernel_score,
             "p_win": p_win,
-            "candles_since_retest": _to_int(
+            "candles_since_sweep": _to_int(
                 context.get(
-                    "candles_since_retest",
-                    features.get("candles_since_retest", 0),
+                    "candles_since_sweep",
+                    features.get("candles_since_sweep", 0),
                 ),
                 0,
             ),
@@ -151,6 +179,17 @@ def collect(
                 "rr_fusion": rr_fusion,
                 "p_win": p_win,
             },
+        },
+        # Phase D: strategy memory — populated from context["strategy"] when available.
+        # winning_id: strategy that produced the top signal ("S1" | "S3" | "").
+        # crt_path: compact CRT transition codes at decision time (["S","D","T","X"]).
+        # pattern_hash: 16-char SHA-256 cluster fingerprint for expectancy lookup.
+        # hypotheses: StrategyIntent.to_dict() list from OrchestratorResult.
+        "strategy": {
+            "winning_id":   str(context.get("strategy", {}).get("winning_id",   "")),
+            "crt_path":     list(context.get("strategy", {}).get("crt_path",    [])),
+            "pattern_hash": str(context.get("strategy", {}).get("pattern_hash", "")),
+            "hypotheses":   list(context.get("strategy", {}).get("hypotheses",  [])),
         },
     }
     _log.info(json.dumps(_json_serializable(record)))

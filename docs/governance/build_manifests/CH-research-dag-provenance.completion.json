@@ -1,0 +1,55 @@
+{
+  "change_id": "CH-research-dag-provenance",
+  "date_utc": "2026-08-26",
+  "change_classes": [
+    "DOCUMENTATION_ONLY",
+    "SCRIPT_LIFECYCLE_CHANGE"
+  ],
+  "declared_files": [
+    "scripts/analysis/research_dag_provenance.py",
+    "docs/governance/research_dag_provenance-2026-08-26.json",
+    "docs/governance/research_dag_provenance.LATEST.json",
+    "docs/analysis/research-dag-provenance-2026-08-26.md",
+    "docs/analysis/readme.md",
+    "docs/governance/build_manifests/CH-research-dag-provenance.impact.json",
+    "docs/governance/build_manifests/CH-research-dag-provenance.completion.json",
+    "tests/test_research_dag_provenance.py",
+    "docs/governance/script_registry_stubs.jsonl",
+    "docs/governance/script_registry_grandfather.json",
+    "scripts/governance/seed_script_registry.py",
+    "data/script_registry.jsonl",
+    "docs/reference/script-matrix.md",
+    "assistant_project.md"
+  ],
+  "checks_executed": [
+    "tests/test_research_dag_provenance.py",
+    "tests/test_script_registry.py",
+    "tests/test_script_matrix_sync.py",
+    "tests/test_session_log.py",
+    "tests/test_construction_protocol.py",
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py"
+  ],
+  "checks_result": {
+    "focused_required_floors": "3 failed, 112 passed in 12.66s",
+    "new_floor": "tests/test_research_dag_provenance.py 25 passed",
+    "doc_floors": "tests/test_current_findings.py + test_doc_citations.py + test_topic_docs.py green",
+    "determinism": "two runs at --date 2026-08-26 byte-identical (sha256 verified)",
+    "impact_validation": "IMPACT: APPROVED",
+    "validate_completion": "BLOCKED on undeclared governed surfaces from a shared dirty tree; required checks re-executed directly",
+    "pre_existing_failures_not_caused_by_this_change": {
+      "tests/test_script_registry.py::test_disk_coverage_full_universe": "names exclusively _dedent.py and _run_mr.py - untracked repo-root scripts dated 2026-08-24 belonging to another session's working tree, after the grandfather pin's last resync 2026-08-22. Not adopted into the pin by this change: registering another session's WIP under this change contract would launder it. This change's own path reports unclassified=[].",
+      "tests/test_script_registry.py::test_grandfather_ratchet_live_universe": "same two foreign paths, same reasoning.",
+      "tests/test_session_log.py::test_session_log_entry_count_is_bounded": "78 emoji-visible entries against a cap of 30; was already red at HEAD with 77. The documented remedy (rotate_session_log.py) was DELIBERATELY NOT RUN - a read-only probe using the rotator's own parse_log/render shows it would fuse 90 bare-marker entries into the doctrine preamble (grown ~53 -> 1,194 lines) while its conservation guard PASSES, because that guard counts markers with the same blind regex the parser uses. Surfaced as TC-3 in the write-up; the fix needs its own authorized turn."
+    },
+    "repaired_pre_existing": {
+      "tests/test_script_registry.py::test_grandfather_paths_match_stubs": "was RED at HEAD (pin 406 paths vs stubs 378) and is now GREEN - the script_census --write-stubs run in this turn restored the 28 missing stub rows. Pin resynced 406 -> 407 for this change's one new path, with the resync sentence the pin's own description convention requires."
+    }
+  },
+  "repo_state_hash": "0fa376884d53+4485a102e0ba",
+  "completion_status": "WORK_COMPLETE_GATE_BLOCKED_BY_SHARED_DIRTY_TREE",
+  "production_behavior_changed": "NO",
+  "result_summary": "Typed provenance DAG over the whole record: 1,170 architectural decisions (1,052 SESSION LOG entries back to 2026-04-10 + 88 CH-* impact manifests + 15 promotion-log events + 15 closure surfaces) x 4 origin slots = 4,680 edges, conservation proved. EXPLICIT 18.61% / INFERRED 18.14% / UNKNOWN 63.25%. originating_measurement_basis is 100% UNKNOWN (sealed_pass_bound 0; 15 MC-*/MP-* on disk, 0 with a proven run); originating_hypothesis only 1.37% explicit (18 of 20 H-* back-seeded on 2026-07-03, 803 decisions with no hypothesis reachable, 197 pre-registry decisions carrying only extracted programme labels). Gate 6 moved UNKNOWN -5.3pp but EXPLICIT +0.5pp: the manifest regime made links more derivable, not more recorded. Six gaps recorded and NOT filled; four TruthConflicts surfaced and NOT resolved. No finding registered, no config, no ACTIVE_VERSION, no ontology node, no G001.",
+  "completion_status_explanation": "All checks this change can affect are green, including its own 25-test floor. Mechanical validate-completion returns BLOCKED at repo_state 0fa376884d53+4485a102e0ba because this checkout carries pre-existing unrelated governed changes from concurrent sessions (first reported: configs/data_provenance/, configs/experimental/spec/live_rail_tickdb_paper.json, configs/experimental/spec/live_rail_tickdb_paper_run.json, configs/formulas/crt_resolver_links.yaml, configs/formulas/market_crt_states.yaml, configs/formulas/market_ontology.yaml, configs/formulas/structure_profiles.yaml, configs/market_reality/market_reality_v1.yaml). Declaring them would launder unrelated work into this manifest. Same disposition and precedent as CH-evid-01-mr-prior-mc-v1."
+}

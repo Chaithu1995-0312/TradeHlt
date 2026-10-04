@@ -1,0 +1,1486 @@
+{
+  "run_folder": "D:\\Tradelatest\\results\\run_20260916_225925_XAUUSD",
+  "artifacts": {
+    "XAUUSD_trades.csv": {
+      "format": "csv",
+      "n_rows": 3,
+      "n_columns": 90,
+      "columns": [
+        {
+          "name": "trade_id",
+          "inferred_type": "str",
+          "example_CRT0001": "CRT-0001"
+        },
+        {
+          "name": "instrument",
+          "inferred_type": "str",
+          "example_CRT0001": "XAUUSD"
+        },
+        {
+          "name": "direction",
+          "inferred_type": "str",
+          "example_CRT0001": "LONG"
+        },
+        {
+          "name": "entry_raw",
+          "inferred_type": "float",
+          "example_CRT0001": "2614.46"
+        },
+        {
+          "name": "entry_fill",
+          "inferred_type": "float",
+          "example_CRT0001": "2615.0826845879556"
+        },
+        {
+          "name": "sl",
+          "inferred_type": "float",
+          "example_CRT0001": "2610.0475714285712"
+        },
+        {
+          "name": "tp1",
+          "inferred_type": "float",
+          "example_CRT0001": "2618.872428571429"
+        },
+        {
+          "name": "tp2",
+          "inferred_type": "float",
+          "example_CRT0001": "2623.2848571428576"
+        },
+        {
+          "name": "exit_fill",
+          "inferred_type": "float",
+          "example_CRT0001": "2609.772004593011"
+        },
+        {
+          "name": "exit_reason",
+          "inferred_type": "str",
+          "example_CRT0001": "STOPPED"
+        },
+        {
+          "name": "opened_at",
+          "inferred_type": "str",
+          "example_CRT0001": "2024-11-12T15:30:00"
+        },
+        {
+          "name": "closed_at",
+          "inferred_type": "str",
+          "example_CRT0001": "2024-11-12T15:45:00"
+        },
+        {
+          "name": "duration_candles",
+          "inferred_type": "int",
+          "example_CRT0001": "1"
+        },
+        {
+          "name": "pnl_pips_raw",
+          "inferred_type": "float",
+          "example_CRT0001": "-441.2"
+        },
+        {
+          "name": "pnl_pips_net",
+          "inferred_type": "float",
+          "example_CRT0001": "-531.1"
+        },
+        {
+          "name": "pnl_rr_raw",
+          "inferred_type": "float",
+          "example_CRT0001": "-0.8763"
+        },
+        {
+          "name": "pnl_rr_net",
+          "inferred_type": "float",
+          "example_CRT0001": "-1.0547"
+        },
+        {
+          "name": "slippage_pips",
+          "inferred_type": "float",
+          "example_CRT0001": "37.59"
+        },
+        {
+          "name": "spread_pips",
+          "inferred_type": "float",
+          "example_CRT0001": "52.23"
+        },
+        {
+          "name": "capital_before",
+          "inferred_type": "float",
+          "example_CRT0001": "100000.0"
+        },
+        {
+          "name": "capital_after",
+          "inferred_type": "float",
+          "example_CRT0001": "98945.27"
+        },
+        {
+          "name": "position_size",
+          "inferred_type": "float",
+          "example_CRT0001": "198.61"
+        },
+        {
+          "name": "risk_score",
+          "inferred_type": "float",
+          "example_CRT0001": "0.5728"
+        },
+        {
+          "name": "session",
+          "inferred_type": "float",
+          "example_CRT0001": "3.0"
+        },
+        {
+          "name": "day_of_week",
+          "inferred_type": "int",
+          "example_CRT0001": "1"
+        },
+        {
+          "name": "hour_of_day",
+          "inferred_type": "float",
+          "example_CRT0001": "15.0"
+        },
+        {
+          "name": "htf_id",
+          "inferred_type": "str",
+          "example_CRT0001": "XAUUSD-HTF-000714"
+        },
+        {
+          "name": "candle_idx",
+          "inferred_type": "int",
+          "example_CRT0001": "11427"
+        },
+        {
+          "name": "open",
+          "inferred_type": "float",
+          "example_CRT0001": "2614.419921875"
+        },
+        {
+          "name": "high",
+          "inferred_type": "float",
+          "example_CRT0001": "2614.85009765625"
+        },
+        {
+          "name": "low",
+          "inferred_type": "float",
+          "example_CRT0001": "2606.0"
+        },
+        {
+          "name": "close",
+          "inferred_type": "float",
+          "example_CRT0001": "2606.320068359375"
+        },
+        {
+          "name": "volume",
+          "inferred_type": "float",
+          "example_CRT0001": "4516.0"
+        },
+        {
+          "name": "volume_ratio",
+          "inferred_type": "float",
+          "example_CRT0001": "1.4248079061508179"
+        },
+        {
+          "name": "double_sweep",
+          "inferred_type": "float",
+          "example_CRT0001": "0.0"
+        },
+        {
+          "name": "ema_fast",
+          "inferred_type": "float",
+          "example_CRT0001": "2604.555908203125"
+        },
+        {
+          "name": "ema_slow",
+          "inferred_type": "float",
+          "example_CRT0001": "2602.52783203125"
+        },
+        {
+          "name": "ema_spread",
+          "inferred_type": "float",
+          "example_CRT0001": "933.5361938476562"
+        },
+        {
+          "name": "trend_bias",
+          "inferred_type": "float",
+          "example_CRT0001": "1.0"
+        },
+        {
+          "name": "trend_strength_z",
+          "inferred_type": "float",
+          "example_CRT0001": "0.9097664952278137"
+        },
+        {
+          "name": "momentum_score",
+          "inferred_type": "float",
+          "example_CRT0001": "-3746.89306640625"
+        },
+        {
+          "name": "atr",
+          "inferred_type": "float",
+          "example_CRT0001": "0.0021724666003137827"
+        },
+        {
+          "name": "volatility_ratio",
+          "inferred_type": "float",
+          "example_CRT0001": "1.5630123615264893"
+        },
+        {
+          "name": "rsi_14",
+          "inferred_type": "float",
+          "example_CRT0001": "66.71895599365234"
+        },
+        {
+          "name": "macd_line",
+          "inferred_type": "float",
+          "example_CRT0001": "0.5529419779777527"
+        },
+        {
+          "name": "macd_signal",
+          "inferred_type": "float",
+          "example_CRT0001": "-1.623963713645935"
+        },
+        {
+          "name": "macd_hist_raw",
+          "inferred_type": "float",
+          "example_CRT0001": "2.176905632019043"
+        },
+        {
+          "name": "macd_hist_z",
+          "inferred_type": "float",
+          "example_CRT0001": "2.2291245460510254"
+        },
+        {
+          "name": "sweep_detected",
+          "inferred_type": "float",
+          "example_CRT0001": "0.0"
+        },
+        {
+          "name": "liquidity_sweep",
+          "inferred_type": "float",
+          "example_CRT0001": "0.0"
+        },
+        {
+          "name": "break_of_structure",
+          "inferred_type": "float",
+          "example_CRT0001": "1.0"
+        },
+        {
+          "name": "swing_high",
+          "inferred_type": "float",
+          "example_CRT0001": "0.0"
+        },
+        {
+          "name": "swing_low",
+          "inferred_type": "float",
+          "example_CRT0001": "0.0"
+        },
+        {
+          "name": "higher_high",
+          "inferred_type": "float",
+          "example_CRT0001": "1.0"
+        },
+        {
+          "name": "lower_low",
+          "inferred_type": "float",
+          "example_CRT0001": "0.0"
+        },
+        {
+          "name": "body_size",
+          "inferred_type": "float",
+          "example_CRT0001": "8.100000381469727"
+        },
+        {
+          "name": "candle_range",
+          "inferred_type": "float",
+          "example_CRT0001": "8.850000381469727"
+        },
+        {
+          "name": "body_ratio",
+          "inferred_type": "float",
+          "example_CRT0001": "0.9152542352676392"
+        },
+        {
+          "name": "volatility_regime",
+          "inferred_type": "float",
+          "example_CRT0001": "2.0"
+        },
+        {
+          "name": "disp_strength",
+          "inferred_type": "float",
+          "example_CRT0001": "1.430553674697876"
+        },
+        {
+          "name": "retest_depth",
+          "inferred_type": "float",
+          "example_CRT0001": "0.3115590214729309"
+        },
+        {
+          "name": "candles_since_sweep",
+          "inferred_type": "float",
+          "example_CRT0001": "8.0"
+        },
+        {
+          "name": "liquidity_distance",
+          "inferred_type": "float",
+          "example_CRT0001": "1.2716033458709717"
+        },
+        {
+          "name": "liquidity_pressure_score",
+          "inferred_type": "float",
+          "example_CRT0001": "0.5295107960700989"
+        },
+        {
+          "name": "volume_spike",
+          "inferred_type": "float",
+          "example_CRT0001": "0.0"
+        },
+        {
+          "name": "order_block_distance",
+          "inferred_type": "float",
+          "example_CRT0001": "-0.054694946855306625"
+        },
+        {
+          "name": "fvg_distance",
+          "inferred_type": "float",
+          "example_CRT0001": "0.9784079790115356"
+        },
+        {
+          "name": "breaker_distance",
+          "inferred_type": "float",
+          "example_CRT0001": "0.5247107148170471"
+        },
+        {
+          "name": "mitigation_block_distance",
+          "inferred_type": "float",
+          "example_CRT0001": "0.5596129298210144"
+        },
+        {
+          "name": "pdh_distance",
+          "inferred_type": "float",
+          "example_CRT0001": "1.0"
+        },
+        {
+          "name": "pdl_distance",
+          "inferred_type": "float",
+          "example_CRT0001": "-0.6500150561332703"
+        },
+        {
+          "name": "eqh_distance",
+          "inferred_type": "float",
+          "example_CRT0001": "0.0"
+        },
+        {
+          "name": "eql_distance",
+          "inferred_type": "float",
+          "example_CRT0001": "-0.9792947769165039"
+        },
+        {
+          "name": "change_of_character",
+          "inferred_type": "float",
+          "example_CRT0001": "0.0"
+        },
+        {
+          "name": "live_atr",
+          "inferred_type": "float",
+          "example_CRT0001": "5.66214286"
+        },
+        {
+          "name": "live_ema_fast",
+          "inferred_type": "float",
+          "example_CRT0001": "2606.87995346"
+        },
+        {
+          "name": "live_ema_slow",
+          "inferred_type": "float",
+          "example_CRT0001": "2606.6449867"
+        },
+        {
+          "name": "cached_retest_depth",
+          "inferred_type": "float",
+          "example_CRT0001": "0.455752"
+        },
+        {
+          "name": "cached_body_ratio",
+          "inferred_type": "float",
+          "example_CRT0001": "0.937759"
+        },
+        {
+          "name": "cached_disp_strength",
+          "inferred_type": "float",
+          "example_CRT0001": "1.348162"
+        },
+        {
+          "name": "cached_session",
+          "inferred_type": "str",
+          "example_CRT0001": "UNKNOWN"
+        },
+        {
+          "name": "cached_double_sweep",
+          "inferred_type": "int",
+          "example_CRT0001": "0"
+        },
+        {
+          "name": "bitnet_score_at_entry",
+          "inferred_type": "float",
+          "example_CRT0001": "0.0"
+        },
+        {
+          "name": "bitnet_decision_at_entry",
+          "inferred_type": "empty",
+          "example_CRT0001": ""
+        },
+        {
+          "name": "config_version",
+          "inferred_type": "str",
+          "example_CRT0001": "v2_htfcrt_2026_08"
+        },
+        {
+          "name": "shadow_used",
+          "inferred_type": "int",
+          "example_CRT0001": "0"
+        },
+        {
+          "name": "cost_model_id",
+          "inferred_type": "str",
+          "example_CRT0001": "backtest_g1g2_v2"
+        },
+        {
+          "name": "cost_model_params_hash",
+          "inferred_type": "str",
+          "example_CRT0001": "8239f7adde53080c"
+        },
+        {
+          "name": "risk_denominator_id",
+          "inferred_type": "str",
+          "example_CRT0001": "entry_fill_to_sl__v1"
+        },
+        {
+          "name": "run_id",
+          "inferred_type": "str",
+          "example_CRT0001": "run_20260916_172925"
+        }
+      ],
+      "column_names_only": [
+        "trade_id",
+        "instrument",
+        "direction",
+        "entry_raw",
+        "entry_fill",
+        "sl",
+        "tp1",
+        "tp2",
+        "exit_fill",
+        "exit_reason",
+        "opened_at",
+        "closed_at",
+        "duration_candles",
+        "pnl_pips_raw",
+        "pnl_pips_net",
+        "pnl_rr_raw",
+        "pnl_rr_net",
+        "slippage_pips",
+        "spread_pips",
+        "capital_before",
+        "capital_after",
+        "position_size",
+        "risk_score",
+        "session",
+        "day_of_week",
+        "hour_of_day",
+        "htf_id",
+        "candle_idx",
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "volume_ratio",
+        "double_sweep",
+        "ema_fast",
+        "ema_slow",
+        "ema_spread",
+        "trend_bias",
+        "trend_strength_z",
+        "momentum_score",
+        "atr",
+        "volatility_ratio",
+        "rsi_14",
+        "macd_line",
+        "macd_signal",
+        "macd_hist_raw",
+        "macd_hist_z",
+        "sweep_detected",
+        "liquidity_sweep",
+        "break_of_structure",
+        "swing_high",
+        "swing_low",
+        "higher_high",
+        "lower_low",
+        "body_size",
+        "candle_range",
+        "body_ratio",
+        "volatility_regime",
+        "disp_strength",
+        "retest_depth",
+        "candles_since_sweep",
+        "liquidity_distance",
+        "liquidity_pressure_score",
+        "volume_spike",
+        "order_block_distance",
+        "fvg_distance",
+        "breaker_distance",
+        "mitigation_block_distance",
+        "pdh_distance",
+        "pdl_distance",
+        "eqh_distance",
+        "eql_distance",
+        "change_of_character",
+        "live_atr",
+        "live_ema_fast",
+        "live_ema_slow",
+        "cached_retest_depth",
+        "cached_body_ratio",
+        "cached_disp_strength",
+        "cached_session",
+        "cached_double_sweep",
+        "bitnet_score_at_entry",
+        "bitnet_decision_at_entry",
+        "config_version",
+        "shadow_used",
+        "cost_model_id",
+        "cost_model_params_hash",
+        "risk_denominator_id",
+        "run_id"
+      ]
+    },
+    "XAUUSD_summary.json": {
+      "format": "json_object",
+      "fields": {
+        "instrument": "str",
+        "total_candles": "int",
+        "gap_resets": "int",
+        "total_setups": "int",
+        "approved_trades": "int",
+        "rejected_trades": "int",
+        "approval_rate": "float",
+        "win_rate": "float",
+        "avg_rr_net": "float",
+        "total_pnl_rr_raw": "float",
+        "total_pnl_rr_net": "float",
+        "max_drawdown_rr": "float",
+        "max_drawdown_pct": "float",
+        "max_win_streak": "int",
+        "max_loss_streak": "int",
+        "tp1_hits": "int",
+        "tp2_hits": "int",
+        "avg_trade_duration": "float",
+        "rejection_reasons": "object",
+        "state_distribution": "object",
+        "state_distribution.RANGE": "int",
+        "state_distribution.SWEEP": "int",
+        "state_distribution.DISPLACEMENT": "int",
+        "state_distribution.EXPANSION": "int",
+        "state_distribution.RETEST": "int",
+        "state_distribution.EXECUTION": "int",
+        "state_distribution.SHADOW_PENDING": "int",
+        "monthly_pnl": "object",
+        "monthly_pnl.2024-11": "float",
+        "monthly_pnl.2025-02": "float",
+        "capital_curve": "object",
+        "capital_curve.initial_capital": "float",
+        "capital_curve.final_capital": "float",
+        "capital_curve.total_return_pct": "float",
+        "capital_curve.max_drawdown_pct": "float",
+        "capital_curve.current_drawdown_pct": "float",
+        "capital_curve.peak_capital": "float",
+        "capital_curve.equity_curve_len": "int",
+        "distribution": "object",
+        "distribution.session_breakdown": "object",
+        "distribution.session_breakdown.NEWYORK": "object",
+        "distribution.session_breakdown.NEWYORK.trades": "int",
+        "distribution.session_breakdown.NEWYORK.win_rate": "float",
+        "distribution.session_breakdown.NEWYORK.pnl_rr": "float",
+        "distribution.session_breakdown.NEWYORK.avg_rr": "float",
+        "distribution.session_breakdown.LONDON": "object",
+        "distribution.session_breakdown.LONDON.trades": "int",
+        "distribution.session_breakdown.LONDON.win_rate": "float",
+        "distribution.session_breakdown.LONDON.pnl_rr": "float",
+        "distribution.session_breakdown.LONDON.avg_rr": "float",
+        "distribution.day_of_week_breakdown": "object",
+        "distribution.day_of_week_breakdown.Tuesday": "object",
+        "distribution.day_of_week_breakdown.Tuesday.trades": "int",
+        "distribution.day_of_week_breakdown.Tuesday.win_rate": "float",
+        "distribution.day_of_week_breakdown.Tuesday.pnl_rr": "float",
+        "distribution.day_of_week_breakdown.Friday": "object",
+        "distribution.day_of_week_breakdown.Friday.trades": "int",
+        "distribution.day_of_week_breakdown.Friday.win_rate": "float",
+        "distribution.day_of_week_breakdown.Friday.pnl_rr": "float",
+        "distribution.best_hour_utc": "int",
+        "distribution.worst_hour_utc": "int",
+        "distribution.rolling_win_rate": "array[0]",
+        "distribution.loss_clustering_score": "float",
+        "distribution.score_outcome_corr": "float",
+        "distribution.best_trade": "object",
+        "distribution.best_trade.id": "str",
+        "distribution.best_trade.rr": "float",
+        "distribution.best_trade.session": "str",
+        "distribution.best_trade.opened_at": "str",
+        "distribution.worst_trade": "object",
+        "distribution.worst_trade.id": "str",
+        "distribution.worst_trade.rr": "float",
+        "distribution.worst_trade.session": "str",
+        "distribution.worst_trade.opened_at": "str",
+        "distribution.cost_analysis": "object",
+        "distribution.cost_analysis.total_slippage_pips": "float",
+        "distribution.cost_analysis.total_spread_pips": "float",
+        "distribution.cost_analysis.avg_cost_per_trade": "float",
+        "distribution.cost_analysis.raw_vs_net_pnl_rr_delta": "float",
+        "distribution.goal_report": "object",
+        "distribution.goal_report.enabled": "bool",
+        "distribution.goal_report.enforced": "bool",
+        "distribution.goal_report.goal_id": "str",
+        "distribution.goal_report.decision": "str",
+        "distribution.goal_report.criteria": "array[6]",
+        "distribution.goal_report.criteria[]": [
+          "actual",
+          "comparator",
+          "gap",
+          "name",
+          "status",
+          "target"
+        ],
+        "distribution.metrics_v2": "object",
+        "distribution.metrics_v2.rr": "object",
+        "distribution.metrics_v2.rr.avg_realized_rr": "float",
+        "distribution.metrics_v2.rr.avg_planned_rr": "float",
+        "distribution.metrics_v2.rr.median_rr": "float",
+        "distribution.metrics_v2.rr.rr_p10": "float",
+        "distribution.metrics_v2.rr.rr_p50": "float",
+        "distribution.metrics_v2.rr.rr_p90": "float",
+        "distribution.metrics_v2.concentration": "object",
+        "distribution.metrics_v2.concentration.largest_winner_rr": "float",
+        "distribution.metrics_v2.concentration.largest_loser_rr": "float",
+        "distribution.metrics_v2.concentration.top5_win_contribution_pct": "float",
+        "distribution.metrics_v2.distribution": "object",
+        "distribution.metrics_v2.distribution.trades_per_week": "float",
+        "distribution.metrics_v2.distribution.trades_per_month": "float",
+        "distribution.metrics_v2.distribution.trades_per_session": "object",
+        "distribution.metrics_v2.distribution.trades_per_session.NEWYORK": "int",
+        "distribution.metrics_v2.distribution.trades_per_session.LONDON": "int",
+        "distribution.metrics_v2.distribution.median_duration": "float",
+        "distribution.metrics_v2.survival": "object",
+        "distribution.metrics_v2.survival.median_capture_ratio": "float",
+        "distribution.metrics_v2.survival.median_giveback": "float",
+        "distribution.metrics_v2.survival.median_bars_to_peak": "float",
+        "distribution.metrics_v2.survival.mfe_rr_p50": "float",
+        "distribution.metrics_v2.survival.mfe_rr_p90": "float",
+        "distribution.metrics_v2.survival.mae_rr_p50": "float",
+        "distribution.metrics_v2.survival.mae_rr_p90": "float",
+        "distribution.metrics_v2.efficiency": "object",
+        "distribution.metrics_v2.efficiency.median_time_efficiency": "float",
+        "distribution.metrics_v2.efficiency.time_efficiency_p90": "float",
+        "distribution.metrics_v2.efficiency.median_adverse_efficiency": "float",
+        "distribution.feature_drift": "object",
+        "distribution.feature_drift.n_samples": "int",
+        "distribution.feature_drift.n_total": "int",
+        "distribution.feature_drift.n_drift_detected": "int",
+        "distribution.feature_drift.status": "str",
+        "total_return_pct": "float",
+        "annualized_return_pct": "float",
+        "profit_factor": "float",
+        "return_to_max_dd": "float",
+        "trades_per_month": "float",
+        "gross_win_rr": "float",
+        "gross_loss_rr": "float",
+        "funnel_counts": "object",
+        "funnel_counts.RANGE": "int",
+        "funnel_counts.SWEEP": "int",
+        "funnel_counts.DISPLACEMENT": "int",
+        "funnel_counts.EXPANSION": "int",
+        "funnel_counts.RETEST": "int",
+        "funnel_counts.EXECUTION": "int",
+        "funnel_counts.SHADOW_PENDING": "int",
+        "config_version": "str",
+        "htf_candles_per_range": "int",
+        "htf_clock_basis": "str",
+        "run_id": "str",
+        "cost_model_id": "str",
+        "cost_model_params_hash": "str",
+        "risk_denominator_id": "str"
+      },
+      "top_keys": [
+        "annualized_return_pct",
+        "approval_rate",
+        "approved_trades",
+        "avg_rr_net",
+        "avg_trade_duration",
+        "capital_curve",
+        "config_version",
+        "cost_model_id",
+        "cost_model_params_hash",
+        "distribution",
+        "funnel_counts",
+        "gap_resets",
+        "gross_loss_rr",
+        "gross_win_rr",
+        "htf_candles_per_range",
+        "htf_clock_basis",
+        "instrument",
+        "max_drawdown_pct",
+        "max_drawdown_rr",
+        "max_loss_streak",
+        "max_win_streak",
+        "monthly_pnl",
+        "profit_factor",
+        "rejected_trades",
+        "rejection_reasons",
+        "return_to_max_dd",
+        "risk_denominator_id",
+        "run_id",
+        "state_distribution",
+        "total_candles",
+        "total_pnl_rr_net",
+        "total_pnl_rr_raw",
+        "total_return_pct",
+        "total_setups",
+        "tp1_hits",
+        "tp2_hits",
+        "trades_per_month",
+        "win_rate"
+      ]
+    },
+    "XAUUSD_events.jsonl": {
+      "format": "jsonl",
+      "n_rows": 7112,
+      "envelope_keys": [
+        "candle_index",
+        "direction",
+        "event",
+        "metadata",
+        "price",
+        "reason",
+        "run_id",
+        "state_from",
+        "state_to",
+        "timestamp"
+      ],
+      "events": {
+        "RESET": {
+          "count": 2887,
+          "envelope_keys": [
+            "candle_index",
+            "direction",
+            "event",
+            "metadata",
+            "price",
+            "reason",
+            "run_id",
+            "state_from",
+            "state_to",
+            "timestamp"
+          ],
+          "metadata_keys": []
+        },
+        "STATE_TRANSITION": {
+          "count": 2382,
+          "envelope_keys": [
+            "candle_index",
+            "direction",
+            "event",
+            "metadata",
+            "price",
+            "reason",
+            "run_id",
+            "state_from",
+            "state_to",
+            "timestamp"
+          ],
+          "metadata_keys": [
+            "atr",
+            "displacement_atr_ratio",
+            "features",
+            "sweep_type"
+          ]
+        },
+        "SWEEP": {
+          "count": 1792,
+          "envelope_keys": [
+            "candle_index",
+            "direction",
+            "event",
+            "metadata",
+            "price",
+            "reason",
+            "run_id",
+            "state_from",
+            "state_to",
+            "timestamp"
+          ],
+          "metadata_keys": [
+            "double_confirmed"
+          ]
+        },
+        "BEGIN_SOFT_CONF": {
+          "count": 24,
+          "envelope_keys": [
+            "candle_index",
+            "direction",
+            "event",
+            "metadata",
+            "price",
+            "reason",
+            "run_id",
+            "state_from",
+            "state_to",
+            "timestamp"
+          ],
+          "metadata_keys": []
+        },
+        "FILTER_REJECTED": {
+          "count": 19,
+          "envelope_keys": [
+            "candle_index",
+            "direction",
+            "event",
+            "metadata",
+            "price",
+            "reason",
+            "run_id",
+            "state_from",
+            "state_to",
+            "timestamp"
+          ],
+          "metadata_keys": [
+            "session_name"
+          ]
+        },
+        "TRADE_OPENED": {
+          "count": 3,
+          "envelope_keys": [
+            "candle_index",
+            "direction",
+            "event",
+            "metadata",
+            "price",
+            "reason",
+            "run_id",
+            "state_from",
+            "state_to",
+            "timestamp"
+          ],
+          "metadata_keys": [
+            "S_score",
+            "id",
+            "risk_pct",
+            "session_name",
+            "sl",
+            "tp1",
+            "tp2"
+          ]
+        },
+        "TRADE_STOPPED": {
+          "count": 2,
+          "envelope_keys": [
+            "candle_index",
+            "direction",
+            "event",
+            "metadata",
+            "price",
+            "reason",
+            "run_id",
+            "state_from",
+            "state_to",
+            "timestamp"
+          ],
+          "metadata_keys": [
+            "pnl"
+          ]
+        },
+        "CONFIRMATION_FAILED": {
+          "count": 1,
+          "envelope_keys": [
+            "candle_index",
+            "direction",
+            "event",
+            "metadata",
+            "price",
+            "reason",
+            "run_id",
+            "state_from",
+            "state_to",
+            "timestamp"
+          ],
+          "metadata_keys": []
+        },
+        "TRADE_TP1": {
+          "count": 1,
+          "envelope_keys": [
+            "candle_index",
+            "direction",
+            "event",
+            "metadata",
+            "price",
+            "reason",
+            "run_id",
+            "state_from",
+            "state_to",
+            "timestamp"
+          ],
+          "metadata_keys": [
+            "pnl"
+          ]
+        },
+        "TRADE_TP2": {
+          "count": 1,
+          "envelope_keys": [
+            "candle_index",
+            "direction",
+            "event",
+            "metadata",
+            "price",
+            "reason",
+            "run_id",
+            "state_from",
+            "state_to",
+            "timestamp"
+          ],
+          "metadata_keys": [
+            "pnl"
+          ]
+        }
+      }
+    },
+    "XAUUSD_crt_telemetry.jsonl": {
+      "format": "jsonl",
+      "n_rows": 4883,
+      "kinds": {
+        "RESET_ATTRIBUTED": {
+          "count": 2887,
+          "keys": [
+            "candidate_id",
+            "candle_index",
+            "from_state",
+            "htf_window_position",
+            "kind",
+            "reason",
+            "run_id",
+            "state_age_candles",
+            "to_state",
+            "would_expand",
+            "would_expand_score",
+            "would_expand_threshold"
+          ]
+        },
+        "CANDIDATE_LIFECYCLE": {
+          "count": 1798,
+          "keys": [
+            "age_candles",
+            "candidate_id",
+            "death_reason",
+            "entered_states",
+            "first_seen_idx",
+            "first_seen_ts",
+            "kind",
+            "last_seen_idx",
+            "max_score_seen",
+            "run_id",
+            "score_at_approval",
+            "shadow_context",
+            "shadow_displacement_br",
+            "shadow_used"
+          ]
+        },
+        "EXPANSION_RETRACE_CHECK": {
+          "count": 148,
+          "keys": [
+            "age_hours_actual",
+            "age_hours_estimated",
+            "age_pct_of_threshold",
+            "candidate_age_at_entry",
+            "ceiling_at_max",
+            "duration_candles",
+            "ended_by",
+            "episode_end_idx",
+            "episode_start_idx",
+            "freshness_ratio",
+            "kind",
+            "max_retrace_depth_abs",
+            "outcome",
+            "qualified",
+            "run_id",
+            "shadow_used",
+            "time_to_max_retrace_candles"
+          ]
+        },
+        "DECISION_DISTANCE": {
+          "count": 26,
+          "keys": [
+            "accepted",
+            "candidate_id",
+            "candle_index",
+            "decision_distance",
+            "kind",
+            "rejection_reason",
+            "run_id",
+            "score_actual",
+            "score_threshold",
+            "soft_conf_candle_num"
+          ]
+        },
+        "RETEST_REPLAY": {
+          "count": 23,
+          "keys": [
+            "accepted",
+            "atr",
+            "candle_index",
+            "direction",
+            "disp_high",
+            "disp_low",
+            "entry",
+            "intent",
+            "kind",
+            "reject_reason",
+            "run_id",
+            "score",
+            "sl_atr_buffer",
+            "timestamp",
+            "tp1_mult",
+            "tp2_mult"
+          ]
+        },
+        "TRANSITION_COUNTER": {
+          "count": 1,
+          "keys": [
+            "expansion_dwell_stats",
+            "kind",
+            "run_id",
+            "state_entry_counts"
+          ]
+        }
+      }
+    },
+    "LIVE_CHART_BIND_V1.json": {
+      "format": "json_object",
+      "top_keys": [
+        "authority",
+        "bind",
+        "generated_utc",
+        "join_keys",
+        "parents",
+        "schema_id",
+        "ui",
+        "views"
+      ],
+      "fields": {
+        "schema_id": "str",
+        "authority": "str",
+        "parents": "array[3]",
+        "parents[]": "str",
+        "join_keys": "array[3]",
+        "join_keys[]": "str",
+        "views": "object",
+        "views.trade_chart": "object",
+        "views.trade_chart.role": "str",
+        "views.trade_chart.constructor_id": "str",
+        "views.trade_chart.occupancy_source": "str",
+        "views.trade_chart.api": "str",
+        "views.trade_chart.forbidden": "array[3]",
+        "views.trade_chart.forbidden[]": "str",
+        "views.state_monitor": "object",
+        "views.state_monitor.role": "str",
+        "views.state_monitor.occupancy_source": "NoneType",
+        "views.state_monitor.live_rail_note": "str",
+        "bind": "object",
+        "bind.instrument": "str",
+        "bind.run_dir": "str",
+        "bind.content_run_id": "str",
+        "bind.cost_model_id": "str",
+        "bind.cost_model_params_hash": "str",
+        "bind.risk_denominator_id": "str",
+        "bind.chart_bound": "bool",
+        "bind.constructor_id": "str",
+        "bind.stamp_trust": "str",
+        "bind.summary_cost_model_id": "str",
+        "bind.summary_cost_model_params_hash": "str",
+        "bind.summary_risk_denominator_id": "str",
+        "bind.has_events": "bool",
+        "bind.has_trades": "bool",
+        "bind.api_run_id": "str",
+        "bind.folder_run_id": "str",
+        "bind.f101_note": "str",
+        "bind.chart_payload_ok": "bool",
+        "ui": "object",
+        "ui.trade_chart_url": "str",
+        "ui.live_monitor_url": "str",
+        "ui.select": "object",
+        "ui.select.instrument": "str",
+        "ui.select.run_id_from_summary": "bool",
+        "ui.api_example": "str",
+        "generated_utc": "str"
+      }
+    },
+    "chart_payload_smoke.json": {
+      "format": "json_object",
+      "top_keys": [
+        "bars",
+        "config_pin",
+        "crt_state",
+        "event_pins",
+        "gap_bands",
+        "instrument",
+        "integrity",
+        "legend",
+        "ok",
+        "run_id",
+        "timeframe",
+        "trades"
+      ],
+      "fields": {
+        "ok": "bool",
+        "instrument": "str",
+        "run_id": "str",
+        "timeframe": "str",
+        "bars": "str",
+        "crt_state": "str",
+        "trades": "str",
+        "event_pins": "str",
+        "gap_bands": "str",
+        "integrity": "str",
+        "legend": "str",
+        "config_pin": "str"
+      }
+    },
+    "cost_audit/ultron_sem_r_shadow.json": {
+      "format": "json_object",
+      "top_keys": [
+        "authority",
+        "design_note",
+        "min_rr_ratio",
+        "n_flip_vs_gross",
+        "n_trades",
+        "rows",
+        "sem_components"
+      ],
+      "fields": {
+        "authority": "str",
+        "min_rr_ratio": "float",
+        "sem_components": "object",
+        "sem_components.half_spread": "float",
+        "sem_components.commission": "float",
+        "sem_components.entry_slippage": "float",
+        "sem_components.stop_slippage": "float",
+        "sem_components.entry_slippage_basis": "str",
+        "n_trades": "int",
+        "n_flip_vs_gross": "int",
+        "rows": "array[3]",
+        "rows[]": [
+          "admit_gross_none",
+          "admit_sem_shadow",
+          "cost_model_id",
+          "direction",
+          "exit_reason",
+          "flip_vs_gross",
+          "gate_rr_sem_shadow",
+          "min_rr",
+          "planned_rr_raw_tp1",
+          "pnl_rr_net_g1g2",
+          "pnl_rr_raw_ledger",
+          "risk_denominator_id",
+          "sem_cost_r_actual_exit",
+          "sem_cost_r_sl_assumption",
+          "trade_id"
+        ],
+        "design_note": "str"
+      }
+    },
+    "cost_audit/ultron_sem_r_shadow.csv": {
+      "format": "csv",
+      "n_rows": 3,
+      "columns": [
+        "trade_id",
+        "direction",
+        "exit_reason",
+        "planned_rr_raw_tp1",
+        "pnl_rr_raw_ledger",
+        "pnl_rr_net_g1g2",
+        "sem_cost_r_sl_assumption",
+        "sem_cost_r_actual_exit",
+        "gate_rr_sem_shadow",
+        "min_rr",
+        "admit_gross_none",
+        "admit_sem_shadow",
+        "flip_vs_gross",
+        "cost_model_id",
+        "risk_denominator_id"
+      ],
+      "example": {
+        "trade_id": "CRT-0001",
+        "direction": "long",
+        "exit_reason": "STOPPED",
+        "planned_rr_raw_tp1": "1.0",
+        "pnl_rr_raw_ledger": "-0.8763",
+        "pnl_rr_net_g1g2": "-1.0547",
+        "sem_cost_r_sl_assumption": "0.0793",
+        "sem_cost_r_actual_exit": "0.0793",
+        "gate_rr_sem_shadow": "0.9207",
+        "min_rr": "1.5",
+        "admit_gross_none": "False",
+        "admit_sem_shadow": "False",
+        "flip_vs_gross": "False",
+        "cost_model_id": "backtest_g1g2_v2",
+        "risk_denominator_id": "entry_fill_to_sl__v1"
+      }
+    },
+    "XAUUSD_report.txt": {
+      "format": "text",
+      "n_lines": 55,
+      "bytes": 3541
+    },
+    "config_dump": {
+      "path": "logs\\config_dumps\\XAUUSD_run_20260916_172925_config.json",
+      "format": "json_object",
+      "top_keys": [
+        "backtest_params",
+        "config_version",
+        "crt_engine",
+        "decision_engine",
+        "dumped_at",
+        "engine_runner",
+        "execution_planner",
+        "fusion_engine",
+        "instrument",
+        "mode",
+        "overrides",
+        "run_id",
+        "source_config_path"
+      ],
+      "fields": {
+        "dumped_at": "str",
+        "instrument": "str",
+        "run_id": "str",
+        "config_version": "str",
+        "mode": "str",
+        "source_config_path": "str",
+        "overrides": "object",
+        "backtest_params": "object",
+        "backtest_params.htf_candles_per_range": "int",
+        "backtest_params.slippage_enabled": "bool",
+        "backtest_params.slippage_atr_fraction": "float",
+        "backtest_params.slippage_seed": "int",
+        "backtest_params.simulated_spread_pct": "float",
+        "backtest_params.initial_capital": "float",
+        "backtest_params.risk_pct_per_trade": "float",
+        "backtest_params.use_compounding": "bool",
+        "backtest_params.gap_reset_enabled": "bool",
+        "backtest_params.gap_reset_minutes": "int",
+        "backtest_params.event_flush_every": "int",
+        "backtest_params.warmup_candles": "int",
+        "backtest_params.instrument": "str",
+        "backtest_params.pip_size": "float",
+        "backtest_params.allow_router_crt_config": "bool",
+        "backtest_params.scorer_mode": "str",
+        "backtest_params.cost_model_id": "str",
+        "backtest_params.cost_model_params_hash": "str",
+        "backtest_params.strategy_id": "str",
+        "backtest_params.htf_clock_basis": "str",
+        "crt_engine": "object",
+        "crt_engine.body_ratio_min": "float",
+        "crt_engine.atr_multiplier_min": "float",
+        "crt_engine.retest_depth_max": "float",
+        "crt_engine.atr_period": "int",
+        "crt_engine.atr_buffer_multiplier": "int",
+        "crt_engine.max_sweep_age_candles": "int",
+        "crt_engine.expansion_atr_min_distance": "float",
+        "crt_engine.retest_atr_depth_fraction": "float",
+        "crt_engine.retest_min_depth_atr_fraction": "float",
+        "crt_engine.risk_score_weights": "array[4]",
+        "crt_engine.risk_score_weights[]": "float",
+        "crt_engine.score_component_weights": "array[4]",
+        "crt_engine.score_component_weights[]": "float",
+        "crt_engine.max_displacement_strength": "float",
+        "crt_engine.score_decay_lambda": "float",
+        "crt_engine.score_threshold": "float",
+        "crt_engine.max_spread_pct": "float",
+        "crt_engine.atr_min_displacement": "float",
+        "crt_engine.confirmation_body_min": "float",
+        "crt_engine.sl_atr_buffer": "float",
+        "crt_engine.tp1_atr_multiplier": "float",
+        "crt_engine.tp2_atr_multiplier": "float",
+        "crt_engine.exit_model": "str",
+        "crt_engine.breakout_disp_threshold": "float",
+        "crt_engine.tp1_atr_multiplier_breakout": "float",
+        "crt_engine.tp1_atr_multiplier_pullback": "float",
+        "crt_engine.tp1_atr_multiplier_liq_sweep": "float",
+        "crt_engine.tp1_atr_multiplier_reversal": "float",
+        "crt_engine.bitnet_main_threshold": "float",
+        "crt_engine.use_bitnet": "bool",
+        "crt_engine.session_windows": "object",
+        "crt_engine.session_windows.LONDON": "array[2]",
+        "crt_engine.session_windows.LONDON[]": "str",
+        "crt_engine.session_windows.NEWYORK": "array[2]",
+        "crt_engine.session_windows.NEWYORK[]": "str",
+        "crt_engine.session_windows.ASIA": "array[2]",
+        "crt_engine.session_windows.ASIA[]": "str",
+        "crt_engine.allowed_sessions": "array[3]",
+        "crt_engine.allowed_sessions[]": "str",
+        "crt_engine.retrace_reset_pct": "float",
+        "crt_engine.extension_reset_fib": "float",
+        "crt_engine.news_blackout_minutes": "int",
+        "crt_engine.conf_alpha": "float",
+        "crt_engine.conf_beta": "float",
+        "crt_engine.conf_weights": "array[4]",
+        "crt_engine.conf_weights[]": "float",
+        "crt_engine.conf_floor": "float",
+        "crt_engine.weak_link_weight": "float",
+        "crt_engine.ema_fast": "int",
+        "crt_engine.ema_slow": "int",
+        "crt_engine.tier_1_threshold": "float",
+        "crt_engine.tier_2_threshold": "float",
+        "crt_engine.soft_conf_max_candles": "int",
+        "crt_engine.pending_displacement_ttl_candles": "int",
+        "crt_engine.displacement_origin_kill_enabled": "bool",
+        "crt_engine.displacement_origin_kill_precedence": "str",
+        "crt_engine.max_expansion_age_candles": "int",
+        "crt_engine.max_expansion_age_hours": "int",
+        "crt_engine.expansion_age_warn_candles": "int",
+        "crt_engine.shadow_age_penalty_lambda": "float",
+        "crt_engine.shadow_age_norm_candles": "int",
+        "crt_engine.shadow_advisory_only": "bool",
+        "crt_engine.sizing_bands": "array[2]",
+        "crt_engine.sizing_bands[]": "list",
+        "engine_runner": "object",
+        "engine_runner.model_path": "str",
+        "engine_runner.min_atr": "float",
+        "engine_runner.allowed_sessions": "array[3]",
+        "engine_runner.allowed_sessions[]": "str",
+        "engine_runner.zone_cluster_threshold": "float",
+        "engine_runner.zone_registry_path": "str",
+        "engine_runner.zone_gate_execution_mode": "str",
+        "engine_runner.zone_mode": "str",
+        "engine_runner.zone_gate": "object",
+        "engine_runner.zone_gate.top_k": "int",
+        "engine_runner.zone_gate.cluster_min_n": "int",
+        "engine_runner.zone_gate.cluster_spread_max": "float",
+        "engine_runner.debug_mode": "bool",
+        "engine_runner.gaussian_impl": "str",
+        "engine_runner.convergence_window": "int",
+        "engine_runner.rr_fusion": "object",
+        "engine_runner.rr_fusion.enabled": "bool",
+        "engine_runner.rr_fusion.model_path": "str",
+        "engine_runner.rr_fusion.threshold": "float",
+        "engine_runner.rr_fusion.full_feature_vector": "bool",
+        "engine_runner.dual_engine": "object",
+        "engine_runner.dual_engine.trend_strength_threshold": "float",
+        "engine_runner.dual_engine.momentum_threshold": "float",
+        "engine_runner.dual_engine.range_volatility_threshold": "float",
+        "engine_runner.dual_engine.breakout_min_score": "float",
+        "engine_runner.dual_engine.trap_min_score": "float",
+        "engine_runner.dual_engine.neutral_min_score": "float",
+        "engine_runner.dual_engine.fusion_min_score": "float",
+        "engine_runner.fusion_compare_evaluate": "bool",
+        "engine_runner.fusion_use_evaluate": "bool",
+        "engine_runner.ultron_gate_enabled": "bool",
+        "engine_runner.zone_min_samples": "int",
+        "fusion_engine": "object",
+        "fusion_engine.weight_crt": "float",
+        "fusion_engine.weight_gaussian": "float",
+        "fusion_engine.weight_zone_gate": "float",
+        "fusion_engine.weight_rr": "float",
+        "fusion_engine.conflict_resolution_policy": "str",
+        "fusion_engine.gaussian_weight": "float",
+        "fusion_engine.neural_weight": "float",
+        "fusion_engine.llm_weight": "float",
+        "fusion_engine.llm_lower_band": "float",
+        "fusion_engine.llm_upper_band": "float",
+        "fusion_engine.enable_llm": "bool",
+        "fusion_engine.tier_full": "float",
+        "fusion_engine.tier_half": "float",
+        "fusion_engine.tier_quarter": "float",
+        "fusion_engine._comment_consensus": "str",
+        "fusion_engine.min_consensus_signals": "int",
+        "fusion_engine.min_consensus_agreement": "float",
+        "execution_planner": "object",
+        "execution_planner.ttl_breakout_sec": "int",
+        "execution_planner.ttl_pullback_sec": "int",
+        "execution_planner.ttl_reversal_sec": "int",
+        "execution_planner.ttl_liq_sweep_sec": "int",
+        "execution_planner.ttl_continuation_sec": "int",
+        "execution_planner.risk_percent": "float",
+        "execution_planner.reject_unknown_intent": "bool",
+        "execution_planner.partial_tp_breakeven_enabled": "bool",
+        "execution_planner.partial_tp_fraction": "float",
+        "execution_planner.precision_default": "int",
+        "execution_planner.default_account_balance": "float",
+        "execution_planner.ttl_unknown_sec": "int",
+        "execution_planner.precision_overrides": "object",
+        "execution_planner.precision_overrides.XAUUSD": "int",
+        "execution_planner.precision_overrides.BTCUSDT": "int",
+        "execution_planner.precision_overrides.ETHUSDT": "int",
+        "execution_planner.precision_overrides.BTCUSD": "int",
+        "execution_planner.precision_overrides.ETHUSD": "int",
+        "decision_engine": "object",
+        "decision_engine.score_threshold": "float",
+        "decision_engine.p_win_threshold": "float",
+        "decision_engine.rr_threshold": "float",
+        "decision_engine.rr_threshold__retired": "str",
+        "decision_engine.weak_component_threshold": "float",
+        "decision_engine.weak_link_weight": "float",
+        "decision_engine.threshold_percentile": "int",
+        "decision_engine.threshold_min": "float",
+        "decision_engine.threshold_max": "float"
+      }
+    },
+    "layer_trace_slice": {
+      "path": "results/layer_trace/XAUUSD_layer_trace.jsonl",
+      "filter_run_id": "lt_20260916_172925_XAUUSD",
+      "format": "jsonl",
+      "n_rows": 94400,
+      "layers": {
+        "L0": 1,
+        "L1": 1,
+        "L7": 1,
+        "L3": 47197,
+        "L4": 47197,
+        "L8": 3
+      },
+      "envelope_keys": [
+        "active_version",
+        "artifact_path",
+        "bar_idx",
+        "bar_ts",
+        "code_sha",
+        "config_hash",
+        "corpus_path",
+        "corpus_rows",
+        "corpus_sha256",
+        "dataset_id",
+        "emitted_by",
+        "input_hash",
+        "instrument",
+        "layer",
+        "module",
+        "note",
+        "output_hash",
+        "plane",
+        "preexisting_run_ids",
+        "rail",
+        "run_id",
+        "schema_hash",
+        "schema_version",
+        "span_id",
+        "status",
+        "timeframe",
+        "trace_id",
+        "tree_dirty"
+      ]
+    }
+  },
+  "folder_files": [
+    "chart_payload_smoke.json",
+    "cost_audit\\ultron_sem_r_shadow.csv",
+    "cost_audit\\ultron_sem_r_shadow.json",
+    "LIVE_CHART_BIND_V1.json",
+    "XAUUSD_crt_telemetry.jsonl",
+    "XAUUSD_events.jsonl",
+    "XAUUSD_report.txt",
+    "XAUUSD_summary.json",
+    "XAUUSD_trades.csv"
+  ]
+}

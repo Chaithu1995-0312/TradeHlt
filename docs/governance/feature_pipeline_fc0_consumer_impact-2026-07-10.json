@@ -1,0 +1,74 @@
+{
+  "_doc": "FC-0 consumer/model impact inventory for FC-1 scope. Models not disabled.",
+  "program": "FEATURE_PIPELINE_CLOSURE",
+  "phase": "FC-0",
+  "surfaces": [
+    {
+      "surface": "FeaturePipeline",
+      "path": "src/features/feature_pipeline.py",
+      "fc1_impact": "PRIMARY — A/B/C/D semantic rewrites",
+      "retrain": false
+    },
+    {
+      "surface": "BacktestRunner dual-load",
+      "path": "src/runtime/backtest_v2.py",
+      "fc1_impact": "feature index values change under A/D/B",
+      "retrain": false
+    },
+    {
+      "surface": "CRTEngine cached_features",
+      "path": "src/config_layer/crt_engine_v2.py",
+      "fc1_impact": "already CH-002 names; remove BitNet name aliases",
+      "retrain": "if BitNet enabled"
+    },
+    {
+      "surface": "BitNet",
+      "path": "models/bitnet + active_models use_bitnet",
+      "fc1_impact": "schema/formula binding; likely INCOMPATIBLE_RETRAIN_REQUIRED at FC-5/6",
+      "retrain": true,
+      "enabled_now": false
+    },
+    {
+      "surface": "Gaussian",
+      "path": "models/gaussian_registry + MLGaussian",
+      "fc1_impact": "feature vector compatibility audit FC-5",
+      "retrain": "if structure/vol features used at train"
+    },
+    {
+      "surface": "ZoneGate",
+      "path": "models/zone_registry.json + zone engines",
+      "fc1_impact": "usually zone geometry not swing flags; audit FC-5",
+      "retrain": "unlikely from A–D alone"
+    },
+    {
+      "surface": "RR Engine / rr_fusion",
+      "path": "models/rr_model.json; rr_fusion disabled",
+      "fc1_impact": "label path F-022 separate; feature inputs audit FC-5",
+      "retrain": "possible"
+    },
+    {
+      "surface": "TradeNet",
+      "path": "models/tradenet_registry.json",
+      "fc1_impact": "unwired (F-005); still inventory FC-5",
+      "retrain": "if activated later"
+    },
+    {
+      "surface": "secondlow",
+      "path": "src/research/secondlow_v1",
+      "fc1_impact": "minimal (own OHLCV path; not FeaturePipeline)",
+      "retrain": false
+    },
+    {
+      "surface": "research qualify_* / HypothesisRunner",
+      "path": "src/research + scripts/research",
+      "fc1_impact": "shadow population deltas if using FeaturePipeline",
+      "retrain": false
+    },
+    {
+      "surface": "live_engine_hook",
+      "path": "src/runtime/live_engine_hook.py",
+      "fc1_impact": "must consume canonical contract at FC-3/FC-7",
+      "retrain": false
+    }
+  ]
+}

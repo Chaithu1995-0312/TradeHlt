@@ -1,0 +1,24 @@
+# REP shard — producer: research_costs (research.costs).
+# cost_source (the calibration: manifest + sha256, or SYNTHETIC) is carried by each model instance
+# (ComponentCostModel.source), not fixed here.
+
+schema: representation_registry/v1
+producer_id: research_costs
+schema_version: "research_costs/1"
+
+representations:
+
+  ComponentCostModel.cost_r:
+    concept_id: TRS-07
+    encoding: "float R = cost_price / risk_distance; exit-aware (stop slippage on stop exits only)"
+    parameterization: {cost_model: component}
+    absence: "None when status is UNKNOWN"
+
+  CostModel.cost_r:
+    concept_id: TRS-07
+    encoding: "float R = round_trip_bps of entry / risk_distance"
+    parameterization: {cost_model: flat_bps}
+    divergence_ref: "TRS-07 research flat 12 bps default (F-082)"
+    absence: "n/a"
+
+unmapped: {}

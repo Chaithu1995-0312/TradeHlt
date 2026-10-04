@@ -1,0 +1,1388 @@
+{
+  "_doc": "Canonical-feature lineage census (39-dim, schema v4.0). Source-verified table + optional frozen-XAU smoke.",
+  "generated_at_utc": "2026-07-31T05:50:56Z",
+  "schema": {
+    "canonical_feature_dim": 39,
+    "schema_hash_md5": "c87a1aba7bc79803d04c680e0232389e",
+    "feature_order_hash": "0edda573414f0a64",
+    "n_features": 39
+  },
+  "pit_class_counts": {
+    "RAW_CONTEMPORANEOUS": 7,
+    "RAW_OR_SYNTHETIC_SAME_BAR": 1,
+    "CAUSAL_ROLLING": 5,
+    "STRUCTURE_WITH_CAUSAL_SWING": 8,
+    "CAUSAL_EWM": 4,
+    "CAUSAL_DERIVED": 9,
+    "CAUSAL_DELAYED_PUBLICATION": 2,
+    "CALENDAR_SAME_BAR": 2,
+    "CAUSAL_COUNTER": 1
+  },
+  "smoke_on_frozen_xauusd": {
+    "status": "PASS",
+    "corpus": "data/mt5/XAUUSD_M15.csv",
+    "rows_out": 47197,
+    "vector_rows": 47197,
+    "canonical_columns_present": "39/39",
+    "missing_columns": []
+  },
+  "features": [
+    {
+      "source_ohlcv": [
+        "open"
+      ],
+      "formula": "identity: open",
+      "formula_id": "RAW-OHLCV",
+      "impl": "feature_pipeline / CSV column passthrough",
+      "impl_refs": [
+        "src/features/feature_pipeline.py"
+      ],
+      "pit": "same-bar raw; no lookback",
+      "pit_class": "RAW_CONTEMPORANEOUS",
+      "consumers": [
+        "FeaturePipeline vector",
+        "CandleLoader.Candle",
+        "CRTEngine"
+      ],
+      "index": 0,
+      "name": "open",
+      "static_consumers_sample": [
+        "src/agent/audit.py",
+        "src/agent/findings_synthesizer.py",
+        "src/agent/groq_client.py",
+        "src/agent/intent_router.py",
+        "src/agent/log_query.py",
+        "src/agent/modes/copilot_mode.py",
+        "src/agent/modes/governance_mode.py",
+        "src/agent/modes/log_query_mode.py",
+        "src/agent/modes/pipeline_mode.py",
+        "src/agent/state.py",
+        "src/analytics/sl_tp_comparator.py",
+        "src/bitnet/_smoke_test.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "high"
+      ],
+      "formula": "identity: high",
+      "formula_id": "RAW-OHLCV",
+      "impl": "passthrough",
+      "impl_refs": [
+        "src/features/feature_pipeline.py"
+      ],
+      "pit": "same-bar raw",
+      "pit_class": "RAW_CONTEMPORANEOUS",
+      "consumers": [
+        "FeaturePipeline",
+        "Candle",
+        "CRT",
+        "candle_math"
+      ],
+      "index": 1,
+      "name": "high",
+      "static_consumers_sample": [
+        "src/analytics/sl_tp_comparator.py",
+        "src/bitnet/contract_c_trainer.py",
+        "src/bitnet/label_contracts.py",
+        "src/bitnet/population_label_audit.py",
+        "src/bitnet/r25_kill_test.py",
+        "src/bitnet/stability_checker.py",
+        "src/config_layer/crt_engine_v2.py",
+        "src/config_layer/crt_sweep_taxonomy.py",
+        "src/config_layer/execution_planner.py",
+        "src/config_layer/llm_scorer.py",
+        "src/config_layer/state_identity.py",
+        "src/control_plane/context_report.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "low"
+      ],
+      "formula": "identity: low",
+      "formula_id": "RAW-OHLCV",
+      "impl": "passthrough",
+      "impl_refs": [
+        "src/features/feature_pipeline.py"
+      ],
+      "pit": "same-bar raw",
+      "pit_class": "RAW_CONTEMPORANEOUS",
+      "consumers": [
+        "FeaturePipeline",
+        "Candle",
+        "CRT",
+        "candle_math"
+      ],
+      "index": 2,
+      "name": "low",
+      "static_consumers_sample": [
+        "src/agent/groq_client.py",
+        "src/analytics/sl_tp_comparator.py",
+        "src/bitnet/_smoke_test.py",
+        "src/bitnet/contract_c_trainer.py",
+        "src/bitnet/label_contracts.py",
+        "src/bitnet/population_label_audit.py",
+        "src/bitnet/stability_checker.py",
+        "src/bitnet/zone_cosine_searcher.py",
+        "src/bitnet/zone_validator.py",
+        "src/config_layer/config_validator.py",
+        "src/config_layer/crt_engine_v2.py",
+        "src/config_layer/crt_sweep_taxonomy.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "close"
+      ],
+      "formula": "identity: close",
+      "formula_id": "RAW-OHLCV",
+      "impl": "passthrough",
+      "impl_refs": [
+        "src/features/feature_pipeline.py"
+      ],
+      "pit": "same-bar raw",
+      "pit_class": "RAW_CONTEMPORANEOUS",
+      "consumers": [
+        "FeaturePipeline",
+        "Candle",
+        "indicators",
+        "CRT"
+      ],
+      "index": 3,
+      "name": "close",
+      "static_consumers_sample": [
+        "src/agent/agent_core.py",
+        "src/analytics/metrics_oracle.py",
+        "src/analytics/sl_tp_comparator.py",
+        "src/bitnet/contract_c_trainer.py",
+        "src/bitnet/label_contracts.py",
+        "src/bitnet/population_label_audit.py",
+        "src/config_layer/crt_engine_v2.py",
+        "src/config_layer/crt_gaussian_scorer.py",
+        "src/config_layer/crt_sweep_taxonomy.py",
+        "src/config_layer/execution_planner.py",
+        "src/config_layer/state_identity.py",
+        "src/core/engine_runner.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "volume"
+      ],
+      "formula": "identity or T-003 proxy high-low if all-zero",
+      "formula_id": "RAW-OHLCV / T-003",
+      "impl": "feature_pipeline.compute_volume_features",
+      "impl_refs": [
+        "src/features/feature_pipeline.py:203-233"
+      ],
+      "pit": "same-bar; proxy mutates volume column in-place when dead",
+      "pit_class": "RAW_OR_SYNTHETIC_SAME_BAR",
+      "consumers": [
+        "FeaturePipeline",
+        "volume_ratio",
+        "volume_spike"
+      ],
+      "mutation_risk": "T-003 silent rename under same key",
+      "index": 4,
+      "name": "volume",
+      "static_consumers_sample": [
+        "src/config_layer/crt_engine_v2.py",
+        "src/config_layer/execution_planner.py",
+        "src/core/feature_store.py",
+        "src/core/gate_intelligence.py",
+        "src/data_ingestion/dataset_integrity.py",
+        "src/data_ingestion/historical_fetcher.py",
+        "src/data_ingestion/ohlcv_schema.py",
+        "src/engines/trap_validator_engine.py",
+        "src/features/crt_feature_builder.py",
+        "src/features/feature_builder.py",
+        "src/features/feature_pipeline.py",
+        "src/governance/strategy_backtest.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "volume",
+        "high",
+        "low"
+      ],
+      "formula": "volume / rolling_mean(volume, 20)",
+      "formula_id": "DERIVED-VOL",
+      "impl": "feature_pipeline.compute_volume_features",
+      "impl_refs": [
+        "src/features/feature_pipeline.py:219-228"
+      ],
+      "pit": "rolling 20 past+current (trailing window)",
+      "pit_class": "CAUSAL_ROLLING",
+      "consumers": [
+        "FeaturePipeline vector",
+        "volume_spike"
+      ],
+      "index": 5,
+      "name": "volume_ratio",
+      "static_consumers_sample": [
+        "src/core/feature_store.py",
+        "src/features/crt_feature_builder.py",
+        "src/features/feature_pipeline.py",
+        "src/governance/strategy_backtest.py",
+        "src/research/ic002_entry_evolution/schema.py",
+        "src/research/zone_mapping/historical_zone_mapper.py",
+        "src/runtime/live_engine_hook.py",
+        "src/strategies/s02_mean_reversion.py",
+        "src/strategies/s03_breakout.py",
+        "src/strategies/s05_grid.py",
+        "src/strategies/s06_scalping.py",
+        "src/strategies/s07_news_sentiment.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "high",
+        "low",
+        "close"
+      ],
+      "formula": "both sweep directions in short window on causal liquidity_sweep",
+      "formula_id": "STRUCT-SWEEP",
+      "impl": "feature_pipeline structure/sweep block (FC1-A)",
+      "impl_refs": [
+        "src/features/feature_pipeline.py"
+      ],
+      "pit": "production structure graph uses causal last_swing refs (available_at=t+k); rolling window of past sweeps only",
+      "pit_class": "STRUCTURE_WITH_CAUSAL_SWING",
+      "consumers": [
+        "FeaturePipeline vector",
+        "CRT-related features",
+        "FeatureStore live"
+      ],
+      "note": "FC1-A 2026-07-11: was STRUCTURE_WITH_CENTERED_SWING",
+      "index": 6,
+      "name": "double_sweep",
+      "static_consumers_sample": [
+        "src/analytics/sl_tp_comparator.py",
+        "src/bitnet/defaults.py",
+        "src/bitnet/encoders.py",
+        "src/config_layer/crt_engine_v2.py",
+        "src/config_layer/execution_planner.py",
+        "src/core/collector.py",
+        "src/core/feature_store.py",
+        "src/core/gate_intelligence.py",
+        "src/engines/crt_engine.py",
+        "src/engines/scoring_engine.py",
+        "src/features/causal_structure.py",
+        "src/features/crt_feature_builder.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "close"
+      ],
+      "formula": "EMA(close, span=fast) \u2014 pipeline uses ma aliases / ewm",
+      "formula_id": "FM-EMA-FAST",
+      "impl": "feature_pipeline.compute_indicators ewm/ma",
+      "impl_refs": [
+        "src/features/feature_pipeline.py:238-284"
+      ],
+      "pit": "ewm causal (adjust=False)",
+      "pit_class": "CAUSAL_EWM",
+      "consumers": [
+        "FeaturePipeline",
+        "ema_spread",
+        "CRT cached"
+      ],
+      "index": 7,
+      "name": "ema_fast",
+      "static_consumers_sample": [
+        "src/analytics/sl_tp_comparator.py",
+        "src/bitnet/contract_c_trainer.py",
+        "src/config_layer/crt_engine_v2.py",
+        "src/config_layer/execution_planner.py",
+        "src/config_layer/state_identity.py",
+        "src/core/feature_store.py",
+        "src/core/gate_intelligence.py",
+        "src/engines/heuristic_gaussian_engine.py",
+        "src/engines/trap_validator_engine.py",
+        "src/features/crt_feature_builder.py",
+        "src/features/derived_math.py",
+        "src/features/feature_builder.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "close"
+      ],
+      "formula": "EMA(close, span=slow) / ma_50 path",
+      "formula_id": "FM-EMA-SLOW",
+      "impl": "feature_pipeline.compute_indicators",
+      "impl_refs": [
+        "src/features/feature_pipeline.py:238-284"
+      ],
+      "pit": "causal rolling/ewm",
+      "pit_class": "CAUSAL_EWM",
+      "consumers": [
+        "FeaturePipeline",
+        "ema_spread"
+      ],
+      "index": 8,
+      "name": "ema_slow",
+      "static_consumers_sample": [
+        "src/analytics/sl_tp_comparator.py",
+        "src/bitnet/contract_c_trainer.py",
+        "src/config_layer/crt_engine_v2.py",
+        "src/config_layer/execution_planner.py",
+        "src/config_layer/state_identity.py",
+        "src/core/feature_store.py",
+        "src/core/gate_intelligence.py",
+        "src/engines/heuristic_gaussian_engine.py",
+        "src/engines/trap_validator_engine.py",
+        "src/features/crt_feature_builder.py",
+        "src/features/derived_math.py",
+        "src/features/feature_builder.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "close"
+      ],
+      "formula": "derived_math.ema_spread / (ema_fast - ema_slow) normalized",
+      "formula_id": "FM-022-ish / pipeline trend",
+      "impl": "feature_pipeline + derived_math.ema_spread",
+      "impl_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/derived_math.py",
+        "configs/formulas/market_ontology.yaml"
+      ],
+      "pit": "depends on EMA history; ATR-gated NaN during warmup",
+      "pit_class": "CAUSAL_DERIVED",
+      "consumers": [
+        "FeaturePipeline vector",
+        "CRT cached_features"
+      ],
+      "index": 9,
+      "name": "ema_spread",
+      "static_consumers_sample": [
+        "src/core/engine_runner.py",
+        "src/core/model_registry.py",
+        "src/features/crt_feature_builder.py",
+        "src/features/derived_math.py",
+        "src/features/feature_pipeline.py",
+        "src/features/feature_states.py",
+        "src/features/registry/derived_registry.py",
+        "src/governance/strategy_backtest.py",
+        "src/research/band_validation.py",
+        "src/research/model_runners/adapters/dual_engine.py",
+        "src/research/model_runners/contracts.py",
+        "src/research/zone_mapping/historical_zone_mapper.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "close"
+      ],
+      "formula": "sign of MA relationship / rsi_state-like encoding to {-1,0,1}",
+      "formula_id": "DERIVED-TREND",
+      "impl": "feature_pipeline.compute_trend_features / finalize encoding",
+      "impl_refs": [
+        "src/features/feature_pipeline.py:290-298"
+      ],
+      "pit": "causal MAs",
+      "pit_class": "CAUSAL_DERIVED",
+      "consumers": [
+        "FeaturePipeline vector",
+        "Gaussian/BitNet inputs"
+      ],
+      "index": 10,
+      "name": "trend_bias",
+      "static_consumers_sample": [
+        "src/core/engine_runner.py",
+        "src/core/model_registry.py",
+        "src/features/crt_feature_builder.py",
+        "src/features/crt_state_resolver.py",
+        "src/features/dataset_builder.py",
+        "src/features/feature_pipeline.py",
+        "src/governance/strategy_backtest.py",
+        "src/msip/interpretation_config.py",
+        "src/msip/market_state_vector.py",
+        "src/research/ic002_entry_evolution/schema.py",
+        "src/research/model_runners/adapters/dual_engine.py",
+        "src/research/model_runners/contracts.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "close"
+      ],
+      "formula": "rolling mean of ma_20.diff()",
+      "formula_id": "DERIVED-TREND",
+      "impl": "feature_pipeline.compute_trend_features",
+      "impl_refs": [
+        "src/features/feature_pipeline.py:295-296"
+      ],
+      "pit": "causal rolling 10 on ma_slope",
+      "pit_class": "CAUSAL_ROLLING",
+      "consumers": [
+        "FeaturePipeline vector"
+      ],
+      "index": 11,
+      "name": "trend_strength",
+      "static_consumers_sample": [
+        "src/core/engine_runner.py",
+        "src/core/model_registry.py",
+        "src/features/crt_feature_builder.py",
+        "src/features/feature_pipeline.py",
+        "src/governance/strategy_backtest.py",
+        "src/msip/interpretation_config.py",
+        "src/msip/market_state_vector.py",
+        "src/research/synthetic/stories/trend_continuation.py",
+        "src/runtime/live_engine_hook.py",
+        "src/strategies/s07_news_sentiment.py",
+        "src/strategies/s08_ml_ensemble.py",
+        "src/training/stage1_dataset_builder.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "close"
+      ],
+      "formula": "derived_math.momentum_score / pipeline momentum block",
+      "formula_id": "FM-023",
+      "impl": "feature_pipeline + derived_math",
+      "impl_refs": [
+        "src/features/derived_math.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "pit": "causal lookback; ATR-gated warmup NaN possible",
+      "pit_class": "CAUSAL_DERIVED",
+      "consumers": [
+        "FeaturePipeline vector",
+        "CRT telemetry"
+      ],
+      "index": 12,
+      "name": "momentum_score",
+      "static_consumers_sample": [
+        "src/analytics/sl_tp_comparator.py",
+        "src/bitnet/contract_c_trainer.py",
+        "src/config_layer/crt_engine_v2.py",
+        "src/config_layer/execution_planner.py",
+        "src/core/engine_runner.py",
+        "src/core/gate_intelligence.py",
+        "src/core/model_registry.py",
+        "src/engines/heuristic_gaussian_engine.py",
+        "src/features/crt_feature_builder.py",
+        "src/features/derived_math.py",
+        "src/features/feature_pipeline.py",
+        "src/features/registry/derived_registry.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "high",
+        "low",
+        "close"
+      ],
+      "formula": "Wilder/rolling mean TrueRange(14)",
+      "formula_id": "FM-ATR",
+      "impl": "feature_pipeline.compute_indicators atr_14",
+      "impl_refs": [
+        "src/features/feature_pipeline.py:262-268"
+      ],
+      "pit": "TR uses close.shift(1); rolling 14 causal",
+      "pit_class": "CAUSAL_ROLLING",
+      "consumers": [
+        "FeaturePipeline",
+        "disp_strength",
+        "retest_depth",
+        "liquidity_*"
+      ],
+      "index": 13,
+      "name": "atr",
+      "static_consumers_sample": [
+        "src/analytics/sl_tp_comparator.py",
+        "src/bitnet/contract_c_trainer.py",
+        "src/bitnet/defaults.py",
+        "src/bitnet/encoders.py",
+        "src/bitnet/population_label_audit.py",
+        "src/config_layer/crt_engine_v2.py",
+        "src/config_layer/crt_gaussian_scorer.py",
+        "src/config_layer/execution_planner.py",
+        "src/config_layer/state_identity.py",
+        "src/control_plane/registry.py",
+        "src/core/feature_store.py",
+        "src/core/gate_intelligence.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "high",
+        "low",
+        "close"
+      ],
+      "formula": "atr / close or pipeline volatility ratio",
+      "formula_id": "FM-024",
+      "impl": "feature_pipeline + derived_math.volatility_ratio",
+      "impl_refs": [
+        "src/features/derived_math.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "pit": "causal atr-based",
+      "pit_class": "CAUSAL_DERIVED",
+      "consumers": [
+        "FeaturePipeline vector"
+      ],
+      "index": 14,
+      "name": "volatility_ratio",
+      "static_consumers_sample": [
+        "src/core/engine_runner.py",
+        "src/features/crt_feature_builder.py",
+        "src/features/derived_math.py",
+        "src/features/feature_pipeline.py",
+        "src/features/registry/derived_registry.py",
+        "src/governance/strategy_backtest.py",
+        "src/msip/interpretation_config.py",
+        "src/msip/market_state_vector.py",
+        "src/regime/market_state_cluster_engine.py",
+        "src/research/ic002_entry_evolution/schema.py",
+        "src/research/model_runners/adapters/dual_engine.py",
+        "src/research/model_runners/contracts.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "close"
+      ],
+      "formula": "Wilder RSI(14) = 100 - 100/(1+RS)",
+      "formula_id": "RSI-14",
+      "impl": "feature_pipeline.compute_indicators",
+      "impl_refs": [
+        "src/features/feature_pipeline.py:246-255"
+      ],
+      "pit": "diff + rolling 14 causal",
+      "pit_class": "CAUSAL_ROLLING",
+      "consumers": [
+        "FeaturePipeline vector"
+      ],
+      "index": 15,
+      "name": "rsi_14",
+      "static_consumers_sample": [
+        "src/bitnet/contract_c_trainer.py",
+        "src/control_plane/dashboard_api.py",
+        "src/core/model_registry.py",
+        "src/features/crt_feature_builder.py",
+        "src/features/feature_pipeline.py",
+        "src/features/registry/__init__.py",
+        "src/governance/strategy_backtest.py",
+        "src/research/ic002_entry_evolution/schema.py",
+        "src/research/ic003_shapes/schema.py",
+        "src/research/ic003b_sequence_geometry/schema.py",
+        "src/research/zone_mapping/historical_zone_mapper.py",
+        "src/runtime/live_engine_hook.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "close"
+      ],
+      "formula": "EMA12 - EMA26",
+      "formula_id": "MACD",
+      "impl": "feature_pipeline.compute_indicators",
+      "impl_refs": [
+        "src/features/feature_pipeline.py:278-283"
+      ],
+      "pit": "ewm causal",
+      "pit_class": "CAUSAL_EWM",
+      "consumers": [
+        "FeaturePipeline",
+        "macd_hist_raw"
+      ],
+      "index": 16,
+      "name": "macd_line",
+      "static_consumers_sample": [
+        "src/core/model_registry.py",
+        "src/features/crt_feature_builder.py",
+        "src/features/feature_pipeline.py",
+        "src/governance/strategy_backtest.py",
+        "src/runtime/live_engine_hook.py",
+        "src/uat/uat_runner.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "close"
+      ],
+      "formula": "EMA9(macd_line)",
+      "formula_id": "MACD",
+      "impl": "feature_pipeline.compute_indicators",
+      "impl_refs": [
+        "src/features/feature_pipeline.py:282"
+      ],
+      "pit": "ewm causal",
+      "pit_class": "CAUSAL_EWM",
+      "consumers": [
+        "FeaturePipeline",
+        "macd_hist_raw"
+      ],
+      "index": 17,
+      "name": "macd_signal",
+      "static_consumers_sample": [
+        "src/core/model_registry.py",
+        "src/features/crt_feature_builder.py",
+        "src/features/feature_pipeline.py",
+        "src/governance/strategy_backtest.py",
+        "src/runtime/live_engine_hook.py",
+        "src/uat/uat_runner.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "close"
+      ],
+      "formula": "macd_line - macd_signal (FM-049) -- the DECLARED formula, unchanged from v3.0",
+      "formula_id": "FM-049",
+      "impl": "feature_pipeline.compute_indicators",
+      "impl_refs": [
+        "src/features/feature_pipeline.py:283"
+      ],
+      "pit": "causal",
+      "pit_class": "CAUSAL_DERIVED",
+      "consumers": [
+        "FeaturePipeline vector",
+        "macd_hist_z"
+      ],
+      "note": "v4.0 rename of the v3.0 `macd_hist` entry -- same math, index moved 18->18 (this identity) while the z-scored value it used to silently carry moved to its own slot, macd_hist_z (index 19).",
+      "index": 18,
+      "name": "macd_hist_raw",
+      "static_consumers_sample": [
+        "src/config_layer/production_bundle.py",
+        "src/core/model_registry.py",
+        "src/features/crt_feature_builder.py",
+        "src/features/feature_pipeline.py",
+        "src/features/gaussian_schema_contract.py",
+        "src/governance/strategy_backtest.py",
+        "src/research/clean_labels/builder.py",
+        "src/research/model_runners/schema_resolver.py",
+        "src/runtime/live_engine_hook.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "close"
+      ],
+      "formula": "rolling(50) z-score of macd_hist_raw (FM-053)",
+      "formula_id": "FM-053",
+      "impl": "feature_pipeline.compute_normalization (NORMALIZE_TO_NEW_COL)",
+      "impl_refs": [
+        "src/features/feature_pipeline.py"
+      ],
+      "pit": "causal rolling(50)",
+      "pit_class": "CAUSAL_DERIVED",
+      "consumers": [
+        "FeaturePipeline vector"
+      ],
+      "note": "v4.0 new slot (index 19) -- what v3.0's single `macd_hist` column actually EMITTED (compute_normalization overwrote it in place); now has its own canonical identity distinct from macd_hist_raw.",
+      "index": 19,
+      "name": "macd_hist_z",
+      "static_consumers_sample": [
+        "src/core/model_registry.py",
+        "src/features/crt_feature_builder.py",
+        "src/features/feature_pipeline.py",
+        "src/features/gaussian_schema_contract.py",
+        "src/governance/strategy_backtest.py",
+        "src/research/clean_labels/builder.py",
+        "src/research/model_runners/schema_resolver.py",
+        "src/runtime/live_engine_hook.py",
+        "src/strategies/s06_scalping.py",
+        "src/strategies/s08_ml_ensemble.py",
+        "src/training/trainer.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "high",
+        "low",
+        "close"
+      ],
+      "formula": "liquidity_sweep != 0 (production liquidity_sweep is causal-graph)",
+      "formula_id": "STRUCT-SWEEP",
+      "impl": "feature_pipeline compute_canonical_structure_features",
+      "impl_refs": [
+        "src/features/feature_pipeline.py"
+      ],
+      "pit": "derived from causal structure graph (FC1-A)",
+      "pit_class": "STRUCTURE_WITH_CAUSAL_SWING",
+      "consumers": [
+        "FeaturePipeline vector",
+        "CRT score channel"
+      ],
+      "note": "FC1-A 2026-07-11",
+      "index": 20,
+      "name": "sweep_detected",
+      "static_consumers_sample": [
+        "src/analytics/sl_tp_comparator.py",
+        "src/config_layer/crt_engine_v2.py",
+        "src/config_layer/execution_planner.py",
+        "src/core/collector.py",
+        "src/core/engine_runner.py",
+        "src/core/gate_intelligence.py",
+        "src/engines/crt_engine.py",
+        "src/engines/scoring_engine.py",
+        "src/features/causal_structure.py",
+        "src/features/crt_feature_builder.py",
+        "src/features/feature_pipeline.py",
+        "src/governance/strategy_backtest.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "high",
+        "low",
+        "close"
+      ],
+      "formula": "sweep high/low vs causal last_swing refs (shift(1))",
+      "formula_id": "STRUCT-LIQ",
+      "impl": "feature_pipeline compute_structure_liquidity (FC1-A)",
+      "impl_refs": [
+        "src/features/feature_pipeline.py"
+      ],
+      "pit": "causal last_swing_*_price; bar t uses info through t",
+      "pit_class": "STRUCTURE_WITH_CAUSAL_SWING",
+      "consumers": [
+        "FeaturePipeline vector",
+        "FeatureStore live"
+      ],
+      "note": "FC1-A 2026-07-11",
+      "index": 21,
+      "name": "liquidity_sweep",
+      "static_consumers_sample": [
+        "src/core/feature_store.py",
+        "src/core/model_registry.py",
+        "src/features/causal_structure.py",
+        "src/features/crt_feature_builder.py",
+        "src/features/crt_state_resolver.py",
+        "src/features/feature_pipeline.py",
+        "src/governance/strategy_backtest.py",
+        "src/msip/disagreement.py",
+        "src/msip/interpretation_config.py",
+        "src/msip/market_state_vector.py",
+        "src/research/synthetic/stories/liquidity_reversal.py",
+        "src/research/synthetic/stories/range_rotation.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "high",
+        "low",
+        "close"
+      ],
+      "formula": "BOS vs causal last_swing refs",
+      "formula_id": "STRUCT-BOS",
+      "impl": "feature_pipeline compute_structure_liquidity (FC1-A)",
+      "impl_refs": [
+        "src/features/feature_pipeline.py"
+      ],
+      "pit": "causal last_swing refs + shift(1)",
+      "pit_class": "STRUCTURE_WITH_CAUSAL_SWING",
+      "consumers": [
+        "FeaturePipeline vector"
+      ],
+      "note": "FC1-A 2026-07-11",
+      "index": 22,
+      "name": "break_of_structure",
+      "static_consumers_sample": [
+        "src/core/model_registry.py",
+        "src/features/causal_structure.py",
+        "src/features/crt_feature_builder.py",
+        "src/features/feature_pipeline.py",
+        "src/governance/strategy_backtest.py",
+        "src/msip/interpretation_config.py",
+        "src/msip/market_state_vector.py",
+        "src/regime/market_state_cluster_engine.py",
+        "src/research/ic002_entry_evolution/schema.py",
+        "src/research/synthetic/stories/breakout.py",
+        "src/research/synthetic/stories/range_rotation.py",
+        "src/runtime/live_engine_hook.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "high"
+      ],
+      "formula": "centered pivot then delayed publication: centered.shift(k), k=SWING_WINDOW=2",
+      "formula_id": "STRUCT-SWING",
+      "impl": "feature_pipeline compute_structure_liquidity production bind (FC1-A)",
+      "impl_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/causal_structure.py",
+        "SWING_WINDOW=2"
+      ],
+      "pit": "production = causal_confirmed (available_at=t+k); research = swing_high_centered_batch (may leak)",
+      "pit_class": "CAUSAL_DELAYED_PUBLICATION",
+      "consumers": [
+        "FeaturePipeline",
+        "BOS/sweep features",
+        "FeatureStore live"
+      ],
+      "note": "FC1-A 2026-07-11: production no longer CENTERED_SWING_LOOKAHEAD_IN_BATCH",
+      "index": 23,
+      "name": "swing_high",
+      "static_consumers_sample": [
+        "src/core/model_registry.py",
+        "src/features/causal_structure.py",
+        "src/features/crt_feature_builder.py",
+        "src/features/feature_pipeline.py",
+        "src/governance/strategy_backtest.py",
+        "src/research/synthetic/stories/breakout.py",
+        "src/research/synthetic/stories/range_rotation.py",
+        "src/runtime/live_engine_hook.py",
+        "src/strategies/s03_breakout.py",
+        "src/strategies/s05_grid.py",
+        "src/strategies/s10_trap_strategy.py",
+        "src/uat/uat_runner.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "low"
+      ],
+      "formula": "centered pivot then delayed publication: centered.shift(k), k=SWING_WINDOW=2",
+      "formula_id": "STRUCT-SWING",
+      "impl": "feature_pipeline compute_structure_liquidity production bind (FC1-A)",
+      "impl_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/causal_structure.py"
+      ],
+      "pit": "production = causal_confirmed (available_at=t+k); research = swing_low_centered_batch",
+      "pit_class": "CAUSAL_DELAYED_PUBLICATION",
+      "consumers": [
+        "FeaturePipeline",
+        "BOS/sweep features",
+        "FeatureStore live"
+      ],
+      "note": "FC1-A 2026-07-11",
+      "index": 24,
+      "name": "swing_low",
+      "static_consumers_sample": [
+        "src/core/model_registry.py",
+        "src/features/causal_structure.py",
+        "src/features/crt_feature_builder.py",
+        "src/features/feature_pipeline.py",
+        "src/governance/strategy_backtest.py",
+        "src/research/synthetic/stories/range_rotation.py",
+        "src/runtime/live_engine_hook.py",
+        "src/strategies/s03_breakout.py",
+        "src/strategies/s05_grid.py",
+        "src/strategies/s10_trap_strategy.py",
+        "src/uat/uat_runner.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "high"
+      ],
+      "formula": "high > causal last_swing_high_price.shift(1)",
+      "formula_id": "STRUCT-HH",
+      "impl": "feature_pipeline structure (FC1-A coherent graph)",
+      "impl_refs": [
+        "src/features/feature_pipeline.py"
+      ],
+      "pit": "depends on causal swing last prices",
+      "pit_class": "STRUCTURE_WITH_CAUSAL_SWING",
+      "consumers": [
+        "FeaturePipeline vector"
+      ],
+      "note": "FC1-A 2026-07-11",
+      "index": 25,
+      "name": "higher_high",
+      "static_consumers_sample": [
+        "src/core/model_registry.py",
+        "src/features/causal_structure.py",
+        "src/features/crt_feature_builder.py",
+        "src/features/feature_pipeline.py",
+        "src/governance/strategy_backtest.py",
+        "src/msip/interpretation_config.py",
+        "src/msip/market_state_vector.py",
+        "src/research/ic002_entry_evolution/schema.py",
+        "src/research/synthetic/stories/breakout.py",
+        "src/runtime/live_engine_hook.py",
+        "src/strategies/s03_breakout.py",
+        "src/strategies/s10_trap_strategy.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "low"
+      ],
+      "formula": "low < causal last_swing_low_price.shift(1)",
+      "formula_id": "STRUCT-LL",
+      "impl": "feature_pipeline structure (FC1-A coherent graph)",
+      "impl_refs": [
+        "src/features/feature_pipeline.py"
+      ],
+      "pit": "depends on causal swing last prices",
+      "pit_class": "STRUCTURE_WITH_CAUSAL_SWING",
+      "consumers": [
+        "FeaturePipeline vector"
+      ],
+      "note": "FC1-A 2026-07-11",
+      "index": 26,
+      "name": "lower_low",
+      "static_consumers_sample": [
+        "src/core/model_registry.py",
+        "src/features/causal_structure.py",
+        "src/features/crt_feature_builder.py",
+        "src/features/feature_pipeline.py",
+        "src/governance/strategy_backtest.py",
+        "src/msip/interpretation_config.py",
+        "src/msip/market_state_vector.py",
+        "src/research/ic002_entry_evolution/schema.py",
+        "src/runtime/live_engine_hook.py",
+        "src/strategies/s03_breakout.py",
+        "src/strategies/s10_trap_strategy.py",
+        "src/uat/uat_runner.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "open",
+        "close"
+      ],
+      "formula": "|close - open|",
+      "formula_id": "FM-001-ish / candle_math.body_size",
+      "impl": "candle_math.body_size + pipeline candle_body",
+      "impl_refs": [
+        "src/features/candle_math.py:25-27",
+        "src/features/feature_pipeline.py"
+      ],
+      "pit": "same-bar",
+      "pit_class": "RAW_CONTEMPORANEOUS",
+      "consumers": [
+        "FeaturePipeline",
+        "body_ratio",
+        "CRT"
+      ],
+      "index": 27,
+      "name": "body_size",
+      "static_consumers_sample": [
+        "src/bitnet/contract_c_trainer.py",
+        "src/config_layer/crt_engine_v2.py",
+        "src/features/candle_math.py",
+        "src/features/crt_feature_builder.py",
+        "src/features/derived_math.py",
+        "src/features/feature_pipeline.py",
+        "src/features/fm_resolve.py",
+        "src/features/registry/primitive_registry.py",
+        "src/governance/strategy_backtest.py",
+        "src/msip/interpretation_config.py",
+        "src/msip/market_state_vector.py",
+        "src/runtime/live_engine_hook.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "high",
+        "low"
+      ],
+      "formula": "high - low (FM-002)",
+      "formula_id": "FM-002",
+      "impl": "candle_math.candle_range",
+      "impl_refs": [
+        "src/features/candle_math.py:30-32",
+        "configs/formulas/market_ontology.yaml primitives.candle_range"
+      ],
+      "pit": "same-bar",
+      "pit_class": "RAW_CONTEMPORANEOUS",
+      "consumers": [
+        "FeaturePipeline",
+        "body_ratio",
+        "volatility_ratio",
+        "displacement_atr_ratio"
+      ],
+      "note": "v4.0 rename (feature_schema.py:89, Semantic Layer Certification Audit 2026-07-31, Tier 1 items 1-2): this entry was `wick_size` in v3.0 -- pure identity rename, math never changed (always high-low, never a wick magnitude -- see F-046 / candle_math.py). `wick_size` survives only as a read-side alias for historical records (SCHEMA_V3_ALIASES); never emitted.",
+      "index": 28,
+      "name": "candle_range",
+      "static_consumers_sample": [
+        "src/config_layer/crt_engine_v2.py",
+        "src/config_layer/crt_gaussian_scorer.py",
+        "src/engines/rr_engine.py",
+        "src/features/candle_math.py",
+        "src/features/crt_feature_builder.py",
+        "src/features/crt_state_resolver.py",
+        "src/features/derived_math.py",
+        "src/features/feature_pipeline.py",
+        "src/features/fm_resolve.py",
+        "src/features/gaussian_schema_contract.py",
+        "src/features/registry/primitive_registry.py",
+        "src/governance/strategy_backtest.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "formula": "body_size / candle_range, 0 if range<=0",
+      "formula_id": "FM-010",
+      "impl": "candle_math.body_ratio + feature_pipeline parity",
+      "impl_refs": [
+        "src/features/candle_math.py:50-59",
+        "configs/formulas/market_ontology.yaml body_ratio"
+      ],
+      "pit": "same-bar geometry",
+      "pit_class": "RAW_CONTEMPORANEOUS",
+      "consumers": [
+        "FeaturePipeline",
+        "CRT displacement gate body_ratio>=0.70",
+        "FeatureMonitor"
+      ],
+      "index": 29,
+      "name": "body_ratio",
+      "static_consumers_sample": [
+        "src/analytics/sl_tp_comparator.py",
+        "src/bitnet/contract_c_trainer.py",
+        "src/bitnet/defaults.py",
+        "src/config_layer/crt_engine_v2.py",
+        "src/config_layer/crt_gaussian_scorer.py",
+        "src/config_layer/crt_sweep_taxonomy.py",
+        "src/config_layer/execution_planner.py",
+        "src/config_layer/rr/rr_fusion.py",
+        "src/core/collector.py",
+        "src/core/engine_runner.py",
+        "src/core/fusion_engine.py",
+        "src/core/gate_intelligence.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "high",
+        "low",
+        "close"
+      ],
+      "formula": "tercile of ATR rolling percentile rank (N=200); production bind FC1-D",
+      "formula_id": "REGIME-VOL-ROLLING-CAUSAL",
+      "impl": "feature_pipeline.compute_volatility_regime production \u2192 rolling_causal",
+      "impl_refs": [
+        "src/features/feature_pipeline.py",
+        "SWING-adjacent: rolling window 200"
+      ],
+      "pit": "rolling rank uses past+current only (min_periods=1); prefix-invariant interior",
+      "pit_class": "CAUSAL_ROLLING",
+      "consumers": [
+        "FeaturePipeline vector",
+        "s05_grid",
+        "live_engine_hook pass-through"
+      ],
+      "note": "FC1-D 2026-07-11: production was GLOBAL_BATCH (non-PIT prefix ~43%). Adjudication FC-0.5 selected rolling N=200 causal; global preserved as volatility_regime_global_batch research/legacy only. Semantic is local ATR-percentile tercile context, not latent Regime Detection.",
+      "index": 30,
+      "name": "volatility_regime",
+      "static_consumers_sample": [
+        "src/features/crt_feature_builder.py",
+        "src/features/feature_pipeline.py",
+        "src/governance/strategy_backtest.py",
+        "src/interpreters/regime_observer.py",
+        "src/msip/interpretation_config.py",
+        "src/msip/market_state_vector.py",
+        "src/replay/timing_advisor.py",
+        "src/research/band_validation.py",
+        "src/research/synthetic/stories/range_rotation.py",
+        "src/runtime/live_engine_hook.py",
+        "src/strategies/s05_grid.py",
+        "src/uat/uat_runner.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "timestamp"
+      ],
+      "formula": "session bucket from hour/tz assumptions \u2192 SESSION_MAP float",
+      "formula_id": "CAL-SESSION",
+      "impl": "feature_pipeline session encode + feature_schema.SESSION_MAP",
+      "impl_refs": [
+        "src/features/feature_schema.py:91-100",
+        "src/features/feature_pipeline.py"
+      ],
+      "pit": "same-bar timestamp; UTC-naive assumption",
+      "pit_class": "CALENDAR_SAME_BAR",
+      "consumers": [
+        "FeaturePipeline vector",
+        "session filters"
+      ],
+      "index": 31,
+      "name": "session",
+      "static_consumers_sample": [
+        "src/agent/agent_core.py",
+        "src/agent/audit.py",
+        "src/agent/cli.py",
+        "src/config_layer/config_validator.py",
+        "src/config_layer/crt_engine_v2.py",
+        "src/config_layer/execution_planner.py",
+        "src/config_layer/insight_reporter.py",
+        "src/config_layer/llm_narrative.py",
+        "src/config_layer/production_config.py",
+        "src/control_plane/dashboard_api.py",
+        "src/control_plane/registry.py",
+        "src/control_plane/server.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "timestamp"
+      ],
+      "formula": "timestamp.hour (or fraction)",
+      "formula_id": "CAL-HOUR",
+      "impl": "feature_pipeline",
+      "impl_refs": [
+        "src/features/feature_pipeline.py"
+      ],
+      "pit": "same-bar",
+      "pit_class": "CALENDAR_SAME_BAR",
+      "consumers": [
+        "FeaturePipeline vector"
+      ],
+      "index": 32,
+      "name": "hour_of_day",
+      "static_consumers_sample": [
+        "src/features/crt_feature_builder.py",
+        "src/features/feature_pipeline.py",
+        "src/features/session_classifier.py",
+        "src/governance/portfolio_validation.py",
+        "src/governance/strategy_backtest.py",
+        "src/msip/interpretation_config.py",
+        "src/msip/market_state_vector.py",
+        "src/research/zone_mapping/historical_zone_mapper.py",
+        "src/runtime/backtest_v2.py",
+        "src/runtime/live_engine_hook.py",
+        "src/strategies/s06_scalping.py",
+        "src/uat/uat_runner.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "formula": "clip(body_size / (atr * close), 0, 3) \u2014 FM-020 (pipeline vector definition)",
+      "formula_id": "FM-020",
+      "related_identities": [
+        {
+          "id": "FM-028",
+          "name": "displacement_atr_ratio",
+          "role": "distinct CRT range/ATR multiple, historically emitted under 'disp_strength' \u2014 renamed off pipeline names by F-050/CH-002"
+        },
+        {
+          "id": "FM-029",
+          "name": "disp_strength_atr_rescale",
+          "role": "distinct scoring_engine as-wired quantity FM-020/atr_rel \u2014 registered + routed by GD-004 closure 2026-07-11"
+        }
+      ],
+      "impl": "derived_math.disp_strength (scalar authority) + feature_pipeline vectorized",
+      "impl_refs": [
+        "src/features/derived_math.py",
+        "configs/formulas/market_ontology.yaml FM-020",
+        "src/features/feature_pipeline.py"
+      ],
+      "pit": "ATR lookback causal; same-bar body",
+      "pit_class": "CAUSAL_DERIVED",
+      "consumers": [
+        "FeaturePipeline",
+        "CRT cached_features",
+        "FeatureMonitor"
+      ],
+      "note": "F-050 (FM-028 emission rename) + GD-004 (FM-029 registration): name collisions closed; this row is FM-020 only",
+      "index": 33,
+      "name": "disp_strength",
+      "static_consumers_sample": [
+        "src/analytics/sl_tp_comparator.py",
+        "src/bitnet/contract_c_trainer.py",
+        "src/bitnet/defaults.py",
+        "src/bitnet/encoders.py",
+        "src/config_layer/crt_engine_v2.py",
+        "src/config_layer/crt_gaussian_scorer.py",
+        "src/config_layer/execution_planner.py",
+        "src/config_layer/rr/rr_fusion.py",
+        "src/core/engine_runner.py",
+        "src/core/gate_intelligence.py",
+        "src/engines/crt_engine.py",
+        "src/engines/scoring_engine.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "high",
+        "low",
+        "close"
+      ],
+      "formula": "FM-021 pipeline retest vs EMA/ATR; CRT has FM-027 displacement_retrace",
+      "formula_id": "FM-021 / FM-027 split (F-050)",
+      "impl": "feature_pipeline + derived_math; CRT derived_math FM-027",
+      "impl_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/derived_math.py",
+        "configs/formulas/market_ontology.yaml"
+      ],
+      "pit": "causal ATR/EMA; structure context",
+      "pit_class": "CAUSAL_DERIVED",
+      "consumers": [
+        "FeaturePipeline",
+        "CRT",
+        "FeatureMonitor"
+      ],
+      "index": 34,
+      "name": "retest_depth",
+      "static_consumers_sample": [
+        "src/analytics/sl_tp_comparator.py",
+        "src/bitnet/contract_c_trainer.py",
+        "src/bitnet/defaults.py",
+        "src/bitnet/encoders.py",
+        "src/bitnet/population_label_audit.py",
+        "src/config_layer/crt_engine_v2.py",
+        "src/config_layer/crt_gaussian_scorer.py",
+        "src/config_layer/execution_planner.py",
+        "src/config_layer/rr/rr_fusion.py",
+        "src/core/collector.py",
+        "src/core/engine_runner.py",
+        "src/core/fusion_engine.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "high",
+        "low",
+        "close"
+      ],
+      "formula": "bars since last retest event flag",
+      "formula_id": "STRUCT-COUNT",
+      "impl": "feature_pipeline structure counters",
+      "impl_refs": [
+        "src/features/feature_pipeline.py"
+      ],
+      "pit": "causal counter from past events",
+      "pit_class": "CAUSAL_COUNTER",
+      "consumers": [
+        "FeaturePipeline vector"
+      ],
+      "index": 35,
+      "name": "candles_since_retest",
+      "static_consumers_sample": [
+        "src/analytics/sl_tp_comparator.py",
+        "src/bitnet/defaults.py",
+        "src/config_layer/crt_engine_v2.py",
+        "src/config_layer/crt_gaussian_scorer.py",
+        "src/config_layer/execution_planner.py",
+        "src/core/collector.py",
+        "src/core/gate_intelligence.py",
+        "src/engines/crt_engine.py",
+        "src/engines/live_engine.py",
+        "src/engines/scoring_engine.py",
+        "src/features/crt_feature_builder.py",
+        "src/features/feature_pipeline.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "high",
+        "low",
+        "close"
+      ],
+      "formula": "ATR-normalised distance to nearest liquidity level (causal swing refs)",
+      "formula_id": "FM-025/LIQ",
+      "impl": "feature_pipeline liquidity block v3 + derived_math (FC1-A refs)",
+      "impl_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/derived_math.py"
+      ],
+      "pit": "depends on causal last_swing / BOS levels + shift(1)",
+      "pit_class": "STRUCTURE_WITH_CAUSAL_SWING",
+      "consumers": [
+        "FeaturePipeline vector index 35"
+      ],
+      "note": "FC1-A 2026-07-11",
+      "index": 36,
+      "name": "liquidity_distance",
+      "static_consumers_sample": [
+        "src/core/hierarchical_meta_fusion.py",
+        "src/features/causal_structure.py",
+        "src/features/crt_feature_builder.py",
+        "src/features/derived_math.py",
+        "src/features/feature_pipeline.py",
+        "src/features/fm_resolve.py",
+        "src/features/registry/derived_registry.py",
+        "src/msip/interpretation_config.py",
+        "src/msip/market_state_vector.py",
+        "src/regime/market_state_cluster_engine.py",
+        "src/research/ic002_entry_evolution/schema.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "high",
+        "low",
+        "close"
+      ],
+      "formula": "clip(exp(-0.5 * liquidity_distance), 0, 1)",
+      "formula_id": "FM-026/LIQ",
+      "impl": "feature_pipeline + derived_math.liquidity_pressure_score",
+      "impl_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/derived_math.py"
+      ],
+      "pit": "derived from causal liquidity_distance",
+      "pit_class": "STRUCTURE_WITH_CAUSAL_SWING",
+      "consumers": [
+        "FeaturePipeline vector index 36"
+      ],
+      "note": "FC1-A 2026-07-11",
+      "index": 37,
+      "name": "liquidity_pressure_score",
+      "static_consumers_sample": [
+        "src/core/hierarchical_meta_fusion.py",
+        "src/engines/tradenet_meta_engine.py",
+        "src/features/causal_structure.py",
+        "src/features/crt_feature_builder.py",
+        "src/features/derived_math.py",
+        "src/features/feature_pipeline.py",
+        "src/features/fm_resolve.py",
+        "src/features/registry/derived_registry.py",
+        "src/msip/interpretation_config.py",
+        "src/msip/market_state_vector.py",
+        "src/regime/market_state_cluster_engine.py"
+      ]
+    },
+    {
+      "source_ohlcv": [
+        "volume",
+        "high",
+        "low"
+      ],
+      "formula": "(volume_ratio > 1.5).astype(int8)",
+      "formula_id": "VOL-SPIKE",
+      "impl": "feature_pipeline.compute_volume_features",
+      "impl_refs": [
+        "src/features/feature_pipeline.py:231"
+      ],
+      "pit": "causal volume_ratio",
+      "pit_class": "CAUSAL_DERIVED",
+      "consumers": [
+        "FeaturePipeline vector index 37"
+      ],
+      "index": 38,
+      "name": "volume_spike",
+      "static_consumers_sample": [
+        "src/features/crt_feature_builder.py",
+        "src/features/feature_pipeline.py",
+        "src/regime/market_state_cluster_engine.py",
+        "src/research/synthetic/stories/breakout.py"
+      ]
+    }
+  ],
+  "chain_template": "source_ohlcv \u2192 formula \u2192 impl \u2192 pit_class \u2192 consumers",
+  "authority": "Research/architecture only. No economic claims. No formula changes.",
+  "resync_notes": [
+    "2026-07-11: FC1-A structure family PIT classes updated to causal delayed publication",
+    "2026-07-11: FC1-D volatility_regime production \u2192 rolling causal N=200",
+    "2026-07-11: wick_size documented as exact FM-002 candle_range alias",
+    "2026-07-31 (Semantic Layer Certification Audit, Tier 1 items 1-3): re-synced to schema v4.0 (39-dim) -- wick_size renamed to candle_range (its own entry, not an alias, since v4.0 made candle_range the canonical name); macd_hist split into macd_hist_raw (index 18) + macd_hist_z (index 19); dim assertion de-literalized 38 -> CANONICAL_FEATURE_DIM."
+  ]
+}

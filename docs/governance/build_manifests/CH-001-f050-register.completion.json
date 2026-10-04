@@ -1,0 +1,34 @@
+{
+  "change_id": "CH-001-f050-register",
+  "change_classes": ["FEATURE_IDENTITY_CHANGE", "DERIVED_METRIC_CHANGE"],
+  "declared_files": [
+    "configs/formulas/market_ontology.yaml",
+    "src/features/derived_math.py",
+    "src/features/registry/derived_registry.py",
+    "scripts/analysis/gate2b_adjudication.py",
+    "docs/governance/geometry_census.jsonl",
+    "docs/governance/geometry_census_summary.json",
+    "docs/governance/geometry_semantic_adjudication.jsonl",
+    "docs/governance/geometry_family_registry.json",
+    "docs/governance/build_manifests/CH-001-f050-register.impact.json",
+    "docs/current-findings.md",
+    "CLAUDE.md",
+    "assistant_project.md"
+  ],
+  "checks_executed": [
+    "tests/test_formula_registry.py",
+    "tests/test_feature_lineage.py",
+    "tests/test_derived_math.py",
+    "tests/test_candle_math.py",
+    "tests/test_feature_math_lint.py",
+    "tests/test_geometry_census.py",
+    "tests/test_gate2b_closure.py"
+  ],
+  "checks_note": "Informational only — construction_protocol.py validate-completion re-executes the required checks itself (never log-trusted). 42 passed (feature-math set) + 46 passed (census freshness + gate2b closure) on 2026-07-10; the census freshness floor validated the regenerated artifacts against a fresh build_census() (new FM-028 site GEO-D-db0e1218ce present in both).",
+  "repo_state_hash": "b48d4d9a7abf+591a20482891",
+  "completion_status": "COMPLETE",
+  "landed_commit": "b48d4d9",
+  "behavior_evidence": "ZERO behavior change by construction (registration only; no consumer migrated in CH-001). Corroborated post-CH-002 by the frozen-baseline differential: reports/POST_CH002_BASELINE_DIFFERENTIAL.md — gate-ON BNBUSDT summary SHA byte-identical to results/baseline/run1.",
+  "residual_disclosure": "Validated retroactively post-commit on a shared working tree. Any undeclared-surface findings from the diff guard are PRE-EXISTING uncommitted residuals of earlier sessions (F-044 config-behind confidence gate, F-046 dead-builder canonicalization, calendar maintenance, truth-registry v2.1 follow-ons) — not part of CH-001. The guard firing on them is a TRUE POSITIVE of the per-commit workflow, recorded here rather than suppressed.",
+  "validator_verdict_2026_07_10": "validate-completion at repo_state b48d4d9a7abf+591a20482891: required checks EXECUTED GREEN (no check-failure problem raised); diff guard BLOCKED on the pre-existing residual surfaces only (configs/production/v2_multi_2026_04.json + untracked research/production configs + src/tests residuals — none are CH-001 files). COMPLETE claim mechanically DENIED until the shared tree is cleaned (user commits or reverts the residual), then re-run validate-completion."
+}

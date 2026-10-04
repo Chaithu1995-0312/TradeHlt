@@ -7,7 +7,7 @@ Problem:
   zone_registry.json uses LEGACY schema:
     {center: [...], radius: [...], min_score: float, weight: float}
 
-  Runtime (zone_gate.py) expects NEW schema:
+  Runtime (feature_cluster_similarity.py) expects NEW schema:
     {mu: [...], sigma: [...], weights: [...], threshold: float}
 
 Migration rules (deterministic, lossless):

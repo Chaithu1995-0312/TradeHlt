@@ -1,0 +1,29 @@
+{
+  "change_id": "CH-phase1-resolver-create-census",
+  "date_utc": "2026-09-10",
+  "objective": "Authorized resolver CREATE census on frozen dual-construction grain run_20260906_013609, injection=none. Predicate: CRTStateResolver._force_range_reset kind==htf AND prev==DISPLACEMENT AND shadow_on_htf_displacement_reset. DESCRIPTIVE_ONLY. Do not join to engine CREATE 69. Do not rescore four-arm H20.",
+  "change_classes": [
+    "SCRIPT_LIFECYCLE_CHANGE"
+  ],
+  "change_class_rationale": "Extends already-registered scripts/analysis/phase1_resolver_replay_evidence.py (SCR-451) with an additive CREATE capture on the existing _force_range_reset patch. No new script path, no SITS reclassification, no ontology/config/spine edit.",
+  "affected_files": [
+    "scripts/analysis/phase1_resolver_replay_evidence.py",
+    "docs/research/phase1_resolver_create_census_note.md",
+    "docs/governance/build_manifests/CH-phase1-resolver-create-census.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_script_registry.py",
+    "tests/test_script_matrix_sync.py",
+    "tests/test_construction_protocol.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert the CREATE-capture patch in phase1_resolver_replay_evidence.py and delete the census note. Four-arm scoreboard and engine CREATE 69 artifacts stay.",
+  "authority_granted": "User: Count resolver CREATE on that frozen grain only.",
+  "authority_NOT_granted": "No join to engine 69. No four-arm H20 rescore. No CREATE-context rebuild. No MC-* seal. No finding_id. No G001. No economic_claims_allowed flip. P-GOAL-04 still blocks Sense B.",
+  "production_behavior_changed": "NO"
+}

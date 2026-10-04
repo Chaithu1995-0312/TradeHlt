@@ -1,0 +1,25 @@
+{
+  "change_id": "CH-phase2c-episode-agreement",
+  "status": "COMPLETE",
+  "completed_utc": "2026-08-09T12:20:00Z",
+  "production_behavior_changed": false,
+  "checks_run": [
+    "tests/test_episode_agreement.py + test_episode_propositions.py (26 passed)",
+    "construction_protocol validate-impact → IMPACT: APPROVED",
+    "xauusd_episode_coverage_census.py (agreement_object on 10 episodes)"
+  ],
+  "certification": {
+    "O14_COVERED": "10/10",
+    "verdicts": {"BREAK": 5, "PARTIAL": 4, "COHERENT": 1},
+    "AGREEMENT_layer": {"BREAK": 5, "PARTIAL": 4, "OK": 1},
+    "layerwise_describable": 5,
+    "full_coherent": 0,
+    "conflict_preservation": "5/5 O11 CONFLICT episodes → BREAK"
+  },
+  "artifacts": [
+    "src/research/episode_agreement.py",
+    "results/research/xauusd_episode_semantic_reconstruction/episodes.json",
+    "results/research/xauusd_episode_semantic_reconstruction/coverage_census.json",
+    "results/research/xauusd_episode_semantic_reconstruction/phase2_chain_coherence.json"
+  ]
+}

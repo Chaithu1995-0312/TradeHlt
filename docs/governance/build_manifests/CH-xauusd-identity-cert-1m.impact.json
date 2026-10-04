@@ -1,0 +1,39 @@
+{
+  "change_id": "CH-xauusd-identity-cert-1m",
+  "date_utc": "2026-08-23",
+  "objective": "Do not promote. Shadow-certify the 1-month XAUUSD corpus through identity writer→store→query. Fix flow errors found on the aborted 2-year run (unsafe sha256 id-memo; detect_sweep crash when active_range is None; global crt_transitions append). Report XAUUSD_IDENTITY_CERTIFICATION. Production approved remains false.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY",
+    "IDENTITY_STORE_CHANGE",
+    "RUNTIME_DECISION_PATH_CHANGE"
+  ],
+  "change_class_rationale": "Certification runner + hash/store fixes (identity store). detect_sweep returns None when active_range is missing (previously AttributeError on every bar, so the CRT writer never advanced). Equivalent to no-sweep when no range exists. Report is docs. Not live-spine promotion.",
+  "affected_files": [
+    "src/identity/certify.py",
+    "src/identity/hashes.py",
+    "src/identity/store.py",
+    "src/config_layer/crt_engine_v2.py",
+    "docs/governance/xauusd_identity_certification.md",
+    "docs/governance/xauusd_identity_certification.json",
+    "docs/governance/build_manifests/CH-xauusd-identity-cert-1m.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/test_identity_store.py",
+    "tests/test_construction_protocol.py",
+    "tests/test_feature_math_lint.py",
+    "tests/test_geometry_census.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert certify defaults, hash memo removal, detect_sweep None guard, certification report. Identity contracts stay CLOSED.",
+  "authority_granted": "User 2026-08-23: do not promote; run 1-month XAUUSD first; fix flow errors; 2-year only after 1-month behaves.",
+  "authority_NOT_granted": "No production approval, no 2-year cert this turn, no live-spine wire, no G001, no ACTIVE_VERSION change.",
+  "production_behavior_changed": "YES — detect_sweep: missing active_range returns None instead of AttributeError. First bars now complete process_candle (range can form). No sweep without a range, same as the crash path never sweeping."
+}

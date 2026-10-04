@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "docs/research/reports/schemas/measurement_binding.schema.json",
+  "title": "MeasurementBinding",
+  "description": "SCHEMA TEMPLATE ONLY -- additive sidecar, currently UNUSED (no instance files exist, by design). Shape for optionally binding a contract id to the populations and datasets a run was measured on. WHY A SIDECAR: measurement_contract.schema.json is FROZEN v1.0.0 with additionalProperties:false, and docs/governance/JSONL_CLAIM_SURFACE.md:730 forbids mutating it; the MC-CTXATTR-XAUUSD-M15-V1 precedent is 'the schema is not loosened to fit an instance; the instance conforms'. So the population/dataset linkage is expressed BESIDE the frozen contract, never inside it. This file ASSERTS NO AUTHORITY over any contract: it claims nothing beyond what docs/research/reports/SCHEMAS_README.md already says in prose, it does not promote any registry, it does not make a contract's population definition non-authoritative (the contract's own embedded `population` block remains the authority), and it grants no economic or production authority whatsoever (CLAUDE.md 6.5). It sits here until a future, separately-authorised episode measures whether it needs populating.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "binding_id",
+    "contract_id",
+    "status",
+    "authority",
+    "grants_authority"
+  ],
+  "properties": {
+    "binding_id": {
+      "type": "string",
+      "pattern": "^MB-[A-Za-z0-9._:-]+$",
+      "description": "Identifier for this binding row. An address only; mints no new measurement identity."
+    },
+    "contract_id": {
+      "type": "string",
+      "pattern": "^(MC|MP)-.+$",
+      "description": "The sealed contract this binding annotates, referenced BY ID ONLY. The contract file is never modified and never needs to know this row exists. Pattern mirrors measurement_execution.schema.json's contract_id."
+    },
+    "population_ids": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Population Registry ids (docs/governance/population_registry.json) the run drew on. ANNOTATION, NOT AUTHORITY: the frozen contract embeds its own `population` block with 9 required fields and that block stays authoritative. This list does not override, replace, or reinterpret it -- it only makes an otherwise-unstated correspondence explicit."
+    },
+    "dataset_ids": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "DatasetIdentity ids (docs/governance/dataset_identity.schema.json). Recorded because clock_basis, volume_semantic and source_family are measurement assumptions, not decoration. ANNOTATION ONLY -- carries no corpus-approval authority; approval remains CorpusAuthorityDecision's (decision_status APPROVED), and a binding row here neither implies nor substitutes for one."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["DRAFT", "RECORDED", "SUPERSEDED", "RETIRED"],
+      "description": "DRAFT until a measurement episode actually records the correspondence."
+    },
+    "authority": {
+      "const": "research",
+      "description": "PINNED. Mirrors provenance_record.schema.json."
+    },
+    "grants_authority": {
+      "const": false,
+      "description": "PINNED false. A recorded binding is not validity, not economic value, and not authority. Mirrors provenance_record.schema.json's identically-pinned field and measurement_execution.schema.json's economic_claims_allowed."
+    },
+    "notes": { "type": "string" }
+  }
+}

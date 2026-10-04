@@ -1,0 +1,1 @@
+{"_doc": "BUILD_IMPACT/BUILD_COMPLETION manifests live here as <change_id>.impact.json / <change_id>.completion.json — see REPOSITORY_CONSTRUCTION_PROTOCOL.md. Validated by scripts/governance/construction_protocol.py."}

@@ -1,0 +1,217 @@
+{
+  "registry_id": "MEASUREMENT_OBJECT_REGISTRY",
+  "version": "MOR.v1",
+  "authority_finding": "L-003L",
+  "authority_version": "L-003L.v1",
+  "noun_parity_companion": {
+    "finding_id": "L-003M",
+    "version": "L-003M.v1",
+    "run_id": "l003m_noun_parity_20260907_201028",
+    "path": "docs/governance/ANALYTICS_NOUN_PARITY_L003M.md"
+  },
+  "run_id": "l003l_joint_state_space_measurement_objects_20260907_200006",
+  "generated_at_utc": "2026-09-07T20:00:06Z",
+  "git_commit_sha": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+  "branch": "feature/trace-parquet-duckdb-query",
+  "status": "MEASUREMENT_OBJECTS_REGISTERED",
+  "purpose": "First-class registry for research MeasurementObjects (identity promotion / ontology correction). NOT edge claims; NOT attribution-eligible by themselves; NOT analytics schema column promotion. L-003M affirms this as the correct promotion class (identity before edge).",
+  "complementary_to": "TradeImpl Observation / Evidence / Finding / Policy",
+  "four_layer_context": "docs/governance/ANALYTICS_JOINT_STATE_SPACE_L003L.md",
+  "terminal_label_vocabulary": {
+    "source": "L-003M",
+    "when_measurement_object_not_named": {
+      "scanner_terminal_label": "emitted value of Y_scanner",
+      "oracle_terminal_label": "emitted value of Y_oracle"
+    },
+    "bare_outcome_reserved_for": "only when MeasurementObject is explicit (Y_scanner / Y_oracle)",
+    "historical_synonyms_retained": [
+      "scanner_outcome",
+      "oracle_outcome",
+      "art_outcome",
+      "outcome"
+    ],
+    "match_relation": {
+      "preferred_framing": "MATCH_RELATION",
+      "forbidden_framing": "CORRECTNESS_RELATION",
+      "LABEL_MATCH": "1[Y_scanner == Y_oracle]  # terminal-label equality only",
+      "LABEL_MISMATCH": "1[Y_scanner != Y_oracle]"
+    }
+  },
+  "process_vs_variable_rewrite": {
+    "source": "L-003M",
+    "forbidden": [
+      "forward_walk outcome",
+      "forward_walk says",
+      "forward_walk predicts"
+    ],
+    "required": [
+      "Y_oracle emitted by forward_walk(...)",
+      "Y_scanner emitted by opportunity_scanner._simulate(...)"
+    ]
+  },
+  "objects": [
+    {
+      "object_id": "Y_scanner",
+      "formula": "Y_scanner := outcome emitted by opportunity_scanner._simulate",
+      "formula_source": "L-003K",
+      "emitter_path": "scripts/research/opportunity_scanner.py",
+      "emitter_symbol": "_simulate",
+      "emitter_params": {
+        "trail_mult_default": 0.5,
+        "return_field": "outcome"
+      },
+      "value_domain": [
+        "SL_HIT",
+        "TP_HIT",
+        "TIMEOUT"
+      ],
+      "emitted_label_noun": "scanner_terminal_label",
+      "related_columns": {
+        "art_outcome": "projection / artifact column; NOT the MeasurementObject itself"
+      },
+      "population_default": "anatomy opportunity rows across BNB/BTC/ETH/SOL (L-003F join corpus)",
+      "distinct_from": [
+        "Y_oracle (HOMONYM: distinct RV; label equality does not imply identity)",
+        "ExitProcess opportunity_scanner._simulate (process, not variable)",
+        "column art_outcome (projection of this object, not the object)"
+      ],
+      "status": "REGISTERED_IDENTITY",
+      "status_note": "Ontology correction from Y_scanner != Y_oracle (L-003 / L-003B HOMONYM). Identity promotion only \u2014 NOT edge, NOT attribution-eligible by itself.",
+      "edge_claim": false,
+      "attribution_eligible": false,
+      "emits": "OutcomeLabel",
+      "outcome_label_is_value_domain_only": true,
+      "emitter_function_alias": "f_scanner(path)",
+      "mathematical_type": "Omega -> OutcomeLabel",
+      "formula_map": {
+        "domain": "Omega_anatomy_opportunity",
+        "codomain": "OutcomeLabel",
+        "notation": "Y_scanner : Omega -> OutcomeLabel",
+        "definition": "Y_scanner(x) = OutcomeLabel emitted by opportunity_scanner._simulate on unit x"
+      },
+      "population_default_id": "Omega_anatomy_opportunity"
+    },
+    {
+      "object_id": "Y_oracle",
+      "formula": "Y_oracle := outcome emitted by research.measurement.forward_walk(exit_model=\"intrabar_fixed\")",
+      "formula_source": "L-003K",
+      "emitter_path": "src/research/measurement/forward_walk.py",
+      "emitter_symbol": "forward_walk",
+      "emitter_params": {
+        "exit_model": "intrabar_fixed",
+        "trail_mult_default": 0.5
+      },
+      "value_domain": [
+        "SL_HIT",
+        "TP_HIT",
+        "TIMEOUT"
+      ],
+      "emitted_label_noun": "oracle_terminal_label",
+      "related_columns": {
+        "outcome": "projection / anatomy oracle column; NOT the MeasurementObject itself"
+      },
+      "population_default": "anatomy opportunity rows across BNB/BTC/ETH/SOL (L-003F join corpus)",
+      "distinct_from": [
+        "Y_scanner (HOMONYM)",
+        "ExitProcess forward_walk / exit_model=intrabar_fixed (process IS NOT Y_oracle)",
+        "column outcome (projection of this object, not the object)"
+      ],
+      "status": "REGISTERED_IDENTITY",
+      "status_note": "Ontology correction from Y_scanner != Y_oracle. Identity promotion only \u2014 NOT edge, NOT attribution-eligible by itself.",
+      "edge_claim": false,
+      "attribution_eligible": false,
+      "emits": "OutcomeLabel",
+      "outcome_label_is_value_domain_only": true,
+      "emitter_function_alias": "f_oracle(path)",
+      "mathematical_type": "Omega -> OutcomeLabel",
+      "formula_map": {
+        "domain": "Omega_anatomy_opportunity",
+        "codomain": "OutcomeLabel",
+        "notation": "Y_oracle : Omega -> OutcomeLabel",
+        "definition": "Y_oracle(x) = OutcomeLabel emitted by forward_walk(exit_model=\"intrabar_fixed\") on unit x"
+      },
+      "population_default_id": "Omega_anatomy_opportunity"
+    },
+    {
+      "object_id": "Y_joint",
+      "formula": "Y_joint := (Y_scanner, Y_oracle)",
+      "formula_source": "L-003K",
+      "primary_observable_alias": "JOINT_OUTCOME_STATE",
+      "emitter_path": "pair composition of Y_scanner and Y_oracle emitters",
+      "emitter_symbol": "Y_joint = (Y_scanner, Y_oracle)",
+      "emitter_params": {},
+      "value_domain": "Omega_joint (9 StateIDs; canonical STATE_* per L-003M / L-003L)",
+      "related_columns": {
+        "art_outcome": "projection component for Y_scanner",
+        "outcome": "projection component for Y_oracle",
+        "note": "columns are projections of components, not Y_joint itself"
+      },
+      "population_default": "anatomy opportunity rows across BNB/BTC/ETH/SOL (L-003F join corpus)",
+      "distinct_from": [
+        "LABEL_MATCH / LABEL_MISMATCH (terminal-label equality helpers only; MATCH_RELATION framing)",
+        "named StateID populations (coordinates in Omega_joint; canonical STATE_* \u2014 not rival variables)",
+        "EARLY_STOP_CANDIDATE (research alias for STATE_SL_TP / JOINT_STATE_SL_TP coordinate only)"
+      ],
+      "status": "REGISTERED_IDENTITY",
+      "status_note": "Primary joint MeasurementObject (L-003J framing). Identity promotion only \u2014 NOT edge, NOT attribution-eligible by itself; NOT analytics schema column promotion.",
+      "edge_claim": false,
+      "attribution_eligible": false,
+      "mathematical_type": "Omega -> S",
+      "formula_map": {
+        "domain": "Omega_anatomy_opportunity",
+        "codomain": "S = L x L (Omega_joint)",
+        "notation": "Y_joint : Omega -> S",
+        "definition": "Y_joint(x) := (Y_scanner(x), Y_oracle(x)) in S"
+      },
+      "population_default_id": "Omega_anatomy_opportunity"
+    }
+  ],
+  "non_promotions": {
+    "edge_claims": false,
+    "attribution_eligible_by_registration": false,
+    "analytics_schema_column_promoted": false,
+    "lineage_registry_column_edits": false,
+    "evidence_class_edits": false,
+    "src_edits": false,
+    "new_measurements": false,
+    "git_commit": false,
+    "l003_frozen": true,
+    "l003_package_status": "L003_PACKAGE_FROZEN",
+    "further_l003_doctrine_except_errata": false
+  },
+  "attribution_blockers_remain": [
+    "ATTRIBUTION_BLOCKER_IDENTITY",
+    "ATTRIBUTION_BLOCKER_OUTCOME_SEMANTICS"
+  ],
+  "package_freeze": {
+    "status": "L003_PACKAGE_FROZEN",
+    "version": "L-003-FREEZE.v1",
+    "run_id": "l003_package_freeze_20260907_201945",
+    "generated_at_utc": "2026-09-07T20:19:45.454186Z",
+    "prohibit_further_l003_doctrine_except_errata": true,
+    "successor_episode": "JOINT_STATE_EXPLAINABILITY"
+  },
+  "outcome_label_discipline": {
+    "source": "L-003-FREEZE.v1",
+    "OutcomeLabel": {
+      "role": "value_domain_only",
+      "domain": [
+        "SL_HIT",
+        "TP_HIT",
+        "TIMEOUT"
+      ]
+    },
+    "emitters": {
+      "Y_scanner": "f_scanner(path) -> OutcomeLabel",
+      "Y_oracle": "f_oracle(path) -> OutcomeLabel"
+    },
+    "same_token_not_same_event": true,
+    "note": "SL_HIT under Y_scanner and SL_HIT under Y_oracle are not automatically the same event"
+  },
+  "arch_review_errata": {
+    "run_id": "arch_review_falsify_pack_20260908_023341",
+    "version": "ARCH-REVIEW.v1",
+    "note": "Added mathematical_type / formula_map on Y_* (Omega -> Label / Omega -> S). Producer refs retained. Not a doctrine reopen.",
+    "generated_at_utc": "2026-09-07T21:03:41Z"
+  }
+}

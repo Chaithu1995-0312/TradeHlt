@@ -1,0 +1,83 @@
+{
+  "change_id": "CH-f069-epoch-scope",
+  "date_utc": "2026-09-11",
+  "completion_status": "BLOCKED_ON_FOREIGN_TREE_STATE",
+  "completion_status_note": "The declared work is finished, every declared check passed, and the full floor was re-run to confirm net-zero regression -- see the final floor result below. This field does not say COMPLETE because the one remaining non-baseline floor failure (test_script_registry::test_disk_coverage_full_universe) is caused by two files this change did not write (scripts/research/link001_choch_measurement.py, scripts/research/retest_divergence_probe.py), so declaring them or asserting COMPLETE over a floor that includes their effect would be a false claim either way. See validator_blocked_on_foreign_tree_state.",
+  "declared_files": [
+    "scripts/analysis/build_decision_atlas.py",
+    "docs/governance/run_linkage_registry.json",
+    "tests/test_run_linkage_traces.py",
+    "tests/test_run_linkage.py",
+    "docs/current-findings.md",
+    "CLAUDE.md",
+    "reports/CRT_SEMANTIC_PARITY_REPORT.md",
+    "docs/governance/build_manifests/CH-f069-epoch-scope.impact.json",
+    "docs/governance/build_manifests/CH-f069-epoch-scope.completion.json",
+    "data/findings.jsonl",
+    "assistant_project.md"
+  ],
+  "checks_executed": [
+    {
+      "check": "tests/test_run_linkage.py + tests/test_run_linkage_traces.py",
+      "result": "PASS",
+      "detail": "20 passed."
+    },
+    {
+      "check": "required_checks_ack (TRACE_OBSERVATION_JOIN + DOCUMENTATION_ONLY, per impact.json)",
+      "result": "PASS",
+      "detail": "tests/test_crt_construction_trace.py + tests/test_crt_construction_trace_envelope.py + tests/test_resolver_metadata.py + tests/test_current_findings.py + tests/test_doc_citations.py + tests/test_topic_docs.py: 58 passed, 2 failed -- both pre-existing and independently root-caused below, not this change's regression."
+    },
+    {
+      "check": "agree_scope pass-through verification",
+      "result": "PASS",
+      "detail": "results/decision_atlas_full/envelope_bar.parquet: 21 columns (was 20), row count unchanged (47,197), agree True/False counts byte-identical (32,418/14,779) to the pre-rebuild table. transition_decision.parquet: 24 columns (was 23), row count unchanged (5,269). agree_scope reads 'm15_ontology_injection_none' -- confirms the re-measurement used the same injection scope as F-069's own 2026-08-05 baseline, so the 68.69%-vs-88.16% gap is a construction-epoch difference, not an injection-mode artifact."
+    },
+    {
+      "check": "Step 2b negative control (surfaces_ruling enforcement)",
+      "result": "PASS",
+      "detail": "Retargeted AN-SHADOWMEM-XAUUSD-M15-V1 claim C1 to run_20260909_202201#create_H20_context_economics (now INVALIDATED). tests/test_run_linkage_traces.py::test_every_claim_names_a_registered_surface failed with a named REFUSED message citing the surface and pointing at surfaces_ruling -- confirmed by reading the assertion text, not just the exit code. Reverted; re-ran, green (20/20)."
+    },
+    {
+      "check": "registry additivity",
+      "result": "PASS",
+      "detail": "Independently reconstructed (not trusted from prose): stripping _analyses, _traces, the surfaces_ruling block, reverting the 3 surface values (create_session_hour_tables/create_htf_parent_context_tables/create_H20_context_economics) to VALID, and trimming the AN/TR sentence from _doc reproduces sha256 5ac5d098ebfe2fc5 exactly -- the CH-analysis-trace-linkage pre-edit baseline."
+    },
+    {
+      "check": "validate-impact",
+      "result": "APPROVED",
+      "detail": "scripts/governance/construction_protocol.py validate-impact docs/governance/build_manifests/CH-f069-epoch-scope.impact.json -> IMPACT: APPROVED. TRACE_OBSERVATION_JOIN and DOCUMENTATION_ONLY confirmed as registered classes in docs/governance/change_contracts.json (grep-verified, not assumed)."
+    },
+    {
+      "check": "Documentation Drift Protocol synchronization gap, found and fixed same turn",
+      "result": "FIXED",
+      "detail": "Editing docs/current-findings.md's F-069 Note without regenerating the GENERATED artifact (data/findings.jsonl) broke tests/test_findings_export.py::test_on_disk_export_is_not_hand_edited -- a real regression caused by this change, confirmed by reading the failure diff (it isolated to F-069's note text). Fixed: ran `python scripts/governance/export_findings.py` (wrote 99 findings); tests/test_findings_export.py now 6/6 passed. data/findings.jsonl is gitignored (git status shows no change) so nothing to commit, but the regenerated file is required for the local floor to read consistently with source."
+    },
+    {
+      "check": "scripts/maintenance/check_governance_invariants.py --all (baseline, captured before any edit)",
+      "result": "12 failed / 554 passed / 1 skipped",
+      "detail": "Captured at session start via a background run, confirmed against the full FAILED-name list in the log (not just the summary count): test_current_findings::test_nonterminal_findings_are_fresh, test_doc_citations::test_every_code_citation_resolves, test_session_log::test_session_log_entry_count_is_bounded, test_feature_math_lint::test_universe_reconciliation_with_census, test_geometry_census::test_geometry_census_is_fresh, test_geometry_census::test_adjudication_closed_against_fresh_census, test_model_paths_literals x3, test_script_registry::test_grandfather_paths_match_stubs, test_script_registry::test_grandfather_ratchet_live_universe, test_corpus_read_lint::test_floor_is_green."
+    },
+    {
+      "check": "scripts/maintenance/check_governance_invariants.py --all (post-edit, before the findings-export fix)",
+      "result": "14 failed / 553 passed / 1 skipped",
+      "detail": "Diffed by exact FAILED name against the baseline list above: all 12 baseline failures reproduce byte-identically. Exactly 2 new: test_script_registry::test_disk_coverage_full_universe (root-caused to scripts/research/link001_choch_measurement.py + retest_divergence_probe.py -- two files from a concurrent session's LINK-001/CHoCH work, whose own assistant_project.md entry already flagged their SITS registration as deferred; this change touched no file under scripts/research/) and test_findings_export::test_on_disk_export_is_not_hand_edited (this change's own regression, fixed above)."
+    },
+    {
+      "check": "scripts/maintenance/check_governance_invariants.py --all (final, after the findings-export fix)",
+      "result": "13 failed / 554 passed / 1 skipped",
+      "detail": "Diffed by exact FAILED name against baseline: all 12 baseline failures reproduce byte-identically; passed count (554) matches baseline exactly; skipped count (1) matches. Exactly ONE non-baseline failure remains -- test_script_registry::test_disk_coverage_full_universe -- attributed below, not to this change."
+    }
+  ],
+  "attribution_note": "This change's real net regression was exactly one test (test_findings_export.py::test_on_disk_export_is_not_hand_edited), self-caught by running the full floor rather than only the targeted tests named in the impact manifest, and fixed the same turn per CLAUDE.md 3.3b -- a completion claim with a failing/stale check is DENIED regardless of prose, so this was fixed rather than narrated around. Net contribution of this change to the floor after the fix: ZERO new failures, ZERO passed-count drop.",
+  "validator_blocked_on_foreign_tree_state": {
+    "status": "EXPECTED_BLOCK",
+    "surfaces_reported_undeclared": [
+      "scripts/research/link001_choch_measurement.py",
+      "scripts/research/retest_divergence_probe.py"
+    ],
+    "attribution": "Neither file was touched by this change. Both are new files from a concurrent session's LINK-001/CHoCH work (assistant_project.md's own entry for that session names both by path and explicitly defers their SITS registration, citing a 60-line uncommitted seed_script_registry.py predating this session). This change touched zero files under scripts/research/.",
+    "consequence": "validate-completion (if run) would report BLOCKED on an undeclared governed surface belonging to a different session's in-flight work, not an incomplete change here. Resolving it requires that session to register its own scripts, or an isolated worktree measurement."
+  },
+  "authority_NOT_granted": "No MC-* seal, no finding_id, no F-*, no mx_id, no SEM-* node, no provenance record_id, no G001, no promotion, no economic_claims_allowed flip, no ablation of F-074/F-075/F-068, no registry tracking, no AN/TR schema trim.",
+  "production_behavior_changed": "NO"
+}

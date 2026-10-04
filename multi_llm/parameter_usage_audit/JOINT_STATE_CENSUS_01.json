@@ -1,0 +1,65 @@
+{
+  "census_id": "joint_state_census_xau_clean_labels_20260723",
+  "source": "results/clean_labels/XAUUSD/20260723T083443Z/clean_labels.parquet",
+  "n": 94332,
+  "Y_scanner": "diagnostics.stream_outcome (opportunity_scanner trail 0.5R)",
+  "Y_oracle": "path_outcome (forward_walk intrabar_fixed)",
+  "authority_outcome": "path_outcome / y_R_net (F-022)",
+  "aligned_pct": 67.166,
+  "mismatch_pct": 32.834,
+  "frequency": [
+    {
+      "state": "BOTH_SL",
+      "n": 62077,
+      "rate_pct": 65.8069
+    },
+    {
+      "state": "JOINT_STATE_SL_TP",
+      "n": 29294,
+      "rate_pct": 31.0541
+    },
+    {
+      "state": "JOINT_STATE_SL_TIMEOUT",
+      "n": 1566,
+      "rate_pct": 1.6601
+    },
+    {
+      "state": "BOTH_TP",
+      "n": 1231,
+      "rate_pct": 1.305
+    },
+    {
+      "state": "JOINT_STATE_TP_SL",
+      "n": 113,
+      "rate_pct": 0.1198
+    },
+    {
+      "state": "BOTH_TIMEOUT",
+      "n": 51,
+      "rate_pct": 0.0541
+    }
+  ],
+  "crosstab": {
+    "SL": {
+      "SL": 62077,
+      "TIMEOUT": 1566,
+      "TP": 29294
+    },
+    "TIMEOUT": {
+      "SL": 0,
+      "TIMEOUT": 51,
+      "TP": 0
+    },
+    "TP": {
+      "SL": 113,
+      "TIMEOUT": 0,
+      "TP": 1231
+    }
+  },
+  "specimen": {
+    "entry": 3430.37,
+    "joint_state": "JOINT_STATE_SL_TP",
+    "verified": true
+  },
+  "engine_decision": "DO_NOT_BUILD_YET \u2014 census first per User 2026-09-20"
+}

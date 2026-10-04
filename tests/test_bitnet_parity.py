@@ -39,9 +39,23 @@ import pytest
 # ── Path setup ────────────────────────────────────────────────────────────────
 _REPO_ROOT = Path(__file__).parent.parent
 _CPP_RUNNER = _REPO_ROOT / "tools" / "cpp" / "cpp_runner.exe"
+_FIXTURE    = Path(__file__).parent / "fixtures" / "test_vectors.json"
 sys.path.insert(0, str(_REPO_ROOT / "src"))
 
 from features.feature_schema import CANONICAL_FEATURE_ORDER, CANONICAL_FEATURE_DIM
+
+
+def _load_fixture_vectors(n: int = 100) -> list[dict]:
+    """Load the first *n* records from the committed seed-42 fixture.
+
+    Falls back to inline generation only if the fixture file is absent
+    (e.g. a fresh clone before running generate_vectors.py).
+    """
+    if _FIXTURE.exists():
+        data = json.loads(_FIXTURE.read_text())
+        return data[:n]
+    # Fallback — keeps CI green even without the fixture
+    return _make_test_vectors(n=n)
 
 
 # ── Helpers (mirror python_runner.py logic) ───────────────────────────────────
@@ -121,7 +135,7 @@ def _make_model(seed=42):
 )
 def test_cpp_python_parity(tmp_path):
     """Python and C++ inference must agree on all final outputs within abs_tol=1e-5."""
-    vectors = _make_test_vectors(n=100)
+    vectors = _load_fixture_vectors(n=100)  # shared golden fixture (seed-42, 35-dim)
     model = _make_model()
 
     # Write inputs to tmp_path (cpp_runner reads from cwd)

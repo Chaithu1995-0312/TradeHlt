@@ -1,0 +1,255 @@
+{
+  "authority": "research_only",
+  "engine_mode": "enter",
+  "agreement": 25954,
+  "total": 47197,
+  "agreement_rate": 0.5499078331249868,
+  "engine_counts": {
+    "RANGE": 35103,
+    "SWEEP": 7046,
+    "DISPLACEMENT": 371,
+    "SHADOW_PENDING": 51,
+    "EXPANSION": 4604,
+    "RETEST": 17,
+    "EXECUTION": 5
+  },
+  "resolver_counts": {
+    "RANGE": 31825,
+    "SWEEP": 10319,
+    "DISPLACEMENT": 1192,
+    "SHADOW_PENDING": 461,
+    "EXPANSION": 3123,
+    "RETEST": 277
+  },
+  "reference_counts": {
+    "RANGE": 35159,
+    "SWEEP": 6987,
+    "DISPLACEMENT": 373,
+    "EXPANSION": 4605,
+    "RETEST": 17,
+    "EXECUTION": 5,
+    "RESOLUTION": 0,
+    "SHADOW_PENDING": 51,
+    "EXPIRED": 0
+  },
+  "matrix": {
+    "RANGE|RANGE": 23845,
+    "SWEEP|RANGE": 4728,
+    "RANGE|SWEEP": 7743,
+    "DISPLACEMENT|RANGE": 238,
+    "SHADOW_PENDING|RANGE": 41,
+    "SWEEP|SWEEP": 1557,
+    "RANGE|DISPLACEMENT": 890,
+    "SWEEP|DISPLACEMENT": 169,
+    "DISPLACEMENT|DISPLACEMENT": 11,
+    "EXPANSION|SHADOW_PENDING": 38,
+    "SWEEP|SHADOW_PENDING": 105,
+    "RANGE|SHADOW_PENDING": 311,
+    "DISPLACEMENT|SWEEP": 86,
+    "RANGE|EXPANSION": 2105,
+    "RANGE|RETEST": 209,
+    "EXPANSION|RANGE": 2960,
+    "EXPANSION|SWEEP": 919,
+    "EXPANSION|DISPLACEMENT": 121,
+    "RETEST|SWEEP": 5,
+    "SWEEP|EXPANSION": 446,
+    "SWEEP|RETEST": 41,
+    "EXECUTION|SWEEP": 4,
+    "DISPLACEMENT|EXPANSION": 30,
+    "SHADOW_PENDING|EXPANSION": 2,
+    "EXPANSION|EXPANSION": 540,
+    "EXPANSION|RETEST": 26,
+    "RETEST|RANGE": 12,
+    "DISPLACEMENT|SHADOW_PENDING": 6,
+    "SHADOW_PENDING|SWEEP": 5,
+    "SHADOW_PENDING|RETEST": 1,
+    "SHADOW_PENDING|SHADOW_PENDING": 1,
+    "SHADOW_PENDING|DISPLACEMENT": 1,
+    "EXECUTION|RANGE": 1
+  },
+  "top_confusions": [
+    {
+      "engine": "RANGE",
+      "resolver": "SWEEP",
+      "n": 7743
+    },
+    {
+      "engine": "SWEEP",
+      "resolver": "RANGE",
+      "n": 4728
+    },
+    {
+      "engine": "EXPANSION",
+      "resolver": "RANGE",
+      "n": 2960
+    },
+    {
+      "engine": "RANGE",
+      "resolver": "EXPANSION",
+      "n": 2105
+    },
+    {
+      "engine": "EXPANSION",
+      "resolver": "SWEEP",
+      "n": 919
+    },
+    {
+      "engine": "RANGE",
+      "resolver": "DISPLACEMENT",
+      "n": 890
+    },
+    {
+      "engine": "SWEEP",
+      "resolver": "EXPANSION",
+      "n": 446
+    },
+    {
+      "engine": "RANGE",
+      "resolver": "SHADOW_PENDING",
+      "n": 311
+    },
+    {
+      "engine": "DISPLACEMENT",
+      "resolver": "RANGE",
+      "n": 238
+    },
+    {
+      "engine": "RANGE",
+      "resolver": "RETEST",
+      "n": 209
+    },
+    {
+      "engine": "SWEEP",
+      "resolver": "DISPLACEMENT",
+      "n": 169
+    },
+    {
+      "engine": "EXPANSION",
+      "resolver": "DISPLACEMENT",
+      "n": 121
+    },
+    {
+      "engine": "SWEEP",
+      "resolver": "SHADOW_PENDING",
+      "n": 105
+    },
+    {
+      "engine": "DISPLACEMENT",
+      "resolver": "SWEEP",
+      "n": 86
+    },
+    {
+      "engine": "SHADOW_PENDING",
+      "resolver": "RANGE",
+      "n": 41
+    },
+    {
+      "engine": "SWEEP",
+      "resolver": "RETEST",
+      "n": 41
+    },
+    {
+      "engine": "EXPANSION",
+      "resolver": "SHADOW_PENDING",
+      "n": 38
+    },
+    {
+      "engine": "DISPLACEMENT",
+      "resolver": "EXPANSION",
+      "n": 30
+    },
+    {
+      "engine": "EXPANSION",
+      "resolver": "RETEST",
+      "n": 26
+    },
+    {
+      "engine": "RETEST",
+      "resolver": "RANGE",
+      "n": 12
+    },
+    {
+      "engine": "DISPLACEMENT",
+      "resolver": "SHADOW_PENDING",
+      "n": 6
+    },
+    {
+      "engine": "RETEST",
+      "resolver": "SWEEP",
+      "n": 5
+    },
+    {
+      "engine": "SHADOW_PENDING",
+      "resolver": "SWEEP",
+      "n": 5
+    },
+    {
+      "engine": "EXECUTION",
+      "resolver": "SWEEP",
+      "n": 4
+    },
+    {
+      "engine": "SHADOW_PENDING",
+      "resolver": "EXPANSION",
+      "n": 2
+    }
+  ],
+  "edge_mismatch_n": 3062,
+  "timeline": {
+    "n_bars": 47275,
+    "n_transitions": 3869,
+    "n_resets": 10869,
+    "htf_resets": 10666,
+    "gap_resets": 121,
+    "reset_from_counts": {
+      "RANGE": 7441,
+      "SWEEP": 3062,
+      "DISPLACEMENT": 298,
+      "SHADOW_PENDING": 8,
+      "EXPANSION": 43,
+      "RETEST": 12,
+      "RESOLUTION": 1,
+      "EXECUTION": 4
+    }
+  },
+  "resolver_meta": {
+    "n_raw": 47275,
+    "n_resolved": 47197,
+    "n_dropped_warmup": 78,
+    "resolver_counts": {
+      "RANGE": 31825,
+      "SWEEP": 10319,
+      "DISPLACEMENT": 1192,
+      "SHADOW_PENDING": 461,
+      "EXPANSION": 3123,
+      "RETEST": 277
+    },
+    "config": "reports\\parity_experiment\\iter11_htf_window_8.yaml",
+    "lifecycle_stats": {
+      "htf_reset_count": 5447,
+      "gap_reset_count": 121,
+      "forced_reset_count": 0,
+      "last_reset_reason": "HTF changed: XAUUSD-HTF-005908 \u2192 XAUUSD-HTF-005909"
+    },
+    "lifecycle_cfg": {
+      "htf_reset_enabled": true,
+      "htf_candles_per_range": 8,
+      "htf_protect_states": [
+        "EXPANSION",
+        "RETEST"
+      ],
+      "htf_protect_execution": true,
+      "gap_reset_enabled": true,
+      "gap_reset_minutes": 120.0,
+      "shadow_on_htf_displacement_reset": true,
+      "pending_displacement_ttl_candles": 4
+    },
+    "htf_mode": "engine",
+    "htf_instrument": "XAUUSD",
+    "htf_candles_per_range": 8,
+    "htf_unique_ids": 5901,
+    "htf_changes_on_resolved_slice": 5900,
+    "htf_first_id": "XAUUSD-HTF-000009",
+    "htf_last_id": "XAUUSD-HTF-005909"
+  }
+}

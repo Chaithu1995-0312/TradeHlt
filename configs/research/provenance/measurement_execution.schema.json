@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "measurement_execution.schema.json",
+  "title": "Measurement Execution (MX-*, MPA v1)",
+  "description": "A stable ADDRESSING SCHEME over one line of configs/research/measurement_result_log.jsonl — NOT a second store. `MX-<run_id>` names the execution that a provenance record's EXECUTION slot points at. The result log stays the system of record; this schema documents the projection the resolver reads. FROZEN v1.0.0. Authoritative prose: docs/governance/MEASUREMENT_PROVENANCE_ARCHITECTURE.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mx_id",
+    "contract_id",
+    "run_id",
+    "trust_mt00",
+    "trust_mt01_matrix_coverage",
+    "artifact_hashes",
+    "declared_artifacts_exist",
+    "basis_status",
+    "economic_claims_allowed"
+  ],
+  "properties": {
+    "mx_id": {
+      "type": "string",
+      "pattern": "^MX-.+$",
+      "description": "MX-<run_id>. An address, not a new identity — the run_id belongs to the result-log line."
+    },
+    "contract_id": {
+      "type": "string",
+      "pattern": "^(MC|MP)-.+$",
+      "description": "The sealed contract this run executed. The CONTRACT/EXECUTION split is the architecture's central correction: the 2026-08-26 audit had ONE measurement-basis slot, so naming a contract and running it were indistinguishable (its U4_DECLARED_NOT_EXECUTED rule fired 56 times)."
+    },
+    "run_id": { "type": "string", "minLength": 1 },
+    "trust_mt00": {
+      "enum": ["UNRUN", "PASS", "FAIL", "PARTIAL"],
+      "description": "E-MT-00 clean-path verdict. Vocabulary mirrors measurement_result_log.MT00_VALUES exactly."
+    },
+    "trust_mt01_matrix_coverage": {
+      "enum": ["UNRUN", "COMPLETE", "INCOMPLETE"],
+      "description": "E-MT-01 adversarial matrix coverage. 0/27 probes exist repo-wide, so every execution today is UNRUN here."
+    },
+    "artifact_hashes": {
+      "type": "object",
+      "description": "repo-relative path -> sha256 of the artifact as it stood at run time. Content proof WITHOUT requiring the artifact to be git-tracked, which matters because results/ is gitignored.",
+      "additionalProperties": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+    },
+    "declared_artifacts_exist": { "type": "boolean" },
+    "basis_status": {
+      "enum": ["UNIDENTIFIED", "BASIS_DECLARED", "N_A"],
+      "description": "Run-grain basis classification. NEVER `PRESERVED` — that is an identity CheckResult status, and a result line is not an L5 object."
+    },
+    "economic_claims_allowed": {
+      "const": false,
+      "description": "PINNED false. The charter's E4 seal needs mt00 == PASS AND mt01_matrix_coverage == COMPLETE; coverage is 0/27, so no execution can open this gate. An execution proves a run HAPPENED, never that its result is economic."
+    }
+  }
+}

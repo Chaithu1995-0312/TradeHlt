@@ -1,0 +1,12 @@
+{
+  "change_id": "CH-model-paths-literal-freeze",
+  "status": "COMPLETE",
+  "completed_at": "2026-07-22",
+  "summary": "Unauthorized models/ path-literal freeze: scanner + debt (39 pairs / 50 occ) + tests on GREEN_FLOOR. Approved: model_paths.py, model_resolver.py, zone_schema_migrator, tests/**, migration scripts. No loader migration.",
+  "checks_run": {
+    "tests/test_model_paths_literals.py": "PASS (with governance_invariant_check: 11)",
+    "scripts/governance/scan_model_paths_literals.py": "exit 0"
+  },
+  "production_behavior_changed": false,
+  "authority_granted": false
+}

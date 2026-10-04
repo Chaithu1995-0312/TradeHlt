@@ -1,0 +1,109 @@
+{
+  "artifact": "market_language_schema",
+  "version": 1,
+  "status": "DRAFT_DETERMINISTIC_FIRST",
+  "generated_from": "docs/research-readiness/market_language_census_report.json",
+  "principle": "Run/Trace identity fields are named FROM the existing authority vocabulary, never invented and never normalised. The four state vocabularies stay separate; the sweep concept-token overlap stays surfaced; the DISPLACEMENT exact-name collision is disambiguated by vocabulary prefix, not merged.",
+  "state_vocabularies": [
+    {
+      "name": "crt_machine",
+      "kind": "deterministic_state_machine",
+      "count": 12,
+      "canonical_terms": [
+        "RANGE", "RANGE_C1", "EXPANSION", "DISTRIBUTION_C3", "MANIPULATION_C2",
+        "DISPLACEMENT", "RETEST", "SWEEP", "RESOLUTION", "EXECUTION", "EXPIRED",
+        "SHADOW_PENDING"
+      ],
+      "provenance": ["configs/formulas/crt_state_identity.yaml", "configs/formulas/market_crt_states.yaml"]
+    },
+    {
+      "name": "feature_enum",
+      "kind": "feature_gate_enums",
+      "count": 36,
+      "parent_groups": [
+        "trend_bias", "higher_high", "lower_low", "break_of_structure", "liquidity_sweep",
+        "sweep_detected", "double_sweep", "retest_flag", "rsi_state", "displacement_flag",
+        "body_commitment", "atr_magnitude", "momentum_magnitude", "change_of_character"
+      ],
+      "provenance": ["configs/formulas/market_ontology.yaml (states blocks)"]
+    },
+    {
+      "name": "smc_choch",
+      "kind": "signed_combination_not_state_machine",
+      "count": 1,
+      "canonical_terms": ["change_of_character"],
+      "note": "Pure signed operation (BOS x trend_bias) over registered features, domain {-1,0,+1}. NOT a state machine; ontology explicitly excludes BOS/CHOCH detection machines (market_ontology.yaml:32).",
+      "provenance": ["src/features/smc/choch.py"]
+    },
+    {
+      "name": "trade_execution",
+      "kind": "journal_and_geometry",
+      "count": 31,
+      "sub_vocabularies": ["trade/record_field", "trade/intent", "trade/geometry"],
+      "intents": ["BREAKOUT", "PULLBACK", "LIQ_SWEEP", "REVERSAL", "CONTINUATION", "UNKNOWN"],
+      "provenance": ["src/journal/schema.py", "src/config_layer/execution_planner.py", "src/config_layer/crt_engine_v2.py", "src/runtime/backtest_v2.py"]
+    }
+  ],
+  "crt_to_predicate_gating_edge": {
+    "kind": "edge",
+    "description": "Each crt_machine state's activation_condition is a conjunction of feature_enum GATES (each expecting an enum value such as NoSweep/NoBreak/NoHigherHigh). This is the ONLY place the two vocabularies formally meet, and therefore the exact surface a Run/Trace can_join field must encode.",
+    "gate_keys": [
+      "liquidity_sweep", "break_of_structure", "sweep_detected", "displacement_flag",
+      "double_sweep", "higher_high", "lower_low", "retest_flag", "swing_high", "swing_low"
+    ],
+    "example": {
+      "state": "RANGE",
+      "activation_condition": {
+        "liquidity_sweep": ["NoSweep"], "break_of_structure": ["NoBreak"],
+        "sweep_detected": ["NoSweep"], "displacement_flag": ["NoDisplacement"],
+        "double_sweep": ["NoDoubleSweep"], "higher_high": ["NoHigherHigh"],
+        "lower_low": ["NoLowerLow"], "retest_flag": ["NoRetest"],
+        "swing_high": ["NoSwingHigh"], "swing_low": ["NoSwingLow"]
+      }
+    }
+  },
+  "exact_name_collisions": [
+    {
+      "word": "DISPLACEMENT",
+      "appears_in": ["state/crt_machine", "state/feature_enum"],
+      "resolution": "prefix-disambiguate, do not merge: crt::DISPLACEMENT (state) vs feature_enum::displacement_flag (enum gate).",
+      "collision_status": "SURFACED_KEEP_SEPARATE"
+    }
+  ],
+  "concept_overlaps_preserved": [
+    {
+      "stem": "sweep",
+      "vocabularies": [
+        "feature/rolling_indicators", "feature/structural_states", "shape/shape_layer",
+        "state/crt_machine", "state/feature_enum", "trade/intent"
+      ],
+      "member_words": [
+        "buysidesweep", "candles_since_sweep", "double_sweep", "doublesweep",
+        "doublesweeptrap", "liq_sweep", "liquidity_sweep", "nodoublesweep", "nosweep",
+        "sellsidesweep", "sweep", "sweep_detected", "sweepdetected"
+      ],
+      "status": "SURFACED_NOT_NORMALISED"
+    }
+  ],
+  "run_trace_field_vocabulary": {
+    "trace_id": {
+      "purpose": "Identifies a contiguous CRT-machine residence episode. Composite of crt_machine canonical state + the gating predicate fingerprint that admitted it.",
+      "value_domain": "crt_machine canonical state (one of the 12) + feature_enum gate fingerprint",
+      "grounded_in": ["crt_machine", "feature_enum"],
+      "status": "PROPOSAL_AWAITING_ENGINE_CONSUMER"
+    },
+    "can_join": {
+      "purpose": "Predicate-level joinability test: whether the observed feature_enum gate values satisfy the target CRT state's activation_condition.",
+      "value_domain": "bitmask / predicate over the 10 gate keys (liquidity_sweep, break_of_structure, sweep_detected, displacement_flag, double_sweep, higher_high, lower_low, retest_flag, swing_high, swing_low)",
+      "grounded_in": ["feature_enum", "crt_to_predicate_gating_edge"],
+      "status": "PROPOSAL_AWAITING_ENGINE_CONSUMER"
+    }
+  },
+  "llm_pending_alignments": [
+    "S7: of the 47 features_with_no_state, which are genuine API gaps (need a feature_enum state parent) vs legitimate scalar measurements (e.g. atr, volume_ratio) — semantic determination, not census-derivable.",
+    "S6/shape: whether shape-layer members of concept families (DoubleSweepTrap, BuySideSweep, SellSideSweep) are aliases of one geometric intent or distinct shapes — cross-check against docs/research-readiness/ic-003-shape-narratives.md.",
+    "Confirm the sweep 6-way overlap stays un-collapsed (same market concept, distinct computational vocabularies)."
+  ],
+  "downstream_application": "Consumed by the Run/Trace identity design (layer_trace/* engine) to name trace_id / can_join per the census vocabularies. Engine implementation is OUT of scope for this schema artifact.",
+  "note": "No census verification suppressed: zero ungrounded predicate keys (S5 not_grounded = empty); S7 states_no_parent = 0."
+}

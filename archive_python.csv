@@ -1,0 +1,21 @@
+language,filename,blank,comment,code,"github.com/AlDanial/cloc v 2.10  T=0.13 s (150.7 files/s 39617.9 lines/s)"
+Python,.\archive\inout_legacy\ARCHIVED_2026_05_02\probability_engine.py,190,308,608
+Python,.\archive\inout_legacy\ARCHIVED_2026_05_02\state_machine.py,78,145,464
+Python,.\archive\inout_legacy\ARCHIVED_2026_05_02\controller.py,88,117,378
+Python,.\archive\inout_legacy\ARCHIVED_2026_05_02\db.py,55,156,257
+Python,.\archive\inout_legacy\ARCHIVED_2026_05_02\scanner.py,68,118,249
+Python,.\archive\inout_legacy\ARCHIVED_2026_05_02\runner.py,70,93,248
+Python,.\archive\inout_legacy\ARCHIVED_2026_05_02\executor.py,47,96,136
+Python,.\archive\inout_legacy\ARCHIVED_2026_05_02\config.py,37,43,122
+Python,.\archive\dead_code\bitnet\_smoke_test.py,27,5,120
+Python,.\archive\dead_code\config_layer\insight_reporter.py,17,11,108
+Python,.\archive\dead_code\features\bitnet_feature_builder.py,9,10,56
+Python,.\archive\dead_code\ui\dashboard.py,17,13,49
+Python,.\archive\ui_legacy\dashboard_ARCHIVED_2026_05_02.py,18,18,49
+Python,.\archive\dead_code\journal\trade_logger.py,8,6,30
+Python,.\archive\scripts\run_hisotircal_data_EURCAD.py,13,5,30
+Python,.\archive\scripts\run_hisotircal_data_GBPUSD.py,13,5,30
+Python,.\archive\scripts\run_hisotircal_data_XAUUSD.py,13,5,30
+Python,.\archive\dead_code\journal\schema.py,5,6,28
+Python,.\archive\inout_legacy\ARCHIVED_2026_05_02\__init__.py,9,40,20
+SUM,,782,1200,3012

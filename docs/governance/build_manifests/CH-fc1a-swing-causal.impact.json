@@ -1,0 +1,53 @@
+{
+  "change_id": "CH-fc1a-swing-causal",
+  "objective": "FC1-A: bind production swing_high/swing_low + coherent structure graph to causal delayed publication (available_at=t+k, k=SWING_WINDOW=2). Preserve *_centered_batch research identities. Live FeatureStore publishes same delayed-confirmed structure from OHLCV history. Tag RR/Zone artifacts PIT_UNCLEAN_CENTERED_SWINGS (no retrain). Prefix-invariance tests for production structure closure. F-051 evidence; grants no economic authority.",
+  "change_classes": [
+    "FEATURE_IDENTITY_CHANGE",
+    "MODEL_INPUT_CHANGE",
+    "RUNTIME_DECISION_PATH_CHANGE",
+    "DOCUMENTATION_ONLY"
+  ],
+  "affected_files": [
+    "src/features/feature_pipeline.py",
+    "src/features/causal_structure.py",
+    "src/features/feature_identity.py",
+    "src/core/feature_store.py",
+    "docs/governance/phase1_feature_identity_registry-2026-07-10.json",
+    "docs/governance/feature_pipeline_change_contracts/FC1-A-SWING-CAUSAL.json",
+    "docs/governance/FC1-A-SWING-CAUSAL-implementation-contract-2026-07-11.md",
+    "docs/governance/pit_phaseA_centered_swing_decision_record-2026-07-11.md",
+    "docs/governance/phase1_duplicate_formula_follow_up_backlog-2026-07-10.json",
+    "docs/current-findings.md",
+    "models/rr_model.provenance.json",
+    "models/zone_registry.provenance.json",
+    "tests/test_fc1a_swing_causal.py",
+    "tests/test_phase1_duplicate_formula_identity_closure.py",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [
+    "FEAT-SWING_HIGH_CENTERED_BATCH",
+    "FEAT-SWING_LOW_CENTERED_BATCH",
+    "FEAT-SWING_HIGH_CAUSAL_CONFIRMED",
+    "FEAT-SWING_LOW_CAUSAL_CONFIRMED"
+  ],
+  "affected_models": "none enabled/changed; rr_model + zone_registry tagged PIT_UNCLEAN_CENTERED_SWINGS via sidecar provenance only",
+  "affected_production_config": "none (hash-neutral)",
+  "required_checks_ack": [
+    "tests/test_fc1a_swing_causal.py",
+    "tests/test_phase1_duplicate_formula_identity_closure.py",
+    "tests/test_feature_pipeline.py",
+    "tests/test_current_findings.py",
+    "tests/test_feature_math_lint.py",
+    "tests/test_session_log.py",
+    "tests/test_active_models_registry.py",
+    "tests/test_doc_citations.py",
+    "tests/test_feature_lineage.py",
+    "tests/test_formula_registry.py",
+    "tests/test_gate2b_closure.py",
+    "tests/test_geometry_census.py",
+    "tests/test_topic_docs.py"
+  ],
+  "unknowns": [],
+  "behavior_changed": true,
+  "rollback_boundary": "single change stack: revert feature_pipeline structure binding + causal_structure + feature_store + identity registry alias move + provenance sidecars + FC1-A tests together"
+}

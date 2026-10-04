@@ -1,0 +1,446 @@
+{
+  "TRANSITION_COUNTER": {
+    "kind": "TRANSITION_COUNTER",
+    "state_entry_counts": {
+      "RANGE": 2887,
+      "SWEEP": 1798,
+      "DISPLACEMENT": 399,
+      "EXPANSION": 148,
+      "RETEST": 24,
+      "EXECUTION": 4,
+      "SHADOW_PENDING": 6,
+      "RESOLUTION": 3
+    },
+    "expansion_dwell_stats": {
+      "count": 148,
+      "mean": 73.6,
+      "median": 5.0,
+      "p90": 308,
+      "p99": 509,
+      "max": 510,
+      "ended_by_counts": {
+        "retest": 24,
+        "reset": 124,
+        "eof": 0,
+        "expired": 0
+      }
+    },
+    "run_id": "run_20260916_172925"
+  },
+  "CANDIDATE_LIFECYCLE": {
+    "n": 1798,
+    "death_reason": [
+      [
+        "RESET_HTF",
+        1442
+      ],
+      [
+        "RESET_RETRACE",
+        166
+      ],
+      [
+        "RESET_EXTENSION",
+        109
+      ],
+      [
+        "RESET_OTHER",
+        62
+      ],
+      [
+        "FILTER_REJECTED",
+        15
+      ],
+      [
+        "ACCEPTED",
+        3
+      ],
+      [
+        "SOFT_CONF_TIMEOUT",
+        1
+      ]
+    ],
+    "entered_states_counts": [
+      [
+        "SWEEP",
+        1798
+      ],
+      [
+        "DISPLACEMENT",
+        399
+      ],
+      [
+        "EXPANSION",
+        148
+      ],
+      [
+        "RETEST",
+        24
+      ],
+      [
+        "EXECUTION",
+        4
+      ]
+    ],
+    "n_with_score_at_approval": 3,
+    "score_at_approval_sample": [
+      0.5728457169016976,
+      0.4871316574775695,
+      0.5649299316624503
+    ]
+  },
+  "EXPANSION_RETRACE_CHECK": {
+    "n": 148,
+    "qualified": [
+      [
+        "False",
+        124
+      ],
+      [
+        "True",
+        24
+      ]
+    ],
+    "outcome": [
+      [
+        "RESET_EXTENSION",
+        53
+      ],
+      [
+        "RESET_OTHER",
+        36
+      ],
+      [
+        "RESET_RETRACE",
+        35
+      ],
+      [
+        "QUALIFIED",
+        24
+      ]
+    ],
+    "ended_by": [
+      [
+        "reset",
+        124
+      ],
+      [
+        "retest",
+        24
+      ]
+    ],
+    "keys": [
+      "age_hours_actual",
+      "age_hours_estimated",
+      "age_pct_of_threshold",
+      "candidate_age_at_entry",
+      "ceiling_at_max",
+      "duration_candles",
+      "ended_by",
+      "episode_end_idx",
+      "episode_start_idx",
+      "freshness_ratio",
+      "kind",
+      "max_retrace_depth_abs",
+      "outcome",
+      "qualified",
+      "run_id",
+      "shadow_used",
+      "time_to_max_retrace_candles"
+    ],
+    "sample_qualified_true": {
+      "episode_start_idx": 686,
+      "episode_end_idx": 718,
+      "duration_candles": 32,
+      "age_hours_actual": 8.0,
+      "age_hours_estimated": 8.0,
+      "ended_by": "retest",
+      "shadow_used": false,
+      "candidate_age_at_entry": 1,
+      "max_retrace_depth_abs": 15.150000000000091,
+      "ceiling_at_max": 1.09200000000003,
+      "time_to_max_retrace_candles": 8,
+      "age_pct_of_threshold": 0.0,
+      "freshness_ratio": 0.0,
+      "qualified": true,
+      "outcome": "QUALIFIED",
+      "run_id": "run_20260916_172925"
+    },
+    "sample_qualified_false": {
+      "episode_start_idx": 255,
+      "episode_end_idx": 256,
+      "duration_candles": 1,
+      "age_hours_actual": 0.25,
+      "age_hours_estimated": 0.25,
+      "ended_by": "reset",
+      "shadow_used": false,
+      "candidate_age_at_entry": 1,
+      "max_retrace_depth_abs": 0.0,
+      "ceiling_at_max": 0.0,
+      "time_to_max_retrace_candles": 0,
+      "age_pct_of_threshold": 0.0,
+      "freshness_ratio": 0.0,
+      "qualified": false,
+      "outcome": "RESET_EXTENSION",
+      "run_id": "run_20260916_172925"
+    }
+  },
+  "DECISION_DISTANCE": {
+    "n": 26,
+    "accepted": [
+      [
+        "True",
+        23
+      ],
+      [
+        "False",
+        3
+      ]
+    ],
+    "rejection_reason": [
+      [
+        "APPROVED",
+        23
+      ],
+      [
+        "score_below_threshold",
+        3
+      ]
+    ],
+    "rows": [
+      {
+        "candidate_id": "CAND-677",
+        "accepted": true,
+        "rejection_reason": "APPROVED",
+        "score_actual": 0.4171747842020701,
+        "score_threshold": 0.3,
+        "decision_distance": 0.11717478420207011,
+        "candle_index": 719
+      },
+      {
+        "candidate_id": "CAND-808",
+        "accepted": true,
+        "rejection_reason": "APPROVED",
+        "score_actual": 0.4604224408865803,
+        "score_threshold": 0.3,
+        "decision_distance": 0.1604224408865803,
+        "candle_index": 827
+      },
+      {
+        "candidate_id": "CAND-3410",
+        "accepted": true,
+        "rejection_reason": "APPROVED",
+        "score_actual": 0.3617366890716234,
+        "score_threshold": 0.3,
+        "decision_distance": 0.061736689071623385,
+        "candle_index": 3841
+      },
+      {
+        "candidate_id": "CAND-8025",
+        "accepted": true,
+        "rejection_reason": "APPROVED",
+        "score_actual": 0.39658399199234207,
+        "score_threshold": 0.3,
+        "decision_distance": 0.09658399199234208,
+        "candle_index": 8055
+      },
+      {
+        "candidate_id": "CAND-8946",
+        "accepted": true,
+        "rejection_reason": "APPROVED",
+        "score_actual": 0.3391664812374576,
+        "score_threshold": 0.3,
+        "decision_distance": 0.039166481237457584,
+        "candle_index": 8982
+      },
+      {
+        "candidate_id": "CAND-9894",
+        "accepted": true,
+        "rejection_reason": "APPROVED",
+        "score_actual": 0.4911888886462698,
+        "score_threshold": 0.3,
+        "decision_distance": 0.19118888864626982,
+        "candle_index": 10082
+      },
+      {
+        "candidate_id": "CAND-10439",
+        "accepted": true,
+        "rejection_reason": "APPROVED",
+        "score_actual": 0.3518955249021289,
+        "score_threshold": 0.3,
+        "decision_distance": 0.0518955249021289,
+        "candle_index": 10730
+      },
+      {
+        "candidate_id": "CAND-11282",
+        "accepted": true,
+        "rejection_reason": "APPROVED",
+        "score_actual": 0.5728457169016976,
+        "score_threshold": 0.3,
+        "decision_distance": 0.2728457169016976,
+        "candle_index": 11364
+      },
+      {
+        "candidate_id": "CAND-11592",
+        "accepted": true,
+        "rejection_reason": "APPROVED",
+        "score_actual": 0.4871316574775695,
+        "score_threshold": 0.3,
+        "decision_distance": 0.1871316574775695,
+        "candle_index": 11609
+      },
+      {
+        "candidate_id": "CAND-12790",
+        "accepted": true,
+        "rejection_reason": "APPROVED",
+        "score_actual": 0.3944473706942988,
+        "score_threshold": 0.3,
+        "decision_distance": 0.09444737069429882,
+        "candle_index": 12830
+      },
+      {
+        "candidate_id": "CAND-14329",
+        "accepted": true,
+        "rejection_reason": "APPROVED",
+        "score_actual": 0.32124921185313526,
+        "score_threshold": 0.3,
+        "decision_distance": 0.021249211853135275,
+        "candle_index": 14470
+      },
+      {
+        "candidate_id": "CAND-16450",
+        "accepted": true,
+        "rejection_reason": "APPROVED",
+        "score_actual": 0.38054463739615824,
+        "score_threshold": 0.3,
+        "decision_distance": 0.08054463739615825,
+        "candle_index": 16496
+      },
+      {
+        "candidate_id": "CAND-17925",
+        "accepted": false,
+        "rejection_reason": "score_below_threshold",
+        "score_actual": 0.2885690989458077,
+        "score_threshold": 0.3,
+        "decision_distance": 0.01143090105419231,
+        "candle_index": 17942
+      },
+      {
+        "candidate_id": "CAND-17925",
+        "accepted": false,
+        "rejection_reason": "score_below_threshold",
+        "score_actual": 0.2583197347630313,
+        "score_threshold": 0.3,
+        "decision_distance": 0.04168026523696872,
+        "candle_index": 17943
+      },
+      {
+        "candidate_id": "CAND-17925",
+        "accepted": false,
+        "rejection_reason": "score_below_threshold",
+        "score_actual": 0.2469799182075086,
+        "score_threshold": 0.3,
+        "decision_distance": 0.0530200817924914,
+        "candle_index": 17944
+      },
+      {
+        "candidate_id": "CAND-18007",
+        "accepted": true,
+        "rejection_reason": "APPROVED",
+        "score_actual": 0.5649299316624503,
+        "score_threshold": 0.3,
+        "decision_distance": 0.2649299316624503,
+        "candle_index": 18029
+      },
+      {
+        "candidate_id": "CAND-18424",
+        "accepted": true,
+        "rejection_reason": "APPROVED",
+        "score_actual": 0.491532614426968,
+        "score_threshold": 0.3,
+        "decision_distance": 0.191532614426968,
+        "candle_index": 18439
+      },
+      {
+        "candidate_id": "CAND-26790",
+        "accepted": true,
+        "rejection_reason": "APPROVED",
+        "score_actual": 0.3465275746121595,
+        "score_threshold": 0.3,
+        "decision_distance": 0.046527574612159506,
+        "candle_index": 26843
+      },
+      {
+        "candidate_id": "CAND-29106",
+        "accepted": true,
+        "rejection_reason": "APPROVED",
+        "score_actual": 0.43904768703081004,
+        "score_threshold": 0.3,
+        "decision_distance": 0.13904768703081005,
+        "candle_index": 29132
+      },
+      {
+        "candidate_id": "CAND-30713",
+        "accepted": true,
+        "rejection_reason": "APPROVED",
+        "score_actual": 0.35697614082134665,
+        "score_threshold": 0.3,
+        "decision_distance": 0.056976140821346666,
+        "candle_index": 30799
+      },
+      {
+        "candidate_id": "CAND-36677",
+        "accepted": true,
+        "rejection_reason": "APPROVED",
+        "score_actual": 0.36474953827334766,
+        "score_threshold": 0.3,
+        "decision_distance": 0.06474953827334767,
+        "candle_index": 36690
+      },
+      {
+        "candidate_id": "CAND-41219",
+        "accepted": true,
+        "rejection_reason": "APPROVED",
+        "score_actual": 0.3983097215549573,
+        "score_threshold": 0.3,
+        "decision_distance": 0.09830972155495732,
+        "candle_index": 41282
+      },
+      {
+        "candidate_id": "CAND-43015",
+        "accepted": true,
+        "rejection_reason": "APPROVED",
+        "score_actual": 0.394098807501241,
+        "score_threshold": 0.3,
+        "decision_distance": 0.094098807501241,
+        "candle_index": 43030
+      },
+      {
+        "candidate_id": "CAND-44939",
+        "accepted": true,
+        "rejection_reason": "APPROVED",
+        "score_actual": 0.30333702853140293,
+        "score_threshold": 0.3,
+        "decision_distance": 0.0033370285314029413,
+        "candle_index": 44956
+      },
+      {
+        "candidate_id": "CAND-45014",
+        "accepted": true,
+        "rejection_reason": "APPROVED",
+        "score_actual": 0.36726438184886556,
+        "score_threshold": 0.3,
+        "decision_distance": 0.06726438184886557,
+        "candle_index": 45163
+      },
+      {
+        "candidate_id": "CAND-47157",
+        "accepted": true,
+        "rejection_reason": "APPROVED",
+        "score_actual": 0.4751658922087255,
+        "score_threshold": 0.3,
+        "decision_distance": 0.17516589220872553,
+        "candle_index": 47197
+      }
+    ]
+  }
+}

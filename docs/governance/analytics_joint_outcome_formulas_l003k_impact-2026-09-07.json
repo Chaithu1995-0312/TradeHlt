@@ -1,0 +1,34 @@
+{
+  "finding_id": "L-003K",
+  "version": "L-003K.v1",
+  "run_id": "l003k_joint_outcome_formulas_20260907_195221",
+  "generated_at_utc": "2026-09-07T19:52:21.897045Z",
+  "git_commit_sha": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+  "title": "JOINT_OUTCOME_FORMULAS_FROZEN",
+  "summary": {
+    "equations": [
+      "Y_scanner := opportunity_scanner._simulate outcome",
+      "Y_oracle := forward_walk(exit_model=intrabar_fixed) outcome",
+      "Y_joint := (Y_scanner, Y_oracle)"
+    ],
+    "locked": "formula definitions + wording<->formula parity",
+    "not_locked": "registry columns / EARLY_STOP-as-fact / attribution / causality",
+    "companion": "L-003J ontology lock"
+  },
+  "flags": {
+    "formulas_frozen": true,
+    "promotion": false,
+    "registry_edits": false,
+    "l003_frozen": false,
+    "attribution_unblocked": false,
+    "economic_claims": false,
+    "causal_language_upgrade": false,
+    "src_edits": false,
+    "new_measurements": false
+  },
+  "artifacts": [
+    "docs/governance/ANALYTICS_JOINT_OUTCOME_FORMULAS_L003K.md",
+    "docs/governance/analytics_joint_outcome_formulas_l003k-2026-09-07.json",
+    "docs/governance/analytics_joint_outcome_formulas_l003k_impact-2026-09-07.json"
+  ]
+}

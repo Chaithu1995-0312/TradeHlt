@@ -1,0 +1,1645 @@
+{
+  "els": [
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "button",
+      "value": "",
+      "text": "Close menu"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "Close menu"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "Date",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "Date"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "CustomRange",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "Custom range"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "INPUT",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "YYYY-MM-DD",
+      "type": "",
+      "value": "2026-08-13",
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "INPUT",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "00:00",
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Previous month, July 2026",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Switch to months, 2026",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "August 2026"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "August 2026"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "August 2026"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Next month, September 2026",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "Mo"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "Tu"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "We"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "Th"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "Fr"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "Sa"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "Su"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Saturday 1 August 2026",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "1"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "1"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "1"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Sunday 2 August 2026",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "2"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "2"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "2"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Monday 3 August 2026",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "3"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "3"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "3"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Tuesday 4 August 2026",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "4"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "4"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "4"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Wednesday 5 August 2026",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "5"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "5"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "5"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Thursday 6 August 2026",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "6"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "6"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "6"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Friday 7 August 2026",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "7"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "7"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "7"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Saturday 8 August 2026",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "8"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "8"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "8"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Sunday 9 August 2026",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "9"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "9"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "9"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Monday 10 August 2026",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "10"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "10"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "10"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Tuesday 11 August 2026",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "11"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "11"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "11"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Wednesday 12 August 2026",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "12"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "12"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "12"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Thursday 13 August 2026",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "13"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "13"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "13"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Friday 14 August 2026",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "14"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "14"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "14"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Saturday 15 August 2026",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "15"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "15"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "15"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Sunday 16 August 2026",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "16"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "16"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "16"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Monday 17 August 2026",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "17"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "17"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "17"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Tuesday 18 August 2026",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "18"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "18"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "18"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Wednesday 19 August 2026",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "19"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "19"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "19"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Thursday 20 August 2026",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "20"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "20"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "20"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Friday 21 August 2026",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "21"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "21"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "21"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Saturday 22 August 2026",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "22"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "22"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "22"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Sunday 23 August 2026",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "23"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "23"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "23"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Monday 24 August 2026",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "24"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "24"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "24"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Tuesday 25 August 2026",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "25"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "25"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "25"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Wednesday 26 August 2026",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "26"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "26"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "26"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Thursday 27 August 2026",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "27"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "27"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "27"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Friday 28 August 2026",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "28"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "28"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "28"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Saturday 29 August 2026",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "29"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "29"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "29"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Sunday 30 August 2026",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "30"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "30"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "30"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "Monday 31 August 2026",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "31"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "31"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "31"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "Cancel"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "Cancel"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "Go to"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "submit-button",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "Go to"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "aria": "",
+      "ph": "",
+      "type": "",
+      "value": "",
+      "text": "Go to"
+    }
+  ],
+  "html": "<div class=\"container-BZKENkhT\"><div id=\"title_RTEhleaPOkts\" class=\"title-BZKENkhT\" data-dragg-area=\"true\"><div class=\"ellipsis-BZKENkhT\">Go to</div></div><button class=\"navButton-hbSJVxkQ medium-hbSJVxkQ preservePaddings-hbSJVxkQ close-BZKENkhT\" data-qa-id=\"close\" type=\"button\"><span class=\"background-hbSJVxkQ\"></span><span aria-hidden=\"true\" role=\"img\" class=\"icon-hbSJVxkQ scalableIcon-cj1bASf7\"><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 14 14\"><path stroke=\"currentColor\" stroke-width=\"1.2\" d=\"m1.5 1.5 11 11m0-11-11 11\" vector-effect=\"non-scaling-stroke\"></path></svg></span><span class=\"visuallyHidden-hbSJVxkQ\">Close menu</span></button></div><div class=\"tabs-vX_TnhDI\"><div class=\"scroll-wrap-pej7qj3O size-small-pej7qj3O enable-scroll-pej7qj3O\"><div id=\"go-to-date-tabs\" role=\"tablist\" aria-orientation=\"horizontal\" class=\"underline-tabs-pej7qj3O\"><button id=\"Date\" role=\"tab\" tabindex=\"0\" aria-selected=\"true\" aria-disabled=\"false\" data-id=\"tab-item-date\" class=\"underline-tab-GAhOQ4ll size-small-GAhOQ4ll selected-GAhOQ4ll\">Date</button><button id=\"CustomRange\" role=\"tab\" tabindex=\"-1\" aria-selected=\"false\" aria-disabled=\"false\" data-id=\"tab-item-customrange\" class=\"underline-tab-GAhOQ4ll size-small-GAhOQ4ll\">Custom range</button><div data-qa-id=\"ui-kit-underline-tabs-underline\" class=\"underline-rNtZdZbX\" style=\"transform: translateX(0px) scaleX(0.343438); transition-duration: 0ms;\"><div class=\"corner-rNtZdZbX\" style=\"transform: scaleX(2.91174);\"></div><div class=\"center-rNtZdZbX\" style=\"transform: scaleX(0.126479);\"></div><div class=\"corner-rNtZdZbX\" style=\"transform: scaleX(2.91174);\"></div></div></div></div></div><div class=\"content-vX_TnhDI\"><div class=\"bodyWrapper-vX_TnhDI\"><div><div class=\"row-oGXdbZIN\"><div data-qa-id=\"undefined-wrapper\"><div data-qa-id=\"date-picker-wrapper\"><div class=\"pickerInput-gwABf9Ap\"><div class=\"container-NrJ8eKrr\"><span class=\"container-N84XScGn container-small-N84XScGn intent-primary-N84XScGn border-thin-N84XScGn size-small-N84XScGn with-highlight-N84XScGn focused-N84XScGn adjust-position-N84XScGn first-row-N84XScGn first-col-N84XScGn date-NrJ8eKrr\" tabindex=\"-1\" data-qa-id=\"ui-lib-Input\"><span class=\"inner-slot-NbGptD5j inner-middle-slot-NbGptD5j\"><input tabindex=\"0\" placeholder=\"YYYY-MM-DD\" class=\"input-H0xdCnFS size-small-H0xdCnFS with-end-slot-H0xdCnFS\" data-qa-id=\"ui-lib-Input-input\" value=\"2026-08-13\" style=\"\"></span><span class=\"inner-slot-NbGptD5j icon-NbGptD5j\"><span role=\"img\" class=\"icon-NrJ8eKrr\" aria-hidden=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 28 28\" width=\"28\" height=\"28\" fill=\"none\"><path fill=\"currentColor\" fill-rule=\"evenodd\" clip-rule=\"evenodd\" d=\"M10 4h1v2h6V4h1v2h2.5A2.5 2.5 0 0 1 23 8.5v11a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 5 19.5v-11A2.5 2.5 0 0 1 7.5 6H10V4zm8 3H7.5C6.67 7 6 7.67 6 8.5v11c0 .83.67 1.5 1.5 1.5h13c.83 0 1.5-.67 1.5-1.5v-11c0-.83-.67-1.5-1.5-1.5H18zm-3 2h-2v2h2V9zm-7 4h2v2H8v-2zm12-4h-2v2h2V9zm-7 4h2v2h-2v-2zm-3 4H8v2h2v-2zm3 0h2v2h-2v-2zm7-4h-2v2h2v-2z\"></path></svg></span></span><span class=\"highlight-N84XScGn shown-N84XScGn size-small-N84XScGn\"></span></span></div></div></div></div><div class=\"desktopTimeInput-thTsQWzx\" data-qa-id=\"time-input-wrapper\"><span class=\"container-N84XScGn container-small-N84XScGn intent-default-N84XScGn border-thin-N84XScGn size-small-N84XScGn adjust-position-N84XScGn first-row-N84XScGn first-col-N84XScGn\" tabindex=\"0\" data-qa-id=\"ui-lib-Input time-input\"><span class=\"inner-slot-NbGptD5j inner-middle-slot-NbGptD5j\"><input aria-activedescendant=\"desktop_time_input_item_00:00\" role=\"combobox\" tabindex=\"-1\" autocomplete=\"off\" maxlength=\"5\" class=\"input-H0xdCnFS size-small-H0xdCnFS with-end-slot-H0xdCnFS\" data-qa-id=\"ui-lib-Input-input time-input-input\" value=\"00:00\" style=\"\"></span><span class=\"inner-slot-NbGptD5j interactive-NbGptD5j icon-NbGptD5j\"><span role=\"img\" class=\"icon-RvzjWrqx\" aria-hidden=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 28 28\" width=\"28\" height=\"28\" fill=\"none\"><path fill=\"currentColor\" d=\"M14 3c6.075 0 11 4.925 11 11s-4.925 11-11 11S3 20.075 3 14 7.925 3 14 3m0 1C8.477 4 4 8.477 4 14s4.477 10 10 10 10-4.477 10-10S19.523 4 14 4m1 12h-5v-1h4V8h1z\"></path></svg></span></span><span class=\"highlight-N84XScGn\"></span></span></div></div><div class=\"calendar-jzF6AlM1 calendar-LEHSts9P\" tabindex=\"-1\"><div class=\"header-jzF6AlM1\"><button aria-label=\"Previous month, July 2026\" class=\"lightButton-kjRfTlfx noContent-kjRfTlfx withStartSlot-kjRfTlfx ghost-IeQwPjcZ gray-IeQwPjcZ small-kjRfTlfx typography-regular16px-kjRfTlfx\" style=\"--ui-lib-light-button-content-max-lines: 1;\"><span class=\"slot-kjRfTlfx\"><span role=\"img\" aria-hidden=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 28 28\" width=\"28\" height=\"28\"><path fill=\"currentColor\" d=\"m16.47 7.47 1.06 1.06L12.06 14l5.47 5.47-1.06 1.06L9.94 14l6.53-6.53Z\"></path></svg></span></span></button><button aria-label=\"Switch to months, 2026\" class=\"lightButton-kjRfTlfx ghost-IeQwPjcZ gray-IeQwPjcZ small-kjRfTlfx typography-regular16px-kjRfTlfx\" style=\"--ui-lib-light-button-content-max-lines: 1;\"><span class=\"content-kjRfTlfx nowrap-kjRfTlfx apply-overflow-tooltip apply-overflow-tooltip--check-children-recursively apply-overflow-tooltip--allow-text\" data-overflow-tooltip-text=\"August 2026\"><span class=\"ellipsisContainer-kjRfTlfx\">August 2026</span><span class=\"visuallyHidden-kjRfTlfx\" aria-hidden=\"true\">August 2026</span></span></button><button disabled=\"\" aria-label=\"Next month, September 2026\" class=\"flip-horizontal-jzF6AlM1 lightButton-kjRfTlfx noContent-kjRfTlfx withStartSlot-kjRfTlfx ghost-IeQwPjcZ gray-IeQwPjcZ small-kjRfTlfx typography-regular16px-kjRfTlfx\" style=\"--ui-lib-light-button-content-max-lines: 1;\"><span class=\"slot-kjRfTlfx\"><span role=\"img\" aria-hidden=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 28 28\" width=\"28\" height=\"28\"><path fill=\"currentColor\" d=\"m16.47 7.47 1.06 1.06L12.06 14l5.47 5.47-1.06 1.06L9.94 14l6.53-6.53Z\"></path></svg></span></span></button></div><div class=\"sub-header-jzF6AlM1\" aria-hidden=\"true\"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div><div class=\"view-month-jzF6AlM1\" tabindex=\"-1\"><div role=\"grid\" class=\"weeks-jzF6AlM1\"><div role=\"row\" class=\"week-jzF6AlM1\"><button tabindex=\"-1\" aria-label=\"Saturday 1 August 2026\" aria-selected=\"false\" aria-colindex=\"6\" class=\"day-jzF6AlM1 hide-focus-ring-jzF6AlM1 lightButton-kjRfTlfx ghost-IeQwPjcZ gray-IeQwPjcZ small-kjRfTlfx typography-regular16px-kjRfTlfx\" role=\"cell\" style=\"--ui-lib-light-button-content-max-lines: 1;\"><span class=\"content-kjRfTlfx nowrap-kjRfTlfx apply-overflow-tooltip apply-overflow-tooltip--check-children-recursively apply-overflow-tooltip--allow-text\" data-overflow-tooltip-text=\"1\"><span class=\"ellipsisContainer-kjRfTlfx\">1</span><span class=\"visuallyHidden-kjRfTlfx\" aria-hidden=\"true\">1</span></span></button><button tabindex=\"-1\" aria-label=\"Sunday 2 August 2026\" aria-selected=\"false\" aria-colindex=\"7\" class=\"day-jzF6AlM1 hide-focus-ring-jzF6AlM1 lightButton-kjRfTlfx ghost-IeQwPjcZ gray-IeQwPjcZ small-kjRfTlfx typography-regular16px-kjRfTlfx\" role=\"cell\" style=\"--ui-lib-light-button-content-max-lines: 1;\"><span class=\"content-kjRfTlfx nowrap-kjRfTlfx apply-overflow-tooltip apply-overflow-tooltip--check-children-recursively apply-overflow-tooltip--allow-text\" data-overflow-tooltip-text=\"2\"><span class=\"ellipsisContainer-kjRfTlfx\">2</span><span class=\"visuallyHidden-kjRfTlfx\" aria-hidden=\"true\">2</span></span></button></div><div role=\"row\" class=\"week-jzF6AlM1\"><button tabindex=\"-1\" aria-label=\"Monday 3 August 2026\" aria-selected=\"false\" class=\"day-jzF6AlM1 hide-focus-ring-jzF6AlM1 lightButton-kjRfTlfx ghost-IeQwPjcZ gray-IeQwPjcZ small-kjRfTlfx typography-regular16px-kjRfTlfx\" role=\"cell\" style=\"--ui-lib-light-button-content-max-lines: 1;\"><span class=\"content-kjRfTlfx nowrap-kjRfTlfx apply-overflow-tooltip apply-overflow-tooltip--check-children-recursively apply-overflow-tooltip--allow-text\" data-overflow-tooltip-text=\"3\"><span class=\"ellipsisContainer-kjRfTlfx\">3</span><span class=\"visuallyHidden-kjRfTlfx\" aria-hidden=\"true\">3</span></span></button><button tabindex=\"-1\" aria-label=\"Tuesday 4 August 2026\" aria-selected=\"false\" class=\"day-jzF6AlM1 hide-focus-ring-jzF6AlM1 lightButton-kjRfTlfx ghost-IeQwPjcZ gray-IeQwPjcZ small-kjRfTlfx typography-regular16px-kjRfTlfx\" role=\"cell\" style=\"--ui-lib-light-button-content-max-lines: 1;\"><span class=\"content-kjRfTlfx nowrap-kjRfTlfx apply-overflow-tooltip apply-overflow-tooltip--check-children-recursively apply-overflow-tooltip--allow-text\" data-overflow-tooltip-text=\"4\"><span class=\"ellipsisContainer-kjRfTlfx\">4</span><span class=\"visuallyHidden-kjRfTlfx\" aria-hidden=\"true\">4</span></span></button><button tabindex=\"-1\" aria-label=\"Wednesday 5 August 2026\" aria-selected=\"false\" class=\"day-jzF6AlM1 hide-focus-ring-jzF6AlM1 lightButton-kjRfTlfx ghost-IeQwPjcZ gray-IeQwPjcZ small-kjRfTlfx typography-regular16px-kjRfTlfx\" role=\"cell\" style=\"--ui-lib-light-button-content-max-lines: 1;\"><span class=\"content-kjRfTlfx nowrap-kjRfTlfx apply-overflow-tooltip apply-overflow-tooltip--check-children-recursively apply-overflow-tooltip--allow-text\" data-overflow-tooltip-text=\"5\"><span class=\"ellipsisContainer-kjRfTlfx\">5</span><span class=\"visuallyHidden-kjRfTlfx\" aria-hidden=\"true\">5</span></span></button><button tabindex=\"-1\" aria-label=\"Thursday 6 August 2026\" aria-selected=\"false\" class=\"day-jzF6AlM1 hide-focus-ring-jzF6AlM1 lightButton-kjRfTlfx ghost-IeQwPjcZ gray-IeQwPjcZ small-kjRfTlfx typography-regular16px-kjRfTlfx\" role=\"cell\" style=\"--ui-lib-light-button-content-max-lines: 1;\"><span class=\"content-kjRfTlfx nowrap-kjRfTlfx apply-overflow-tooltip apply-overflow-tooltip--check-children-recursively apply-overflow-tooltip--allow-text\" data-overflow-tooltip-text=\"6\"><span class=\"ellipsisContainer-kjRfTlfx\">6</span><span class=\"visuallyHidden-kjRfTlfx\" aria-hidden=\"true\">6</span></span></button><button tabindex=\"-1\" aria-label=\"Friday 7 August 2026\" aria-selected=\"false\" class=\"day-jzF6AlM1 hide-focus-ring-jzF6AlM1 lightButton-kjRfTlfx ghost-IeQwPjcZ gray-IeQwPjcZ small-kjRfTlfx typography-regular16px-kjRfTlfx\" role=\"cell\" style=\"--ui-lib-light-button-content-max-lines: 1;\"><span class=\"content-kjRfTlfx nowrap-kjRfTlfx apply-overflow-tooltip apply-overflow-tooltip--check-children-recursively apply-overflow-tooltip--allow-text\" data-overflow-tooltip-text=\"7\"><span class=\"ellipsisContainer-kjRfTlfx\">7</span><span class=\"visuallyHidden-kjRfTlfx\" aria-hidden=\"true\">7</span></span></button><button tabindex=\"-1\" aria-label=\"Saturday 8 August 2026\" aria-selected=\"false\" class=\"day-jzF6AlM1 hide-focus-ring-jzF6AlM1 lightButton-kjRfTlfx ghost-IeQwPjcZ gray-IeQwPjcZ small-kjRfTlfx typography-regular16px-kjRfTlfx\" role=\"cell\" style=\"--ui-lib-light-button-content-max-lines: 1;\"><span class=\"content-kjRfTlfx nowrap-kjRfTlfx apply-overflow-tooltip apply-overflow-tooltip--check-children-recursively apply-overflow-tooltip--allow-text\" data-overflow-tooltip-text=\"8\"><span class=\"ellipsisContainer-kjRfTlfx\">8</span><span class=\"visuallyHidden-kjRfTlfx\" aria-hidden=\"true\">8</span></span></button><button tabindex=\"-1\" aria-label=\"Sunday 9 August 2026\" aria-selected=\"false\" class=\"day-jzF6AlM1 hide-focus-ring-jzF6AlM1 lightButton-kjRfTlfx ghost-IeQwPjcZ gray-IeQwPjcZ small-kjRfTlfx typography-regular16px-kjRfTlfx\" role=\"cell\" style=\"--ui-lib-light-button-content-max-lines: 1;\"><span class=\"content-kjRfTlfx nowrap-kjRfTlfx apply-overflow-tooltip apply-overflow-tooltip--check-children-recursively apply-overflow-tooltip--allow-text\" data-overflow-tooltip-text=\"9\"><span class=\"ellipsisContainer-kjRfTlfx\">9</span><span class=\"visuallyHidden-kjRfTlfx\" aria-hidden=\"true\">9</span></span></button></div><div role=\"row\" class=\"week-jzF6AlM1\"><button tabindex=\"-1\" aria-label=\"Monday 10 August 2026\" aria-selected=\"false\" class=\"day-jzF6AlM1 hide-focus-ring-jzF6AlM1 lightButton-kjRfTlfx ghost-IeQwPjcZ gray-IeQwPjcZ small-kjRfTlfx typography-regular16px-kjRfTlfx\" role=\"cell\" style=\"--ui-lib-light-button-content-max-lines: 1;\"><span class=\"content-kjRfTlfx nowrap-kjRfTlfx apply-overflow-tooltip apply-overflow-tooltip--check-children-recursively apply-overflow-tooltip--allow-text\" data-overflow-tooltip-text=\"10\"><span class=\"ellipsisContainer-kjRfTlfx\">10</span><span class=\"visuallyHidden-kjRfTlfx\" aria-hidden=\"true\">10</span></span></button><button tabindex=\"-1\" aria-label=\"Tuesday 11 August 2026\" aria-selected=\"false\" class=\"day-jzF6AlM1 hide-focus-ring-jzF6AlM1 lightButton-kjRfTlfx ghost-IeQwPjcZ gray-IeQwPjcZ small-kjRfTlfx typography-regular16px-kjRfTlfx\" role=\"cell\" style=\"--ui-lib-light-button-content-max-lines: 1;\"><span class=\"content-kjRfTlfx nowrap-kjRfTlfx apply-overflow-tooltip apply-overflow-tooltip--check-children-recursively apply-overflow-tooltip--allow-text\" data-overflow-tooltip-text=\"11\"><span class=\"ellipsisContainer-kjRfTlfx\">11</span><span class=\"visuallyHidden-kjRfTlfx\" aria-hidden=\"true\">11</span></span></button><button tabindex=\"-1\" aria-label=\"Wednesday 12 August 2026\" aria-selected=\"false\" class=\"day-jzF6AlM1 hide-focus-ring-jzF6AlM1 lightButton-kjRfTlfx ghost-IeQwPjcZ gray-IeQwPjcZ small-kjRfTlfx typography-regular16px-kjRfTlfx\" role=\"cell\" style=\"--ui-lib-light-button-content-max-lines: 1;\"><span class=\"content-kjRfTlfx nowrap-kjRfTlfx apply-overflow-tooltip apply-overflow-tooltip--check-children-recursively apply-overflow-tooltip--allow-text\" data-overflow-tooltip-text=\"12\"><span class=\"ellipsisContainer-kjRfTlfx\">12</span><span class=\"visuallyHidden-kjRfTlfx\" aria-hidden=\"true\">12</span></span></button><button tabindex=\"0\" aria-label=\"Thursday 13 August 2026\" aria-selected=\"true\" aria-current=\"date\" class=\"day-jzF6AlM1 accent-color-jzF6AlM1 current-day-jzF6AlM1 hide-focus-ring-jzF6AlM1 lightButton-kjRfTlfx selected-IeQwPjcZ ghost-IeQwPjcZ gray-IeQwPjcZ small-kjRfTlfx typography-semibold16px-kjRfTlfx\" role=\"cell\" style=\"--ui-lib-light-button-content-max-lines: 1;\"><span class=\"content-kjRfTlfx nowrap-kjRfTlfx apply-overflow-tooltip apply-overflow-tooltip--check-children-recursively apply-overflow-tooltip--allow-text\" data-overflow-tooltip-text=\"13\"><span class=\"ellipsisContainer-kjRfTlfx\">13</span><span class=\"visuallyHidden-kjRfTlfx\" aria-hidden=\"true\">13</span></span></button><button disabled=\"\" tabindex=\"-1\" aria-label=\"Friday 14 August 2026\" aria-selected=\"false\" class=\"day-jzF6AlM1 hide-focus-ring-jzF6AlM1 lightButton-kjRfTlfx ghost-IeQwPjcZ gray-IeQwPjcZ small-kjRfTlfx typography-regular16px-kjRfTlfx\" role=\"cell\" style=\"--ui-lib-light-button-content-max-lines: 1;\"><span class=\"content-kjRfTlfx nowrap-kjRfTlfx apply-overflow-tooltip apply-overflow-tooltip--check-children-recursively apply-overflow-tooltip--allow-text\" data-overflow-tooltip-text=\"14\"><span class=\"ellipsisContainer-kjRfTlfx\">14</span><span class=\"visuallyHidden-kjRfTlfx\" aria-hidden=\"true\">14</span></span></button><button d"
+}

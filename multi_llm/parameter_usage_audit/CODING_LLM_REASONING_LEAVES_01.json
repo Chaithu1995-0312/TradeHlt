@@ -1,0 +1,269 @@
+{
+  "registry_id": "CODING_LLM_REASONING_LEAVES_01",
+  "purpose": "Semantic keywords + formulas as parallel leaves for coding-LLM reasoning over funnel, features, and design schema. Leaves do not collide; decide/update one leaf without rewriting siblings.",
+  "created_at_ist": "2026-09-22",
+  "created_at_utc": "2026-09-21T20:00:43Z",
+  "run_pins": {
+    "folder": "run_20260916_225925_XAUUSD",
+    "canonical": "run_20260916_172925",
+    "layer_trace": "lt_20260916_172925_XAUUSD",
+    "config": "v2_htfcrt_2026_08",
+    "W": 16,
+    "config_sha12": "3ca7549e8088",
+    "dump_sha12": "b382ec24f235",
+    "n_bars_L3": 47197,
+    "n_candidates": 1798,
+    "n_trades": 3
+  },
+  "lanes": {
+    "funnel": "state-machine path, edges, bottlenecks, deaths, gates",
+    "feature_map": "trade feature groups, live/cached/bitnet/drift/L1/snapshots/joins",
+    "design_schema": "MC-OPP-DETECT, MC-JOINT, lifecycle engine, HTF authority, identity, fail-closed"
+  },
+  "rule": "Trace by leaf_id or keyword. Parallel leaves. No silent merge of POP_CAND with POP_EDGE. No APPLY without L-HTF-CFGATE.",
+  "funnel_leaves": [
+    {
+      "leaf_id": "L-FN-PATH",
+      "keyword": "FUNNEL_STATE_PATH",
+      "lane": "funnel",
+      "for_coding_llm": "Use this as the only legal state order when labeling bottlenecks or writing transition tests.",
+      "formula": "PATH := RANGE \u2192 SWEEP \u2192 DISPLACEMENT \u2192 EXPANSION \u2192 RETEST \u2192 EXECUTION (+ SHADOW_PENDING side-path into EXPANSION); \u00ac(EXPANSION \u2192 DISPLACEMENT)",
+      "run1_ref": "L3 note transition=* ; corrected vs earlier mis-ordered funnel",
+      "status": "CORRECTED"
+    },
+    {
+      "leaf_id": "L-FN-EDGE",
+      "keyword": "FUNNEL_EDGE_COUNT",
+      "lane": "funnel",
+      "for_coding_llm": "Count non-self L3 transitions; do not use TRANSITION_COUNTER as a from\u2192to matrix.",
+      "formula": "EDGE(a,b) := |{L3 notes : transition=a\u2192b \u2227 a\u2260b}|; TRANSITION_COUNTER.has_matrix = false; matrix_source = L3.note",
+      "run1_ref": {
+        "RANGE->RANGE": 20387,
+        "SWEEP->SWEEP": 13795,
+        "EXPANSION->EXPANSION": 8520,
+        "RANGE->SWEEP": 1792,
+        "SWEEP->RANGE": 1372,
+        "SWEEP->DISPLACEMENT": 399,
+        "DISPLACEMENT->DISPLACEMENT": 380,
+        "DISPLACEMENT->RANGE": 256,
+        "DISPLACEMENT->EXPANSION": 142,
+        "EXPANSION->RANGE": 88,
+        "EXPANSION->RETEST": 24,
+        "RETEST->RANGE": 20,
+        "RANGE->SHADOW_PENDING": 6,
+        "SHADOW_PENDING->EXPANSION": 6,
+        "EXECUTION->RANGE": 4,
+        "RETEST->EXECUTION": 4,
+        "RETEST->RETEST": 2
+      },
+      "status": "MEASURED_CLOSED",
+      "fix_note": "F4 CLOSED + N2: full 17-pair matrix in run1_ref; gap=0; every note has transition=.",
+      "fix_at_utc": "2026-09-22T04:15:21Z",
+      "run1_ref_n_pairs": 17,
+      "run1_ref_prior_edge_only": {
+        "RANGE->SWEEP": 1792,
+        "SWEEP->DISPLACEMENT": 399,
+        "DISPLACEMENT->EXPANSION": 142,
+        "EXPANSION->RETEST": 24,
+        "RETEST->EXECUTION": 4,
+        "SWEEP->RANGE": 1372
+      },
+      "n2_cleanup_note": "Prior run1_ref listed 6 non-self edges only. Full L3 matrix = 17 pairs (self-transitions + DISPLACEMENT/EXPANSION/RETEST/EXECUTION\u2192RANGE + SHADOW_PENDING path + RETEST\u2192RETEST). \u03a3 counts = 47197.",
+      "n2_cleanup_at_utc": "2026-09-22T04:18:04Z"
+    },
+    {
+      "leaf_id": "L-FN-BN",
+      "keyword": "FUNNEL_BOTTLENECK",
+      "lane": "funnel",
+      "for_coding_llm": "Bottleneck = drop on PATH edge, not bar-occupancy alone.",
+      "formula": "BN_i := 1 - EDGE(s_i,s_{i+1}) / entries(s_i); primary_BN := [SWEEP\u2192DISP \u221278%, DISP\u2192EXP \u221264%, EXP\u2192RETEST \u221284%, RETEST\u2192EXEC \u221283%]",
+      "status": "MEASURED"
+    },
+    {
+      "leaf_id": "L-FN-DEATH",
+      "keyword": "FUNNEL_CANDIDATE_DEATH",
+      "lane": "funnel",
+      "for_coding_llm": "Death reasons from CANDIDATE_LIFECYCLE only; RESET_HTF \u2260 SWEEP\u2192RANGE edge count.",
+      "formula": "DEATH(r) := |{c \u2208 CANDIDATE_LIFECYCLE : death_reason=r}|; \u03a3 DEATH = 1798; DEATH(RESET_HTF)=1442 (80.2%); DEATH(RESET_HTF) \u2260 EDGE(SWEEP,RANGE)",
+      "status": "MEASURED"
+    },
+    {
+      "leaf_id": "L-FN-SCORE",
+      "keyword": "FUNNEL_SCORE_GATE",
+      "lane": "funnel",
+      "for_coding_llm": "Score threshold 0.3 is not the main RETEST\u2192EXEC kill; session/bias filters are.",
+      "formula": "PASS_SCORE := score \u2265 0.3; DECISION_DISTANCE: unique_pass=23, unique_fail=1 (CAND-17925); EXECUTION=4 \u226a 23 \u21d2 post_score_filters dominate",
+      "status": "MEASURED"
+    },
+    {
+      "leaf_id": "L-FN-FILTER",
+      "keyword": "FUNNEL_POSTSCORE_FILTER",
+      "lane": "funnel",
+      "for_coding_llm": "After score pass, FILTER_REJECTED reasons cut RETEST\u2192RANGE.",
+      "formula": "FILTER \u2208 {off_session:15, parent_bias_LONG:2, parent_bias_SHORT:2, reason_None:1}; \u03a3 = 20",
+      "status": "MEASURED_CLOSED",
+      "fix_note": "F2 CLOSED: L3 RETEST\u2192RANGE reasons = off_session:15 + parent_bias LONG:2 + SHORT:2 + None:1. CANDIDATE_LIFECYCLE only exposes FILTER_REJECTED:15 (no bias subtype).",
+      "fix_at_utc": "2026-09-22T04:15:21Z",
+      "formula_note_parent_bias": "LONG:2 + SHORT:2 (from L3 notes, not death_reason)",
+      "formula_note_reason_None": "CONFIRMATION_FAILED event exists (CAND-17925) but does not carry a reason label in L3 RETEST\u2192RANGE; do not equate the two without evidence.",
+      "n1_cleanup_at_utc": "2026-09-22T04:18:04Z"
+    }
+  ],
+  "feature_leaves": [
+    {
+      "leaf_id": "L-FT-GROUP",
+      "keyword": "FEATURE_TRADE_COLUMN_GROUPS",
+      "lane": "feature_map",
+      "for_coding_llm": "90 trade columns; group before using as model inputs. Identity \u2260 features.",
+      "formula": "COLS_90 := identity\u222ageometry\u222aprice\u222atrend\u222avol\u222amomentum\u222astructure\u222aregime\u222adistances\u222alive\u222acached\u222abitnet\u222ameta; identity \u2287 {trade_id, run_id}; features \u2286 COLS_90 \\ identity",
+      "groups": {
+        "price_ohlcv": "cols ~29-34",
+        "trend": "ema_*/trend_*/momentum_score",
+        "volatility": "atr, volatility_ratio",
+        "momentum": "rsi_14, macd_*",
+        "structure": "sweep_*, break_of_structure, body_ratio, ...",
+        "regime": "volatility_regime, retest_depth, liquidity_pressure",
+        "distances": "order_block/fvg/breaker/pdh/pdl/...",
+        "live": "live_atr, live_ema_*",
+        "cached": "cached_retest_depth, cached_body_ratio, ...",
+        "bitnet": "bitnet_score_at_entry, bitnet_decision_at_entry"
+      },
+      "status": "SCHEMA_PINNED"
+    },
+    {
+      "leaf_id": "L-FT-LIVE",
+      "keyword": "FEATURE_LIVE_VS_CACHED",
+      "lane": "feature_map",
+      "for_coding_llm": "Do not equate live_* with non-live or cached_* without an authority rule.",
+      "formula": "live_x := value at entry from live metrics path; cached_x := value from CRT cache / prior snapshot; x := feature_pipeline batch value; authority_for_decision := declared_config_key (fail-closed if missing)",
+      "status": "OPEN_AUTHORITY"
+    },
+    {
+      "leaf_id": "L-FT-BITNET",
+      "keyword": "FEATURE_BITNET_STUB",
+      "lane": "feature_map",
+      "for_coding_llm": "On this run BitNet columns are schema stubs, not evaluated scores.",
+      "formula": "IF engine.state.bitnet_main_score is None THEN bitnet_score_at_entry=0.0 \u2227 bitnet_decision_at_entry=\"\"; stub \u2260 model_reject",
+      "status": "MEASURED_INTENTIONAL_OFF",
+      "fix_note": "F6 CLOSED: config use_bitnet=false (threshold 0.55 still present). Engine can set bitnet_main_score when enabled; backtest maps None\u21920/\"\". Intentional-off on this run \u2014 not broken wiring.",
+      "fix_at_utc": "2026-09-22T04:15:21Z"
+    },
+    {
+      "leaf_id": "L-FT-DRIFT",
+      "keyword": "FEATURE_DRIFT_MIN_SAMPLES",
+      "lane": "feature_map",
+      "for_coding_llm": "insufficient_data (need 30) means monitor buffer samples, not 30 trades.",
+      "formula": "DRIFT_OK \u21d4 |buffer| \u2265 30; buffer holds {retest_depth, body_ratio, disp_strength}; site = features/feature_monitor.py; wire = runtime/backtest_v2.py \u2192 distribution.feature_drift",
+      "status": "MEASURED"
+    },
+    {
+      "leaf_id": "L-FT-L1",
+      "keyword": "FEATURE_L1_BUILD_RECORD",
+      "lane": "feature_map",
+      "for_coding_llm": "L1 is a single observation record; no per-bar feature artifact pointer on this run.",
+      "formula": "L1 := 1 row (module=features.feature_pipeline, status=PASS, bar_idx=-1, artifact_path=None, output_hash=None); \u2260 per-bar feature store",
+      "status": "MEASURED"
+    },
+    {
+      "leaf_id": "L-FT-SNAP",
+      "keyword": "FEATURE_SNAPSHOTS_EMITTER",
+      "lane": "feature_map",
+      "for_coding_llm": "logs/feature_snapshots.jsonl is a global optional emitter, not a Run1 folder artifact.",
+      "formula": "SNAP_PATH := logs/feature_snapshots.jsonl; SNAP \u2208 Run1_artifacts = false; emitter \u2248 core/engine_runner (optional)",
+      "status": "LOCATED"
+    },
+    {
+      "leaf_id": "L-FT-JOIN",
+      "keyword": "FEATURE_INDEX_JOIN",
+      "lane": "feature_map",
+      "for_coding_llm": "When joining features to layer_trace / events / trades, use L-HTF-IDX offsets.",
+      "formula": "join_ts := opened_at = events.timestamp = layer.bar_ts; bar_idx = trades.candle_idx - 1 = events.candle_index + 62",
+      "status": "MEASURED"
+    }
+  ],
+  "design_leaves": [
+    {
+      "leaf_id": "L-DS-DETECT",
+      "keyword": "SCHEMA_MC_OPP_DETECT_01",
+      "lane": "design_schema",
+      "for_coding_llm": "Detection authority \u2014 opportunity birth. Do not confuse with measurement money authority.",
+      "formula": "DETECT := MT5 OHLCV \u2192 opportunity; immutable = {trade_id, dataset_identity}; nest = dataset_identity \u2192 trace_id \u2192 analysis_id \u2192 run_id \u2192 trade_id; schema_change \u21d2 User approval",
+      "artifact": "MC-OPP-DETECT-01",
+      "status": "FROZEN"
+    },
+    {
+      "leaf_id": "L-DS-JOINT",
+      "keyword": "SCHEMA_MC_JOINT_01",
+      "lane": "design_schema",
+      "for_coding_llm": "Measurement authority \u2014 Y_scanner/Y_oracle/Y_joint; money = path only.",
+      "formula": "STATES_6 := {BOTH_SL, BOTH_TP, BOTH_TIMEOUT, JOINT_STATE_SL_TP, JOINT_STATE_TP_SL, JOINT_STATE_SL_TIMEOUT}; authority_outcome := path_outcome + y_R_net; mismatch \u2208 STATES_6 \u2260 error",
+      "artifact": "MC-JOINT-01",
+      "status": "FROZEN"
+    },
+    {
+      "leaf_id": "L-DS-LIFE",
+      "keyword": "SCHEMA_TRADE_LIFECYCLE_V0",
+      "lane": "design_schema",
+      "for_coding_llm": "Emit-only engine; wraps trail simulate + forward_walk(intrabar_fixed); no new exit semantics.",
+      "formula": "measure(entry,sl,tp,side,bars) \u2192 {Y_scanner, Y_oracle, Y_joint, authority_outcome, rr_*, duration_*, exit_mechanism_*}; specimen \u21d2 JOINT_STATE_SL_TP",
+      "artifact": "trade_lifecycle_engine v0",
+      "status": "SHIPPED"
+    },
+    {
+      "leaf_id": "L-DS-HTF",
+      "keyword": "SCHEMA_DC_HTF_AUTHORITY_01",
+      "lane": "design_schema",
+      "for_coding_llm": "clock_id = cadence; h_ref/l_ref = structure; ResetLogic = lifecycle. Patch PARKED.",
+      "formula": "clock_id \u22a8 lifecycle_cadence; h_ref,l_ref \u22a8 sweep_structure; should_reset_today \u22a8 clock_flip \u2228 retrace \u2228 extension; structural_break_patch = PARKED; APPLY \u21d4 locks \u2227 counterfactual_gate",
+      "artifact": "DC-HTF-AUTHORITY-01",
+      "status": "REOPENED_PATCH_PARKED"
+    },
+    {
+      "leaf_id": "L-DS-IDNEST",
+      "keyword": "SCHEMA_IDENTITY_NEST",
+      "lane": "design_schema",
+      "for_coding_llm": "Never mint a new campaign id in measurement; forward trade_id+trace_id.",
+      "formula": "dataset_identity \u2192 trace_id \u2192 analysis_id \u2192 run_id \u2192 trade_id; trade_id mint = sha1(instrument|ts|direction|entry:.8f|sl:.8f)[:16]; unit_id = legacy alias",
+      "status": "FROZEN"
+    },
+    {
+      "leaf_id": "L-DS-SPLIT",
+      "keyword": "SCHEMA_DETECT_VS_MEASURE",
+      "lane": "design_schema",
+      "for_coding_llm": "Detection produces candidates; measurement labels them. Separate authorities.",
+      "formula": "DETECT_AUTH = MT5 OHLCV; MEASURE_AUTH = path / y_R_net; DETECT \u2229 MEASURE = trade_id,trace_id forwarded; \u00ac(scanner_label \u21d2 money_truth)",
+      "status": "FROZEN"
+    },
+    {
+      "leaf_id": "L-DS-FAILCLOSED",
+      "keyword": "SCHEMA_FAILCLOSED_CONFIG",
+      "lane": "design_schema",
+      "for_coding_llm": "Tier-1 CRTConfig keys required; no silent .get defaults.",
+      "formula": "Tier1 = {body_ratio_min, atr_multiplier_min, expansion_atr_min_distance, retest_depth_max}; missing_key \u21d2 fail_closed; shipped fail-closed A = 09ffcb1",
+      "status": "SHIPPED"
+    }
+  ],
+  "htf_lock_crosslinks": [
+    {
+      "leaf_id": "L-HTF-DIR",
+      "keyword": "HTF_BREAK_DIRECTIONALITY",
+      "registry": "DC-HTF-AUTHORITY-01_PARALLEL_LEAVES.json"
+    },
+    {
+      "leaf_id": "L-HTF-PROT",
+      "keyword": "HTF_BREAK_PROTECT_PARITY",
+      "registry": "DC-HTF-AUTHORITY-01_PARALLEL_LEAVES.json"
+    },
+    {
+      "leaf_id": "L-HTF-ORD",
+      "keyword": "HTF_BREAK_CHECK_ORDER",
+      "registry": "DC-HTF-AUTHORITY-01_PARALLEL_LEAVES.json"
+    },
+    {
+      "leaf_id": "L-HTF-CFGATE",
+      "keyword": "HTF_COUNTERFACTUAL_GATE",
+      "registry": "DC-HTF-AUTHORITY-01_PARALLEL_LEAVES.json"
+    }
+  ],
+  "claim_bind_registry": "CLAIM_TO_LEAF_BIND_01.json"
+}

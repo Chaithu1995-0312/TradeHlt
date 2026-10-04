@@ -1,0 +1,29 @@
+{
+  "DUPLICATE_FORMULA_IDENTITY_PHASE_STATUS": "COMPLETE",
+  "ECONOMIC_CLAIMS_ALLOWED": false,
+  "MODEL_ARTIFACTS_CHANGED": false,
+  "MODEL_COMPATIBILITY_EVALUATED": false,
+  "MODEL_ENABLEMENT_CHANGED": false,
+  "MODEL_LINEAGE_STARTED": false,
+  "PIT_REMEDIATION_STARTED": false,
+  "RETRAINING_PERFORMED": false,
+  "artifact": "phase1_duplicate_formula_identity_manifest",
+  "artifact_sha256": {
+    "phase1_consumer_identity_bindings-2026-07-10.json": "d79f520be377a996a9dbf0169342ee22fc1cbad62026ec4b6cc54b72b0246d93",
+    "phase1_duplicate_formula_follow_up_backlog-2026-07-10.json": "9426211767382053c777c4699da8eee45a025c774e1a9271d4d0f7ebdafd6f17",
+    "phase1_duplicate_formula_identity_closure-2026-07-10.json": "40e9d4291f432996433beda087738f15461161befc24231a3092362a175fb968",
+    "phase1_duplicate_formula_identity_closure-2026-07-10.md": "37b08f9f593c6971aaaba0d859baa7b17b52112e0062a0bc3d329cebbf67a6db",
+    "phase1_duplicate_formula_identity_manifest-2026-07-10.json": "b4e086e6e98f3ccb804eeec1228658f51c0dddd65d2dd5aa4cdf90fcb6ce65d5",
+    "phase1_duplicate_implementation_authority_decisions-2026-07-10.json": "1eafb490f54f91c66b5ee831fd8f6561d03338c9cb83f42c6690b215d8783beb",
+    "phase1_feature_identity_registry-2026-07-10.json": "c952d0a5b4e881f05c534321a34f8c2a3c5f87cc3acfc7941c1f2388ae22a17b"
+  },
+  "date": "2026-07-10",
+  "production_code_changes": [
+    "src/features/feature_pipeline.py",
+    "src/features/candle_math.py",
+    "src/features/feature_identity.py",
+    "src/runtime/live_engine_hook.py",
+    "configs/formulas/market_ontology.yaml"
+  ],
+  "registry_path": "docs/governance/phase1_feature_identity_registry-2026-07-10.json"
+}

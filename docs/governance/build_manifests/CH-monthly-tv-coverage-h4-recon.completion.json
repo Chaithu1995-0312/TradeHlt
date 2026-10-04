@@ -1,0 +1,75 @@
+{
+  "change_id": "CH-monthly-tv-coverage-h4-recon",
+  "task_class": "OBSERVATION_ONLY",
+  "completion_status": "PARTIAL",
+  "completion_status_reason": "All three authorized workstreams are delivered and their own floors are green (tests/test_tv_forensic_smoke.py 36/36, tests/test_current_findings.py + test_doc_citations.py + test_topic_docs.py 53/53 together). Status is PARTIAL for two honestly-reported residuals, neither introduced by this change: (1) 1 of 11 planned shots (02_h4_july_setup) could not be captured — frame_shot's two-sided achieved-vs-requested assertion refuses a right edge ~2 days wider than requested on BOTH the widget-API and --via-ui paths; the guard was deliberately NOT loosened and the window is a strict subset of the captured 01_h4_july_macro, so no coverage is lost, but the framing root cause is unresolved. (2) 3 tests in tests/test_script_registry.py are RED (test_disk_coverage_full_universe, test_grandfather_paths_match_stubs, test_grandfather_ratchet_live_universe) because four untracked scripts belonging to another concurrent session sit on disk unregistered: scripts/analysis/crt_episode_number_trace.py, run_crt_trace_workflow.py, session_filter_funnel_probe.py, xauusd_excel_feature_state_trace.py. MEASURED as pre-existing, not asserted: the same 3 tests fail identically against HEAD's own stubs+seed (verified by restoring both files from HEAD, reseeding, and re-running — 3 failed / 46 passed, the identical failure set). With this change the same file passes 65. Those 4 paths were deliberately left unregistered rather than classified, per the standing rule not to touch another session's in-progress work.",
+  "declared_files": [
+    "tools/tv_forensic/htf_bars.py",
+    "tools/tv_forensic/engine_data.py",
+    "tools/tv_forensic/capture_tv.py",
+    "tools/tv_forensic/shot_plan.json",
+    "scripts/research/smc_visual_verification.py",
+    "scripts/governance/seed_script_registry.py",
+    "docs/governance/script_registry_stubs.jsonl",
+    "docs/reference/script-matrix.md",
+    "tests/test_tv_forensic_smoke.py",
+    "reports/monthly_tv_vs_active_production_semantic_comparison.md",
+    "reports/monthly_tv_vs_active_production_semantic_comparison.json",
+    "docs/current-findings.md",
+    "CLAUDE.md",
+    "docs/governance/build_manifests/CH-monthly-tv-coverage-h4-recon.impact.json",
+    "docs/governance/build_manifests/CH-monthly-tv-coverage-h4-recon.completion.json",
+    "assistant_project.md"
+  ],
+  "checks_executed": [
+    "tests/test_tv_forensic_smoke.py",
+    "tests/test_script_registry.py",
+    "tests/test_script_matrix_sync.py",
+    "tests/test_construction_protocol.py",
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py"
+  ],
+  "repo_state_hash": "PENDING",
+  "validator_outcome": {
+    "result": "BLOCKED",
+    "blocker": "UNDECLARED governed surfaces changed: configs/data_provenance/, configs/formulas/market_crt_states.yaml, configs/formulas/market_ontology.yaml, configs/market_reality/market_reality_v1.yaml, configs/production/ACTIVE_VERSION, configs/production/v2_htfcrt_2026_08.json, configs/production/v2_htfcrt_objgate_shadow_2026_08.json, configs/production/v2_multi_2026_04.json",
+    "assessment": "NOT introduced by this change, and this is measured rather than asserted. validate_completion compares `declared_files` against the FULL `git status --porcelain`, so it cannot distinguish this change's edits from working-tree state that was already dirty when the session began — a real limitation in a repo where ~15 Claude sessions run concurrently. Evidence that none of the 8 are ours: every one carries an mtime at or before 2026-08-17 19:01:11, while this change's FIRST write (the impact manifest itself) is 2026-08-17 19:49:45 — a 48-minute gap, with the rest of our writes later still. Six of the eight also appear as already-modified in this session's own opening `git status` snapshot. configs/production/ACTIVE_VERSION's pending diff is v2_multi_2026_04 -> v2_htfcrt_2026_08, which predates this session (mtime 2026-08-15 23:00) and matches the value this change READ and left alone.",
+    "action_taken": "Deliberately NOT added to declared_files. Declaring a file this change did not modify would launder someone else's edit through this manifest and defeat the check's purpose. The honest record is BLOCKED with the evidence above; completion_status stays PARTIAL, never COMPLETE.",
+    "what_would_unblock": "A clean working tree, or a validator that diffs against a session-start baseline instead of the whole porcelain output. The latter is a real tooling gap worth raising separately; it is not fixed here (out of the authorized scope, and a silent validator change would weaken a governance gate)."
+  },
+  "delivered": {
+    "workstream_A_h4_reconciliation": {
+      "status": "DELIVERED",
+      "detail": "New tools/tv_forensic/htf_bars.py bridges the tool to src/ WITHOUT re-deriving HTF geometry — it reuses features.parent_candle.ParentCandleBuilder, honouring engine_data.py's own module note that duplicating HTF aggregation here would be 'a second, unverified reimplementation of the same geometry the codebase's own doctrine warns against'. engine_data.diff_table gained step_minutes (default 15) and record_missing_engine (default False). capture_tv.build_engine_vs_tv now has 3 recorded outcomes; NOT_APPLICABLE survives with distinguishable reasons (H4_GRID_UNRESOLVED / SRC_UNAVAILABLE / unsupported interval). Grid phase is MEASURED per candidate by re-aggregating the children, so a shifted TradingView grid is DISCOVERED, not merely rejected.",
+      "byte_identity_gate": "PASS — every pre-existing M15 sidecar's `rows` list and all pre-existing summary counts are identical before/after (verified per-shot against a snapshot, and floored by test_diff_table_step_minutes_default_is_unchanged_m15_behaviour). Only 2 ADDITIVE summary keys appear (missing_engine_bar, engine_gap_tv_has_bar), both 0 on every M15 shot; always present rather than conditional because an absent key is the ambiguity D-1 exists to prevent.",
+      "backfill": "Both pre-existing H4 sidecars lifted NOT_APPLICABLE -> DIVERGENT offline from their own stored bars (zero new capture). Prior payloads preserved as *_PRE_H4RECON.json per CLAUDE.md 6.2 rule 4."
+    },
+    "workstream_B_coverage": {
+      "status": "DELIVERED_WITH_ONE_RESIDUAL",
+      "detail": "TradingView coverage of the corpus month rose from 5 of ~22 trading days to 23 of 23, computed from the sidecars on disk against the corpus's own distinct trading dates. New: 01_h4_july_macro (the whole-month H4 shot, never previously captured), 10_m15_jul07_14 and 11_m15_aug01_06 (the two previously blind spans), plus a month-fill preset. ohlc_clock_reconciliation.json now reports unreconciled_shots: []. Residual: 02_h4_july_setup (see completion_status_reason).",
+      "self_correction": "An in-session hypothesis that the framing failure was caused by the shot's Saturday right edge was WRONG and is corrected at source in shot_plan.json rather than left standing — the Saturday edge was a real defect in the definition (2026-08-01 has zero bars on either feed) but moving it to the Friday close reproduces the failure identically."
+    },
+    "workstream_C_smc": {
+      "status": "DELIVERED",
+      "detail": "New scripts/research/smc_visual_verification.py recovers Zone geometry via the canonical detectors behind a parity gate that ABORTS unless recomputed distances match the pipeline's own stored values. 725/725 evaluated mechanical checks pass over 226 zone instances; 195 checks skipped by construction are counted and named separately, never folded into the pass total. Visual layer rendered to 10 *_SMC_ANNOTATED.png and left PENDING HUMAN ADJUDICATION — not self-certified.",
+      "self_caught_overclaims": 3,
+      "self_caught_detail": "197 false failures from a naive current-bar-overlap mitigation rule (contradicts find_active_fvg's and find_active_order_block's documented contracts); 66 from asserting origin RANGE for mitigation blocks (documented as the body-only inner zone); 18 from omitting the formed-in-frame gate (trailing 100-bar window legitimately reaches off-frame). Every one a defect in the CHECK, none in the code. Recorded per the E-001 mandatory phrase.",
+      "new_contract_gap_found": "Zone exposes formed_at_index (origin) but not the confirming break index that OB/breaker/mitigation zones measure mitigation from, so mitigation state is not independently auditable without duplicating _find_break_events. Reported as a TEST/CONTRACT GAP; no remediation attempted (out of scope, and a review never silently remediates)."
+    }
+  },
+  "pre_registration_outcome": {
+    "new_finding_condition": "FIRED — H4 reconciliation found divergence beyond the inherited tolerance, so F-080 is registered. A clean measurement would have registered nothing.",
+    "tolerance_not_tuned": "MATCH_TOLERANCE=3.0 was fixed before the first H4 diff ran and was NOT widened afterwards, even though widening would have made all 25 divergences disappear. 4 of 9 daily opens cross it, 5 do not.",
+    "fail_closed_honoured": "H4_GRID_UNRESOLVED / SRC_UNAVAILABLE paths implemented and unit-tested (no-TV-bars, wrong-prices, and partial-anchor-match cases all resolve to not-decisive).",
+    "corpus_boundary_honoured": "Jul 1-6 (pre-corpus) is reported as 61 NO_ENGINE_BAR rows plus 30 ENGINE_BAR_MISSING_TV_HAS_ONE rows in 01_h4_july_macro, counted in the denominator rather than dropped."
+  },
+  "authority_unchanged": {
+    "active_version": "v2_htfcrt_2026_08 (unchanged, not read for write)",
+    "config_hash": "untouched — no configs/ file modified",
+    "models": "none read, retrained, or registered; F-076's 6 stale families unchanged",
+    "crt_closure": "REOPENED (unchanged)",
+    "g001": "none claimed",
+    "f077": "Romeo/Sujan non-equivalence NOT adjudicated — better coverage is not an equivalence proof"
+  }
+}

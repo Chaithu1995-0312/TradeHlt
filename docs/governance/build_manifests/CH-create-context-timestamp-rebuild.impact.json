@@ -1,0 +1,37 @@
+{
+  "change_id": "CH-create-context-timestamp-rebuild",
+  "date_utc": "2026-09-10",
+  "objective": "Rebuild CREATE-context tables (session/hour/HTF/parent/H20) for run_20260909_202201 on event-timestamp → CSV/parquet bar_index. Keep funnel 69/45/18/6. Keep four-arm untouched. DESCRIPTIVE_ONLY. Do not mint MC-*/F-*.",
+  "change_classes": [
+    "SCRIPT_LIFECYCLE_CHANGE",
+    "TRACE_OBSERVATION_JOIN"
+  ],
+  "change_class_rationale": "Re-runs already-registered scripts/analysis/phase1_shadow_create_economic_census.py with the timestamp join already in assemble_creates. Adds index_join rebuild pin. Registry surfaces + test_run_linkage pin move INVALIDATED→VALID after 69/69 timestamp join. TRACE_OBSERVATION_JOIN is the has/surfaces addressability class (same as CH-runid-schema-bridge). No new script path. No spine/config.",
+  "affected_files": [
+    "scripts/analysis/phase1_shadow_create_economic_census.py",
+    "docs/research/phase1_shadow_create_economic_census_note.md",
+    "docs/research/phase1_run_20260909_202201_coding_llm_context.yaml",
+    "docs/governance/run_linkage_registry.json",
+    "docs/governance/build_manifests/CH-create-context-timestamp-rebuild.impact.json",
+    "tests/test_run_linkage.py",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_script_registry.py",
+    "tests/test_script_matrix_sync.py",
+    "tests/test_construction_protocol.py",
+    "tests/test_crt_construction_trace.py",
+    "tests/test_crt_construction_trace_envelope.py",
+    "tests/test_resolver_metadata.py",
+    "tests/test_run_linkage.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Restore census.json from git history if present; revert script index_join write, pack trust_table, and registry surfaces. Funnel counts and four-arm scoreboard stay.",
+  "authority_granted": "User: continue remaining unresolved surfaces — quarantined CREATE-context tables (session/hour/HTF/parent/H20) invalidated by the +62 join. Ignore wrong-window PR-3/resolver-unrun message.",
+  "authority_NOT_granted": "No four-arm rescore. No TTL flip. No MC-* seal. No finding_id. No G001. No economic_claims_allowed flip. P-GOAL-04 still blocks Sense B.",
+  "production_behavior_changed": "NO"
+}

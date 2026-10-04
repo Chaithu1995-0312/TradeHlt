@@ -1,0 +1,2801 @@
+{
+  "schema": "crt_13_candidate_provenance.v1",
+  "phase": 6,
+  "program": "CRT_CLOSURE",
+  "generated_at_utc": "2026-07-09T09:59:11Z",
+  "scope": "CRT-side only; stop at TRADE_OPENED; no EngineRunner/journal admission audit",
+  "corpus": {
+    "symbol": "BNBUSDT",
+    "timeframe": "M15",
+    "baseline": "results/baseline/run1",
+    "config_version": "v2_multi_2026_04",
+    "report": "reports/PRE_REMEDIATION_BASELINE.md"
+  },
+  "candidate_count": 13,
+  "summary": {
+    "complete": 13,
+    "partial": 0,
+    "unknown_candidates": 0,
+    "shadow_path": 6,
+    "golden_path": 7,
+    "crt_trade_opened": 13,
+    "present_in_gate_on_trades_csv": 11,
+    "absent_from_gate_on_trades_csv": 2
+  },
+  "candidates": [
+    {
+      "candidate_index": 1,
+      "trade_id": "CRT-0001",
+      "symbol": "BNBUSDT",
+      "timestamp": "2024-05-24T07:45:00",
+      "candle_index": 197,
+      "direction": "LONG",
+      "path_class": "SHADOW",
+      "crt_action": "TRADE_OPENED",
+      "state_sequence": [
+        "RANGE",
+        "SHADOW_PENDING",
+        "SWEEP",
+        "EXPANSION",
+        "RETEST",
+        "EXECUTION"
+      ],
+      "state_transitions": [
+        {
+          "from": "RANGE",
+          "to": "SHADOW_PENDING",
+          "timestamp": "2024-05-24T07:00:00",
+          "candle_index": 194,
+          "reason": "Shadow resume: confirming sweep @ 588.40000 dir=LONG",
+          "metadata": {
+            "sweep_type": "TYPE-C",
+            "disp_strength": null,
+            "atr": 2.450000000000005,
+            "features": {}
+          }
+        },
+        {
+          "from": "SHADOW_PENDING",
+          "to": "SWEEP",
+          "timestamp": "2024-05-24T07:15:00",
+          "candle_index": 195,
+          "reason": "Shadow: prior-window displacement restored from idx=191",
+          "metadata": {
+            "sweep_type": "TYPE-C",
+            "disp_strength": null,
+            "atr": 2.528571428571427,
+            "features": {}
+          }
+        },
+        {
+          "from": "SWEEP",
+          "to": "EXPANSION",
+          "timestamp": "2024-05-24T07:15:00",
+          "candle_index": 195,
+          "reason": "Shadow resume: displacement carried from prior HTF window \u2014 strength check skipped",
+          "metadata": {
+            "sweep_type": "TYPE-C",
+            "disp_strength": null,
+            "atr": 2.528571428571427,
+            "features": {}
+          }
+        },
+        {
+          "from": "EXPANSION",
+          "to": "RETEST",
+          "timestamp": "2024-05-24T07:30:00",
+          "candle_index": 196,
+          "reason": "Retest | depth_abs=1.60000 ceiling=1.99500",
+          "metadata": {
+            "sweep_type": "TYPE-C",
+            "disp_strength": 1.8535211267605365,
+            "atr": 2.5357142857142856,
+            "features": {
+              "retest_depth": 1.0,
+              "body_ratio": 0.8723404255319324,
+              "disp_strength": 1.8535211267605365,
+              "retest_index": 196,
+              "session": "UNKNOWN",
+              "double_sweep": false
+            }
+          }
+        },
+        {
+          "from": "RETEST",
+          "to": "EXECUTION",
+          "timestamp": "2024-05-24T07:45:00",
+          "candle_index": 197,
+          "reason": "Risk approved \u2192 entering execution",
+          "metadata": {
+            "sweep_type": "TYPE-C",
+            "disp_strength": 1.8535211267605365,
+            "atr": 2.557142857142862,
+            "features": {
+              "retest_depth": 1.0,
+              "body_ratio": 0.8723404255319324,
+              "disp_strength": 1.8535211267605365,
+              "retest_index": 196,
+              "session": "UNKNOWN",
+              "double_sweep": false
+            }
+          }
+        }
+      ],
+      "shadow_path": true,
+      "input_context": {
+        "instrument": "BNBUSDT",
+        "timeframe": "M15",
+        "config_version": "v2_multi_2026_04",
+        "baseline_artifact": "results/baseline/run1"
+      },
+      "sweep": {
+        "timestamp": "2024-05-24T07:00:00",
+        "candle_index": 194,
+        "direction": "LONG",
+        "price": null,
+        "double_confirmed": null
+      },
+      "canonical_features_at_retest": {
+        "status": "PARTIAL",
+        "note": "From STATE_TRANSITION metadata.features at RETEST entry (F-050 names if present)",
+        "values": {
+          "retest_depth": 1.0,
+          "body_ratio": 0.8723404255319324,
+          "disp_strength": 1.8535211267605365,
+          "retest_index": 196,
+          "session": "UNKNOWN",
+          "double_sweep": false
+        },
+        "disp_strength_in_metadata": 1.8535211267605365,
+        "atr_in_metadata": 2.5357142857142856
+      },
+      "score_gate_results": {
+        "S_score": 0.5100132375804405,
+        "session_name": "LONDON",
+        "begin_soft_conf_timestamp": "2024-05-24T07:30:00",
+        "begin_soft_conf_candle_index": 196,
+        "tier_interpretation": "TIER_2",
+        "risk_pct": 0.005
+      },
+      "crt_internal_diversions_passed": [
+        {
+          "id": "DIV-SOFT-CONF-SCORE",
+          "status": "PASSED",
+          "evidence": "S_score=0.5100132375804405"
+        },
+        {
+          "id": "DIV-ZONE-DISCOUNT-PREMIUM",
+          "status": "PASSED",
+          "evidence": "reached TRADE_OPENED"
+        },
+        {
+          "id": "DIV-SESSION-FILTER",
+          "status": "PASSED",
+          "evidence": "session=LONDON"
+        },
+        {
+          "id": "DIV-INVERTED-SL",
+          "status": "PASSED",
+          "evidence": "build_trade returned trade"
+        },
+        {
+          "id": "DIV-NEWS-BLACKOUT",
+          "status": "NOT_APPLICABLE_OR_PASSED",
+          "evidence": "no news reject"
+        },
+        {
+          "id": "DIV-SPREAD-MAX",
+          "status": "NOT_APPLICABLE_OR_PASSED",
+          "evidence": "no spread reject"
+        },
+        {
+          "id": "DIV-BITNET-THRESHOLD",
+          "status": "INACTIVE",
+          "evidence": "use_bitnet=false"
+        }
+      ],
+      "candidate_payload": {
+        "trade_id": "CRT-0001",
+        "entry_price": 591.1,
+        "sl": 590.0885714285714,
+        "tp1": 592.6171428571429,
+        "tp2": 593.1228571428572,
+        "risk_pct": 0.005,
+        "direction": "LONG"
+      },
+      "telemetry_episode": {
+        "episode_start_idx": 195,
+        "episode_end_idx": 196,
+        "duration_candles": 1,
+        "shadow_used": true,
+        "candidate_age_at_entry": 4,
+        "ended_by": "retest"
+      },
+      "journaled_in_gate_on_baseline": false,
+      "journal_note": "CRT TRADE_OPENED only \u2014 absent from gate-ON trades.csv (2 ER rejects; Phase 6 stops at CRT boundary)",
+      "trade_csv_snapshot": null,
+      "reproducible_from_crt_artifacts": true,
+      "unknowns": [],
+      "evidence_completeness": "COMPLETE",
+      "evidence_sources": [
+        "results/baseline/run1/BNBUSDT_events.jsonl",
+        "results/baseline/run1/BNBUSDT_crt_telemetry.jsonl",
+        "reports/PRE_REMEDIATION_BASELINE.md"
+      ]
+    },
+    {
+      "candidate_index": 2,
+      "trade_id": "CRT-0002",
+      "symbol": "BNBUSDT",
+      "timestamp": "2024-10-28T13:45:00",
+      "candle_index": 15293,
+      "direction": "SHORT",
+      "path_class": "SHADOW",
+      "crt_action": "TRADE_OPENED",
+      "state_sequence": [
+        "RANGE",
+        "SHADOW_PENDING",
+        "SWEEP",
+        "EXPANSION",
+        "RETEST",
+        "EXECUTION"
+      ],
+      "state_transitions": [
+        {
+          "from": "RANGE",
+          "to": "SHADOW_PENDING",
+          "timestamp": "2024-10-28T13:00:00",
+          "candle_index": 15290,
+          "reason": "Shadow resume: confirming sweep @ 596.70000 dir=SHORT",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": null,
+            "atr": 1.4285714285714286,
+            "features": {}
+          }
+        },
+        {
+          "from": "SHADOW_PENDING",
+          "to": "SWEEP",
+          "timestamp": "2024-10-28T13:15:00",
+          "candle_index": 15291,
+          "reason": "Shadow: prior-window displacement restored from idx=15287",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": null,
+            "atr": 1.2714285714285682,
+            "features": {}
+          }
+        },
+        {
+          "from": "SWEEP",
+          "to": "EXPANSION",
+          "timestamp": "2024-10-28T13:15:00",
+          "candle_index": 15291,
+          "reason": "Shadow resume: displacement carried from prior HTF window \u2014 strength check skipped",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": null,
+            "atr": 1.2714285714285682,
+            "features": {}
+          }
+        },
+        {
+          "from": "EXPANSION",
+          "to": "RETEST",
+          "timestamp": "2024-10-28T13:30:00",
+          "candle_index": 15292,
+          "reason": "Retest | depth_abs=0.50000 ceiling=0.84000",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": 1.7405405405405923,
+            "atr": 1.3214285714285714,
+            "features": {
+              "retest_depth": 1.052631578947381,
+              "body_ratio": 0.8260869565217047,
+              "disp_strength": 1.7405405405405923,
+              "retest_index": 15292,
+              "session": "UNKNOWN",
+              "double_sweep": false
+            }
+          }
+        },
+        {
+          "from": "RETEST",
+          "to": "EXECUTION",
+          "timestamp": "2024-10-28T13:45:00",
+          "candle_index": 15293,
+          "reason": "Risk approved \u2192 entering execution",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": 1.7405405405405923,
+            "atr": 1.4499999999999968,
+            "features": {
+              "retest_depth": 1.052631578947381,
+              "body_ratio": 0.8260869565217047,
+              "disp_strength": 1.7405405405405923,
+              "retest_index": 15292,
+              "session": "UNKNOWN",
+              "double_sweep": false
+            }
+          }
+        }
+      ],
+      "shadow_path": true,
+      "input_context": {
+        "instrument": "BNBUSDT",
+        "timeframe": "M15",
+        "config_version": "v2_multi_2026_04",
+        "baseline_artifact": "results/baseline/run1"
+      },
+      "sweep": {
+        "timestamp": "2024-10-28T13:00:00",
+        "candle_index": 15290,
+        "direction": "SHORT",
+        "price": null,
+        "double_confirmed": null
+      },
+      "canonical_features_at_retest": {
+        "status": "FROM_TRADES_CSV_CACHED",
+        "note": "From STATE_TRANSITION metadata.features at RETEST entry (F-050 names if present)",
+        "values": {
+          "retest_depth": "1.052632",
+          "body_ratio": "0.826087",
+          "disp_strength": "1.740541"
+        },
+        "disp_strength_in_metadata": 1.7405405405405923,
+        "atr_in_metadata": 1.3214285714285714
+      },
+      "score_gate_results": {
+        "S_score": 0.571028663839917,
+        "session_name": "NEWYORK",
+        "begin_soft_conf_timestamp": "2024-10-28T13:30:00",
+        "begin_soft_conf_candle_index": 15292,
+        "tier_interpretation": "TIER_2",
+        "risk_pct": 0.005
+      },
+      "crt_internal_diversions_passed": [
+        {
+          "id": "DIV-SOFT-CONF-SCORE",
+          "status": "PASSED",
+          "evidence": "S_score=0.571028663839917"
+        },
+        {
+          "id": "DIV-ZONE-DISCOUNT-PREMIUM",
+          "status": "PASSED",
+          "evidence": "reached TRADE_OPENED"
+        },
+        {
+          "id": "DIV-SESSION-FILTER",
+          "status": "PASSED",
+          "evidence": "session=NEWYORK"
+        },
+        {
+          "id": "DIV-INVERTED-SL",
+          "status": "PASSED",
+          "evidence": "build_trade returned trade"
+        },
+        {
+          "id": "DIV-NEWS-BLACKOUT",
+          "status": "NOT_APPLICABLE_OR_PASSED",
+          "evidence": "no news reject"
+        },
+        {
+          "id": "DIV-SPREAD-MAX",
+          "status": "NOT_APPLICABLE_OR_PASSED",
+          "evidence": "no spread reject"
+        },
+        {
+          "id": "DIV-BITNET-THRESHOLD",
+          "status": "INACTIVE",
+          "evidence": "use_bitnet=false"
+        }
+      ],
+      "candidate_payload": {
+        "trade_id": "CRT-0002",
+        "entry_price": 596.0,
+        "sl": 596.49,
+        "tp1": 595.265,
+        "tp2": 595.02,
+        "risk_pct": 0.005,
+        "direction": "SHORT"
+      },
+      "telemetry_episode": {
+        "episode_start_idx": 15291,
+        "episode_end_idx": 15292,
+        "duration_candles": 1,
+        "shadow_used": true,
+        "candidate_age_at_entry": 4,
+        "ended_by": "retest"
+      },
+      "journaled_in_gate_on_baseline": true,
+      "journal_note": "Present in gate-ON trades.csv (post-ER admit)",
+      "trade_csv_snapshot": {
+        "entry_raw": "596.0",
+        "entry_fill": "595.9666831142235",
+        "sl": "596.49",
+        "tp1": "595.265",
+        "tp2": "595.02",
+        "risk_score": "0.571",
+        "session": "1.0",
+        "candle_idx": "15320",
+        "body_ratio": "0.6896551847457886",
+        "disp_strength": "1.3793103694915771",
+        "retest_depth": "0.7850804924964905",
+        "cached_retest_depth": "1.052632",
+        "cached_body_ratio": "0.826087",
+        "cached_disp_strength": "1.740541",
+        "shadow_used": "1",
+        "config_version": "v2_multi_2026_04"
+      },
+      "reproducible_from_crt_artifacts": true,
+      "unknowns": [],
+      "evidence_completeness": "COMPLETE",
+      "evidence_sources": [
+        "results/baseline/run1/BNBUSDT_events.jsonl",
+        "results/baseline/run1/BNBUSDT_crt_telemetry.jsonl",
+        "reports/PRE_REMEDIATION_BASELINE.md",
+        "results/baseline/run1/BNBUSDT_trades.csv"
+      ]
+    },
+    {
+      "candidate_index": 3,
+      "trade_id": "CRT-0003",
+      "symbol": "BNBUSDT",
+      "timestamp": "2024-11-07T14:00:00",
+      "candle_index": 16254,
+      "direction": "SHORT",
+      "path_class": "SHADOW",
+      "crt_action": "TRADE_OPENED",
+      "state_sequence": [
+        "RANGE",
+        "SHADOW_PENDING",
+        "SWEEP",
+        "EXPANSION",
+        "RETEST",
+        "EXECUTION"
+      ],
+      "state_transitions": [
+        {
+          "from": "RANGE",
+          "to": "SHADOW_PENDING",
+          "timestamp": "2024-11-06T22:15:00",
+          "candle_index": 16191,
+          "reason": "Shadow resume: confirming sweep @ 591.01000 dir=SHORT",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": null,
+            "atr": 1.7800000000000051,
+            "features": {}
+          }
+        },
+        {
+          "from": "SHADOW_PENDING",
+          "to": "SWEEP",
+          "timestamp": "2024-11-06T22:30:00",
+          "candle_index": 16192,
+          "reason": "Shadow: prior-window displacement restored from idx=16188",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": null,
+            "atr": 1.8035714285714448,
+            "features": {}
+          }
+        },
+        {
+          "from": "SWEEP",
+          "to": "EXPANSION",
+          "timestamp": "2024-11-06T22:30:00",
+          "candle_index": 16192,
+          "reason": "Shadow resume: displacement carried from prior HTF window \u2014 strength check skipped",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": null,
+            "atr": 1.8035714285714448,
+            "features": {}
+          }
+        },
+        {
+          "from": "EXPANSION",
+          "to": "RETEST",
+          "timestamp": "2024-11-07T13:45:00",
+          "candle_index": 16253,
+          "reason": "Retest | depth_abs=0.71000 ceiling=0.81150",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": 1.5854258985721745,
+            "atr": 1.4507142857142898,
+            "features": {
+              "retest_depth": 0.7260273972602562,
+              "body_ratio": 0.9521739130434244,
+              "disp_strength": 1.5854258985721745,
+              "retest_index": 16253,
+              "session": "UNKNOWN",
+              "double_sweep": false
+            }
+          }
+        },
+        {
+          "from": "RETEST",
+          "to": "EXECUTION",
+          "timestamp": "2024-11-07T14:00:00",
+          "candle_index": 16254,
+          "reason": "Risk approved \u2192 entering execution",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": 1.5854258985721745,
+            "atr": 1.4785714285714318,
+            "features": {
+              "retest_depth": 0.7260273972602562,
+              "body_ratio": 0.9521739130434244,
+              "disp_strength": 1.5854258985721745,
+              "retest_index": 16253,
+              "session": "UNKNOWN",
+              "double_sweep": false
+            }
+          }
+        }
+      ],
+      "shadow_path": true,
+      "input_context": {
+        "instrument": "BNBUSDT",
+        "timeframe": "M15",
+        "config_version": "v2_multi_2026_04",
+        "baseline_artifact": "results/baseline/run1"
+      },
+      "sweep": {
+        "timestamp": "2024-11-06T22:15:00",
+        "candle_index": 16191,
+        "direction": "SHORT",
+        "price": null,
+        "double_confirmed": null
+      },
+      "canonical_features_at_retest": {
+        "status": "FROM_TRADES_CSV_CACHED",
+        "note": "From STATE_TRANSITION metadata.features at RETEST entry (F-050 names if present)",
+        "values": {
+          "retest_depth": "0.726027",
+          "body_ratio": "0.952174",
+          "disp_strength": "1.585426"
+        },
+        "disp_strength_in_metadata": 1.5854258985721745,
+        "atr_in_metadata": 1.4507142857142898
+      },
+      "score_gate_results": {
+        "S_score": 0.5371325464284107,
+        "session_name": "NEWYORK",
+        "begin_soft_conf_timestamp": "2024-11-07T13:45:00",
+        "begin_soft_conf_candle_index": 16253,
+        "tier_interpretation": "TIER_2",
+        "risk_pct": 0.005
+      },
+      "crt_internal_diversions_passed": [
+        {
+          "id": "DIV-SOFT-CONF-SCORE",
+          "status": "PASSED",
+          "evidence": "S_score=0.5371325464284107"
+        },
+        {
+          "id": "DIV-ZONE-DISCOUNT-PREMIUM",
+          "status": "PASSED",
+          "evidence": "reached TRADE_OPENED"
+        },
+        {
+          "id": "DIV-SESSION-FILTER",
+          "status": "PASSED",
+          "evidence": "session=NEWYORK"
+        },
+        {
+          "id": "DIV-INVERTED-SL",
+          "status": "PASSED",
+          "evidence": "build_trade returned trade"
+        },
+        {
+          "id": "DIV-NEWS-BLACKOUT",
+          "status": "NOT_APPLICABLE_OR_PASSED",
+          "evidence": "no news reject"
+        },
+        {
+          "id": "DIV-SPREAD-MAX",
+          "status": "NOT_APPLICABLE_OR_PASSED",
+          "evidence": "no spread reject"
+        },
+        {
+          "id": "DIV-BITNET-THRESHOLD",
+          "status": "INACTIVE",
+          "evidence": "use_bitnet=false"
+        }
+      ],
+      "candidate_payload": {
+        "trade_id": "CRT-0003",
+        "entry_price": 589.81,
+        "sl": 590.7357142857144,
+        "tp1": 588.4214285714284,
+        "tp2": 587.9585714285711,
+        "risk_pct": 0.005,
+        "direction": "SHORT"
+      },
+      "telemetry_episode": {
+        "episode_start_idx": 16192,
+        "episode_end_idx": 16253,
+        "duration_candles": 61,
+        "shadow_used": true,
+        "candidate_age_at_entry": 4,
+        "ended_by": "retest"
+      },
+      "journaled_in_gate_on_baseline": true,
+      "journal_note": "Present in gate-ON trades.csv (post-ER admit)",
+      "trade_csv_snapshot": {
+        "entry_raw": "589.81",
+        "entry_fill": "589.8283799507839",
+        "sl": "590.7357142857144",
+        "tp1": "588.4214285714284",
+        "tp2": "587.9585714285711",
+        "risk_score": "0.5371",
+        "session": "1.0",
+        "candle_idx": "16281",
+        "body_ratio": "0.39024388790130615",
+        "disp_strength": "0.4328502416610718",
+        "retest_depth": "0.0",
+        "cached_retest_depth": "0.726027",
+        "cached_body_ratio": "0.952174",
+        "cached_disp_strength": "1.585426",
+        "shadow_used": "1",
+        "config_version": "v2_multi_2026_04"
+      },
+      "reproducible_from_crt_artifacts": true,
+      "unknowns": [],
+      "evidence_completeness": "COMPLETE",
+      "evidence_sources": [
+        "results/baseline/run1/BNBUSDT_events.jsonl",
+        "results/baseline/run1/BNBUSDT_crt_telemetry.jsonl",
+        "reports/PRE_REMEDIATION_BASELINE.md",
+        "results/baseline/run1/BNBUSDT_trades.csv"
+      ]
+    },
+    {
+      "candidate_index": 4,
+      "trade_id": "CRT-0004",
+      "symbol": "BNBUSDT",
+      "timestamp": "2025-01-13T15:15:00",
+      "candle_index": 22691,
+      "direction": "LONG",
+      "path_class": "GOLDEN",
+      "crt_action": "TRADE_OPENED",
+      "state_sequence": [
+        "RANGE",
+        "SWEEP",
+        "DISPLACEMENT",
+        "EXPANSION",
+        "RETEST",
+        "EXECUTION"
+      ],
+      "state_transitions": [
+        {
+          "from": "RANGE",
+          "to": "SWEEP",
+          "timestamp": "2025-01-13T09:00:00",
+          "candle_index": 22666,
+          "reason": "Sweep @ 675.08000 idx=22666",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": null,
+            "atr": 2.519285714285713,
+            "features": {}
+          }
+        },
+        {
+          "from": "SWEEP",
+          "to": "DISPLACEMENT",
+          "timestamp": "2025-01-13T09:15:00",
+          "candle_index": 22667,
+          "reason": "Displacement | body_ratio=0.902 wick=4.07000",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": null,
+            "atr": 2.644285714285705,
+            "features": {}
+          }
+        },
+        {
+          "from": "DISPLACEMENT",
+          "to": "EXPANSION",
+          "timestamp": "2025-01-13T09:30:00",
+          "candle_index": 22668,
+          "reason": "Bullish expansion | close=674.11000 disp_close=672.40000",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": null,
+            "atr": 2.837857142857128,
+            "features": {}
+          }
+        },
+        {
+          "from": "EXPANSION",
+          "to": "RETEST",
+          "timestamp": "2025-01-13T15:00:00",
+          "candle_index": 22690,
+          "reason": "Retest | depth_abs=0.91000 ceiling=1.41771",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": 0.8612454655380719,
+            "atr": 4.725714285714308,
+            "features": {
+              "retest_depth": 0.2288828337874391,
+              "body_ratio": 0.9017199017199337,
+              "disp_strength": 0.8612454655380719,
+              "retest_index": 22690,
+              "session": "UNKNOWN",
+              "double_sweep": false
+            }
+          }
+        },
+        {
+          "from": "RETEST",
+          "to": "EXECUTION",
+          "timestamp": "2025-01-13T15:15:00",
+          "candle_index": 22691,
+          "reason": "Risk approved \u2192 entering execution",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": 0.8612454655380719,
+            "atr": 4.813571428571444,
+            "features": {
+              "retest_depth": 0.2288828337874391,
+              "body_ratio": 0.9017199017199337,
+              "disp_strength": 0.8612454655380719,
+              "retest_index": 22690,
+              "session": "UNKNOWN",
+              "double_sweep": false
+            }
+          }
+        }
+      ],
+      "shadow_path": false,
+      "input_context": {
+        "instrument": "BNBUSDT",
+        "timeframe": "M15",
+        "config_version": "v2_multi_2026_04",
+        "baseline_artifact": "results/baseline/run1"
+      },
+      "sweep": {
+        "timestamp": "2025-01-13T09:00:00",
+        "candle_index": 22666,
+        "direction": "LONG",
+        "price": 675.08,
+        "double_confirmed": false
+      },
+      "canonical_features_at_retest": {
+        "status": "FROM_TRADES_CSV_CACHED",
+        "note": "From STATE_TRANSITION metadata.features at RETEST entry (F-050 names if present)",
+        "values": {
+          "retest_depth": "0.228883",
+          "body_ratio": "0.90172",
+          "disp_strength": "0.861245"
+        },
+        "disp_strength_in_metadata": 0.8612454655380719,
+        "atr_in_metadata": 4.725714285714308
+      },
+      "score_gate_results": {
+        "S_score": 0.480450686178374,
+        "session_name": "NEWYORK",
+        "begin_soft_conf_timestamp": "2025-01-13T15:00:00",
+        "begin_soft_conf_candle_index": 22690,
+        "tier_interpretation": "TIER_2",
+        "risk_pct": 0.005
+      },
+      "crt_internal_diversions_passed": [
+        {
+          "id": "DIV-SOFT-CONF-SCORE",
+          "status": "PASSED",
+          "evidence": "S_score=0.480450686178374"
+        },
+        {
+          "id": "DIV-ZONE-DISCOUNT-PREMIUM",
+          "status": "PASSED",
+          "evidence": "reached TRADE_OPENED"
+        },
+        {
+          "id": "DIV-SESSION-FILTER",
+          "status": "PASSED",
+          "evidence": "session=NEWYORK"
+        },
+        {
+          "id": "DIV-INVERTED-SL",
+          "status": "PASSED",
+          "evidence": "build_trade returned trade"
+        },
+        {
+          "id": "DIV-NEWS-BLACKOUT",
+          "status": "NOT_APPLICABLE_OR_PASSED",
+          "evidence": "no news reject"
+        },
+        {
+          "id": "DIV-SPREAD-MAX",
+          "status": "NOT_APPLICABLE_OR_PASSED",
+          "evidence": "no spread reject"
+        },
+        {
+          "id": "DIV-BITNET-THRESHOLD",
+          "status": "INACTIVE",
+          "evidence": "use_bitnet=false"
+        }
+      ],
+      "candidate_payload": {
+        "trade_id": "CRT-0004",
+        "entry_price": 676.91,
+        "sl": 671.3672857142858,
+        "tp1": 682.4527142857141,
+        "tp2": 687.9954285714283,
+        "risk_pct": 0.005,
+        "direction": "LONG"
+      },
+      "telemetry_episode": {
+        "episode_start_idx": 22668,
+        "episode_end_idx": 22690,
+        "duration_candles": 22,
+        "shadow_used": false,
+        "candidate_age_at_entry": 1,
+        "ended_by": "retest"
+      },
+      "journaled_in_gate_on_baseline": true,
+      "journal_note": "Present in gate-ON trades.csv (post-ER admit)",
+      "trade_csv_snapshot": {
+        "entry_raw": "676.91",
+        "entry_fill": "677.3320146794465",
+        "sl": "671.3672857142858",
+        "tp1": "682.4527142857141",
+        "tp2": "687.9954285714283",
+        "risk_score": "0.4805",
+        "session": "1.0",
+        "candle_idx": "22718",
+        "body_ratio": "0.36094674468040466",
+        "disp_strength": "0.3801751136779785",
+        "retest_depth": "0.6613858342170715",
+        "cached_retest_depth": "0.228883",
+        "cached_body_ratio": "0.90172",
+        "cached_disp_strength": "0.861245",
+        "shadow_used": "0",
+        "config_version": "v2_multi_2026_04"
+      },
+      "reproducible_from_crt_artifacts": true,
+      "unknowns": [],
+      "evidence_completeness": "COMPLETE",
+      "evidence_sources": [
+        "results/baseline/run1/BNBUSDT_events.jsonl",
+        "results/baseline/run1/BNBUSDT_crt_telemetry.jsonl",
+        "reports/PRE_REMEDIATION_BASELINE.md",
+        "results/baseline/run1/BNBUSDT_trades.csv"
+      ]
+    },
+    {
+      "candidate_index": 5,
+      "trade_id": "CRT-0005",
+      "symbol": "BNBUSDT",
+      "timestamp": "2025-01-19T09:15:00",
+      "candle_index": 23243,
+      "direction": "LONG",
+      "path_class": "GOLDEN",
+      "crt_action": "TRADE_OPENED",
+      "state_sequence": [
+        "RANGE",
+        "SWEEP",
+        "DISPLACEMENT",
+        "EXPANSION",
+        "RETEST",
+        "EXECUTION"
+      ],
+      "state_transitions": [
+        {
+          "from": "RANGE",
+          "to": "SWEEP",
+          "timestamp": "2025-01-14T06:00:00",
+          "candle_index": 22750,
+          "reason": "Sweep @ 687.33000 idx=22750",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": null,
+            "atr": 1.384285714285706,
+            "features": {}
+          }
+        },
+        {
+          "from": "SWEEP",
+          "to": "DISPLACEMENT",
+          "timestamp": "2025-01-14T06:15:00",
+          "candle_index": 22751,
+          "reason": "Displacement | body_ratio=0.856 wick=2.22000",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": null,
+            "atr": 1.4492857142857036,
+            "features": {}
+          }
+        },
+        {
+          "from": "DISPLACEMENT",
+          "to": "EXPANSION",
+          "timestamp": "2025-01-14T06:30:00",
+          "candle_index": 22752,
+          "reason": "Bullish expansion | close=690.50000 disp_close=690.07000",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": null,
+            "atr": 1.4221428571428467,
+            "features": {}
+          }
+        },
+        {
+          "from": "EXPANSION",
+          "to": "RETEST",
+          "timestamp": "2025-01-19T09:00:00",
+          "candle_index": 23242,
+          "reason": "Retest | depth_abs=0.81000 ceiling=0.85243",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": 0.7812971342383253,
+            "atr": 2.8414285714285534,
+            "features": {
+              "retest_depth": 0.13684210526314655,
+              "body_ratio": 0.8558558558558863,
+              "disp_strength": 0.7812971342383253,
+              "retest_index": 23242,
+              "session": "UNKNOWN",
+              "double_sweep": false
+            }
+          }
+        },
+        {
+          "from": "RETEST",
+          "to": "EXECUTION",
+          "timestamp": "2025-01-19T09:15:00",
+          "candle_index": 23243,
+          "reason": "Risk approved \u2192 entering execution",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": 0.7812971342383253,
+            "atr": 2.994285714285695,
+            "features": {
+              "retest_depth": 0.13684210526314655,
+              "body_ratio": 0.8558558558558863,
+              "disp_strength": 0.7812971342383253,
+              "retest_index": 23242,
+              "session": "UNKNOWN",
+              "double_sweep": false
+            }
+          }
+        }
+      ],
+      "shadow_path": false,
+      "input_context": {
+        "instrument": "BNBUSDT",
+        "timeframe": "M15",
+        "config_version": "v2_multi_2026_04",
+        "baseline_artifact": "results/baseline/run1"
+      },
+      "sweep": {
+        "timestamp": "2025-01-14T06:00:00",
+        "candle_index": 22750,
+        "direction": "LONG",
+        "price": 687.33,
+        "double_confirmed": false
+      },
+      "canonical_features_at_retest": {
+        "status": "FROM_TRADES_CSV_CACHED",
+        "note": "From STATE_TRANSITION metadata.features at RETEST entry (F-050 names if present)",
+        "values": {
+          "retest_depth": "0.136842",
+          "body_ratio": "0.855856",
+          "disp_strength": "0.781297"
+        },
+        "disp_strength_in_metadata": 0.7812971342383253,
+        "atr_in_metadata": 2.8414285714285534
+      },
+      "score_gate_results": {
+        "S_score": 0.37120231605484355,
+        "session_name": "LONDON",
+        "begin_soft_conf_timestamp": "2025-01-19T09:00:00",
+        "begin_soft_conf_candle_index": 23242,
+        "tier_interpretation": "TIER_2",
+        "risk_pct": 0.005
+      },
+      "crt_internal_diversions_passed": [
+        {
+          "id": "DIV-SOFT-CONF-SCORE",
+          "status": "PASSED",
+          "evidence": "S_score=0.37120231605484355"
+        },
+        {
+          "id": "DIV-ZONE-DISCOUNT-PREMIUM",
+          "status": "PASSED",
+          "evidence": "reached TRADE_OPENED"
+        },
+        {
+          "id": "DIV-SESSION-FILTER",
+          "status": "PASSED",
+          "evidence": "session=LONDON"
+        },
+        {
+          "id": "DIV-INVERTED-SL",
+          "status": "PASSED",
+          "evidence": "build_trade returned trade"
+        },
+        {
+          "id": "DIV-NEWS-BLACKOUT",
+          "status": "NOT_APPLICABLE_OR_PASSED",
+          "evidence": "no news reject"
+        },
+        {
+          "id": "DIV-SPREAD-MAX",
+          "status": "NOT_APPLICABLE_OR_PASSED",
+          "evidence": "no spread reject"
+        },
+        {
+          "id": "DIV-BITNET-THRESHOLD",
+          "status": "INACTIVE",
+          "evidence": "use_bitnet=false"
+        }
+      ],
+      "candidate_payload": {
+        "trade_id": "CRT-0005",
+        "entry_price": 688.43,
+        "sl": 687.5711428571428,
+        "tp1": 689.2888571428571,
+        "tp2": 690.1477142857142,
+        "risk_pct": 0.005,
+        "direction": "LONG"
+      },
+      "telemetry_episode": {
+        "episode_start_idx": 22752,
+        "episode_end_idx": 23242,
+        "duration_candles": 490,
+        "shadow_used": false,
+        "candidate_age_at_entry": 1,
+        "ended_by": "retest"
+      },
+      "journaled_in_gate_on_baseline": true,
+      "journal_note": "Present in gate-ON trades.csv (post-ER admit)",
+      "trade_csv_snapshot": {
+        "entry_raw": "688.43",
+        "entry_fill": "688.7660630534157",
+        "sl": "687.5711428571428",
+        "tp1": "689.2888571428571",
+        "tp2": "690.1477142857142",
+        "risk_score": "0.3712",
+        "session": "1.0",
+        "candle_idx": "23270",
+        "body_ratio": "0.15909090638160706",
+        "disp_strength": "0.25715646147727966",
+        "retest_depth": "0.0",
+        "cached_retest_depth": "0.136842",
+        "cached_body_ratio": "0.855856",
+        "cached_disp_strength": "0.781297",
+        "shadow_used": "0",
+        "config_version": "v2_multi_2026_04"
+      },
+      "reproducible_from_crt_artifacts": true,
+      "unknowns": [],
+      "evidence_completeness": "COMPLETE",
+      "evidence_sources": [
+        "results/baseline/run1/BNBUSDT_events.jsonl",
+        "results/baseline/run1/BNBUSDT_crt_telemetry.jsonl",
+        "reports/PRE_REMEDIATION_BASELINE.md",
+        "results/baseline/run1/BNBUSDT_trades.csv"
+      ]
+    },
+    {
+      "candidate_index": 6,
+      "trade_id": "CRT-0006",
+      "symbol": "BNBUSDT",
+      "timestamp": "2025-02-17T13:45:00",
+      "candle_index": 26045,
+      "direction": "SHORT",
+      "path_class": "GOLDEN",
+      "crt_action": "TRADE_OPENED",
+      "state_sequence": [
+        "RANGE",
+        "SWEEP",
+        "DISPLACEMENT",
+        "EXPANSION",
+        "RETEST",
+        "EXECUTION"
+      ],
+      "state_transitions": [
+        {
+          "from": "RANGE",
+          "to": "SWEEP",
+          "timestamp": "2025-02-17T06:00:00",
+          "candle_index": 26014,
+          "reason": "Sweep @ 677.67000 idx=26014",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": null,
+            "atr": 2.869999999999988,
+            "features": {}
+          }
+        },
+        {
+          "from": "SWEEP",
+          "to": "DISPLACEMENT",
+          "timestamp": "2025-02-17T06:15:00",
+          "candle_index": 26015,
+          "reason": "Displacement | body_ratio=0.881 wick=4.21000",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": null,
+            "atr": 3.069999999999985,
+            "features": {}
+          }
+        },
+        {
+          "from": "DISPLACEMENT",
+          "to": "EXPANSION",
+          "timestamp": "2025-02-17T06:30:00",
+          "candle_index": 26016,
+          "reason": "Bearish expansion | close=671.79000 disp_close=672.79000",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": null,
+            "atr": 3.057142857142838,
+            "features": {}
+          }
+        },
+        {
+          "from": "EXPANSION",
+          "to": "RETEST",
+          "timestamp": "2025-02-17T13:30:00",
+          "candle_index": 26044,
+          "reason": "Retest | depth_abs=0.95000 ceiling=1.66050",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": 1.6068702290076013,
+            "atr": 2.6200000000000045,
+            "features": {
+              "retest_depth": 0.21024258760106876,
+              "body_ratio": 0.8812351543943241,
+              "disp_strength": 1.6068702290076013,
+              "retest_index": 26044,
+              "session": "UNKNOWN",
+              "double_sweep": false
+            }
+          }
+        },
+        {
+          "from": "RETEST",
+          "to": "EXECUTION",
+          "timestamp": "2025-02-17T13:45:00",
+          "candle_index": 26045,
+          "reason": "Risk approved \u2192 entering execution",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": 1.6068702290076013,
+            "atr": 2.5657142857142907,
+            "features": {
+              "retest_depth": 0.21024258760106876,
+              "body_ratio": 0.8812351543943241,
+              "disp_strength": 1.6068702290076013,
+              "retest_index": 26044,
+              "session": "UNKNOWN",
+              "double_sweep": false
+            }
+          }
+        }
+      ],
+      "shadow_path": false,
+      "input_context": {
+        "instrument": "BNBUSDT",
+        "timeframe": "M15",
+        "config_version": "v2_multi_2026_04",
+        "baseline_artifact": "results/baseline/run1"
+      },
+      "sweep": {
+        "timestamp": "2025-02-17T06:00:00",
+        "candle_index": 26014,
+        "direction": "SHORT",
+        "price": 677.67,
+        "double_confirmed": false
+      },
+      "canonical_features_at_retest": {
+        "status": "FROM_TRADES_CSV_CACHED",
+        "note": "From STATE_TRANSITION metadata.features at RETEST entry (F-050 names if present)",
+        "values": {
+          "retest_depth": "0.210243",
+          "body_ratio": "0.881235",
+          "disp_strength": "1.60687"
+        },
+        "disp_strength_in_metadata": 1.6068702290076013,
+        "atr_in_metadata": 2.6200000000000045
+      },
+      "score_gate_results": {
+        "S_score": 0.41789804300647937,
+        "session_name": "NEWYORK",
+        "begin_soft_conf_timestamp": "2025-02-17T13:30:00",
+        "begin_soft_conf_candle_index": 26044,
+        "tier_interpretation": "TIER_2",
+        "risk_pct": 0.005
+      },
+      "crt_internal_diversions_passed": [
+        {
+          "id": "DIV-SOFT-CONF-SCORE",
+          "status": "PASSED",
+          "evidence": "S_score=0.41789804300647937"
+        },
+        {
+          "id": "DIV-ZONE-DISCOUNT-PREMIUM",
+          "status": "PASSED",
+          "evidence": "reached TRADE_OPENED"
+        },
+        {
+          "id": "DIV-SESSION-FILTER",
+          "status": "PASSED",
+          "evidence": "session=NEWYORK"
+        },
+        {
+          "id": "DIV-INVERTED-SL",
+          "status": "PASSED",
+          "evidence": "build_trade returned trade"
+        },
+        {
+          "id": "DIV-NEWS-BLACKOUT",
+          "status": "NOT_APPLICABLE_OR_PASSED",
+          "evidence": "no news reject"
+        },
+        {
+          "id": "DIV-SPREAD-MAX",
+          "status": "NOT_APPLICABLE_OR_PASSED",
+          "evidence": "no spread reject"
+        },
+        {
+          "id": "DIV-BITNET-THRESHOLD",
+          "status": "INACTIVE",
+          "evidence": "use_bitnet=false"
+        }
+      ],
+      "candidate_payload": {
+        "trade_id": "CRT-0006",
+        "entry_price": 675.72,
+        "sl": 677.0431428571428,
+        "tp1": 673.7352857142859,
+        "tp2": 673.0737142857145,
+        "risk_pct": 0.005,
+        "direction": "SHORT"
+      },
+      "telemetry_episode": {
+        "episode_start_idx": 26016,
+        "episode_end_idx": 26044,
+        "duration_candles": 28,
+        "shadow_used": false,
+        "candidate_age_at_entry": 1,
+        "ended_by": "retest"
+      },
+      "journaled_in_gate_on_baseline": true,
+      "journal_note": "Present in gate-ON trades.csv (post-ER admit)",
+      "trade_csv_snapshot": {
+        "entry_raw": "675.72",
+        "entry_fill": "675.6793079159779",
+        "sl": "677.0431428571428",
+        "tp1": "673.7352857142859",
+        "tp2": "673.0737142857145",
+        "risk_score": "0.4179",
+        "session": "1.0",
+        "candle_idx": "26072",
+        "body_ratio": "0.05945945903658867",
+        "disp_strength": "0.04287305101752281",
+        "retest_depth": "0.6947326064109802",
+        "cached_retest_depth": "0.210243",
+        "cached_body_ratio": "0.881235",
+        "cached_disp_strength": "1.60687",
+        "shadow_used": "0",
+        "config_version": "v2_multi_2026_04"
+      },
+      "reproducible_from_crt_artifacts": true,
+      "unknowns": [],
+      "evidence_completeness": "COMPLETE",
+      "evidence_sources": [
+        "results/baseline/run1/BNBUSDT_events.jsonl",
+        "results/baseline/run1/BNBUSDT_crt_telemetry.jsonl",
+        "reports/PRE_REMEDIATION_BASELINE.md",
+        "results/baseline/run1/BNBUSDT_trades.csv"
+      ]
+    },
+    {
+      "candidate_index": 7,
+      "trade_id": "CRT-0007",
+      "symbol": "BNBUSDT",
+      "timestamp": "2025-03-15T08:15:00",
+      "candle_index": 28519,
+      "direction": "LONG",
+      "path_class": "GOLDEN",
+      "crt_action": "TRADE_OPENED",
+      "state_sequence": [
+        "RANGE",
+        "SWEEP",
+        "DISPLACEMENT",
+        "EXPANSION",
+        "RETEST",
+        "EXECUTION"
+      ],
+      "state_transitions": [
+        {
+          "from": "RANGE",
+          "to": "SWEEP",
+          "timestamp": "2025-03-15T07:00:00",
+          "candle_index": 28514,
+          "reason": "Sweep @ 591.69000 idx=28514",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": null,
+            "atr": 1.3307142857143017,
+            "features": {}
+          }
+        },
+        {
+          "from": "SWEEP",
+          "to": "DISPLACEMENT",
+          "timestamp": "2025-03-15T07:15:00",
+          "candle_index": 28515,
+          "reason": "Displacement | body_ratio=0.925 wick=1.99000",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": null,
+            "atr": 1.38285714285716,
+            "features": {}
+          }
+        },
+        {
+          "from": "DISPLACEMENT",
+          "to": "EXPANSION",
+          "timestamp": "2025-03-15T07:30:00",
+          "candle_index": 28516,
+          "reason": "Bullish expansion | close=591.08000 disp_close=590.59000",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": null,
+            "atr": 1.4478571428571496,
+            "features": {}
+          }
+        },
+        {
+          "from": "EXPANSION",
+          "to": "RETEST",
+          "timestamp": "2025-03-15T08:00:00",
+          "candle_index": 28518,
+          "reason": "Retest | depth_abs=0.34000 ceiling=0.46200",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": 1.3985943775100413,
+            "atr": 1.4228571428571481,
+            "features": {
+              "retest_depth": 0.038043478260836656,
+              "body_ratio": 0.924623115577844,
+              "disp_strength": 1.3985943775100413,
+              "retest_index": 28518,
+              "session": "UNKNOWN",
+              "double_sweep": false
+            }
+          }
+        },
+        {
+          "from": "RETEST",
+          "to": "EXECUTION",
+          "timestamp": "2025-03-15T08:15:00",
+          "candle_index": 28519,
+          "reason": "Risk approved \u2192 entering execution",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": 1.3985943775100413,
+            "atr": 1.517142857142866,
+            "features": {
+              "retest_depth": 0.038043478260836656,
+              "body_ratio": 0.924623115577844,
+              "disp_strength": 1.3985943775100413,
+              "retest_index": 28518,
+              "session": "UNKNOWN",
+              "double_sweep": false
+            }
+          }
+        }
+      ],
+      "shadow_path": false,
+      "input_context": {
+        "instrument": "BNBUSDT",
+        "timeframe": "M15",
+        "config_version": "v2_multi_2026_04",
+        "baseline_artifact": "results/baseline/run1"
+      },
+      "sweep": {
+        "timestamp": "2025-03-15T07:00:00",
+        "candle_index": 28514,
+        "direction": "LONG",
+        "price": 591.69,
+        "double_confirmed": false
+      },
+      "canonical_features_at_retest": {
+        "status": "FROM_TRADES_CSV_CACHED",
+        "note": "From STATE_TRANSITION metadata.features at RETEST entry (F-050 names if present)",
+        "values": {
+          "retest_depth": "0.038043",
+          "body_ratio": "0.924623",
+          "disp_strength": "1.398594"
+        },
+        "disp_strength_in_metadata": 1.3985943775100413,
+        "atr_in_metadata": 1.4228571428571481
+      },
+      "score_gate_results": {
+        "S_score": 0.48485784640037327,
+        "session_name": "LONDON",
+        "begin_soft_conf_timestamp": "2025-03-15T08:00:00",
+        "begin_soft_conf_candle_index": 28518,
+        "tier_interpretation": "TIER_2",
+        "risk_pct": 0.005
+      },
+      "crt_internal_diversions_passed": [
+        {
+          "id": "DIV-SOFT-CONF-SCORE",
+          "status": "PASSED",
+          "evidence": "S_score=0.48485784640037327"
+        },
+        {
+          "id": "DIV-ZONE-DISCOUNT-PREMIUM",
+          "status": "PASSED",
+          "evidence": "reached TRADE_OPENED"
+        },
+        {
+          "id": "DIV-SESSION-FILTER",
+          "status": "PASSED",
+          "evidence": "session=LONDON"
+        },
+        {
+          "id": "DIV-INVERTED-SL",
+          "status": "PASSED",
+          "evidence": "build_trade returned trade"
+        },
+        {
+          "id": "DIV-NEWS-BLACKOUT",
+          "status": "NOT_APPLICABLE_OR_PASSED",
+          "evidence": "no news reject"
+        },
+        {
+          "id": "DIV-SPREAD-MAX",
+          "status": "NOT_APPLICABLE_OR_PASSED",
+          "evidence": "no spread reject"
+        },
+        {
+          "id": "DIV-BITNET-THRESHOLD",
+          "status": "INACTIVE",
+          "evidence": "use_bitnet=false"
+        }
+      ],
+      "candidate_payload": {
+        "trade_id": "CRT-0007",
+        "entry_price": 592.36,
+        "sl": 590.1465714285715,
+        "tp1": 594.5734285714285,
+        "tp2": 596.786857142857,
+        "risk_pct": 0.005,
+        "direction": "LONG"
+      },
+      "telemetry_episode": {
+        "episode_start_idx": 28516,
+        "episode_end_idx": 28518,
+        "duration_candles": 2,
+        "shadow_used": false,
+        "candidate_age_at_entry": 1,
+        "ended_by": "retest"
+      },
+      "journaled_in_gate_on_baseline": true,
+      "journal_note": "Present in gate-ON trades.csv (post-ER admit)",
+      "trade_csv_snapshot": {
+        "entry_raw": "592.36",
+        "entry_fill": "592.4524915041773",
+        "sl": "590.1465714285715",
+        "tp1": "594.5734285714285",
+        "tp2": "596.786857142857",
+        "risk_score": "0.4849",
+        "session": "1.0",
+        "candle_idx": "28546",
+        "body_ratio": "0.3648068606853485",
+        "disp_strength": "0.5602636337280273",
+        "retest_depth": "0.5150141716003418",
+        "cached_retest_depth": "0.038043",
+        "cached_body_ratio": "0.924623",
+        "cached_disp_strength": "1.398594",
+        "shadow_used": "0",
+        "config_version": "v2_multi_2026_04"
+      },
+      "reproducible_from_crt_artifacts": true,
+      "unknowns": [],
+      "evidence_completeness": "COMPLETE",
+      "evidence_sources": [
+        "results/baseline/run1/BNBUSDT_events.jsonl",
+        "results/baseline/run1/BNBUSDT_crt_telemetry.jsonl",
+        "reports/PRE_REMEDIATION_BASELINE.md",
+        "results/baseline/run1/BNBUSDT_trades.csv"
+      ]
+    },
+    {
+      "candidate_index": 8,
+      "trade_id": "CRT-0008",
+      "symbol": "BNBUSDT",
+      "timestamp": "2025-06-15T09:15:00",
+      "candle_index": 37355,
+      "direction": "LONG",
+      "path_class": "SHADOW",
+      "crt_action": "TRADE_OPENED",
+      "state_sequence": [
+        "RANGE",
+        "SHADOW_PENDING",
+        "SWEEP",
+        "EXPANSION",
+        "RETEST",
+        "EXECUTION"
+      ],
+      "state_transitions": [
+        {
+          "from": "RANGE",
+          "to": "SHADOW_PENDING",
+          "timestamp": "2025-06-14T15:15:00",
+          "candle_index": 37283,
+          "reason": "Shadow resume: confirming sweep @ 646.04000 dir=LONG",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": null,
+            "atr": 0.8864285714285772,
+            "features": {}
+          }
+        },
+        {
+          "from": "SHADOW_PENDING",
+          "to": "SWEEP",
+          "timestamp": "2025-06-14T15:30:00",
+          "candle_index": 37284,
+          "reason": "Shadow: prior-window displacement restored from idx=37280",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": null,
+            "atr": 0.9628571428571442,
+            "features": {}
+          }
+        },
+        {
+          "from": "SWEEP",
+          "to": "EXPANSION",
+          "timestamp": "2025-06-14T15:30:00",
+          "candle_index": 37284,
+          "reason": "Shadow resume: displacement carried from prior HTF window \u2014 strength check skipped",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": null,
+            "atr": 0.9628571428571442,
+            "features": {}
+          }
+        },
+        {
+          "from": "EXPANSION",
+          "to": "RETEST",
+          "timestamp": "2025-06-15T09:00:00",
+          "candle_index": 37354,
+          "reason": "Retest | depth_abs=0.62000 ceiling=0.67500",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": 0.9830721003134668,
+            "atr": 1.1392857142857338,
+            "features": {
+              "retest_depth": 1.009708737864069,
+              "body_ratio": 0.919642857142829,
+              "disp_strength": 0.9830721003134668,
+              "retest_index": 37354,
+              "session": "UNKNOWN",
+              "double_sweep": false
+            }
+          }
+        },
+        {
+          "from": "RETEST",
+          "to": "EXECUTION",
+          "timestamp": "2025-06-15T09:15:00",
+          "candle_index": 37355,
+          "reason": "Risk approved \u2192 entering execution",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": 0.9830721003134668,
+            "atr": 1.1835714285714485,
+            "features": {
+              "retest_depth": 1.009708737864069,
+              "body_ratio": 0.919642857142829,
+              "disp_strength": 0.9830721003134668,
+              "retest_index": 37354,
+              "session": "UNKNOWN",
+              "double_sweep": false
+            }
+          }
+        }
+      ],
+      "shadow_path": true,
+      "input_context": {
+        "instrument": "BNBUSDT",
+        "timeframe": "M15",
+        "config_version": "v2_multi_2026_04",
+        "baseline_artifact": "results/baseline/run1"
+      },
+      "sweep": {
+        "timestamp": "2025-06-14T15:15:00",
+        "candle_index": 37283,
+        "direction": "LONG",
+        "price": null,
+        "double_confirmed": null
+      },
+      "canonical_features_at_retest": {
+        "status": "FROM_TRADES_CSV_CACHED",
+        "note": "From STATE_TRANSITION metadata.features at RETEST entry (F-050 names if present)",
+        "values": {
+          "retest_depth": "1.009709",
+          "body_ratio": "0.919643",
+          "disp_strength": "0.983072"
+        },
+        "disp_strength_in_metadata": 0.9830721003134668,
+        "atr_in_metadata": 1.1392857142857338
+      },
+      "score_gate_results": {
+        "S_score": 0.4608007682306499,
+        "session_name": "LONDON",
+        "begin_soft_conf_timestamp": "2025-06-15T09:00:00",
+        "begin_soft_conf_candle_index": 37354,
+        "tier_interpretation": "TIER_2",
+        "risk_pct": 0.005
+      },
+      "crt_internal_diversions_passed": [
+        {
+          "id": "DIV-SOFT-CONF-SCORE",
+          "status": "PASSED",
+          "evidence": "S_score=0.4608007682306499"
+        },
+        {
+          "id": "DIV-ZONE-DISCOUNT-PREMIUM",
+          "status": "PASSED",
+          "evidence": "reached TRADE_OPENED"
+        },
+        {
+          "id": "DIV-SESSION-FILTER",
+          "status": "PASSED",
+          "evidence": "session=LONDON"
+        },
+        {
+          "id": "DIV-INVERTED-SL",
+          "status": "PASSED",
+          "evidence": "build_trade returned trade"
+        },
+        {
+          "id": "DIV-NEWS-BLACKOUT",
+          "status": "NOT_APPLICABLE_OR_PASSED",
+          "evidence": "no news reject"
+        },
+        {
+          "id": "DIV-SPREAD-MAX",
+          "status": "NOT_APPLICABLE_OR_PASSED",
+          "evidence": "no spread reject"
+        },
+        {
+          "id": "DIV-BITNET-THRESHOLD",
+          "status": "INACTIVE",
+          "evidence": "use_bitnet=false"
+        }
+      ],
+      "candidate_payload": {
+        "trade_id": "CRT-0008",
+        "entry_price": 647.02,
+        "sl": 646.7832857142857,
+        "tp1": 647.2567142857142,
+        "tp2": 647.4934285714285,
+        "risk_pct": 0.005,
+        "direction": "LONG"
+      },
+      "telemetry_episode": {
+        "episode_start_idx": 37284,
+        "episode_end_idx": 37354,
+        "duration_candles": 70,
+        "shadow_used": true,
+        "candidate_age_at_entry": 4,
+        "ended_by": "retest"
+      },
+      "journaled_in_gate_on_baseline": true,
+      "journal_note": "Present in gate-ON trades.csv (post-ER admit)",
+      "trade_csv_snapshot": {
+        "entry_raw": "647.02",
+        "entry_fill": "647.0877627215547",
+        "sl": "646.7832857142857",
+        "tp1": "647.2567142857142",
+        "tp2": "647.4934285714285",
+        "risk_score": "0.4608",
+        "session": "1.0",
+        "candle_idx": "37382",
+        "body_ratio": "0.692307710647583",
+        "disp_strength": "0.6843693852424622",
+        "retest_depth": "0.0",
+        "cached_retest_depth": "1.009709",
+        "cached_body_ratio": "0.919643",
+        "cached_disp_strength": "0.983072",
+        "shadow_used": "1",
+        "config_version": "v2_multi_2026_04"
+      },
+      "reproducible_from_crt_artifacts": true,
+      "unknowns": [],
+      "evidence_completeness": "COMPLETE",
+      "evidence_sources": [
+        "results/baseline/run1/BNBUSDT_events.jsonl",
+        "results/baseline/run1/BNBUSDT_crt_telemetry.jsonl",
+        "reports/PRE_REMEDIATION_BASELINE.md",
+        "results/baseline/run1/BNBUSDT_trades.csv"
+      ]
+    },
+    {
+      "candidate_index": 9,
+      "trade_id": "CRT-0009",
+      "symbol": "BNBUSDT",
+      "timestamp": "2025-08-02T09:00:00",
+      "candle_index": 41962,
+      "direction": "LONG",
+      "path_class": "GOLDEN",
+      "crt_action": "TRADE_OPENED",
+      "state_sequence": [
+        "RANGE",
+        "SWEEP",
+        "DISPLACEMENT",
+        "EXPANSION",
+        "RETEST",
+        "EXECUTION"
+      ],
+      "state_transitions": [
+        {
+          "from": "RANGE",
+          "to": "SWEEP",
+          "timestamp": "2025-08-02T07:00:00",
+          "candle_index": 41954,
+          "reason": "Sweep @ 750.00000 idx=41954",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": null,
+            "atr": 2.9735714285714283,
+            "features": {}
+          }
+        },
+        {
+          "from": "SWEEP",
+          "to": "DISPLACEMENT",
+          "timestamp": "2025-08-02T07:15:00",
+          "candle_index": 41955,
+          "reason": "Displacement | body_ratio=0.931 wick=5.78000",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": null,
+            "atr": 3.239285714285716,
+            "features": {}
+          }
+        },
+        {
+          "from": "DISPLACEMENT",
+          "to": "EXPANSION",
+          "timestamp": "2025-08-02T07:30:00",
+          "candle_index": 41956,
+          "reason": "Bullish expansion | close=758.22000 disp_close=757.12000",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": null,
+            "atr": 3.3728571428571366,
+            "features": {}
+          }
+        },
+        {
+          "from": "EXPANSION",
+          "to": "RETEST",
+          "timestamp": "2025-08-02T08:45:00",
+          "candle_index": 41961,
+          "reason": "Retest | depth_abs=2.55000 ceiling=2.86650",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": 1.6918252143006467,
+            "atr": 3.416428571428558,
+            "features": {
+              "retest_depth": 0.3364312267657894,
+              "body_ratio": 0.9307958477508687,
+              "disp_strength": 1.6918252143006467,
+              "retest_index": 41961,
+              "session": "UNKNOWN",
+              "double_sweep": false
+            }
+          }
+        },
+        {
+          "from": "RETEST",
+          "to": "EXECUTION",
+          "timestamp": "2025-08-02T09:00:00",
+          "candle_index": 41962,
+          "reason": "Risk approved \u2192 entering execution",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": 1.6918252143006467,
+            "atr": 3.5521428571428424,
+            "features": {
+              "retest_depth": 0.3364312267657894,
+              "body_ratio": 0.9307958477508687,
+              "disp_strength": 1.6918252143006467,
+              "retest_index": 41961,
+              "session": "UNKNOWN",
+              "double_sweep": false
+            }
+          }
+        }
+      ],
+      "shadow_path": false,
+      "input_context": {
+        "instrument": "BNBUSDT",
+        "timeframe": "M15",
+        "config_version": "v2_multi_2026_04",
+        "baseline_artifact": "results/baseline/run1"
+      },
+      "sweep": {
+        "timestamp": "2025-08-02T07:00:00",
+        "candle_index": 41954,
+        "direction": "LONG",
+        "price": 750.0,
+        "double_confirmed": false
+      },
+      "canonical_features_at_retest": {
+        "status": "FROM_TRADES_CSV_CACHED",
+        "note": "From STATE_TRANSITION metadata.features at RETEST entry (F-050 names if present)",
+        "values": {
+          "retest_depth": "0.336431",
+          "body_ratio": "0.930796",
+          "disp_strength": "1.691825"
+        },
+        "disp_strength_in_metadata": 1.6918252143006467,
+        "atr_in_metadata": 3.416428571428558
+      },
+      "score_gate_results": {
+        "S_score": 0.47131309163006363,
+        "session_name": "LONDON",
+        "begin_soft_conf_timestamp": "2025-08-02T08:45:00",
+        "begin_soft_conf_candle_index": 41961,
+        "tier_interpretation": "TIER_2",
+        "risk_pct": 0.005
+      },
+      "crt_internal_diversions_passed": [
+        {
+          "id": "DIV-SOFT-CONF-SCORE",
+          "status": "PASSED",
+          "evidence": "S_score=0.47131309163006363"
+        },
+        {
+          "id": "DIV-ZONE-DISCOUNT-PREMIUM",
+          "status": "PASSED",
+          "evidence": "reached TRADE_OPENED"
+        },
+        {
+          "id": "DIV-SESSION-FILTER",
+          "status": "PASSED",
+          "evidence": "session=LONDON"
+        },
+        {
+          "id": "DIV-INVERTED-SL",
+          "status": "PASSED",
+          "evidence": "build_trade returned trade"
+        },
+        {
+          "id": "DIV-NEWS-BLACKOUT",
+          "status": "NOT_APPLICABLE_OR_PASSED",
+          "evidence": "no news reject"
+        },
+        {
+          "id": "DIV-SPREAD-MAX",
+          "status": "NOT_APPLICABLE_OR_PASSED",
+          "evidence": "no spread reject"
+        },
+        {
+          "id": "DIV-BITNET-THRESHOLD",
+          "status": "INACTIVE",
+          "evidence": "use_bitnet=false"
+        }
+      ],
+      "candidate_payload": {
+        "trade_id": "CRT-0009",
+        "entry_price": 753.55,
+        "sl": 750.8095714285714,
+        "tp1": 757.6606428571428,
+        "tp2": 759.030857142857,
+        "risk_pct": 0.005,
+        "direction": "LONG"
+      },
+      "telemetry_episode": {
+        "episode_start_idx": 41956,
+        "episode_end_idx": 41961,
+        "duration_candles": 5,
+        "shadow_used": false,
+        "candidate_age_at_entry": 1,
+        "ended_by": "retest"
+      },
+      "journaled_in_gate_on_baseline": true,
+      "journal_note": "Present in gate-ON trades.csv (post-ER admit)",
+      "trade_csv_snapshot": {
+        "entry_raw": "753.55",
+        "entry_fill": "753.8564162363626",
+        "sl": "750.8095714285714",
+        "tp1": "757.6606428571428",
+        "tp2": "759.030857142857",
+        "risk_score": "0.4713",
+        "session": "1.0",
+        "candle_idx": "41989",
+        "body_ratio": "0.774545431137085",
+        "disp_strength": "0.599638044834137",
+        "retest_depth": "0.0",
+        "cached_retest_depth": "0.336431",
+        "cached_body_ratio": "0.930796",
+        "cached_disp_strength": "1.691825",
+        "shadow_used": "0",
+        "config_version": "v2_multi_2026_04"
+      },
+      "reproducible_from_crt_artifacts": true,
+      "unknowns": [],
+      "evidence_completeness": "COMPLETE",
+      "evidence_sources": [
+        "results/baseline/run1/BNBUSDT_events.jsonl",
+        "results/baseline/run1/BNBUSDT_crt_telemetry.jsonl",
+        "reports/PRE_REMEDIATION_BASELINE.md",
+        "results/baseline/run1/BNBUSDT_trades.csv"
+      ]
+    },
+    {
+      "candidate_index": 10,
+      "trade_id": "CRT-0010",
+      "symbol": "BNBUSDT",
+      "timestamp": "2025-10-04T09:45:00",
+      "candle_index": 48013,
+      "direction": "LONG",
+      "path_class": "SHADOW",
+      "crt_action": "TRADE_OPENED",
+      "state_sequence": [
+        "RANGE",
+        "SHADOW_PENDING",
+        "SWEEP",
+        "EXPANSION",
+        "RETEST",
+        "EXECUTION"
+      ],
+      "state_transitions": [
+        {
+          "from": "RANGE",
+          "to": "SHADOW_PENDING",
+          "timestamp": "2025-10-04T09:00:00",
+          "candle_index": 48010,
+          "reason": "Shadow resume: confirming sweep @ 1153.42000 dir=LONG",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": null,
+            "atr": 5.007857142857152,
+            "features": {}
+          }
+        },
+        {
+          "from": "SHADOW_PENDING",
+          "to": "SWEEP",
+          "timestamp": "2025-10-04T09:15:00",
+          "candle_index": 48011,
+          "reason": "Shadow: prior-window displacement restored from idx=48008",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": null,
+            "atr": 5.042142857142868,
+            "features": {}
+          }
+        },
+        {
+          "from": "SWEEP",
+          "to": "EXPANSION",
+          "timestamp": "2025-10-04T09:15:00",
+          "candle_index": 48011,
+          "reason": "Shadow resume: displacement carried from prior HTF window \u2014 strength check skipped",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": null,
+            "atr": 5.042142857142868,
+            "features": {}
+          }
+        },
+        {
+          "from": "EXPANSION",
+          "to": "RETEST",
+          "timestamp": "2025-10-04T09:30:00",
+          "candle_index": 48012,
+          "reason": "Retest | depth_abs=3.82000 ceiling=3.89850",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": 1.759053954175909,
+            "atr": 4.8321428571428475,
+            "features": {
+              "retest_depth": 0.7926421404682266,
+              "body_ratio": 0.7035294117647081,
+              "disp_strength": 1.759053954175909,
+              "retest_index": 48012,
+              "session": "UNKNOWN",
+              "double_sweep": false
+            }
+          }
+        },
+        {
+          "from": "RETEST",
+          "to": "EXECUTION",
+          "timestamp": "2025-10-04T09:45:00",
+          "candle_index": 48013,
+          "reason": "Risk approved \u2192 entering execution",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": 1.759053954175909,
+            "atr": 5.204999999999976,
+            "features": {
+              "retest_depth": 0.7926421404682266,
+              "body_ratio": 0.7035294117647081,
+              "disp_strength": 1.759053954175909,
+              "retest_index": 48012,
+              "session": "UNKNOWN",
+              "double_sweep": false
+            }
+          }
+        }
+      ],
+      "shadow_path": true,
+      "input_context": {
+        "instrument": "BNBUSDT",
+        "timeframe": "M15",
+        "config_version": "v2_multi_2026_04",
+        "baseline_artifact": "results/baseline/run1"
+      },
+      "sweep": {
+        "timestamp": "2025-10-04T09:00:00",
+        "candle_index": 48010,
+        "direction": "LONG",
+        "price": null,
+        "double_confirmed": null
+      },
+      "canonical_features_at_retest": {
+        "status": "FROM_TRADES_CSV_CACHED",
+        "note": "From STATE_TRANSITION metadata.features at RETEST entry (F-050 names if present)",
+        "values": {
+          "retest_depth": "0.792642",
+          "body_ratio": "0.703529",
+          "disp_strength": "1.759054"
+        },
+        "disp_strength_in_metadata": 1.759053954175909,
+        "atr_in_metadata": 4.8321428571428475
+      },
+      "score_gate_results": {
+        "S_score": 0.44472819404803987,
+        "session_name": "LONDON",
+        "begin_soft_conf_timestamp": "2025-10-04T09:30:00",
+        "begin_soft_conf_candle_index": 48012,
+        "tier_interpretation": "TIER_2",
+        "risk_pct": 0.005
+      },
+      "crt_internal_diversions_passed": [
+        {
+          "id": "DIV-SOFT-CONF-SCORE",
+          "status": "PASSED",
+          "evidence": "S_score=0.44472819404803987"
+        },
+        {
+          "id": "DIV-ZONE-DISCOUNT-PREMIUM",
+          "status": "PASSED",
+          "evidence": "reached TRADE_OPENED"
+        },
+        {
+          "id": "DIV-SESSION-FILTER",
+          "status": "PASSED",
+          "evidence": "session=LONDON"
+        },
+        {
+          "id": "DIV-INVERTED-SL",
+          "status": "PASSED",
+          "evidence": "build_trade returned trade"
+        },
+        {
+          "id": "DIV-NEWS-BLACKOUT",
+          "status": "NOT_APPLICABLE_OR_PASSED",
+          "evidence": "no news reject"
+        },
+        {
+          "id": "DIV-SPREAD-MAX",
+          "status": "NOT_APPLICABLE_OR_PASSED",
+          "evidence": "no spread reject"
+        },
+        {
+          "id": "DIV-BITNET-THRESHOLD",
+          "status": "INACTIVE",
+          "evidence": "use_bitnet=false"
+        }
+      ],
+      "candidate_payload": {
+        "trade_id": "CRT-0010",
+        "entry_price": 1158.52,
+        "sl": 1154.8390000000002,
+        "tp1": 1164.0414999999998,
+        "tp2": 1165.8819999999996,
+        "risk_pct": 0.005,
+        "direction": "LONG"
+      },
+      "telemetry_episode": {
+        "episode_start_idx": 48011,
+        "episode_end_idx": 48012,
+        "duration_candles": 1,
+        "shadow_used": true,
+        "candidate_age_at_entry": 3,
+        "ended_by": "retest"
+      },
+      "journaled_in_gate_on_baseline": true,
+      "journal_note": "Present in gate-ON trades.csv (post-ER admit)",
+      "trade_csv_snapshot": {
+        "entry_raw": "1158.52",
+        "entry_fill": "1158.7497903437722",
+        "sl": "1154.8390000000002",
+        "tp1": "1164.0414999999998",
+        "tp2": "1165.8819999999996",
+        "risk_score": "0.4447",
+        "session": "1.0",
+        "candle_idx": "48040",
+        "body_ratio": "0.8668830990791321",
+        "disp_strength": "1.5389049053192139",
+        "retest_depth": "0.0",
+        "cached_retest_depth": "0.792642",
+        "cached_body_ratio": "0.703529",
+        "cached_disp_strength": "1.759054",
+        "shadow_used": "1",
+        "config_version": "v2_multi_2026_04"
+      },
+      "reproducible_from_crt_artifacts": true,
+      "unknowns": [],
+      "evidence_completeness": "COMPLETE",
+      "evidence_sources": [
+        "results/baseline/run1/BNBUSDT_events.jsonl",
+        "results/baseline/run1/BNBUSDT_crt_telemetry.jsonl",
+        "reports/PRE_REMEDIATION_BASELINE.md",
+        "results/baseline/run1/BNBUSDT_trades.csv"
+      ]
+    },
+    {
+      "candidate_index": 11,
+      "trade_id": "CRT-0011",
+      "symbol": "BNBUSDT",
+      "timestamp": "2025-12-09T07:30:00",
+      "candle_index": 54340,
+      "direction": "LONG",
+      "path_class": "GOLDEN",
+      "crt_action": "TRADE_OPENED",
+      "state_sequence": [
+        "RANGE",
+        "SWEEP",
+        "DISPLACEMENT",
+        "EXPANSION",
+        "RETEST",
+        "EXECUTION"
+      ],
+      "state_transitions": [
+        {
+          "from": "RANGE",
+          "to": "SWEEP",
+          "timestamp": "2025-12-09T06:00:00",
+          "candle_index": 54334,
+          "reason": "Sweep @ 888.02000 idx=54334",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": null,
+            "atr": 2.6057142857142788,
+            "features": {}
+          }
+        },
+        {
+          "from": "SWEEP",
+          "to": "DISPLACEMENT",
+          "timestamp": "2025-12-09T06:15:00",
+          "candle_index": 54335,
+          "reason": "Displacement | body_ratio=0.738 wick=4.47000",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": null,
+            "atr": 2.6850000000000023,
+            "features": {}
+          }
+        },
+        {
+          "from": "DISPLACEMENT",
+          "to": "EXPANSION",
+          "timestamp": "2025-12-09T06:30:00",
+          "candle_index": 54336,
+          "reason": "Bullish expansion | close=886.40000 disp_close=885.09000",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": null,
+            "atr": 2.741428571428579,
+            "features": {}
+          }
+        },
+        {
+          "from": "EXPANSION",
+          "to": "RETEST",
+          "timestamp": "2025-12-09T07:15:00",
+          "candle_index": 54339,
+          "reason": "Retest | depth_abs=1.09000 ceiling=1.21500",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": 1.7628169014084556,
+            "atr": 2.535714285714294,
+            "features": {
+              "retest_depth": 0.26060606060606833,
+              "body_ratio": 0.7382550335570323,
+              "disp_strength": 1.7628169014084556,
+              "retest_index": 54339,
+              "session": "UNKNOWN",
+              "double_sweep": false
+            }
+          }
+        },
+        {
+          "from": "RETEST",
+          "to": "EXECUTION",
+          "timestamp": "2025-12-09T07:30:00",
+          "candle_index": 54340,
+          "reason": "Risk approved \u2192 entering execution",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": 1.7628169014084556,
+            "atr": 2.567857142857146,
+            "features": {
+              "retest_depth": 0.26060606060606833,
+              "body_ratio": 0.7382550335570323,
+              "disp_strength": 1.7628169014084556,
+              "retest_index": 54339,
+              "session": "UNKNOWN",
+              "double_sweep": false
+            }
+          }
+        }
+      ],
+      "shadow_path": false,
+      "input_context": {
+        "instrument": "BNBUSDT",
+        "timeframe": "M15",
+        "config_version": "v2_multi_2026_04",
+        "baseline_artifact": "results/baseline/run1"
+      },
+      "sweep": {
+        "timestamp": "2025-12-09T06:00:00",
+        "candle_index": 54334,
+        "direction": "LONG",
+        "price": 888.02,
+        "double_confirmed": false
+      },
+      "canonical_features_at_retest": {
+        "status": "PARTIAL",
+        "note": "From STATE_TRANSITION metadata.features at RETEST entry (F-050 names if present)",
+        "values": {
+          "retest_depth": 0.26060606060606833,
+          "body_ratio": 0.7382550335570323,
+          "disp_strength": 1.7628169014084556,
+          "retest_index": 54339,
+          "session": "UNKNOWN",
+          "double_sweep": false
+        },
+        "disp_strength_in_metadata": 1.7628169014084556,
+        "atr_in_metadata": 2.535714285714294
+      },
+      "score_gate_results": {
+        "S_score": 0.45551993885483727,
+        "session_name": "LONDON",
+        "begin_soft_conf_timestamp": "2025-12-09T07:15:00",
+        "begin_soft_conf_candle_index": 54339,
+        "tier_interpretation": "TIER_2",
+        "risk_pct": 0.005
+      },
+      "crt_internal_diversions_passed": [
+        {
+          "id": "DIV-SOFT-CONF-SCORE",
+          "status": "PASSED",
+          "evidence": "S_score=0.45551993885483727"
+        },
+        {
+          "id": "DIV-ZONE-DISCOUNT-PREMIUM",
+          "status": "PASSED",
+          "evidence": "reached TRADE_OPENED"
+        },
+        {
+          "id": "DIV-SESSION-FILTER",
+          "status": "PASSED",
+          "evidence": "session=LONDON"
+        },
+        {
+          "id": "DIV-INVERTED-SL",
+          "status": "PASSED",
+          "evidence": "build_trade returned trade"
+        },
+        {
+          "id": "DIV-NEWS-BLACKOUT",
+          "status": "NOT_APPLICABLE_OR_PASSED",
+          "evidence": "no news reject"
+        },
+        {
+          "id": "DIV-SPREAD-MAX",
+          "status": "NOT_APPLICABLE_OR_PASSED",
+          "evidence": "no spread reject"
+        },
+        {
+          "id": "DIV-BITNET-THRESHOLD",
+          "status": "INACTIVE",
+          "evidence": "use_bitnet=false"
+        }
+      ],
+      "candidate_payload": {
+        "trade_id": "CRT-0011",
+        "entry_price": 889.25,
+        "sl": 884.0264285714285,
+        "tp1": 897.0853571428572,
+        "tp2": 899.697142857143,
+        "risk_pct": 0.005,
+        "direction": "LONG"
+      },
+      "telemetry_episode": {
+        "episode_start_idx": 54336,
+        "episode_end_idx": 54339,
+        "duration_candles": 3,
+        "shadow_used": false,
+        "candidate_age_at_entry": 1,
+        "ended_by": "retest"
+      },
+      "journaled_in_gate_on_baseline": false,
+      "journal_note": "CRT TRADE_OPENED only \u2014 absent from gate-ON trades.csv (2 ER rejects; Phase 6 stops at CRT boundary)",
+      "trade_csv_snapshot": null,
+      "reproducible_from_crt_artifacts": true,
+      "unknowns": [],
+      "evidence_completeness": "COMPLETE",
+      "evidence_sources": [
+        "results/baseline/run1/BNBUSDT_events.jsonl",
+        "results/baseline/run1/BNBUSDT_crt_telemetry.jsonl",
+        "reports/PRE_REMEDIATION_BASELINE.md"
+      ]
+    },
+    {
+      "candidate_index": 12,
+      "trade_id": "CRT-0012",
+      "symbol": "BNBUSDT",
+      "timestamp": "2026-02-12T14:00:00",
+      "candle_index": 60606,
+      "direction": "SHORT",
+      "path_class": "GOLDEN",
+      "crt_action": "TRADE_OPENED",
+      "state_sequence": [
+        "RANGE",
+        "SWEEP",
+        "DISPLACEMENT",
+        "EXPANSION",
+        "RETEST",
+        "EXECUTION"
+      ],
+      "state_transitions": [
+        {
+          "from": "RANGE",
+          "to": "SWEEP",
+          "timestamp": "2026-02-12T11:00:00",
+          "candle_index": 60594,
+          "reason": "Sweep @ 619.17000 idx=60594",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": null,
+            "atr": 2.1385714285714323,
+            "features": {}
+          }
+        },
+        {
+          "from": "SWEEP",
+          "to": "DISPLACEMENT",
+          "timestamp": "2026-02-12T11:15:00",
+          "candle_index": 60595,
+          "reason": "Displacement | body_ratio=0.846 wick=3.32000",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": null,
+            "atr": 2.3114285714285807,
+            "features": {}
+          }
+        },
+        {
+          "from": "DISPLACEMENT",
+          "to": "EXPANSION",
+          "timestamp": "2026-02-12T11:30:00",
+          "candle_index": 60596,
+          "reason": "Bearish expansion | close=618.43000 disp_close=619.69000",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": null,
+            "atr": 2.391428571428581,
+            "features": {}
+          }
+        },
+        {
+          "from": "EXPANSION",
+          "to": "RETEST",
+          "timestamp": "2026-02-12T13:45:00",
+          "candle_index": 60605,
+          "reason": "Retest | depth_abs=0.82000 ceiling=1.27950",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": 1.4403470715835418,
+            "atr": 2.3049999999999904,
+            "features": {
+              "retest_depth": 0.4839857651245498,
+              "body_ratio": 0.8463855421686798,
+              "disp_strength": 1.4403470715835418,
+              "retest_index": 60605,
+              "session": "UNKNOWN",
+              "double_sweep": false
+            }
+          }
+        },
+        {
+          "from": "RETEST",
+          "to": "EXECUTION",
+          "timestamp": "2026-02-12T14:00:00",
+          "candle_index": 60606,
+          "reason": "Risk approved \u2192 entering execution",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": 1.4403470715835418,
+            "atr": 2.532142857142844,
+            "features": {
+              "retest_depth": 0.4839857651245498,
+              "body_ratio": 0.8463855421686798,
+              "disp_strength": 1.4403470715835418,
+              "retest_index": 60605,
+              "session": "UNKNOWN",
+              "double_sweep": false
+            }
+          }
+        }
+      ],
+      "shadow_path": false,
+      "input_context": {
+        "instrument": "BNBUSDT",
+        "timeframe": "M15",
+        "config_version": "v2_multi_2026_04",
+        "baseline_artifact": "results/baseline/run1"
+      },
+      "sweep": {
+        "timestamp": "2026-02-12T11:00:00",
+        "candle_index": 60594,
+        "direction": "SHORT",
+        "price": 619.17,
+        "double_confirmed": false
+      },
+      "canonical_features_at_retest": {
+        "status": "FROM_TRADES_CSV_CACHED",
+        "note": "From STATE_TRANSITION metadata.features at RETEST entry (F-050 names if present)",
+        "values": {
+          "retest_depth": "0.483986",
+          "body_ratio": "0.846386",
+          "disp_strength": "1.440347"
+        },
+        "disp_strength_in_metadata": 1.4403470715835418,
+        "atr_in_metadata": 2.3049999999999904
+      },
+      "score_gate_results": {
+        "S_score": 0.5559219122647866,
+        "session_name": "NEWYORK",
+        "begin_soft_conf_timestamp": "2026-02-12T13:45:00",
+        "begin_soft_conf_candle_index": 60605,
+        "tier_interpretation": "TIER_2",
+        "risk_pct": 0.005
+      },
+      "crt_internal_diversions_passed": [
+        {
+          "id": "DIV-SOFT-CONF-SCORE",
+          "status": "PASSED",
+          "evidence": "S_score=0.5559219122647866"
+        },
+        {
+          "id": "DIV-ZONE-DISCOUNT-PREMIUM",
+          "status": "PASSED",
+          "evidence": "reached TRADE_OPENED"
+        },
+        {
+          "id": "DIV-SESSION-FILTER",
+          "status": "PASSED",
+          "evidence": "session=NEWYORK"
+        },
+        {
+          "id": "DIV-INVERTED-SL",
+          "status": "PASSED",
+          "evidence": "build_trade returned trade"
+        },
+        {
+          "id": "DIV-NEWS-BLACKOUT",
+          "status": "NOT_APPLICABLE_OR_PASSED",
+          "evidence": "no news reject"
+        },
+        {
+          "id": "DIV-SPREAD-MAX",
+          "status": "NOT_APPLICABLE_OR_PASSED",
+          "evidence": "no spread reject"
+        },
+        {
+          "id": "DIV-BITNET-THRESHOLD",
+          "status": "INACTIVE",
+          "evidence": "use_bitnet=false"
+        }
+      ],
+      "candidate_payload": {
+        "trade_id": "CRT-0012",
+        "entry_price": 618.24,
+        "sl": 620.4764285714286,
+        "tp1": 616.0035714285714,
+        "tp2": 613.7671428571427,
+        "risk_pct": 0.005,
+        "direction": "SHORT"
+      },
+      "telemetry_episode": {
+        "episode_start_idx": 60596,
+        "episode_end_idx": 60605,
+        "duration_candles": 9,
+        "shadow_used": false,
+        "candidate_age_at_entry": 1,
+        "ended_by": "retest"
+      },
+      "journaled_in_gate_on_baseline": true,
+      "journal_note": "Present in gate-ON trades.csv (post-ER admit)",
+      "trade_csv_snapshot": {
+        "entry_raw": "618.24",
+        "entry_fill": "618.096393645077",
+        "sl": "620.4764285714286",
+        "tp1": "616.0035714285714",
+        "tp2": "613.7671428571427",
+        "risk_score": "0.5559",
+        "session": "1.0",
+        "candle_idx": "60633",
+        "body_ratio": "0.8920454382896423",
+        "disp_strength": "1.8600846529006958",
+        "retest_depth": "0.9499803185462952",
+        "cached_retest_depth": "0.483986",
+        "cached_body_ratio": "0.846386",
+        "cached_disp_strength": "1.440347",
+        "shadow_used": "0",
+        "config_version": "v2_multi_2026_04"
+      },
+      "reproducible_from_crt_artifacts": true,
+      "unknowns": [],
+      "evidence_completeness": "COMPLETE",
+      "evidence_sources": [
+        "results/baseline/run1/BNBUSDT_events.jsonl",
+        "results/baseline/run1/BNBUSDT_crt_telemetry.jsonl",
+        "reports/PRE_REMEDIATION_BASELINE.md",
+        "results/baseline/run1/BNBUSDT_trades.csv"
+      ]
+    },
+    {
+      "candidate_index": 13,
+      "trade_id": "CRT-0013",
+      "symbol": "BNBUSDT",
+      "timestamp": "2026-03-18T13:45:00",
+      "candle_index": 63869,
+      "direction": "LONG",
+      "path_class": "SHADOW",
+      "crt_action": "TRADE_OPENED",
+      "state_sequence": [
+        "RANGE",
+        "SHADOW_PENDING",
+        "SWEEP",
+        "EXPANSION",
+        "RETEST",
+        "EXECUTION"
+      ],
+      "state_transitions": [
+        {
+          "from": "RANGE",
+          "to": "SHADOW_PENDING",
+          "timestamp": "2026-03-18T13:00:00",
+          "candle_index": 63866,
+          "reason": "Shadow resume: confirming sweep @ 654.87000 dir=LONG",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": null,
+            "atr": 3.0478571428571564,
+            "features": {}
+          }
+        },
+        {
+          "from": "SHADOW_PENDING",
+          "to": "SWEEP",
+          "timestamp": "2026-03-18T13:15:00",
+          "candle_index": 63867,
+          "reason": "Shadow: prior-window displacement restored from idx=63864",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": null,
+            "atr": 3.112857142857162,
+            "features": {}
+          }
+        },
+        {
+          "from": "SWEEP",
+          "to": "EXPANSION",
+          "timestamp": "2026-03-18T13:15:00",
+          "candle_index": 63867,
+          "reason": "Shadow resume: displacement carried from prior HTF window \u2014 strength check skipped",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": null,
+            "atr": 3.112857142857162,
+            "features": {}
+          }
+        },
+        {
+          "from": "EXPANSION",
+          "to": "RETEST",
+          "timestamp": "2026-03-18T13:30:00",
+          "candle_index": 63868,
+          "reason": "Retest | depth_abs=1.72000 ceiling=3.06450",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": 1.8936742934051303,
+            "atr": 3.1842857142857333,
+            "features": {
+              "retest_depth": 0.9054621848739421,
+              "body_ratio": 0.7893864013267059,
+              "disp_strength": 1.8936742934051303,
+              "retest_index": 63868,
+              "session": "UNKNOWN",
+              "double_sweep": false
+            }
+          }
+        },
+        {
+          "from": "RETEST",
+          "to": "EXECUTION",
+          "timestamp": "2026-03-18T13:45:00",
+          "candle_index": 63869,
+          "reason": "Risk approved \u2192 entering execution",
+          "metadata": {
+            "sweep_type": null,
+            "disp_strength": 1.8936742934051303,
+            "atr": 3.2900000000000205,
+            "features": {
+              "retest_depth": 0.9054621848739421,
+              "body_ratio": 0.7893864013267059,
+              "disp_strength": 1.8936742934051303,
+              "retest_index": 63868,
+              "session": "UNKNOWN",
+              "double_sweep": false
+            }
+          }
+        }
+      ],
+      "shadow_path": true,
+      "input_context": {
+        "instrument": "BNBUSDT",
+        "timeframe": "M15",
+        "config_version": "v2_multi_2026_04",
+        "baseline_artifact": "results/baseline/run1"
+      },
+      "sweep": {
+        "timestamp": "2026-03-18T13:00:00",
+        "candle_index": 63866,
+        "direction": "LONG",
+        "price": null,
+        "double_confirmed": null
+      },
+      "canonical_features_at_retest": {
+        "status": "FROM_TRADES_CSV_CACHED",
+        "note": "From STATE_TRANSITION metadata.features at RETEST entry (F-050 names if present)",
+        "values": {
+          "retest_depth": "0.905462",
+          "body_ratio": "0.789386",
+          "disp_strength": "1.893674"
+        },
+        "disp_strength_in_metadata": 1.8936742934051303,
+        "atr_in_metadata": 3.1842857142857333
+      },
+      "score_gate_results": {
+        "S_score": 0.442053360070539,
+        "session_name": "NEWYORK",
+        "begin_soft_conf_timestamp": "2026-03-18T13:30:00",
+        "begin_soft_conf_candle_index": 63868,
+        "tier_interpretation": "TIER_2",
+        "risk_pct": 0.005
+      },
+      "crt_internal_diversions_passed": [
+        {
+          "id": "DIV-SOFT-CONF-SCORE",
+          "status": "PASSED",
+          "evidence": "S_score=0.442053360070539"
+        },
+        {
+          "id": "DIV-ZONE-DISCOUNT-PREMIUM",
+          "status": "PASSED",
+          "evidence": "reached TRADE_OPENED"
+        },
+        {
+          "id": "DIV-SESSION-FILTER",
+          "status": "PASSED",
+          "evidence": "session=NEWYORK"
+        },
+        {
+          "id": "DIV-INVERTED-SL",
+          "status": "PASSED",
+          "evidence": "build_trade returned trade"
+        },
+        {
+          "id": "DIV-NEWS-BLACKOUT",
+          "status": "NOT_APPLICABLE_OR_PASSED",
+          "evidence": "no news reject"
+        },
+        {
+          "id": "DIV-SPREAD-MAX",
+          "status": "NOT_APPLICABLE_OR_PASSED",
+          "evidence": "no spread reject"
+        },
+        {
+          "id": "DIV-BITNET-THRESHOLD",
+          "status": "INACTIVE",
+          "evidence": "use_bitnet=false"
+        }
+      ],
+      "candidate_payload": {
+        "trade_id": "CRT-0013",
+        "entry_price": 657.76,
+        "sl": 655.382,
+        "tp1": 661.327,
+        "tp2": 662.5160000000001,
+        "risk_pct": 0.005,
+        "direction": "LONG"
+      },
+      "telemetry_episode": {
+        "episode_start_idx": 63867,
+        "episode_end_idx": 63868,
+        "duration_candles": 1,
+        "shadow_used": true,
+        "candidate_age_at_entry": 3,
+        "ended_by": "retest"
+      },
+      "journaled_in_gate_on_baseline": true,
+      "journal_note": "Present in gate-ON trades.csv (post-ER admit)",
+      "trade_csv_snapshot": {
+        "entry_raw": "657.76",
+        "entry_fill": "658.0908635338529",
+        "sl": "655.382",
+        "tp1": "661.327",
+        "tp2": "662.5160000000001",
+        "risk_score": "0.4421",
+        "session": "1.0",
+        "candle_idx": "63896",
+        "body_ratio": "0.11428571492433548",
+        "disp_strength": "0.08510638028383255",
+        "retest_depth": "0.0",
+        "cached_retest_depth": "0.905462",
+        "cached_body_ratio": "0.789386",
+        "cached_disp_strength": "1.893674",
+        "shadow_used": "1",
+        "config_version": "v2_multi_2026_04"
+      },
+      "reproducible_from_crt_artifacts": true,
+      "unknowns": [],
+      "evidence_completeness": "COMPLETE",
+      "evidence_sources": [
+        "results/baseline/run1/BNBUSDT_events.jsonl",
+        "results/baseline/run1/BNBUSDT_crt_telemetry.jsonl",
+        "reports/PRE_REMEDIATION_BASELINE.md",
+        "results/baseline/run1/BNBUSDT_trades.csv"
+      ]
+    }
+  ],
+  "phase6_status": "PASS",
+  "blockers": [],
+  "notes": [
+    "All 13 CRT TRADE_OPENED events reconstructed with full state sequence from events.jsonl",
+    "2 candidates (CRT-0001, CRT-0011) not in gate-ON trades.csv \u2014 consistent with 2 EngineRunner rejects (out of Phase 6 scope)",
+    "S_score all in tier_2 band (<0.75) with risk_pct=0.005",
+    "cached_features at retest often empty in STATE_TRANSITION metadata; filled from trades.csv when available"
+  ],
+  "next_phase": "Phase 7 \u2014 adversarial CRT validation"
+}

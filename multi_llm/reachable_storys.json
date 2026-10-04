@@ -1,0 +1,18 @@
+[
+  {
+    "class": "ReachableStory",
+    "id": "STORY-33.3",
+    "in_degree": 4,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": true
+  },
+  {
+    "class": "ReachableStory",
+    "id": "STORY-33.19",
+    "in_degree": 4,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": true
+  }
+]

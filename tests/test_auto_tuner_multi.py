@@ -9,6 +9,7 @@ Run with:
 ═══════════════════════════════════════════════════════════════════════════════
 """
 
+from tests.helpers.crt_config import crt_config_for_test
 import dataclasses
 import math
 import random
@@ -18,7 +19,6 @@ from typing import Optional
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 # ── Bootstrap: add parent dir to path so imports resolve ────────────────────
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -54,6 +54,9 @@ class _StubConfigBuilder:
                 if hasattr(cfg, k):
                     setattr(cfg, k, v)
         return cfg
+
+    # EPIC-84: the tuner now builds via from_production (production base + overrides).
+    from_production = build
 cb_module.ConfigBuilder = _StubConfigBuilder
 sys.modules["config_builder"] = cb_module
 
@@ -84,7 +87,9 @@ class _StubCandleLoader:
     def stream(self): return iter(range(1000))
 
 class _StubBacktestRunner:
-    def __init__(self, cfg, csv_path=None, skip_features=False): pass
+    # EPIC-84 A3b: tuners build the feature frame once (export_features) and pass it on
+    def __init__(self, cfg, csv_path=None, prebuilt_features=None): pass
+    def export_features(self): return ("vectors", {}, None)
     def run(self, stream, count, output_dir="", write_reports=True): return _StubMetrics()
 
 bt_module.BacktestConfig = _StubBacktestConfig
@@ -92,10 +97,21 @@ bt_module.CandleLoader   = _StubCandleLoader
 bt_module.BacktestRunner = _StubBacktestRunner
 sys.modules["backtest_v2"] = bt_module
 
-# Stub llama_gate
-llm_module = types.ModuleType("llama_gate")
-llm_module.llm_score = lambda metrics: 0.9
-sys.modules["llama_gate"] = llm_module
+# Stub the bare "llm_inference_client" key (legacy fallback — kept for any
+# code that might import without the config_layer prefix).  Do NOT stub
+# "config_layer.llm_inference_client" here: the real module loads cleanly and
+# installing a thin stub at module-collection time would poison every
+# subsequent test that imports the real implementation.
+llm_module = types.ModuleType("llm_inference_client")
+llm_module.llm_score        = lambda metrics: 0.9
+llm_module.llm_score_safe   = lambda metrics: 0.9
+llm_module.llm_score_batch  = lambda metrics_list: [0.9] * len(metrics_list)
+llm_module.llm_score_cached = lambda metrics: 0.9
+llm_module.cached_llm_score = lambda metrics: 0.9
+llm_module.llm_chat         = lambda messages, **kw: "ok"
+llm_module.llm_insight      = lambda text, **kw: "ok"
+llm_module._fallback_insight = lambda text: "ok"
+sys.modules["llm_inference_client"] = llm_module
 
 # Stub market_router (old import — should NOT be used, but must not crash import)
 mr_module = types.ModuleType("market_router")
@@ -303,9 +319,9 @@ def test_params_to_key_deterministic():
     strict=False,
 )
 def test_no_forbidden_imports():
-    """Source code must not call get_crt_config or CRTConfig(...)."""
+    """Source code must not call get_crt_config or crt_config_for_test(...)."""
     source = (Path(__file__).parent.parent / "scripts" / "training" / "auto_tuner_multi.py").read_text(encoding="utf-8", errors="replace")
     # Check for call patterns (with opening paren) — comments/docstrings mentioning the name are OK
     assert "get_crt_config(" not in source, "get_crt_config() call found in source — FORBIDDEN"
-    # Direct instantiation pattern: CRTConfig(  (with opening paren)
+    # Direct instantiation pattern: crt_config_for_test(  (with opening paren)
     assert "CRTConfig(" not in source, "Direct CRTConfig(...) instantiation found — FORBIDDEN"

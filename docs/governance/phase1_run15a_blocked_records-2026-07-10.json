@@ -1,0 +1,40 @@
+{
+  "_doc": "Phase 1 RUN 1.5A BLOCKED records only",
+  "generated_at_utc": "2026-07-10T16:18:42Z",
+  "n_blocked": 2,
+  "records": [
+    {
+      "quantity_id": "Q-SCORING-DISP",
+      "names": [
+        "disp_strength"
+      ],
+      "exact_missing_evidence": "Full call-site graph and formula proof for scoring_engine local disp_strength=move/atr vs FM-020 not established in RUN-1.5A scope",
+      "paths_inspected": [
+        "RUN-1 residual note",
+        "FC-0.5 unknown list"
+      ],
+      "evidence_found": [
+        "name disp_strength appears in scoring residual UNKNOWN"
+      ],
+      "why_terminal_classification_is_not_possible": "Cannot distinguish EXPLICIT_MODEL_SPECIFIC vs DUPLICATE of Q-FM020 without call-site proof",
+      "highest_leverage_next_search": "AST/grep scoring_engine and engines for move/atr disp_strength"
+    },
+    {
+      "quantity_id": "Q-CRT-FEATURE-BUILDER",
+      "names": [
+        "body_ratio",
+        "features"
+      ],
+      "exact_missing_evidence": "Complete call-site reachability and formula set of crt_feature_builder.py",
+      "paths_inspected": [
+        "RUN-1 note git-modified crt_feature_builder",
+        "F-046 orphan claim history"
+      ],
+      "evidence_found": [
+        "module exists; historical claim of zero call sites may be stale"
+      ],
+      "why_terminal_classification_is_not_possible": "May be PROVEN_UNREACHABLE or IMPLEMENTATION_INTERMEDIATE or DUPLICATE \u2014 not proven",
+      "highest_leverage_next_search": "import graph + grep crt_feature_builder callers"
+    }
+  ]
+}

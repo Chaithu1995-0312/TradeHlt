@@ -1,0 +1,251 @@
+{
+  "authority": "research_only",
+  "engine_mode": "enter",
+  "agreement": 16126,
+  "total": 47197,
+  "agreement_rate": 0.3416742589571371,
+  "engine_counts": {
+    "RANGE": 35103,
+    "SWEEP": 7046,
+    "DISPLACEMENT": 371,
+    "SHADOW_PENDING": 51,
+    "EXPANSION": 4604,
+    "RETEST": 17,
+    "EXECUTION": 5
+  },
+  "resolver_counts": {
+    "RANGE": 16389,
+    "SWEEP": 16474,
+    "DISPLACEMENT": 2577,
+    "EXPANSION": 10907,
+    "RETEST": 850
+  },
+  "reference_counts": {
+    "RANGE": 35159,
+    "SWEEP": 6987,
+    "DISPLACEMENT": 373,
+    "EXPANSION": 4605,
+    "RETEST": 17,
+    "EXECUTION": 5,
+    "RESOLUTION": 0,
+    "SHADOW_PENDING": 51,
+    "EXPIRED": 0
+  },
+  "matrix": {
+    "RANGE|RANGE": 12337,
+    "SWEEP|RANGE": 2342,
+    "RANGE|SWEEP": 12242,
+    "SWEEP|SWEEP": 2553,
+    "RANGE|DISPLACEMENT": 1957,
+    "DISPLACEMENT|RANGE": 138,
+    "SHADOW_PENDING|RANGE": 19,
+    "RANGE|EXPANSION": 7918,
+    "SWEEP|EXPANSION": 1680,
+    "RANGE|RETEST": 649,
+    "SWEEP|DISPLACEMENT": 357,
+    "DISPLACEMENT|DISPLACEMENT": 22,
+    "EXPANSION|RANGE": 1550,
+    "DISPLACEMENT|SWEEP": 127,
+    "EXPANSION|SWEEP": 1522,
+    "EXPANSION|DISPLACEMENT": 238,
+    "EXPANSION|EXPANSION": 1214,
+    "EXPANSION|RETEST": 80,
+    "RETEST|RANGE": 3,
+    "DISPLACEMENT|EXPANSION": 78,
+    "SWEEP|RETEST": 114,
+    "RETEST|SWEEP": 8,
+    "EXECUTION|SWEEP": 4,
+    "SHADOW_PENDING|RETEST": 1,
+    "SHADOW_PENDING|EXPANSION": 12,
+    "SHADOW_PENDING|SWEEP": 18,
+    "RETEST|DISPLACEMENT": 2,
+    "RETEST|EXPANSION": 4,
+    "DISPLACEMENT|RETEST": 6,
+    "SHADOW_PENDING|DISPLACEMENT": 1,
+    "EXECUTION|EXPANSION": 1
+  },
+  "top_confusions": [
+    {
+      "engine": "RANGE",
+      "resolver": "SWEEP",
+      "n": 12242
+    },
+    {
+      "engine": "RANGE",
+      "resolver": "EXPANSION",
+      "n": 7918
+    },
+    {
+      "engine": "SWEEP",
+      "resolver": "RANGE",
+      "n": 2342
+    },
+    {
+      "engine": "RANGE",
+      "resolver": "DISPLACEMENT",
+      "n": 1957
+    },
+    {
+      "engine": "SWEEP",
+      "resolver": "EXPANSION",
+      "n": 1680
+    },
+    {
+      "engine": "EXPANSION",
+      "resolver": "RANGE",
+      "n": 1550
+    },
+    {
+      "engine": "EXPANSION",
+      "resolver": "SWEEP",
+      "n": 1522
+    },
+    {
+      "engine": "RANGE",
+      "resolver": "RETEST",
+      "n": 649
+    },
+    {
+      "engine": "SWEEP",
+      "resolver": "DISPLACEMENT",
+      "n": 357
+    },
+    {
+      "engine": "EXPANSION",
+      "resolver": "DISPLACEMENT",
+      "n": 238
+    },
+    {
+      "engine": "DISPLACEMENT",
+      "resolver": "RANGE",
+      "n": 138
+    },
+    {
+      "engine": "DISPLACEMENT",
+      "resolver": "SWEEP",
+      "n": 127
+    },
+    {
+      "engine": "SWEEP",
+      "resolver": "RETEST",
+      "n": 114
+    },
+    {
+      "engine": "EXPANSION",
+      "resolver": "RETEST",
+      "n": 80
+    },
+    {
+      "engine": "DISPLACEMENT",
+      "resolver": "EXPANSION",
+      "n": 78
+    },
+    {
+      "engine": "SHADOW_PENDING",
+      "resolver": "RANGE",
+      "n": 19
+    },
+    {
+      "engine": "SHADOW_PENDING",
+      "resolver": "SWEEP",
+      "n": 18
+    },
+    {
+      "engine": "SHADOW_PENDING",
+      "resolver": "EXPANSION",
+      "n": 12
+    },
+    {
+      "engine": "RETEST",
+      "resolver": "SWEEP",
+      "n": 8
+    },
+    {
+      "engine": "DISPLACEMENT",
+      "resolver": "RETEST",
+      "n": 6
+    },
+    {
+      "engine": "EXECUTION",
+      "resolver": "SWEEP",
+      "n": 4
+    },
+    {
+      "engine": "RETEST",
+      "resolver": "EXPANSION",
+      "n": 4
+    },
+    {
+      "engine": "RETEST",
+      "resolver": "RANGE",
+      "n": 3
+    },
+    {
+      "engine": "RETEST",
+      "resolver": "DISPLACEMENT",
+      "n": 2
+    },
+    {
+      "engine": "SHADOW_PENDING",
+      "resolver": "RETEST",
+      "n": 1
+    }
+  ],
+  "edge_mismatch_n": 2611,
+  "timeline": {
+    "n_bars": 47275,
+    "n_transitions": 3869,
+    "n_resets": 10869,
+    "htf_resets": 10666,
+    "gap_resets": 121,
+    "reset_from_counts": {
+      "RANGE": 7441,
+      "SWEEP": 3062,
+      "DISPLACEMENT": 298,
+      "SHADOW_PENDING": 8,
+      "EXPANSION": 43,
+      "RETEST": 12,
+      "RESOLUTION": 1,
+      "EXECUTION": 4
+    }
+  },
+  "resolver_meta": {
+    "n_raw": 47275,
+    "n_resolved": 47197,
+    "n_dropped_warmup": 78,
+    "resolver_counts": {
+      "RANGE": 16389,
+      "SWEEP": 16474,
+      "DISPLACEMENT": 2577,
+      "EXPANSION": 10907,
+      "RETEST": 850
+    },
+    "config": "reports\\parity_experiment\\iter8_no_htf_reset.yaml",
+    "lifecycle_stats": {
+      "htf_reset_count": 0,
+      "gap_reset_count": 121,
+      "forced_reset_count": 0,
+      "last_reset_reason": "Session gap detected: 2955min > 120min"
+    },
+    "lifecycle_cfg": {
+      "htf_reset_enabled": false,
+      "htf_candles_per_range": 4,
+      "htf_protect_states": [
+        "EXPANSION",
+        "RETEST"
+      ],
+      "htf_protect_execution": true,
+      "gap_reset_enabled": true,
+      "gap_reset_minutes": 120.0,
+      "shadow_on_htf_displacement_reset": true,
+      "pending_displacement_ttl_candles": 4
+    },
+    "htf_mode": "engine",
+    "htf_instrument": "XAUUSD",
+    "htf_candles_per_range": 4,
+    "htf_unique_ids": 11800,
+    "htf_changes_on_resolved_slice": 11799,
+    "htf_first_id": "XAUUSD-HTF-000019",
+    "htf_last_id": "XAUUSD-HTF-011818"
+  }
+}

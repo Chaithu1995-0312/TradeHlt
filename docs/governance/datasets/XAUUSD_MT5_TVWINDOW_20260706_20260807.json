@@ -1,0 +1,137 @@
+{
+  "schema_version": "1.0.0",
+  "dataset_id": "XAUUSD_MT5_TVWINDOW_20260706_20260807",
+  "symbol": "XAUUSD",
+  "source_family": "mt5",
+  "clock_basis": "broker_local",
+  "volume_semantic": "TICK_VOLUME_APPROXIMATE",
+  "is_synthetic": false,
+  "decision_status": "UNRESOLVED",
+  "parent_timeframe_source": "derived_h4",
+  "canonical_artifact": {
+    "timeframe": "M15",
+    "path": "data/mt5/XAUUSD_W2026-07-06-to-2026-08-07.csv",
+    "sha256": "dcaf88a76b927d530924be4dc1f8dda4fcba431725099a8db4f1dfd806e8a78b",
+    "source": "native_fetch",
+    "admitted": true,
+    "rows": 2300,
+    "start": "2026-07-06T01:00:00",
+    "end": "2026-08-07T23:45:00",
+    "phase1_binding_ref": null
+  },
+  "timeframes": {
+    "M15": {
+      "role": "canonical_artifact",
+      "source": "native_fetch",
+      "admitted": true,
+      "path": "data/mt5/XAUUSD_W2026-07-06-to-2026-08-07.csv",
+      "sha256": "dcaf88a76b927d530924be4dc1f8dda4fcba431725099a8db4f1dfd806e8a78b",
+      "rows": 2300,
+      "start": "2026-07-06T01:00:00",
+      "end": "2026-08-07T23:45:00",
+      "producer": null,
+      "rule": "M15",
+      "parent": null,
+      "parent_sha256": null,
+      "derivation": null
+    },
+    "H1": {
+      "role": "projection",
+      "source": null,
+      "admitted": false,
+      "path": null,
+      "sha256": null,
+      "rows": null,
+      "start": null,
+      "end": null,
+      "producer": "features.parent_candle.ParentCandleBuilder",
+      "rule": "H1",
+      "parent": "M15",
+      "parent_sha256": "dcaf88a76b927d530924be4dc1f8dda4fcba431725099a8db4f1dfd806e8a78b",
+      "derivation": "direct"
+    },
+    "H4": {
+      "role": "projection",
+      "source": null,
+      "admitted": false,
+      "path": null,
+      "sha256": null,
+      "rows": null,
+      "start": null,
+      "end": null,
+      "producer": "features.parent_candle.ParentCandleBuilder",
+      "rule": "H4",
+      "parent": "M15",
+      "parent_sha256": "dcaf88a76b927d530924be4dc1f8dda4fcba431725099a8db4f1dfd806e8a78b",
+      "derivation": "direct"
+    },
+    "D1": {
+      "role": "projection",
+      "source": null,
+      "admitted": false,
+      "path": null,
+      "sha256": null,
+      "rows": null,
+      "start": null,
+      "end": null,
+      "producer": "features.parent_candle.ParentCandleBuilder",
+      "rule": "D1",
+      "parent": "M15",
+      "parent_sha256": "dcaf88a76b927d530924be4dc1f8dda4fcba431725099a8db4f1dfd806e8a78b",
+      "derivation": "direct"
+    },
+    "W1": {
+      "role": "projection",
+      "source": null,
+      "admitted": false,
+      "path": null,
+      "sha256": null,
+      "rows": null,
+      "start": null,
+      "end": null,
+      "producer": "features.parent_candle.ParentCandleBuilder",
+      "rule": "W1",
+      "parent": "M15",
+      "parent_sha256": "dcaf88a76b927d530924be4dc1f8dda4fcba431725099a8db4f1dfd806e8a78b",
+      "derivation": "direct"
+    },
+    "MN1": {
+      "role": "projection",
+      "source": null,
+      "admitted": false,
+      "path": null,
+      "sha256": null,
+      "rows": null,
+      "start": null,
+      "end": null,
+      "producer": "features.parent_candle.ParentCandleBuilder",
+      "rule": "MN1",
+      "parent": "M15",
+      "parent_sha256": "dcaf88a76b927d530924be4dc1f8dda4fcba431725099a8db4f1dfd806e8a78b",
+      "derivation": "direct"
+    }
+  },
+  "forensic_paths": [
+    "data/XAUUSD_M15.csv"
+  ],
+  "load_policy": {
+    "require_hash_match": true,
+    "unbound_instruments": "path_passthrough",
+    "reject_forensic_as_canonical": true
+  },
+  "explicitly_not": [
+    "AUTHORITATIVE",
+    "VALIDATED",
+    "ECONOMICALLY_ADMISSIBLE",
+    "APPROVED"
+  ],
+  "notes": [
+    "Dataset Identity R3 multi-dataset extension (Phase 2 of the TV-forensic / constructor-trace comparison plan, 2026-09-03).",
+    "Fresh MT5 fetch (ICMarketsSC-Demo, terminal build 6140) covering the tools/tv_forensic/ screenshot window 2026-07-07..2026-08-06, padded one day each side for the F-066 broker/UTC skew. dataset_integrity strict_fetch gate: APPROVE, 2300 rows, 0 tradable-bar gaps.",
+    "Independent-refetch check: 0/2116 field mismatches (OHLCV incl. volume) against the overlapping span of the older data/XAUUSD_M15.csv one-month export -- that file is listed FORENSIC here so it is never mistaken for this admitted corpus.",
+    "clock_basis is broker_local (F-066) -- do not launder to UTC. volume_semantic is TICK_VOLUME_APPROXIMATE per F-099's measured verdict on the same terminal/producer family, NOT re-derived for this specific window (BC-4 evidence is scoped to the admitted Phase-1 hash and does NOT transfer here as a proof, only as the honest expected value).",
+    "decision_status is UNRESOLVED -- this window has never been through Phase-1-style validation. OHLCV_CLOSURE_STATUS remains BLOCKED:BC-1..BC-6 and is unaffected by this record.",
+    "Parent CRT population is derived_h4: ParentCandleBuilder(rule=H4) on this admitted M15, mirroring the Phase-1 record's star topology. No native HTF file exists for this window; none is forensic-listed because none was fetched.",
+    "legacy_rewrite_target is intentionally absent -- XAUUSD_MT5_PHASE1_20260521 remains the sole legacy rewrite target for bare XAUUSD_M15* requests; this record is addressed only by its explicit canonical_artifact.path."
+  ]
+}

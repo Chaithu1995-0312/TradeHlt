@@ -393,7 +393,7 @@ def api_reasoning(*args, **kwargs) -> str:
     text on any failure (matches §9.4 'none' behavior).
     """
     try:
-        from config_layer.llama_gate import llm_score  # noqa: F401
+        from config_layer.llm_inference_client import llm_score  # noqa: F401
         # Note: production llm_score returns a float — for narrative
         # reasoning we keep deterministic text and just confirm reachability.
         return deterministic_reasoning(*args, **kwargs)

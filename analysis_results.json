@@ -1,0 +1,745 @@
+{
+  "summary": {
+    "total_modules": 351,
+    "total_edges": 696,
+    "circular_dependencies": 5,
+    "packages": 36
+  },
+  "packages": {
+    "agent": {
+      "count": 19,
+      "modules": [
+        "agent",
+        "agent.agent_core",
+        "agent.audit",
+        "agent.cli",
+        "agent.executor",
+        "agent.findings_synthesizer",
+        "agent.groq_client",
+        "agent.intent_router",
+        "agent.log_query",
+        "agent.modes",
+        "agent.modes.copilot_mode",
+        "agent.modes.findings_mode",
+        "agent.modes.governance_mode",
+        "agent.modes.log_query_mode",
+        "agent.modes.pipeline_mode",
+        "agent.plan_compiler",
+        "agent.state",
+        "agent.tool_planner",
+        "agent.tool_registry"
+      ]
+    },
+    "analytics": {
+      "count": 5,
+      "modules": [
+        "analytics",
+        "analytics.clustering",
+        "analytics.metrics_oracle",
+        "analytics.performance",
+        "analytics.sl_tp_comparator"
+      ]
+    },
+    "bitnet": {
+      "count": 9,
+      "modules": [
+        "bitnet",
+        "bitnet._smoke_test",
+        "bitnet.bitnet_inference",
+        "bitnet.bitnet_runner",
+        "bitnet.forward_tester",
+        "bitnet.model_contract",
+        "bitnet.stability_checker",
+        "bitnet.zone_cosine_searcher",
+        "bitnet.zone_validator"
+      ]
+    },
+    "cognitive": {
+      "count": 2,
+      "modules": [
+        "cognitive",
+        "cognitive.cognitive_bus"
+      ]
+    },
+    "config_layer": {
+      "count": 22,
+      "modules": [
+        "config_layer",
+        "config_layer.config_builder",
+        "config_layer.config_validator",
+        "config_layer.crt_engine_v2",
+        "config_layer.crt_gaussian_scorer",
+        "config_layer.crt_sweep_taxonomy",
+        "config_layer.execution_planner",
+        "config_layer.goal_schema",
+        "config_layer.goal_validator",
+        "config_layer.insight_reporter",
+        "config_layer.llm_inference_client",
+        "config_layer.llm_narrative",
+        "config_layer.llm_scorer",
+        "config_layer.market_router",
+        "config_layer.production_config",
+        "config_layer.rr",
+        "config_layer.rr.rr_dataset_builder",
+        "config_layer.rr.rr_fusion",
+        "config_layer.rr.rr_pattern_miner",
+        "config_layer.state_contract",
+        "config_layer.state_contract_loader",
+        "config_layer.state_topology"
+      ]
+    },
+    "control_plane": {
+      "count": 11,
+      "modules": [
+        "control_plane",
+        "control_plane.code_context_extractor",
+        "control_plane.context_report",
+        "control_plane.cp_types",
+        "control_plane.dashboard_api",
+        "control_plane.dot_graph_context",
+        "control_plane.jobs",
+        "control_plane.monitors",
+        "control_plane.registry",
+        "control_plane.report_api",
+        "control_plane.server"
+      ]
+    },
+    "core": {
+      "count": 20,
+      "modules": [
+        "core",
+        "core.acceptance_controller",
+        "core.backtest_port",
+        "core.collector",
+        "core.convergence_controller",
+        "core.decision_engine",
+        "core.dynamic_threshold",
+        "core.engine_runner",
+        "core.feature_store",
+        "core.fusion_engine",
+        "core.gate_intelligence",
+        "core.governance_mode",
+        "core.hierarchical_meta_fusion",
+        "core.model_registry",
+        "core.regime_governor",
+        "core.signal_audit",
+        "core.signal_belief_tracker",
+        "core.types",
+        "core.ultron_risk_gate",
+        "core.ultron_risk_gate_wrapper"
+      ]
+    },
+    "data_ingestion": {
+      "count": 6,
+      "modules": [
+        "data_ingestion",
+        "data_ingestion.dataset_integrity",
+        "data_ingestion.historical_fetcher",
+        "data_ingestion.ohlcv_schema",
+        "data_ingestion.session_autoderive",
+        "data_ingestion.xauusd_phase1_candidate"
+      ]
+    },
+    "engines": {
+      "count": 12,
+      "modules": [
+        "engines",
+        "engines.crt_engine",
+        "engines.gaussian_engine",
+        "engines.heuristic_gaussian_engine",
+        "engines.live_engine",
+        "engines.llm_engine",
+        "engines.ml_gaussian_engine",
+        "engines.rr_engine",
+        "engines.scoring_engine",
+        "engines.tradenet_meta_engine",
+        "engines.trap_validator_engine",
+        "engines.zone_gate_engine"
+      ]
+    },
+    "events": {
+      "count": 2,
+      "modules": [
+        "events",
+        "events.event_fabric"
+      ]
+    },
+    "execution": {
+      "count": 5,
+      "modules": [
+        "execution",
+        "execution.alert_manager",
+        "execution.execution_intent_v1_0",
+        "execution.loop",
+        "execution.override_handler"
+      ]
+    },
+    "expansion": {
+      "count": 6,
+      "modules": [
+        "expansion",
+        "expansion.config_mutator",
+        "expansion.evaluator",
+        "expansion.expansion_engine",
+        "expansion.llm_pattern_extractor",
+        "expansion.policy_schema"
+      ]
+    },
+    "features": {
+      "count": 20,
+      "modules": [
+        "features",
+        "features.candle_math",
+        "features.causal_structure",
+        "features.crt_feature_builder",
+        "features.dataset_builder",
+        "features.dataset_validator",
+        "features.derived_math",
+        "features.feature_builder",
+        "features.feature_identity",
+        "features.feature_monitor",
+        "features.feature_pipeline",
+        "features.feature_schema",
+        "features.fm_resolve",
+        "features.formula_registry",
+        "features.registry",
+        "features.registry._loader",
+        "features.registry.composition_registry",
+        "features.registry.derived_registry",
+        "features.registry.primitive_registry",
+        "features.schema_validator"
+      ]
+    },
+    "feedback": {
+      "count": 2,
+      "modules": [
+        "feedback",
+        "feedback.ai_feedback"
+      ]
+    },
+    "governance": {
+      "count": 14,
+      "modules": [
+        "governance",
+        "governance.bitnet_governance_executor",
+        "governance.config_integrity",
+        "governance.expansion_integration",
+        "governance.findings_export",
+        "governance.framework_registry",
+        "governance.hypothesis_registry",
+        "governance.multi_strategy_validator",
+        "governance.orchestrator",
+        "governance.portfolio_validation",
+        "governance.promotion_manager",
+        "governance.reflection_buffer_advanced",
+        "governance.shadow_promotion_gate",
+        "governance.strategy_backtest"
+      ]
+    },
+    "inout": {
+      "count": 5,
+      "modules": [
+        "inout",
+        "inout.alphavantage_candle_fetcher",
+        "inout.hummingbot_candle_fetcher",
+        "inout.mt5_candle_fetcher",
+        "inout.perp_funding_fetcher"
+      ]
+    },
+    "interpreters": {
+      "count": 6,
+      "modules": [
+        "interpreters",
+        "interpreters.adapter",
+        "interpreters.contract",
+        "interpreters.point_and_figure",
+        "interpreters.reference",
+        "interpreters.regime_observer"
+      ]
+    },
+    "journal": {
+      "count": 6,
+      "modules": [
+        "journal",
+        "journal.schema",
+        "journal.trade_execution_link_v1_0",
+        "journal.trade_identity_v1_0",
+        "journal.trade_logger",
+        "journal.trade_provenance_v1_0"
+      ]
+    },
+    "live": {
+      "count": 3,
+      "modules": [
+        "live",
+        "live.mt5_bridge",
+        "live.telegram_bridge"
+      ]
+    },
+    "llm_research": {
+      "count": 5,
+      "modules": [
+        "llm_research",
+        "llm_research.evaluator",
+        "llm_research.forward_tester",
+        "llm_research.pattern_extractor",
+        "llm_research.policy_builder"
+      ]
+    },
+    "monitoring": {
+      "count": 2,
+      "modules": [
+        "monitoring",
+        "monitoring.health_checker"
+      ]
+    },
+    "msip": {
+      "count": 6,
+      "modules": [
+        "msip",
+        "msip.disagreement",
+        "msip.interpretation_config",
+        "msip.isolation",
+        "msip.market_state_vector",
+        "msip.shadow_emitter"
+      ]
+    },
+    "multi_llm": {
+      "count": 5,
+      "modules": [
+        "multi_llm",
+        "multi_llm.context_pack",
+        "multi_llm.discussion",
+        "multi_llm.tokens",
+        "multi_llm.turn_ledger"
+      ]
+    },
+    "portfolio": {
+      "count": 5,
+      "modules": [
+        "portfolio",
+        "portfolio.allocator",
+        "portfolio.capital_policy",
+        "portfolio.correlation_engine",
+        "portfolio.exposure_tracker"
+      ]
+    },
+    "regime": {
+      "count": 4,
+      "modules": [
+        "regime",
+        "regime.config_router",
+        "regime.market_state_cluster_engine",
+        "regime.regime_classifier"
+      ]
+    },
+    "replay": {
+      "count": 6,
+      "modules": [
+        "replay",
+        "replay.replay_drift_governor",
+        "replay.replay_memory_engine",
+        "replay.replay_similarity_index",
+        "replay.timing_advisor",
+        "replay.timing_reconstructor"
+      ]
+    },
+    "research": {
+      "count": 77,
+      "modules": [
+        "research",
+        "research.adapters",
+        "research.adapters.spine_signal_source",
+        "research.adapters.structural_event_source",
+        "research.candle_state",
+        "research.candle_state.encoder",
+        "research.candle_state.info_robustness",
+        "research.candle_state.m5_incremental",
+        "research.candle_state.mtf_conjunction",
+        "research.candle_state.reporting",
+        "research.candle_state.transition_target",
+        "research.cli",
+        "research.conditional_entropy_grid",
+        "research.config",
+        "research.contracts",
+        "research.controls",
+        "research.controls.always_long",
+        "research.controls.random_baseline",
+        "research.costs",
+        "research.cross_sectional",
+        "research.exit_grid",
+        "research.forensics",
+        "research.hypotheses",
+        "research.hypotheses.compression_box_straddle",
+        "research.hypotheses.compression_breakout",
+        "research.hypotheses.expansion_breakout",
+        "research.hypotheses.mean_reversion",
+        "research.hypotheses.spine_hypothesis",
+        "research.hypotheses.weekly_sweep_reversal",
+        "research.ic002_entry_evolution",
+        "research.ic002_entry_evolution.build_trajectories",
+        "research.ic002_entry_evolution.evaluate_separation",
+        "research.ic002_entry_evolution.io_util",
+        "research.ic002_entry_evolution.schema",
+        "research.ic003_shapes",
+        "research.ic003_shapes.build_library",
+        "research.ic003_shapes.schema",
+        "research.ic003b_sequence_geometry",
+        "research.ic003b_sequence_geometry.build_all",
+        "research.ic003b_sequence_geometry.cluster_dtw",
+        "research.ic003b_sequence_geometry.cluster_euclid",
+        "research.ic003b_sequence_geometry.continuum",
+        "research.ic003b_sequence_geometry.dtw",
+        "research.ic003b_sequence_geometry.schema",
+        "research.ic003b_sequence_geometry.summarize",
+        "research.indicators",
+        "research.measurement",
+        "research.measurement.forward_walk",
+        "research.measurement.metrics",
+        "research.process_characterization",
+        "research.process_diagnostics",
+        "research.provenance",
+        "research.qualification",
+        "research.regime_conditioning",
+        "research.registry",
+        "research.resample",
+        "research.runner",
+        "research.secondlow_v1",
+        "research.secondlow_v1.corpus",
+        "research.secondlow_v1.depth_metrics",
+        "research.secondlow_v1.detector",
+        "research.secondlow_v1.regime_metrics",
+        "research.selection_effect",
+        "research.structural_asymmetry",
+        "research.synthetic",
+        "research.synthetic.ontology",
+        "research.synthetic.stories",
+        "research.synthetic.stories.breakout",
+        "research.synthetic.stories.liquidity_reversal",
+        "research.synthetic.stories.range_rotation",
+        "research.synthetic.stories.trend_continuation",
+        "research.synthetic.story_builder",
+        "research.synthetic.story_registry",
+        "research.synthetic.story_spec",
+        "research.weekly_sweep",
+        "research.weekly_sweep.weekly_range",
+        "research.zone_label_audit"
+      ]
+    },
+    "rounded": {
+      "count": 1,
+      "modules": [
+        "rounded"
+      ]
+    },
+    "runtime": {
+      "count": 10,
+      "modules": [
+        "runtime",
+        "runtime.analyze_fusion_shadow",
+        "runtime.backtest_bitnet",
+        "runtime.backtest_v2",
+        "runtime.baseline_capture",
+        "runtime.crt_baseline_trace",
+        "runtime.crt_fail_reason_counters",
+        "runtime.exit_model_band",
+        "runtime.live_engine_hook",
+        "runtime.unified_replay_harness"
+      ]
+    },
+    "scanner": {
+      "count": 6,
+      "modules": [
+        "scanner",
+        "scanner.ranker",
+        "scanner.scanner",
+        "scanner.signal_pool",
+        "scanner.spine_adapter",
+        "scanner.universe"
+      ]
+    },
+    "search": {
+      "count": 2,
+      "modules": [
+        "search",
+        "search.regime_weight_searcher"
+      ]
+    },
+    "strategies": {
+      "count": 16,
+      "modules": [
+        "strategies",
+        "strategies.base_strategy",
+        "strategies.intent_builder",
+        "strategies.s01_crt_wrapper",
+        "strategies.s02_mean_reversion",
+        "strategies.s03_breakout",
+        "strategies.s04_stat_arb",
+        "strategies.s05_grid",
+        "strategies.s06_scalping",
+        "strategies.s07_news_sentiment",
+        "strategies.s08_ml_ensemble",
+        "strategies.s09_pattern_recog",
+        "strategies.s10_trap_strategy",
+        "strategies.strategy_intent",
+        "strategies.strategy_orchestrator",
+        "strategies.strategy_result"
+      ]
+    },
+    "training": {
+      "count": 8,
+      "modules": [
+        "training",
+        "training.evaluator",
+        "training.phase5_calibration",
+        "training.stage1_dataset_builder",
+        "training.trade_net_v2",
+        "training.train_pipeline",
+        "training.trainer",
+        "training.training_trigger"
+      ]
+    },
+    "uat": {
+      "count": 4,
+      "modules": [
+        "uat",
+        "uat.kill_switch",
+        "uat.monte_carlo",
+        "uat.uat_runner"
+      ]
+    },
+    "ui": {
+      "count": 1,
+      "modules": [
+        "ui"
+      ]
+    },
+    "utils": {
+      "count": 18,
+      "modules": [
+        "utils",
+        "utils.config_dumper",
+        "utils.console_safe",
+        "utils.engine_telemetry",
+        "utils.episode_summarizer",
+        "utils.integrity_events",
+        "utils.jsonl_writer",
+        "utils.llm_logger",
+        "utils.log_identity",
+        "utils.log_index_writer",
+        "utils.logging_config",
+        "utils.pattern_hasher",
+        "utils.registry_refresh",
+        "utils.run_manifest",
+        "utils.sweep_trace_logger",
+        "utils.trade_logger",
+        "utils.validation_contract",
+        "utils.zone_schema_migrator"
+      ]
+    }
+  },
+  "critical_modules": {
+    "most_depended_on": [
+      [
+        "config_layer.production_config",
+        54
+      ],
+      [
+        "utils.logging_config",
+        36
+      ],
+      [
+        "features.feature_schema",
+        35
+      ],
+      [
+        "utils.integrity_events",
+        18
+      ],
+      [
+        "research.contracts",
+        18
+      ],
+      [
+        "research.indicators",
+        17
+      ],
+      [
+        "config_layer.crt_engine_v2",
+        16
+      ],
+      [
+        "strategies.strategy_result",
+        15
+      ],
+      [
+        "runtime.backtest_v2",
+        14
+      ],
+      [
+        "strategies.base_strategy",
+        12
+      ],
+      [
+        "data_ingestion.ohlcv_schema",
+        10
+      ],
+      [
+        "events.event_fabric",
+        10
+      ],
+      [
+        "research.registry",
+        10
+      ],
+      [
+        "config_layer.llm_inference_client",
+        9
+      ],
+      [
+        "features.dataset_builder",
+        9
+      ]
+    ],
+    "most_dependent": [
+      [
+        "runtime.backtest_v2",
+        24
+      ],
+      [
+        "core.engine_runner",
+        20
+      ],
+      [
+        "runtime.live_engine_hook",
+        19
+      ],
+      [
+        "strategies.strategy_orchestrator",
+        16
+      ],
+      [
+        "strategies",
+        13
+      ],
+      [
+        "config_layer.crt_engine_v2",
+        12
+      ],
+      [
+        "research.synthetic.story_builder",
+        12
+      ],
+      [
+        "control_plane.server",
+        10
+      ],
+      [
+        "research.cli",
+        9
+      ],
+      [
+        "agent.agent_core",
+        8
+      ],
+      [
+        "agent.modes.copilot_mode",
+        8
+      ],
+      [
+        "research.runner",
+        8
+      ],
+      [
+        "training.train_pipeline",
+        8
+      ],
+      [
+        "engines.live_engine",
+        7
+      ],
+      [
+        "research.forensics",
+        7
+      ]
+    ]
+  },
+  "cycles": [
+    [
+      "config_layer.llm_inference_client",
+      "config_layer.llm_narrative",
+      "config_layer.llm_inference_client"
+    ],
+    [
+      "config_layer.llm_inference_client",
+      "config_layer.llm_scorer",
+      "config_layer.llm_inference_client"
+    ],
+    [
+      "config_layer.crt_engine_v2",
+      "config_layer.state_contract_loader",
+      "config_layer.crt_engine_v2"
+    ],
+    [
+      "config_layer.crt_engine_v2",
+      "config_layer.state_topology",
+      "config_layer.crt_engine_v2"
+    ],
+    [
+      "training.trainer",
+      "training.trade_net_v2",
+      "training.trainer"
+    ]
+  ],
+  "flows": {
+    "agent": {
+      "modules": 17,
+      "internal_edges": 20,
+      "boundary_edges": 0,
+      "total_edges": 20,
+      "isolation_score": 1.0
+    },
+    "control_plane": {
+      "modules": 17,
+      "internal_edges": 19,
+      "boundary_edges": 0,
+      "total_edges": 19,
+      "isolation_score": 1.0
+    },
+    "governance": {
+      "modules": 30,
+      "internal_edges": 31,
+      "boundary_edges": 0,
+      "total_edges": 31,
+      "isolation_score": 1.0
+    },
+    "research": {
+      "modules": 32,
+      "internal_edges": 59,
+      "boundary_edges": 0,
+      "total_edges": 59,
+      "isolation_score": 1.0
+    },
+    "runtime": {
+      "modules": 45,
+      "internal_edges": 58,
+      "boundary_edges": 0,
+      "total_edges": 58,
+      "isolation_score": 1.0
+    },
+    "telemetry": {
+      "modules": 36,
+      "internal_edges": 35,
+      "boundary_edges": 0,
+      "total_edges": 35,
+      "isolation_score": 1.0
+    },
+    "training": {
+      "modules": 23,
+      "internal_edges": 43,
+      "boundary_edges": 0,
+      "total_edges": 43,
+      "isolation_score": 1.0
+    }
+  }
+}

@@ -25,7 +25,7 @@ Usage:
     cfg = get_prod_config("BTCUSDT")  # CRYPTO profile + prod overrides
 
     # Historical replay
-    cfg = load_prod_config_from_registry("v1_multi_2026_03", "EURUSD")
+    cfg = load_prod_config_from_registry("v2_htfcrt_2026_08", "XAUUSD")  # incomplete configs refuse (EPIC-84)
 ═══════════════════════════════════════════════════════════════════════════════
 """
 
@@ -38,34 +38,49 @@ from datetime import time as dt_time
 from pathlib import Path
 from typing import Optional
 
-from config_layer.config_builder import ConfigBuilder
-from config_layer.crt_engine_v2 import CRTConfig
+import logging as _logging
 
+from config_layer.config_builder import ConfigBuilder, _validate_override_keys
+from config_layer.state_identity import CRTConfig
+from config_layer.strict_config import ConfigKeyMissingError, require_section
+
+_log = _logging.getLogger(__name__)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # PRODUCTION VERSION
-# Resolved automatically from configs/production/ACTIVE_VERSION (pointer file
-# written by PromotionManager._write_to_registry on every promotion).
-# Hardcoded string below is the fallback for fresh checkouts with no pointer.
+# Resolved from configs/production/ACTIVE_VERSION (pointer file written by
+# PromotionManager on every successful promotion). Raises RuntimeError if the
+# file is absent or empty — never silently falls back to a hardcoded version.
 # ─────────────────────────────────────────────────────────────────────────────
 
 PRODUCTION_REGISTRY_DIR: str = "configs/production"
 
-_FALLBACK_PROD_VERSION: str = "v1_multi_2026_03"
 _ACTIVE_VERSION_FILE: Path = Path(PRODUCTION_REGISTRY_DIR) / "ACTIVE_VERSION"
 
-def _resolve_prod_version() -> str:
-    """Return version from pointer file, or fall back to hardcoded default."""
-    try:
-        if _ACTIVE_VERSION_FILE.exists():
-            resolved = _ACTIVE_VERSION_FILE.read_text(encoding="utf-8").strip()
-            if resolved:
-                return resolved
-    except OSError:
-        pass
-    return _FALLBACK_PROD_VERSION
 
-PROD_VERSION: str = _resolve_prod_version()
+def get_active_version() -> str:
+    """Read version from ACTIVE_VERSION pointer file. Raises RuntimeError if missing/empty."""
+    if not _ACTIVE_VERSION_FILE.exists():
+        raise RuntimeError(
+            "No active version pointer found at configs/production/ACTIVE_VERSION. "
+            "Run promotion_manager.py promote first."
+        )
+    try:
+        resolved = _ACTIVE_VERSION_FILE.read_text(encoding="utf-8").strip()
+    except OSError as exc:
+        raise RuntimeError(
+            f"Failed to read configs/production/ACTIVE_VERSION: {exc}"
+        ) from exc
+    if not resolved:
+        raise RuntimeError(
+            "configs/production/ACTIVE_VERSION is empty. "
+            "Run promotion_manager.py promote first."
+        )
+    _log.info("Active production config: %s", resolved)
+    return resolved
+
+
+PROD_VERSION: str = get_active_version()
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -123,6 +138,134 @@ def _assert_registry_exists(path: Path) -> None:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# SESSION-OVERRIDE RESOLVERS  (single source of truth — shared by the registry
+# loader, ConfigValidator, and the analysis sweeps)
+#
+# Instrument-scoped session expansion lets BNBUSDT run +ASIA +OFF_SESSION without
+# touching ETH/BTC. See plan: trd-m6-stays-downstream.
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _canon_session(raw: str) -> str:
+    """
+    Canonicalize a session label to the engine-facing form.
+
+    The engine compares against `session_windows` keys ("LONDON"/"NEWYORK"/
+    "ASIA"/"OVERLAP") which strip underscores, BUT the off-session sentinel must
+    stay "OFF_SESSION" — "OFFSESSION" would never match and off-session trades
+    would be silently rejected.
+    """
+    s = str(raw).upper()
+    if s.replace("_", "") == "OFFSESSION":
+        return "OFF_SESSION"
+    return s.replace("_", "")
+
+
+def resolve_allowed_sessions(
+    engine_runner_cfg: Optional[dict], instrument: str
+) -> tuple[str, ...]:
+    """
+    Resolve the canonical allowed-session tuple for an instrument.
+
+    A per-instrument entry in `engine_runner.allowed_sessions_overrides` (matched
+    case-insensitively) wins over the global `engine_runner.allowed_sessions`.
+
+    EPIC-84 (no defaults): the section, the per-symbol map (`{}` = no symbol differs) and the
+    global list are all REQUIRED -- missing raises ConfigKeyMissingError (it used to return
+    None so the caller kept whatever sessions it already had).
+    """
+    from config_layer.strict_config import ConfigKeyMissingError, require
+
+    consumer = "resolve_allowed_sessions"
+    if not isinstance(engine_runner_cfg, dict):
+        raise ConfigKeyMissingError(["<section>"], section="engine_runner", consumer=consumer)
+    overrides = require(engine_runner_cfg, "allowed_sessions_overrides",
+                        section_name="engine_runner", consumer=consumer)
+    if not isinstance(overrides, dict):
+        raise TypeError("engine_runner.allowed_sessions_overrides must be a mapping")
+    lut = {str(k).upper(): v for k, v in overrides.items()}
+    if str(instrument).upper() in lut:
+        return tuple(_canon_session(s) for s in lut[str(instrument).upper()])
+    return tuple(_canon_session(s) for s in require(
+        engine_runner_cfg, "allowed_sessions", section_name="engine_runner", consumer=consumer))
+
+
+def resolve_breakout_disp_threshold(
+    crt_engine_cfg: Optional[dict], instrument: str, params: Optional[dict] = None
+) -> float:
+    """
+    Resolve the per-symbol BREAKOUT displacement threshold.
+
+    A per-instrument entry in `crt_engine.breakout_disp_threshold_overrides`
+    (case-insensitive) wins over the global `crt_engine.breakout_disp_threshold`.
+    Shared by the CRT engine and ExecutionPlanner so backtest and live can never
+    diverge on intent classification.
+
+    EPIC-84 (no defaults; user decision O1 2026-09-28): BOTH keys are REQUIRED in crt_engine:
+    `breakout_disp_threshold_overrides` (a mapping, `{}` = no symbol differs) and the global
+    `breakout_disp_threshold`. Missing -> ConfigKeyMissingError (it used to return None so each
+    caller picked its own 1.5). The global value follows the loader's precedence: a `params`
+    entry wins over `crt_engine`. The loader writes this result into CRTConfig, so the CRT
+    engine and the ExecutionPlanner use the identical per-symbol value.
+    """
+    from config_layer.strict_config import ConfigKeyMissingError, require
+
+    consumer = "resolve_breakout_disp_threshold"
+    if not isinstance(crt_engine_cfg, dict):
+        raise ConfigKeyMissingError(["<section>"], section="crt_engine", consumer=consumer)
+    overrides = require(crt_engine_cfg, "breakout_disp_threshold_overrides",
+                        section_name="crt_engine", consumer=consumer)
+    if not isinstance(overrides, dict):
+        raise TypeError("crt_engine.breakout_disp_threshold_overrides must be a mapping")
+    lut = {str(k).upper(): v for k, v in overrides.items()}
+    if str(instrument).upper() in lut:
+        return float(lut[str(instrument).upper()])
+    if isinstance(params, dict) and "breakout_disp_threshold" in params:
+        return float(params["breakout_disp_threshold"])
+    return float(require(crt_engine_cfg, "breakout_disp_threshold", section_name="crt_engine",
+                         consumer=consumer))
+
+
+def resolve_instrument_overrides(
+    crt_engine_cfg: Optional[dict], instrument: str
+) -> dict:
+    """
+    Resolve per-instrument CRTConfig field overrides.
+
+    A per-instrument entry in `crt_engine.instrument_overrides` (matched
+    case-insensitively) supplies CRTConfig field values that win over the global
+    `params`/`crt_engine` config for that instrument ONLY. Keys are validated
+    against the CRTConfig schema (fail-fast on typos); values are coerced to
+    CRTConfig types (e.g. conf_weights list → tuple) via `_coerce_crt_engine`.
+
+    EPIC-84 (no defaults): `crt_engine.instrument_overrides` is REQUIRED (`{}` = no symbol
+    differs); missing raises ConfigKeyMissingError. Returns {} only when the declared map has
+    no entry for this instrument.
+
+    This is the governed per-instrument deployment vehicle — the SAME pattern as
+    `resolve_allowed_sessions`, and the ONLY supported place for instrument-scoped
+    CRT param divergence. Never hardcode per-instrument params in market_router.
+    """
+    from config_layer.strict_config import ConfigKeyMissingError, require
+
+    consumer = "resolve_instrument_overrides"
+    if not isinstance(crt_engine_cfg, dict):
+        raise ConfigKeyMissingError(["<section>"], section="crt_engine", consumer=consumer)
+    overrides = require(crt_engine_cfg, "instrument_overrides",
+                        section_name="crt_engine", consumer=consumer)
+    if not isinstance(overrides, dict):
+        raise TypeError("crt_engine.instrument_overrides must be a mapping")
+    lut = {str(k).upper(): v for k, v in overrides.items()}
+    if str(instrument).upper() not in lut:
+        return {}
+    hit = lut[str(instrument).upper()]
+    if not isinstance(hit, dict):
+        raise TypeError(f"crt_engine.instrument_overrides[{instrument!r}] must be a mapping")
+    coerced = _coerce_crt_engine(hit)
+    _validate_override_keys(coerced)  # ValueError on unknown CRTConfig field
+    return coerced
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # PUBLIC API
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -166,8 +309,29 @@ def get_prod_metadata() -> dict:
     """
     registry_path = _get_registry_path(PROD_VERSION)
     _assert_registry_exists(registry_path)
-    with open(registry_path) as f:
+    with open(registry_path, encoding="utf-8") as f:
         return json.load(f)
+
+
+def _require_crt_complete(crt_engine: dict, params: dict, engine_runner: dict, *,
+                          consumer: str, version: str, source: str) -> None:
+    """Raise ConfigKeyMissingError naming every CRTConfig field not declared in its owning
+    section (crt_engine / params / engine_runner). Reuses crt_config_completeness."""
+    from config_layer.crt_config_completeness import (
+        missing_externally_owned_fields,
+        missing_nonscalar_fields,
+        missing_scalar_fields,
+    )
+
+    missing = sorted(
+        {f"crt_engine|params:{k}" for k in missing_scalar_fields(crt_engine, params)}
+        | {f"crt_engine:{k}" for k in missing_nonscalar_fields(crt_engine)}
+        | {f"engine_runner:{k}" for k in missing_externally_owned_fields(engine_runner)}
+    )
+    if missing:
+        raise ConfigKeyMissingError(
+            missing, section="CRTConfig", consumer=consumer, version=version, source=source,
+        )
 
 
 def load_prod_config_from_registry(
@@ -206,10 +370,15 @@ def load_prod_config_from_registry(
     registry_path = _get_registry_path(version, registry_dir)
     _assert_registry_exists(registry_path)
 
-    with open(registry_path) as f:
+    with open(registry_path, encoding="utf-8") as f:
         data = json.load(f)
 
-    params = data.get("params", {})
+    if "params" not in data:
+        raise ConfigKeyMissingError(
+            ["params"], section="<root>", consumer="load_prod_config_from_registry",
+            version=version, source=str(registry_path),
+        )
+    params = data["params"]
     if not params:
         raise RuntimeError(
             f"Production registry {registry_path} has no 'params' key.\n"
@@ -222,23 +391,71 @@ def load_prod_config_from_registry(
         if stored_hash:
             _verify_config_hash(params, stored_hash)
         else:
-            warnings.warn(
-                f"Registry {registry_path} has no 'config_hash' field. "
-                "Run promotion_manager.py to regenerate with hash.",
-                stacklevel=2,
+            raise RuntimeError(
+                f"Registry {registry_path} has no 'config_hash' field — "
+                "refusing to load an unhashed config. "
+                "Run promotion_manager.py to regenerate with hash."
             )
 
     # ── Merge crt_engine section into overrides ────────────────────────────
     # crt_engine.* fields map 1-to-1 with CRTConfig fields. params section
     # wins over crt_engine defaults (tuned params take precedence).
-    crt_engine = data.get("crt_engine", {})
-    if crt_engine:
-        coerced = _coerce_crt_engine(crt_engine)
-        merged = {**coerced, **params}   # params (tuned) wins over crt_engine defaults
-    else:
-        merged = params
+    # EPIC-84: no defaults, no fallbacks. Both sections are required, and every CRTConfig
+    # field must be declared (crt_engine / params / engine_runner) before the build, so a
+    # missing key fails closed here instead of silently taking the CRTConfig code value.
+    _where = dict(consumer="load_prod_config_from_registry", version=version,
+                  source=str(registry_path))
+    crt_engine = require_section(data, "crt_engine", **_where)
+    _er = require_section(data, "engine_runner", **_where)
+    _require_crt_complete(crt_engine, params, _er, **_where)
+    coerced = _coerce_crt_engine(crt_engine)
+    # `instrument_overrides` is a meta sub-dict (handled by
+    # resolve_instrument_overrides below from the raw crt_engine), NOT a
+    # CRTConfig field — strip it so ConfigBuilder key-validation doesn't reject.
+    coerced.pop("instrument_overrides", None)
+    # `breakout_disp_threshold_overrides` is a per-symbol meta map (O1, mandatory): resolved
+    # below into CRTConfig.breakout_disp_threshold, never a CRTConfig field itself.
+    coerced.pop("breakout_disp_threshold_overrides", None)
+    merged = {**coerced, **params}   # params (tuned) wins over crt_engine
+    merged["breakout_disp_threshold"] = resolve_breakout_disp_threshold(
+        crt_engine, instrument, params)
 
-    return ConfigBuilder.build(instrument, overrides=merged)
+    # ── Resolve allowed_sessions (global + per-instrument override) ─────────
+    # JSON stores lowercase ("london", "new_york"); the engine wants canonical
+    # keys ("LONDON", "NEWYORK", "OFF_SESSION"). resolve_allowed_sessions is the
+    # single source of truth shared with ConfigValidator and the sweeps.
+    merged["allowed_sessions"] = resolve_allowed_sessions(_er, instrument)
+
+    # ── Per-instrument CRT overrides (governed; applied LAST so they win) ────
+    # The ONLY supported place for instrument-scoped CRT param divergence.
+    # Merged after params/crt_engine/allowed_sessions so they are never
+    # silently overwritten (the failure mode of hardcoding in market_router).
+    _inst_over = resolve_instrument_overrides(crt_engine, instrument)
+    if _inst_over:
+        if ("breakout_disp_threshold" in _inst_over
+                and float(_inst_over["breakout_disp_threshold"])
+                != merged["breakout_disp_threshold"]):
+            raise ValueError(
+                f"{registry_path}: breakout_disp_threshold for {instrument} is set by both "
+                f"crt_engine.instrument_overrides ({_inst_over['breakout_disp_threshold']}) and "
+                f"the resolved breakout_disp_threshold_overrides/global "
+                f"({merged['breakout_disp_threshold']}). Declare it in one place (EPIC-84 O1)."
+            )
+        merged.update(_inst_over)
+
+    from config_layer.crt_config_provenance import ConstructionMode
+
+    # P1 observe: stamp PRODUCTION_MERGED directly (no intermediate ROUTER_BASE warning).
+    return ConfigBuilder.build(
+        instrument,
+        overrides=merged,
+        stamp_mode=ConstructionMode.PRODUCTION_MERGED,
+        stamp_version=version,
+        stamp_note=(
+            "load_prod_config_from_registry — crt_engine∪params (params win)"
+            "∪instrument_overrides"
+        ),
+    )
 
 
 def _coerce_crt_engine(raw: dict) -> dict:
@@ -274,7 +491,7 @@ def get_prod_section(section: str, version: Optional[str] = None) -> dict:
     """
     Return a raw dict section from the production config JSON.
 
-    Used by subsystems (rr_pattern_miner, crt_gaussian_scorer, llama_gate, etc.)
+    Used by subsystems (rr_trained, crt_gaussian_scorer, llama_gate, etc.)
     to load their own config blocks without going through CRTConfig.
 
     Parameters
@@ -298,7 +515,7 @@ def get_prod_section(section: str, version: Optional[str] = None) -> dict:
     v = version or PROD_VERSION
     registry_path = _get_registry_path(v)
     _assert_registry_exists(registry_path)
-    with open(registry_path) as f:
+    with open(registry_path, encoding="utf-8") as f:
         data = json.load(f)
     if section not in data:
         raise RuntimeError(
@@ -307,6 +524,35 @@ def get_prod_section(section: str, version: Optional[str] = None) -> dict:
             f"Add the missing section to v1_multi_2026_03.json."
         )
     return data[section]
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# FULL CONFIG ACCESSOR
+# ─────────────────────────────────────────────────────────────────────────────
+
+def get_full_config_dict(version: Optional[str] = None) -> dict:
+    """
+    Return the entire production registry JSON for the given version.
+
+    Unlike get_prod_section(), which fetches one section, this returns every
+    top-level key (params, engine_runner, crt_engine, fusion_engine, …) as a
+    single dict.  Useful for config dumps and audit tooling.
+
+    Parameters
+    ----------
+    version : str | None
+        Config version string.  Defaults to PROD_VERSION.
+
+    Returns
+    -------
+    dict
+        Raw registry JSON (no hash verification — audit-only path).
+    """
+    v = version or PROD_VERSION
+    registry_path = _get_registry_path(v)
+    _assert_registry_exists(registry_path)
+    with open(registry_path, encoding="utf-8") as f:
+        return json.load(f)
 
 
 # ─────────────────────────────────────────────────────────────────────────────

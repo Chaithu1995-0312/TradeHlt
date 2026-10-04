@@ -1,0 +1,29 @@
+{
+  "change_id": "CH-analytics-lineage-semantics",
+  "date_utc": "2026-09-07",
+  "objective": "Freeze lineage semantics doctrines: L-001 definitions, evidence taxonomy (CORPUS_VERIFIED/CODE_VERIFIED/DECLARED_ONLY), attribution-eligibility. Phase B measurement proves variance LOCALIZED to opportunities; global 4-column lineage schema falsified. Adds evidence-class + eligibility doctrine to lineage registry header. NO schema/column/row/src changes.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY"
+  ],
+  "change_class_rationale": "Decision sheet + header doctrine notes only; no behavior surface. 12 UNKNOWN cells untouched; 4-column schema + multi-producer exception explicitly NOT promoted (measured-but-held).",
+  "affected_files": [
+    "docs/design/context-finding-odp/ANALYTICS_LINEAGE_SEMANTICS_DECISION.md",
+    "docs/governance/ANALYTICS_LINEAGE_REGISTRY.md",
+    "docs/governance/build_manifests/CH-analytics-lineage-semantics.impact.json",
+    "docs/governance/build_manifests/CH-analytics-lineage-semantics.completion.json"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert decision sheet + lineage-registry doctrine notes in one commit; 268/268 maintained; 12 UNKNOWN cells remain unresolved (intended).",
+  "authority_granted": "User approved act mode: freeze L-001 defs + evidence taxonomy + attribution-eligibility; hold 4-column schema + multi-producer as measured-not-promoted.",
+  "authority_NOT_granted": "No attribution/causal-edge claim; no invert analytics-never-becomes-authority; no schema/column change; no new Parquet family; no promote opportunities.outcome to eligible.",
+  "production_behavior_changed": "NO"
+}

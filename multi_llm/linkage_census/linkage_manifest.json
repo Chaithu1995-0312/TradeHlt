@@ -1,0 +1,57 @@
+{
+  "counts": {
+    "ast_edges": 2144,
+    "call_edges": 65,
+    "config_edges": 1295,
+    "data_edges": 1557,
+    "existence_edges": 5061,
+    "layer_count": 11,
+    "modules": 1265,
+    "modules_by_class": {
+      "Bridge": 72,
+      "Hub": 20,
+      "Leaf": 292,
+      "Orphan": 340,
+      "Reachable": 181,
+      "Unreachable": 360
+    },
+    "reachable_modules": 610,
+    "stories": 719,
+    "story_dep_pairs": 22836,
+    "storys_by_class": {
+      "BridgeStory": 27,
+      "HubStory": 210,
+      "LeafStory": 75,
+      "OrphanStory": 333,
+      "ReachableStory": 2,
+      "UnreachableStory": 72
+    },
+    "support_edges": 5061
+  },
+  "frozen": true,
+  "manifest": "linkage_census/1",
+  "schema": "dependency-ontology/1",
+  "sha256": {
+    "docs/architecture/dependency-ontology.schema.json": "581b65e435617be0504bfa9766838fd6ea15e6ee972ee516a62f2f6ad79f7d46",
+    "multi_llm/bridge_storys.json": "d9494b8113e372751fdb30771c7f442b10713ce6e90abc5bc19dfbe2589a3da1",
+    "multi_llm/build_queue.jsonl": "58eab305bff0fb4b4844aa4104b1c4c4bf7adf63888d1ba29ee259339525e5bf",
+    "multi_llm/coverage_inventory.jsonl": "49cd26294e653d0aae28c8a4e0f606572f0b175fb2256d76bf33e59671572dc1",
+    "multi_llm/dependency_graph/ast_edges.jsonl": "168e534ac886d71b0b0077632d8d04b10a00ac98d1dbb53eb1dd50becec6ae12",
+    "multi_llm/dependency_graph/authority.schema.json": "581b65e435617be0504bfa9766838fd6ea15e6ee972ee516a62f2f6ad79f7d46",
+    "multi_llm/dependency_graph/call_edges.jsonl": "c4c272199181bf8103da659768031b4b99bdb3093a0adc10fe1ffe8d7215c6d7",
+    "multi_llm/dependency_graph/config_edges.jsonl": "b3cba39eec4e654883dcb3e4b0773e86bb8d7f4b461a75740d8573a657995ce5",
+    "multi_llm/dependency_graph/data_edges.jsonl": "2757a9a2a001325466e63e0f9ef4ab118175cfe3cb532f7e62a6aead03a9da63",
+    "multi_llm/dependency_graph/edges_existence.jsonl": "19b2e364ed4fce092fb75a5c13eea5d3a8c3a9a39d371f2ab0de5046458958a5",
+    "multi_llm/dependency_graph/edges_support.jsonl": "b49912384a55412c89357b57ae2c40715606b4cbdcc92662c423a33b9fb9424a",
+    "multi_llm/dependency_graph/runtime_reachability.jsonl": "d595c7882e4ccb2b9a4b15003e17d6af7485670472d18d25b74f4c601568d28b",
+    "multi_llm/file_linkage.jsonl": "a8056723c789e38354a402419167941e2b3b9fc4a41934919533b9ff47d87a23",
+    "multi_llm/hub_storys.json": "6c205c35e4c7cbd2be2b3e57c58fe819838abb53c074d9a2b67ebf0ad0b5cb15",
+    "multi_llm/layer_dependency_graph.jsonl": "83113455d17db13dbb41b1b2236c738cb94c10ed950da006256eda928dd0a13e",
+    "multi_llm/leaf_storys.json": "557cf8fae23c8e986d732aea1e29274170d66725a7361342d348ca9027dba26a",
+    "multi_llm/linkage_registry.jsonl": "d940bb59ec49214c8b8ca4884dc0d29efbea0689a5a37ae37bed762f484e1229",
+    "multi_llm/orphan_storys.json": "4fcaca181fdeaf5fd4b1116e23ee190ca2cf431c340c38989609ba1320edaa37",
+    "multi_llm/reachable_storys.json": "f1d5f76fa473a505cb7aee3cbcfcc55d664fe771c8974ab2fa385e7e702c70fc",
+    "multi_llm/story_dependency_graph.jsonl": "c2e28a80e0728b1ace253cf1f45d0797557943932eb034d70f48652018b4d103",
+    "multi_llm/unreachable_storys.json": "1f8ca32bfc56094b92a2e307edc5a80806be01d6b01234c08ee6eadd05c6081b"
+  }
+}

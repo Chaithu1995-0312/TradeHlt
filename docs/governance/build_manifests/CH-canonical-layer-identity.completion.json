@@ -1,0 +1,21 @@
+{
+  "change_id": "CH-canonical-layer-identity",
+  "date_utc": "2026-08-23",
+  "declared_files": [
+    "docs/governance/CANONICAL_LAYER_IDENTITY_CONTRACT.md",
+    "docs/governance/build_manifests/CH-canonical-layer-identity.impact.json",
+    "docs/governance/build_manifests/CH-canonical-layer-identity.completion.json",
+    "docs/knowledge-map.md",
+    "docs/analysis/feature_state_lineage_census.md",
+    "assistant_project.md"
+  ],
+  "checks_executed": [
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py"
+  ],
+  "repo_state_hash": "PENDING",
+  "completion_status": "NOT_CLAIMED",
+  "production_behavior_changed": "NO",
+  "notes": "Phase 1 identity freeze is docs-only (Impact APPROVED; tests/test_current_findings.py + test_doc_citations.py + test_topic_docs.py = 17 passed). validate-completion cannot claim COMPLETE on this branch: git status already contains undeclared governed surfaces (configs/*, etc.) from pre-existing WIP on feature/truth-registry-v2, none of which this change edits. Persistence remains forbidden."
+}

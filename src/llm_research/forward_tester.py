@@ -116,7 +116,13 @@ def run_forward_test(
     )
 
     engine = EngineRunner(config)
-    planner = ExecutionPlannerV1_2(config)
+    # EPIC-84: the planner section for the CSV's symbol, not the whole config (the old
+    # DEFAULT_CONFIG merge silently supplied every planner value from code).
+    from pathlib import Path as _P
+    from src.config_layer.execution_planner import planner_config_from_production
+    from src.config_layer.market_router import _leading_symbol_token
+    planner = ExecutionPlannerV1_2(
+        planner_config_from_production(config, _leading_symbol_token(_P(data_csv).stem)))
 
     baseline = ModeResult(mode="BASELINE")
     pol = ModeResult(mode="POLICY")
@@ -193,7 +199,7 @@ def run_forward_test(
         hybrid=hybrid,
         forward_rows=len(forward_rows),
         train_rows=len(train_rows),
-        policy_source=getattr(policy, "_source", "unknown"),
+        policy_source=policy._source,
     )
 
 

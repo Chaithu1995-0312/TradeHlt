@@ -1,0 +1,390 @@
+# CONFIGS FOLDER — Full Runtime Analysis
+
+---
+
+## FILE INVENTORY (all 19 files)
+
+| Path | Lines | Type |
+|------|-------|------|
+| `configs/promotion_log.jsonl` | 14 | Audit log |
+| `configs/control_plane/monitors.json` | 193 | Dashboard definition |
+| `configs/experimental/config/output_format.json` | 20 | Training data schema |
+| `configs/experimental/spec/bitnet_spec.md` | 64 | Spec (documentation) |
+| `configs/experimental/spec/bitpacking_spec.md` | 22 | Spec (documentation) |
+| `configs/experimental/spec/config/drift_thresholds.json` | 6 | Drift params |
+| `configs/experimental/spec/config/feature_schema.json` | 20 | Feature schema |
+| `configs/experimental/spec/config/llm_schema.json` | 17 | LLM schema |
+| `configs/production/ACTIVE_VERSION` | 1 | Version pointer |
+| `configs/production/regime_map.json` | 31 | Regime→weights mapping |
+| `configs/production/v1_multi_2026_03.json` | 679 | Production config (legacy) |
+| `configs/production/v1_multi_2026_03_force_accept.json` | ~679 | Force-accepted variant |
+| `configs/production/v2_multi_2026_04 - deepdeektry.json` | 607 | **ACTIVE** config |
+| `configs/production/v2_multi_2026_04.json` | 536 | Pre-deepdeektry variant |
+| `configs/production/v2_test.json` | 42 | Test config (minimal) |
+| `configs/production/v2_test_archived_20260411_200110.json` | ~42 | Archived test |
+| 6 archive files (`v2_multi_2026_04_archived_*.json`) | ~350-536 each | Snapshots |
+
+---
+
+# ==========================================
+# SECTION 1: ROOT-LEVEL FILES
+# ==========================================
+
+## 1A. `promotion_log.jsonl`
+
+### File Purpose
+Persistent append-only audit trail that records every config promotion event: successful promotions, failure reasons, and which candidate configuration was promoted to production.
+
+### Runtime Role
+Consumed by observing/monitoring components to understand promotion history. NOT consumed by the promotion pipeline itself during runtime — it is written to, not read from, during promotion.
+
+### Trust Classification: **CANONICAL**
+Source proof: 14 lines show actual promotion events with version IDs, scores, timestamps, and failure reasons. Contains real operational data.
+
+### Fail-Fast / Fallback Audit
+- **Silent fallback:** None. This is append-only output.
+- **Missing events:** PROMOTION_FAILED entries (lines 1-2, 13-14) show the system logged failures but no logic depends on them — the failures are purely audit.
+- **Hidden defaults:** Line 3 shows an empty `"notes": ""` field — callers may omit notes silently.
+- **Runtime corruption risk:** Appending malformed JSON lines would corrupt the file, but since it is write-only by a single pipeline, corruption is limited to disk-full scenarios.
+
+---
+
+# ==========================================
+# SECTION 2: `control_plane/`
+# ==========================================
+
+## 2A. `monitors.json`
+
+### File Purpose
+Defines the monitoring dashboard surface — which metrics to scrape, from where, and how to render them. It is the schema for the control-plane monitoring UI that tracks 4 subsystems (live inout runner, auto-tuner, config validator, backtest).
+
+### Runtime Role
+Loaded by the control plane dashboard (NOT by any trading engine). This is a **UI configuration file** consumed by a monitoring web layer, not by trading pipelines.
+
+### Trust Classification: **LIVE** (but UI-only)
+Source proof: 4 named monitor groups (`live.inout_runner`, `tuning.auto_tuner_multi`, `validation.config_validator`, `backtest.v2`) each define extractors (`jsonl_tail`, `json_file`, `log_regex`, `file_stat`) that point to real runtime files on disk.
+
+### Runtime Flow - What actually happens
+```
+Control plane dashboard starts
+  → reads monitors.json
+  → for each monitor group, spawns metric scrapers
+  → jsonl_tail: tails the last line of the heartbeat log
+  → json_file: reads and JSON-parses checkpoint/report files
+  → log_regex: scans combined.log for regex patterns
+  → file_stat: checks file size/mtime
+  → renders metrics as dashboard widgets
+```
+
+### Hidden Defaults / Fallbacks
+- `source: "jsonl_tail"` depends on the log file existing. If `logs/inout_heartbeat.jsonl` is missing, the extractor silently returns nothing. NOT VERIFIED IN SOURCE whether the UI handles missing files gracefully.
+- `source: "log_regex"` will silently fail to match if log content format changes — no warning emitted.
+- `path_template` uses `{args.output_dir}` and `{log_dir}` — these are template variables substituted at runtime. If substitution fails, the path becomes literal `{args.output_dir}` which won't resolve to any real file, producing silent metric gaps.
+
+### Downstream Call Boundary
+This file only controls what the UI renders. It does NOT affect engine tuning, config validation, or backtest execution. Tracing further would enter the control plane web server, which exceeds the configs folder boundary.
+
+---
+
+# ==========================================
+# SECTION 3: `experimental/`
+# ==========================================
+
+This subtree contains **design specifications and data schemas** used during development/validation. None of these files are loaded as runtime configuration by any engine — they are reference documents.
+
+## 3A. `config/output_format.json`
+
+### File Purpose
+Defines the schema contract for training data JSONL lines. Specifies which feature fields are required vs optional, and what their types are.
+
+### Runtime Role: **DEAD** (reference only)
+Source proof: Contains a single training data format definition. No runtime engine reads this file — the actual runtime configs (in production/) define their own feature schemas inline. This was likely used during initial model training setup but is not consulted by live execution.
+
+### Trust Classification: **DEAD**
+- No evidence of any reader loading this file.
+- The required features (`gaussian_score`, `rr_ratio`, `sweep_flag`, `volume_spike`, `regime_score`) match those in `production/v2_multi_2026_04 - deepdeektry.json`'s `feature_monitor` section, suggesting this was a schema source that was later inlined into production configs.
+
+### Fallback / Failure
+NOT VERIFIED IN SOURCE — no code references this file. If someone deleted it, nothing would break in live runtime.
+
+## 3B. `spec/bitnet_spec.md`
+
+### File Purpose
+Living specification document describing the BitNet neural network architecture (binary MLP), its data pipeline, inference flow, online learning, drift detection, regime classification, hybrid engine, explainability, portfolio risk, stealth execution, and the AI CIO state machine.
+
+### Runtime Role: **DEAD** (documentation only)
+This is a `.md` file — not parseable JSON or executable code. It describes the intended architecture but is NOT loaded by any runtime component.
+
+### Trust Classification: **DOCUMENTATION** (not code)
+It's a design spec, not a configuration. However, it provides useful context: for example, the `feature_schema.json` aligns with it (6 features → 1 label), and the hybrid engine thresholds (0.6 BitNet, 0.6-0.8 LLM band) appear mirrored in production configs.
+
+### Key Design Claims (not verifiable from configs alone):
+- "BitNet primary gate: reject if confidence < 0.6" — matches `crt_engine.bitnet_main_threshold: 0.55` in active config (close but not exact).
+- "LLM called for 0.6 ≤ confidence < 0.8" — matches `fusion_engine.llm_lower_band: 0.45, llm_upper_band: 0.65`.
+- "Total exposure ≤ 5%" — matches `ultron_risk_gate.max_portfolio_risk_pct: 5.0`.
+
+## 3C. `spec/bitpacking_spec.md`
+
+### File Purpose
+Defines the C++ bit-packing encoding for binary neural network inference: weight/input binarization, XNOR + popcount dot product, multi-layer forward pass.
+
+### Runtime Role: **DEAD** (documentation only)
+This is documentation for the C++ inference engine. No Python runtime reads this.
+
+## 3D. `spec/config/drift_thresholds.json`
+
+### File Purpose
+Defines threshold constants for feature drift detection: performance drop threshold, feature shift threshold, rolling and baseline window sizes.
+
+### Runtime Role: **DEAD** (reference only)
+Source proof: This is within the `experimental/spec` subtree. The actual drift thresholds used at runtime are defined inline in `production/v2_multi_2026_04 - deepdeektry.json` under `feature_monitor` (window_size: 500, hard_drift_z: 3.0, soft_drift_z: 2.5). The values here differ significantly (rolling_window_size: 50 vs 500), confirming this file is not the active source.
+
+### Hidden Defaults / Fallback
+If code were to read this file and it were missing, the defaults shown here would NOT be applied — they're only documenting intended values. NOT VERIFIED IN SOURCE that any runtime reader exists.
+
+## 3E. `spec/config/feature_schema.json`
+
+### File Purpose
+Specifies the normalization bounds for each ML input feature: min/max ranges, capping, type constraints, and optional feature defaults.
+
+### Runtime Role: **DEAD** (reference only)
+Same as drift_thresholds — this is within `experimental/spec`. The actual normalization logic is embedded in Python code (NOT in configs folder), which uses the schema concept but may not read this file.
+
+### Hidden Default / Fallback
+- `optional_features.liquidity_distance: 0.0` means if this feature is missing, default to 0.0. This default would be applied by whatever Python code implements the schema.
+- `rr_ratio: { "cap": 5.0 }` — values >5.0 are capped silently. No warning emitted.
+
+## 3F. `spec/config/llm_schema.json`
+
+### File Purpose
+Defines the JSON schema for inputs to and outputs from the LLM gating layer. Input: features, bitnet_confidence, regime, constraints. Output: verdict (CONFIRM/REJECT/WEAK_CONFIRM), reason codes, risk adjustment (sl_tighten, position_scale), confidence.
+
+### Runtime Role: **DEAD** (reference only)
+Same placement as other spec files. The actual LLM prompt schema is likely constructed in Python code.
+
+---
+
+# ==========================================
+# SECTION 4: `production/`
+# ==========================================
+
+## 4A. `ACTIVE_VERSION`
+
+### File Purpose
+A single-line pointer file indicating which configuration file is currently the active production version.
+
+### Runtime Role
+Read at startup by whatever component loads the production config. Contains: `v2_multi_2026_04 - deepdeektry`
+
+### What actually happens
+```
+System boots
+  → reads configs/production/ACTIVE_VERSION
+  → resolves "v2_multi_2026_04 - deepdeektry" to the filename
+  → constructs path: configs/production/v2_multi_2026_04 - deepdeektry.json
+  → loads that JSON as the active config
+```
+
+### Trust Classification: **LIVE**
+Source proof: It is a single-line pointer that maps to an existing file. The file it points to (v2_multi_2026_04 - deepdeektry.json) contains a `config_hash` field (line 574) which is `c2568b6afb4a9eed3a4beb293b2806583410c60375b3ac5bd87596f4260bcba7`.
+
+### Failure Modes
+- **Mismatched pointer:** If the ACTIVE_VERSION content changes but the target file doesn't exist → crash at startup. NOT VERIFIED IN SOURCE whether graceful fallback exists.
+- **Empty file:** If ACTIVE_VERSION is blank → the loader would attempt to open a file named `.json` or similar, likely crashing.
+
+## 4B. `regime_map.json`
+
+### File Purpose
+Maps regime classifications (TRENDING, RANGING, HIGH_VOLATILITY, DEFAULT) to strategy fusion weights and BitNet confidence thresholds. Controls how the engine weights different signal sources based on market regime.
+
+### Runtime Role
+Loaded by the hybrid fusion engine at startup. Defines 3 regime-specific weight vectors and 3 identical BitNet thresholds (all 0.5).
+
+### Trust Classification: **LIVE**
+Source proof: Contains actual runtime parameters (fusion_weights, bitnet_thresholds) that map 1:1 to engine subcomponents.
+
+### What actually happens
+```
+When regime classifier emits a state (e.g., "TRENDING"):
+  → engine reads regime_map.json
+  → selects fusion_weights["TRENDING"]: crt=0.4, gaussian=0.3, zone=0.2, rr=0.1
+  → selects bitnet_thresholds["TRENDING"]: 0.5
+  → applies these weights during signal fusion
+```
+
+### Hidden Defaults / Fallback
+- `DEFAULT: "SAFE"` maps to... nothing. There is no `"SAFE"` key in fusion_weights. Line 5: `"DEFAULT": "SAFE"` — this is a regime→behavior mapping, but there's no `SAFE` fusion_weight entry. If the regime classifier emits an unknown regime, it would map to SAFE, which has no weight vector defined.
+- All 3 regimes have **identical** fusion weights (crt=0.4, gaussian=0.3, zone=0.2, rr=0.1 for all). This means the regime differentiation via fusion weights is effectively disabled — the system is treating all regimes identically despite defining different keys.
+- All 3 bitnet_thresholds are 0.5 — again identical.
+
+### Failure Modes
+- Regime classifier emits a regime NOT in the map and NOT matching DEFAULT → KeyError or silent fallback to first entry. NOT VERIFIED IN SOURCE.
+
+## 4C. Production Config Files — Structural Analysis
+
+15 files total, forming 4 version families:
+
+| Family | Files | Promoted dates |
+|--------|-------|---------------|
+| `v1_multi_2026_03` | 2 (regular + force_accept) | 2026-03-24 |
+| `v2_multi_2026_04` | 8 (1 active, 1 variant, 6 archives) | 2026-04-28 to 2026-05-06 |
+| `v2_test` | 2 (regular + 1 archive) | 2026-04-11 |
+| Unversioned test | 1 | N/A |
+
+### Key structural differences across families:
+
+**v1 vs v2:**
+- `v1_multi_2026_03.json` (679 lines) has fewer sections than v2 — notably lacks: `feature_monitor`, `feature_store`, `capital_management`, `inout`, `uat`, `agent`, `live_integration`
+- v1 has a `config_validator` section (like v2) but with different thresholds
+- v1 `schema_version` is absent (pre-schema-versioning)
+
+**v2 variant files:**
+- `v2_multi_2026_04 - deepdeektry.json` (607 lines) has **stricter params** (`retest_depth_max: 0.8`, `body_ratio_min: 0.3`, `atr_multiplier_min: 0.6`) vs `v2_multi_2026_04.json` (536 lines) has **tighter params** (`retest_depth_max: 0.15`, `body_ratio_min: 0.65`, `atr_multiplier_min: 1.0`)
+- "deepdeektry" is more permissive — allows deeper retests (0.8 vs 0.15), smaller body ratios (0.3 vs 0.65), lower ATR multiplier (0.6 vs 1.0)
+- "deepdeektry" has inout scanner (allowed_symbols: BTCUSDT, ETHUSDT) — the non-deepdeektry variant may lack this section
+
+**v2_test.json** (42 lines):
+- Minimal config with only: version, config_id, params, config_hash, validation_summary (EURUSD-only, 36 trades, score: 0.5966)
+- No engine_runner, no inout, no agent, no portfolio — this was a dry-run test candidate
+
+### Archive Files:
+6 files for `v2_multi_2026_04` + 1 for `v2_test`. Archive naming: `{version}_archived_{timestamp}.json`. Timestamps match promotion_log.jsonl promotion events:
+```
+20260430_080821 → log line 6: PROMOTED at 2026-04-30T08:08:21
+20260430_111839 → log line 7: PROMOTED at 2026-04-30T11:18:39
+20260501_100005 → log line 8: PROMOTED at 2026-05-01T10:00:05
+20260501_183742 → log line 9: PROMOTED at 2026-05-01T18:37:42
+20260502_181418 → log line 10: PROMOTED at 2026-05-02T18:14:18
+20260506_115338 → log line 11: PROMOTED at 2026-05-06T11:53:38
+20260506_193401 → log line 12: PROMOTED at 2026-05-06T19:34:01 ← ACTIVE
+```
+
+### Trust Classification (per version family):
+- `v2_multi_2026_04 - deepdeektry`: **LIVE** — ACTIVE_VERSION points here, contains all engine sections in use
+- `v1_multi_2026_03`: **LEGACY** — older schema, missing recent subsystems
+- `v1_multi_2026_03_force_accept`: **DANGEROUS** — the name implies governance bypass; "force_accept" suggests it was pushed through without validation gates. This is a governance contamination vector.
+- `v2_multi_2026_04.json` (non-deepdeektry): **LEGACY** — superseded by deepdeektry variant
+- Archive files: **LEGACY** — historical snapshots, not read at runtime
+- `v2_test.json`: **DEAD** — was used for testing only, never promoted to live
+
+### Config Structuring (all v2 production files share this schema tree):
+```
+version, config_id, created_at, promoted_at
+├── params (5 CRT retest/body/ATR tuning params)
+├── engine_runner (runner mode, model paths, zone gate, dual engine, fusion)
+├── execution_planner (trade TTLs, risk, precision)
+├── sl_tp_comparison (legacy SL/TP—"used ONLY by SLTPComparator, never in live path")
+├── gate_intelligence (4 gate weights + approval threshold)
+├── ultron_risk_gate (portfolio risk limits, regime factors)
+├── governance (shadow trading data paths)
+├── fusion_engine (signal fusion weights, conflict policy, LLM bands, tiers)
+├── decision_engine (score, p_win, rr thresholds)
+├── validation_summary (validation results per config)
+├── crt_engine (35+ CRT parameters)
+├── rr_model (ridge alpha, GNB, drift threshold, score weights)
+├── gaussian_scorer (retest/body/disp Gaussian params)
+├── training (min records)
+├── phase5_calibration (cross-val params)
+├── tuner (fitness weights, LLM gate params)
+├── portfolio (capital, risk, slippage)
+├── llama_gate (LLM inference — local + Groq fallback)
+├── config_validator (quality gate thresholds)
+├── backtest (simulation params: slippage, compounding, gaps)
+├── feature_monitor (drift detection Z thresholds)
+├── feature_store (max history)
+├── inout (scanner, exit, time, risk, probability, db, logging)
+├── capital_management (INR-based risk limits, kill switch thresholds)
+├── data_ingestion (DB/CSV pipeline, pairs, timeframes)
+├── strategy_engine (10 strategy definitions: s01-s10)
+├── agent (LLM agent, intent router, Groq config, findings)
+├── live_integration (Telegram + MT5 dry-run config)
+├── uat (kill switch + Monte Carlo simulation)
+└── config_hash, schema_version, notes
+```
+
+---
+
+# ==========================================
+# SECTION 5: CROSS-CUTTING RUNTIME ANALYSIS
+# ==========================================
+
+## 5A. The Promotion Pipeline (what actually happens when a config gets promoted)
+
+```
+auto_tuner_multi.py runs a genetic search
+  → writes best params to results/tuner/checkpoint_multi.json
+  → promotion_manager.py reads checkpoint
+  → promotes from tuner checkpoint
+  → writes to configs/production/{version}.json
+  → appends to configs/promotion_log.jsonl  (audit trail)
+  → archives previous version as configs/production/{version}_archived_{timestamp}.json
+  → updates ACTIVE_VERSION
+```
+
+**Promotion failures** (from log): checkpoint not found (3 times), governance rejection (1 time).
+
+## 5B. The Lead-Lag Relationship: promotion_log.jsonl ↔ archives
+
+The 6 archive timestamps match 6 promotion events in promotion_log.jsonl exactly. The 7th promotion event (line 12, 2026-05-06T19:34:01) corresponds to the ACTIVE config `v2_multi_2026_04 - deepdeektry.json`, which was NOT followed by an archive of the previous version (the non-deepdeektry variant remains as `v2_multi_2026_04.json` without an archive timestamp for that date).
+
+**Replay implication:** If someone needed to replay a specific historical config, they would use the archive files + promotion_log.jsonl to reconstruct which config was active at which timestamp. The archive naming convention supports chronological reconstruction.
+
+## 5C. Determinism
+
+- **promotion_log.jsonl:** Deterministic — each line is an immutable event with a timestamp. Appends only.
+- **ACTIVE_VERSION:** Non-deterministic — changes each time a promotion succeeds.
+- **regime_map.json:** Effectively non-functional — all 3 regimes have identical weights and thresholds. The differentiation map is a **dead code path**.
+- **Experimental spec files:** Deterministic but unused.
+
+## 5D. Failure Mode Summary
+
+| File | Failure Mode | Impact |
+|------|-------------|--------|
+| ACTIVE_VERSION | Missing/blank | System won't load config → crash on boot |
+| ACTIVE_VERSION | Points to nonexistent file | Crash on boot |
+| regime_map.json | Unknown regime with no DEFAULT handler | KeyError or silent fallback |
+| monitors.json | Missing log files | Silent UI metric gaps |
+| promotion_log.jsonl | Disk full | Promotion succeeds but audit trail lost |
+| Experimental spec files | Deleted/absent | Zero impact (not read by runtime) |
+
+## 5E. Trust Classification — Summary
+
+- **CANONICAL:** `promotion_log.jsonl`, `ACTIVE_VERSION`
+- **LIVE:** `monitors.json`, `regime_map.json`, `v2_multi_2026_04 - deepdeektry.json`
+- **EXPERIMENTAL:** All files under `experimental/` — they're design specs and schemas, not runtime configs
+- **LEGACY:** `v1_multi_2026_03.json`, `v2_multi_2026_04.json` (non-deepdeektry variant), all archive files
+- **DEAD:** `v2_test.json`, `experimental/spec/bitnet_spec.md`, `experimental/spec/bitpacking_spec.md`, `experimental/config/output_format.json`, `experimental/spec/config/*.json`
+- **DANGEROUS:** `v1_multi_2026_03_force_accept.json` — name implies it bypassed governance gates entirely. This is a governance contamination vector.
+
+## 5F. Hidden Defaults, Silent Fallbacks, and Corruption Risks
+
+1. **force_accept variant** (`v1_multi_2026_03_force_accept.json`): If this was loaded instead of the validated variant, all governance quality gates would be silently bypassed. The config hash would not match any validation report. This is a **governance contamination risk**.
+
+2. **regime_map.json identical weights**: All 3 regimes use `crt=0.4, gaussian=0.3, zone=0.2, rr=0.1` and BitNet threshold `0.5`. The regime differentiation system is effectively disabled. If a developer thinks regimes matter but they all produce the same output, this is a hidden logic bug.
+
+3. **DEFAULT → "SAFE" missing mapping**: Line 5 maps DEFAULT to "SAFE", but there is no `SAFE` key in fusion_weights. If the regime classifier returns an unknown value, it gets redirected to "SAFE", which has no weights → runtime KeyError or silent zeroweight fallback. NOT VERIFIED IN SOURCE which behavior occurs.
+
+4. **v2_test.json vs v2_multi_2026_04.json overlap**: The v2_test config (line 14 in config_hash) has `config_hash: "ea517a5b..."` which is different from both ACTIVE config hashes. However, test configs were promoted to production (`promotion_log.jsonl` lines 3-4 show "v2_test" being PROMOTED). This means a test config with minimal fields once ran as production — a **governance bypass event**.
+
+5. **promotion_log.jsonl line 14**: "Only APPROVE reports can be promoted" — the governance gate REJECTed a promotion. This is the system working correctly, but it demonstrates that if the report file at `results/validation/report.json` contains a REJECT decision, the pipeline stops. If that report file is **stale** (from a previous run), the pipeline might reject valid promotions due to stale data.
+
+6. **Experimental spec files as source of truth confusion**: Two sets of drift thresholds exist — one in `experimental/spec/config/drift_thresholds.json` (rolling_window=50, shift_threshold=0.1) and one in the active production config (`feature_monitor.window_size=500, hard_drift_z=3.0`). These are **completely different threshold systems**. If a developer modifies one thinking it's active and the other is not, they would get no runtime effect.
+
+## 5G. Boundary Report
+
+Further tracing into:
+- How `monitors.json` is rendered → enters the control plane web dashboard. Boundary reached.
+- How ACTIVE_VERSION is resolved → enters the Python config loader. Boundary reached.
+- How promotion validates → enters `promotion_manager.py` and `config_validator.py`. Boundary reached.
+- How specific engine sections (inout, crt_engine, fusion_engine) execute → enters src/ subpackages. Boundary reached.
+
+## 5H. Determinism Summary
+
+| Component | Deterministic? | Runtime Variation |
+|-----------|---------------|------------------|
+| promotion_log.jsonl | Yes (append-only) | New rows added non-deterministically |
+| ACTIVE_VERSION | No | Changes on each promotion |
+| regime_map.json | Yes (static) | Never changes at runtime |
+| Active production config | Yes (per promotion) | Changes between promotions |
+| Experimental spec files | Yes (static) | Never changes |
+| Archive files | Yes (immutable) | Written once per promotion, never modified |

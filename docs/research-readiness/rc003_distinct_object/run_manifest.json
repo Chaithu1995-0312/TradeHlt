@@ -1,0 +1,16 @@
+{
+  "prereg_path": "docs/research/preregistration-rc003-distinct-object.md",
+  "prereg_frozen_prefix_sha256": "731ccbcfadcc43310db0a1a588f9b997692187d87f809278cee30d226a1ddc4c",
+  "prereg_freeze_whole_file_sha256": "0102f9dc66bbcf08181aef9712c7cf0048a3fe58607de7325796c54a8c8e0f57",
+  "corpus_path": "data/mt5/XAUUSD_M15.csv",
+  "corpus_sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+  "active_version": "v2_htfcrt_2026_08",
+  "instrument": "XAUUSD",
+  "alpha_primary": 0.05,
+  "alpha_secondary_bonferroni": 0.0167,
+  "n_min_per_group": 150,
+  "block_bars": 96,
+  "n_boot": 2000,
+  "economic_claims_allowed": false,
+  "promise_rung_max_claim": "PL-0"
+}

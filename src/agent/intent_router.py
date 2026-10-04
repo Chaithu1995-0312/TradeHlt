@@ -31,16 +31,20 @@ _MODE_INTENTS: Dict[str, List[str]] = {
     "pipeline": [
         "tune_only", "tune_and_validate", "tune_and_promote",
         "validate_only", "promote_only", "backtest_only", "full_pipeline",
+        "campaign_run", "campaign_tune_validate",
     ],
     "copilot": ["advise_signal", "veto_query", "resize_query"],
     "governance": ["governance_inspect", "governance_propose", "governance_run"],
-    "cross": ["audit_inspect"],
+    "ops": ["ops_diagnose"],
+    "truth": ["truth_janitor"],
+    "cross": ["audit_inspect", "findings_synthesize", "findings_recent", "findings_explain"],
 }
 
 _ALL_INTENT_KEYS = [k for keys in _MODE_INTENTS.values() for k in keys]
 
 _LLM_SYSTEM = (
-    "You are an intent classifier for a CRT trading automation agent.\n"
+    "You are an intent classifier for GrokAgenticAI (CRT trading kitchen agents).\n"
+    "Specialists: ops_diagnose=OpsDoctor; campaign_run=CampaignRunner; truth_janitor=TruthJanitor hygiene.\n"
     "Map the user's request to exactly ONE intent_key from this list:\n"
     "{INTENT_LIST}\n"
     "  ask_user: cannot classify\n\n"
@@ -107,7 +111,7 @@ class IntentRouter:
         messages.extend(conversation[-2:])
         messages.append({"role": "user", "content": user_input})
 
-        from config_layer.llama_gate import llm_chat
+        from config_layer.llm_inference_client import llm_chat
         raw = llm_chat(messages, max_tokens=64, temperature=0.0)
         if not raw:
             return None

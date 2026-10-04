@@ -1,0 +1,766 @@
+{
+  "probe": "zone assignment parity (label KMeans vs runtime Gaussian)",
+  "authority": "research/governance only; no G001 authority (CLAUDE.md 6.5)",
+  "instrument": "BNBUSDT",
+  "source": "logs/BNBUSDT/bnbusdt_training_20260524/opportunities.jsonl",
+  "registry": "models/zone_registry.json",
+  "scope_note": "The live spine consumes only top_scores and never assigns a zone (live_engine.py check() note). This metric describes a partition no decision path acts on.",
+  "variance_decomposition": {
+    "note": "var_j = sigma_j^2 = per-dim contribution to the unnormalised squared-Euclidean objective KMeans minimises.",
+    "total_variance": 25443516.595543455,
+    "zeroed_dims_variance_share": 0.9999833726652079,
+    "active_dims_variance_share": 1.6627334792114654e-05,
+    "top_contributors": [
+      {
+        "feature": "volume",
+        "sigma": 4982.757279,
+        "variance_share": 0.9758034039121856,
+        "zeroed_at_runtime": true
+      },
+      {
+        "feature": "momentum_score",
+        "sigma": 498.569595,
+        "variance_share": 0.009769547386464747,
+        "zeroed_at_runtime": true
+      },
+      {
+        "feature": "ema_spread",
+        "sigma": 470.115455,
+        "variance_share": 0.008686241943009074,
+        "zeroed_at_runtime": true
+      },
+      {
+        "feature": "high",
+        "sigma": 156.259321,
+        "variance_share": 0.0009596541149369967,
+        "zeroed_at_runtime": true
+      },
+      {
+        "feature": "close",
+        "sigma": 155.810686,
+        "variance_share": 0.0009541515136332536,
+        "zeroed_at_runtime": true
+      },
+      {
+        "feature": "open",
+        "sigma": 155.807978,
+        "variance_share": 0.0009541183474889847,
+        "zeroed_at_runtime": true
+      },
+      {
+        "feature": "ema_fast",
+        "sigma": 155.776119,
+        "variance_share": 0.0009537281986780276,
+        "zeroed_at_runtime": true
+      },
+      {
+        "feature": "ema_slow",
+        "sigma": 155.731476,
+        "variance_share": 0.0009531816298296781,
+        "zeroed_at_runtime": true
+      }
+    ]
+  },
+  "n_records": 139942,
+  "membership_status": "VERIFIED",
+  "oracle_reproduction": {
+    "oracle_overall": 0.414,
+    "probe_overall": 0.414,
+    "overall_delta": 0.0,
+    "max_per_zone_delta": 0.0,
+    "reproduced": true
+  },
+  "assignment_parity": {
+    "overall": 0.414,
+    "per_zone": {
+      "0": 0.0592,
+      "1": 0.1234,
+      "2": 0.7013,
+      "3": 0.1313,
+      "4": 0.1927,
+      "5": 0.3721,
+      "6": 0.2599,
+      "7": 0.6805
+    },
+    "n": 139942
+  },
+  "registry_sha256": "e73e08934add02c98aa6ab19e70230af09368a19af601de9d852dc1e3639eda3",
+  "path_crosscheck": {
+    "audit_standalone_argmax_overall": 0.414,
+    "live_consistent_path_overall": 0.4140000857498106,
+    "delta": 8.57498106410226e-08,
+    "paths_agree": true
+  },
+  "agreement": {
+    "raw": 0.4140000857498106,
+    "majority_class_baseline": 0.3263780709150934,
+    "uniform_random_baseline": 0.125,
+    "cohens_kappa": 0.23803497169037044,
+    "lift_over_majority": 0.08762201483471721,
+    "note": "kappa corrects for the very unbalanced zone marginals; the majority baseline is the honest null, not 1/k."
+  },
+  "confusion_matrix": {
+    "orientation": "rows = label (KMeans) zone, cols = runtime (Gaussian) zone",
+    "matrix": [
+      [
+        1226,
+        1674,
+        4460,
+        3206,
+        1706,
+        144,
+        848,
+        7444
+      ],
+      [
+        774,
+        1246,
+        1294,
+        1436,
+        1380,
+        248,
+        932,
+        2790
+      ],
+      [
+        202,
+        250,
+        32030,
+        1378,
+        282,
+        12,
+        92,
+        11428
+      ],
+      [
+        1014,
+        1228,
+        12924,
+        4142,
+        1258,
+        108,
+        414,
+        10452
+      ],
+      [
+        210,
+        558,
+        308,
+        420,
+        746,
+        314,
+        608,
+        708
+      ],
+      [
+        8,
+        16,
+        0,
+        10,
+        24,
+        64,
+        38,
+        12
+      ],
+      [
+        58,
+        126,
+        40,
+        84,
+        198,
+        222,
+        302,
+        132
+      ],
+      [
+        402,
+        446,
+        6574,
+        768,
+        186,
+        0,
+        158,
+        18180
+      ]
+    ],
+    "row_normalised": [
+      [
+        0.0592,
+        0.0808,
+        0.2154,
+        0.1548,
+        0.0824,
+        0.007,
+        0.041,
+        0.3595
+      ],
+      [
+        0.0766,
+        0.1234,
+        0.1281,
+        0.1422,
+        0.1366,
+        0.0246,
+        0.0923,
+        0.2762
+      ],
+      [
+        0.0044,
+        0.0055,
+        0.7013,
+        0.0302,
+        0.0062,
+        0.0003,
+        0.002,
+        0.2502
+      ],
+      [
+        0.0321,
+        0.0389,
+        0.4098,
+        0.1313,
+        0.0399,
+        0.0034,
+        0.0131,
+        0.3314
+      ],
+      [
+        0.0542,
+        0.1441,
+        0.0795,
+        0.1085,
+        0.1927,
+        0.0811,
+        0.157,
+        0.1829
+      ],
+      [
+        0.0465,
+        0.093,
+        0.0,
+        0.0581,
+        0.1395,
+        0.3721,
+        0.2209,
+        0.0698
+      ],
+      [
+        0.0499,
+        0.1084,
+        0.0344,
+        0.0723,
+        0.1704,
+        0.191,
+        0.2599,
+        0.1136
+      ],
+      [
+        0.015,
+        0.0167,
+        0.2461,
+        0.0287,
+        0.007,
+        0.0,
+        0.0059,
+        0.6805
+      ]
+    ],
+    "runtime_assignment_distribution": {
+      "0": 3894,
+      "1": 5544,
+      "2": 57630,
+      "3": 11444,
+      "4": 5780,
+      "5": 1112,
+      "6": 3392,
+      "7": 51146
+    },
+    "label_distribution": {
+      "0": 20708,
+      "1": 10100,
+      "2": 45674,
+      "3": 31540,
+      "4": 3872,
+      "5": 172,
+      "6": 1162,
+      "7": 26714
+    }
+  },
+  "runtime_concentration": {
+    "note": "The runtime argmax is not spread over the 8 zones. Concentration is itself part of why parity is low for the zones the runtime seldom picks.",
+    "top2_zones": [
+      2,
+      7
+    ],
+    "top2_runtime_share": 0.7772934501436309,
+    "top2_label_share": 0.5172714410255678
+  },
+  "per_zone": [
+    {
+      "zone": 0,
+      "label_n": 20708,
+      "label_share": 0.147975589887239,
+      "runtime_n": 3894,
+      "runtime_marginal": 0.027825813551328408,
+      "parity": 0.05920417230056017,
+      "lift": 0.03137835874923177,
+      "enrichment": 2.1276708474794535,
+      "margin_median": 0.010634481579119837,
+      "margin_p10": 0.0017848777132365434,
+      "margin_p90": 0.03562515536613531,
+      "frac_margin_lt_0.01": 0.47836584894726675,
+      "frac_margin_lt_0.05": 0.9817461850492564,
+      "agreement_by_margin_tercile": [
+        {
+          "tercile": 1,
+          "margin_lo": -4.2340436169685525e-05,
+          "margin_hi": 0.006459586049365806,
+          "n": 6902,
+          "agreement": 0.138800347725297
+        },
+        {
+          "tercile": 2,
+          "margin_lo": 0.006459586049365806,
+          "margin_hi": 0.017946300803599602,
+          "n": 6902,
+          "agreement": 0.038829324833381626
+        },
+        {
+          "tercile": 3,
+          "margin_lo": 0.017946300803599602,
+          "margin_hi": 0.07821541577544677,
+          "n": 6904,
+          "agreement": 0.0
+        }
+      ]
+    },
+    {
+      "zone": 1,
+      "label_n": 10100,
+      "label_share": 0.072172757285161,
+      "runtime_n": 5544,
+      "runtime_marginal": 0.0396164125137557,
+      "parity": 0.12336633663366336,
+      "lift": 0.08374992411990767,
+      "enrichment": 3.1140209020902088,
+      "margin_median": 0.009428955186318866,
+      "margin_p10": 0.0016954174437218584,
+      "margin_p90": 0.03344646037650245,
+      "frac_margin_lt_0.01": 0.522970297029703,
+      "frac_margin_lt_0.05": 0.9843564356435643,
+      "agreement_by_margin_tercile": [
+        {
+          "tercile": 1,
+          "margin_lo": -4.054042101309108e-05,
+          "margin_hi": 0.005838473536109889,
+          "n": 3366,
+          "agreement": 0.19132501485442663
+        },
+        {
+          "tercile": 2,
+          "margin_lo": 0.005838473536109889,
+          "margin_hi": 0.015229340076071574,
+          "n": 3366,
+          "agreement": 0.16696375519904932
+        },
+        {
+          "tercile": 3,
+          "margin_lo": 0.015229340076071574,
+          "margin_hi": 0.0759520923485335,
+          "n": 3368,
+          "agreement": 0.011876484560570071
+        }
+      ]
+    },
+    {
+      "zone": 2,
+      "label_n": 45674,
+      "label_share": 0.3263780709150934,
+      "runtime_n": 57630,
+      "runtime_marginal": 0.4118134655785968,
+      "parity": 0.7012742479309891,
+      "lift": 0.2894607823523923,
+      "enrichment": 1.7028929516564026,
+      "margin_median": 0.023467113401121953,
+      "margin_p10": 0.004449508013032455,
+      "margin_p90": 0.04895257013088138,
+      "frac_margin_lt_0.01": 0.21929325217848228,
+      "frac_margin_lt_0.05": 0.9099268730568814,
+      "agreement_by_margin_tercile": [
+        {
+          "tercile": 1,
+          "margin_lo": -3.998635769530967e-05,
+          "margin_hi": 0.01539846648543064,
+          "n": 15224,
+          "agreement": 0.5342879663688912
+        },
+        {
+          "tercile": 2,
+          "margin_lo": 0.01539846648543064,
+          "margin_hi": 0.03176330242552128,
+          "n": 15224,
+          "agreement": 0.7059905412506569
+        },
+        {
+          "tercile": 3,
+          "margin_lo": 0.03176330242552128,
+          "margin_hi": 0.07716331756168138,
+          "n": 15226,
+          "agreement": 0.8635229213187968
+        }
+      ]
+    },
+    {
+      "zone": 3,
+      "label_n": 31540,
+      "label_share": 0.22537908562118592,
+      "runtime_n": 11444,
+      "runtime_marginal": 0.08177673607637449,
+      "parity": 0.13132530120481928,
+      "lift": 0.049548565128444785,
+      "enrichment": 1.6059004981828748,
+      "margin_median": 0.013663574517437438,
+      "margin_p10": 0.0022318597959567143,
+      "margin_p90": 0.037442666943367085,
+      "frac_margin_lt_0.01": 0.3937856689917565,
+      "frac_margin_lt_0.05": 0.9766011414077362,
+      "agreement_by_margin_tercile": [
+        {
+          "tercile": 1,
+          "margin_lo": -3.005965321600801e-05,
+          "margin_hi": 0.008232744214314414,
+          "n": 10512,
+          "agreement": 0.2726407914764079
+        },
+        {
+          "tercile": 2,
+          "margin_lo": 0.008232744214314414,
+          "margin_hi": 0.02151483708428714,
+          "n": 10514,
+          "agreement": 0.12136199353243295
+        },
+        {
+          "tercile": 3,
+          "margin_lo": 0.02151483708428714,
+          "margin_hi": 0.0696384638973373,
+          "n": 10514,
+          "agreement": 0.0
+        }
+      ]
+    },
+    {
+      "zone": 4,
+      "label_n": 3872,
+      "label_share": 0.02766860556516271,
+      "runtime_n": 5780,
+      "runtime_marginal": 0.04130282545626045,
+      "parity": 0.19266528925619836,
+      "lift": 0.1513624637999379,
+      "enrichment": 4.664699984271784,
+      "margin_median": 0.00986608417835566,
+      "margin_p10": 0.0016017668416814404,
+      "margin_p90": 0.03464858769140707,
+      "frac_margin_lt_0.01": 0.5041322314049587,
+      "frac_margin_lt_0.05": 0.9808884297520661,
+      "agreement_by_margin_tercile": [
+        {
+          "tercile": 1,
+          "margin_lo": -4.33493726650358e-05,
+          "margin_hi": 0.006063707412784836,
+          "n": 1290,
+          "agreement": 0.17364341085271318
+        },
+        {
+          "tercile": 2,
+          "margin_lo": 0.006063707412784836,
+          "margin_hi": 0.01568311140606493,
+          "n": 1290,
+          "agreement": 0.22325581395348837
+        },
+        {
+          "tercile": 3,
+          "margin_lo": 0.01568311140606493,
+          "margin_hi": 0.08690993783906642,
+          "n": 1292,
+          "agreement": 0.18111455108359134
+        }
+      ]
+    },
+    {
+      "zone": 5,
+      "label_n": 172,
+      "label_share": 0.0012290806191136328,
+      "runtime_n": 1112,
+      "runtime_marginal": 0.007946149118920696,
+      "parity": 0.37209302325581395,
+      "lift": 0.36414687413689323,
+      "enrichment": 46.82683620545424,
+      "margin_median": 0.014626067824995925,
+      "margin_p10": 0.001371897002067679,
+      "margin_p90": 0.041335324843365696,
+      "frac_margin_lt_0.01": 0.36046511627906974,
+      "frac_margin_lt_0.05": 0.9302325581395349,
+      "agreement_by_margin_tercile": [
+        {
+          "tercile": 1,
+          "margin_lo": 4.362387125356193e-05,
+          "margin_hi": 0.00820083439381547,
+          "n": 56,
+          "agreement": 0.21428571428571427
+        },
+        {
+          "tercile": 2,
+          "margin_lo": 0.00820083439381547,
+          "margin_hi": 0.02186186771201859,
+          "n": 58,
+          "agreement": 0.27586206896551724
+        },
+        {
+          "tercile": 3,
+          "margin_lo": 0.02186186771201859,
+          "margin_hi": 0.07784895724341989,
+          "n": 58,
+          "agreement": 0.6206896551724138
+        }
+      ]
+    },
+    {
+      "zone": 6,
+      "label_n": 1162,
+      "label_share": 0.008303439996570008,
+      "runtime_n": 3392,
+      "runtime_marginal": 0.024238613139729318,
+      "parity": 0.25989672977624784,
+      "lift": 0.23565811663651853,
+      "enrichment": 10.722425754229857,
+      "margin_median": 0.010379578506971465,
+      "margin_p10": 0.001618174856822474,
+      "margin_p90": 0.03546354191801104,
+      "frac_margin_lt_0.01": 0.4905335628227194,
+      "frac_margin_lt_0.05": 0.9621342512908778,
+      "agreement_by_margin_tercile": [
+        {
+          "tercile": 1,
+          "margin_lo": 2.556701429567987e-06,
+          "margin_hi": 0.00568641142243087,
+          "n": 386,
+          "agreement": 0.13989637305699482
+        },
+        {
+          "tercile": 2,
+          "margin_lo": 0.00568641142243087,
+          "margin_hi": 0.017778521401603187,
+          "n": 388,
+          "agreement": 0.29381443298969073
+        },
+        {
+          "tercile": 3,
+          "margin_lo": 0.017778521401603187,
+          "margin_hi": 0.07091393994662887,
+          "n": 388,
+          "agreement": 0.34536082474226804
+        }
+      ]
+    },
+    {
+      "zone": 7,
+      "label_n": 26714,
+      "label_share": 0.19089337011047433,
+      "runtime_n": 51146,
+      "runtime_marginal": 0.3654799845650341,
+      "parity": 0.6805420378827581,
+      "lift": 0.315062053317724,
+      "enrichment": 1.862050089261896,
+      "margin_median": 0.020955124630774646,
+      "margin_p10": 0.003575774589993564,
+      "margin_p90": 0.043628894499097536,
+      "frac_margin_lt_0.01": 0.2558209178707794,
+      "frac_margin_lt_0.05": 0.954181328142547,
+      "agreement_by_margin_tercile": [
+        {
+          "tercile": 1,
+          "margin_lo": -3.116029523497765e-05,
+          "margin_hi": 0.013185764375226228,
+          "n": 8904,
+          "agreement": 0.45215633423180596
+        },
+        {
+          "tercile": 2,
+          "margin_lo": 0.013185764375226228,
+          "margin_hi": 0.02911924948017075,
+          "n": 8904,
+          "agreement": 0.7142857142857143
+        },
+        {
+          "tercile": 3,
+          "margin_lo": 0.02911924948017075,
+          "margin_hi": 0.0712123726837528,
+          "n": 8906,
+          "agreement": 0.8751403548169773
+        }
+      ]
+    }
+  ],
+  "anomaly_criterion": {
+    "declared_before_inspection": true,
+    "expected_agreement_baseline": "runtime marginal m_i (not label share, not 1/k)",
+    "lift_threshold": 0.31026138285982513,
+    "lift_rule": "lift > mean + 1.0*sd",
+    "enrichment_rule": "enrichment > 5.0x",
+    "selected_zones": [
+      5,
+      6,
+      7
+    ],
+    "not_anomalous_note": "Zones failing BOTH rules are explained by their runtime marginal alone. In particular a large LABEL zone with low parity is not anomalous if the runtime seldom picks it."
+  },
+  "anomalous_zone_investigations": [
+    {
+      "zone": 5,
+      "why_selected": {
+        "lift": 0.36414687413689323,
+        "exceeds_lift_threshold": true,
+        "enrichment": 46.82683620545424,
+        "exceeds_enrichment": true
+      },
+      "top_runtime_destinations": [
+        {
+          "runtime_zone": 5,
+          "n": 64,
+          "share_of_label_zone": 0.37209302325581395
+        },
+        {
+          "runtime_zone": 6,
+          "n": 38,
+          "share_of_label_zone": 0.22093023255813954
+        },
+        {
+          "runtime_zone": 4,
+          "n": 24,
+          "share_of_label_zone": 0.13953488372093023
+        }
+      ],
+      "margin_profile": {
+        "median": 0.014626067824995925,
+        "frac_lt_0.01": 0.36046511627906974,
+        "frac_lt_0.05": 0.9302325581395349
+      },
+      "within_zone_margin_gradient": 0.4064039408866995,
+      "instability_driven": true
+    },
+    {
+      "zone": 6,
+      "why_selected": {
+        "lift": 0.23565811663651853,
+        "exceeds_lift_threshold": false,
+        "enrichment": 10.722425754229857,
+        "exceeds_enrichment": true
+      },
+      "top_runtime_destinations": [
+        {
+          "runtime_zone": 6,
+          "n": 302,
+          "share_of_label_zone": 0.25989672977624784
+        },
+        {
+          "runtime_zone": 5,
+          "n": 222,
+          "share_of_label_zone": 0.19104991394148021
+        },
+        {
+          "runtime_zone": 4,
+          "n": 198,
+          "share_of_label_zone": 0.1703958691910499
+        }
+      ],
+      "margin_profile": {
+        "median": 0.010379578506971465,
+        "frac_lt_0.01": 0.4905335628227194,
+        "frac_lt_0.05": 0.9621342512908778
+      },
+      "within_zone_margin_gradient": 0.20546445168527322,
+      "instability_driven": true
+    },
+    {
+      "zone": 7,
+      "why_selected": {
+        "lift": 0.315062053317724,
+        "exceeds_lift_threshold": true,
+        "enrichment": 1.862050089261896,
+        "exceeds_enrichment": false
+      },
+      "top_runtime_destinations": [
+        {
+          "runtime_zone": 7,
+          "n": 18180,
+          "share_of_label_zone": 0.6805420378827581
+        },
+        {
+          "runtime_zone": 2,
+          "n": 6574,
+          "share_of_label_zone": 0.2460881934566145
+        },
+        {
+          "runtime_zone": 3,
+          "n": 768,
+          "share_of_label_zone": 0.028748970577225426
+        }
+      ],
+      "margin_profile": {
+        "median": 0.020955124630774646,
+        "frac_lt_0.01": 0.2558209178707794,
+        "frac_lt_0.05": 0.954181328142547
+      },
+      "within_zone_margin_gradient": 0.4229840205851713,
+      "instability_driven": true
+    }
+  ],
+  "margin_gradient_structure": {
+    "per_zone_gradient": {
+      "0": -0.138800347725297,
+      "1": -0.17944853029385655,
+      "2": 0.3292349549499056,
+      "3": -0.2726407914764079,
+      "4": 0.007471140230878165,
+      "5": 0.4064039408866995,
+      "6": 0.20546445168527322,
+      "7": 0.4229840205851713
+    },
+    "rising_zones": [
+      2,
+      5,
+      6,
+      7
+    ],
+    "falling_zones": [
+      0,
+      1,
+      3
+    ],
+    "flat_zones": [
+      4
+    ],
+    "bimodal": true,
+    "mean_is_meaningless": true,
+    "rising_are_runtime_attractors": true,
+    "interpretation": "RISING zone: when the runtime is confident (large top1-top2 margin) it agrees with the label -> disagreement there is near-tie INSTABILITY. FALLING zone: when the runtime is confident it systematically picks a DIFFERENT zone (agreement -> ~0) -> that disagreement is SYSTEMATIC re-routing, not noise. Both mechanisms operate simultaneously on different zones, which is why no single scalar describes the 41.4%."
+  },
+  "verdict": {
+    "parity_reproduced": true,
+    "mechanical_cause": "KMeans variance is 99.99% carried by dims the runtime zeroes; the two partitions are built on near-disjoint information.",
+    "all_zones_positive_lift": true,
+    "residual_over_majority_baseline": 0.08762201483471721,
+    "cohens_kappa": 0.23803497169037044,
+    "near_tie_prevalence": {
+      "frac_margin_lt_0.05_overall": 0.9518228980577668,
+      "frac_margin_lt_0.01_overall": 0.33615354932757857
+    },
+    "two_mechanisms": "near-tie instability (margins are tiny corpus-wide) AND systematic re-routing into the runtime's attractor zones",
+    "instability_driven": "BIMODAL_SEE_margin_gradient_structure",
+    "anomalous_zones": [
+      5,
+      6,
+      7
+    ]
+  }
+}

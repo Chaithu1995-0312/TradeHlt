@@ -1,0 +1,42 @@
+{
+  "phase": "SESSION_END",
+  "files": {
+    "configs/formulas/market_ontology.yaml": {
+      "bytes": 29556,
+      "sha256": "ddf53562bf98175b70c1e44c221165330b8122d1beee9046919fe865197be3d5"
+    },
+    "src/features/derived_math.py": {
+      "bytes": 6915,
+      "sha256": "c88e62ab458317ae8b3454444fb583de815c9b2e6c1730a00538039822952605"
+    },
+    "src/features/candle_math.py": {
+      "bytes": 3347,
+      "sha256": "912ff1b41dd7f175eb76d6740dca64a9bc48339fb5b3d41a1b933e94dfde729c"
+    },
+    "src/features/feature_pipeline.py": {
+      "bytes": 42938,
+      "sha256": "7188051e3beeab6ae731b5bb99e4d1af53a130ce3a26f1d12ba446e01315c5dc"
+    },
+    "src/features/feature_schema.py": {
+      "bytes": 14121,
+      "sha256": "b4bfa6810ac0eb8a37e93d80217a1221b768a30ccdf6a1c213736342e12f521b"
+    },
+    "src/features/registry/derived_registry.py": {
+      "bytes": 2388,
+      "sha256": "c1d951681a68b25fd7c64e44f03d85fc50ffa936289702ecb38782bb7de333d7"
+    },
+    "active_models.yaml": {
+      "bytes": 57445,
+      "sha256": "76f9ee6930ca305e652552877684425e60f8318af77313fb8641f7104bc47b9c"
+    },
+    "configs/production/v2_multi_2026_04.json": {
+      "bytes": 25058,
+      "sha256": "03a3b8aa497d116a3bb32620253a2d1b6ce53737ec10e837d4bc83334f194990"
+    },
+    "scripts/analysis/feature_dag_layers.py": {
+      "bytes": 15230,
+      "sha256": "878fa3c395d6ef512f30a110f13c55ec8734354d7a191dfa2b5f842ecbc613e0"
+    }
+  },
+  "production_drift": []
+}

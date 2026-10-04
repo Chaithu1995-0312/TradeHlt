@@ -1,0 +1,108 @@
+{
+  "gate_id": "OSS-CODEBASE-MEMORY-G4-G6",
+  "oss_id": "OSS-CODEBASE-MEMORY",
+  "assessed_utc": "2026-08-12T21:00:00Z",
+  "assessor": "oss_lab_gate_operator",
+  "authority": "RESEARCH_LAB_ONLY",
+  "result": {
+    "G4": "PASS",
+    "G5": "PASS",
+    "G6": "PASS",
+    "SLSA_residual": "ATTEMPTED_TOOLS_ABSENT"
+  },
+  "lifecycle_after": "APPROVED_FOR_LAB",
+  "pin": {
+    "version": "v0.10.2",
+    "commit_sha": "b377c62a4e8b7ad64ccd295e4aa88abc8d275180",
+    "windows_amd64_sha256": "8f08e5c5b480e625adf9d4560765a860d493a690df6ded5b94127283ec5b660a"
+  },
+  "G4_architectural_boundary": {
+    "status": "PASS",
+    "allowed_surfaces_verified": [
+      "oss_lab/adapters/codebase_memory",
+      "oss_lab/evidence/repo_intel",
+      "results/oss_lab/repo_intel",
+      "tools/oss_lab/codebase-memory/v0.10.2 (install isolation only)"
+    ],
+    "forbidden_surfaces_verified": [
+      "docs/governance/semantic_os",
+      "src/governance/semantic_os.py",
+      "configs/formulas/market_ontology.yaml",
+      "src/config_layer/crt_engine_v2.py",
+      "src/core",
+      "configs/production",
+      "src/governance/promotion_manager.py"
+    ],
+    "output_contract": "oss_lab/contracts/structural_fact.py#StructuralFactRecord",
+    "output_contract_exists": true,
+    "adapter_exists": true,
+    "adapter_path": "oss_lab/adapters/codebase_memory/adapter.py",
+    "semantic_os_non_goal": "Codebase-Memory provides structural facts only; Semantic OS remains meaning authority. No live YAML mutation authorized by this gate.",
+    "evidence_docs": [
+      "oss_lab/governance/ARCHITECTURE_APPROVAL.md",
+      "oss_lab/adapters/codebase_memory/INSTALL_ISOLATION.md",
+      "oss_lab/governance/semantic_os_mapping.json"
+    ],
+    "boundary_rules": [
+      "Production spine must not import oss_lab",
+      "Adapter must not write docs/governance/semantic_os/*.yaml",
+      "Install must not target venv/.venv",
+      "Lab prefer --skip-config so agent MCP configs are not mutated",
+      "T4 production authority forbidden"
+    ]
+  },
+  "G5_benchmark_readiness": {
+    "status": "PASS",
+    "qa_corpus": {
+      "path": "oss_lab/scenarios/repo_intel_qa_corpus_v1.json",
+      "corpus_id": "REPO-INTEL-QA-V1",
+      "item_count": 12,
+      "frozen": true
+    },
+    "local_baselines": [
+      "graph.dot",
+      "scripts/analysis/gen_pyan.py",
+      "src/control_plane/dot_graph_context.py"
+    ],
+    "scenario": "oss_lab/scenarios/bm_repo_intel_head_to_head.json",
+    "report_template": "oss_lab/reports/repo_intel_benchmark_template.md",
+    "evidence_output_dirs_created": [
+      "results/oss_lab/repo_intel/runs/",
+      "results/oss_lab/repo_intel/cbm_cache/",
+      "tools/oss_lab/codebase-memory/v0.10.2/"
+    ],
+    "run_manifest_plan": "oss_lab/evidence/repo_intel/codebase_memory_v0.10.2/REPO_INTEL_RUN_MANIFEST_PLAN.json",
+    "lab_cbmignore_template": "oss_lab/adapters/codebase_memory/lab.cbmignore",
+    "run_id_pattern": "results/oss_lab/repo_intel/runs/RI-RUN-<utc>/"
+  },
+  "G6_lifecycle": {
+    "status": "PASS",
+    "previous_decision": "DISCOVERED",
+    "new_decision": "APPROVED_FOR_LAB",
+    "new_lifecycle_status": "APPROVED_FOR_LAB",
+    "certification_status": "LAB_ONLY",
+    "decision_reason": "G1–G6 complete 2026-08-12. MIT pin v0.10.2 hash-verified; architectural boundary certified; REPO-INTEL-QA-V1 ready; isolation paths created. APPROVED_FOR_LAB authorizes isolated lab install+benchmark only under INSTALL_ISOLATION.md. Does NOT authorize Semantic OS mutation, production agent wiring, or T4 authority. SLSA residual: tools absent — execute still recommends cosign/gh attestation when available.",
+    "explicit_not_authorized": [
+      "Semantic OS live YAML mutation",
+      "Production agent default MCP wiring",
+      "T4 production authority",
+      "Promotion findings from unpublished lab runs without measurement discipline",
+      "Dual Infigraph adoption without H2H"
+    ]
+  },
+  "SLSA_residual": {
+    "status": "ATTEMPTED_TOOLS_ABSENT",
+    "attempted_utc": "2026-08-12T21:00:00Z",
+    "gh_available": false,
+    "cosign_available": false,
+    "sha256_of_zip": "PASS (prior G3)",
+    "cosign_bundle_downloaded": true,
+    "cosign_bundle_path": "results/oss_lab/repo_intel/codebase_memory_v0.10.2/codebase-memory-mcp-windows-amd64.zip.bundle",
+    "cosign_bundle_bytes": 10559,
+    "commands_when_tools_available": [
+      "gh attestation verify results/oss_lab/repo_intel/codebase_memory_v0.10.2/codebase-memory-mcp-windows-amd64.zip --repo DeusData/codebase-memory-mcp --signer-workflow DeusData/codebase-memory-mcp/.github/workflows/_build.yml",
+      "cosign verify-blob --bundle results/oss_lab/repo_intel/codebase_memory_v0.10.2/codebase-memory-mcp-windows-amd64.zip.bundle results/oss_lab/repo_intel/codebase_memory_v0.10.2/codebase-memory-mcp-windows-amd64.zip"
+    ],
+    "policy": "APPROVED_FOR_LAB may proceed to isolated extract under isolation policy. First EXECUTE should still run SLSA/cosign when tools exist; SHA-256 pin remains the load-bearing integrity proof today."
+  }
+}

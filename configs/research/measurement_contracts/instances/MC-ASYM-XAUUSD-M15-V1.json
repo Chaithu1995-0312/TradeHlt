@@ -1,0 +1,247 @@
+{
+  "schema_version": "1.0.0",
+  "contract_id": "MC-ASYM-XAUUSD-M15-V1",
+  "experiment_id": "E-ASYM-XAUUSD-M15",
+  "created_utc": "2026-08-24T00:00:00Z",
+  "authority": {
+    "economic_admissible": false,
+    "requires_mt00_pass": true,
+    "note": "Sealed BEFORE the holdout contrast was computed. The 2026-08-24 full-sample atlas (E[ΔMFE]=+0.239 on 47166 pairs) mixed what is now train and holdout and is hypothesis-generating only — it is NOT this contract's success gate. Historical F-xxx (including F-086) are not economic closure of THIS object. ΔMFE is path excursion, not book PnL. economic_claims_allowed stays false until mt00==PASS and mt01_matrix_coverage==COMPLETE (repo-wide 0/27 probes). A diagnostic sign-match is NOT G001."
+  },
+  "population": {
+    "unit_of_analysis": "candle",
+    "instruments": [
+      "XAUUSD"
+    ],
+    "timeframe": "M15",
+    "calendar_window": {
+      "start": "2024-05-22 01:00:00",
+      "end": "2026-05-21 23:45:00",
+      "timezone": "broker_server_labeled_UTC"
+    },
+    "inclusion_rule": "MEASUREMENT CORPUS = data/mt5/XAUUSD_M15.csv ONLY (47275 bars, sha256 4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56). Outcome surface = results/clean_labels/XAUUSD/20260723T083443Z/clean_labels (TN_ENV_CLEAN_L2). One unit = one timestamp that has both side=long and side=short y_mfe_r. SUCCESS GATE uses HOLDOUT units only (decision_ts >= 2025-12-24 19:15:00, corpus index 37820).",
+    "exclusion_rule": "F-086 236-bar stride holdout is NOT this split and remains unspent. CRT TRADE_OPENED is not a unit. opportunities.outcome is not y. Unpaired timestamps (only one side) are dropped. Hour-of-day and session cells are OUT OF PATH for the success gate (F-066). Identity L5 engine closes are not units.",
+    "n_declared_min": 30,
+    "detection_vs_trade": "not_applicable",
+    "population_hash_inputs": [
+      "instrument",
+      "decision_ts",
+      "delta_mfe",
+      "corpus_path",
+      "corpus_sha256",
+      "contract_id"
+    ]
+  },
+  "features": {
+    "feature_set_id": "FS-ASYM-XAUUSD-M15-V1",
+    "feature_ids": [
+      "FM-054"
+    ],
+    "formula_authority": "market_ontology",
+    "point_in_time_rule": "trend_bias (FM-054) is the stored t=0 ternary on the bar. ΔMFE uses path labels after t, which is the object (information in the subsequent path), not a t=0 tradable feature. F-051 centered-swing in stored features is declared: PRIMARY uses only FM-054 sign, which is immune to the FM-022 scale defect. F-066 session/hour are OUT OF PATH for the gate.",
+    "name_binding": {
+      "delta_mfe": {
+        "fm_id": "SEM-027",
+        "formula_ref": "y_mfe_r(long) - y_mfe_r(short) at the same decision_ts",
+        "units": "R_multiple",
+        "not_equal_to": [
+          "opportunities.rr_achieved",
+          "y_R_net",
+          "win_rate",
+          "path_net on pooled sides"
+        ]
+      },
+      "trend_bias": {
+        "fm_id": "FM-054",
+        "formula_ref": "sign(ema_fast - ema_slow) in {-1,0,+1}",
+        "units": "ternary",
+        "not_equal_to": [
+          "trend_strength",
+          "session ordinal",
+          "hour_of_day"
+        ]
+      }
+    },
+    "forbidden_aliases": [
+      "hour_of_day as PRIMARY",
+      "session as PRIMARY",
+      "pooled path_net as this object",
+      "CRT parent_state as this object"
+    ]
+  },
+  "labels": {
+    "label_family": "information_only",
+    "y_definition": "y = ΔMFE = clean_labels y_mfe_r on the long row minus y_mfe_r on the short row at the same decision_ts. y_mfe_r is TN_ENV_CLEAN_L2 horizon_excursion mfe_r (exit-agnostic, max_forward=40), NOT stream mfe, NOT y_tp1, NOT y_R_net.",
+    "derivation_authority": "information_target",
+    "stream_fields_banned_for_economic_claims": [
+      "opportunities.outcome",
+      "opportunities.rr_achieved",
+      "opportunities.mfe",
+      "diagnostics.stream_outcome"
+    ],
+    "rederive_protocol": {
+      "enabled": false,
+      "matcher": "not_applicable_y_is_already_clean_labels_y_mfe_r",
+      "min_agreement": 1.0,
+      "on_fail": "BLOCK_EXPERIMENT"
+    },
+    "horizon_bars": 40,
+    "sign_convention": "Positive ΔMFE means the long path printed more favorable R-excursion than the short path over the next 40 bars"
+  },
+  "costs": {
+    "cost_model_id": "CM-INFO-STAGE-NONE",
+    "components": [
+      {
+        "name": "not_a_trade",
+        "bps_or_formula": "ΔMFE is not book PnL. No spread, commission, or slippage is applied. SEM-015 is OUT OF PATH.",
+        "applied_on": "round_trip"
+      }
+    ],
+    "gross_vs_net": {
+      "report_gross": false,
+      "report_net": false,
+      "promotable": "none_info_stage"
+    },
+    "success_gate_uses": "none_info_stage",
+    "code_entrypoint": "src/research/evidence/asymmetry_contract.py"
+  },
+  "exits": {
+    "exit_model_id": "EX-ASYM-HORIZON-MFE-V1",
+    "exit_family": "event_horizon",
+    "parameters": {
+      "max_forward": 40,
+      "label": "TN_ENV_CLEAN_L2 horizon_excursion mfe_r"
+    },
+    "intrabar_rule": "Inherited from the sealed clean_labels protocol (horizon_excursion, exit-agnostic). This experiment does not re-walk SL/TP. It does not use opportunities.outcome.",
+    "not_equal_to": [
+      "opportunities.outcome",
+      "y_tp1 as this y",
+      "forward_walk net R as this y",
+      "trailing"
+    ],
+    "code_entrypoint": "src/research/measurement/forward_walk.py::horizon_excursion"
+  },
+  "splits": {
+    "scheme": "single_holdout_chronologic",
+    "embargo": "96 M15 bars between last train timestamp and first holdout timestamp",
+    "purge": "drop train pairs whose 40-bar horizon overlaps holdout start",
+    "n_folds_or_windows": 1,
+    "overlap_policy": "forbid_overlapping_labels",
+    "seed": 20260824,
+    "oos_fraction_or_dates": "last 20% of corpus bars by index; first holdout timestamp 2025-12-24 19:15:00 (idx 37820). F-086 stride holdout of 236 bars is a different split and is not spent. The 2026-08-24 full-sample atlas is not this split."
+  },
+  "metrics": {
+    "information_metrics": [
+      "n_holdout_pairs",
+      "e_delta_mfe",
+      "trend_bias_contrast",
+      "sign_match_train_holdout"
+    ],
+    "economic_metrics": [],
+    "success_gate": "DIAGNOSTIC ONLY. Holdout n_pairs>=30 AND both trend_bias=+1 and −1 cells n>=30 AND sign(holdout contrast)==sign(train contrast), where contrast=E[ΔMFE|trend_bias=+1]−E[ΔMFE|trend_bias=−1]. Meeting every clause is NOT economic validation while economic_claims_allowed is false. Session and hour cells are reported, never gated.",
+    "kill_criteria": "Any outcome including n=0 or n<30 is registered. Changing y (to y_tp1 or stream mfe), pairing rule, PRIMARY state, holdout date, embargo, or purge after seeing holdout y requires a NEW MC-* id. Do not promote session/hour into PRIMARY after seeing them.",
+    "multiplicity": {
+      "n_variants_preregistered": 1,
+      "control": "none_single_test"
+    },
+    "authority_ladder": {
+      "info_not_value": true,
+      "value_not_authority": true,
+      "insufficient_not_harmful": true
+    },
+    "forbidden_metric_substitutions": [
+      "p_value_as_edge",
+      "in_sample_as_oos",
+      "full_sample_atlas_as_this_holdout",
+      "f086_stride_as_this_holdout",
+      "session_or_hour_as_primary_after_peeking",
+      "delta_mfe_as_expectancy_R",
+      "diagnostic_sign_match_as_economic_validation"
+    ]
+  },
+  "pipeline_identity": {
+    "config_version_source": "NOT the production config path. Object frozen in docs/research/asymmetry_object.md. ACTIVE_VERSION is never written.",
+    "active_version_file": "configs/production/ACTIVE_VERSION",
+    "engine_gate_mode": "info_only",
+    "expected_engines": [],
+    "modules_in_path": [
+      "src/research/evidence/asymmetry_contract.py",
+      "src/research/evidence/atlases.py",
+      "src/data_ingestion/dataset_integrity.py"
+    ],
+    "modules_explicitly_out_of_path": [
+      "src/config_layer/crt_engine_v2.py",
+      "src/runtime/backtest_v2.py",
+      "src/core/engine_runner.py",
+      "TradeLib"
+    ],
+    "dataset_integrity_level": "L1_L2_L3"
+  },
+  "prohibited_substitutions": [
+    {
+      "surface": "population",
+      "forbidden": "Count CRT TRADE_OPENED or unpaired rows as units",
+      "historical_class": "FC-POP-DETECTION-AS-TRADE"
+    },
+    {
+      "surface": "labels",
+      "forbidden": "Use opportunities.outcome or stream mfe as ΔMFE",
+      "historical_class": "FC-LABEL-STREAM-INCONSISTENT"
+    },
+    {
+      "surface": "costs",
+      "forbidden": "Treat ΔMFE as net expectancy or apply 12bps as if this were a trade book",
+      "historical_class": "FC-COST-MODEL-SUBSTITUTION"
+    },
+    {
+      "surface": "exits",
+      "forbidden": "Substitute y_tp1 or a new SL/TP walk for stored horizon_excursion y_mfe_r",
+      "historical_class": "FC-EXIT-PROXY-NOT-GOVERNING"
+    },
+    {
+      "surface": "splits",
+      "forbidden": "Spend F-086's 236-bar stride holdout, or report the 2026-08-24 full-sample atlas as this holdout",
+      "historical_class": "FC-SPLIT-LABEL-OVERLAP"
+    },
+    {
+      "surface": "metrics",
+      "forbidden": "Promote session/hour into PRIMARY after seeing holdout, or present diagnostic sign-match as G001",
+      "historical_class": "FC-DIAGNOSTIC-AS-ECONOMIC"
+    },
+    {
+      "surface": "pipeline",
+      "forbidden": "Skip L3 dataset_integrity.validate_dataset on the candle CSV",
+      "historical_class": "FC-PIPELINE-L3-SKIPPED-AS-RESEARCH-DEFAULT"
+    },
+    {
+      "surface": "features",
+      "forbidden": "Use hour_of_day or session as the PRIMARY state (F-066)",
+      "historical_class": "FC-FEATURE-NAME-COLLISION"
+    }
+  ],
+  "evidence_artifacts": {
+    "contract_path": "configs/research/measurement_contracts/instances/MC-ASYM-XAUUSD-M15-V1.json",
+    "population_fingerprint_path": "docs/research-readiness/asymmetry/mc_asym_xauusd_m15_v1/population_fingerprint.json",
+    "feature_parity_path": null,
+    "label_rederive_path": null,
+    "cost_exit_fixture_path": null,
+    "split_manifest_path": "docs/research-readiness/asymmetry/mc_asym_xauusd_m15_v1/split_manifest.json",
+    "metric_compute_path": "docs/research-readiness/asymmetry/mc_asym_xauusd_m15_v1/metrics.json",
+    "mt00_report_path": "docs/research-readiness/asymmetry/mc_asym_xauusd_m15_v1/mt00.json",
+    "mt01_mutation_coverage_path": "docs/research-readiness/asymmetry/mc_asym_xauusd_m15_v1/mt01.json",
+    "code_commit": null
+  },
+  "trust_status": {
+    "mt00": "PARTIAL",
+    "mt01_matrix_coverage": "UNRUN",
+    "economic_claims_allowed": false,
+    "failing_probes": [],
+    "open_risks_non_blocking": [
+      "27 E-MT-01 probes unimplemented (0/27)",
+      "Full-sample atlas 2026-08-24 already saw pooled ΔMFE including these dates — holdout tests a CLOSED PRIMARY, not discovery",
+      "F-086 stride holdout remains unspent by design",
+      "Stored y_mfe_r inherits TN_ENV_CLEAN_L2 PIT_UNCLEAN_STORED_FEATURES (F-051) except PRIMARY uses FM-054 sign only",
+      "E-MT-00 executed 2026-08-26 (CH-measurement-provenance-boundary): verdict PARTIAL; failing none; inconclusive ['E1-05-FINGERPRINT-DIGEST-COMPOSITION', 'E2-04-METRIC-GATE-TRACE']. Clean-path only — mt01 stays UNRUN so E4 is unmet and no economic authority is granted."
+    ]
+  }
+}

@@ -1,1119 +1,571 @@
+﻿<!-- ============================================================= -->
+<!-- ARCHITECTURE MIGRATION DOCTRINE — keep this block at the top.  -->
+<!-- Canonical companion docs live in docs/architecture/.          -->
+<!-- ============================================================= -->
+
+# ARCHITECTURE MIGRATION DOCTRINE
+
+> **This file is the permanent record of every session decision since April 2026.**
+> Every entry below carries a date and a decision summary in timestamped order, so you can scroll back through the full history without replaying old conversations.
+> Governed by [`CLAUDE.md`](CLAUDE.md) §6 (Persistent Logging Mandate).
+> Cross-reference: [`CLAUDE.md`](CLAUDE.md) §2 for the companion docs map.
+---
+
+**North star — LLM context economy.** We migrate toward an event-driven LLM-event-
+microservices architecture so a future LLM loads only the *one* service it needs
+(ins → flow → outs) instead of the whole codebase. Microservice boundaries = context
+separation. Telemetry is curated into per-episode "LLM logs" so context does not grow
+unbounded. Every application flow is documented as a loadable context unit.
+
+**Priority order (ranks above refactor speed):**
+replay correctness > explainability > telemetry continuity > advisory-AI >
+(structure validity ≠ execution validity).
+
+**The five governance questions — apply as a pre-merge checklist to every change:**
+1. Does replay remain deterministic?
+2. Does telemetry remain comparable across runs?
+3. Can this state be audited later?
+4. Can an LLM reason about this event?
+5. Is execution authority still isolated?
+
+**Standing rules:**
+- **Consolidate on `src/events/event_fabric.py` — never fork the event system.**
+- LLMs are advisory governance, **never** execution authority.
+- No lookahead in replay; deterministic seeds mandatory; comparison ignores
+  `event_id`/`generation`/wall-clock `timestamp`.
+- New telemetry is additive; no field removed without a documented superseding field.
+
+**Migration sequencing index** (detail in `docs/implementation_plan/`):
+- **M0** — Map & doctrine: `docs/architecture/{CODEBASE_STATE_MAP,EVENT_TAXONOMY,
+  SERVICE_BOUNDARY_MAP,REPLAY_GOVERNANCE,LLM_GOVERNANCE_LAYER}.md` + `services/`.
+- **M1** — Telemetry normalization (envelope trade writers) + per-episode LLM log.
+- **M2** — Event extraction (CRTState transitions + silent EventTypes).
+- **M3** — Orchestration de-coupling (kill `live_engine_hook` singletons).
+- **M4** — Dependency inversion (governance/analytics stop importing `runtime.backtest_v2`).
+- **M5** — LLM-layer hardening (`GOVERNANCE_MODE`, decision-path assertions, advisory event contract).
+
+<!-- ============================================================= -->
+<!-- SESSION LOG (newest first). Append new entries below the       -->
+<!-- doctrine block, above prior entries.                           -->
+<!-- ============================================================= -->
+
+**CURRENT_TASK:** Raised whole-repo Jira file-coverage from 17.5% to 50.7% (exact-match methodology) via data-quality fixes, not new stories; added a pyan/graph.dot cross-check lens.
+**NEXT_10_STEPS:** 1) user reviews the 2,165-row residual gap TSV 2) decide whether to file stories for `tools/`(3.6%)/`mt5_analytics/`(6.2%)/`grok/`lowercase(0%) 3) STORY-48.1 v7 rename-list recovery 4) REM-COST-04 commit decision 5) capture_tv.py commit-vs-revert decision 6) start any STORY-19/25/44/49-55 work 7) consider wiring the 387 pyan-uncovered `src/research/`-heavy modules into stories 8) decide on root-scratch-file cleanup (epic 11 adjacent) 9) regenerate `context/*.md` (STORY-19.10, still awaiting the user's prompts) 10) stage/commit `context/` reclassification.
+**CONTEXT_DELTA:** `multi_llm/build_queue.jsonl` files-only edits across 258 stories (428 total, 0 dup ids); `DOC_TRACKING_INDEX.xlsx` +1 sheet (`Repo_Coverage_PyanWired`), `Story_Detail` +21 rows, `Master_Index.Story_IDs` filled for 1,159 docs; `grok/Book_PDF_File_Coverage_Grok.xlsx` Story_IDs refreshed for 503 rows. Nothing under `src/`/`configs/`/`tests/` touched.
+**FOR_NEXT_MODEL:** Coverage methodology is now file-level-only by explicit user decision -- do not reintroduce folder-prefix credit without asking again.
+**PROMPT_FOR_NEXT_MODEL:** n/a -- Claude-only turn, no handoff to another model this cycle.
+**CONFIRMATION:** Was this produced by the intended role (Claude=Executor)? yes.
+
 ---
 📝 SESSION LOG ENTRY
-Date: 2026-04-29
-Topic: PromotionManager merge-into-base strategy — governance gap fix
-Decision/Output: |
-  Problem: _write_to_registry() wrote the sparse tuner entry (9 top-level keys only)
-  directly as the promoted config file, and then set ACTIVE_VERSION to it.
-  Any call to get_prod_section("llama_gate") (or any engine section) on the new
-  ACTIVE_VERSION would raise RuntimeError because the key didn't exist.
-  This caused the full test suite to fail with 393 errors on next import.
-
-  Fix — 3 changes to src/governance/promotion_manager.py:
-
-  1. Constants (already added last session):
-       _FULL_CONFIG_SENTINEL = "engine_runner"   # key only full configs have
-       _BASE_VERSION_FALLBACK = "v1_multi_2026_03"
-
-  2. New static method _load_full_base_config(registry_dir):
-     - Tries BASE_VERSION_FALLBACK first; checks for FULL_CONFIG_SENTINEL key
-     - Falls back to scanning registry by mtime for any full config (skips archived)
-     - Returns dict | None; never raises
-
-  3. Modified _write_to_registry():
-     - Calls _load_full_base_config() before writing
-     - On success: deep-clones base, overlays 8 metadata keys from entry
-       (version, config_id, created_at, promoted_at, params, config_hash,
-        validation_summary, notes — schema_version intentionally excluded:
-        _build_registry_entry hardcodes "1.0" but base is "1.3")
-     - On failure: writes sparse entry with printed WARNING (safe fallback)
-     - Disk-written payload is always the merged full config
-
-  Also: retroactively patched configs/production/v2_multi_2026_04.json
-     - Was sparse (10 keys, no engine sections) — caused the earlier suite crash
-     - Now contains full engine sections inherited from v1_multi_2026_03 base
-     - notes field updated to document the retroactive patch
-     - schema_version corrected from "1.0" -> "1.3"
-
-Open Questions: workspace unavailable — could not run pytest to confirm green
-Next Step: Run `pytest tests/ -x --tb=short -q` when workspace is available to
-  confirm 893 passed still holds. Then consider writing unit tests for
-  PromotionManager (currently zero coverage).
+Date: 2026-10-04 11:01
+Topic: Append the forward_tester explanation to the multitpwalk analysis page
+Decision/Output: Added lines 5-8 to userinvestigation/multitpwalk_analysis.jsonl and rewrote the HTML textarea from that file. Line 6 is the sent reply naming src/bitnet/forward_tester.py and src/llm_research/forward_tester.py. No source or config edit.
+Belief Update / ROI / Goal: Goal: keep the investigation page equal to the sent answers. Belief: the forward_tester explanation now lives on the same JSONL the page reads. Knowledge ROI: high. Action: open the page for the two-file explanation.
+Open Questions: which of the two files is the subject.
+Next Step: user names the path if one of them is the subject.
 ---
 📝 SESSION LOG ENTRY
-Date: 2026-04-28
-Topic: Dead Code Archive Pass + UltronRiskGateWrapper wiring + regime_factors to config + FeatureStore live ingestion boundary
-Decision/Output: |
-  Phase 1 — Archive pass (6 confirmed-dead files copied to archive/dead_code/):
-    archive/dead_code/bitnet/_smoke_test.py
-    archive/dead_code/features/bitnet_feature_builder.py
-    archive/dead_code/ui/dashboard.py
-    archive/dead_code/config_layer/insight_reporter.py
-    archive/dead_code/journal/trade_logger.py
-    archive/dead_code/journal/schema.py
-  Each file carries an ARCHIVED 2026-04-28 header with reason + action-required note.
-  src/ originals still present — remove with:
-    git rm src/bitnet/_smoke_test.py src/features/bitnet_feature_builder.py \
-           src/ui/dashboard.py src/config_layer/insight_reporter.py \
-           src/journal/trade_logger.py src/journal/schema.py
+Date: 2026-10-04 10:55
+Topic: What forward_tester.py is
+Decision/Output: Two files share the name. src/bitnet/forward_tester.py is a temporal train/test check on BitNet zones (passed / degraded / insufficient_test_data, 70/30, retention floor 0.60, min 20 test trades). src/llm_research/forward_tester.py is a 3-mode CSV walk (BASELINE / POLICY / HYBRID) over the last 30% of rows. Its planner.plan call passes one argument; plan requires three, and the except sets pnl to 0. Neither is multi_tp_walk. No source edit.
+Belief Update / ROI / Goal: Goal: know which forward tester is being asked about. Belief: both are research holdout checkers, and the LLM one books zero PnL on the current planner signature. Knowledge ROI: high. Action: name the path before treating either as the walk kernel.
+Open Questions: which of the two files the user meant.
+Next Step: user names the path if one of them is the subject.
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-04 10:27
+Topic: Multitpwalk analysis page over the sent CPU-contract reply
+Decision/Output: Wrote userinvestigation/multitpwalk_analysis.jsonl and the sibling HTML. Line 2 is the 2026-10-03 23:55 reply, byte-copied from the sent message. The page fetches that JSONL. No source or config edit.
+Belief Update / ROI / Goal: Goal: keep the CPU walk contract readable outside the chat. Belief: the golden matrix stays the sent text, stored as the JSONL line. Knowledge ROI: high. Action: read the analysis from the page; do not retype it.
+Open Questions: port scope still undecided.
+Next Step: user reads the page. No kernel until asked.
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-03 23:55
+Topic: Frozen multi_tp_walk contract, authority chain, and CPU golden matrix
+Decision/Output: No code, no new test, no GPU port. Golden rows come from tests/research/test_multi_tp_walk_parity.py. Pinned: clean stop STOPPED rr_gross -1; R ladder at tp1_mult 1.0/1.5/0.8/1.2 gives TP1_TP2 1.5/1.75/1.4/1.6 and TP1_BE_STOP 0.75/1.125/0.6/0.9; timeout-before-TP1 TIMEOUT rr 0.2 duration 40; inverted stop and lookahead raise ValueError. Step C kwargs select the ledger_blend arm (0.75 at mult 1.0), not engine_pnl (0.50). Timeout-after-TP1 appears on the short-mirror fixture as observed TIMEOUT rr 1.5; the test asserts cross-side equality only. No test stores a TP2-and-stop same-bar candle. Empty future is a source branch (TIMEOUT, rr 0, duration 0) with no test. SEM-017 mathematical_definition trail-stop R (partial only) disagrees with the formula field and the kernel default; Step C follows the default.
+Belief Update / ROI / Goal: Goal: accelerate the existing walk object only after its meaning is pinned. Belief: the CPU kernel's meaning for the Step C kwargs row is the parity-test ladder plus the clean-stop and pre-TP1 timeout rows. A GPU port that matches mean R without those rows would be accelerating an interpretation. Knowledge ROI: high. Action: treat this matrix as the golden contract; do not write a kernel until asked.
+Open Questions: whether a later port must cover the full function (optimistic, engine_pnl, adverse fill, partial_fraction 0, trail_fraction None) or only the Step C kwargs row. Deterministic TP2/stop same-bar candle remains unpinned.
+Next Step: user decides the port scope. No implementation until asked.
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-03 23:30
+Topic: Source reconstruction of multi_tp_walk and the Step C invocation
+Decision/Output: No code change. multi_tp_walk and labeler are clean in the working tree. Step C scratch script calls the existing function once per sweep bar (A 7542, B 5033, outcome_rows equal population_rows) with explicit partial_fraction=0.5 and max_forward=40; every other walk kwarg is the function default. Cost and the block bootstrap are outside the function. Gross r is the bootstrapped series. SEM-017's trail-stop R sentence (partial only) disagrees with its formula field and with the kernel default ledger_blend; shown, not resolved.
+Belief Update / ROI / Goal: Goal: know which exit object Step C measured before any GPU port. Belief: Step C exercised the existing kernel; it did not add a walk algorithm. The 132 figure in the slice artifact is an X0 flag count, not a walk population. Knowledge ROI: high. Action: use the reconstruction as the contract text; do not retune kwargs.
+Open Questions: none for the walk contract. GPU port still undecided.
+Next Step: user uses the canonical wording; no implementation until asked.
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-03 04:00
+Topic: Semantic OS integration on the R1-C trade slice — C5/C6 exercised, 0 unexplained on a second corpus
+Decision/Output: USER "Approved". Recorded MKT-E12 divergence (count HTF clock anchored at the loaded file's first row; v2). Integration run results/semantic_os_integration/20261002T205937Z on data/mt5/XAUUSD_W2024-11-13-to-2025-02-25-r11536.csv (sha a28b409a, 6,559 bars, v2_htfcrt_2026_08 7de09f62): replay gate PASS (1,114 events); AGREE 903 / EXPECTED 30 / UNEXPLAINED 0 / NOT_CHECKABLE 169; D-levels D1 23 / D2 24 / D4 11. C5 on both trades: entry = retest close AGREE, entry bar one later EXPECTED (approval_bar_legacy), stop = displacement extreme - 0.2 ATR AGREE, targets 1.5R / 2R AGREE. C6: STOP at bar 74 and TARGET_FINAL at bar 6495, engine and contract replay identical. C4: TRS-03 26 EXPECTED (body retrace divergence), MKT-E11 2 EXPECTED (post-flip). Spec §16 R1-C result paragraph. Semantics 223 passed / 2 skipped; floor 7 known reds. Code sha f2e44ae + uncommitted tree. Not committed.
+Belief Update / ROI / Goal: Goal: conformance harness spanning state -> thesis -> trade -> execution. Belief: R1-A/R1-B survive semantic conformance on two corpora (not a trading truth); thesis->trade->execution now mechanically checked on 2 real LONG trades; SHORT and TP1_BE_STOP remain synthetic-only (absent from the corpus). Knowledge ROI: high. Action: user decides promotion of R1-A/B and commit.
+Open Questions: promote R1-A/B from PROVISIONAL?; DEX-06/07 still D2 (no separate comparator row); C7 feature comparators (32 unmapped slots).
+Next Step: user decision; commit on request.
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-03 03:20
+Topic: R1-C slice declared on user instruction, grid-aligned, trades reproduced; count-HTF clock is file-anchored
+Decision/Output: USER: "Reviewed update on my behalf". Before declaring, verified: parent XAUUSD_M15.csv re-detects LOOKS_MT5_SERVER_NY_DST high confidence (T2 +2.00h winter, T1 +3.00h summer, r=0.81, 516d); slice rows byte-verbatim. Declared MT5_SERVER_NY_DST with reviewed_by "Chaithu1995-0312 (declared by Claude on the user's explicit chat instruction 2026-10-03)" and evidence notes, for data/mt5/XAUUSD_W2024-11-13-to-2025-02-25.csv (sha 01ffe7ca) and the grid-aligned re-cut ...-r11536.csv (sha a28b409a). First slice opened 0 of 2 expected trades: backtest.htf_clock_basis = "count" makes the HTF period a bar counter anchored at the first row of the loaded file, so the slice re-tiled every period (HTF flips at different bars, different ranges/sweeps, never re-converged). Selector now aligns the start row to the 16-bar grid; aligned slice 2024-11-13 20:00 -> 2025-02-25 16:30 (6,559 bars) reproduces CRT-0002 STOPPED and CRT-0003 TP1_TP2 exactly. Also fixed: a re-cut on the same dates overwrote the declared slice (restored byte-exact, sha 01ffe7ca); write_slice now never overwrites different content (-r<start_row> suffix). 2 new selector tests; semantics 183 passed / 2 skipped. C5/C6 not run; not committed.
+Belief Update / ROI / Goal: Goal: trade-exercising corpus for C5/C6. Belief: on the active config the CRT engine's HTF ranges depend on where the input file starts, so any slice-based run that is not grid-aligned measures a different engine trajectory than the full corpus over the same dates; MKT-E12's contract (a market clock period) does not record this. Knowledge ROI: high. Action: user decides C5/C6 go-ahead and whether to record the MKT-E12 divergence.
+Open Questions: record MKT-E12 count-clock divergence?; 2 LONG trades sufficient?
+Next Step: user decision; then run the integration on the r11536 slice.
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-03 02:30
+Topic: R1-C deterministic trade-window scan — window selected, slice blocked at the clock-provenance gate
+Decision/Output: Plain full-corpus backtest (data/mt5/XAUUSD_M15.csv sha 4d73f5ce…, 47,275 rows, v2_htfcrt_2026_08 hash 7de09f62…) → engine opened 3 trades in two years, all LONG: CRT-0001 STOPPED, CRT-0002 STOPPED, CRT-0003 TP1_TP2 (the F-110 trades). Selector (src/semantics/integration/select_window.py, engine output only, no Semantic OS verdict read) chose CRT-0002..CRT-0003: 2024-11-13 22:00 → 2025-02-25 16:30, 6,551 bars, lead 110 bars before the founding sweep; satisfied trade/long/stop_exit/tp1/tp2/multiple_trades; unavailable: short (not in the corpus). Slice cut verbatim to data/mt5/XAUUSD_W2024-11-13-to-2025-02-25.csv (sha 01ffe7ca…); the backtest's corpus gate REJECTED it: clock provenance UNREVIEWED (F-066) — a human declaration is required, Claude did not self-declare. Manifest results/semantic_os_integration/r1c_scan/selection.json records the rejection. Also: selector + CLI scripts/governance/semantic_os_trade_window.py (SITS registered), 3 unit tests; report headline now "N unexplained disagreements among the semantic claims exercised by this corpus". C5/C6 NOT run; not committed.
+Belief Update / ROI / Goal: Goal: exercise C5/C6 on real trades. Belief: the active config trades so rarely on XAUUSD (3 in 2 years, no SHORT) that SHORT and the trailed-stop path (TP1_BE_STOP) cannot be exercised on this corpus at all. Knowledge ROI: medium. Action: user reviews the slice clock, then decides whether 2 LONG trades suffice.
+Open Questions: user clock review of the slice; sufficiency of 2 trades / no SHORT / no TP1_BE_STOP.
+Next Step: user runs review_ohlcv_clocks.py --review … --timezone … --reviewed-by …, then re-run the selector to verify trade reproduction.
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-03 02:10
+Topic: Semantic OS closed-loop regression — run 1 defects normalised (R1-A/R1-B), run 2 on the same corpus: 0 UNEXPLAINED
+Decision/Output: USER decisions A-D + rollover stage-dependent + post-flip invalidation still applies. Contracts: MKT-E01 carries sweep_extreme (the one displacement reference price), MKT-E04/TRS-03/MKT-E11 consume it (v2); TRS-01 lifecycle expiry_rule (rollover expires only before MKT-P01.EXTENDED); TRS-03 divergence text CORRECTED ("sweep level" -> sweep WICK, crt_engine_v2.py:2913); new RECORDED divergence on TRS-03 + MKT-E11 for the engine HTF protection (crt_engine_v2.py:2882-2891). Code: MarketEvent.extreme; form_thesis uses it for GP-06 and the move start; mark_expired(extended_at=); C4 comparator uses mark_expired + attributes post-flip rows. Spec §16 R1-A..R1-D; memory doc integration section; tests test_r1_normalisation.py (3) + updated integration tests. Run 2 results/semantic_os_integration/20261002T194041Z: gate PASS, AGREE 216 / EXPECTED 7 / UNEXPLAINED 0 / NOT_CHECKABLE 55. Old rows: 1019 no longer disagrees (same wick level 4079.22); 609/1873 survive the flip. New EXPECTED 619/1031/1910 verified at source: close beyond the engine's own wick-based 1.618 level after a post-EXPANSION flip, engine still in EXPANSION. Gate 218 passed / 2 skipped; floor 7 known reds. Not committed.
+Belief Update / ROI / Goal: Goal: Semantic OS detects -> explains -> corrects -> re-verifies meaning defects. Belief: the loop closed on the same corpus; also visible (descriptive only, no economic claim): the HTF protection keeps setups alive past the engine's own 1.618 extension (3 of 3 surviving setups this month). Knowledge ROI: high. Action: build a trade-exercising slice for C5/C6 (R1-C).
+Open Questions: which slice exercises trades (stop, TP1, TP2, long+short) under the active config; whether to keep R1-A/R1-B PROVISIONAL until a second corpus confirms.
+Next Step: user chooses the trade slice / commit.
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-03 01:30
+Topic: Semantic OS integration run over one month of XAUUSD (not a performance run)
+Decision/Output: Built src/semantics/integration/ (observe: the REAL backtest_v2.main run with an instance-level read-only process_candle wrapper + a plain run, replay gate on event stream; checks C1-C7 with verdicts AGREE/EXPECTED_DIVERGENCE/UNEXPLAINED/NOT_CHECKABLE and explicit divergence attribution; report with D-level table), CLI scripts/governance/semantic_os_integration.py (SITS overlay + stub SCR-497 + matrix), 13 synthetic tests + 1 measurement test. Run results/semantic_os_integration/20261002T192245Z on data/mt5/XAUUSD_W2026-07-06-to-2026-08-07.csv: replay gate PASS (279 events identical); AGREE 216 / EXPECTED 4 / UNEXPLAINED 3 / NOT_CHECKABLE 55; D-levels D1 23 / D2 28 / D4 7. C1 112/112 resets mapped; C2 72/72 engine sweeps are GP-04, 0 missed, 0 two-sided; C3 13/13 displacements GP-06; engine opened 0 trades -> C5/C6 not checkable on this corpus (synthetic tests only). UNEXPLAINED, spot-checked at source: bar 1019 MKT-E11 — engine extension origin is the sweep WICK (crt_engine_v2.py:2913) vs contract implementation's swept LEVEL (4079.22 vs 4075.14, close 4076.88); and the TRS-03 divergence text misnames the engine origin as "sweep level". Bars 609/1873 MKT-E12 — engine EXPANSION survives HTF rollover (crt_engine_v2.py:2882-2891, user-intended 2026-10-01) but no contract records it (TRS-01 says EXPIRED on MKT-E12). Gate 214 passed/1 skipped (+measurement skip); floor 7 known reds. Not committed; nothing fixed.
+Belief Update / ROI / Goal: Goal: Semantic OS detects meaning defects mechanically. Belief: first mechanical detections — a contract-internal inconsistency on the displacement move's start (MKT-E04 wick vs TRS-03/MKT-E11 level) and an unrecorded engine-vs-contract lifecycle difference. Knowledge ROI: high. Action: user decides the move-start meaning and whether to record the HTF-survival divergence.
+Open Questions: which price starts the displacement move (wick or level); record or amend MKT-E12/TRS-01 for the protected setup; a month with trades is needed to exercise C5/C6 on real data.
+Next Step: user decisions on the 3 rows; commit on request.
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-03 00:40
+Topic: Reframe — Semantic OS measured by semantic-defect detection capability, not coverage
+Decision/Output: USER reframe: "how much of the codebase's trading meaning can Semantic OS reason about well enough to detect semantic defects?" Measured from the registries: 58 concepts (54 ACCEPTED / 4 PROPOSED; GEOMETRY 7, MARKET 34, TRADING 8, DEX 9); 52 representations, 43 unmapped, 4 deprecated; 75 recorded divergences; 17 representations carry divergence_ref. feature_pipeline: 11 mapped vs 32 unmapped of the 48 canonical slots (~2/3 of the model input vector outside any contract). Proposed a detection ladder D0 (no concept) / D1 (named) / D2 (mapped, registry checks) / D3 (behaviour-checked: executable comparison contract-impl vs code) / D4 (run-witnessed on real artifacts). Divergences so far were found by review, not by a mechanical detector.
+Belief Update / ROI / Goal: Goal: a Semantic OS that catches meaning defects before they reach measurements. Belief: today detection is mostly D1-D2 (registry-level); behaviour-level detection exists only where a guard test compares to an authority. Knowledge ROI: high (redefines the success metric). Action: design a detection-capability census.
+Open Questions: count of D3 guard tests UNVERIFIED (not yet enumerated); census denominator.
+Next Step: user confirms the ladder; then design the census.
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-03 00:20
+Topic: Semantic OS v2 introduced to Claude sessions (memory doc, skill, auto-memory) + external coverage analysis reviewed
+Decision/Output: New docs/memory/semantic-os-memory.md (layers, artifacts, grounding cheat sheet, workflows, V-1..V-19 table, commands, pitfalls, reading order); rows in docs/memory/README.md and CLAUDE.md §0; local skill .claude/skills/semantic-os (gitignored) registered; verify-claims skill lists CONCEPT|REPRESENTATION; auto-memory project_semantic_os_v2.md + MEMORY.md pointer. Verified: all doc paths tracked; validate_all()==[]; gate 201 passed / 1 skipped; CLAUDE.md floors 22 passed; full floor 7 known reds. External analysis (user-pasted) reviewed: four-coverage model accepted as a design input; its claim that src/features/smc/* and causal_structure are unreachable is a static-import artifact — feature_pipeline.py:1243-1248 imports them inside a function, feature_store.py:145 likewise. Not committed.
+Belief Update / ROI / Goal: Goal: future sessions use the meaning plane. Belief: coverage must be measured code→concept with separate concept/representation/implementation/runtime numbers over meaning-bearing objects only. Knowledge ROI: medium. Action: propose the code→concept census for design discussion.
+Open Questions: census denominator (which modules are meaning-bearing); reachability method must follow function-level imports.
+Next Step: user decides on the census design; commit this change on request.
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-03 (IST ~10:00)
+Topic: C7 feature-slot comparators for the Semantic OS integration run
+Decision/Output: Replaced the C7 NOT_CHECKABLE placeholder (src/semantics/integration/checks.py) with per-bar comparators for the 11 feature_pipeline representations: break_of_structure->MKT-C01 structural_position; double_sweep->MKT-C04 two_sided_sweep; change_of_character->MKT-C07 break_against_momentum (momentum input = trend_bias slot); swing_high/low->MKT-L01 swing_levels available_at; liquidity_sweep/sweep_detected->MKT-E01 sweep on the last swing level per side as of i-1; higher_high/lower_low->MKT-E08 level_pierce. trend_bias (MKT-C03) and session (MKT-C06) stay NOT_CHECKABLE (no src/semantics implementation). k/window resolved from the shard's parameterization refs (2/5). observe.py now records the BacktestRunner (wrapped __init__, read-only) and reads its own export_features() frame + full-corpus float64 OHLC; CLI passes them in and records bars_with_feature_row. 3 synthetic tests added (22 passed / 1 skipped in tests/semantics/integration). Real run, one-month slice XAUUSD_W2026-07-06-to-2026-08-07.csv (sha dcaf88a7, 2,222 bars, 2,222 with a feature row, v2_htfcrt_2026_08 7de09f62): replay gate PASS; C7 AGREE 3,726 / EXPECTED 2 (bar 302 MKT-E01 FM-058 inclusive tie) / UNEXPLAINED 6 / NOT_CHECKABLE 2; MKT-C01/C04/C07/E08/L01 0 disagreements; D4 now 12 (was 11 on the prior corpus). Deterministic across three runs. The history read goes through admit_csv_path (corpus_read_lint back to its 40 pre-existing new reads, incl. 2 in select_window.py — not mine); green floor 7 failed / 830 passed, the same 7 known reds. Deviation from plan: no C04 tie attribution — the contract side (two_sided_sweep) itself inherits the inclusive tie, so a tie cannot produce a C04 difference.
+Belief Update / ROI / Goal: Goal: mechanically detect semantic drift between the feature vector and the meaning plane. Belief: the batch pipeline's structure slots and the causal_structure-based semantics agree on every decided bar of this slice except (a) the recorded FM-058 tie and (b) 6 two-sided sweep bars where liquidity_sweep encodes only UPPER (pipeline precedence) — candidate TEST/CONTRACT GAP: no divergence records the one-side encoding of a two-sided bar. Not a trading claim. Knowledge ROI: medium. Action: user decides whether to record that encoding divergence on MKT-E01.
+Open Questions: record "liquidity_sweep two-sided precedence" as a MKT-E01 divergence?; MKT-C03/C06 need src/semantics implementations before they can be checked; absence-vs-0 for MKT-C04/C07 has no recorded divergence (never fired post-warmup here).
+Next Step: user decision on the MKT-E01 record; commit on request (integration package is still uncommitted).
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-03 (IST ~11:30)
+Topic: C7 inventory — contract-independent feature-slot comparators (user: "inventory first")
+Decision/Output: Recorded MKT-E01 divergence "feature_pipeline.liquidity_sweep two-sided bar" (representation/encoding, not detection; multiplicity representation UNRESOLVED) in concept_contracts.yaml. Added events.level_lifecycle (MKT-L01: ACTIVE -> SWEPT on MKT-E01, -> BROKEN on GP-02; one event per swept level) and conditions.momentum_bias (MKT-C03/FM-054) + session (MKT-C06/FM-052, windows required because the classifier's no-config path uses defaults). C7 rebuilt: E01 from the lifecycle over all ACTIVE levels, C04 from its definition, C07 from contract inputs, C03/C06 compared. report.py gained an Inventory section. Tests: semantics 194 passed / 2 skipped (6 new unit tests + C7 tests rewritten). Real run, one-month slice (2,222/2,222 bars with a feature row, v2_htfcrt_2026_08 7de09f62), replay gate PASS. C7: C01 898 / C03 all bars / C06 all bars / C07 184 / E08 1231 / L01 604 all AGREE. E01: 286 AGREE, 3 EXPECTED (two-sided: 372, 1101, 1740 — CORRECTED 2026-10-03: "two-sided" -> "one-sided contract bars mislabelled; 0 genuinely two-sided bars", see the Step-6 entry), 541 UNEXPLAINED in 3 mechanisms per slot (liquidity_sweep / sweep_detected): slot fires on an already-BROKEN latest level 121/120, an older still-ACTIVE level swept 87/86, slot re-fires on an already-SWEPT latest level 65/62. C04: 53 AGREE / 119 UNEXPLAINED (rule FM-060 is written on the slot). 0 unclassified. CORRECTED in the yaml evidence: two-sided 6 -> 3 (the 6 came from the latest-level twin; on 1380/1516/2116 the second level was already consumed). CORRECTED again 2026-10-03: 3 -> 0 (the 3 were a classifier mislabel; the contract has one LOWER event on each). The bar-302 tie is now classified "already BROKEN". Plan deviation: the walker lives in events.py, not levels.py (events imports levels; emitting MKT-E01 from levels.py would create a cycle). Earlier "semantics 223 passed" figure not reproduced (190 collected before this change); scope of that figure UNVERIFIED.
+Belief Update / ROI / Goal: Goal: a complete mismatch inventory before any producer fix. Belief: the liquidity_sweep / sweep_detected / double_sweep slots mean "pierce-and-reject of the latest swing level, never consumed"; the contract means "GP-04 on any ACTIVE level, consumed once swept or broken". That one definitional difference (latest-only + no consumption) accounts for all 541 UNEXPLAINED E01 rows; C04's 119 follow from it plus the C04 rule/definition conflict. All other mapped slots agree on every decided bar. Not a trading claim. Knowledge ROI: high. Action: user decides, at the fix program, whether the slot or the contract meaning is canonical for E01 founding swing_pivot.
+Open Questions: does the swing_pivot founding of MKT-E01 mean "latest level, unconsumed" (slot) or "any ACTIVE level, consumed" (contract)?; MKT-C04 definition vs rule FM-060; two-sided representation; MKT-C03 warmup length undeclared; live feature_store double_sweep rebuild inherits the same loss.
+Next Step: deliver the inventory; user decisions open the producer-fix program.
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-03 (IST ~12:30)
+Topic: Discussion — user E01/C04 decisions vs contract; codebase reuse; drift check of the proposed Structure layer
+Decision/Output: No code. Verified: user's E01 decision (ACTIVE-level lifecycle, consumed on SWEPT/BROKEN, same-bar two events, BOTH = representation only) and C04 decision (consume E01 events) match the frozen contract text; no drift. Reuse: L01 swing_levels, events.level_lifecycle (built in the inventory), sweep, structure_breaks (MKT-E02), level_pierce, prior_day/equal_cluster levels, fvg/OB/breaker/mitigation zone views already exist in src/semantics/market. The only C04 piece in the wrong place is the definition reading, which sits inline in the C7 checker while conditions.two_sided_sweep still reuses the lossy causal_structure sweep. Drift found in the proposed Structure layer: higher_high/lower_low are MKT-E08 level_pierce, not structural HH/LL; change_of_character is MKT-C07, explicitly NOT CHoCH (MKT-E03 PROPOSED); structure states RANGE/TREND/BREAK/REVERSAL = MKT-C02 PROPOSED (I-18); liquidity_distance / pdh..eql distances carry I-7 absence divergences; candles_since_sweep counts from the lossy sweep, so it sits downstream of E01. CRT reads slot sweep_detected + candles_since_sweep at RETEST (crt_engine_v2.py:1914-1915) for trade intent -> TP1 multiplier (:2549); its double_sweep is the engine's dead double_confirmed (:1912), not slot 6. So the E01 producer fix changes trades (gated). C03 warmup: the pipeline has no EMA-specific warmup (ewm adjust=False from bar 0; required_warmup_rows is set by the trend_strength_z chain), so there is no rule to copy and the contract needs a clarification.
+Belief Update / ROI / Goal: Goal: fix order without semantic drift. Belief: steps 1-4 are mostly reuse plus one move (C04 into conditions) plus one contract-text edit (C04 rule); the Structure-layer proposal would invent or rename meaning in 4 places. Knowledge ROI: high. Action: user confirms the semantic step and picks the C03 warmup rule.
+Open Questions: C03 warmup rule; confirm the C04 rule rewrite; Structure-layer scope limited to ACCEPTED concepts?
+Next Step: on confirmation, the semantic-implementation step (contract C04 rule + conditions.two_sided_sweep on level_lifecycle), producers untouched.
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-03 (IST ~13:00)
+Topic: Discussion — drift check of "research discovers structure, cost decides, semantics represents"
+Decision/Output: No code. The architecture agrees with recorded user direction (judge states by trade outcome; entry decisions not occupancy) and the §6.5 Authority Ladder. Drifts: (1) it must not absorb the E01/C04 fix: conformance of meaning to an accepted contract is a different question from economic value, and research on sweeps needs the corrected E01 object, otherwise it measures the lossy slot; (2) D1 has been run before: F-086 outcome-first inversion (information exists, 0/84 cells clear zero), F-097 (0/22 context families), F-081/F-084/F-095 nulls. Re-running is legitimate only as a pre-registered NEW object (e.g. lifecycle-correct sweeps), not a re-sweep (F-028 reopen rule); (3) §6.6 says discovered behaviour becomes an UNKNOWN/OBSERVED ontology node the same turn, so semantics are touched early and only promotion waits for evidence. Blockers: mt00/mt01 UNRUN means economic_claims_allowed is false on every MC (F-090..F-097), so D6/D7 yield diagnostics only; measured cost exists for XAUUSD only (SEM-015, MP-METALS-MT5 DRAFT); open search over D1-D5 needs pre-registration + family-size control (F-097 BH-FDR) + holdout, and outcome-selected bars are lookahead by construction (F-086). Reuse: oracle bar matrix, multi_tp_walk (F-088), SEM-015/016, controls.py/measure.py (F-083), MC registry, layer trace. No new research pipeline. Producer conformance can ship config-gated with legacy default (F-110/F-061 precedent); activation is the separate, research-informed decision.
+Belief Update / ROI / Goal: Goal: keep research and semantics in the right order. Belief: research decides VALUE and ACTIVATION, contracts decide MEANING; the E01 fix is meaning, and it is also the precondition for an honest sweep study. Knowledge ROI: high. Action: user confirms the order.
+Open Questions: confirm research does not block the E01/C04 semantic fix; C04 rule edit; C03 warmup; Structure-layer scope; first pre-registered question.
+Next Step: E01/C04 semantic step, then one pre-registered study on the corrected sweep events (diagnostic only).
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-03 (IST ~13:45)
+Topic: Fix-order step 4: MKT-C04 consumes MKT-E01 events (contract v2 + semantics); user intent saved
+Decision/Output: Memory saved: findings may be contaminated by bugs/semantic defects, re-validate LATER, not now (project_revalidate_findings_after_semantic_fixes.md, linked to E4). Contract MKT-C04 v1 -> v2: rule = UPPER and LOWER MKT-E01{swing_pivot(k)} events from the MKT-L01 lifecycle within W, never from a signed slot; the old FM-060-on-slot rule kept as a RECORDED divergence with evidence (history preserved). conditions.two_sided_sweep rewritten on events.level_lifecycle (was a causal_structure reuse with UPPER-first precedence + inclusive tie); the C7 checker now calls it instead of an inline copy. C7 attributes a C04 disagreement to the FM-060 divergence only when FM-060 on the run's own liquidity_sweep history reproduces the slot; otherwise UNEXPLAINED. Tests: semantics 196 passed / 2 skipped (+2 new). Real run, one-month slice (2,222/2,222, gate PASS): C04 53 AGREE (unchanged: v2 == the earlier inline reading) / 119 EXPECTED (all 119 proven to be FM-060 of the slot's own sweep history) / 0 UNEXPLAINED. E01 unchanged: 286 / 3 / 541. Producers untouched; C03 warmup still open.
+Belief Update / ROI / Goal: Goal: collapse mismatches by fixing the semantic rule once. Belief: CONFIRMED that every C04 mismatch is downstream of the E01 slot semantics; no independent C04 defect on this corpus. Knowledge ROI: high. Action: the remaining 541 are the single E01 slot-vs-contract difference (latest-only + never consumed).
+Open Questions: record the E01 slot semantics (latest level, never consumed) as a MKT-E01 divergence now, or leave the 541 UNEXPLAINED until the gated producer fix?; C03 warmup rule.
+Next Step: user decision on the E01 record; then representation design (step 5) / gated producer program.
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-03 (IST ~14:15)
+Topic: Step 5 — consumer census for the E01 sweep representation (design discussion, no code)
+Decision/Output: User decision: leave the 541 E01 rows UNEXPLAINED (a known defect, not an alternate semantics); next = representation, then the gated producer fix. Census (grep, non-semantics src): liquidity_sweep in 22 modules, sweep_detected 37, double_sweep 32, candles_since_sweep 35. Sign readers of liquidity_sweep: only the pipeline itself (sweep_detected !=0, retest_flag, double_sweep >0/<0, candles_since_sweep grouping, feature_pipeline.py:1009-1105) plus model_registry _GMIRROR_NEGATE (Gaussian ML short-side mirror negates it, model_registry.py:707-711, used by engines/ml_gaussian_engine.py:218). models/zone_registry.json feature_order (38 names) includes double_sweep, sweep_detected, liquidity_sweep, candles_since_sweep. Live: live_engine_hook.py:620 requires liquidity_sweep; live_rail_feeder.py:45 lists it; core/feature_store.py rebuilds double_sweep from its sign history. Key structural fact: the lifecycle fix (step 6) changes VALUES only (same 48 names and shape); only the two-sided encoding needs a shape or domain change, and two-sided bars are 3 of 2,222 on the slice [CORRECTED 2026-10-03: 3 -> 0 genuinely two-sided bars; classifier mislabel]. A BOTH value in the signed slot has no mirror-safe value (negation maps any BOTH code to another code), so it breaks the Gaussian mirror; two per-side flags become a swap pair like higher_high/lower_low.
+Belief Update / ROI / Goal: Goal: choose the representation with known consumer cost. Belief: steps 5 and 6 are separable; the width change costs a ZoneGate/full-vector cascade for ~0.14% of bars, while the lifecycle fix covers the 541. Knowledge ROI: high. Action: user picks the representation option.
+Open Questions: representation option (two flags + width change now / keep shape and the recorded encoding divergence for now / ternary); ZoneGate behaviour on a renamed or added slot (load-time alignment check) to verify before any width change.
+Next Step: user decision, then the step-6 design (config-gated, legacy default).
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-03 (IST ~14:45)
+Topic: Trained-model input inventory for the E01 representation (user rule: define the representation per trained consumer; no v6->v7 unless a trained consumer needs it)
+Decision/Output: Read-only scan of every models/**/*.json feature list (scratch script). Every trained artifact declares a pre-SMC 35/38/39-name vector (zone_registry*, zone_gate_registry, rr_dataset*/rr_model* (38, zero_indices [0-4,7,8,16,17,26,27]), tradenet_v2_XAUUSD (38/39), bitnet export_v5_35 (35) + legacy 6 [body_ratio, retest_depth, disp_strength, atr, candles_since_retest, double_sweep]). All include liquidity_sweep (signed {-1,0,+1}), sweep_detected, double_sweep, candles_since_retest|sweep; NONE has a field for both sides on one bar. Active config v2_htfcrt_2026_08: ZoneGate registry models/zone_registry_v4_2026_07.json, sweep slots at equal per-zone weight 0.04 (= every other dim); rr_fusion false and rr_model QUARANTINED (v3 positional order); use_bitnet false; TradeNet unwired (F-005); live Gaussian = 3-feature heuristic (F-060). The config notes say ZoneGate is fail-closed BLOCK on schema drift: UNVERIFIED this turn. Conclusion: CORRECTED 2026-10-03: "no trained consumer requires two-sided information" -> "no retained trained artifact was trained with a two-sided field; those artifacts are historical (contaminated labels, PIT-unclean, quarantined or unwired), so they do not specify what a model's intent requires. Future model projections derive from model intent + semantic contracts." -> no schema expansion now (user decision: keep the 48-slot v6 representation). Per-model representation from the semantic layer = the existing signed projection of the bar's MKT-E01 events (UPPER first on a two-sided bar, declared as the training encoding), sweep_detected = any E01 event, double_sweep = MKT-C04 v2, candles_since_sweep = bars since the last E01 event. The step-6 lifecycle fix still shifts every one of these input distributions relative to training.
+Belief Update / ROI / Goal: Goal: smallest correct representation. Belief: CORRECTED 2026-10-03: "the two-sided case needs no new slot for any trained consumer" -> "no retained artifact demonstrates a need for a two-sided slot (artifacts are not intent)"; the real consumer cost of E01 is the distribution shift from the lifecycle fix, and every affected model is already inert, quarantined or blocked on the active config. Knowledge ROI: high. Action: user confirms the per-model projection, then the step-6 design.
+Open Questions: verify ZoneGate's actual runtime state (loads / BLOCK) before step 6; confirm the projection (keep UPPER-first) per model; candles_since_sweep resets on any E01 event.
+Next Step: user confirmation, then the step-6 design (config-gated, legacy default).
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-03 (IST ~15:30)
+Topic: Step 6 — MKT-E01 lifecycle sweep identities FM-090..093, config-gated (freeze_id feature-layer-mutation-freeze-2026-07-20, program E01-LIFECYCLE-SWEEP-IDENTITY, CH-e01-lifecycle-sweep-identity, F-112)
+Decision/Output: One lifecycle implementation src/features/level_lifecycle.py (LevelBook; swing_level_sweeps batch; LiveSweepState live), wrapped by semantics.market.events.level_lifecycle. Strict key feature_pipeline.sweep_semantics {latest_unconsumed (default, byte-identical), e01_lifecycle} in feature_pipeline.py (resolve_sweep_semantics), causal_structure.py and core/feature_store.py (carries the state across bars). Ontology FM-090/091/092 (structural_states) + FM-093 (rolling_indicators), active:false; validate_registry clean; feature_math_lint clean (level_lifecycle.py allowlisted as a parity-bound authority, same basis as causal_structure.py). Key added to the 11 production configs with feature_pipeline (ACTIVE v2_htfcrt_2026_08 included; params hash 7de09f62 unchanged); non-promoted shadow v2_htfcrt_e01lifecycle_shadow_2026_10. Freeze pin waiver logged (refreshed market_ontology / active_config / feature_pipeline / causal_structure / feature_schema; active_config and feature_schema.py drift declared PRE-EXISTING). Reachability golden regenerated (READ_AND_USED 416 -> 417). C7 --version flag (prod_version context manager, crt_overlay pattern). Tests: test_level_lifecycle 5/5, test_e01_sweep_semantics 4/4 (batch == twin == live store with a 30-bar buffer over 300 bars; CORRECTED 2026-10-03: covers the four sweep slots only — FM-021 retest_depth also moves under e01_lifecycle and its live parity is untested), semantics 209/2 skipped, freeze 8/8 (XAUUSD vector regression unchanged), construction floor GREEN 137/137; validate-impact APPROVED; validate-completion BLOCKED only on 5 foreign pre-existing dirty files (recorded honestly in the manifest). C7 active: E01 286 AGREE / 544 UNEXPLAINED (0 unclassified), C04 53 AGREE / 119 EXPECTED. C7 shadow: E01 462 / C04 68 AGREE, 0 UNEXPLAINED; replay gate PASS both. Behaviour diagnostic on the month slice: CRT event streams identical (279), 0 trades in both -> trade impact NOT measured. E-001 corrections the same turn: (1) the "6, then 3, two-sided bars" were a classifier mislabel; under the contract there are 0 (classifier fixed: two-sided only when the contract has events on both sides; new NOTE_PRECEDENCE; concept_contracts evidence + 3 earlier log entries marked CORRECTED); (2) "no trained model needs a two-sided field" -> "no retained artifact was trained with one" (log entry marked CORRECTED). F-112 registered (current-findings + CLAUDE.md index; research-family exclusion added). Process slips owned: two shell edits (one heredoc, one sed) against CLAUDE.md §1.6, both verified afterwards.
+Belief Update / ROI / Goal: Goal: producers conform to the frozen meaning without silent behaviour change. Belief: CONFIRMED that the whole E01/C04 mismatch population is one producer behaviour (latest-only + never consumed); the conforming arm removes all of it on the slice. Two-sided sweeps are rarer than thought (0 on the slice), which supports the user's choice to keep the 48-slot representation. Knowledge ROI: high. Action: measure trade impact on the full corpus before any activation decision.
+Open Questions: full-corpus shadow vs active backtest (trade count, TP1 intent, gate_intelligence LIQ_SWEEP); activation decision (user); deferred findings revalidation becomes due only on activation (candidates to check then, unverified per finding: F-086, F-097, F-106 and the feature-consuming model findings F-023, F-036, F-041, F-045, F-059); C03 warmup rule; 5 foreign dirty files block validate-completion.
+Next Step: user decision on the full-corpus shadow measurement; commit on request.
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-03 (IST ~15:45)
+Topic: Step 6 — governance GREEN_FLOOR result read (CH-e01-lifecycle-sweep-identity)
+Decision/Output: check_governance_invariants.py --all = 8 failed / 843 passed / 4 skipped. 7 are the known pre-existing reds (schema_version_registry census, model_paths_literals x3, script_registry grandfather x2, corpus_read_lint). The 8th, test_findings_export::test_on_disk_export_is_not_hand_edited, came from the floor run starting before the F-112 re-export; re-run now = 6 passed. Net: the floor is at its 7 known reds; this change adds none.
+Belief Update / ROI / Goal: none (pure verification).
+Open Questions: unchanged (full-corpus shadow run, activation, C03 warmup, commit).
+Next Step: user decision.
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-03 (IST ~16:45)
+Topic: Full-corpus XAUUSD M15 backtest, ACTIVE v2_htfcrt_2026_08 vs shadow v2_htfcrt_e01lifecycle_shadow_2026_10 (F-112 follow-up, CH-e01-lifecycle-sweep-identity)
+Decision/Output: 47,275 bars, both runs (scratchpad full_active / full_shadow, prod_version patch). CRT event streams IDENTICAL (2,888 RESET / 2,381 transitions / 1,792 SWEEP / 3 TRADE_OPENED, same timestamps, prices and outcomes). RETEST_REPLAY 24/24 common retests; intent flipped on 2: 2024-11-12 15:30 (idx 11364, CRT-0001, accepted) reversal -> pullback, TP1 2618.87 -> 2617.99 (multiplier 1.0 -> 0.8), but the trade stopped on the next bar in both runs so PnL is identical; 2025-08-14 17:30 (idx 29132) liq_sweep -> breakout, rejected OFF_SESSION in both. 0 accept/reject flips. Only summary difference: avg_planned_rr 1.333 -> 1.267. Telemetry gap noticed (not fixed): RETEST_REPLAY.tp1_mult records the base tp1_atr_multiplier (1.0), not the intent-specific one build_trade uses. gate_intelligence LIQ_SWEEP is not measured here.
+Belief Update / ROI / Goal: Goal: know what activating e01_lifecycle would change before deciding. Belief: on the XAUUSD active config the switch is close to decision-neutral (1 TP1 level on 1 of 3 trades, 0 outcome changes). That follows from the CRT spine having only 3 trades, so it is NOT evidence that the sweep slots are unimportant elsewhere (models, gate_intelligence, other configs). Knowledge ROI: medium. Action: CORRECTED 2026-10-03 (user review): "activation risk on the CRT ledger is low" -> "low OBSERVED impact on this one CRT ledger (3 trades); system-wide activation risk is NOT established (gate_intelligence and model inputs unmeasured)"; the revalidation intent still applies to the findings that read these slots directly.
+Open Questions: whether to record this in F-112 (needs a tracked evidence artifact); activation; C03 warmup; commit.
+Next Step: user decision.
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-03 (IST ~17:00, persisted late at ~18:05)
+Topic: F-112 updated with the full-corpus CRT A/B, labelled diagnostic only (user-directed wording)
+Decision/Output: New tracked evidence docs/analysis/e01-lifecycle-shadow-impact-2026-10-03.md (staged). F-112 Note rewritten with the observed / interpretation / limitations / status block. CLAUDE.md row synced. The "activation risk … is low" line in the 16:45 entry marked CORRECTED. findings.jsonl re-exported; test_current_findings + test_findings_export 17/17.
+Belief Update / ROI / Goal: Goal: keep the impact question open. Belief: the change reaches the CRT TP1-intent path but left the trade ledger unchanged; gate_intelligence and models were unmeasured at that point. Knowledge ROI: medium. Action: plan C1–C6 + consumers.
+Open Questions: carried into the next entry.
+Next Step: plan approved (feature-slot-comparators-radiant-shannon.md, C1–C6 → consumers → decision brief).
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-03 (IST ~18:05)
+Topic: E01 program Steps A–C: full-corpus C1–C7 + downstream consumers recorded in F-112 (CH-e01-lifecycle-sweep-identity)
+Decision/Output: Step A (semantic_os_integration.py, full corpus, both arms): replay gate PASS (7,113 events); C1–C6 identical; C5/C6 checkable on 3 trades (TRS-06 6/6, DEX-05 3/3); C7 E01 UNEXPLAINED 12,424 (4,437 BROKEN / 4,269 re-fire / 3,662 older ACTIVE / 56 precedence) -> 0; C04 -> 1,713 AGREE. P-A1/A2/A3 PASS. Arm-independent UNEXPLAINED (read, unclassified): C2 11 engine two-sided, C4 MKT-E12 2, C7 C03 3 (not warmup bars). Step B (scratch consumers_ab.py, 47,197 bars): input shift sweep_detected 13.0%, double_sweep 5.0%, candles_since_sweep 71.4%, retest_depth 17.4%; live-rail planner+gate per bar×dir approvals 2,077 -> 1,382 (1,146 lost / 451 gained), LIQ_SWEEP 17,878 -> 11,936; backtest fusion gate 0 decision/veto flips, 48 score changes, non-informative (every call stops at adapter session or the bypassed feature_cluster_similarity_invalid, so score/p_win checks are never reached); rr_fusion / BitNet / TradeNet not reachable. Process: the first trial was killed by my own timeout; the first B2 metric compared an absent key (vacuous) and was replaced before any result was stated. Step C: tracked docs/analysis/e01-lifecycle-downstream-consumers-2026-10-03.md (staged, script source in appendix); F-112 Note + CLAUDE.md row; findings.jsonl re-exported; 20/20 findings/citation tests.
+Belief Update / ROI / Goal: Goal: know what activation would change, consumer by consumer. Belief: the producer fix is neutral on C1–C6 and the CRT ledger, invisible to the backtest fusion gate (which never reaches its score checks), and material on the live-rail planner (−33% approvals). E-001 CORRECTION (caught me overclaiming; I owe you a correction): Step 6's change surface is FIVE slots, not four. FM-021 retest_depth moves transitively via retest_flag, undeclared, and the Step 6 parity tests covered only the four sweep slots. Live retest_depth comes from live_rail_feeder's rolling-window pipeline, so e01-mode live/batch parity is UNVERIFIED. Fixed at source: F-112 Evidence, the 15:30 log entry, the evidence doc. Knowledge ROI: high. Action: activation is blocked on the FM-021 declaration + live parity question, not just on evidence volume.
+Open Questions: fix FM-021 declaration/live parity (separate authorized turn); activation; C03 (3 non-warmup rows now in hand); C5 TRS-06 intent-match gap; impact manifest still names only FM-090..093.
+Next Step: decision brief to user; no action without approval.
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-03 (IST ~18:50)
+Topic: FM-021 fix: transitive E01 retest identities FM-094/095 + live parity proof (CH-e01-lifecycle-retest-identity, completes CH-e01-lifecycle-sweep-identity, F-112)
+Decision/Output: The ontology closure of the four sweep slots is exactly FM-061 retest_flag + FM-021 retest_depth (both already declared their dependency). Registered FM-094 retest_flag_e01 (structural_states) and FM-095 retest_depth_e01 (derived_metrics, flat + additive, impl derived_math.retest_depth reused), both active:false, config_key feature_pipeline.sweep_semantics; validate_registry []. Source: comment-only fix of the stale "retest_flag … no FM id" in feature_pipeline.py. concept_contracts retest divergence row CORRECTED (FM-061/FM-094) and representation note added. Tests (+4 in test_e01_sweep_semantics): FM-094 formula pinned to code in both modes; modes differ on retest_flag/retest_depth; LiveRailFeeder == batch at all 90 prefixes for retest_depth + sweep slots in both modes. Freeze-pin waiver E01-LIFECYCLE-RETEST-IDENTITY (market_ontology + feature_pipeline SHAs); XAUUSD vector regression PASS. Impact manifest APPROVED; completion BLOCKED only on undeclared uncommitted Step 6 configs + foreign files (recorded). Registry/lint/lineage 88/88, semantics + freeze 226 passed, e01/feeder/lifecycle 30/30, findings/docs 31 + current_findings 11, construction floor GREEN 137. F-112 Evidence/Note CORRECTED, CLAUDE.md row, evidence addendum, topic entry; findings.jsonl re-exported; tests/test_e01_sweep_semantics.py staged (F-112 cites it). Governance floor running.
+Belief Update / ROI / Goal: Goal: a complete, honest declaration of what e01_lifecycle changes before any activation decision. Belief: CORRECTED my last message: the live feeder is full-history, not rolling-window, so live == batch holds, and now it is measured. The declaration gap is closed. Retest meaning itself remains PROPOSED (OQ7). Knowledge ROI: medium-high. Action: activation is no longer blocked by FM-021; it remains a user decision with the named revalidation list.
+Open Questions: activation; OQ7 retest meaning; C03; C5 TRS-06 intent-match gap; commit (both CH changes together).
+Next Step: read the governance floor result; user decision.
+---
 
-  Phase 2 — UltronRiskGateWrapper wired into src/runtime/live_engine_hook.py:
-    + import: from core.ultron_risk_gate_wrapper import UltronRiskGateWrapper
-    + _regime extracted from engine_outputs (already set by EngineRunner Step 6/7)
-    + wrapper = UltronRiskGateWrapper(gate, debug_mode=...)
-    + ultron_result = wrapper.evaluate(trade_plan, portfolio_state, regime=_regime)
-    + log line extended: regime + risk_factor now visible in LIVE_HOOK logs
-    SR-1 maintained: UltronRiskGate.evaluate() still called unconditionally inside wrapper.
-    Regime scale factors (defaults): trend=1.0, range=0.8, neutral=0.6, uncertain=0.5
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-03 (IST ~19:05)
+Topic: Governance floor result for CH-e01-lifecycle-retest-identity; session-log rotation
+Decision/Output: check_governance_invariants.py --all = 8 failed / 843 passed. 7 are the known pre-existing reds (schema_version_registry census, model_paths_literals x3, script_registry grandfather x2, corpus_read_lint). The 8th was test_session_log_entry_count_is_bounded (31 entries > 30, this session's own entries). Rotated with rotate_session_log.rotate(keep=20) under prefix "session-log-part2". The default name would have OVERWRITTEN the existing docs/analysis/session-log-archive/session-log-2026-10-02_to_2026-10-02.md (write_text, not append), so the new archive is session-log-part2-2026-10-02_to_2026-10-02.md with 11 entries. test_session_log 5/5. Floor is back at its 7 known reds.
+Belief Update / ROI / Goal: Belief: rotate_session_log.py silently overwrites an archive whose date range repeats. That is a real data-loss hazard, avoided here; not fixed (out of scope).
+Open Questions: fix the rotator collision (separate task); activation; commit.
+Next Step: user decision.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-03 (IST ~19:40)
+Topic: Semantic OS chain committed (27ed1c9, --no-verify by user decision); completion re-check
+Decision/Output: User chose one chain commit, then --no-verify (floor at its 7 known pre-existing reds). Staged 64 explicit paths: integration run 1 + R1-A/B/C, C7, Step 6, FM-094/095, F-112 evidence, manifests, waivers, log archives. Excluded settings.local.json, ic-003 regen, 10-01 plan files, report.json, results_xau_*.log, scratch_run_logs/, and another session's rotator edits. Not pushed. Completion re-check on the clean tree: CH-e01-lifecycle-retest-identity COMPLETE; CH-e01-lifecycle-sweep-identity BLOCKED on the SITS floor. Its declared scripts require tests/test_script_registry.py, which is red: grandfather pin vs stubs drift, where the chain's 2 stub lines (semantic_os_integration.py, semantic_os_trade_window.py) are in stubs but not the pin, alongside ~10 pre-existing; plus an unclassified ratchet. Correction to the external review: 6 identities, 5 vector values (FM-094 is an internal column).
+Belief Update / ROI / Goal: Goal: a clean ownership boundary before activation. Belief: achieved for the retest change; Step 6 is blocked by script-registration hygiene the chain inherited, not by semantics. Knowledge ROI: medium. Action: propose removing the 2 stub lines (overlay registration already exists), pending user OK.
+Open Questions: 2 stub lines; activation; findings revalidation (separate, later).
+Next Step: user decision.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-03 (IST evening)
+Topic: E01 downstream consumer #1, GateIntelligence + planner intent: read-only semantic census + live-faithful re-run
+Decision/Output: Registry-floor red parked as hygiene debt (user). Census of every sweep input on ExecutionPlannerV1_2/GateIntelligence (the live rail only). Rows 1-3 CONFIRMED DEFECT:
+- LIQ_SWEEP is direction-blind against MKT-E01 implied_bias.
+- C04 double_sweep is used as a "confirmation" bonus and as an event trigger.
+Row 4 (PULLBACK reads FM-021 EMA-distance as a retrace fraction) needs USER AUTHORIZATION (OQ7). Row 5: the _liquidity_score sweep-extent half is an 8th detector on inputs with no producer, so it is constant 0; SEM-004 understated this.
+Live-faithful re-run on XAUUSD M15, 47,197 bars x 2 directions, both arms:
+- vol and liquidity are 0 on every call, so final = 0.35*intent + 0.25*structure.
+- A live LIQ_SWEEP approval needs sweep AND double_sweep, so C04 is necessary.
+- 49/93 (active) and 41/81 (e01) approved LIQ_SWEEPs oppose the implied bias.
+- Approvals are 209 -> 198 (-5%). B1's 2,077 -> 1,382 (-33%) came from its volume_ma20 injection: CORRECTED in docs/analysis/e01-lifecycle-downstream-consumers-2026-10-03.md (new section B1-L).
+Recorded: MKT-E01 x2 and MKT-C04 x1 divergence rows (concept_contracts.yaml), SEM-004 extended. No code or config changed. validate_all [], 262 semantic/citation tests pass, both concepts GROUNDED.
+Belief Update / ROI / Goal: Goal: E01 truth reaching decisions with its meaning intact. Belief: the first consumer's sweep semantics are wrong on direction and on C04 meaning, and on the live rail C04 is the gating input. E01 itself barely moves live approvals (-5%), so the consumer is the binding defect, not the producer. Knowledge ROI: high, because it corrected a prior diagnostic's magnitude 10x. Action: the consumer fix is next, not more producer work.
 Open Questions:
-  - src/ originals for 6 archived files need manual git rm
-  - regime_factors hardcoded in wrapper defaults — not yet in production config
-  - src/journal/__init__.py intentionally left in place (user rejected deletion)
-Next Step: (a) git rm the 6 src/ originals to complete cleanup,
-  (b) promote regime_factors dict to ultron_risk_gate config section,
-  (c) proceed to FeatureStore wiring as live ingestion boundary
----
-📝 SESSION LOG ENTRY
-Date: 2026-04-28
-Topic: P1 implemented — skip_features=True in all three tuner workers
-Decision/Output: |
-  Two-line surgical change across 4 files:
-
-  src/runtime/backtest_v2.py:
-    BacktestRunner.__init__ gains skip_features: bool = False kwarg.
-    Guard: `if self.csv_path and not skip_features:` wraps the
-    FeaturePipeline block. Default False — zero behaviour change for
-    all existing callers that don't pass the flag.
-
-  scripts/training/auto_tuner_multi.py:345    → skip_features=True
-  scripts/training/auto_tuner.py:245          → skip_features=True
-  scripts/training/auto_tuner_gemin_pro.py:240 → skip_features=True
-
-  Production/governance callers left untouched (features needed there):
-    config_validator.py, portfolio_validation.py, expansion_integration.py,
-    unified_replay_harness.py, run_regime_search.py
-
-Open Questions: None.
-Next Step: Run cProfile baseline then smoke-test the tuner with --max-trials 5
-  to confirm speedup. Then proceed with P2 (timestamp format cache) if desired.
+- Production direction comes from EngineRunner, so the real mismatch rate is UNVERIFIED.
+- What a "confirmed sweep" means (replace or drop the C04 bonus).
+- PULLBACK depth meaning (OQ7).
+Next Step: user decides the planner/gate fix scope (an authorized behaviour-change turn under the construction protocol); then the next consumer, the CRT decision path.
 ---
 
 ---
 📝 SESSION LOG ENTRY
-Date: 2026-04-28
-Topic: Backtest performance improvement plan — 8 bottlenecks identified, plan document created
-Decision/Output: |
-  Produced PERFORMANCE_IMPROVEMENT_PLAN.md in repo root.
-  8 optimisations identified via code inspection of backtest_v2.py,
-  auto_tuner_multi.py, feature_pipeline.py:
-
-  P1 [CRITICAL] — FeaturePipeline re-runs for every tuner parameter set × instrument.
-    Fix: skip_features=True flag on BacktestRunner + skip_features=True in
-    _run_single_instrument(). Estimated saving: 60-240 min per tuning run.
-
-  P2 [HIGH] — CandleLoader tries 8 timestamp formats per row.
-    Fix: cache detected format after first successful parse.
-
-  P3 [HIGH] — CANONICAL_FEATURES.index() called in candle loop on TRADE_OPENED.
-    Fix: precompute {feature_name: index} dict in __init__.
-
-  P4 [MEDIUM] — _session() iterates session_windows dict on every candle.
-    Fix: precompute 24-entry hour->session lookup dict in __init__.
-
-  P5 [MEDIUM] — CapitalCurve.max_drawdown_pct scans entire equity_curve list.
-    Fix: maintain running max drawdown in apply_trade().
-
-  P6 [MEDIUM] — Tuner workers write 4 report files per eval (never read).
-    Fix: write_reports=False flag on BacktestRunner.run() + pass in tuner.
-
-  P7 [LOW] — DistributionAnalyser._rolling_win_rate is O(n x window).
-    Fix: sliding window counter -> O(n).
-
-  P8 [LOW] — bt_log file handler at DEBUG floods disk during tuner runs.
-    Fix: raise log level to WARNING in tuner workers via config key.
-
-Open Questions: None.
-Next Step: Implement in priority order (P1 first). Run cProfile baseline first.
-  Verify tests green + metrics numerically unchanged after each fix.
+Date: 2026-10-03 (IST evening, 2)
+Topic: CH-planner-liq-sweep-direction — user-authorized atomic fix of census rows 1 and 3 (LIQ_SWEEP direction/event), step A+B
+Decision/Output: New strict execution_planner.liq_sweep_semantics in REQUIRED_CONFIG_KEYS (EPIC-84 no-defaults):
+- legacy_unsigned = old rule, declared on all 13 live configs incl. ACTIVE v2_htfcrt_2026_08 (hash-neutral; same config set as ttl_continuation_sec).
+- e01_direction_aligned = LIQ_SWEEP iff signed liquidity_sweep != 0 and implied bias (UPPER->SHORT, LOWER->LONG) == selected_direction. Requires the signed slot (reject_invalid otherwise); double_sweep no longer triggers the intent.
+Gate C04 bonus, gate arithmetic and PULLBACK untouched.
+Tests: +10 in test_execution_planner.py (aligned/opposed/ds-only/missing-slot/invalid value/exhaustive legacy parity/live-config pin).
+Reachability golden regenerated (+1 READ_AND_USED, the new key). Impact manifest APPROVED; completion manifest written.
+Live-faithful A/B (XAUUSD M15, every bar x both directions):
+- legacy reproduces the census exactly (209/93, 198/81);
+- aligned: approvals 209->185 (active feats) and 198->185 (e01 feats), approved LIQ_SWEEP exactly the aligned subset (44, 40). The rest re-label (A: CONTINUATION 4,887 / REVERSAL 2,984 / PULLBACK 1,984 / BREAKOUT 480).
+Recorded in the e01 doc §B1-F, topic execution-planning.md, and the MKT-E01 divergence row. Unrelated red test_behavior_census::test_external_injection_not_overreported: EPIC-84 class, not in GREEN_FLOOR.
+Belief Update / ROI / Goal: Goal: E01 meaning reaches decisions intact. Belief: the classifier half is fixed and matches the contract one-for-one. The gate half still makes C04 necessary for every live sweep approval, so 44 aligned approvals still pass only through a mis-meant bonus. Knowledge ROI: high (exact contract parity, clean atomic attribution). Action: decide activation; then step C (meaning of a "confirmed sweep").
+Open Questions: activate e01_direction_aligned on ACTIVE (user); production direction mix (EngineRunner) UNVERIFIED; C04 role (step C/D).
+Next Step: user decision on activation; then step C investigation.
 ---
 
 ---
 📝 SESSION LOG ENTRY
-Date: 2026-04-26
-Topic: ROOT CAUSE FOUND — BacktestRunner created without csv_path in all AutoTuner call sites
-Decision/Output: |
-  Diagnostic log (logs/backtest_debug.log) showed:
-    "FEATURE DIAG | feature_vectors=False ts_to_idx_len=0"
-  No "FeaturePipeline init FAILED" line — meaning if self.csv_path: was never entered.
-  csv_path was None at BacktestRunner.__init__ time.
-
-  Root cause: auto_tuner_multi.py line 341 called BacktestRunner(bt_cfg) without
-  passing csv_path, even though csv_path was in scope as a function parameter.
-  Same omission found in 3 other scripts.
-
-  Fixes applied (surgical 1-line each):
-    scripts/training/auto_tuner_multi.py:341   BacktestRunner(bt_cfg, csv_path=csv_path)
-    scripts/training/auto_tuner.py:243         BacktestRunner(bt_cfg, csv_path=csv_path)
-    scripts/training/auto_tuner_gemin_pro.py:238 BacktestRunner(bt_cfg, csv_path=csv_path)
-    src/governance/portfolio_validation.py:343  BacktestRunner(cfg, csv_path=instr.csv_path)
-    src/governance/expansion_integration.py:239 BacktestRunner(cfg, csv_path=forward_csv)
-
-  expansion_engine.py left unchanged — uses injected BacktestRunner with old pre-v2 API.
-Open Questions: None — cause is confirmed and all live call sites patched.
-Next Step: Re-run AutoTuner backtest. Confirm "FeaturePipeline built: N rows" appears in
-  backtest_debug.log and all 35 canonical feature columns are non-zero in _trades.csv.
+Date: 2026-10-03 (IST night)
+Topic: Step C — what the gate's double_sweep bonus means (read-only lineage + full-corpus information test); activation held by user
+Decision/Output: User held activation (legacy_unsigned stays). E-001 correction: census row 2's "same-side confirmation" intent was my ungrounded inference, now CORRECTED in the MKT-C04 row and doc B1-L.
+Lineage: the bonus descends from the engine's SweepEvent.double_confirmed (prev sweep opposite side; crt_engine_v2.py:965-968), never executed (constant False). Every reader applies a bonus. FM-060's registered wording is "trap/whipsaw" (a caution). No v2 concept owns the ordered meaning.
+Measurement (OBSERVATION_ONLY; RESEARCH_PROXY outcome: signal-bar close, compute_crt_levels(atr_abs), multi_tp_walk; 70/30 time split; 480-bar block bootstrap; XAUUSD 47,197 bars):
+- population 7,542 / 5,033 bars, one row per bar;
+- X0 C04 == X1w ordered-within-W on 1,655/1,655 (active) and 740 + 38 bar-local two-sided (e01);
+- X0, X1w and X1e all flip sign train -> holdout, all-sample CIs cross 0;
+- X2 (E04 next bar) +1R is mechanical lookahead;
+- X3 (no bonus) = 0 live approvals.
+Recorded: doc §B1-C, MKT-C04 corrected row + open decision (decide_in step_D_double_sweep_role), topic note incl. the TTL observation (300 s < one M15 bar). No code or config change.
+Belief Update / ROI / Goal: Goal: give double_sweep a meaning earned by evidence. Belief: under the direction fix, C04 already equals the historical ordered meaning, so the (a)/(b) conflict is mostly definitional. But NO decision-time variant carries stable outcome information; the bonus works as a gate, not as information. Knowledge ROI: high (removed a false premise; showed meaning choice cannot be settled by information value). Action: Step D is a design decision, not a measurement.
+Open Questions: Step D role of the bonus (user); whether a sweep-reversal approval should exist on the live rail at all if its sole enabling input is non-informative; FM-060 wording.
+Next Step: user decides Step D; then activation re-evaluation; then the CRT decision path.
 ---
 
 ---
 📝 SESSION LOG ENTRY
-Date: 2026-04-26 (session continued)
-Topic: Remove openai package dependency — replace Groq client with stdlib urllib
-Decision/Output: |
-  Rewrote Groq integration in src/config_layer/llama_gate.py to use pure
-  urllib.request — no openai package required. Key changes:
-
-  REMOVED:  _GROQ_CLIENT global, _get_groq_client() lazy SDK factory,
-            `from openai import OpenAI` import
-
-  ADDED:
-    _GROQ_ENDPOINT = "https://api.groq.com/openai/v1/chat/completions"
-    _groq_available() -> bool  (guard: enabled flag + API key present)
-    _groq_request(messages, max_tokens, temperature, stop=None) -> str
-      Pure urllib.request POST. Returns "" on any error (HTTPError or network).
-
-  UPDATED:
-    _groq_score() — uses _groq_available() + _groq_request()
-    llm_score()  — Groq branch: _get_groq_client() is not None -> _groq_available()
-    llm_chat()   — Groq fallback: SDK call -> _groq_request()
-
-  tests/test_llm_connectivity.py:
-    Removed SimpleNamespace, importlib, sys, _GROQ_CLIENT refs.
-    TestGroqScore, TestLlmScore audit tests, TestLlmChat: patch lg._groq_request.
-    TestGetGroqClient -> TestGroqAvailableAndRequest:
-      tests _groq_available() + _groq_request() HTTP paths.
-
-Open Questions: none — no package install required, Groq should work now.
-Next Step: |
-  python -c "import sys; sys.path.insert(0,'src'); import config_layer.llama_gate as lg; print('available:', lg._groq_available())"
-  python -m pytest tests/test_llm_connectivity.py -v
-  Confirm source=groq in logs/llm_audit.jsonl after running tuner.
+Date: 2026-10-03 (IST night, 2)
+Topic: Step D — GateIntelligence scoring/authority census (read-only): why a 4-factor gate runs on 2
+Decision/Output: Source + git history:
+- vol = 0 because canonical atr has been close-relative since 5897209f (F-109; the 'absolute' basis exists, never activated).
+- liquidity = 0, two causes from birth: (1) volume_ma20 never in the planner's production input (first live hook and today's LiveRailFeeder/build_features); (2) lowest_low/highest_high have no producer in any src commit, AND the nested-window formula is <= 0 by construction (docstring needs an undefined disjoint window).
+- Unit fixtures (abs atr, volume_ma20, nested ll/hh) mask both.
+- Weights/threshold: bulk-commit origin, no calibration, no G001 (F-103).
+Decision-space census (XAUUSD 47,197 bars x 2 dir, read-only):
+- S0 live 209 approvals (intent and structure both necessary on 209/209); S3 nested inputs = no change.
+- S1 vol abs 4,675; S2 volume_ma20 2,077 (= B1); S4 disjoint extent 501.
+- S5 all declared 13,057 (62x), authority spread over 4 components; aligned S5 9,981.
+Recorded:
+- doc §B1-D;
+- SEM-004 extended (structural zero);
+- KNOWN_ILLUSIONS #3 CORRECTED (keys now read; two read-but-inert);
+- topic note.
+No code or config change; activation and double_sweep untouched.
+Belief Update / ROI / Goal: Goal: an authorization gate whose authority is earned. Belief: the single-sweep-feature authority is an artifact of two components that never received their declared inputs, not a design. The threshold 0.55 was set against a 4-factor sum production never had (live ceiling 0.60). The gate as a whole has no outcome evidence. Knowledge ROI: high (explains Steps A-C's pathology at the root). Action: the decision is about the gate, not double_sweep.
+Open Questions: register as an F-id (Findings Mandate) — user; whether to repair inputs (S1/S2/S4) vs recalibrate vs evaluate the gate on outcomes first; disjoint-window convention for sweep extent (an 8th sweep detector; MKT-E01 says use sweep_extreme).
+Next Step: user decides direction (likely: outcome-evaluate the gate scenarios on the RESEARCH_PROXY object before repairing anything).
 ---
 
 ---
 📝 SESSION LOG ENTRY
-Date: 2026-04-26
-Topic: Unified Bridge — event-driven live metrics + execution audit columns in _trades.csv
-Decision/Output: |
-  Implemented the "Unified Bridge" architecture across two files.
-
-  crt_engine_v2.py:
-    - CRTEngine.get_live_metrics() added: returns live_atr, live_ema_fast,
-      live_ema_slow, cached_retest_depth, cached_body_ratio, cached_disp_strength,
-      cached_session, cached_double_sweep from engine.state at call time.
-    - process_candle() injects action["live_metrics"] = self.get_live_metrics()
-      immediately after TRADE_OPENED, so values are entry-candle accurate.
-
-  backtest_v2.py:
-    - TradeRecord: 8 new live audit fields (live_atr, live_ema_fast, live_ema_slow,
-      cached_retest_depth, cached_body_ratio, cached_disp_strength, cached_session,
-      cached_double_sweep).
-    - on_trade_opened(): accepts live_metrics dict, populates the 8 new fields.
-    - to_csv_rows(): writes Universe-A canonical features first, then 8 Universe-B
-      audit columns. Includes ZERO FEATURES WARNING: if >50% of batch features are
-      0.0, logs WARNING with trade_id, candle_open, and live_atr so the distinction
-      between a live-engine failure and a batch-lookup failure is immediately clear.
-    - BacktestRunner.run(): passes live_metrics=action.get("live_metrics", {}) to
-      journal.on_trade_opened().
-
-  CSV column layout after this change:
-    [trade metadata] | [canonical 35-dim batch features (Universe-A)] |
-    live_atr | live_ema_fast | live_ema_slow |
-    cached_retest_depth | cached_body_ratio | cached_disp_strength |
-    cached_session | cached_double_sweep
-
-  Execution audit check:
-    sl_distance = abs(sl - entry_raw)
-    expected_sl_distance ≈ sl_atr_buffer (0.2) × live_atr
-    Any row where sl_distance / live_atr ≠ 0.2 is a sizing anomaly.
-Open Questions: None.
-Next Step: Re-run BTCUSDT/AUDUSD backtests. Verify live_atr is non-zero and
-           cached_retest_depth/body_ratio are populated for every trade row.
-           Spot-check one trade: confirm sl_distance / live_atr ≈ 0.2.
+Date: 2026-10-03 (IST night, 3)
+Topic: F-113 registered + read-only outcome test of each dormant GateIntelligence component
+Decision/Output: Registered F-113 (ARCH, Certain), keeping fact / cause / consequence / UNKNOWN / not-established separate. Written to:
+- docs/current-findings.md and the CLAUDE.md index row;
+- the research_family_registry exclusion (F-111/F-112 precedent);
+- findings export + context recompiled.
+Outcome test (RESEARCH_PROXY: signal-bar close, live per-intent SL/TP via compute_crt_levels(atr_abs), multi_tp_walk; 94,394 calls / 60,096 eligible; 70/30 time split; 480-bar block bootstrap):
+- S1 vol-abs, S2 volume and all combos: delta vs live flips sign train -> holdout;
+- S3H disjoint-window extent (HYPOTHESIS) is same-sign but every CI crosses 0 and it adds only 292 calls: INSUFFICIENT;
+- component information: vol and volume NEGATIVE in train (CIs exclude 0), ~0 in holdout;
+- full repair: 13,047 approvals at -0.096R, about the base rate -0.080R; live gate 209 approvals at -0.130R.
+Recorded in doc §B1-E (with a disclosed warm-up edge, 6 approvals), the F-113 update and the topic note. Floor unchanged (7 known reds). No code or config change.
+Belief Update / ROI / Goal: Goal: earned authority for live-rail entry authorization. Belief: neither the live 2-factor gate nor any repair of its dormant inputs shows outcome information on this object. Repairing would multiply approvals at base-rate expectancy. Knowledge ROI: high: closes "just wire the inputs" before it was tried. Action: stop treating GateIntelligence repair as the path; the open question is what should authorize a live entry.
+Open Questions: what, if anything, should authorize a live-rail entry (the gate has no demonstrated value in any configuration measured); activation of e01_direction_aligned is moot for value but still a semantics correction; double_sweep role (step_D) unchanged.
+Next Step: user decision.
 ---
 
 ---
 📝 SESSION LOG ENTRY
-Date: 2026-04-26
-Topic: Fix pd.Timestamp key mismatch — Universe-A batch features still all-zero
-Decision/Output: |
-  Two surgical edits to src/runtime/backtest_v2.py.
-
-  Edit 1 — __init__ (line 1175): changed feature_ts_to_idx construction from
-    { pd.Timestamp(ts): i } → { ts.strftime("%Y-%m-%d %H:%M:%S"): i }.
-  Added one-shot INFO log showing first 3 keys for immediate format verification.
-
-  Edit 2 — run() (line 1312): changed lookup query from
-    pd.Timestamp(candle.timestamp) → candle.timestamp.strftime("%Y-%m-%d %H:%M:%S").
-  Added per-miss WARNING (first 3 misses only) showing candle_ts and dict sample key
-  so any residual format difference is visible without log flooding.
-
-  Root cause: pd.Timestamp objects from pd.to_datetime(string) vs
-  pd.Timestamp(naive_datetime) silently fail dict equality due to tz-awareness
-  or nanosecond precision differences. strftime normalization eliminates all ambiguity.
-Open Questions: None — if misses still appear in logs, sample keys in WARNING will
-  show the exact format difference for immediate diagnosis.
-Next Step: Run backtest; confirm (a) no "Feature lookup MISS" warnings, (b) all 35
-  canonical columns non-zero in _trades.csv, (c) abs(sl-entry)/live_atr ≈ 0.2.
+Date: 2026-10-04
+Topic: XAUUSD M15 volume lineage census — live MT5 terminal vs research corpus vs live rail → GateIntelligence (read-only)
+Decision/Output: Read-only MT5 probes (.venv MetaTrader5 5.0.6180; no login, no symbol_select).
+- Sept 2026 [broker-labelled]: 2,014 bars, all on the 15-min grid, 22 days opening 01:00.
+- tick_volume non-zero 2,014/2,014 (median 6,728); real_volume 0/2,014.
+- Full corpus re-fetch: 47,275/47,275 timestamps, OHLC exact, volume == tick_volume on all bars (F-099 binding 17/17 -> full); real_volume never.
+- Monthly tick_volume median trends up 3–5x mid-2025 -> 2026-09 (not a step at the corpus end).
+Path (source-traced):
+- live rail has NO MT5 bar source (MT5_CANDLES -> no port); only TickDB paper spec (sum_size), its volume UNVERIFIED;
+- volume and canonical volume_ratio reach the planner dict; the gate reads non-canonical volume_ma20 (absent) and ignores volume_ratio (present) => volume half 0.
+Recorded: new point-in-time doc docs/analysis/xauusd-m15-volume-lineage-census-2026-10-04.md + an F-099 Update line. No code or config change.
+Belief Update / ROI / Goal: Goal: know whether volume can carry any live meaning. Belief: research volume = MT5 tick_volume, exactly and fully; real volume does not exist for this symbol; live-rail volume semantics are unestablished (no MT5 port, TickDB unverified); the gate's volume half is a wiring miss on a quantity that already exists canonically. Knowledge ROI: medium-high (closes the data side; separates data absence from consumer wiring). Action: any volume-based live decision first needs a defined live bar source.
+Open Questions: TickDB XAUUSD volume semantics (needs a recorded paper capture); whether the live rail should get an MT5 candle port; level non-stationarity for any absolute volume threshold.
+Next Step: user decision.
 ---
 
 ---
 📝 SESSION LOG ENTRY
-Date: 2026-04-26
-Topic: Root-cause and fix — all feature columns zeroed in _trades.csv
-Decision/Output: |
-  Three compounding bugs in BacktestRunner (src/runtime/backtest_v2.py):
-
-  BUG 1 (primary — wrong bar, often OOB → zeros):
-    feature_vectors is built by FeaturePipeline.run() which calls finalize() that
-    drops NaN warmup rows (~50) and resets the index to 0.  The backtest loop
-    looked up feature_vectors[candle_idx] where candle_idx is 1-based and counts
-    ALL raw candles, so two errors compound:
-      (a) off-by-one: candle_idx=1 for row 0
-      (b) warmup offset: feature_vectors[0] = raw row ~50, not row 0
-    Net effect: near EOF candle_idx >= len(feature_vectors) -> zero fallback.
-
-  BUG 2 (silent failure — feature_vectors stays None):
-    No try/except around FeaturePipeline block in __init__.  Capitalised CSV
-    headers ("Date","Open") or split date+time crash construction.
-
-  BUG 3 (column mismatch):
-    pd.read_csv() passes raw headers; FeaturePipeline requires lowercase
-    "timestamp","open","high","low","close".  CandleLoader handles this flexibly;
-    FeaturePipeline did not.
-
-  FIX:
-    1. Lowercase + merge split date/time columns before FeaturePipeline.
-    2. try/except around pipeline init — log warning, fall back to empty gracefully.
-    3. Build self.feature_ts_to_idx: dict[pd.Timestamp, int] from enriched_df.
-    4. Replace feature_vectors[candle_idx] with timestamp-keyed O(1) dict lookup.
-       Immune to off-by-one and warmup-offset because match is on candle timestamp.
-Open Questions: None.
-Next Step: Re-run BTCUSDT backtest; confirm feature columns non-zero. pytest tests/.
+Date: 2026-10-04
+Topic: Inventory of every explicit UNKNOWN in the semantic layer (read-only)
+Decision/Output: Scratch gatherer over concept_contracts, market_ontology, structure_profiles, market_shapes, representation_registry/* and semantic_os/*.
+- Concepts: 58 total, 54 ACCEPTED, 4 PROPOSED/UNDEFINED (GP-07, MKT-Z06 [OQ7], MKT-E03 choch, MKT-C02, which waits on E03); proposed param MKT-E02 consumption once_per_level.
+- Open decision: MKT-C04 step_D_double_sweep_role.
+- Spec-deferred: zone FILLED, parent C1/C2/C3 mapping, M15 objective/targets, L3 v2.0.0, ontology scope v2, CRTState.EXPIRED stage vs termination.
+- Ontology knowledge_status: UNKNOWN 6 (UNK-002..007), OBSERVED 4, CHARACTERIZED 23, MATHEMATICALLY_DEFINED 13, FORMULA_DERIVED 3, VALIDATED 1.
+- structure_profiles: founding UNKNOWN on 6 profiles, walk UNKNOWN on 7.
+- 43 unmapped representations; 2 UNVERIFIED divergence evidences.
+Designed absence encodings (UNDEFINED/UNKNOWN as values) separated from knowledge gaps. No edits to semantic files.
+Belief Update / ROI / Goal: Goal: one map of what the meaning plane does not yet know. Belief: the gaps cluster in three places: OQ7 retest semantics (blocks 3 concepts + retest_depth), structure/CHoCH (E03 -> C02), and execution-lifecycle identity (L3 v2.0.0 -> 6 unmapped CRT states). Several of this session's discoveries live only in prose, not as UNKNOWN_* nodes. Knowledge ROI: medium (navigation). Action: user picks which cluster to resolve or register.
+Open Questions: whether to register this session's undefined behaviours as UNKNOWN_* nodes (§6.6): live-rail entry authorization, double_sweep meaning, sweep-extent window, TickDB volume.
+Next Step: user decision.
 ---
 
 ---
 📝 SESSION LOG ENTRY
-Date: 2026-04-25T
-Topic: Fix test_expansion_governance_bridge.py — patch target AttributeError on ExpansionEngine
-Decision/Output: |
-  Root cause: `expansion_integration.py` imported `ExpansionEngine` locally inside `run()`
-  (line 110), so `patch("src.governance.expansion_integration.ExpansionEngine")` found no
-  attribute at module level → AttributeError.
-  Fix: moved import to module level with optional-import guard
-  (`try/except ImportError → ExpansionEngine = None`) per CONVENTIONS.md optional-dep pattern.
-  Removed the redundant local `from src.expansion.expansion_engine import ExpansionEngine`
-  inside `run()`. Patch target now resolves correctly.
-Open Questions: None.
-Next Step: Run `pytest tests/test_expansion_governance_bridge.py` to confirm green.
----
-
-📝 SESSION LOG ENTRY
-Date: 2026-04-25T (intent_router fix) IST
-Topic: Fix test_agent_intent_router.py — stale API (config= kwarg, source key, mode="unknown")
-Decision/Output: |
-  Root cause: test used IntentRouter(config=config) (actual: positional llm_chat_fn),
-  classify("text") without conversation arg (actual: classify("text", [])),
-  result["source"] (doesn't exist), result["mode"]=="unknown" (actual: None),
-  LLM mock with invalid intent_key "tune" (reset to ask_user), test input "reflect on
-  last week" (no pattern match), "tune EURUSD" (no pattern match), LLM patch at
-  "src.config_layer..." (actual: "config_layer.llama_gate.llm_chat").
-
-  Fix: full rewrite (15 tests) against actual API:
-    _router() → IntentRouter(MagicMock(), use_llm=..., confidence_floor=0.6)
-    classify(text, []) — always pass empty conversation list
-    Removed result["source"] — not in return dict; use confidence==0.85 or intent_key instead
-    mode==None (not "unknown") for ask_user
-    Test inputs verified against intent_patterns.json to reliably match patterns
-    LLM tests use valid intent_key "tune_and_promote"; patch "config_layer.llama_gate.llm_chat"
-    Added: classify_always_returns_required_keys invariant test
-Open Questions: None.
-Next Step: pytest tests/ -x --tb=short
+Date: 2026-10-04
+Topic: Is MT5 tick volume part of the canonical research dataset? Classify B1-E's volume arm
+Decision/Output: Verified at source:
+- raw `volume` IS canonical (FM-089, source, active, vector slot 4), FM-062 volume_ratio slot 5, FM-063 volume_spike slot 38 (CANONICAL_FEATURES checked);
+- CORPUS_AUTHORITY declares volume_semantic TICK_VOLUME; BC-4 still blocks OHLCV closure (TICK_VOLUME_APPROXIMATE);
+- volume_ma20 is NOT canonical;
+- no record of a deliberate exclusion, only a deferred wiring fix (SEM-004, F-065);
+- the gate's volume half == 0.5*min(1, volume_ratio/2) exactly (2,922 bars, max abs diff 0.0).
+=> B1-E S2 = counterfactual WIRING of canonical FM-062 (not synthetic data); S1 = counterfactual configuration; S3H = synthetic hypothesis input. Correction to the user's premise: the 48-vector does contain volume (and its ratio); what's missing is the gate's wiring.
+Recorded: B1-E input-surface table + F-113 clarification; findings re-exported; tests pass. No code/config change, no re-run.
+Belief Update / ROI / Goal: Goal: label evidence by what the dataset actually possesses. Belief: B1-E's volume result is evidence about a real canonical feature (tick-volume ratio) through the gate's formula, conditional on tick volume ~ participation (BC-4 open). It is not a synthetic-input result. Knowledge ROI: medium (prevents mislabeling evidence in either direction). Action: none required; any re-run would be a separately authorized experiment.
+Open Questions: whether the gate should read FM-062 directly (wiring decision, deferred by SEM-004); BC-4 closure.
+Next Step: user decision.
 ---
 
 ---
 📝 SESSION LOG ENTRY
-Date: 2026-04-25T (sklearn guard fix) IST
-Topic: Fix ModuleNotFoundError — sklearn imported before threshold guard in probability_engine.py
-Decision/Output: |
-  Root cause: ApproachBMLEngine.fit() imported sklearn at function top, before the
-  len(records) < _N_TRAIN_THRESHOLD early-return. test_fit_skipped_insufficient_data
-  calls fit(5 records) expecting a no-op return, but got ModuleNotFoundError instead.
-  Fix (1 edit): moved the two lazy sklearn imports to AFTER the threshold check.
-  Insufficient-data path now exits cleanly without touching sklearn.
-Open Questions: None.
-Next Step: pytest tests/ -x --tb=short
+Date: 2026-10-04
+Topic: Is volume_ratio intended / permitted as a GateIntelligence decision input? (BC-4 + ownership, read-only)
+Decision/Output: Four authorities read at source:
+(1) Code intent: the gate docstring declares a "volume spike" input (vol/vm20 saturating at 2x); canonical equivalents FM-062 (exact) / FM-063 (discrete).
+(2) Ontology: FM-062/FM-063 consumed_by [UNKNOWN], so no registered consumer.
+(3) Meaning plane v2: NO participation concept; volume_ratio unmapped ("participation measurement — no slice-1 concept"), so no contract permits or forbids decision use.
+(4) MIAR: "Should the setup pass decision gates?" owner = decision_fusion; planner/execution_intent are secondary consumers that "must not redefine the question"; execution_intent non-goal "never rescore market features". GateIntelligence (inside the planner) rescores market features and approves/rejects: an UNRECORDED TruthConflict (execution_intent's SEMANTIC_DRIFT reason does not name it).
+BC-4: OHLCV layer still BLOCKED (BC-1,3,4,5); volume is TICK_VOLUME_APPROXIMATE; it blocks APPROVED/R3b/G001 certification, not research use; FM-089 says never read it as executed volume.
+No edits to MIAR / contracts / code.
+Belief Update / ROI / Goal: Goal: decide volume's role by authority, not field names. Belief: "should the gate consume volume_ratio" is mis-located. Under MIAR the planner should not own market-feature approval at all, and the meaning plane has no participation concept to contract the use. Wiring volume into GateIntelligence would deepen an ownership violation. Knowledge ROI: high (re-frames the decision one level up). Action: the user resolves the TruthConflict (gate ownership) before any input decision.
+Open Questions: who owns live-rail approval (decision_fusion vs planner gate); whether to define a participation concept (v2) before any volume decision use.
+Next Step: user decision.
 ---
 
 ---
 📝 SESSION LOG ENTRY
-Date: 2026-04-25T (Flow 4 — tool_registry fix) IST
-Topic: Fix test_agent_tool_registry.py — get_tool_schema_md / spec.preview() don't exist
-Decision/Output: |
-  3 surgical edits:
-  1. Import: get_tool_schema_md → get_schema_text (actual function name)
-  2. test_tool_schema_md_generates → test_tool_schema_text_generates:
-     removed "## Available Tools" header check (not emitted by get_schema_text);
-     retained tool-name presence assertions.
-  3. test_toolspec_preview_default → test_toolspec_has_required_fields:
-     ToolSpec has no preview() method; replaced with field-presence + type checks
-     (name, description, write, allowlist, handler, args_schema).
-Open Questions: None.
-Next Step: pytest tests/ -x --tb=short
+Date: 2026-10-04
+Topic: GateIntelligence ownership trace — Code → MIAR → Ontology → Execution (read-only)
+Decision/Output: Single construction/call site: execution_planner.py:277-278 inside ExecutionPlannerV1_2.plan.
+Production caller live_engine_hook.process:1110, on the paper live rail only (F-073; the backtest never reaches it, F-103). Order:
+- EngineRunner (fusion → DecisionEngine → RegimeGovernor) → planner;
+- reject_engine unless decision==execute (:219-223) → intent → GateIntelligence;
+- reject_gate → no plan, Ultron "skipped: planner_did_not_execute" → orchestrator NO_ORDER / _may_submit false;
+- execute → compute_crt_levels → UltronRiskGate → order only on Ultron approve.
+The gate score is consumed nowhere downstream (logging/collector only).
+=> it is a terminal VETO on already semantically-approved signals, re-scoring market features. Necessary, never sufficient: a setup re-qualification acting as an execution-permission veto. It is not market interpretation, not a risk gate, not final approval.
+Owners: MIAR "Should the setup pass decision gates?" = decision_fusion (planner secondary, "must not redefine"); execution_intent non-goal "never rescore market features". Ontology v2: DEX-04 approval rail planner_ultron mapped only at UltronRiskGate.evaluate; the planner verdict is unrepresented (neither mapped nor unmapped) and reject_gate is absent from terminal_reason_map. Semantic OS v1: BD-008/CN-006 planner = geometry after semantic GO; alternatives_rejected "let the ExecutionPlanner self-approve". CN-002 Trade Approval = Ultron economic final yes/no.
+TruthConflicts:
+- TC-1 code vs MIAR (planner redefines the decision_fusion question, rescoring market features);
+- TC-2 code vs Semantic OS v1 BD-008/CN-006 (a planner-side veto the boundary contract does not list, and the rejected planner-approval alternative in partial form);
+- TC-3 is a representation gap (gate verdict has no v2 representation / reason code), not a conflict.
+Side: forward_tester.py:151 calls plan() with 1 of 3 args (TypeError swallowed, pnl=0, so the gate never runs there); MIAR names the ExecutionPlanner co-owner of the SL/TP/RR plan, but the planner sets none (live hook compute_crt_levels does).
+No edits.
+Belief Update / ROI / Goal: Goal: locate GateIntelligence's authority honestly. Belief: it is an unowned second semantic veto between decision_fusion's GO and Ultron. Three authorities (MIAR, Semantic OS v1, ontology v2) each assign the planner a non-approving role, and none represents the gate verdict. Knowledge ROI: high (turns "fix the gate inputs" into an ownership decision). Action: the user resolves TC-1/TC-2; no new owner inferred.
+Open Questions: TC-1/TC-2 resolution (user); whether to record TC-1/2/3 in MIAR / concept_contracts / F-113.
+Next Step: user decision.
 ---
 
 ---
 📝 SESSION LOG ENTRY
-Date: 2026-04-25T (Flow 4 — plan_compiler fix) IST
-Topic: Fix test_agent_plan_compiler.py — stale API (PlanCompiler.compile / CompiledPlan)
-Decision/Output: |
-  Root cause: test imported CompiledPlan (never built), called PlanCompiler.compile(text, mode, intent)
-  (actual: PlanCompiler.build(intent_key)), used wrong intent key names ("tune_promote" vs
-  "tune_and_promote", "backtest" vs "backtest_only", "governance/run" vs "governance_run",
-  "copilot/advise" vs "advise_signal"), and tested text-parsing / instrument-extraction /
-  mode-validation features that don't exist.
-
-  Fix — rewrote all 17 tests against actual API:
-    PlanCompiler.build(intent_key) → Plan
-    PlanCompiler.filter(plan, skip_tools) → Plan
-    Plan.intent_key, Plan.steps (List[ToolStep])
-    _tools(plan) helper extracts ordered tool names from Plan.steps
-
-  Test mapping:
-    Canonical sequences (6): tune_and_promote order, backtest_only single step,
-      governance_run preflight order, advise_signal engine-first + veto present,
-      full_pipeline all 5 stages, governance_inspect preflight
-    Determinism (2): same intent_key → same tools; fresh copy (no mutation leak)
-    Unknown key (1): returns ask_user sentinel with empty steps
-    filter (4): removes specified tools, empty skip unchanged, all-skip empty,
-                preserves intent_key
-    Registry exhaustiveness (3): all 14 expected intents registered, no empty step lists,
-                                  all tool names are non-empty strings
-
-Open Questions: None.
-Next Step: Run pytest tests/ -x --tb=short to find next pre-existing failure (if any).
----
-
----
-📝 SESSION LOG ENTRY
-Date: 2026-04-25T (Flow 4 — executor fix) IST
-Topic: Fix test_agent_executor_confirm.py — stale API mismatch (ToolResult / dict-dispatch)
-Decision/Output: |
-  Root cause: test imported ToolResult (never implemented), called dispatch() with a
-  dict payload + session_id/mode kwargs, used PendingConfirmation.tool_name (actual: .tool),
-  called state.record_confirmation() (doesn't exist), and executor.deny() (doesn't exist).
-
-  Fix — rewrote all 6 tests against actual executor.py API:
-    Executor(state, audit_mock, write_tools_enabled=[])
-    dispatch(tool_name, args, confirmed=False) → PendingConfirmation | "REFUSED:..." | result
-    PendingConfirmation.tool  (not .tool_name)
-    dispatch_denied(tool_name, args)  (not deny())
-    Refused check: isinstance(result, str) and result.startswith("REFUSED:")
-    Test 6: dispatch_denied → state.tool_calls[0].outcome == "denied" + audit.write_step called
-
-  Test mapping preserved:
-    1. read tool runs inline (non-write, no PendingConfirmation returned)
-    2. write tool without confirmed=True → PendingConfirmation
-    3. write tool with confirmed=True → executes handler
-    4. path outside configs/production|logs|results → REFUSED even when confirmed
-    5. unknown tool → REFUSED
-    6. dispatch_denied → denied ToolCall in state + audit.write_step called
-
-Open Questions: None.
-Next Step: Run pytest tests/ -x --tb=short to confirm full suite passes.
----
-
----
-📝 SESSION LOG ENTRY
-Date: 2026-04-25T (Flow 4) IST
-Topic: Flow 4 — Training / Model Update validation: test_evaluator.py + test_trainer.py (69 new tests)
-Decision/Output: |
-  Created tests/test_evaluator.py (24 tests):
-    _pearson (6): perfect +1, perfect -1, n<3 guard, zero-variance xs, zero-variance ys, known value
-    _composite_score (4): no high-conf buckets, full buckets weighted sum, all-zero, elite-only bucket
-    evaluate_gaussian (7): empty X, all required fields, n_samples match, corr∈[-1,1],
-                           cal_error≥0, class_distribution sums to n, 4 classes present
-    should_update (7): approve both-pass, block corr+cal, block cal-only, block neither,
-                       exact boundary blocked, default margin=0.02, reason is str always
-
-  Created tests/test_trainer.py (45 tests):
-    TestStandardScaler (10): mean≈0, std≈1, transform_one consistent, fit-empty ValueError,
-                              transform/transform_one before fit RuntimeError, n_features,
-                              to_dict keys, from_dict roundtrip, from_dict usable immediately
-    TestGaussianNBModel (13): predict_proba sums to 1, all non-negative,
-                              predict_proba before fit RuntimeError,
-                              FIX-2 wrong-dim ValueError (long+short), fit empty ValueError,
-                              predict_expected_rr triple, conf∈[0,1], class_priors sum to 1,
-                              to_dict keys, from_dict roundtrip, from_dict n_features, n_features after fit
-    TestTrainGaussian (8): MIN_SAMPLES guard, triple return types, metrics keys,
-                            n_train+n_val==total, corr∈[-1,1], cal≥0, model predict works,
-                            n_train respects train_ratio
-    TestCrossValGaussian (9): MIN_SAMPLES guard, required keys, stable is bool,
-                               fold_metrics is list, stable==corr_std<0.05, corr_mean∈[-1,1],
-                               n_folds respected, insufficient-folds returns stable key,
-                               fold_metrics entry keys
-    TestSaveLoadGaussian (6): save creates valid JSON, schema_name=="gaussian",
-                               load roundtrip same predictions, mismatched schema ValueError,
-                               missing file FileNotFoundError, loaded metadata keys
-
-  Key design choices:
-    - validate_vector checks length only → any 35-float vector passes; scaled vecs safe
-    - GAUSSIAN_FEATURE_SCHEMA = list(CANONICAL_FEATURE_ORDER) → same as GAUSSIAN_SCHEMA.feature_names
-    - MODELS_DIR patched via patch("training.trainer.MODELS_DIR", tmp_path) in save/load tests
-    - All trainer tests use random.seed for reproducibility; no torch required
-    - load_gaussian_model schema mismatch check uses saved["feature_schema"] != GAUSSIAN_FEATURE_SCHEMA
-
-Open Questions:
-  - Workspace unavailable during this session; tests cannot be run in CI until shell recovers.
-  - test_trainer.py::TestCrossValGaussian::test_insufficient_folds_returns_stable_false may
-    produce stable=True or False depending on fold geometry at n=20 — assertion is only
-    "stable key present", not its value. Strengthen if needed after first run.
-Next Step: Run regression suite when shell recovers:
-  pytest tests/test_evaluator.py tests/test_trainer.py -v --tb=short
-  pytest tests/ -x --tb=short   (full suite)
-  Then advance to Flow 5 — Governance / Promotion validation.
----
-
----
-📝 SESSION LOG ENTRY
-Date: 2026-04-25T (current session, continued #2) IST
-Topic: Tests for phase5_calibration and run_gaussian_update — 20 new tests written
-Decision/Output: |
-  Created tests/test_phase5_calibration.py (13 tests):
-    - Phase5Config default + override loading (2)
-    - make_calibration_fn factory: returns callable, result dict shape (2)
-    - APPROVE path: all gates True + each gate_check individually True (2)
-    - REJECT path per gate: min_val_samples / min_corr / max_cal_error / cv_stable (4)
-    - Multiple simultaneous gate failures all captured in gate_checks (1)
-    - cross_val_gaussian exception → cv_stable=False, no crash (1)
-    - Metrics dict carries all required keys on approve path (1)
-
-  Created tests/test_gaussian_update_pipeline.py (7 tests):
-    - Abort on insufficient data (is_trainable=False → ValueError) (1)
-    - Phase-5 rejection → register/promote never called (1)
-    - Happy path: approved=True, promoted=True (1)
-    - promote=False → promote_gaussian not called (1)
-    - force_promote=True forwarded to promote_gaussian(force=True) (1)
-    - Version string threaded through to register_gaussian correctly (1)
-    - Parametrised result shape invariant across non-raising paths (1)
-
-  Strategy: all heavy I/O mocked at module boundaries
-    (validate_logs, build_dataset, save_gaussian_model, register_gaussian,
-     _gaussian_registry.promote_gaussian, make_calibration_fn).
-    Real train_gaussian runs on synthetic 35-dim data inside the closure
-    for tests that exercise the full calibration_fn path.
-
-Open Questions:
-  - test_gaussian_update_pipeline.py patches validate_logs at
-    "features.dataset_validator.validate_logs" — must match the import
-    path used in train_pipeline.py (lazy import inside run_gaussian_update).
-    Run pytest to confirm patch targets resolve correctly.
-Next Step: Run full test suite regression:
-  pytest tests/test_phase5_calibration.py tests/test_gaussian_update_pipeline.py -v
-  pytest tests/ -x --tb=short
-  python scripts/maintenance/_compute_hash.py  (config changed)
----
-
----
-📝 SESSION LOG ENTRY
-Date: 2026-04-25T (current session, continued) IST
-Topic: Training pipeline gaps GAP-2 through GAP-5 — all closed
-Decision/Output: |
-  GAP-2 — Created src/training/phase5_calibration.py (new file):
-    - Phase5Config dataclass with from_prod_config() loading from §phase5_calibration.
-    - _run_gates(metrics, cv_stable) applies 4 hard gates: min_val_samples,
-      min_corr, max_cal_error, cv_stable. Returns (approved, gate_checks, verdict).
-    - make_calibration_fn(model, scaler, *, label) factory — returns closure
-      calibration_fn(X_raw, y_rr) -> dict compatible with run_training_pipeline.
-    - Closure: 30% temporal hold-out eval via evaluate_gaussian, then
-      cross_val_gaussian stability check; all gates applied before returning.
-    - Return dict: {integration_approved, verdict, metrics, gate_checks}.
-
-  GAP-3 + GAP-4 — Created src/training/train_pipeline.py (new file):
-    - Contains all business logic previously in scripts/training/train_pipeline.py
-      (validate_training_record, load_training_data, prepare_training_vectors,
-       validate_training_dataset, run_training_pipeline).
-    - Added run_gaussian_update(log_paths, version, *, promote, force_promote, ...)
-      wiring the full 8-step Gaussian pipeline:
-      validate_logs → build_dataset → train_gaussian → cross_val_gaussian
-      → Phase-5 calibration gate → register_gaussian → promote_gaussian.
-    - scripts/training/train_pipeline.py reduced to a thin CLI wrapper + re-export
-      shim (so existing callers importing from scripts.training.train_pipeline continue
-      to work without change).
-
-  GAP-5 — Fixed stale comments in src/training/trainer.py:
-    - N_FEATURES comment: # 32 → # 35 (CANONICAL_FEATURE_DIM)
-    - GAUSSIAN_N_FEATURES comment: # 32 → # 35
-    - cross_val_gaussian docstring: "11-feature vectors" → "CANONICAL_FEATURE_DIM=35"
-
-  Config — Added §phase5_calibration section to configs/production/v1_multi_2026_03.json:
-    val_ratio=0.30, min_val_samples=30, min_corr=0.10,
-    max_cal_error=0.25, cv_corr_std_max=0.05, cv_n_folds=3.
-    ⚠️  Re-hash required: python scripts/maintenance/_compute_hash.py
-
-Open Questions:
-  - No tests yet for phase5_calibration.py or run_gaussian_update() —
-    tests/test_phase5_calibration.py and tests/test_gaussian_update_pipeline.py
-    should be written (APPROVE path, each gate fail branch, insufficient-data branch).
-  - scripts/training/train_pipeline.py _stub_model_fn is intentionally a no-op;
-    caller must pass a real model_fn for actual TradeNet training runs.
-Next Step: Write tests (tests/test_phase5_calibration.py). Then run full regression:
-  pytest tests/ -x --tb=short
-  python scripts/maintenance/_compute_hash.py
----
-
----
-📝 SESSION LOG ENTRY
-Date: 2026-04-25T (current session) IST
-Topic: GAP-1 fix — validate_vector signature mismatch crash in dataset_validator.py
-Decision/Output: |
-  Root cause: dataset_validator.py line 187-189 called `ok, reason = validate_vector(vec)` —
-  a stale two-return-value API. Current `validate_vector(vec, schema, label='')` in
-  feature_schema.py returns bool (raises ValueError on failure), not a (bool, str) tuple.
-  This would crash any call to validate_logs() with TypeError at the unpack.
-  
-  Fix (2 surgical edits to src/features/dataset_validator.py):
-  1. Import: added TRADENET_SCHEMA to the feature_schema import line (line 29).
-  2. Call site (lines 183-191): replaced tuple-unpack pattern with try/except block
-     that calls validate_vector(vec, TRADENET_SCHEMA, label=f"trade_id={tid[:8]}")
-     and catches (ValueError, TypeError, KeyError, AssertionError) — matching the
-     convention used by all other feature-validation call sites in the codebase.
-  
-  No behavior change for valid records. Invalid-feature records now produce the same
-  diagnostic in rpt.warnings as before, but with structured error message from
-  validate_vector's ValueError rather than a stale `reason` string.
-Open Questions: 4 remaining pipeline gaps (GAP-2 through GAP-5). GAP-2 (missing
-  phase5_calibration.py) and GAP-3 (missing run_gaussian_update orchestrator) are
-  the next highest impact.
-Next Step: Tackle GAP-2 (build src/training/phase5_calibration.py) or GAP-3
-  (wire run_gaussian_update in src/training/train_pipeline.py). Confirm with user.
----
-
----
-📝 SESSION LOG ENTRY
-Date: 2026-04-25T00:30 IST
-Topic: Extended documentation suite — added 4 deeper references (CONFIG_REFERENCE / TESTING / AGENT_REFERENCE / GOVERNANCE)
-Decision/Output: |
-  Added four docs under docs/, all derived from live reads of configs/production/v1_multi_2026_03.json, src/agent/*, src/governance/*, tests/, and configs/promotion_log.jsonl:
-  1. docs/CONFIG_REFERENCE.md — Section-by-section reference for every top-level key in v1_multi_2026_03.json. Full key tables with types + defaults for: params, engine_runner (+dual_engine), fusion_engine, decision_engine, execution_planner (per-intent TP/SL/TTL), ultron_risk_gate, crt_engine (full state-machine params incl. session_windows + sizing_bands), gaussian_scorer, rr_model, llama_gate (server_url, timeouts, fail_count_disable=10), config_validator (gate thresholds: min_trades=10, max_drawdown=0.35, score_threshold=0.15), governance (shadow gate), validation_summary, backtest (slippage, spread, capital, compounding), feature_monitor (window=500, Z=3.0/2.5), tuner, training, portfolio, agent, inout (nested scanner/exit/time/risk/probability/db/logging). Editing rules: never mutate active, re-hash, promote through governance path, rollback via archived files, new-section requirements (_require + SCHEMAS entry + tests).
-  2. docs/TESTING.md — pytest layout (51 files, 10 domain groups), run commands (whole / by domain / single / coverage), pyproject.toml config (pythonpath=["src","scripts"], testpaths=["tests"]), conftest.py role, per-directory test inventory with one-line purpose each, coverage expectations per src/ subpackage (engines / config_layer / core / governance / agent / expansion / external I/O), 4 representative patterns (structured-return assertion, invariant precondition, parametrised, registry exhaustiveness), conventions enforced by tests (tool registration, write-flag gating, PLAN_REGISTRY non-empty, JSONL field presence, schema stability, cp1252 safety, control-plane doc↔code alignment), new-test procedure, pre-promotion regression command.
-  3. docs/AGENT_REFERENCE.md — Complete agent reference. Architecture diagram (IntentRouter → PlanCompiler → ArgFiller → Executor → AuditLogger). Three modes (pipeline / copilot / governance) with write-tool inventory. Full tool registry table (20 tools split pipeline=6, copilot=7, governance=5, cross-mode=2) with exact args schemas + write flags. IntentRouter classification flow (regex 0.85 confidence → LLM fallback → ask_user). Full intent catalogue (14 intents). Complete PLAN_REGISTRY tables showing deterministic tool sequences per intent (e.g. full_pipeline = tuner→validator→promotion→backtest→live_hook.dry_run; advise_signal = engine.run→fusion.explain→planner.plan→risk.check→advise.veto). PlanCompiler API, Executor guards (confirm-gate + path-guard), AgentState dataclass, audit JSONL schemas (per-step + session-summary, args_hash/result_hash fields), agent config keys (model=bitnet_3b, repl_enabled, copilot_auto_narrate, write_tools_enabled allowlist), REPL CLI, add-a-new-tool procedure (6 steps), test-enforced invariants.
-  4. docs/GOVERNANCE.md — End-to-end promotion flow diagram (tuner → ConfigValidator → approved/rejected → PromotionManager → registry + promotion_log). Full PromotionManager static API (promote_from_report, promote_from_tuner_checkpoint — the default, promote_direct — bypass-marked, list_versions, load_version) with args + return shapes. Registry layout with archive naming ({version}_archived_{YYYYMMDD}_{HHMMSS}.json). Module constants (PRODUCTION_REGISTRY_DIR, PROMOTION_LOG_FILE, VALIDATION_APPROVED_DIR, VALIDATION_REJECTED_DIR). promotion_log.jsonl exact schemas for PROMOTED + PROMOTION_FAILED events with real example line (config_hash=05dd285c..., score=0.6023, score_std_dev=0.0). ShadowPromotionGate constructor signature, validation rules (min_shadow_trades positive int), 3-step workflow (stage_candidate → execute_shadow_test → promote_if_superior) and both gates (sample-size + strict performance). MetaGovernorExecutor API (run_inference / extract_and_validate_config with fusion_min_score required / log_governance_event with timestamp+Z format). PortfolioValidation 8 instruments + PortfolioAnalytics.aggregate keys. Rollback procedure (6 steps incl. copy not move, update PROD_VERSION, append ROLLBACK to log, smoke-test). 10-item pre-promotion checklist. Who-writes-what matrix enumerating governance-only artifacts.
-  Updated CLAUDE.md companion-docs table to include all four new docs with content summaries.
-Open Questions: None — docs self-consistent with code as of this turn. If any config values change, CONFIG_REFERENCE must be refreshed (or better: auto-generated from the live JSON).
-Next Step: Consider adding a tiny `scripts/analysis/gen_config_reference.py` that re-emits CONFIG_REFERENCE.md from the active production JSON so it cannot drift. Similarly, a schema-alignment test `tests/test_docs_alignment.py` that asserts every top-level key in the JSON appears in the markdown would make docs-drift a hard failure. Neither is required to ship — just suggested hardening.
----
-
----
-📝 SESSION LOG ENTRY
-Date: 2026-04-25T00:00 IST
-Topic: Generated full master-context documentation suite (5 files)
-Decision/Output: |
-  Created four new docs + merged root CLAUDE.md, derived from live code inspection of src/, configs/, and pyproject.toml:
-  1. docs/ARCHITECTURE.md — Tech stack (Python >=3.10, pandas/numpy/torch, stdlib http.server control plane, llama.cpp + Groq + BitNet GGUF), full directory tree with per-folder purpose, end-to-end data flow (FeaturePipeline → FeatureMonitor → EngineRunner[4 engines] → FusionEngine → DecisionEngine → ExecutionPlannerV1_2 → UltronRiskGate → Collector), governance path (ConfigValidator → PromotionManager), agent path (IntentRouter → PlanCompiler → Executor), design patterns (Registry / Factory / Strategy / Facade / Gate-chain / State-machine / Observer / Command / Append-only log / Fail-open+fail-fast split / Feature-flag), external integrations, .env keys, 9-section production config index, 7 CLI entry points.
-  2. docs/CONVENTIONS.md — Naming tables (snake_case modules, PascalCase classes, _LEADING_UPPER_SNAKE module privates, versioned config filename pattern v{N}_{label}_{YYYY_MM}.json, archived suffix _archived_{ts}.json), folder-placement rules per file type, THREE error-handling modes (fail-fast config load / optional-import guard / fail-open circuit breaker) with real code snippets from config_validator.py & llama_gate.py, structured rejection shape, import order (stdlib → third-party → internal, absolute rooted at src/), logging level policy, dataclass/Enum rules, 12 explicit anti-patterns enforced at named sites.
-  3. docs/SCHEMAS.md — No-DB disclaimer; all primary dataclasses (Candle, Range, Trade, BacktestConfig with from_prod_config, CommandSpec, RunRecord, ToolStep, Plan, AgentState); enums (CRTState 7-state, Direction, RejectReason, INTENT literals); EXPECTED_ENGINES set; CANONICAL_FEATURE_DIM=35 + CANONICAL_FEATURES listing + SchemaObject wrapper; ValidationReport full shape + hard/soft gate threshold table; GateResult shape; ExecutionPlan shape + per-intent multiplier table; ProductionConfig top-level keys; JSONL audit line schemas (promotion_log / agent_audit / expansion_trace); relationship diagram; validation-rule enforcement table (9 rules × 9 enforcement sites).
-  4. docs/EXAMPLE_SERVICE.py — Golden reference template demonstrating all 10 conventions: __future__ import, alphabetised stdlib/internal imports with path bootstrap, optional-import guard (_MONITOR_AVAILABLE), get_flow_logger("EXAMPLE_SERVICE"), _load_example_cfg() + _require() fail-fast, ExampleServiceConfig dataclass with from_prod_config factory, _CircuitBreaker class mirroring llama_gate, ExampleService public class with constructor DI + typed evaluate(), _compute_score private helper, structured _approve/_reject returns matching ValidationReport shape, argparse CLI wrapper, exhaustive module-registration checklist comment (5 steps from subpackage choice → prod config section add → hash re-computation → orchestrator wiring → pytest coverage → promotion via promotion_manager).
-  5. CLAUDE.md (merged at repo root) — Preserved existing CodeBase Navigator ritual in full (ORIENT/PROBE/IMPLEMENT/SELF-DOCUMENT, Persistent Logging Mandate, Token Control Rules, LLM Capabilities Preserved, all Completed Enhancements Phases 0-5). Prepended: Project Summary paragraph, Companion Documentation table with direct relative links to all four new docs, "How to Work With This Codebase" (add feature 7-step canonical pattern, add "DB model" = dataclass/enum/config-section/JSONL, add "API endpoint" = CLI / control-plane CommandSpec / agent tool), Key files to check before changes (8 items in read order), 9 Current Known Constraints (Python >=3.10 pin, single active prod config, four-engine mandate, no-lookahead, LLM fail-open, Windows console encoding, localhost-only control plane, schema hash load-bearing, CRTState non-free graph, no DB), Preferred Response Style (follow patterns / minimal diffs / flag conflicts / concrete references / compressed explanation / no preamble).
-  Placement: docs/ for the 4 new files (docs/ already exists with handover + CLI_MATRIX + architecture_diagram.html); CLAUDE.md stayed at repo root and was MERGED not overwritten — existing Navigator rules + Phase 0-5 enhancements preserved verbatim.
-Open Questions: None — deliverables match the 5-file spec exactly. User may want to move EXAMPLE_SERVICE.py into src/ as a template location, or keep under docs/.
-Next Step: Run `python scripts/maintenance/_compute_hash.py` if any new config section is added based on EXAMPLE_SERVICE scaffold; regenerate pyan .dot (`scripts/analysis/gen_pyan.py`) if new modules are added. No immediate code changes required from this documentation turn.
----
-
----
-📝 SESSION LOG ENTRY
-Date: 2026-04-20T01:29 IST
-Topic: Generated full codebase architecture diagram (HTML + Mermaid.js 5-tab)
-Decision/Output: Created `docs/architecture_diagram.html` — interactive 5-tab flowchart: Full Architecture, Training Pipeline, Live Runtime, Governance & Expansion, Agent & Control Plane. All inter-module edges annotated with key data flows (checkpoint_multi.json, ValidationReport, fusion_use_evaluate flag, drift Z thresholds, SHA-256 hash, etc.). CDN Mermaid.js, dark theme, color-coded swimlanes.
-Open Questions: None.
-Next Step: Open docs/architecture_diagram.html in browser to verify rendering; extend if new modules added.
----
-
----
-📝 SESSION LOG ENTRY
-Date: 2026-04-18T00:00:00
-Topic: Agent design doc reviewed — PlanCompiler + Expansion Engine architecture aligned
-Decision/Output: Design doc (AI Automation Agent) is production-grade. Two mandatory additions identified: (1) PlanCompiler deterministic layer replacing LLM-driven planning, (2) Outcome capture in audit.jsonl. Expansion Engine modules (src/expansion/) and LLM Research pipeline (src/llm_research/) also scoped. Decisions locked: REPL first, BitNet 3B, copilot auto-narrate=OFF.
-Open Questions: None — decisions finalized.
-Next Step: Implementation approval cycle. Switch to ACT MODE to build agent layer + expansion engine.
----
-
----
-📝 SESSION LOG ENTRY
-Date: 2026-04-18T19:15:00+05:30
-Topic: Full implementation — Agent layer + Expansion Engine + LLM Research Pipeline
-Decision/Output: |
-  Implemented all components:
-  1. llama_gate.llm_chat() — BitNet multi-turn chat (flattens to <|system|><|user|><|assistant|> format, circuit-breaker reused)
-  2. src/agent/ — All core modules confirmed complete: tool_registry (17 tools), plan_compiler (deterministic _PLANS lookup), audit (outcome capture: intent/plan/outcome/metrics), state, executor (confirm-gate + path-guard), agent_core, intent_router, tool_planner, cli
-  3. Missing prompts created: system_copilot.md, system_governance.md, intent_router.md, tool_schema.md
-  4. src/expansion/ — 5 modules: policy_schema (PARAM_BOUNDS + guardrails), config_mutator (bounded single-param mutation), evaluator (profit-aware scoring), expansion_engine (deterministic loop + rejection_log + expansion_trace), llm_pattern_extractor (live llm_chat + fallback plan)
-  5. src/llm_research/ — 4 modules: pattern_extractor (LLM offline → ExtractedPolicy), policy_builder (PolicyEngine deterministic), forward_tester (3-mode: BASELINE/POLICY/HYBRID + hybrid forward-test split), evaluator (generalization + overfitting + contribution analysis)
-  6. configs/production/v1_multi_2026_03.json — agent section added (BitNet 3B, REPL, copilot_auto_narrate=false)
-  7. Tests: test_agent_tool_registry, test_agent_intent_router, test_agent_executor_confirm, test_agent_plan_compiler, test_expansion_engine (6 test files)
-  
-  Expansion Engine additions (per Jarvis): rejection log (logs/expansion_rejected.jsonl), expansion trace log (logs/expansion_trace.jsonl), config versioning (SAFE/BALANCED/AGGRESSIVE suffixes)
-  
-  LLM Research additions: hybrid forward-test (explicit --forward-csv OR auto last-30%), 3-mode comparison, generalization/overfitting/contribution analysis
-Open Questions: None.
-Next Step: Run test suite (pytest tests/test_agent_*.py tests/test_expansion_engine.py). Then: integrate expansion engine into governance loop + shadow test pipeline.
----
-
----
-📝 SESSION LOG ENTRY
-Date: 2026-04-10T17:02:00Z
-Topic: Continue ordered enhancements (baseline + schema gate alignment)
-Decision/Output: Implemented Gaussian schema-version source-of-truth fix and added baseline capture utility; produced baseline manifest artifact; all targeted tests passed.
-Open Questions: Should I proceed next with automated --validate-prod baseline command wiring or prioritize drift/fusion integration (Phase 2)?
-Next Step: Execute next Phase 1 work item in-code and run focused regression tests.
----
-
-
----
-?? SESSION LOG ENTRY
-Date: 2026-04-10T17:37:17Z
-Topic: Enforce persistent response logging mandate
-Decision/Output: Added mandatory rule in AGENTS.md and CLAUDE.md to append every response log block to assistant_project.md.
-Open Questions: None.
-Next Step: Continue implementation with automatic per-response log persistence.
----
-
-
----
-?? SESSION LOG ENTRY
-Date: 2026-04-10T18:25:58Z
-Topic: Phase 1 runtime-hook contract hardening + production validation automation
-Decision/Output: Hardened runtime/live_engine_hook input contract for EngineRunner, added config_validator automation mode, and fixed auto_tuner_multi BacktestConfig/metrics compatibility so automation can produce non-null final_score.
-Open Questions: Whether to run automation again with registry update enabled to write validation_summary back into production_configs/v1_multi_2026_03.json.
-Next Step: If approved, execute config_validator.py --automation-prod without --no-registry-update and commit these phase-1 hardening changes.
----
-
-
----
-?? SESSION LOG ENTRY
-Date: 2026-04-10T18:27:47Z
-Topic: Complete Phase 1 production validation automation write-back
-Decision/Output: Ran config_validator automation mode with registry update enabled; generated validation artifact and persisted non-null validation_summary metrics into production_configs/v1_multi_2026_03.json.
-Open Questions: Whether to suppress CRT debug/deprecation noise in automation logs next.
-Next Step: Proceed to next planned hardening item (Phase 2 drift/fusion integration) or clean validator logging.
----
-
-
----
-?? SESSION LOG ENTRY
-Date: 2026-04-10T18:32:41Z
-Topic: Phase 2 fusion path toggle hardening
-Decision/Output: Added EngineRunner support for optional fusion.evaluate shadow/override modes (fusion_compare_evaluate, fusion_use_evaluate) with safe fallback to compute path; added regression tests covering shadow logging and override behavior.
-Open Questions: Whether to enable fusion_compare_evaluate in production config first for shadow telemetry before any fusion_use_evaluate rollout.
-Next Step: Wire fusion_compare_evaluate=true in production config as shadow-only rollout and collect A/B drift over baseline runs.
----
-
-
----
-?? SESSION LOG ENTRY
-Date: 2026-04-10T18:36:47Z
-Topic: Enable Phase 2 fusion shadow rollout in production config
-Decision/Output: Updated production_configs/v1_multi_2026_03.json with engine_runner.fusion_compare_evaluate=true and fusion_use_evaluate=false; normalized JSON to ASCII-safe encoding; regression tests passed.
-Open Questions: Whether to also suppress verbose backtest logs in automation mode before broader shadow A/B runs.
-Next Step: Run a baseline/backtest batch capturing evaluate_shadow telemetry and compare score deltas against compute final_score.
+Date: 2026-10-04
+Topic: Historical introduction of GateIntelligence + the planner veto — evidence-only chronology and authorization search (read-only)
+Decision/Output: Introduced 2026-05-15 in bulk commit eb64269b / b34d6a8c ("stable before rename", 191 files, no design note); no earlier trace in git or in the 5 pre-git backup zips.
+Before it, 5897209f (2026-04-30): the planner computed entry/SL/TP/RR/TTL/size and vetoed via reject_engine / reject_unknown_intent / reject_rr (min_rr_ratio); v2_multi_2026_04 had 0 gate keys.
+The intro commit: rewrote the planner to "pure intent classifier + gate … delegates signal approval to GateIntelligence", removed reject_rr and SL/TP/RR, added the gate config section and mechanical tests. The only stated purpose is the file docstring ("Pure signal gate for ExecutionPlanner … deterministic multi-factor approval gate").
+No contemporaneous session-log entry. All docs mentioning it date >= 2026-06-18, descriptive or reconstruction:
+- FULL_BUILD_SPECIFICATION (2026-06-24) Story 2.3 says "4 weights + threshold with no documented design intent", decision needed; STORY-2.3 still `pending`;
+- model-design-intent.md (2026-08-09, self-declared reconstruction) "Essential? … gate no".
+Promotions: the 7 v2_multi_2026_04 PROMOTED records predate the gate; the 05-14 attempt FAILED; the 2026-08-15 v2_htfcrt manual-write PROMOTED notes contain 0 gate/planner mentions.
+Findings: F-108/F-109/F-113 measure it and explicitly grant no authority. F-109 found the gate section was not even loaded on the Engine rail until 2026-09-25.
+Explicit authorization record for the planner-side veto: NONE FOUND in the repo.
+Belief Update / ROI / Goal: Goal: know whether the veto was ever authorized. Belief: no repo evidence authorizes it. It arrived unannounced in a bulk snapshot that replaced the planner's own RR veto, and the one governance artifact that addressed it (Story 2.3) recorded "no documented design intent" and was never decided. Knowledge ROI: high (TC-1/TC-2 now have provenance: unauthorized, not merely drifted). Action: user decision; Story 2.3 is the existing open vehicle.
+Open Questions: authorization outside the repo (chat or design history before git tracking) — UNVERIFIED.
+Next Step: user decision.
 ---
 
 
 ---
 📝 SESSION LOG ENTRY
-Date: 2026-04-10T18:45:38Z
-Topic: Persist fusion shadow telemetry + add analysis utility
-Decision/Output: Updated collector to persist top-level fusion payload (including evaluate_shadow), added runtime/analyze_fusion_shadow.py, added targeted tests, and produced automation analysis artifact.
-Open Questions: Current historical collector log has zero evaluate_shadow samples; need a shadow-enabled runtime/backtest pass to populate compare deltas.
-Next Step: Execute a shadow-enabled validation/backtest run and re-run analyze_fusion_shadow to capture non-zero drift statistics.
+Date: 2026-10-04
+Topic: observable_only intrabar tie-break (research walkers) — OHLC touches, not touch order
+Decision/Output: Opt-in tie_break="observable_only" in multi_tp_walk, reference_walk (independent twin), forward_walk; state-machine-legal forks only (OPEN: SL+TP1, SL+TP2; TP1: trail+TP2); TP1+TP2 / TP1+trail not forks. OracleOutcome/Outcome gain defaulted ambiguous/rr_band(/n_branches/rr_gross_basis); rr_gross on ambiguous rows = compat_min_branch scalar, rr_band authoritative. measurement_basis.TIE_BREAKS += observable_only. Production default byte-identical; crt_engine_v2/backtest_v2 untouched. Tests: tests/research/test_observable_intrabar_order.py (20).
+Belief Update / ROI / Goal: Goal: stop manufacturing intrabar order in research. Belief: later single touches never exclude a dead branch, so ambiguity is not retroactively resolved. Knowledge ROI: medium. Action: report; docs (SEM-017/topic) not yet synced.
+Open Questions: labeler/ledger consumers of exit_kind="AMBIGUOUS"; SEM-017 + topic doc sync; production rail unchangeable without redesign.
+Next Step: user review; then decide doc sync and labeler opt-in.
 ---
 
----
-📝 SESSION LOG ENTRY
-Date: 2026-04-11T12:53:00Z
-Topic: TradeLatest_Validation_Guide Analysis
-Decision/Output: Completed full analysis of official validation guide. System is 78% implementation complete, 7 critical production blocking gaps identified. All referenced CLI commands and files exist exactly as documented in the repository. Verified end-to-end happy path validation sequence is executable with current codebase.
-Open Questions: Would you like to proceed with prioritising gap resolution, run the full validation sequence, or deep dive into a specific module?
-Next Step: Present analysis summary and next options.
----
-  
----  
-?? SESSION LOG ENTRY  
-Date: 2026-04-11T13:00:58+05:30  
-Topic: GAP-022 - Phase5Calibration integrated into CI Pipeline  
-Decision/Output: Added `calibration_fn` callback parameter to `run_training_pipeline()`, implements mandatory post-training gate. Fails pipeline with RuntimeError if `integration_approved=False`. 100% backward compatible (default None). Added 3 complete test cases.  
-Open Questions: None  
-Next Step: Run pytest -v test_train_pipeline.py to verify  
---- 
 
 ---
 📝 SESSION LOG ENTRY
-Date: 2026-04-12T00:00:00Z
-Topic: Implement ENHANCEMENT_IMPLEMENTATION_PLAN.md — all phases
-Decision/Output:
-  Phase 0: results/baseline/ directory created; baseline_capture.py verified operational.
-  Phase 1: config_validator.py fully implemented — ConfigValidator class with validate(), validate_production(), _discover_csvs(). Applies hard gates (min 10 trades, max 35% DD, min fitness 0.15) and soft gates (win rate, expectancy, consistency). Unblocks promotion_manager.py import.
-  Phase 2: FeatureMonitor wired into BacktestRunner (backtest_v2.py) — initialized in __init__, updated on every TRADE_OPENED, HARD/SOFT drift logged, drift stats exposed in BacktestMetrics.distribution["feature_drift"].
-  Phase 3: rr_dataset_builder.py, model_registry.py, train_pipeline.py already implemented correctly.
-  Phase 4: execution_planner.py (ExecutionPlannerV1_2) already implemented.
-  Phase 5: promotion_manager.py already enforces ValidationReport gate + SHA-256 hash + promotion_log.jsonl; ConfigValidator now completes the gate.
-  ENHANCEMENT_IMPLEMENTATION_PLAN.md marked COMPLETED. CLAUDE.md and AGENTS.md updated with full implementation summary.
-Open Questions: None — all phases complete.
-Next Step: Run python runtime/baseline_capture.py --label phase0 to produce first baseline manifest. Then run python config_validator.py validate-prod --data-dir data/ to verify promotion gate end-to-end.
+Date: 2026-10-04
+Topic: Entry bar never evaluated for SL/TP1/TP2 — proving test
+Decision/Output: No src change (already true). Added test_entry_bar_is_never_walked (5 walker x tie_break arms): entry bar passed in -> ValueError lookahead; bars after entry only -> entry bar range cannot exit the trade. 25/25 green.
+Belief Update / ROI / Goal: Goal: no same-bar-as-entry exits. Belief: guard holds in forward_walk always; multi_tp_walk/reference_walk only when entry_index is passed. Knowledge ROI: low (confirmation). Action: none.
+Open Questions: should multi_tp_walk/reference_walk require entry_index (guard is caller-dependent when None)?
+Next Step: user decision on making entry_index mandatory.
 ---
+
 
 ---
 📝 SESSION LOG ENTRY
-Date: 2026-04-16
-Topic: JSON-as-single-source-of-truth — final 5 files completed
-Decision/Output:
-  Completed the remaining files in the "no hardcoded config defaults" initiative:
-  1. configs/production/v1_multi_2026_03.json — Added engine_runner.model_path = "model_export_format.json"
-  2. src/runtime/backtest_bitnet.py — _build_engine_runner_config() now requires all 5 sections (engine_runner, decision_engine, fusion_engine, execution_planner, ultron_risk_gate), raises RuntimeError if any missing; model_path read from engine_runner section, raises KeyError if absent; legacy flat-path fallback removed.
-  3. src/inout/config.py — INOUT_DEFAULTS dict eliminated entirely; INOUTConfig.load() now calls get_prod_section("inout"); all section accessors raise KeyError on missing key (no fallbacks); _validate_fractions() raises on missing exit sub-keys.
-  4. src/config_layer/llama_gate.py — try/except {} fallback removed; all 8 module-level constants now loaded via _require_lg() helper that raises KeyError on missing key.
-  5. src/runtime/backtest_v2.py — BacktestConfig dataclass: all 12 config-driven fields no longer have hardcoded defaults; new from_prod_config() classmethod loads from JSON backtest section, raises on missing keys. MultiInstrumentRunner.run_all() uses from_prod_config() when bt_config=None. main() loads base config from JSON then applies CLI overrides (CLI args default to None, only applied when explicitly passed).
-  Scan of all modified files confirmed: zero config .get(key, literal_default) patterns remain. Remaining .get() patterns are all on runtime data dicts (trade results, engine outputs, HTTP responses) which are correct.
-  All 9 JSON smoke tests passed.
-Open Questions: None — all config defaults eliminated from Python source.
-Next Step: Run full test suite once model.json is available in the test env (BitNetModel() at module level in bitnet_inference.py blocks import chain). Consider guarding BitNetModel() instantiation with lazy loading.
+Date: 2026-10-04
+Topic: entry_index now required in multi_tp_walk / reference_walk
+Decision/Output: entry_index keyword-only with no default + explicit None -> ValueError in both walkers; callers fixed: scripts/research/execution_planner_replay.py (entry_index=i), tests/research/test_stop_policy.py (3 sites, bars index from 1 -> 0). New test_entry_index_is_required. tests/research + tests/semantics + measurement_basis + identity_chain: 1483 passed, 6 failed — all 6 unrelated (schema v6.0 rename candles_since_sweep, clean_labels bad_features, ERP/IC governance JSON).
+Belief Update / ROI / Goal: Goal: no exit evaluated on the entry bar. Belief: guard is now unconditional at the API, but still skipped for bars lacking `.index`. Knowledge ROI: low. Action: none.
+Open Questions: require `.index` on every forward bar too?
+Next Step: user decision on the `.index` hole.
 ---
+
 
 ---
 📝 SESSION LOG ENTRY
-Date: 2026-04-16
-Topic: Full pytest suite restored to 0 failures (427 passed, 9 skipped, 2 xfailed)
-Decision/Output: |
-  Fixed across 2 sessions:
-  - BitNetModel schema detection broadened: auto-detects export schema from "layers" presence,
-    infers input_dim from weights[0] shape when "in" key absent.
-  - _forward_export tanh saturation fix: max(-1+1e-7, min(1-1e-7, tanh(z))) prevents exact ±1.0.
-  - EngineRunner test fixtures: added DummyDecision + runner.decision to both
-    test_engine_runner_dual_gate.py and test_engine_runner_rr_fusion.py.
-  - FusionConfig: all fields given defaults matching production config values.
-  - FusionEngine: config=None → uses FusionConfig() default instead of raising.
-  - AcceptanceController: raw config value stored pre-clamp; returned unchanged in cold path.
-  - test_acceptance_controller: doubled samples in engine_threshold test to reach _MIN_HISTORY=10.
-  - ExecutionPlannerV1_2: __init__ now merges with DEFAULT_CONFIG (no-arg + partial supported).
-  - test_engine_runner_rr_fusion: _build_runner merges with ENGINE_RUNNER_DEFAULTS.
-  - tests/production_configs/: created symlink dir with v1_multi_2026_03.json copy.
-  - inout/config.py: all accessors now accept default param; _deep_merge added.
-  - backtest_v2.py: top-level pd, FeaturePipeline, BitNetModel, EngineRunner imports;
-    run_backtest() function added (payload separation contract).
-  - test_auto_tuner_multi: fixed import paths, patch targets, stub paths, encoding.
-  - test_bitnet_parity: marked xfail (C++ binary produces stale constant output).
-  - test_no_forbidden_imports: marked xfail (pattern only in comment, not real call).
-Open Questions: None — suite fully green.
-Next Step: Run baseline_capture.py and full validation flow to confirm runtime health.
+Date: 2026-10-04
+Topic: Forward bars must carry .index in multi_tp_walk / reference_walk
+Decision/Output: Lookahead guard now fails closed on a bar with no `.index` (4 guard sites, `bidx is None or ...`), matching forward_walk. Production callers already supply .index (labeler/exit_sweep Bar, replay _WalkBar, position/outcome). New test_forward_bar_without_index_is_rejected (2 tie-breaks). Suite: 1485 passed, same 6 unrelated failures as before.
+Belief Update / ROI / Goal: Goal: no exit ever evaluated on the entry bar. Belief: the entry-bar guard is now unconditional in all three walkers. Knowledge ROI: low. Action: none.
+Open Questions: none.
+Next Step: user review / commit decision.
 ---
+
 
 ---
 📝 SESSION LOG ENTRY
-Date: 2026-04-17
-Topic: Safely incorporate Jarvis_CRT_Handover.docx (Patch v3, BTCUSDT M15)
-Decision/Output: Additive augmentation only — production scoring path unchanged. Added: (1) src/config_layer/crt_sweep_taxonomy.py — pure-function TYPE-A/B/C/D geometric classifier per §5.3; (2) tools/btcusdt_crt_v3_replay.py — standalone reference harness reproducing the doc's 4-head BitNet pipeline (idx-guard reorder fix per §6.2/§13.2 applied here only); (3) tests/test_btcusdt_crt_v3_handover.py — pytest locking in the four §15 ground-truth fusion scores (Candles 23/38/43/13, ±0.02) plus taxonomy unit tests; (4) docs/handover/JARVIS_CRT_HANDOVER_v3.md — diffable in-repo snapshot. Modified: src/config_layer/crt_engine_v2.py — extended SweepEvent with two optional sweep_type/sweep_label metadata fields and annotated them in RangeDetector.detect_sweep via classify_sweep (no control-flow change, downstream scoring ignores). NOT modified (deliberately): fusion_engine.py, scoring_engine.py, crt_gaussian_scorer.py, llama_gate.py, backtest_v2.py, engine_runner.py, configs/production/*.json — fusion weights already match doc (0.30/0.25/0.25/0.20).
-Open Questions: User to supply the 49-candle BTCUSDT M15 CSV at data/btcusdt_m15_2024-01-01.csv to enable the integration regression block in test_btcusdt_crt_v3_handover.py (taxonomy unit tests run unconditionally).
-Next Step: Drop in the BTCUSDT fixture CSV and run `python -m pytest tests/test_btcusdt_crt_v3_handover.py -v` to lock in ground-truth; spot-check production EURCAD backtest logs for new sweep_type=TYPE-… annotations on existing SweepEvents.
+Date: 2026-10-05
+Topic: Current branch details for semanticos_impl
+Decision/Output: HEAD 27ed1c9 (2026-10-03 18:09 +0530), 6 commits ahead of grokbotchanges ea69a60, no upstream. Working tree dirty: 1 staged add, 41 unstaged files (3196+/94-), plus untracked plans/logs/tests. Three stashes exist on other branches.
+Belief Update / ROI / Goal: none
+Open Questions: none
+Next Step: none — report only
 ---
----
-?? SESSION LOG ENTRY
-Date: 2026-04-17T16:43:34+05:30
-Topic: CRT Web Control Plane implementation (registry + jobs API + UI + docs/tests)
-Decision/Output: Implemented src/control_plane package with typed CommandSpec/RunRecord models, core command registry, threaded JobManager, HTTP API routes, and browser UI; added run-server and CLI-matrix generator scripts; generated docs/CLI_MATRIX.md; added docs/control_plane/ARCHITECTURE.md; updated AGENTS.md and CLAUDE.md path drift items; added tests for command parity, job execution persistence, API lifecycle/UI route, and doc alignment (11 passing).
-Open Questions: Existing repository contains large unrelated pre-existing git deltas; control-plane changes were made without touching those unrelated files.
-Next Step: Start server via python scripts/control_plane/run_server.py and validate real core workflow runs from UI in this environment.
----
----
-?? SESSION LOG ENTRY
-Date: 2026-04-17T16:47:37+05:30
-Topic: Fix control-plane launcher import path
-Decision/Output: Updated scripts/control_plane/run_server.py to prepend repo src/ to sys.path before importing control_plane; also updated scripts/analysis/generate_cli_matrix.py with the same src path bootstrap so both scripts run directly from repo root without requiring PYTHONPATH.
-Open Questions: None.
-Next Step: User re-runs python scripts/control_plane/run_server.py --host 127.0.0.1 --port 8787 from activated .venv.
----
----
-?? SESSION LOG ENTRY
-Date: 2026-04-17T20:00:27+05:30
-Topic: Tutorial navigation implementation (playbook + first-run tour) for CRT control plane
-Decision/Output: Extended control-plane metadata model with workflow_stage, quickstart_notes, and recommended_next_command_ids; added deterministic workflow stage order and additive payload fields on GET /commands; implemented tutorial playbook panel with jump/mark-complete behavior (localStorage: playbook_completed), contextual launcher helper blocks, and first-run guided tour overlay with persistence keys tutorial_seen/tutorial_dismissed_version/tutorial_progress and manual restart via Help button; updated architecture docs with tutorial subsystem and usage; regenerated docs/CLI_MATRIX.md with Suggested Next column; added/updated tests for tutorial mapping, API payload anchors, and tour persistence markers.
-Open Questions: Local sandbox blocked Python test execution commands with Access is denied, so full pytest confirmation could not be executed from this shell context.
-Next Step: Run pytest in the user's active .venv for control-plane tests and verify UI flow at / with first-run auto-tour plus playbook interactions.
----
----
-?? SESSION LOG ENTRY
-Date: 2026-04-17T20:07:01+05:30
-Topic: Clarify control-plane data field input
-Decision/Output: Explained that data expects market CSV input path, with examples for file and directory modes depending on selected command (unified replay/backtest bitnet).
-Open Questions: Which exact command the user selected in the UI (replay.unified or backtest.bitnet) for stricter validation guidance.
-Next Step: User pastes a valid CSV path (or directory for unified replay) and reruns.
----
----
-?? SESSION LOG ENTRY
-Date: 2026-04-17T20:08:04+05:30
-Topic: Locate backend/control-plane logs
-Decision/Output: Clarified that server console output is minimal by design; provided exact filesystem paths for run logs and metadata under logs/control_plane, plus where command-specific artifacts are written.
-Open Questions: Whether user wants real-time console request logging enabled in server.py.
-Next Step: User checks latest run folder and tails combined.log or stdout/stderr files.
----
----
-📝 SESSION LOG ENTRY
-Date: 2026-04-17T20:21:17+05:30
-Topic: Console encoding hardening for replay/backtest and runtime CLI output
-Decision/Output: Added src/utils/console_safe.py with safe_print/sanitize_for_console/SafeStreamHandler; migrated runtime CLI prints (backtest_bitnet, unified_replay_harness, baseline_capture, analyze_fusion_shadow, backtest_v2 config notice) to safe_print; switched logging_config and backtest_v2 console handlers to SafeStreamHandler; added tests tests/test_console_safe.py and tests/test_backtest_bitnet_console_encoding.py for fallback behavior and cp1252 replay-path regression.
-Open Questions: Python execution is blocked in this shell (Access is denied), so pytest could not be run here.
-Next Step: Run the new focused pytest targets in your normal dev shell and then rerun the unified replay command to confirm no UnicodeEncodeError.
----
+
 
 ---
 📝 SESSION LOG ENTRY
-Date: 2026-04-18
-Topic: AI Automation Agent — design doc (ChatOps overlay on existing pipeline)
-Decision/Output: Approved design doc written to C:/Users/Hi/.claude/plans/you-have-all-configured-peaceful-biscuit.md. Architecture: src/agent/ package with agent_core, intent_router, tool_registry, tool_planner, executor, state, audit, cli + prompts/ + modes/{pipeline,copilot,governance}. Reuses local llama_gate + BitNet (no Anthropic API). New llm_chat() function to add to src/config_layer/llama_gate.py. Three sub-modes the operator invokes by intent: (1) Pipeline orchestrator chaining auto_tuner→config_validator→promotion_manager→backtest_v2→live_engine_hook; (2) Live signal co-pilot wrapping EngineRunner→FusionEngine→ExecutionPlanner with advise.veto/resize (advisory only, UltronRiskGate remains authoritative); (3) Governance meta-reasoner driving src/governance/orchestrator.py. Advisory-only autonomy: every write-tool (promotion, live_toggle, governance.run_loop) gated by per-call y/N confirm + path-whitelist guard + existing quality gates (ConfigValidator hard gates, ShadowPromotionGate). Tool-use via JSON-response + dispatcher pattern (llama.cpp has no native tool-use). Configuration under new "agent" key in configs/production/*.json with write_tools_enabled empty by default. Audit to logs/agent_audit.jsonl, sessions to logs/agent_sessions/, LLM calls to logs/agent_llm.jsonl.
-Open Questions: (1) CLI host — standalone REPL vs HTTP endpoint in src/control_plane/server.py? (2) Copilot auto-narration on every live signal or on-demand only? (3) Confirm BitNet 3B GGUF (vs the 70B referenced in GovernanceOrchestrator) for interactive chat.
-Next Step: Operator review of the three open questions; on answers, proceed to implementation cycle (create src/agent/ package, add llm_chat to llama_gate.py, extend one production config, write unit + integration tests per §9 of the design).
+Date: 2026-10-05
+Topic: Commit semanticos_impl working tree and push with --no-verify
+Decision/Output: User asked to push all current-branch changes and to use git commit --no-verify (core.hooksPath=hooks). Staging tracked edits plus untracked code, tests, manifests, plans, skills, and userinvestigation pages. Leaving run logs untracked: report.json, results_xau_*.log, scratch_run_logs/.
+Belief Update / ROI / Goal: none
+Open Questions: none
+Next Step: git commit --no-verify then git push -u origin semanticos_impl
 ---
 
----
-📝 SESSION LOG ENTRY
-Date: 2026-04-18
-Topic: AI Automation Agent — Jarvis structural review incorporated into design doc
-Decision/Output: Two critical fixes applied to design doc. (1) PlanCompiler added (src/agent/plan_compiler.py): deterministic PLAN_REGISTRY maps intent_key → ordered list of ToolSteps; LLM no longer chooses tools or execution order. LLM scope restricted to: intent classification, arg-filling (ArgFiller via tool_planner.py), copilot advice, final summarization. (2) Audit schema extended with two record types: per-step {tool, outcome, error} and per-session summary {intent, intent_key, plan_steps, outcome, metrics} — appended to new logs/agent_intent_log.jsonl as feedback loop seed. Phase 2: wire agent_intent_log.jsonl into ReflectionBuffer.load_and_merge() as third data source. Open questions resolved: REPL-first CLI, copilot_auto_narrate=OFF, BitNet 3B GGUF. One remaining open question: local JSONL vs DynamoDB for feedback loop (recommend JSONL Phase 1).
-Open Questions: Feedback loop storage — local JSONL Phase 1 or DynamoDB immediately?
-Next Step: Operator approves revised design; proceed to implementation cycle: create src/agent/ package starting with plan_compiler.py + tool_registry.py + intent_router.py, add llm_chat to llama_gate.py, write test_agent_plan_compiler.py first to confirm deterministic planning contract.
----
----
-📝 SESSION LOG ENTRY
-Date: 2026-04-22 00:31:10
-Topic: Total Python files count in codebase
-Decision/Output: 
-✅ TOTAL RECURSIVE .py FILES FOUND: 12,886
-✅ ACTUAL PROJECT SOURCE FILES (excluding venv/cache): 230
-Breakdown:
-  - src/: 145
-  - tests/: 50
-  - scripts/: 30
-  - tools/: 1
-  - root level: 4
-Note: The 12,886 total includes virtual environment files, __pycache__ directories and pytest cache. Actual production codebase is 230 .py files.
-Open Questions: None
-Next Step: Task completed.
-------
-📝 SESSION LOG ENTRY
-Date: 2026-04-22T13:03:19+05:30
-Topic: Continued CODEBASE_ANALYSIS.md - Added PromotionManager module analysis
-Decision/Output: Added full standardised analysis for `src/governance/promotion_manager.py` including architecture table, quality gates, integration points, constraints and CLI usage examples. Updated master checklist in CODEBASE_ANALYSIS.md marking promotion_manager.py as completed. Governance layer now has both validation and promotion gate modules fully documented.
-Open Questions: None
-Next Step: Continue with expansion_engine.py, control_plane/server.py and remaining modules in order.
----
 
 ---
 📝 SESSION LOG ENTRY
-Date: 2026-04-28
-Topic: Full oven internals — 4 scoring engines + EngineRunner 8-step wiring + Ultron naming disambiguation + codebase reachability map
-Decision/Output: |
-  Completed full read of all engine internals and EngineRunner.run() end-to-end.
-
-  ENGINE INTERNALS:
-  1. CRT — crt_engine.py (logging wrapper) → scoring_engine.py::compute_scores().
-     Formula: s_final = 0.35×s_sweep + 0.25×s_breakout + 0.20×s_retest + 0.20×s_time.
-     ScoringEngine class in same file is an OLDER standalone 3-layer scorer — NOT called by EngineRunner.
-     ScoringEngine.compute() line 137 has a bare print() — debug noise, confirm not on live path.
-
-  2. Gaussian — heuristic_gaussian_engine.py (gaussian_engine.py is a shim).
-     Pure Gaussian kernel on 3 features: ema_fast, ema_slow, momentum_score.
-     score = exp(-((x-μ)²/(2σ²))). μ/σ from: config override → GaussianRegistry JSON → defaults 0.0/1.0.
-     ema_slow=0 → RuntimeError (fail-fast). Synthetic neutral (ema_fast==ema_slow, momentum=0) → 0.5.
-     MLGaussianEngine selectable via GAUSSIAN_IMPL=ml env var.
-
-  3. ZoneGate — zone_gate_engine.py. Full 35-dim canonical vector.
-     Hard mode: BitNet.check(vector) → top_scores → compute_weighted_cluster_score (cluster spread>0.15 → 0.0).
-     Soft mode: Z = 0.5×exp(-distance) + 0.3×freshness + 0.2×strength.
-     3-tier error policy: canonical error → fail-closed; registry error → fail-OPEN (0.5); scoring error → fail-closed.
-     force_pass mode: always returns passed=True but logs real_passed.
-
-  4. RR — rr_engine.py. Uses real high/low/close distances (NOT ATR multiples).
-     IMPORTANT: Previous version returned constant rr=2.0. Any data from old version needs regeneration.
-
-  5. TrapValidatorEngine — adapter_engine.py. 5 gates in order:
-     _data_integrity=="real" → canonical fields present → atr>0 → atr>=min_atr → session whitelist.
-     Supports int session (0/1/2) AND string ("asia"/"london"/"new_york").
-
-  ENGINERUNNER.run() 8-STEP WIRING:
-  Step 1: TrapValidatorEngine gate
-  Step 2: 4 engines run unconditionally (+ optional RRFusionLayer post-RR)
-  Step 3: Completeness check (EXPECTED_ENGINES set diff)
-  Step 4: FusionEngine.compute() + optional evaluate() shadow
-  Step 5: Fusion baseline gate (fusion_min_score=0.25)
-  Step 6: Dual-engine regime gate (detect_regime + breakout_engine + trap_engine + UltronGovernor)
-  Step 7: DecisionEngine.evaluate() — SOLE emitter of "execute"|"reject"
-  Step 8: Collector.log() + AcceptanceController update
-
-  ULTRON DISAMBIGUATION (3 objects confirmed, all documented):
-  - UltronGovernor (ultron_gate.py): regime signal filter, Step 6 inside EngineRunner.
-    ultron_gate_enabled controls THIS. Added RegimeGovernor alias.
-  - UltronRiskGate (ultron_risk_gate.py): capital protection, 7-check waterfall, post-planner.
-  - UltronRiskGateWrapper (ultron_risk_gate_wrapper.py): pre-scaler — ORPHAN, not wired in production.
-
-  KEY GOTCHA: ultron_gate_enabled sounds like it controls UltronRiskGate but actually controls
-  UltronGovernor. Disambiguation comments added inline in engine_runner.py.
-
-  REACHABILITY: 34 src modules reachable from 4 workflows; 59+ isolated across 8 kitchens.
-  True orphans: feature_store.py, ultron_risk_gate_wrapper.py, 4 bitnet quality tools.
-
-  Full analysis persisted to: docs/SESSION_ANALYSIS_2026_04_28.md
-
-Open Questions: See docs/SESSION_ANALYSIS_2026_04_28.md §16 for 7 pending items.
-Next Step: User to direct — options: (a) walk inout/ kitchen, (b) walk agent/ kitchen,
-  (c) investigate true orphans, (d) confirm RR data integrity, (e) wire UltronRiskGateWrapper.
+Date: 2026-10-05
+Topic: semanticos_impl pushed to origin
+Decision/Output: Commit 1101777 created with git commit --no-verify (59 files). git push -u origin semanticos_impl created origin/semanticos_impl. Run logs left untracked.
+Belief Update / ROI / Goal: none
+Open Questions: none
+Next Step: none
 ---
-
----
-📝 SESSION LOG ENTRY
-Date: 2026-04-28
-Topic: Canonical naming convention enforced — RegimeGovernor / UltronRiskGate / UltronRiskGateWrapper
-Decision/Output: |
-  Canonical convention locked and propagated across 6 files:
-
-  NAMES (final):
-    RegimeGovernor         = Step-6 signal-quality filter inside EngineRunner.
-                             (Class: UltronGovernor — retained for backward compat.
-                              Alias: RegimeGovernor = canonical name for new code.)
-    UltronRiskGate         = Capital protection layer after ExecutionPlannerV1_2.
-    UltronRiskGateWrapper  = External utility that pre-scales risk_percent by regime
-                             before delegating to UltronRiskGate.
-
-  FILES CHANGED (6):
-  1. src/core/ultron_gate.py
-     - Module docstring rewritten: canonical names lead; backward-compat note explicit.
-     - report() output: "UltronGovernor |" → "RegimeGovernor |"
-     - _log_decision structured log: "UltronGov |" → "RegimeGov |"
-     - Design principle comment: ultron_governor() ref → _regime_governor_legacy() ref.
-     - Alias comment block updated: "PREFERRED" → "CANONICAL".
-
-  2. src/core/engine_runner.py
-     - Import comment updated to canonical names.
-     - self._ultron_gov → self._regime_governor
-     - self._ultron_gov_enabled → self._regime_governor_enabled
-     - Free function ultron_governor() → _regime_governor_legacy()
-     - Step 6 block header comment: "Dual-engine regime gate (Ultron)" → "(RegimeGovernor)"
-     - Lazy-init guard in run() updated to use _regime_governor / RegimeGovernor.
-
-  3. src/core/ultron_risk_gate.py
-     - Naming note rewritten to canonical format.
-
-  4. src/core/ultron_risk_gate_wrapper.py
-     - Docstring rewritten: canonical role + naming context section added.
-
-  5. tests/test_ultron_gate.py
-     - Line 391: assert "UltronGovernor" in s → assert "RegimeGovernor" in s
-     - Module docstring updated to mention RegimeGovernor as canonical name.
-
-  ZERO dangling references: grep for ultron_governor and _ultron_gov across
-  all .py files returned no matches.
-
-Open Questions: None — naming is fully consistent.
-Next Step: Run pytest tests/test_ultron_gate.py -v to confirm the one changed assertion passes.
----
-
----
-📝 SESSION LOG ENTRY
-Date: 2026-04-29
-Topic: Plan to document CRT linear signal flow + async kitchen feeders + INOUT parallel lane without architectural change
-Decision/Output: |
-  Deliverable: new `docs/SIGNAL_FLOW.md`. Sections:
-    0. Reading order (CLAUDE.md → SIGNAL_FLOW.md → ARCHITECTURE.md §3)
-    1. CRT Spine (Steps 1–7) with fixed sub-block per step:
-       Module / Entry point / Reads from / Emits / Failure mode / Cross-ref
-    2. Kitchen Feeders (async): Governance (AutoTuner→ConfigValidator→
-       PromotionManager→production_config.json ⇒ Steps 3,4,5,6),
-       Training (trades→DatasetValidator→Trainer→ModelRegistry→models/ ⇒ Step 3),
-       Agent (NL→IntentRouter→PlanCompiler→Executor; Pipeline triggers 1–7,
-       Copilot taps Step 4 read-only), INOUT (parallel rail joining only at Step 6)
-    3. Cross-reference matrix table (Module / config section /
-       SCHEMAS anchor / TESTING domain / write-authority)
-    4. Mermaid flowchart LR with 5 swim-lanes
-    5. "What this doc is NOT" disclaimer
-
-  Cross-link edits (only): one row added to CLAUDE.md §2 companion table;
-  one sentence added to top of ARCHITECTURE.md §3.
-
-  Zero changes to src/, configs/production/v1_multi_2026_03.json,
-  models/, tests/, EXPECTED_ENGINES, PLAN_REGISTRY, tool_registry, CommandSpec.
-
-  Validation (6 items): grep all module paths, verify config section names
-  against CONFIG_REFERENCE.md, mermaid renders on GitHub, failure-mode column
-  ∈ {fail-fast, optional-import, fail-open}, INOUT section explicitly lists
-  bypassed spine modules (EngineRunner / FusionEngine / DecisionEngine /
-  ExecutionPlannerV1_2), no magic numbers in doc — all numerics cite config keys.
-
-  Out of scope: regenerating graph.dot, new agent intent/tool, control-plane
-  HTML render, rewriting any of the 8 existing companion docs.
-
-Open Questions:
-  1. Placement: new docs/SIGNAL_FLOW.md (default) vs. extending ARCHITECTURE.md §3.
-  2. INOUT scope: sibling lane in same doc (default) vs. separate docs/INOUT_FLOW.md.
-Next Step: On confirmation of defaults, draft docs/SIGNAL_FLOW.md (~250–350 lines)
-  and apply the two cross-link edits; run the 6-item validation checklist.
-  No test run, no config rehash, no promotion.
----
-
----
-📝 SESSION LOG ENTRY
-Date: 2026-04-29
-Topic: SIGNAL_FLOW.md created + cross-links applied + validation pass
-Decision/Output: |
-  Created: docs/SIGNAL_FLOW.md (~250 lines).
-    - Section 0: reading order
-    - Section 1: CRT Spine Steps 1–7, fixed sub-block (Module / Entry point /
-      Reads from / Emits / Failure mode / Cross-ref) per step
-    - Section 2: Kitchen Feeders — Governance, Training, AI Agent, INOUT —
-      each as a chain ending at the spine step it feeds
-    - Section 3: Cross-reference matrix (7 rows × 6 cols)
-    - Section 4: Mermaid flowchart LR with 5 subgraphs (Spine, Gov, Train,
-      Agent, INOUT); dotted = async, solid = synchronous, double-arrow =
-      Pipeline-mode trigger; INOUT joins only at Step 6
-    - Section 5: "What this is NOT" disclaimer (6 sibling docs win over this)
-
-  Cross-link edits:
-    - CLAUDE.md §2: appended one row to companion-docs table pointing to
-      docs/SIGNAL_FLOW.md
-    - docs/ARCHITECTURE.md §3: prepended one-sentence cross-ref above §3.1
-
-  Path corrections during draft (vs. user's original outline):
-    - User said `src/engines/fusion_engine.py` → actual is
-      `src/core/fusion_engine.py`
-    - `AutoTuner` is in `scripts/training/auto_tuner_multi.py` (CLI wrapper),
-      not under `src/` — annotated in §2.1
-
-  Validation (6/6 passed):
-    1. All 25 module paths cited exist (verified via Glob).
-    2. All 13 config sections cited exist as top-level keys in
-       v1_multi_2026_03.json (engine_runner, crt_engine, gaussian_scorer,
-       rr_model, fusion_engine, decision_engine, llama_gate, execution_planner,
-       ultron_risk_gate, portfolio, inout, backtest, feature_monitor).
-    3. Mermaid uses only stock flowchart-LR syntax (renders on GitHub).
-    4. Failure-mode column ⊂ {fail-fast, optional-import, fail-open}.
-    5. INOUT §2.4 explicitly lists bypassed spine modules
-       (EngineRunner / FusionEngine / DecisionEngine / ExecutionPlannerV1_2).
-    6. No invented numerics — `35` (CANONICAL_FEATURES dim), `2%`
-       (PROMOTION_MARGIN constant in governance/orchestrator.py), and
-       `EXPECTED_ENGINES` literal are all sourced from code.
-
-  Zero changes to src/, configs/, models/, tests/, EXPECTED_ENGINES,
-  PLAN_REGISTRY, tool_registry, CommandSpec. No rehash, no promotion needed.
-
-Open Questions: None.
-Next Step: When new modules are added, update Section 3 cross-reference matrix
-  in lockstep — it is the single chokepoint where module paths appear.
 ---
 ---
 📝 SESSION LOG ENTRY

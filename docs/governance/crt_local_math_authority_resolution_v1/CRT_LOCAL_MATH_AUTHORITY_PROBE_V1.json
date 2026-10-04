@@ -1,0 +1,42 @@
+{
+  "atr": {
+    "crt_atr_semantics": "absolute SMA of TR over last atr_period (default 14) on engine buffer",
+    "fullseries_atr_14_raw_vs_crt_abs_max_err": 0.0,
+    "fullseries_atr_14_raw_vs_crt_abs_mean_err": 0.0,
+    "note": "Full-series absolute SMA-TR14 matches atr_14_raw exactly by construction when TR definitions align; CRT engine buffer may still diverge from full-series. Canonical feature name 'atr' is relative \u2014 not CRT absolute.",
+    "pipe_atr_times_close_vs_crt_abs_max_err": 2.710142323891773e-07,
+    "pipe_atr_vs_crt_abs_over_close_max_err": 1.1539986284267445e-10,
+    "pipeline_atr_14_raw_semantics": "absolute SMA of true_range window 14",
+    "pipeline_feature_atr_semantics": "close_relative = atr_14_raw / close"
+  },
+  "body_ratio": {
+    "crt_vs_candle_math_max_abs_err": 0.0,
+    "interpretation": "CRT Candle.body_ratio already FM-010/candle_math bound"
+  },
+  "corpus": "data/mt5/XAUUSD_M15.csv",
+  "ema": {
+    "crt_defaults": {
+      "alpha": "2/(N+1)",
+      "ema_fast": 2,
+      "ema_slow": 5
+    },
+    "note": "Period mismatch is intentional product difference, not a failed equality proof",
+    "pipe_ema_fast_vs_crt_ema2_max_err": 13.650698258905322,
+    "pipe_ema_fast_vs_ewm9_max_err": 0.00012202678499306785,
+    "pipe_ema_slow_vs_crt_ema5_max_err": 16.93828362479917,
+    "pipe_ema_slow_vs_ewm21_max_err": 0.00012205722168801003,
+    "pipeline": {
+      "adjust": false,
+      "ema_fast_span": 9,
+      "ema_slow_span": 21
+    }
+  },
+  "generated_at_utc": "2026-07-14T11:22:24.158668+00:00",
+  "sample_bars": 2000,
+  "schema_id": "CRT_LOCAL_MATH_AUTHORITY_PROBE_V1",
+  "task_class": "OBSERVATION_ONLY",
+  "wick_size": {
+    "crt_vs_candle_math_max_abs_err": 0.0,
+    "interpretation": "CRT Candle.wick_size already FM-002/candle_range bound"
+  }
+}

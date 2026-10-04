@@ -1,0 +1,9 @@
+{
+  "authority": "research",
+  "contract_id": "MC-CTXATTR-XAUUSD-M15-V1",
+  "coverage": "0/27",
+  "economic_claims_allowed": false,
+  "note": "E-MT-01 adversarial matrix coverage is a separate programme (MEASUREMENT_CONTRACT.md \u00a72 E3): 27 failure classes, each needing a seeded mutant its probe catches. None are implemented repo-wide. This UNRUN is measured-absent, not a placeholder for a run that happened.",
+  "schema": "mt01_report/1",
+  "status": "UNRUN"
+}

@@ -1,0 +1,43 @@
+{
+  "change_id": "CH-k23-f4-sweep-htf-exempt",
+  "date_utc": "2026-09-27",
+  "story": "STORY-83.13",
+  "change_classes": [
+    "RUNTIME_DECISION_PATH_CHANGE"
+  ],
+  "declared_files": [
+    "src/config_layer/crt_engine_v2.py",
+    "src/runtime/backtest_v2.py",
+    "tests/test_htf_reset_sweep_exempt.py",
+    "docs/implementation_plan/k23-block-heuristic-table-design.md",
+    "docs/governance/build_manifests/CH-k23-f4-sweep-htf-exempt.impact.json",
+    "docs/governance/build_manifests/CH-k23-f4-sweep-htf-exempt.completion.json",
+    "assistant_project.md"
+  ],
+  "checks_executed": [
+    "tests/test_htf_reset_sweep_exempt.py",
+    "tests/test_feature_math_lint.py",
+    "tests/test_geometry_census.py",
+    "tests/test_current_findings.py",
+    "tests/test_retrace_reset_direction.py",
+    "tests/test_shadow_ttl_lifecycle.py",
+    "tests/test_crt_object_relations.py"
+  ],
+  "check_results_venv_2026_09_27": {
+    "tests/test_htf_reset_sweep_exempt.py": "19 passed",
+    "tests/test_feature_math_lint.py": "2 failed, 12 passed (NEW derivations only in scripts/analysis/phase1_shadow_create_economic_census.py and tests/test_gate_intelligence.py)",
+    "tests/test_geometry_census.py": "2 failed, 39 passed (stale census: same 3 NEW derivations + 171 unadjudicated GEO-O ids)",
+    "tests/test_current_findings.py": "1 failed, 10 passed (23 findings F-016..F-041 past Revalidate-by)",
+    "tests/test_retrace_reset_direction.py + test_shadow_ttl_lifecycle.py + test_crt_object_relations.py": "22 passed"
+  },
+  "repo_state_hash": "PENDING",
+  "completion_status": "BLOCKED_PREEXISTING_RED_FLOOR",
+  "completion_note": "Written retrospectively for a change already on grokbotchanges (STORY-83.1 D2 found impact-only; user decision 2026-09-27: write after v5 parity). The change's own tests pass. The three RUNTIME_DECISION_PATH_CHANGE required checks are red for reasons outside this change's declared files: none of the failing items names crt_engine_v2.py or backtest_v2.py. Already red before this story: STORY-83.1 ran validate-completion at c7499be (= BASE d318f13 + a 1-line version stamp in a non-active config): geometry-census failures, 5 failed / 61 passed. Other sessions' files are not added to declared_files and the census is not regenerated here. Parity proof = STORY-83.6 (see evidence). The impact manifest also acknowledged test_retrace_reset_direction / test_shadow_ttl_lifecycle / test_crt_object_relations; those are not class-required; re-run 2026-09-27 under venv: 22 passed. repo_state_hash PENDING per the CH-resolver-engine-envelope precedent.",
+  "production_behavior_changed": "NO",
+  "evidence": {
+    "default_off_parity": "STORY-83.6 (merge 093e6d3, scripts/research/parity_v5.py): v5 carries backtest.htf_reset_exempt_sweep=false (legacy default, backtest_v2.py:331) and is IDENTICAL to active v2_htfcrt_2026_08 on full XAUUSD M15 (47,275 bars): engine events 7,112, resolver 47,197, layer_trace 94,406, oracle labels 565,884; trades 3/3 equal except per-trade uuid execution_intent_id",
+    "unit_tests": "tests/test_htf_reset_sweep_exempt.py 19 passed (venv 3.12, 2026-09-27)",
+    "active_version": "configs/production/ACTIVE_VERSION = v2_htfcrt_2026_08; htf_reset_exempt_sweep=true is set only on v2_htfcrt_k23_shadow_2026_09"
+  },
+  "validate_completion_verdict": "validate-completion (full mode, venv 3.12, 2026-09-27, repo_state adba177748ac+a6a2d3fabed5): COMPLETION: BLOCKED - required checks FAILED: tests/test_geometry_census.py::test_geometry_census_is_fresh, ::test_adjudication_closed_against_fresh_census; 5 failed, 61 passed (identical to the 5 failed / 61 passed STORY-83.1 observed at c7499be). NOTE: an earlier run WITHOUT change_classes in this file returned COMPLETE vacuously (validator derives required checks only from the completion manifest's change_classes, construction_protocol.py:188-189) - that result is void; gap filed as a separate task."
+}

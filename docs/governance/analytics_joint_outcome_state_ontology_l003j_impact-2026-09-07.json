@@ -1,0 +1,29 @@
+{
+  "finding_id": "L-003J",
+  "version": "L-003J.v1",
+  "run_id": "l003j_joint_outcome_state_ontology_20260907_194325",
+  "generated_at_utc": "2026-09-07T19:43:25.602796Z",
+  "git_commit_sha": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+  "title": "JOINT_OUTCOME_STATE_ONTOLOGY_LOCKED",
+  "summary": {
+    "primary_observable": "JOINT_OUTCOME_STATE / Y_joint",
+    "locked": "docs measurement-object framing",
+    "not_locked": "registry columns / EARLY_STOP-as-fact / attribution / causality"
+  },
+  "flags": {
+    "promotion": false,
+    "registry_edits": false,
+    "l003_frozen": false,
+    "attribution_unblocked": false,
+    "economic_claims": false,
+    "causal_language_upgrade": false,
+    "src_edits": false,
+    "new_measurements": false,
+    "ontology_framing_locked": true
+  },
+  "artifacts": [
+    "docs/governance/ANALYTICS_JOINT_OUTCOME_STATE_ONTOLOGY_L003J.md",
+    "docs/governance/analytics_joint_outcome_state_ontology_l003j-2026-09-07.json",
+    "docs/governance/analytics_joint_outcome_state_ontology_l003j_impact-2026-09-07.json"
+  ]
+}

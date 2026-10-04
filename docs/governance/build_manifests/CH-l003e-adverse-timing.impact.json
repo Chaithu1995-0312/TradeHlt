@@ -1,0 +1,42 @@
+{
+  "change_id": "CH-l003e-adverse-timing",
+  "finding_id": "L-003E",
+  "run_id": "l003e_adverse_timing_20260907_181752",
+  "generated_at_utc": "2026-09-07T18:17:52.190Z",
+  "git_commit_sha": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+  "version": "L-003E.v1",
+  "status": "MEASURED",
+  "touched_paths": [
+    "docs/governance/ANALYTICS_OUTCOME_ADVERSE_TIMING_L003E.md",
+    "docs/governance/analytics_outcome_adverse_timing_l003e-2026-09-07.json",
+    "docs/governance/build_manifests/CH-l003e-adverse-timing.impact.json",
+    "docs/governance/ANALYTICS_OUTCOME_PATH_MECHANICS_L003D.md"
+  ],
+  "src_edits": false,
+  "registry_edits": false,
+  "git_commit_created": false,
+  "promotion_flags": {
+    "economic_claims_allowed": false,
+    "attribution_unblocked": false,
+    "l003_frozen": false,
+    "registry_column_added": false,
+    "chronological_holdout_used": false
+  },
+  "summary": {
+    "aggregate_n": 559768,
+    "aggregate_DISAGREE_SL_TP_rate": 0.31525739234825856,
+    "T_MAE_definition": "time_to_bottom_path (deepest adverse over PEAK_HORIZON~96); NOT FAE-to-stop",
+    "DISAGREE_T_MAE_median": 40.0,
+    "AGREE_T_MAE_median": 45.0,
+    "rate_T_MAE_le_5": 0.552430070990838,
+    "rate_early_mae_AND_late_peak": 0.926969012265978,
+    "favorable_first_DISAGREE": 0.6995143677998085,
+    "favorable_first_AGREE": 0.1868859876765015,
+    "mae_r_abs_median_DISAGREE": 0.8561,
+    "mae_r_abs_median_AGREE": 3.5975,
+    "within_peak_mean_abs_early_delta": 0.30082643258876735,
+    "instrument_stability_tmae_dist_loo_rho_min": 0.9999999999999999,
+    "evidence_lean": "leans SUPPORT early-adverse enrichment on T_MAE proxy (still not causal; not FAE)",
+    "support_count": "5/5"
+  }
+}

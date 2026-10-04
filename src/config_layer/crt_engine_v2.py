@@ -23,11 +23,51 @@ import logging
 import math
 from dataclasses import dataclass, field
 from datetime import datetime, time
-from enum import Enum, auto
-from typing import Optional
+from types import MappingProxyType
+from typing import Any, List, Mapping, Optional, Sequence
 from features.feature_schema import CANONICAL_FEATURES
 from features.schema_validator import validate_features
+from features import candle_math as _cm  # single source of truth for candle geometry
+# Phase-2 Option A: FM id → registry/composition binding (identity-preserving; no auto-run required_fm).
+# FM-027/028 CRT emission identities (CH-002 / F-050) resolve through FORMULA_REGISTRY here.
+from features.fm_resolve import bind_phase2_crt_callables
+_FM_CRT: dict = bind_phase2_crt_callables()  # FM-002/010/027/028 callables
+from config_layer.retest_geometry import (  # noqa: E402  [STORY-83.11a] shared with the resolver
+    FAIL_DEPTH_ABOVE_CEILING,
+    FAIL_DEPTH_BELOW_MIN,
+    FAIL_OVEREXTENDED_DISPLACEMENT,
+    evaluate_retest_geometry,
+)
+from config_layer.state_identity import CRTState, Direction, RejectReason, VALID_TRANSITIONS, CRTConfig
 from config_layer.crt_sweep_taxonomy import classify_sweep as _classify_sweep_geometry
+# SK-1 (2026-08-19): SP-001 single implementation (ontology structural_predicates). The three
+# sweep sites in THIS file — the authority in RangeDetector.detect_sweep and the two telemetry
+# re-derivations in process_candle — migrate together, so a trace packet can never describe a
+# different event than the one that actually fired.
+from structure.predicates import swept_high as _swept_high, swept_low as _swept_low
+from config_layer.htf_state import activation_allows as _activation_allows
+from config_layer.m15_structural_range import (
+    M15StructuralLiquidityRange,
+    from_child_window as _m15_range_from_children,
+)
+# Historical name: ``Range`` is the M15 structural liquidity range (sweep envelope).
+# HTFBuilder is the reset clock, not this type.
+Range = M15StructuralLiquidityRange
+from utils.sweep_trace_logger import SweepTraceLogger
+from utils.integrity_events import emit_integrity_event
+import statistics as _statistics
+import json as _json
+from pathlib import Path as _Path
+
+# M2 — enveloped CRT state-transition stream (additive dual-write; mirrors M1 idiom).
+# Guarded import keeps crt_engine_v2 importable even if the event fabric is absent.
+try:
+    from events.event_fabric import make_event_envelope as _make_event_envelope, EventType as _EventType
+    _ENVELOPE_OK = True
+except Exception:  # noqa: BLE001
+    _ENVELOPE_OK = False
+
+_CRT_TRANSITIONS_LOG = _Path("logs/crt_transitions.jsonl")
 # ─────────────────────────────────────────────────────────────────
 # LOGGING
 # ─────────────────────────────────────────────────────────────────
@@ -44,29 +84,6 @@ logger = logging.getLogger("CRT_ENGINE_V2")
 # ENUMS
 # ─────────────────────────────────────────────────────────────────
 
-class CRTState(Enum):
-    RANGE        = auto()
-    SWEEP        = auto()
-    DISPLACEMENT = auto()
-    EXPANSION    = auto()
-    RETEST       = auto()
-    EXECUTION    = auto()
-    RESOLUTION   = auto()
-
-
-class Direction(Enum):
-    LONG  = "LONG"
-    SHORT = "SHORT"
-    NONE  = "NONE"
-
-
-class RejectReason(Enum):
-    LOW_SCORE       = "score_below_threshold"
-    OUTSIDE_SESSION = "outside_session_window"
-    NO_DOUBLE_SWEEP = "no_double_sweep_confirmed"
-    NEWS_FILTER     = "news_filter_active"
-    HIGH_SPREAD     = "spread_too_high"
-    INVALID_STATE   = "invalid_state_for_execution"
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -85,15 +102,18 @@ class Candle:
 
     @property
     def body_size(self) -> float:
-        return abs(self.close - self.open)
+        return _cm.body_size(self.open, self.close)
 
     @property
     def wick_size(self) -> float:
-        return self.high - self.low
+        # NOTE: historically named `wick_size` but is the full candle range (high - low).
+        # Phase-2: FM-002 via FORMULA_REGISTRY (identity == candle_math.candle_range).
+        return _FM_CRT["FM-002"](self.high, self.low)
 
     @property
     def body_ratio(self) -> float:
-        return self.body_size / self.wick_size if self.wick_size > 0 else 0.0
+        # Phase-2: FM-010 composition path (float-parity with candle_math.body_ratio).
+        return _FM_CRT["FM-010"](self.open, self.high, self.low, self.close)
 
     @property
     def is_bullish(self) -> bool:
@@ -102,29 +122,6 @@ class Candle:
     @property
     def midpoint(self) -> float:
         return (self.high + self.low) / 2
-
-
-@dataclass
-class Range:
-    """HTF or session-level price range."""
-    h_ref:       float
-    l_ref:       float
-    equilibrium: float
-    formed_at:   datetime
-    htf_candle_id: str
-    session:     str = "UNKNOWN"
-
-    @property
-    def size(self) -> float:
-        return self.h_ref - self.l_ref
-
-    def is_inside(self, price: float) -> bool:
-        return self.l_ref <= price <= self.h_ref
-
-    def retrace_depth(self, price: float, direction: Direction) -> float:
-        if direction == Direction.LONG:
-            return (price - self.l_ref) / self.size if self.size > 0 else 0.0
-        return (self.h_ref - price) / self.size if self.size > 0 else 0.0
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -187,16 +184,22 @@ class RiskScore:
     time_score:     float = 0.0
     decay_factor:   float = 1.0          # [PATCH 6] applied before final
     score_override: Optional[float] = None  # set by soft-conf fusion to override computed final
+    # [IC-007 / PLAN-002] (sweep, breakout, retest, time) weights. Default = legacy literals
+    # (parity for direct constructions); production injects CRTConfig.risk_score_weights
+    # at the sole constructor (UltronRiskEngine.compute_score). DISTINCT identity from the
+    # engines-path score_component_weights and from conf_weights — never alias.
+    weights: tuple = (0.35, 0.25, 0.20, 0.20)
 
     @property
     def final(self) -> float:
         if self.score_override is not None:
             return self.score_override
+        w_sweep, w_breakout, w_retest, w_time = self.weights
         raw = (
-            0.35 * self.sweep_score +
-            0.25 * self.breakout_score +
-            0.20 * self.retest_score +
-            0.20 * self.time_score
+            w_sweep * self.sweep_score +
+            w_breakout * self.breakout_score +
+            w_retest * self.retest_score +
+            w_time * self.time_score
         )
         return raw * self.decay_factor
 
@@ -218,6 +221,12 @@ class Trade:
     status:         str   = "PENDING"
     cached_features: Optional[dict] = None   # features copied from state at build time; survives reset
     open_candle_index: int = 0     # [P1] candle index at open, for time-stop tracking
+    # [SEM-021] open() of the displacement candle that founded this setup. Captured HERE,
+    # at build time, and NOT read from EngineState at kill time: reset_to_range moves
+    # state.displacement_candle into pending_displacement_candle while the trade may still
+    # be open, so an engine-state read would silently no-op after any reset — an inertness
+    # bug indistinguishable from "measured and found ineffective" (cf. F-083, F-085).
+    displacement_origin: Optional[float] = None
 
     @property
     def risk_reward_tp1(self) -> float:
@@ -229,12 +238,18 @@ class Trade:
 @dataclass
 class EngineState:
     current_state:       CRTState  = CRTState.RANGE
+    # M15 structural liquidity range (sweep envelope). Not HTFBuilder, not ParentRange.
     active_range:        Optional[Range] = None
     sweep_event:         Optional[SweepEvent] = None
     risk_score:          Optional[RiskScore] = None
     active_trade:        Optional[Trade] = None
     direction:           Direction = Direction.NONE
-    atr:                 float = 0.0
+    # ABSOLUTE ATR in price units (SMA of true_range over crt_engine.atr_period).
+    # DELIBERATELY NOT named `atr`: the canonical feature FM-041 `atr` is CLOSE-RELATIVE
+    # (atr_14_raw / close). Different quantities; the bare name has already caused two
+    # misreadings (FM-050's depends_on, and a T-20 mis-diagnosis). Consumers compare this
+    # against PRICE moves (atr_min_displacement * atr_abs, wick_size < mult * atr_abs).
+    atr_abs:             float = 0.0
     displacement_candle: Optional[Candle] = None
     retest_candle:       Optional[Candle] = None
     retest_candle_index: int = 0       # [PATCH 6] for decay calculation
@@ -245,11 +260,41 @@ class EngineState:
     evaluating_soft_conf: bool  = False
     soft_conf_candles:    int   = 0
     cached_features:      Optional[dict] = None   # [CACHE] scored at RETEST, read at EXECUTE
+    # [EPIC-84 A3b] the current bar's canonical feature mapping, set by process_candle every bar
+    # (None only before the first bar). The RETEST cache copies the intent keys from it.
+    bar_features:         Optional[dict] = None
     # EMA state for momentum smoothing (initialised on first candle)
     ema_fast_val:         float = 0.0
     ema_slow_val:         float = 0.0
+    # Phase 0b telemetry context (set from backtest loop; read by reset_to_range)
+    htf_remaining_candles: int  = 0
+    _displacement_entry_idx: int = 0   # candle_index when DISPLACEMENT state was entered
+    # Phase 1 — Shadow displacement memory (survives one HTF reset, expires after TTL)
+    pending_displacement_candle:       Optional[Candle]   = None
+    pending_displacement_dir:          Direction           = Direction.NONE
+    pending_displacement_ttl:          int                 = 0
+    pending_displacement_source_htf:   str                 = ""
+    pending_displacement_formed_idx:   int                 = 0
+    pending_displacement_age_at_reset: int                 = 0
+    pending_displacement_reason_created: str               = ""
+    # candle.index of the bar that CREATED this shadow memory (set alongside ttl above).
+    # Lets the RANGE-branch TTL countdown skip the creating bar itself — see the
+    # [DEADLOCK FIX] fall-through note at process_candle:RANGE for why the creating bar
+    # already runs the RANGE branch, and why decrementing there was an off-by-one.
+    pending_displacement_created_idx:  int                 = 0
+    # Phase 2b — Persists True from SHADOW_EXPANSION_CONFIRMED until reset, so TRADE_OPENED
+    # can read it even though the shadow action fired on an earlier candle.
+    _came_from_shadow:                 bool                = False
+    # Phase 3a — candle_index when EXPANSION state was entered; used for candidate_age_at_entry.
+    _expansion_entry_idx:              int                 = 0
+    # Phase 3b — wall-clock timestamp when EXPANSION was entered; enables hour-based TTL check.
+    _expansion_entry_ts:               Optional[datetime]  = None
+    # Phase 4b — HTF alignment of pending displacement at shadow expansion entry; None for normal.
+    # True  = displacement direction still aligned with current HTF range midpoint.
+    # False = direction conflict; shadow context is structurally misaligned.
+    _shadow_htf_alignment:             Optional[bool]      = None
 
-    def update_emas(self, close: float, fast: int = 2, slow: int = 5) -> None:
+    def update_emas(self, close: float, *, fast: int, slow: int) -> None:
         """Standard EMA update. α = 2/(N+1). Seeds from first close."""
         if self.ema_fast_val == 0.0:
             self.ema_fast_val = self.ema_slow_val = close
@@ -261,77 +306,6 @@ class EngineState:
 
 
 # ─────────────────────────────────────────────────────────────────
-# CONFIG
-# ─────────────────────────────────────────────────────────────────
-
-@dataclass(frozen=True)
-class CRTConfig:
-    # State machine thresholds
-    body_ratio_min:        float = 0.70
-    atr_multiplier_min:    float = 1.50
-    retest_depth_max:      float = 0.25    # [PATCH 5] now used as ceiling only
-
-    # [PATCH 1] Bounded ATR buffer
-    atr_period:            int   = 14
-    atr_buffer_multiplier: int   = 3       # buffer = atr_period * this
-
-    # [PATCH 2] Sweep age constraint
-    max_sweep_age_candles: int   = 20      # sweep invalidated after N candles
-
-    # [PATCH 3] Expansion quality
-    expansion_atr_min_distance: float = 0.20   # close must be > disp_close + 0.2 * ATR
-
-    # [PATCH 5] Adaptive retest depth
-    retest_atr_depth_fraction: float = 0.50   # adaptive ceiling = 0.5 * ATR
-
-    # [PATCH 6] Time-decay scoring
-    score_decay_lambda:    float = 0.05    # decay rate per candle since retest
-
-    # Ultron risk thresholds
-    score_threshold:       float = 0.45
-    max_spread_pct:        float = 0.05
-    # ── DATA-DRIVEN CONSTANTS (AUTO-DERIVED) ──
-    atr_min_displacement: float = 1.2     # displacement >= 1.2 * ATR
-    confirmation_body_min: float = 0.6    # strong candle
-    sl_atr_buffer: float = 0.2           # SL buffer
-    tp1_atr_multiplier: float = 1.0
-    tp2_atr_multiplier: float = 2.0
-    bitnet_main_threshold: float = 0.55
-    use_bitnet: bool = False
-
-    # Session windows (UTC)
-    session_windows: dict = field(default_factory=lambda: {
-        "LONDON":  (time(7,  0), time(10, 0)),
-        "NEWYORK": (time(13, 0), time(16, 0)),
-        "ASIA":    (time(0,  0), time(3,  0)),
-    })
-
-    # Reset triggers
-    retrace_reset_pct:   float = 0.50
-    extension_reset_fib: float = 1.618
-
-    # News blackout (minutes before/after)
-    news_blackout_minutes: int = 15
-
-    # ── Soft Confirmation Manifold (replaces binary 5-candle gate) ──
-    conf_alpha:         float = 0.70   # structural (Gaussian) weight in fusion
-    conf_beta:          float = 0.30   # confirmation weight in fusion
-    conf_weights:       tuple = (0.35, 0.35, 0.15, 0.15)  # body, mom, dist, disp
-    conf_floor:         float = 0.20   # C is clamped to [floor, 1.0]
-    weak_link_weight:   float = 0.30   # penalty for weakest of body/mom
-    ema_fast:           int   = 2      # EMA period for fast momentum
-    ema_slow:           int   = 5      # EMA period for slow momentum
-
-    # ── Tiered execution thresholds ──────────────────────────────
-    tier_1_threshold:   float = 0.75   # full risk
-    tier_2_threshold:   float = 0.30   # half risk
-    soft_conf_max_candles: int = 3     # evaluation window (was 5-candle binary gate)
-
-    # ── Proportional sizing bands (score → risk_pct) ─────────────
-    sizing_bands: list = field(default_factory=lambda: [
-        (0.75, 0.010),   # Tier 1 → 1.0%
-        (0.55, 0.005),   # Tier 2 → 0.5%
-    ])
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -376,11 +350,551 @@ class EventLogger:
             f"EVENT | {ev.event} | idx={ev.candle_index} "
             f"{ev.state_from}→{ev.state_to} | {ev.reason}"
         )
+        self._emit_enveloped(ev)
         return ev
+
+    def _emit_enveloped(self, ev: EngineEvent) -> None:
+        """M2 dual-write: emit STATE_TRANSITION events as a canonical envelope to
+        logs/crt_transitions.jsonl. Read-only projection of the in-memory EngineEvent —
+        state.event_log above stays the source of truth and is never altered. The flat
+        payload carries candle ts + candle_index, so the stream is replay-comparable.
+        Fail-open: any error is swallowed so the state machine is never disrupted."""
+        if not _ENVELOPE_OK or ev.event != "STATE_TRANSITION":
+            return
+        try:
+            env = _make_event_envelope(
+                event_type = _EventType.STATE_TRANSITION.value,
+                instrument = "",
+                source     = "CRTEngine",
+                payload    = ev.to_dict(),
+            )
+            _CRT_TRANSITIONS_LOG.parent.mkdir(parents=True, exist_ok=True)
+            with open(_CRT_TRANSITIONS_LOG, "a", encoding="utf-8") as fh:
+                fh.write(_json.dumps(env) + "\n")
+        except Exception as e:  # noqa: BLE001
+            self.log.debug(f"CRT transition envelope emit failed: {e}")
 
     def dump(self) -> list[dict]:
         """Serialise full event log to list of dicts (DynamoDB-ready)."""
         return [e.to_dict() for e in self._state.event_log]
+
+
+# ─────────────────────────────────────────────────────────────────
+# PHASE-0 TELEMETRY COLLECTOR
+# Passive observability sidecar — zero behavior change.
+# Accumulates five event types during a run; flushed once at end.
+# ─────────────────────────────────────────────────────────────────
+
+class TelemetryCollector:
+    """Collects CRT funnel telemetry without altering any state machine logic."""
+
+    def __init__(self) -> None:
+        self._transition_counts: dict[str, int] = {}
+        self._state_entered_idx: int = 0
+        # Per-expansion episode running state
+        self._expansion_active: bool = False
+        self._expansion_start_idx: int = 0
+        self._expansion_max_depth: float = 0.0
+        self._expansion_ceiling_at_max: float = 0.0
+        self._expansion_time_to_max: int = 0
+        # Expansion dwell histogram (candles spent in EXPANSION per episode)
+        self._expansion_dwells: list[int] = []
+        self._expansion_start_ts: Optional[datetime] = None   # Phase 3a — wall-clock entry time
+        # Phase 3b RC1: last candle seen while EXPANSION active — for correct RUN_END closure.
+        # Without this, open episodes at flush() collapse to zero duration (start=end).
+        self._last_expansion_seen_idx: int = 0
+        self._last_expansion_seen_ts: Optional[datetime] = None
+        # Phase 3b RC-Closure: track the reason of the first (highest-priority) closure call.
+        # Allows on_expansion_ended() to reject duplicate lower-priority late calls.
+        self._expansion_ended_reason: str = ""
+        # Closure priority: higher number wins when multiple reasons apply simultaneously.
+        # Order: RETEST (execution success) > EXPIRED (TTL) > RESET (interrupted) > RUN_END (flush)
+        self._CLOSURE_PRIORITY: dict[str, int] = {
+            "QUALIFIED": 4,   # Retest fired — structure delivered
+            "EXPIRED":   3,   # TTL guard fired
+            "RESET":     2,   # HTF or other reset interrupted (any non-QUALIFIED/EXPIRED reason)
+            "RUN_END":   1,   # Flush at end of run
+        }
+        # Accumulated records by type
+        self._expansion_records: list[dict] = []
+        self._reset_records:     list[dict] = []
+        self._candidate_records: list[dict] = []
+        self._decision_records:  list[dict] = []
+        self._retest_replay_records: list[dict] = []
+        # Active candidate lifecycle (one at a time)
+        self._active_candidate: Optional[dict] = None
+
+    # ── State entry tracking ──────────────────────────────────────
+
+    def on_state_entered(
+        self, state_name: str, candle_index: int,
+        candle_ts: Optional[datetime] = None,   # Phase 3a — wall-clock timestamp for age_hours_actual
+    ) -> None:
+        """Called from StateMachine._transition() on every valid state entry."""
+        self._transition_counts[state_name] = (
+            self._transition_counts.get(state_name, 0) + 1
+        )
+        self._state_entered_idx = candle_index
+        if state_name == "EXPANSION":
+            self._expansion_active         = True
+            self._expansion_start_idx      = candle_index
+            self._expansion_start_ts       = candle_ts     # Phase 3a
+            self._last_expansion_seen_idx  = candle_index  # Phase 3b RC1
+            self._last_expansion_seen_ts   = candle_ts     # Phase 3b RC1
+            self._expansion_ended_reason   = ""            # Phase 3b RC-Closure: reset per episode
+            self._expansion_max_depth      = 0.0
+            self._expansion_ceiling_at_max = 0.0
+            self._expansion_time_to_max    = 0
+        # Update active candidate state list (exclude RANGE / RESOLUTION)
+        if (self._active_candidate is not None
+                and state_name not in ("RANGE", "RESOLUTION")
+                and state_name not in self._active_candidate["entered_states"]):
+            self._active_candidate["entered_states"].append(state_name)
+            self._active_candidate["last_seen_idx"] = candle_index
+
+    # ── Expansion retrace tracking ────────────────────────────────
+
+    def on_expansion_retrace_check(
+        self, candle_index: int, depth_abs: float, ceiling: float,
+        candle_ts: Optional[datetime] = None,   # Phase 3b RC1 — update last-seen timestamp
+    ) -> None:
+        """Called once per candle in try_expansion_to_retest(), before filtering."""
+        if not self._expansion_active:
+            return
+        if depth_abs > self._expansion_max_depth:
+            self._expansion_max_depth      = depth_abs
+            self._expansion_ceiling_at_max = ceiling
+            self._expansion_time_to_max    = candle_index - self._expansion_start_idx
+        # Phase 3b RC1: keep last-seen position current so RUN_END flush uses real episode end
+        self._last_expansion_seen_idx = candle_index
+        if candle_ts is not None:
+            self._last_expansion_seen_ts = candle_ts
+
+    def on_expansion_ended(
+        self, candle_index: int, reason: str, *,
+        end_ts: Optional[datetime],               # Phase 3a — actual candle timestamp at episode end
+        shadow_used: bool,                        # Phase 3a — was this a shadow expansion?
+        candidate_age_at_entry: int,              # Phase 3a — candles from displacement → expansion
+        age_pct_of_threshold: float,              # Phase 3b — age/TTL×100; 0.0 if no TTL active
+    ) -> None:
+        """Emit per-episode EXPANSION_RETRACE_CHECK record when episode terminates."""
+        # Phase 3b RC-Closure: closure priority guard.
+        # Map reason to priority bucket. Any reason not in QUALIFIED/EXPIRED/RUN_END → RESET (2).
+        _new_prio = self._CLOSURE_PRIORITY.get(
+            reason if reason in self._CLOSURE_PRIORITY else "RESET", 0
+        )
+        if not self._expansion_active:
+            # Episode already closed — allow a higher-priority late arrival to patch the record
+            _old_prio = self._CLOSURE_PRIORITY.get(
+                self._expansion_ended_reason if self._expansion_ended_reason in self._CLOSURE_PRIORITY
+                else "RESET", 0
+            )
+            if _new_prio > _old_prio and self._expansion_records:
+                # Patch the most recent record's ended_by and outcome
+                _last = self._expansion_records[-1]
+                _last["ended_by"] = (
+                    "retest"  if reason == "QUALIFIED"
+                    else "eof"      if reason == "RUN_END"
+                    else "expired"  if reason == "EXPIRED"
+                    else "reset"
+                )
+                _last["outcome"] = (
+                    "QUALIFIED"    if reason == "QUALIFIED"
+                    else "RUN_END"      if reason == "RUN_END"
+                    else "EXPIRED"      if reason == "EXPIRED"
+                    else "INTERRUPTED"
+                )
+                self._expansion_ended_reason = reason
+            return
+        self._expansion_active = False
+        self._expansion_ended_reason = reason  # Phase 3b RC-Closure: record winning reason
+        dwell = candle_index - self._expansion_start_idx
+        self._expansion_dwells.append(dwell)
+
+        # Phase 3a: ended_by taxonomy (key diagnostic for Case A vs Case B)
+        _ended_by = (
+            "retest"   if reason == "QUALIFIED"
+            else "eof"      if reason == "RUN_END"
+            else "expired"  if reason == "EXPIRED"
+            else "reset"
+        )
+
+        # Phase 3a: dual age_hours — actual from timestamps, estimated from M15 approximation
+        _age_estimated: float = round(dwell * 15 / 60, 2)
+        _age_actual: Optional[float] = None
+        if self._expansion_start_ts is not None and end_ts is not None:
+            _age_actual = round(
+                (end_ts - self._expansion_start_ts).total_seconds() / 3600.0, 2
+            )
+
+        # Phase 3b RC2: emit CLOCK_DRIFT — INFO if >10%, WARNING if >25%.
+        # 5% was too aggressive: markets have gaps, DST, and exchange timestamp variance.
+        if _age_actual is not None and _age_estimated > 0:
+            _drift_pct = abs(_age_actual - _age_estimated) / _age_estimated
+            if _drift_pct > 0.10:
+                _drift_severity = "WARNING" if _drift_pct > 0.25 else "INFO"
+                emit_integrity_event(
+                    "CLOCK_DRIFT", _drift_severity, "crt_engine",
+                    {
+                        "age_hours_actual":    _age_actual,
+                        "age_hours_estimated": _age_estimated,
+                        "drift_pct":           round(_drift_pct * 100, 1),
+                        "candle_index":        candle_index,
+                    },
+                )
+
+        outcome = (
+            "QUALIFIED"    if reason == "QUALIFIED"
+            else "RUN_END"      if reason == "RUN_END"
+            else "EXPIRED"      if reason == "EXPIRED"
+            else "RESET_HTF"    if "HTF" in reason
+            else "RESET_RETRACE"    if "retrace" in reason.lower()
+            else "RESET_EXTENSION"  if "extension" in reason.lower()
+            else "RESET_OTHER"
+        )
+        self._expansion_records.append({
+            "kind":                        "EXPANSION_RETRACE_CHECK",
+            "episode_start_idx":           self._expansion_start_idx,
+            "episode_end_idx":             candle_index,
+            "duration_candles":            dwell,
+            "age_hours_actual":            _age_actual,          # Phase 3a — None if timestamps absent
+            "age_hours_estimated":         _age_estimated,       # Phase 3a — M15 approximation
+            "ended_by":                    _ended_by,            # Phase 3a
+            "shadow_used":                 shadow_used,          # Phase 3a
+            "candidate_age_at_entry":      candidate_age_at_entry,  # Phase 3a
+            "max_retrace_depth_abs":       self._expansion_max_depth,
+            "ceiling_at_max":              self._expansion_ceiling_at_max,
+            "time_to_max_retrace_candles": self._expansion_time_to_max,
+            "age_pct_of_threshold":        age_pct_of_threshold,         # Phase 3b — 0.0 if no TTL active
+            "freshness_ratio":             round(age_pct_of_threshold / 100.0, 3),  # Phase 3b RC5
+            "qualified":                   outcome == "QUALIFIED",
+            "outcome":                     outcome,
+        })
+
+    # ── Reset attribution ─────────────────────────────────────────
+
+    def on_reset(
+        self, from_state: str, reason: str, candle_index: int, *,
+        displacement_age_candles: int,
+        ema_aligned: bool,
+        remaining_htf_candles: int,
+        direction_consistent: bool,
+        candle_ts: Optional[datetime],              # Phase 3a — for age_hours_actual
+        shadow_used: bool,                          # Phase 3a — was expansion shadow-sourced?
+        candidate_age_at_entry: int,                # Phase 3a — candles from displacement → expansion
+    ) -> None:
+        """Called from StateMachine.reset_to_range() before state changes."""
+        state_age = candle_index - self._state_entered_idx
+        self._state_entered_idx = candle_index  # RANGE entry time
+        self._transition_counts["RANGE"] = (
+            self._transition_counts.get("RANGE", 0) + 1
+        )
+        # Compute expansion probability score for DISPLACEMENT+HTF resets
+        _would_expand_score = 0.0
+        if from_state == "DISPLACEMENT" and "HTF" in reason:
+            _would_expand_score = (
+                min(displacement_age_candles / 3, 1.0) * 0.30
+                + (0.30 if ema_aligned else 0.0)
+                + (0.25 if direction_consistent else 0.0)
+                + min(remaining_htf_candles / 4, 1.0) * 0.15
+            )
+        self._reset_records.append({
+            "kind":                  "RESET_ATTRIBUTED",
+            "candle_index":          candle_index,
+            "from_state":            from_state,
+            "to_state":              "RANGE",
+            "reason":                reason,
+            "state_age_candles":     state_age,
+            "candidate_id":          (
+                self._active_candidate["candidate_id"]
+                if self._active_candidate else None
+            ),
+            "htf_window_position":   (
+                self._active_candidate.get("disp_htf_pos")
+                if self._active_candidate else None
+            ),
+            "would_expand_score":    round(_would_expand_score, 4),
+            "would_expand_threshold": 0.55,
+            "would_expand":          _would_expand_score >= 0.55,
+        })
+        # Close expansion episode if it was active (pass Phase 3a context for rich records)
+        if from_state == "EXPANSION":
+            self.on_expansion_ended(
+                candle_index, reason,
+                end_ts=candle_ts,
+                shadow_used=shadow_used,
+                candidate_age_at_entry=candidate_age_at_entry,
+                age_pct_of_threshold=0.0,   # reset path: no TTL age measured here
+            )
+        # Classify and close active candidate
+        if self._active_candidate is not None:
+            death = (
+                "RESET_HTF"        if "HTF" in reason
+                else "RESET_RETRACE"   if "retrace" in reason.lower()
+                else "RESET_EXTENSION" if "extension" in reason.lower()
+                else "SWEEP_EXPIRED"   if "expired" in reason.lower() or "Sweep expired" in reason
+                else "SOFT_CONF_TIMEOUT" if ("confirmation" in reason.lower()
+                                              or "timeout" in reason.lower())
+                else "FILTER_REJECTED" if any(k in reason for k in
+                                               ("discount zone", "premium zone", "off_session"))
+                else "STOP_BREACHED"   if "stop_breached" in reason      # [entry-chain 2026-10-01]
+                else "BUILD_REJECTED"  if "trade_build_rejected" in reason  # [entry-chain 2026-10-01]
+                else "RESET_OTHER"
+            )
+            self._close_candidate(death, candle_index)
+
+    # ── Candidate lifecycle ───────────────────────────────────────
+
+    def on_candidate_opened(
+        self, candidate_id: str, candle_index: int, ts: str, *,
+        shadow: bool,
+    ) -> None:
+        """Called when a new SWEEP (or shadow sweep) is detected."""
+        if self._active_candidate is not None:
+            self._close_candidate("RUN_OVERLAP", candle_index)
+        self._active_candidate = {
+            "candidate_id":     candidate_id,
+            "first_seen_idx":   candle_index,
+            "first_seen_ts":    ts,
+            "last_seen_idx":    candle_index,
+            "entered_states":   ["SWEEP"],
+            "max_score_seen":   0.0,
+            "shadow_used":      shadow,
+            "score_at_approval": None,
+            "death_reason":     None,
+            # Declared at birth so the lifecycle record reads every field strictly (EPIC-84);
+            # overwritten on ACCEPTED. Empty/0.0/None = "not accepted", same values as before.
+            "shadow_context":         {},
+            "shadow_displacement_br": 0.0,
+            "trade_id":               None,
+            "bar_ts":                 None,
+        }
+
+    def active_candidate_id(self) -> Optional[str]:
+        """Id of the candidate whose lifecycle is still open, without closing it. Used by the
+        resting-order path so the trade row carries `candidate_id` from the bar it fills on,
+        while the lifecycle itself still closes at approval (ACCEPTED) or on reset."""
+        return self._active_candidate["candidate_id"] if self._active_candidate else None
+
+    def on_candidate_score(self, score: float) -> None:
+        """Track highest S-score seen across all soft-conf evaluations."""
+        if self._active_candidate and score > self._active_candidate["max_score_seen"]:
+            self._active_candidate["max_score_seen"] = score
+
+    def on_displacement_htf_position(self, position: int, remaining: int) -> None:
+        """Record which HTF-window position (1-4) the displacement was detected on."""
+        if self._active_candidate is not None:
+            self._active_candidate["disp_htf_pos"]       = position
+            self._active_candidate["disp_htf_remaining"] = remaining
+
+    def on_candidate_accepted(
+        self,
+        candle_index:          int,
+        *,
+        score_at_approval:     float,
+        candle_ts:             Optional[datetime],   # Phase 3 — bar-open clock (ACCEPTED)
+        trade_id:              Optional[str],        # Phase 3 — Option-A row trade_id
+        shadow_context:        dict,                 # Phase 4b ({} when not shadow-sourced)
+        shadow_displacement_br: float,               # Phase 4b — body_ratio of pending disp candle
+    ) -> Optional[str]:
+        """Called when TRADE_OPENED fires — candidate lifecycle ends as ACCEPTED.
+
+        Phase 3 additive fields: ``candle_ts`` (bar-open clock, so the ACCEPTED row resolves to
+        the frozen PK) and ``trade_id`` (the engine's Option-A CRT-{seq} row id, so the
+        lifecycle record joins to trades.csv and L8 without a lookup). Returns the closed
+        candidate_id so the runner can stamp it on the trade row (trades.csv.candidate_id ->
+        lifecycle bidirectional closure, chain invariants 4/5).
+        """
+        if self._active_candidate is not None:
+            self._active_candidate["score_at_approval"]      = score_at_approval
+            self._active_candidate["shadow_context"]         = shadow_context          # Phase 4b
+            self._active_candidate["shadow_displacement_br"] = shadow_displacement_br  # Phase 4b
+            self._active_candidate["trade_id"]               = trade_id
+            self._active_candidate["bar_ts"]                 = (
+                candle_ts.isoformat() if candle_ts is not None else None
+            )
+            cid = self._active_candidate["candidate_id"]
+        else:
+            cid = None
+        self._close_candidate("ACCEPTED", candle_index)
+        return cid
+
+    def _close_candidate(self, death_reason: str, candle_index: int) -> None:
+        if self._active_candidate is None:
+            return
+        c = self._active_candidate
+        self._candidate_records.append({
+            "kind":              "CANDIDATE_LIFECYCLE",
+            "candidate_id":      c["candidate_id"],
+            "first_seen_idx":    c["first_seen_idx"],
+            "first_seen_ts":     c["first_seen_ts"],
+            "last_seen_idx":     candle_index,
+            "age_candles":       candle_index - c["first_seen_idx"],
+            "entered_states":    c["entered_states"],
+            "max_score_seen":    c["max_score_seen"],
+            "shadow_used":          c["shadow_used"],
+            "score_at_approval":    c["score_at_approval"],    # None if not accepted
+            "shadow_context":       c["shadow_context"],       # Phase 4b — age/penalty/alignment
+            "shadow_displacement_br": c["shadow_displacement_br"],  # Phase 4b
+            "trade_id":             c["trade_id"],        # Phase 3 — only non-None when ACCEPTED
+            "bar_ts":               c["bar_ts"],          # Phase 3 — bar-open clock (ACCEPTED)
+            "death_reason":         death_reason,
+        })
+        self._active_candidate = None
+
+    # ── Decision distance ─────────────────────────────────────────
+
+    def on_decision_distance(
+        self,
+        candle_index: int,
+        score_actual: float,
+        score_threshold: float,
+        accepted: bool,
+        rejection_reason: str,
+        soft_conf_candle_num: int,
+        candle_ts: Optional[datetime] = None,   # Phase 3 — bar-open clock for the frozen PK
+    ) -> None:
+        """Called after every S-score computation inside the soft-conf window."""
+        self._decision_records.append({
+            "kind":               "DECISION_DISTANCE",
+            "candle_index":       candle_index,
+            "candidate_id":       (
+                self._active_candidate["candidate_id"]
+                if self._active_candidate else None
+            ),
+            "bar_ts":             (candle_ts.isoformat() if candle_ts is not None else None),
+            "score_actual":       score_actual,
+            "score_threshold":    score_threshold,
+            "decision_distance":  abs(score_actual - score_threshold),
+            "accepted":           accepted,
+            "rejection_reason":   rejection_reason,
+            "soft_conf_candle_num": soft_conf_candle_num,
+        })
+
+    def on_retest_replay(
+        self,
+        *,
+        candle_index: int,
+        timestamp: str,
+        direction: int,
+        entry: float,
+        disp_low: float,
+        disp_high: float,
+        atr: float,
+        sl_atr_buffer: float,
+        tp1_mult: float,
+        tp2_mult: float,
+        intent: str,
+        score: float,
+        accepted: bool,
+        reject_reason: Optional[str],
+    ) -> None:
+        """Additive, measure-only telemetry for the execution-planner replay experiment.
+
+        Records a retest decision point's geometry + intent + score + accept/reject so the
+        offline experiment (scripts/research/execution_planner_replay.py) can reconstruct
+        structure-vs-vanilla SL/TP and run the 2x2 attribution. OFF-SPINE: there is no
+        production caller, so _retest_replay_records stays empty in normal backtests and
+        flush() output is unchanged (replay determinism + ledger byte-identity preserved).
+        Explicit signature (not **kwargs) so the schema is self-documenting and a future
+        field change fails loudly. Mirrors on_decision_distance.
+        """
+        self._retest_replay_records.append({
+            "kind":          "RETEST_REPLAY",
+            "candle_index":  candle_index,
+            "timestamp":     timestamp,
+            "direction":     direction,
+            "entry":         entry,
+            "disp_low":      disp_low,
+            "disp_high":     disp_high,
+            "atr":           atr,
+            "sl_atr_buffer": sl_atr_buffer,
+            "tp1_mult":      tp1_mult,
+            "tp2_mult":      tp2_mult,
+            "intent":        intent,
+            "score":         score,
+            "accepted":      accepted,
+            "reject_reason": reject_reason,
+        })
+
+    # ── Flush ─────────────────────────────────────────────────────
+
+    def flush(self) -> list[dict]:
+        """Return all telemetry records. Called once at end-of-run."""
+        # Phase 3b RC1: use _last_expansion_seen_idx/ts, not _expansion_start_idx.
+        # Using start_idx caused open episodes to collapse to zero duration at flush time.
+        if self._expansion_active:
+            self.on_expansion_ended(
+                self._last_expansion_seen_idx, "RUN_END",
+                end_ts=self._last_expansion_seen_ts,
+                # run end: shadow/age context is not tracked at flush time (recorded as 0/False)
+                shadow_used=False,
+                candidate_age_at_entry=0,
+                age_pct_of_threshold=0.0,
+            )
+        if self._active_candidate is not None:
+            self._close_candidate("RUN_END", self._state_entered_idx)
+
+        _dwells = self._expansion_dwells
+        _sorted_d = sorted(_dwells) if _dwells else []
+        _dwell_stats: dict = {
+            "count":   len(_dwells),
+            "mean":    round(_statistics.mean(_dwells), 1)    if _dwells else 0,
+            "median":  round(_statistics.median(_dwells), 1)  if _dwells else 0,
+            "p90":     _sorted_d[int(0.90 * len(_sorted_d))]  if len(_dwells) >= 10 else 0,
+            "p99":     _sorted_d[int(0.99 * len(_sorted_d))]  if len(_dwells) >= 10 else 0,  # Phase 3a
+            "max":     max(_dwells, default=0),
+            # Phase 3a: ended_by_counts — primary Case A/B diagnostic
+            "ended_by_counts": {
+                "retest":  sum(1 for r in self._expansion_records if r.get("ended_by") == "retest"),
+                "reset":   sum(1 for r in self._expansion_records if r.get("ended_by") == "reset"),
+                "eof":     sum(1 for r in self._expansion_records if r.get("ended_by") == "eof"),
+                "expired": sum(1 for r in self._expansion_records if r.get("ended_by") == "expired"),
+            },
+        }
+
+        # Phase 3b RC3: UNBOUNDED_STATE — CRITICAL if any episode exceeds max(P95×3, median×25).
+        # P99 is self-referential with small N (the anomaly inflates P99, masking itself).
+        # P95×3 is stable: normal episodes stay below, the 20k-candle outlier fires reliably.
+        if len(_dwells) >= 10:
+            _p95    = _sorted_d[int(0.95 * len(_sorted_d))]
+            _median = _statistics.median(_dwells)
+            _threshold = max(_p95 * 3, _median * 25)
+            _unbounded = [d for d in _dwells if d > _threshold]
+            if _unbounded:
+                emit_integrity_event(
+                    "UNBOUNDED_STATE", "CRITICAL", "crt_engine",
+                    {
+                        "state":     "EXPANSION",
+                        "p95":       _p95,
+                        "median":    _median,
+                        "threshold": _threshold,
+                        "offenders": _unbounded,
+                    },
+                )
+
+        # NOTE (documented 2026-08-30, not changed -- behavior-preserving): RANGE has two
+        # increment sites (this generic path at ~:425 AND the unconditional
+        # `on_reset()` bump at :580, which fires even when RANGE is already the current
+        # state), while every other state has exactly one. So
+        # state_entry_counts["RANGE"] counts "entered-or-re-entered-via-reset", not
+        # "distinct RANGE episodes" -- it will read higher than a state-CHANGE-based
+        # count (e.g. crt_state_changed in bar_structure_snapshot.py) for RANGE only.
+        # Confirmed empirically: XAUUSD Jul-Aug 2026 window, telemetry RANGE=144 vs
+        # 83 real before!=after transitions into RANGE (+57 RANGE->RANGE resets, +4
+        # warmup residual). Do not "fix" this counter without checking every consumer
+        # first -- it would change committed telemetry (F-068-style ledger impact).
+        records: list[dict] = [{
+            "kind":                  "TRANSITION_COUNTER",
+            "state_entry_counts":    dict(self._transition_counts),
+            "expansion_dwell_stats": _dwell_stats,
+        }]
+        records.extend(self._expansion_records)
+        records.extend(self._reset_records)
+        records.extend(self._candidate_records)
+        records.extend(self._decision_records)
+        records.extend(self._retest_replay_records)
+        return records
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -393,24 +907,29 @@ class RangeDetector:
         self.config = config
         self.log = logging.getLogger("CRT.RangeDetector")
 
-    def detect_htf_range(
-        self, candles: list[Candle], htf_candle_id: str, session: str = "UNKNOWN"
+    def detect_m15_structural_range(
+        self, candles: list[Candle], clock_id: str, session: str
     ) -> Range:
-        h_ref = max(c.high for c in candles)
-        l_ref = min(c.low  for c in candles)
-        equilibrium = (h_ref + l_ref) / 2
-        r = Range(
-            h_ref=h_ref, l_ref=l_ref, equilibrium=equilibrium,
-            formed_at=candles[-1].timestamp,
-            htf_candle_id=htf_candle_id, session=session,
-        )
+        """Build the M15 structural liquidity range (sweep envelope).
+
+        ``clock_id`` is the HTFBuilder reset-clock tag, not a claim that
+        this envelope equals that count window. Geometry is delegated to
+        ``m15_structural_range.from_child_window`` (max high / min low).
+        """
+        r = _m15_range_from_children(candles, clock_id, session)
         self.log.info(
-            f"Range | H={h_ref:.5f} L={l_ref:.5f} EQ={equilibrium:.5f} "
-            f"Session={session} HTF={htf_candle_id}"
+            f"M15-SLR | H={r.h_ref:.5f} L={r.l_ref:.5f} EQ={r.equilibrium:.5f} "
+            f"Session={session} clock={clock_id} n={r.child_count}"
         )
         return r
 
-    def compute_atr(self, candles: list[Candle], period: int = 14) -> float:
+    def detect_htf_range(
+        self, candles: list[Candle], htf_candle_id: str, session: str
+    ) -> Range:
+        """Legacy name. Same object as ``detect_m15_structural_range``."""
+        return self.detect_m15_structural_range(candles, htf_candle_id, session)
+
+    def compute_atr(self, candles: list[Candle], period: int) -> float:
         if len(candles) < 2:
             return 0.0
         trs = []
@@ -428,12 +947,14 @@ class RangeDetector:
     def detect_sweep(
         self,
         candle: Candle,
-        active_range: Range,
+        active_range: Optional[Range],
         prev_sweep: Optional[SweepEvent],
         current_index: int,
     ) -> Optional[SweepEvent]:
-        swept_high = candle.high > active_range.h_ref and candle.close < active_range.h_ref
-        swept_low  = candle.low  < active_range.l_ref and candle.close > active_range.l_ref
+        if active_range is None:
+            return None
+        swept_high = _swept_high(candle.high, candle.close, active_range.h_ref)
+        swept_low  = _swept_low(candle.low, candle.close, active_range.l_ref)
 
         if not swept_high and not swept_low:
             return None
@@ -451,11 +972,16 @@ class RangeDetector:
         # diagnostic metadata only — sweep detection above (range-boundary rule)
         # is the production decision; downstream scoring ignores these fields.
         full_range = max(candle.high - candle.low, 0.001)
-        upper_wick = (candle.high - max(candle.open, candle.close)) / full_range
-        lower_wick = (min(candle.open, candle.close) - candle.low) / full_range
+        # T-15 / GD-006/007 (2026-07-20): diagnostic sweep-geometry fractions of
+        # full_range. NOT FM-003/FM-004 (raw upper_wick/lower_wick) and NOT
+        # FM-011/FM-012 (canonical upper_wick_ratio/lower_wick_ratio — those are
+        # registered names that the ownership lint would re-flag). Local names
+        # deliberately off the ontology. Behaviour-neutral rename.
+        sweep_uw_frac = (candle.high - max(candle.open, candle.close)) / full_range
+        sweep_lw_frac = (min(candle.open, candle.close) - candle.low) / full_range
         sweep_type, sweep_label = _classify_sweep_geometry(
-            upper_wick=upper_wick,
-            lower_wick=lower_wick,
+            upper_wick=sweep_uw_frac,
+            lower_wick=sweep_lw_frac,
             body_ratio=candle.body_ratio,
             bearish=(candle.close < candle.open),
         )
@@ -481,29 +1007,47 @@ class RangeDetector:
 # MODULE 2 — STATE MACHINE
 # ─────────────────────────────────────────────────────────────────
 
-VALID_TRANSITIONS: dict[CRTState, list[CRTState]] = {
-    CRTState.RANGE:        [CRTState.SWEEP],
-    CRTState.SWEEP:        [CRTState.DISPLACEMENT, CRTState.RANGE],
-    CRTState.DISPLACEMENT: [CRTState.EXPANSION, CRTState.RANGE],
-    CRTState.EXPANSION:    [CRTState.RETEST, CRTState.RANGE],
-    CRTState.RETEST:       [CRTState.EXECUTION, CRTState.RANGE],
-    CRTState.EXECUTION:    [CRTState.RESOLUTION],
-    CRTState.RESOLUTION:   [CRTState.RANGE],
-}
 
 
 class StateMachine:
 
-    def __init__(self, config: CRTConfig):
+    def __init__(
+        self,
+        config: CRTConfig,
+        telemetry: Optional["TelemetryCollector"] = None,
+        valid_transitions: Optional[Mapping[CRTState, Sequence[CRTState]]] = None,
+    ):
         self.config = config
+        self.telemetry = telemetry
         self.log = logging.getLogger("CRT.StateMachine")
+        # Optional CRT baseline trace hooks (default None — zero behavior change).
+        self.trace_hooks = None
+        # Phase-Topology: instance graph (WHO-loaded when provided; else module seed).
+        if valid_transitions is None:
+            from config_layer.state_topology import module_seed_transition_graph
+            self.valid_transitions: Mapping[CRTState, Sequence[CRTState]] = (
+                module_seed_transition_graph()
+            )
+        else:
+            self.valid_transitions = valid_transitions
+
+    def _trace_guard(self, **kwargs) -> None:
+        """Observation-only; never alters control flow. No-op when hooks inactive."""
+        h = self.trace_hooks
+        if h is None:
+            return
+        try:
+            h.record_guard(**kwargs)
+        except Exception:
+            # Serialization/observer failure must not change engine behavior.
+            pass
 
     def _transition(
         self, state: EngineState, target: CRTState,
         reason: str, candle: Optional[Candle] = None,
         ev_logger: Optional[EventLogger] = None,
     ) -> bool:
-        allowed = VALID_TRANSITIONS.get(state.current_state, [])
+        allowed = self.valid_transitions.get(state.current_state, ())
         if target not in allowed:
             self.log.warning(
                 f"ILLEGAL {state.current_state.name} → {target.name} | {reason}"
@@ -522,9 +1066,40 @@ class StateMachine:
                 state_from=state.current_state.name,
                 state_to=target.name,
                 reason=reason,
+                # Enrich metadata so recent_transition_path() can reconstruct WHY each
+                # transition happened without any duplicate storage on EngineState.
+                # dict() copy of cached_features prevents reference aliasing —
+                # if the caller later mutates state.cached_features this snapshot stays stable.
+                metadata={
+                    "sweep_type":    state.sweep_event.sweep_type if state.sweep_event else None,
+                    # CH-002 / F-050: FM-028 identity (was mis-emitted as "disp_strength")
+                    "displacement_atr_ratio": (
+                        state.cached_features.get("displacement_atr_ratio")
+                        if state.cached_features else None
+                    ),
+                    "atr":           state.atr_abs,
+                    "features":      dict(state.cached_features) if state.cached_features else {},
+                },
             )
 
         state.current_state = target
+        if target == CRTState.DISPLACEMENT and candle:
+            state._displacement_entry_idx = candle.index
+        if target == CRTState.EXPANSION and candle:          # Phase 3a/3b
+            state._expansion_entry_idx = candle.index
+            state._expansion_entry_ts  = candle.timestamp   # Phase 3b — for hour-based TTL
+        if self.telemetry and candle:
+            self.telemetry.on_state_entered(target.name, candle.index, candle_ts=candle.timestamp)
+            if target == CRTState.RETEST and self.telemetry._expansion_active:
+                self.telemetry.on_expansion_ended(
+                    candle.index, "QUALIFIED",
+                    end_ts=candle.timestamp,                                       # Phase 3a
+                    shadow_used=state._came_from_shadow,                           # Phase 3a
+                    candidate_age_at_entry=(                                       # Phase 3a
+                        state._expansion_entry_idx - state._displacement_entry_idx
+                    ),
+                    age_pct_of_threshold=0.0,   # QUALIFIED: no TTL expiry on this path
+                )
         return True
 
     # ── Transition guards ─────────────────────────────────────
@@ -541,6 +1116,45 @@ class StateMachine:
             sweep.candle, ev_logger,
         )
 
+    def try_range_to_shadow_pending(
+        self, state: EngineState, sweep: "SweepEvent",
+        ev_logger: Optional[EventLogger] = None
+    ) -> bool:
+        """Transition RANGE→SHADOW_PENDING when a confirming sweep fires while pending memory is active."""
+        state.sweep_event = sweep
+        state.direction   = sweep.direction
+        return self._transition(
+            state, CRTState.SHADOW_PENDING,
+            f"Shadow resume: confirming sweep @ {sweep.price:.5f} dir={sweep.direction.value}",
+            sweep.candle, ev_logger,
+        )
+
+    def try_shadow_pending_to_expansion(
+        self, state: EngineState, candle: Candle,
+        ev_logger: Optional[EventLogger] = None
+    ) -> bool:
+        """Restore prior-window displacement context and collapse SHADOW_PENDING→SWEEP→EXPANSION.
+
+        Bypasses the body_ratio / ATR displacement strength check because displacement
+        was already validated in the previous HTF window.  The confirming sweep in the
+        new window is sufficient evidence that the move is continuing.
+        """
+        state.displacement_candle = state.pending_displacement_candle
+        state.direction           = state.pending_displacement_dir
+        # Two-step transition for full audit trail
+        ok_sweep = self._transition(
+            state, CRTState.SWEEP,
+            f"Shadow: prior-window displacement restored from idx={state.pending_displacement_formed_idx}",
+            candle, ev_logger,
+        )
+        if not ok_sweep:
+            return False
+        return self._transition(
+            state, CRTState.EXPANSION,
+            "Shadow resume: displacement carried from prior HTF window — strength check skipped",
+            candle, ev_logger,
+        )
+
     def try_sweep_to_displacement(
         self, state: EngineState, candle: Candle,
         ev_logger: Optional[EventLogger] = None
@@ -548,16 +1162,216 @@ class StateMachine:
         """
         [PATCH 2] Sweep age check — invalidate if sweep is too old.
         [PATCH 3] Displacement requires body_ratio AND ATR size.
+        [CH-directional-displacement-contract] Impulse must travel away from
+        the swept side: LONG = bullish close above sweep.price; SHORT = bearish
+        close below sweep.price.
         """
         move = abs(candle.close - candle.open)
+        thr_move = self.config.atr_min_displacement * state.atr_abs
+        _loc = "crt_engine_v2.StateMachine.try_sweep_to_displacement"
 
-        if move < self.config.atr_min_displacement * state.atr:
+        # Directional displacement contract (CH-directional-displacement-contract,
+        # user-authorized 2026-08-13). Sweep side sets the intended impulse:
+        #   LONG  = sell-side / range-low sweep  → displacement must be UP
+        #   SHORT = buy-side  / range-high sweep → displacement must be DOWN
+        # Matches build_trade doctrine ("Swept LOW → displaced UP"). Unsigned
+        # energy-only displacement is no longer a legal SWEEP→DISPLACEMENT.
+        direction = (
+            state.sweep_event.direction
+            if state.sweep_event is not None
+            else state.direction
+        )
+        if direction not in (Direction.LONG, Direction.SHORT):
+            self._trace_guard(
+                guard_id="G_SWEEP_DISP_DIR_NONE",
+                guard_name="displacement_direction_present",
+                source_location=_loc,
+                from_state="SWEEP",
+                candidate_to_state="DISPLACEMENT",
+                result=False,
+                operator="direction in {LONG, SHORT}",
+                operands=[{
+                    "name": "direction", "runtime_value": getattr(direction, "value", str(direction)),
+                    "source_class": "STATE_MEMORY",
+                    "source_name": "sweep_event.direction or state.direction",
+                    "source_location": _loc, "formula_id": None, "feature_id": None, "config_key": None,
+                }],
+                thresholds=[],
+                short_circuit_status="FAIL_RETURN",
+                failure_reason="direction_none",
+            )
+            return False
+
+        is_long = direction == Direction.LONG
+        if is_long and not (candle.close > candle.open):
+            self._trace_guard(
+                guard_id="G_SWEEP_DISP_DIR_LONG",
+                guard_name="long_displacement_must_be_bullish",
+                source_location=_loc,
+                from_state="SWEEP",
+                candidate_to_state="DISPLACEMENT",
+                result=False,
+                operator="close > open when LONG",
+                operands=[
+                    {"name": "close", "runtime_value": candle.close, "source_class": "RAW_OHLC",
+                     "source_name": "candle.close", "source_location": _loc,
+                     "formula_id": None, "feature_id": "close", "config_key": None},
+                    {"name": "open", "runtime_value": candle.open, "source_class": "RAW_OHLC",
+                     "source_name": "candle.open", "source_location": _loc,
+                     "formula_id": None, "feature_id": "open", "config_key": None},
+                ],
+                thresholds=[],
+                short_circuit_status="FAIL_RETURN",
+                failure_reason="long_displacement_not_bullish",
+            )
+            self.log.debug(
+                f"Displacement REJECTED: LONG requires bullish bar "
+                f"(open={candle.open:.5f} close={candle.close:.5f})"
+            )
+            return False
+        if (not is_long) and not (candle.close < candle.open):
+            self._trace_guard(
+                guard_id="G_SWEEP_DISP_DIR_SHORT",
+                guard_name="short_displacement_must_be_bearish",
+                source_location=_loc,
+                from_state="SWEEP",
+                candidate_to_state="DISPLACEMENT",
+                result=False,
+                operator="close < open when SHORT",
+                operands=[
+                    {"name": "close", "runtime_value": candle.close, "source_class": "RAW_OHLC",
+                     "source_name": "candle.close", "source_location": _loc,
+                     "formula_id": None, "feature_id": "close", "config_key": None},
+                    {"name": "open", "runtime_value": candle.open, "source_class": "RAW_OHLC",
+                     "source_name": "candle.open", "source_location": _loc,
+                     "formula_id": None, "feature_id": "open", "config_key": None},
+                ],
+                thresholds=[],
+                short_circuit_status="FAIL_RETURN",
+                failure_reason="short_displacement_not_bearish",
+            )
+            self.log.debug(
+                f"Displacement REJECTED: SHORT requires bearish bar "
+                f"(open={candle.open:.5f} close={candle.close:.5f})"
+            )
+            return False
+
+        if state.sweep_event is not None:
+            sweep_px = state.sweep_event.price
+            if is_long and candle.close <= sweep_px:
+                self._trace_guard(
+                    guard_id="G_SWEEP_DISP_AWAY_LONG",
+                    guard_name="long_displacement_closes_above_sweep",
+                    source_location=_loc,
+                    from_state="SWEEP",
+                    candidate_to_state="DISPLACEMENT",
+                    result=False,
+                    operator="close > sweep.price when LONG",
+                    operands=[
+                        {"name": "close", "runtime_value": candle.close, "source_class": "RAW_OHLC",
+                         "source_name": "candle.close", "source_location": _loc,
+                         "formula_id": None, "feature_id": "close", "config_key": None},
+                        {"name": "sweep_price", "runtime_value": sweep_px, "source_class": "STATE_MEMORY",
+                         "source_name": "sweep_event.price", "source_location": _loc,
+                         "formula_id": None, "feature_id": None, "config_key": None},
+                    ],
+                    thresholds=[],
+                    short_circuit_status="FAIL_RETURN",
+                    failure_reason="long_close_not_above_sweep",
+                )
+                self.log.debug(
+                    f"Displacement REJECTED: LONG close={candle.close:.5f} "
+                    f"<= sweep={sweep_px:.5f}"
+                )
+                return False
+            if (not is_long) and candle.close >= sweep_px:
+                self._trace_guard(
+                    guard_id="G_SWEEP_DISP_AWAY_SHORT",
+                    guard_name="short_displacement_closes_below_sweep",
+                    source_location=_loc,
+                    from_state="SWEEP",
+                    candidate_to_state="DISPLACEMENT",
+                    result=False,
+                    operator="close < sweep.price when SHORT",
+                    operands=[
+                        {"name": "close", "runtime_value": candle.close, "source_class": "RAW_OHLC",
+                         "source_name": "candle.close", "source_location": _loc,
+                         "formula_id": None, "feature_id": "close", "config_key": None},
+                        {"name": "sweep_price", "runtime_value": sweep_px, "source_class": "STATE_MEMORY",
+                         "source_name": "sweep_event.price", "source_location": _loc,
+                         "formula_id": None, "feature_id": None, "config_key": None},
+                    ],
+                    thresholds=[],
+                    short_circuit_status="FAIL_RETURN",
+                    failure_reason="short_close_not_below_sweep",
+                )
+                self.log.debug(
+                    f"Displacement REJECTED: SHORT close={candle.close:.5f} "
+                    f">= sweep={sweep_px:.5f}"
+                )
+                return False
+
+        if move < thr_move:
+            self._trace_guard(
+                guard_id="G_SWEEP_DISP_MOVE",
+                guard_name="displacement_min_body_move",
+                source_location=_loc,
+                from_state="SWEEP",
+                candidate_to_state="DISPLACEMENT",
+                result=False,
+                operator="move >= atr_min_displacement * atr",
+                operands=[
+                    {"name": "move", "runtime_value": move, "source_class": "CRT_LOCAL_DERIVED",
+                     "source_name": "abs(close-open)", "source_location": _loc,
+                     "formula_id": None, "feature_id": None, "config_key": None},
+                    {"name": "atr", "runtime_value": state.atr_abs, "source_class": "CRT_LOCAL_DERIVED",
+                     # NOT FM-041: FM-041 `atr` is CLOSE-RELATIVE (atr_14_raw/close); state.atr_abs
+                     # is the ABSOLUTE-price SMA(period) of true_range (FM-040) with no first-class
+                     # FM id of its own. Mislabeled FM-041 here until 2026-07-31 (Semantic Layer
+                     # Certification Audit, Tier 1 item 5) -- same bug class FM-050 fixed 2026-07-19.
+                     "source_name": "RangeDetector.compute_atr (absolute ATR, SMA of FM-040 true_range)",
+                     "source_location": _loc,
+                     "formula_id": None, "feature_id": None, "config_key": None},
+                ],
+                thresholds=[{
+                    "name": "atr_min_displacement * atr",
+                    "runtime_value": thr_move,
+                    "config_key": "atr_min_displacement",
+                    "config_source": "CRTConfig",
+                    "read_location": _loc,
+                }],
+                short_circuit_status="FAIL_RETURN",
+                failure_reason="move_below_atr_min_displacement",
+            )
             self.log.debug(f"Displacement REJECTED: move={move:.5f} < threshold")
             return False
         # [PATCH 2] Stale sweep guard
         if state.sweep_event is not None:
             age = state.current_candle_index - state.sweep_event.candle_index
             if age > self.config.max_sweep_age_candles:
+                self._trace_guard(
+                    guard_id="G_SWEEP_DISP_AGE",
+                    guard_name="sweep_max_age",
+                    source_location=_loc,
+                    from_state="SWEEP",
+                    candidate_to_state="DISPLACEMENT",
+                    result=False,
+                    operator="age <= max_sweep_age_candles",
+                    operands=[
+                        {"name": "age", "runtime_value": age, "source_class": "STATE_MEMORY",
+                         "source_name": "current_candle_index - sweep_event.candle_index",
+                         "source_location": _loc, "formula_id": None, "feature_id": None, "config_key": None},
+                    ],
+                    thresholds=[{
+                        "name": "max_sweep_age_candles",
+                        "runtime_value": self.config.max_sweep_age_candles,
+                        "config_key": "max_sweep_age_candles",
+                        "config_source": "CRTConfig",
+                        "read_location": _loc,
+                    }],
+                    short_circuit_status="FAIL_RETURN",
+                    failure_reason="sweep_expired",
+                )
                 self.log.info(
                     f"Sweep invalidated: age={age} > max={self.config.max_sweep_age_candles}. "
                     f"Resetting to RANGE."
@@ -570,19 +1384,97 @@ class StateMachine:
                 return False
 
         if candle.body_ratio < self.config.body_ratio_min:
+            self._trace_guard(
+                guard_id="G_SWEEP_DISP_BODY",
+                guard_name="body_ratio_min",
+                source_location=_loc,
+                from_state="SWEEP",
+                candidate_to_state="DISPLACEMENT",
+                result=False,
+                operator="body_ratio >= body_ratio_min",
+                operands=[{
+                    "name": "body_ratio", "runtime_value": candle.body_ratio,
+                    "source_class": "CRT_LOCAL_DERIVED",
+                    "source_name": "Candle.body_ratio (FM-010 path)",
+                    "source_location": _loc, "formula_id": "FM-010",
+                    "feature_id": "body_ratio", "config_key": None,
+                }],
+                thresholds=[{
+                    "name": "body_ratio_min",
+                    "runtime_value": self.config.body_ratio_min,
+                    "config_key": "body_ratio_min",
+                    "config_source": "CRTConfig",
+                    "read_location": _loc,
+                }],
+                short_circuit_status="FAIL_RETURN",
+                failure_reason="body_ratio_below_min",
+            )
             self.log.debug(
                 f"Displacement REJECTED: body_ratio={candle.body_ratio:.3f} "
                 f"< {self.config.body_ratio_min}"
             )
             return False
 
-        if state.atr > 0 and candle.wick_size < self.config.atr_multiplier_min * state.atr:
+        if state.atr_abs > 0 and candle.wick_size < self.config.atr_multiplier_min * state.atr_abs:
+            self._trace_guard(
+                guard_id="G_SWEEP_DISP_WICK",
+                guard_name="wick_atr_multiplier_min",
+                source_location=_loc,
+                from_state="SWEEP",
+                candidate_to_state="DISPLACEMENT",
+                result=False,
+                operator="wick_size >= atr_multiplier_min * atr",
+                operands=[
+                    {"name": "wick_size", "runtime_value": candle.wick_size,
+                     "source_class": "CRT_LOCAL_DERIVED",
+                     "source_name": "Candle.wick_size (FM-002 candle_range)",
+                     "source_location": _loc, "formula_id": "FM-002",
+                     "feature_id": "wick_size", "config_key": None},
+                    {"name": "atr", "runtime_value": state.atr_abs,
+                     "source_class": "CRT_LOCAL_DERIVED",
+                     # NOT FM-041 (close-relative) -- see the comment at the sibling site above
+                     # (Semantic Layer Certification Audit, Tier 1 item 5).
+                     "source_name": "RangeDetector.compute_atr (absolute ATR, SMA of FM-040 true_range)",
+                     "source_location": _loc, "formula_id": None,
+                     "feature_id": None, "config_key": None},
+                ],
+                thresholds=[{
+                    "name": "atr_multiplier_min * atr",
+                    "runtime_value": self.config.atr_multiplier_min * state.atr_abs,
+                    "config_key": "atr_multiplier_min",
+                    "config_source": "CRTConfig",
+                    "read_location": _loc,
+                }],
+                short_circuit_status="FAIL_RETURN",
+                failure_reason="wick_below_atr_multiplier",
+            )
             self.log.debug(
                 f"Displacement REJECTED: wick={candle.wick_size:.5f} "
                 f"< {self.config.atr_multiplier_min}×ATR"
             )
             return False
 
+        self._trace_guard(
+            guard_id="G_SWEEP_DISP_PASS",
+            guard_name="sweep_to_displacement_all_pass",
+            source_location=_loc,
+            from_state="SWEEP",
+            candidate_to_state="DISPLACEMENT",
+            result=True,
+            operator="ALL_PRIOR_GUARDS_PASS",
+            operands=[
+                {"name": "move", "runtime_value": move, "source_class": "CRT_LOCAL_DERIVED",
+                 "source_name": "abs(close-open)", "source_location": _loc,
+                 "formula_id": None, "feature_id": None, "config_key": None},
+                {"name": "body_ratio", "runtime_value": candle.body_ratio,
+                 "source_class": "CRT_LOCAL_DERIVED",
+                 "source_name": "Candle.body_ratio", "source_location": _loc,
+                 "formula_id": "FM-010", "feature_id": "body_ratio", "config_key": None},
+            ],
+            thresholds=[],
+            short_circuit_status="NONE",
+            failure_reason=None,
+        )
         state.displacement_candle = candle
         return self._transition(
             state, CRTState.DISPLACEMENT,
@@ -599,7 +1491,23 @@ class StateMachine:
         Requires: close > displacement_close AND close_distance ≥ 0.2 × ATR
         (in addition to directional close > open check).
         """
+        _loc = "crt_engine_v2.StateMachine.try_displacement_to_expansion"
         if state.displacement_candle is None:
+            self._trace_guard(
+                guard_id="G_DISP_EXP_NO_DISP",
+                guard_name="displacement_candle_present",
+                source_location=_loc,
+                from_state="DISPLACEMENT",
+                candidate_to_state="EXPANSION",
+                result=False,
+                operator="displacement_candle is not None",
+                operands=[{"name": "displacement_candle", "runtime_value": None,
+                           "source_class": "STATE_MEMORY", "source_name": "state.displacement_candle",
+                           "source_location": _loc, "formula_id": None, "feature_id": None, "config_key": None}],
+                thresholds=[],
+                short_circuit_status="FAIL_RETURN",
+                failure_reason="no_displacement_candle",
+            )
             return False
 
         disp_close = state.displacement_candle.close
@@ -608,33 +1516,137 @@ class StateMachine:
 
         # Basic directional check
         if is_long and not (candle.close > candle.open):
+            self._trace_guard(
+                guard_id="G_DISP_EXP_DIR_LONG",
+                guard_name="long_requires_bullish_close",
+                source_location=_loc, from_state="DISPLACEMENT", candidate_to_state="EXPANSION",
+                result=False, operator="close > open when LONG",
+                operands=[
+                    {"name": "close", "runtime_value": candle.close, "source_class": "RAW_OHLC",
+                     "source_name": "candle.close", "source_location": _loc,
+                     "formula_id": None, "feature_id": "close", "config_key": None},
+                    {"name": "open", "runtime_value": candle.open, "source_class": "RAW_OHLC",
+                     "source_name": "candle.open", "source_location": _loc,
+                     "formula_id": None, "feature_id": "open", "config_key": None},
+                ],
+                thresholds=[], short_circuit_status="FAIL_RETURN",
+                failure_reason="long_not_bullish_bar",
+            )
             return False
         if is_short and not (candle.close < candle.open):
+            self._trace_guard(
+                guard_id="G_DISP_EXP_DIR_SHORT",
+                guard_name="short_requires_bearish_close",
+                source_location=_loc, from_state="DISPLACEMENT", candidate_to_state="EXPANSION",
+                result=False, operator="close < open when SHORT",
+                operands=[
+                    {"name": "close", "runtime_value": candle.close, "source_class": "RAW_OHLC",
+                     "source_name": "candle.close", "source_location": _loc,
+                     "formula_id": None, "feature_id": "close", "config_key": None},
+                    {"name": "open", "runtime_value": candle.open, "source_class": "RAW_OHLC",
+                     "source_name": "candle.open", "source_location": _loc,
+                     "formula_id": None, "feature_id": "open", "config_key": None},
+                ],
+                thresholds=[], short_circuit_status="FAIL_RETURN",
+                failure_reason="short_not_bearish_bar",
+            )
             return False
 
         # [PATCH 3] close must extend beyond displacement close
         if is_long and candle.close <= disp_close:
+            self._trace_guard(
+                guard_id="G_DISP_EXP_EXT_LONG",
+                guard_name="long_extends_beyond_disp_close",
+                source_location=_loc, from_state="DISPLACEMENT", candidate_to_state="EXPANSION",
+                result=False, operator="close > disp_close",
+                operands=[
+                    {"name": "close", "runtime_value": candle.close, "source_class": "RAW_OHLC",
+                     "source_name": "candle.close", "source_location": _loc,
+                     "formula_id": None, "feature_id": "close", "config_key": None},
+                    {"name": "disp_close", "runtime_value": disp_close, "source_class": "STATE_MEMORY",
+                     "source_name": "displacement_candle.close", "source_location": _loc,
+                     "formula_id": None, "feature_id": None, "config_key": None},
+                ],
+                thresholds=[], short_circuit_status="FAIL_RETURN",
+                failure_reason="close_not_beyond_disp_close",
+            )
             self.log.debug(
                 f"Expansion REJECTED: close={candle.close:.5f} ≤ disp_close={disp_close:.5f}"
             )
             return False
         if is_short and candle.close >= disp_close:
+            self._trace_guard(
+                guard_id="G_DISP_EXP_EXT_SHORT",
+                guard_name="short_extends_beyond_disp_close",
+                source_location=_loc, from_state="DISPLACEMENT", candidate_to_state="EXPANSION",
+                result=False, operator="close < disp_close",
+                operands=[
+                    {"name": "close", "runtime_value": candle.close, "source_class": "RAW_OHLC",
+                     "source_name": "candle.close", "source_location": _loc,
+                     "formula_id": None, "feature_id": "close", "config_key": None},
+                    {"name": "disp_close", "runtime_value": disp_close, "source_class": "STATE_MEMORY",
+                     "source_name": "displacement_candle.close", "source_location": _loc,
+                     "formula_id": None, "feature_id": None, "config_key": None},
+                ],
+                thresholds=[], short_circuit_status="FAIL_RETURN",
+                failure_reason="close_not_beyond_disp_close",
+            )
             self.log.debug(
                 f"Expansion REJECTED: close={candle.close:.5f} ≥ disp_close={disp_close:.5f}"
             )
             return False
 
         # [PATCH 3] ATR-distance guard
-        if state.atr > 0:
+        if state.atr_abs > 0:
             distance = abs(candle.close - disp_close)
-            min_distance = self.config.expansion_atr_min_distance * state.atr
+            min_distance = self.config.expansion_atr_min_distance * state.atr_abs
             if distance < min_distance:
+                self._trace_guard(
+                    guard_id="G_DISP_EXP_ATR_DIST",
+                    guard_name="expansion_atr_min_distance",
+                    source_location=_loc, from_state="DISPLACEMENT", candidate_to_state="EXPANSION",
+                    result=False, operator="abs(close-disp_close) >= expansion_atr_min_distance * atr",
+                    operands=[
+                        {"name": "distance", "runtime_value": distance, "source_class": "CRT_LOCAL_DERIVED",
+                         "source_name": "abs(close-disp_close)", "source_location": _loc,
+                         "formula_id": None, "feature_id": None, "config_key": None},
+                        {"name": "atr", "runtime_value": state.atr_abs, "source_class": "CRT_LOCAL_DERIVED",
+                         # NOT FM-041 (close-relative) -- Semantic Layer Certification Audit, Tier 1 item 5.
+                         "source_name": "state.atr_abs (absolute ATR, SMA of FM-040 true_range)",
+                         "source_location": _loc,
+                         "formula_id": None, "feature_id": None, "config_key": None},
+                    ],
+                    thresholds=[{
+                        "name": "expansion_atr_min_distance * atr",
+                        "runtime_value": min_distance,
+                        "config_key": "expansion_atr_min_distance",
+                        "config_source": "CRTConfig",
+                        "read_location": _loc,
+                    }],
+                    short_circuit_status="FAIL_RETURN",
+                    failure_reason="distance_below_atr_min",
+                )
                 self.log.debug(
                     f"Expansion REJECTED: distance={distance:.5f} "
                     f"< {self.config.expansion_atr_min_distance}×ATR={min_distance:.5f}"
                 )
                 return False
 
+        self._trace_guard(
+            guard_id="G_DISP_EXP_PASS",
+            guard_name="displacement_to_expansion_all_pass",
+            source_location=_loc, from_state="DISPLACEMENT", candidate_to_state="EXPANSION",
+            result=True, operator="ALL_PRIOR_GUARDS_PASS",
+            operands=[
+                {"name": "close", "runtime_value": candle.close, "source_class": "RAW_OHLC",
+                 "source_name": "candle.close", "source_location": _loc,
+                 "formula_id": None, "feature_id": "close", "config_key": None},
+                {"name": "disp_close", "runtime_value": disp_close, "source_class": "STATE_MEMORY",
+                 "source_name": "displacement_candle.close", "source_location": _loc,
+                 "formula_id": None, "feature_id": None, "config_key": None},
+            ],
+            thresholds=[], short_circuit_status="NONE", failure_reason=None,
+        )
         label = "Bullish" if is_long else "Bearish"
         return self._transition(
             state, CRTState.EXPANSION,
@@ -651,28 +1663,104 @@ class StateMachine:
         Ceiling = max(range-based, ATR-based)
         This prevents over-filtering in low-vol and under-filtering in high-vol.
         """
+        _loc = "crt_engine_v2.StateMachine.try_expansion_to_retest"
         if state.active_range is None:
+            self._trace_guard(
+                guard_id="G_EXP_RET_NO_RANGE",
+                guard_name="active_range_present",
+                source_location=_loc, from_state="EXPANSION", candidate_to_state="RETEST",
+                result=False, operator="active_range is not None",
+                operands=[{"name": "active_range", "runtime_value": None, "source_class": "STATE_MEMORY",
+                           "source_name": "state.active_range", "source_location": _loc,
+                           "formula_id": None, "feature_id": None, "config_key": None}],
+                thresholds=[], short_circuit_status="FAIL_RETURN",
+                failure_reason="no_active_range",
+            )
             return False
 
         rng = state.active_range
 
-        # [PATCH 5] Adaptive ceiling
-        static_ceiling  = self.config.retest_depth_max * rng.size
-        atr_ceiling      = self.config.retest_atr_depth_fraction * atr if atr > 0 else static_ceiling
-        adaptive_ceiling = max(static_ceiling, atr_ceiling)
-
-        # Distance from boundary
-        if state.direction == Direction.LONG:
-            depth_abs = candle.close - rng.l_ref
-        else:
-            depth_abs = rng.h_ref - candle.close
-        
-        min_depth = 0.1 * atr if atr > 0 else 0.0
-        if depth_abs < min_depth:
+        # [STORY-83.11a] The geometry test ([PATCH 5] adaptive ceiling, [IC-007] min-depth floor,
+        # [PATCH 7] displacement strength) lives in config_layer.retest_geometry so the resolver
+        # calls the SAME rule. This method keeps tracing/telemetry/state commits; the numbers and
+        # the check order are the extracted function's, unchanged.
+        _disp_check = state.displacement_candle
+        _geo = evaluate_retest_geometry(
+            is_long=(state.direction == Direction.LONG),
+            close=candle.close, h_ref=rng.h_ref, l_ref=rng.l_ref, atr=atr,
+            displacement_range=(_disp_check.wick_size if _disp_check is not None else None),
+            displacement_atr=state.atr_abs,
+            retest_depth_max=self.config.retest_depth_max,
+            retest_atr_depth_fraction=self.config.retest_atr_depth_fraction,
+            retest_min_depth_atr_fraction=self.config.retest_min_depth_atr_fraction,
+            max_displacement_strength=self.config.max_displacement_strength,
+        )
+        static_ceiling   = _geo.static_ceiling
+        atr_ceiling      = _geo.atr_ceiling
+        adaptive_ceiling = _geo.adaptive_ceiling
+        depth_abs        = _geo.depth_abs
+        min_depth        = _geo.min_depth
+        # [TELEMETRY] Track every retrace attempt regardless of outcome (RC1: pass candle_ts)
+        if self.telemetry:
+            self.telemetry.on_expansion_retrace_check(
+                state.current_candle_index, depth_abs, adaptive_ceiling,
+                candle_ts=candle.timestamp,
+            )
+        if _geo.failure_reason == FAIL_DEPTH_BELOW_MIN:
+            self._trace_guard(
+                guard_id="G_EXP_RET_MIN_DEPTH",
+                guard_name="retest_min_depth_floor",
+                source_location=_loc, from_state="EXPANSION", candidate_to_state="RETEST",
+                result=False, operator="depth_abs >= retest_min_depth_atr_fraction * atr",
+                operands=[
+                    {"name": "depth_abs", "runtime_value": depth_abs, "source_class": "CRT_LOCAL_DERIVED",
+                     "source_name": "close - range boundary", "source_location": _loc,
+                     "formula_id": None, "feature_id": None, "config_key": None},
+                    {"name": "atr", "runtime_value": atr, "source_class": "CRT_LOCAL_DERIVED",
+                     # NOT FM-041 (close-relative) -- Semantic Layer Certification Audit, Tier 1 item 5.
+                     "source_name": "state.atr_abs / arg (absolute ATR, SMA of FM-040 true_range)",
+                     "source_location": _loc,
+                     "formula_id": None, "feature_id": None, "config_key": None},
+                ],
+                thresholds=[{
+                    "name": "min_depth",
+                    "runtime_value": min_depth,
+                    "config_key": "retest_min_depth_atr_fraction",
+                    "config_source": "CRTConfig",
+                    "read_location": _loc,
+                }],
+                short_circuit_status="FAIL_RETURN",
+                failure_reason="depth_below_min",
+            )
             return False
 
         # Existing ceiling check
-        if depth_abs > adaptive_ceiling:
+        if _geo.failure_reason == FAIL_DEPTH_ABOVE_CEILING:
+            self._trace_guard(
+                guard_id="G_EXP_RET_CEILING",
+                guard_name="retest_adaptive_ceiling",
+                source_location=_loc, from_state="EXPANSION", candidate_to_state="RETEST",
+                result=False, operator="depth_abs <= adaptive_ceiling",
+                operands=[
+                    {"name": "depth_abs", "runtime_value": depth_abs, "source_class": "CRT_LOCAL_DERIVED",
+                     "source_name": "close - range boundary", "source_location": _loc,
+                     "formula_id": None, "feature_id": None, "config_key": None},
+                    {"name": "adaptive_ceiling", "runtime_value": adaptive_ceiling,
+                     "source_class": "CRT_LOCAL_DERIVED",
+                     "source_name": "max(static_ceiling, atr_ceiling)", "source_location": _loc,
+                     "formula_id": None, "feature_id": None, "config_key": None},
+                ],
+                thresholds=[
+                    {"name": "retest_depth_max", "runtime_value": self.config.retest_depth_max,
+                     "config_key": "retest_depth_max", "config_source": "CRTConfig",
+                     "read_location": _loc},
+                    {"name": "retest_atr_depth_fraction", "runtime_value": self.config.retest_atr_depth_fraction,
+                     "config_key": "retest_atr_depth_fraction", "config_source": "CRTConfig",
+                     "read_location": _loc},
+                ],
+                short_circuit_status="FAIL_RETURN",
+                failure_reason="depth_above_ceiling",
+            )
             self.log.debug(
                 f"Retest REJECTED: depth_abs={depth_abs:.5f} > "
                 f"adaptive_ceiling={adaptive_ceiling:.5f} "
@@ -680,63 +1768,181 @@ class StateMachine:
             )
             return False
 
+        # ── [PATCH 7] Displacement strength ceiling ───────────────────────────
+        # Check BEFORE committing retest state (cheap early exit).
+        # displacement_atr_ratio (FM-028: wick_size ≡ candle_range per F-046, / ATR) >
+        # max_displacement_strength → overextended move. GD-005 closure: math owned by derived_math.
+        # FM-028 ratio computed inside evaluate_retest_geometry via the same registered callable
+        # (features.fm_resolve FM-028, identity == derived_math.displacement_atr_ratio); None when
+        # skipped (no displacement candle or atr_abs <= 0), exactly the prior guard.
+        if _geo.displacement_atr_ratio is not None:
+            _displacement_atr_ratio = _geo.displacement_atr_ratio
+            if _geo.failure_reason == FAIL_OVEREXTENDED_DISPLACEMENT:
+                self._trace_guard(
+                    guard_id="G_EXP_RET_DISP_STRENGTH",
+                    guard_name="max_displacement_strength",
+                    source_location=_loc, from_state="EXPANSION", candidate_to_state="RETEST",
+                    result=False, operator="displacement_atr_ratio <= max_displacement_strength",
+                    operands=[{
+                        "name": "displacement_atr_ratio", "runtime_value": _displacement_atr_ratio,
+                        "source_class": "CRT_LOCAL_DERIVED",
+                        "source_name": "FM-028(disp.wick_size, atr)",
+                        "source_location": _loc, "formula_id": "FM-028",
+                        "feature_id": "displacement_atr_ratio", "config_key": None,
+                    }],
+                    thresholds=[{
+                        "name": "max_displacement_strength",
+                        "runtime_value": self.config.max_displacement_strength,
+                        "config_key": "max_displacement_strength",
+                        "config_source": "CRTConfig",
+                        "read_location": _loc,
+                    }],
+                    short_circuit_status="FAIL_RETURN",
+                    failure_reason="overextended_displacement",
+                )
+                self.log.debug(
+                    f"Retest REJECTED [PATCH 7]: displacement_atr_ratio={_displacement_atr_ratio:.3f} > "
+                    f"max_displacement_strength={self.config.max_displacement_strength:.3f} "
+                    f"— overextended impulse, retest unlikely to sustain"
+                )
+                return False
+
+        # [STORY-83.11b] Everything from here on (cache inputs, retest commit, cached_features,
+        # transition) is `_commit_retest`, shared with the mode-C resolver founding path
+        # (CRTEngine._found_retest_from_resolver) -- one copy, not two. Guard operands and the
+        # transition reason are built here, from this path's own geometry, exactly as before.
+        return self._commit_retest(
+            state, candle, ev_logger,
+            reason=f"Retest | depth_abs={depth_abs:.5f} ceiling={adaptive_ceiling:.5f}",
+            guard_operands=[
+                {"name": "depth_abs", "runtime_value": depth_abs, "source_class": "CRT_LOCAL_DERIVED",
+                 "source_name": "close - range boundary", "source_location": _loc,
+                 "formula_id": None, "feature_id": None, "config_key": None},
+                {"name": "adaptive_ceiling", "runtime_value": adaptive_ceiling,
+                 "source_class": "CRT_LOCAL_DERIVED",
+                 "source_name": "max(static, atr ceiling)", "source_location": _loc,
+                 "formula_id": None, "feature_id": None, "config_key": None},
+            ],
+        )
+
+    def _commit_retest(
+        self, state: EngineState, candle: Candle,
+        ev_logger: Optional[EventLogger], *, reason: str, guard_operands: list,
+    ) -> bool:
+        """Commit a confirmed RETEST: inputs check, retest candle, cached_features, transition.
+
+        Extracted verbatim from try_expansion_to_retest (STORY-83.11b). The engine path's
+        behaviour is unchanged; the resolver-founding path calls it after installing the four
+        handed-over objects.
+        """
+        _loc = "crt_engine_v2.StateMachine.try_expansion_to_retest"
+        # ── [CACHE] Features at RETEST confirmation (CH-002 / F-050).
+        # Canonical identities:
+        #   displacement_retrace   FM-027 — cross-candle retrace (NOT pipeline FM-021 retest_depth)
+        #   displacement_atr_ratio FM-028 — range/ATR multiple  (NOT pipeline FM-020 disp_strength)
+        # Math owned by derived_math; emission keys match Formula Registry.
+        disp = state.displacement_candle
+        _atr = state.atr_abs
+        # EPIC-84 (no fallbacks): the cache used to start as a zero-filled 3-key dict and stay
+        # that way when an input was missing. A RETEST without its displacement candle, a
+        # positive ATR, a non-doji displacement body, an active range or a sweep event is an
+        # inconsistent state: reject the retest (fail closed for this setup) instead of caching
+        # fabricated zeros / "UNKNOWN" / False.
+        _missing = [
+            n for n, ok in (
+                ("displacement_candle", disp is not None),
+                ("atr_abs>0", _atr > 0),
+                ("displacement_body>0", disp is not None and abs(disp.close - disp.open) > 0),
+                ("active_range", state.active_range is not None),
+                ("sweep_event", state.sweep_event is not None),
+            ) if not ok
+        ]
+        # [EPIC-84 A3b] the intent keys the engine cannot compute itself come from this bar's
+        # canonical features; absent -> the retest is rejected (user rule D7).
+        _bf = state.bar_features
+        _bf_missing = (
+            ["bar_features"] if _bf is None else
+            [k for k in ("sweep_detected", "candles_since_sweep", "momentum_score") if k not in _bf]
+        )
+        if _bf_missing:
+            self.log.warning(f"Retest REJECTED: bar features missing {_bf_missing}")
+            self._trace_guard(
+                guard_id="G_EXP_RET_BAR_FEATURES",
+                guard_name="retest_bar_features_present",
+                source_location=_loc, from_state="EXPANSION", candidate_to_state="RETEST",
+                result=False, operator="ALL_PRESENT",
+                operands=[{"name": "missing", "runtime_value": _bf_missing,
+                           "source_class": "FEATURE_VECTOR", "source_name": "bar_features"}],
+                short_circuit_status="FAIL_RETURN",
+                failure_reason="bar_features_missing",
+            )
+            return False
+        if _missing:
+            self.log.warning(f"Retest REJECTED: cache inputs missing {_missing}")
+            self._trace_guard(
+                guard_id="G_EXP_RET_CACHE_INPUTS",
+                guard_name="retest_cache_inputs_present",
+                source_location=_loc, from_state="EXPANSION", candidate_to_state="RETEST",
+                result=False, operator="ALL_PRESENT",
+                operands=[{"name": "missing", "runtime_value": _missing,
+                           "source_class": "STATE_MEMORY", "source_name": "EngineState"}],
+                short_circuit_status="FAIL_RETURN",
+                failure_reason="cache_inputs_missing",
+            )
+            return False
         state.retest_candle       = candle
         state.retest_candle_index = state.current_candle_index  # [PATCH 6]
-
-        # ── [CACHE] Compute and store features at the moment retest is confirmed.
-        # Uses displacement-retrace definition (retest.close vs disp.close / disp_move)
-        # to match the empirical calibration in CRTGaussianScorer.
-        disp = state.displacement_candle
-        _atr = state.atr
-        state.cached_features = {
-            "retest_depth": 0.0,
-            "body_ratio": 0.0,
-            "disp_str": 0.0,
-        }
-        if disp is not None and _atr > 0 and abs(disp.close - disp.open) > 0:
-            _disp_move = abs(disp.close - disp.open)
-            # retrace = how far candle.close moved back toward disp.open from disp.close
-            _retrace   = abs(candle.close - disp.open) / _disp_move
-            # [Phase-6] session + double_confirmed stamped here so
-            # Phase5ExecutionGate.evaluate() can apply regime-based risk tiers
-            # without needing live engine state at fill time.
-            state.cached_features = {
-                "retest_depth":     _retrace,
-                "body_ratio":       disp.body_ratio,
-                "disp_strength":    disp.wick_size / _atr,
-                "retest_index":     state.current_candle_index,
-                "session":          state.active_range.session if state.active_range else "UNKNOWN",
-                "double_sweep":     state.sweep_event.double_confirmed if state.sweep_event else False,
-            }
-            # Hard assertion — production behavior
-            assert "disp_strength" in state.cached_features, "Missing canonical: disp_strength"
-            assert "body_ratio" in state.cached_features, "Missing canonical: body_ratio"
-            try:
-                validate_features(
-                    {
-                        "body_ratio": float(state.cached_features.get("body_ratio", 0.0)),
-                        "atr": float(_atr),
-                        "displacement": float(state.cached_features.get("disp_str", 0.0)),
-                        "retest_depth": float(state.cached_features.get("retest_depth", 0.0)),
-                        "session": str(state.cached_features.get("session", "UNKNOWN")),
-                        "spread": 0.0,
-                    },
-                    context="crt_engine_v2.cached_features",
-                )
-            except Exception as _schema_err:
-                self.log.debug(f"[FSUL] cached feature schema check skipped: {_schema_err}")
-            print(
-                    f"[CRT DEBUG] disp_open={disp.open:.5f} "
-                    f"disp_close={disp.close:.5f} "
-                    f"retest={candle.close:.5f} "
-                    f"r={_retrace:.3f}"
-                )
-
-        return self._transition(
-            state, CRTState.RETEST,
-            f"Retest | depth_abs={depth_abs:.5f} ceiling={adaptive_ceiling:.5f}",
-            candle, ev_logger,
+        # Phase-2: FM-027/FM-028 via FORMULA_REGISTRY (identity-preserving).
+        _retrace = _FM_CRT["FM-027"](
+            retest_close=float(candle.close),
+            disp_open=float(disp.open),
+            disp_close=float(disp.close),
         )
+        _disp_atr = _FM_CRT["FM-028"](
+            candle_range=float(disp.wick_size),  # wick_size property == candle_range (FM-002)
+            atr=float(_atr),
+        )
+        # session + double_confirmed stamped for downstream risk tiers without live state
+        state.cached_features = {
+            "displacement_retrace":   _retrace,
+            "body_ratio":             disp.body_ratio,
+            "displacement_atr_ratio": _disp_atr,
+            "retest_index":           state.current_candle_index,
+            "session":                state.active_range.session,
+            "double_sweep":           state.sweep_event.double_confirmed,
+            # [EPIC-84 A3b] canonical bar features of the RETEST bar (slots 20 / 35 / 12)
+            "sweep_detected":         bool(_bf["sweep_detected"]),
+            "candles_since_sweep":    int(_bf["candles_since_sweep"]),
+            "momentum_score":         float(_bf["momentum_score"]),
+        }
+        assert "displacement_atr_ratio" in state.cached_features, "Missing FM-028: displacement_atr_ratio"
+        assert "displacement_retrace" in state.cached_features, "Missing FM-027: displacement_retrace"
+        assert "body_ratio" in state.cached_features, "Missing canonical: body_ratio"
+        # Soft schema probe is advisory-only (partial dict ≠ CANONICAL_FEATURES).
+        try:
+            _ = (
+                float(state.cached_features["body_ratio"]),
+                float(state.cached_features["displacement_retrace"]),
+                float(state.cached_features["displacement_atr_ratio"]),
+            )
+        except Exception as _schema_err:
+            self.log.debug(f"[FSUL] cached feature check skipped: {_schema_err}")
+        print(
+                f"[CRT DEBUG] disp_open={disp.open:.5f} "
+                f"disp_close={disp.close:.5f} "
+                f"retest={candle.close:.5f} "
+                f"r={_retrace:.3f}"
+            )
+
+        self._trace_guard(
+            guard_id="G_EXP_RET_PASS",
+            guard_name="expansion_to_retest_all_pass",
+            source_location=_loc, from_state="EXPANSION", candidate_to_state="RETEST",
+            result=True, operator="ALL_PRIOR_GUARDS_PASS",
+            operands=guard_operands,
+            thresholds=[], short_circuit_status="NONE", failure_reason=None,
+        )
+        return self._transition(state, CRTState.RETEST, reason, candle, ev_logger)
 
     def try_retest_to_execution(
         self, state: EngineState, candle: Optional[Candle] = None,
@@ -763,6 +1969,35 @@ class StateMachine:
         self.log.info(f"RESET → RANGE | {reason}")
         state.transition_log.append({"from": state.current_state.name, "to": "RANGE", "reason": reason})
 
+        # [TELEMETRY] Reset attribution + expansion/candidate closure
+        if self.telemetry and candle:
+            _disp_age = (
+                candle.index - state._displacement_entry_idx
+                if state.current_state == CRTState.DISPLACEMENT
+                else 0
+            )
+            _ema_aligned = (
+                (state.ema_fast_val > state.ema_slow_val) == (state.direction.value == "LONG")
+                if state.direction.value in ("LONG", "SHORT") else False
+            )
+            _dir_con = (
+                (candle.close > candle.open) == (state.direction.value == "LONG")
+                if state.direction.value in ("LONG", "SHORT") else False
+            )
+            self.telemetry.on_reset(
+                state.current_state.name, reason, candle.index,
+                displacement_age_candles=_disp_age,
+                ema_aligned=_ema_aligned,
+                remaining_htf_candles=state.htf_remaining_candles,
+                direction_consistent=_dir_con,
+                candle_ts=candle.timestamp,                              # Phase 3a
+                shadow_used=state._came_from_shadow,                     # Phase 3a
+                candidate_age_at_entry=(                                 # Phase 3a
+                    state._expansion_entry_idx - state._displacement_entry_idx
+                    if state.current_state == CRTState.EXPANSION else 0
+                ),
+            )
+
         if ev_logger and candle:
             ev_logger.record(
                 "RESET", candle,
@@ -771,16 +2006,51 @@ class StateMachine:
                 reason=reason,
             )
 
-        state.current_state       = CRTState.RANGE
-        state.sweep_event         = None
-        state.displacement_candle = None
-        state.retest_candle       = None
-        state.retest_candle_index = 0
-        state.risk_score          = None
-        state.direction           = Direction.NONE
-        state.cached_features     = None   # [CACHE] invalidate on reset
+        # [Phase 1] Create pending displacement memory before clearing, if appropriate
+        _create_shadow = (
+            state.current_state == CRTState.DISPLACEMENT
+            and state.displacement_candle is not None
+            and "HTF" in reason
+        )
+        if _create_shadow:
+            state.pending_displacement_candle        = state.displacement_candle
+            state.pending_displacement_dir           = state.direction
+            state.pending_displacement_ttl           = self.config.pending_displacement_ttl_candles
+            state.pending_displacement_source_htf    = (
+                state.active_range.htf_candle_id if state.active_range else ""
+            )
+            state.pending_displacement_formed_idx    = state._displacement_entry_idx
+            state.pending_displacement_age_at_reset  = (
+                candle.index - state._displacement_entry_idx if candle else 0
+            )
+            state.pending_displacement_reason_created = reason
+            # Record the creating bar so the RANGE-branch countdown (process_candle) can
+            # skip it — the [DEADLOCK FIX] fall-through means that branch runs THIS same
+            # candle, right after this assignment.
+            state.pending_displacement_created_idx = (
+                candle.index if candle else state.current_candle_index
+            )
+        elif state.pending_displacement_ttl > 0 and not _create_shadow:
+            # Non-HTF reset (retrace, extension, session) expires any existing shadow memory
+            state.pending_displacement_candle  = None
+            state.pending_displacement_ttl     = 0
+            state.pending_displacement_dir     = Direction.NONE
+            state.pending_displacement_created_idx = 0
+
+        state.current_state        = CRTState.RANGE
+        state.sweep_event          = None
+        state.displacement_candle  = None
+        state.retest_candle        = None
+        state.retest_candle_index  = 0
+        state.risk_score           = None
+        state.direction            = Direction.NONE
+        state.cached_features      = None   # [CACHE] invalidate on reset
         state.evaluating_soft_conf = False  # clear soft conf window on every reset
         state.soft_conf_candles    = 0
+        state._came_from_shadow      = False  # [Phase 2b] clear shadow flag on reset
+        state._expansion_entry_idx   = 0      # [Phase 3a] clear expansion entry tracker
+        state._expansion_entry_ts    = None   # [Phase 3b] clear hour-based TTL anchor
+        state._shadow_htf_alignment  = None   # [Phase 4b] clear HTF alignment signal
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -798,6 +2068,9 @@ class UltronRiskEngine:
         self.log = logging.getLogger("CRT.UltronRisk")
         self._news_active      = False
         self._current_spread_pct = 0.0
+        # [K23 F2] None = legacy static broker-time windows (config.session_windows).
+        # Set by CRTEngine when backtest.session_window_basis == "exchange_local".
+        self.exchange_windows = None
 
     def set_news_flag(self, active: bool) -> None:
         self._news_active = active
@@ -841,8 +2114,12 @@ class UltronRiskEngine:
         return score
 
     def score_time(self, timestamp: datetime) -> float:
-        t = timestamp.time()
-        matches = sum(1 for start, end in self.config.session_windows.values() if start <= t <= end)
+        if self.exchange_windows is not None:   # [K23 F2] exact per-date exchange windows
+            from features.broker_clock import exchange_sessions_at
+            matches = len(exchange_sessions_at(timestamp, self.exchange_windows))
+        else:
+            t = timestamp.time()
+            matches = sum(1 for start, end in self.config.session_windows.values() if start <= t <= end)
         if matches >= 2:
             return 1.0
         if matches == 1:
@@ -866,14 +2143,15 @@ class UltronRiskEngine:
         return factor
 
     def compute_score(self, state: EngineState) -> RiskScore:
-        rs = RiskScore()
+        # [PLAN-002] HOW-owned weights (default tuple == legacy literals → parity)
+        rs = RiskScore(weights=tuple(self.config.risk_score_weights))
         if state.sweep_event and state.active_range:
             rs.sweep_score = self.score_sweep(state.sweep_event, state.active_range)
         if state.displacement_candle:
-            rs.breakout_score = self.score_breakout(state.displacement_candle, state.atr)
+            rs.breakout_score = self.score_breakout(state.displacement_candle, state.atr_abs)
         if state.retest_candle and state.active_range:
             rs.retest_score = self.score_retest(
-                state.retest_candle, state.active_range, state.direction, state.atr
+                state.retest_candle, state.active_range, state.direction, state.atr_abs
             )
         ref_candle = state.retest_candle or state.displacement_candle
         if ref_candle:
@@ -922,12 +2200,12 @@ class UltronRiskEngine:
         # 2. Smoothed momentum — EMA fast/slow spread normalised by ATR
         dir_mult = 1.0 if state.direction == Direction.LONG else -1.0
         mom_delta = (state.ema_fast_val - state.ema_slow_val) * dir_mult
-        f_mom = max(0.0, min(1.0, mom_delta / state.atr)) if state.atr > 0 else 0.0
+        f_mom = max(0.0, min(1.0, mom_delta / state.atr_abs)) if state.atr_abs > 0 else 0.0
 
         # 3. Non-linear distance decay — Gaussian penalty for late entries
         rng = state.active_range
         static_ceiling  = self.config.retest_depth_max * rng.size
-        atr_ceiling     = self.config.retest_atr_depth_fraction * state.atr if state.atr > 0 else static_ceiling
+        atr_ceiling     = self.config.retest_atr_depth_fraction * state.atr_abs if state.atr_abs > 0 else static_ceiling
         adaptive_ceiling = max(static_ceiling, atr_ceiling)
         if state.direction == Direction.LONG:
             depth = abs(candle.close - rng.l_ref)
@@ -938,7 +2216,7 @@ class UltronRiskEngine:
         # 4. Displacement strength — structural inheritance
         disp      = state.displacement_candle
         disp_move = abs(disp.close - disp.open) if disp else 0.0
-        f_disp    = min(1.0, disp_move / (1.5 * state.atr)) if state.atr > 0 else 0.0
+        f_disp    = min(1.0, disp_move / (1.5 * state.atr_abs)) if state.atr_abs > 0 else 0.0
 
         # Linear blend
         C_linear = (w_body * f_body) + (w_mom * f_mom) + (w_dist * f_dist) + (w_disp * f_disp)
@@ -983,19 +2261,39 @@ class UltronRiskEngine:
         # -----------------------------
         # BitNet Validation Layer
         # -----------------------------
-        required = ["body_ratio", "retest_depth", "disp_strength"]
+        # CH-002: CRT cache uses FM-027/028 keys; BitNet model input schema still
+        # expects legacy training names (retest_depth/disp_strength). Map only at
+        # the BitNet call boundary — do not re-emit collision keys on the cache.
+        # FM-070 (2026-07-31): same pattern for candles_since_retest_state, which resolves the
+        # name collision with the pipeline's FM-065 (bars-since-SWEEP, renamed to
+        # `candles_since_sweep` at schema v6.0 — the two names are now disjoint at the source).
+        required = ["body_ratio", "displacement_retrace", "displacement_atr_ratio"]
 
         if state.cached_features and all(k in state.cached_features for k in required):
             features = state.cached_features.copy()
-            features["atr"] = state.atr
-            features["candles_since_retest"] = (
-                state.current_candle_index - state.retest_candle_index
+            features["atr"] = state.atr_abs
+            features["candles_since_retest_state"] = _FM_CRT["FM-070"](
+                state.current_candle_index, state.retest_candle_index
             )
 
             if self.config.use_bitnet:
-                bn_score = bitnet_score(features)
+                # P1 BitNet registry governance: fail-closed when enabled without
+                # an active selection (Exists≠Selected≠Enabled).
+                try:
+                    from bitnet.bitnet_registry import assert_serve_allowed
+                    assert_serve_allowed(use_bitnet=True)
+                except Exception as _bn_reg_exc:
+                    self.log.error(
+                        "BitNet registry serve contract failed: %s", _bn_reg_exc
+                    )
+                    raise
+                _bn_in = dict(features)
+                _bn_in["retest_depth"] = float(features["displacement_retrace"])
+                _bn_in["disp_strength"] = float(features["displacement_atr_ratio"])
+                _bn_in["candles_since_retest"] = float(features["candles_since_retest_state"])
+                bn_score = bitnet_score(_bn_in)
                 self.log.info(f"BitNetMain Score: {bn_score:.4f}")
-                if bn_score < 0.55:
+                if bn_score < self.config.bitnet_main_threshold:
                     self.log.warning(f"REJECTED BY BITNET MAIN (score={bn_score:.3f})")
                     return False, RejectReason.LOW_SCORE, 0.0
 # else: BitNet is disabled – no check
@@ -1049,23 +2347,29 @@ class UltronRiskEngine:
         # -----------------------------
         # BitNet Validation Layer
         # -----------------------------
-        required = ["body_ratio", "retest_depth", "disp_strength"]
+        # FM-070 (2026-07-31): candles_since_retest_state resolves the historical name
+        # collision with the pipeline's FM-065 (bars-since-SWEEP) — same CH-002 alias pattern.
+        required = ["body_ratio", "displacement_retrace", "displacement_atr_ratio"]
 
         if state.cached_features and all(k in state.cached_features for k in required):
             features = state.cached_features.copy()
-            features["atr"] = state.atr
-            features["candles_since_retest"] = (
-                state.current_candle_index - state.retest_candle_index
+            features["atr"] = state.atr_abs
+            features["candles_since_retest_state"] = _FM_CRT["FM-070"](
+                state.current_candle_index, state.retest_candle_index
             )
 
             if not hasattr(state, "bitnet_main_score"):
-                state.bitnet_main_score = bitnet_score(features)
+                _bn_in = dict(features)
+                _bn_in["retest_depth"] = float(features["displacement_retrace"])
+                _bn_in["disp_strength"] = float(features["displacement_atr_ratio"])
+                _bn_in["candles_since_retest"] = float(features["candles_since_retest_state"])
+                state.bitnet_main_score = bitnet_score(_bn_in)
 
             bitnet_main_score = state.bitnet_main_score
 
             self.log.info(f"BitNetMain Score: {bitnet_main_score:.4f}")
 
-            if bitnet_main_score < 0.55:
+            if bitnet_main_score < self.config.bitnet_main_threshold:
                 self.log.warning(f"REJECTED BY BITNET MAIN (score={bitnet_main_score:.3f})")
                 return False, RejectReason.LOW_SCORE, 0.0
         state.risk_score = rs
@@ -1107,17 +2411,90 @@ class UltronRiskEngine:
 # MODULE 4 — EXECUTION ENGINE
 # ─────────────────────────────────────────────────────────────────
 
+@dataclass(frozen=True)
+class BuildAttempt:
+    """Why the last build_trade call opened or refused. Not an EngineState field."""
+
+    result: str
+    reason: Optional[str]
+    computed_sl: Optional[float]
+    entry: Optional[float]
+    direction: Optional[str]
+
+
 class ExecutionEngine:
 
-    def __init__(self, config: CRTConfig):
+    def __init__(
+        self,
+        config: CRTConfig,
+        *,
+        sl_anchor: str,
+        target_policy: str,
+    ):
         self.config = config
+        # [K23 F3] Not a CRTConfig field (census pins); fed from backtest.sl_anchor.
+        # "displacement" = legacy; "sweep_extreme" = swept wick extreme -/+ sl_atr_buffer*atr.
+        if sl_anchor not in ("displacement", "sweep_extreme"):
+            raise ValueError(f"sl_anchor must be 'displacement' or 'sweep_extreme', got {sl_anchor!r}")
+        self.sl_anchor = sl_anchor
+        # [STORY-83.11 §3.2 key 2] Not a CRTConfig field; fed from setup.target_policy.
+        # "fixed_r" = legacy (TP1/TP2 as R-multiples). "structural_tp2" = TP2 is the opposite
+        # side of the active range (§3.4 key 2); TP1 stays R-based either way (§10 Q2a).
+        if target_policy not in ("fixed_r", "structural_tp2"):
+            raise ValueError(
+                f"target_policy must be 'fixed_r' or 'structural_tp2', got {target_policy!r}"
+            )
+        self.target_policy = target_policy
         self.log = logging.getLogger("CRT.Execution")
         self._trade_counter = 0
+        self.last_build_attempt: Optional[BuildAttempt] = None
+
+    def _remember_build(
+        self,
+        result: str,
+        reason: Optional[str],
+        computed_sl: Optional[float],
+        entry: Optional[float],
+        direction: Optional[Direction],
+    ) -> None:
+        name = direction.name if isinstance(direction, Direction) else None
+        self.last_build_attempt = BuildAttempt(
+            result=result,
+            reason=reason,
+            computed_sl=computed_sl,
+            entry=entry,
+            direction=name,
+        )
 
     def _next_id(self) -> str:
         """Fallback sequential ID — used internally before entry price is known."""
         self._trade_counter += 1
         return f"CRT-{self._trade_counter:04d}"
+
+    def stop_price(self, state: EngineState) -> Optional[float]:
+        """The stop `build_trade` would place for the CURRENT state, or None when it cannot be
+        derived (no displacement candle, direction NONE, or `sweep_extreme` without a sweep).
+
+        Pure: reads state, writes nothing, never touches `last_build_attempt`. Uses the bar's
+        current ATR (`state.atr_abs`), exactly as `build_trade` does when it is called on that
+        bar -- so a guard evaluated each bar asks "would a trade built NOW have its stop here?".
+        """
+        direction = state.direction
+        if state.displacement_candle is None or direction not in (Direction.LONG, Direction.SHORT):
+            return None
+        atr = state.atr_abs
+        if self.sl_anchor == "sweep_extreme":
+            # [K23 F3] Stop where the sweep idea is invalidated: beyond the swept wick extreme.
+            if state.sweep_event is None:
+                return None
+            _sc = state.sweep_event.candle
+            return (_sc.low - self.config.sl_atr_buffer * atr) if direction == Direction.LONG \
+                else (_sc.high + self.config.sl_atr_buffer * atr)
+        if direction == Direction.LONG:
+            # Swept LOW → displaced UP → SL below displacement candle low
+            return state.displacement_candle.low - self.config.sl_atr_buffer * atr
+        # Swept HIGH → displaced DOWN → SL above displacement candle high
+        return state.displacement_candle.high + self.config.sl_atr_buffer * atr
 
     @staticmethod
     def generate_trade_id(instrument: str, opened_at, direction: str, entry: float) -> str:
@@ -1137,17 +2514,64 @@ class ExecutionEngine:
         raw = f"{instrument}|{ts_norm}|{direction}|{round(entry, 5):.5f}"
         return "CRT-" + hashlib.md5(raw.encode("utf-8")).hexdigest()[:16]
 
+    #: The explicit intent-input contract (EPIC-84 A3b). Every caller supplies all seven keys.
+    INTENT_INPUT_KEYS = (
+        "displacement_retrace",     # FM-027 (engine RETEST cache)
+        "displacement_atr_ratio",   # FM-028 (engine RETEST cache)
+        "body_ratio",               # displacement candle body/range
+        "double_sweep",             # engine sweep event
+        "sweep_detected",           # canonical slot 20 (pipeline sweep on the RETEST bar)
+        "candles_since_sweep",      # canonical slot 35, FM-065
+        "momentum_score",           # canonical slot 12 (signed close-to-close move / ATR)
+    )
+
+    @staticmethod
+    def _derive_trade_intent(inputs: dict, breakout_disp_threshold: float,
+                             direction: "Direction") -> str:
+        """Classify trade intent for TP1 multiplier selection (EPIC-84 A3b).
+
+        All seven INTENT_INPUT_KEYS are read strictly (a missing key raises KeyError): the engine
+        supplies them from its RETEST cache, which now carries the three canonical bar features
+        it used to lack (sweep_detected / candles_since_sweep / momentum_score). The legacy
+        retest_depth / disp_strength / disp_str aliases are gone; a caller holding other
+        quantities (the oracle's pipeline proxies) maps them explicitly at its own call site.
+
+        Pullback is DIRECTION-AWARE (user decision 2026-09-28): the RETEST bar's momentum must
+        point in the trade's direction (LONG > 0, SHORT < 0). Before A3b the three keys were
+        never supplied, so pullback was unreachable and liq_sweep rested on double_sweep alone.
+        """
+        if direction == Direction.LONG:
+            sign = 1.0
+        elif direction == Direction.SHORT:
+            sign = -1.0
+        else:
+            raise ValueError(f"_derive_trade_intent needs LONG or SHORT, got {direction!r}")
+        if bool(inputs["sweep_detected"]) or bool(inputs["double_sweep"]):
+            return "liq_sweep"
+        rd = float(inputs["displacement_retrace"])
+        csr = int(inputs["candles_since_sweep"])
+        mom = float(inputs["momentum_score"])
+        if 0.3 <= rd <= 0.7 and csr <= 5 and mom * sign > 0:
+            return "pullback"
+        body = float(inputs["body_ratio"])
+        disp = float(inputs["displacement_atr_ratio"])
+        if body > 0.6 and disp > breakout_disp_threshold:
+            return "breakout"
+        return "reversal"
+
     def build_trade(
         self, state: EngineState, risk_engine: Optional[UltronRiskEngine] = None
     ) -> Optional[Trade]:
+        self.last_build_attempt = None
         if state.active_range is None or state.sweep_event is None:
             self.log.error("Cannot build trade: missing range or sweep.")
+            self._remember_build("REJECTED", "missing_range_or_sweep", None, None, None)
             return None
 
         rng       = state.active_range
         direction = state.direction
 
-        atr = state.atr
+        atr = state.atr_abs
         entry = state.retest_candle.close
 
         # ── SL anchored to displacement candle extreme ────────────────────────
@@ -1157,21 +2581,24 @@ class ExecutionEngine:
         # CRT doctrine: SL beyond the displacement candle = trade is structurally invalid.
         if state.displacement_candle is None:
             self.log.error("Cannot build trade: no displacement candle.")
+            self._remember_build("REJECTED", "missing_displacement", None, entry, direction)
             return None
 
-        if direction == Direction.LONG:
-            # Swept LOW → displaced UP → SL below displacement candle low
-            sl  = state.displacement_candle.low  - self.config.sl_atr_buffer * atr
-            # [Phase-2] TP levels anchored to actual risk distance (1R and 2R)
-            # This guarantees TP1=+1R and TP2=+2R regardless of ATR scaling.
-            # Risk distance is computed AFTER sl is set so it's always consistent.
-
-        elif direction == Direction.SHORT:
-            # Swept HIGH → displaced DOWN → SL above displacement candle high
-            sl  = state.displacement_candle.high + self.config.sl_atr_buffer * atr
-        else:
+        if self.sl_anchor == "sweep_extreme":
+            # [K23 F3] Stop where the sweep idea is invalidated: beyond the swept wick extreme.
+            if state.sweep_event is None or direction not in (Direction.LONG, Direction.SHORT):
+                self.log.error("Cannot build trade: sweep_extreme anchor needs a sweep event.")
+                self._remember_build("REJECTED", "missing_sweep_extreme", None, entry, direction)
+                return None
+        elif direction not in (Direction.LONG, Direction.SHORT):
             self.log.error("Cannot build trade: direction NONE.")
+            self._remember_build("REJECTED", "invalid_direction", None, entry, direction)
             return None
+        # [Phase-2] TP levels anchored to actual risk distance (1R and 2R): the risk distance is
+        # computed AFTER sl is set so it is always consistent. The stop arithmetic itself lives in
+        # `stop_price` (entry-chain 2026-10-01) so the RETEST stop guard reads the SAME formula
+        # this method trades -- one authority, no second copy.
+        sl = self.stop_price(state)
 
         # ── Inverted SL guard ──────────────────────────────────────────────
         # Rejects when SL lands on the wrong side of entry — happens when the
@@ -1182,23 +2609,62 @@ class ExecutionEngine:
                 f"Trade REJECTED: inverted SL on LONG "
                 f"(entry={entry:.5f} sl={sl:.5f} sweep={state.sweep_event.price:.5f})"
             )
+            self._remember_build("REJECTED", "inverted_sl_long", sl, entry, direction)
             return None
         if direction == Direction.SHORT and sl <= entry:
             self.log.warning(
                 f"Trade REJECTED: inverted SL on SHORT "
                 f"(entry={entry:.5f} sl={sl:.5f} sweep={state.sweep_event.price:.5f})"
             )
+            self._remember_build("REJECTED", "inverted_sl_short", sl, entry, direction)
             return None
 
         # [Phase-2] Anchor TP1 and TP2 to actual risk distance (R-multiples)
-        # TP1 = entry ± 1R, TP2 = entry ± 2R — exact, instrument-agnostic.
-        risk_dist = abs(entry - sl)
+        # TP1 uses per-intent multiplier; TP2 uses tp2_atr_multiplier (default 2R).
+        risk_dist  = abs(entry - sl)
+        if state.cached_features is None:
+            self.log.error("Cannot build trade: no cached RETEST features.")
+            self._remember_build("REJECTED", "missing_cached_features", None, entry, direction)
+            return None
+        _intent    = self._derive_trade_intent(
+            state.cached_features, self.config.breakout_disp_threshold, direction
+        )
+        _tp1_key   = f"tp1_atr_multiplier_{_intent}"
+        _tp1_mult  = getattr(self.config, _tp1_key)   # every intent has a declared CRTConfig field
+        _tp2_mult  = self.config.tp2_atr_multiplier
         if direction == Direction.LONG:
-            tp1 = entry + 1.0 * risk_dist
-            tp2 = entry + 2.0 * risk_dist
+            tp1 = entry + _tp1_mult * risk_dist
+            tp2 = entry + _tp2_mult * risk_dist
         else:
-            tp1 = entry - 1.0 * risk_dist
-            tp2 = entry - 2.0 * risk_dist
+            tp1 = entry - _tp1_mult * risk_dist
+            tp2 = entry - _tp2_mult * risk_dist
+
+        # [STORY-83.11 §3.2 key 2 / §3.4 key 2] structural_tp2: TP2 = the opposite side of the
+        # range frozen at build time (§10 Q2c — `rng` is already bound above, the same object
+        # ResetLogic protects from a reset on an open trade). TP1 is UNCHANGED (§10 Q2a — only
+        # TP2 moves). No inverted-TP guard exists for `fixed_r`'s TP2 today because a fixed
+        # R-multiple can never invert; a structural level CAN (entry already past the opposite
+        # side, or a range narrower than the risk leg) — §10 Q2b: reject rather than clamp or
+        # silently fall back to fixed_r, which would make one label cover two policies.
+        if self.target_policy == "structural_tp2":
+            if direction == Direction.LONG:
+                _structural_tp2 = rng.h_ref
+                _inverted = _structural_tp2 <= entry
+                _too_close = (_structural_tp2 - entry) < risk_dist
+            else:
+                _structural_tp2 = rng.l_ref
+                _inverted = _structural_tp2 >= entry
+                _too_close = (entry - _structural_tp2) < risk_dist
+            if _inverted or _too_close:
+                _reason = "structural_tp2_inverted" if _inverted else "structural_tp2_too_close"
+                self.log.warning(
+                    f"Trade REJECTED: {_reason} "
+                    f"(entry={entry:.5f} structural_tp2={_structural_tp2:.5f} "
+                    f"risk_dist={risk_dist:.5f} h_ref={rng.h_ref:.5f} l_ref={rng.l_ref:.5f})"
+                )
+                self._remember_build("REJECTED", _reason, sl, entry, direction)
+                return None
+            tp2 = _structural_tp2
 
         # [PATCH: Proportional sizing — priority order]
         # 1. Gaussian scorer already wrote risk_pct onto the Trade object via runner
@@ -1226,12 +2692,17 @@ class ExecutionEngine:
             risk_pct=risk_pct,
             runner_active=True,
             cached_features=state.cached_features,   # persists through state reset
+            displacement_origin=(
+                float(state.displacement_candle.open)
+                if state.displacement_candle is not None else None
+            ),                                   # [SEM-021] persists through state reset
         )
         self.log.info(
             f"Trade built | {trade.id} | Dir={direction.value} "
             f"Entry={entry:.5f} SL={sl:.5f} TP1={tp1:.5f} TP2={tp2:.5f} "
             f"RR={trade.risk_reward_tp1:.2f} risk_pct={risk_pct:.3f}"
         )
+        self._remember_build("OPENED", None, sl, entry, direction)
         return trade
 
     def open_trade(self, trade: Trade, timestamp: datetime) -> None:
@@ -1290,16 +2761,91 @@ class ExecutionEngine:
             # [P2] Partial close: book 50% of the TP1 move
             trade.partial_pnl = 0.5 * pnl_direction * (trade.tp1_price - trade.entry_price)
             trade.pnl         = trade.partial_pnl
-            # [P2] Shift SL to breakeven on the remaining 50% runner
-            trade.sl_price    = trade.entry_price
+            # [Phase-A.2] Half-way trail-SL on the runner: locks in 0.5R minimum
+            # instead of plain breakeven. SL = entry + 0.5 * (TP1 − entry).
+            trade.sl_price    = trade.entry_price + 0.5 * (trade.tp1_price - trade.entry_price)
             trade.status      = "TP1"
             self.log.info(
                 f"Trade TP1 HIT | {trade.id} | "
-                f"partial_pnl={trade.partial_pnl:.5f} SL→BE={trade.entry_price:.5f}"
+                f"partial_pnl={trade.partial_pnl:.5f} SL→trail={trade.sl_price:.5f}"
             )
             return "TP1"
 
-        return "UNCHANGED"
+    def close_structural(self, trade: Trade, exit_price: float) -> str:
+        """[SEM-021] Terminate a trade whose founding displacement has been negated.
+
+        Books at `exit_price` (the bar CLOSE), never at the displacement origin -- booking at
+        the origin would assume a fill at a level the bar may never have offered after the
+        trigger became knowable, which is lookahead wearing a structural argument.
+
+        When the trade already reached TP1 the partial is KEPT and only the runner is
+        terminated, so this preempts the SEM-017 half-way trail without discarding a fill that
+        genuinely happened.
+        """
+        if trade.status not in ("OPEN", "TP1"):
+            return "UNCHANGED"
+        pnl_direction = 1 if trade.direction == Direction.LONG else -1
+        if trade.status == "TP1":
+            runner_pnl = 0.5 * pnl_direction * (exit_price - trade.entry_price)
+            trade.pnl = trade.partial_pnl + runner_pnl
+        else:
+            trade.pnl = pnl_direction * (exit_price - trade.entry_price)
+        trade.status = "STOPPED_STRUCTURAL"
+        self.log.info(
+            f"Trade STRUCTURAL KILL | {trade.id} | close={exit_price:.5f} "
+            f"origin={trade.displacement_origin} PnL={trade.pnl:.5f}"
+        )
+        return "STOPPED_STRUCTURAL"
+
+    def close_timeout(self, trade: Trade, exit_price: float) -> str:
+        """[STORY-83.11 §6] Terminate a trade whose `trade_ttl_candles` window has elapsed.
+
+        Books at `exit_price` — the bar CLOSE (§10 Q3c: TIMEOUT_MARK_TO_CLOSE is the default;
+        `TIMEOUT_TRAIL` is a declared non-default that this method does not implement — a
+        caller wanting it passes a different `exit_price`, this method's contract is just
+        "book at whatever price the caller resolved").
+
+        Mirrors `close_structural`'s TP1-partial accounting exactly: a runner that already
+        banked its TP1 partial keeps it, and only the still-open leg is closed here.
+        """
+        if trade.status not in ("OPEN", "TP1"):
+            return "UNCHANGED"
+        pnl_direction = 1 if trade.direction == Direction.LONG else -1
+        if trade.status == "TP1":
+            runner_pnl = 0.5 * pnl_direction * (exit_price - trade.entry_price)
+            trade.pnl = trade.partial_pnl + runner_pnl
+        else:
+            trade.pnl = pnl_direction * (exit_price - trade.entry_price)
+        trade.status = "TIMEOUT"
+        self.log.info(
+            f"Trade TIMEOUT | {trade.id} | close={exit_price:.5f} PnL={trade.pnl:.5f}"
+        )
+        return "TIMEOUT"
+
+    def close_unconfirmed(self, trade: Trade, exit_price: float) -> str:
+        """[entry-chain 2026-10-01, entry_semantics="resting_order"] Flatten a resting order whose
+        setup was NOT confirmed (soft-confirmation timed out, or an approved setup failed a
+        session / zone / parent-bias / objective / shadow filter).
+
+        The order filled at the RETEST close and has lived through the confirmation window; an
+        unconfirmed setup is therefore closed at the bar's own CLOSE, exactly like
+        `close_timeout` -- a deadline/decision is not a level the market quoted, so there is no
+        price to book other than the close. A runner that already banked its TP1 partial keeps it
+        and only the open leg is closed here (same accounting as `close_timeout`).
+        """
+        if trade.status not in ("OPEN", "TP1"):
+            return "UNCHANGED"
+        pnl_direction = 1 if trade.direction == Direction.LONG else -1
+        if trade.status == "TP1":
+            runner_pnl = 0.5 * pnl_direction * (exit_price - trade.entry_price)
+            trade.pnl = trade.partial_pnl + runner_pnl
+        else:
+            trade.pnl = pnl_direction * (exit_price - trade.entry_price)
+        trade.status = "UNCONFIRMED"
+        self.log.info(
+            f"Trade UNCONFIRMED | {trade.id} | close={exit_price:.5f} PnL={trade.pnl:.5f}"
+        )
+        return "UNCONFIRMED"
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -1308,8 +2854,11 @@ class ExecutionEngine:
 
 class ResetLogic:
 
-    def __init__(self, config: CRTConfig):
+    def __init__(self, config: CRTConfig, *, htf_reset_exempt_sweep: bool):
         self.config = config
+        # [K23 F4] Not a CRTConfig field (that census pins every field): sourced from
+        # backtest.htf_reset_exempt_sweep via CRTEngine. False = legacy rule.
+        self.htf_reset_exempt_sweep = bool(htf_reset_exempt_sweep)
         self.log = logging.getLogger("CRT.Reset")
 
     def should_reset(
@@ -1321,17 +2870,42 @@ class ResetLogic:
         if state.active_range is None:
             return False, ""
 
-        if current_htf_id != state.active_range.htf_candle_id:
+        # [Phase-A.3] Protect active trades from reset — let SL/TP/TTL decide
+        # the exit. Without this, retrace / HTF-flip / extension kills trades
+        # 1 candle after open, before TP1 or SL can fire.
+        if state.active_trade and state.active_trade.status in ("OPEN", "TP1"):
+            return False, ""
+
+        # Compare reset CLOCK ids (HTFBuilder). active_range is the M15
+        # structural liquidity envelope; htf_candle_id on it is the clock tag.
+        if current_htf_id != state.active_range.clock_id:
             if state.current_state in [CRTState.EXPANSION, CRTState.RETEST]:
-                return False, ""  # DO NOT INTERRUPT ACTIVE SETUP
-            return True, f"HTF changed: {state.active_range.htf_candle_id} → {current_htf_id}"
+                # DO NOT INTERRUPT ACTIVE SETUP -- INTENDED (user decision 2026-10-01, "protect from
+                # all"). Note the SIDE EFFECT: this return precedes the 50% retrace and 1.618
+                # extension rules below, so once the HTF clock has flipped after EXPANSION began,
+                # those two resets no longer apply for the rest of the setup's life; only a RETEST
+                # or the expansion TTL (max_expansion_age_candles / _hours) ends it. A setup whose
+                # price has already closed through its stop therefore stays alive unless
+                # setup.retest_stop_guard is on (see CRTEngine._expansion_stop_breach).
+                # K23's F1 (retrace_reset_pct) consequently acts on EXPANSION only before the flip.
+                return False, ""
+            if self.htf_reset_exempt_sweep and state.current_state == CRTState.SWEEP:
+                return False, ""  # [K23 F4] SWEEP survives the HTF flip; other resets still apply
+            return True, f"HTF changed: {state.active_range.clock_id} → {current_htf_id}"
 
         price = current_candle.close
 
         if state.displacement_candle is not None:
             disp = state.displacement_candle
             move = abs(disp.close - disp.open)
-            retrace = abs(price - disp.close) / move if move > 0 else 0.0
+            # Against state.direction only. Continuation past disp.close is not a retrace.
+            # LONG pullback = close below disp.close; SHORT = close above. Direction NONE
+            # skips this rule (no setup axis). Unsigned abs() was the previous formula.
+            retrace = 0.0
+            if move > 0 and state.direction == Direction.LONG and price < disp.close:
+                retrace = (disp.close - price) / move
+            elif move > 0 and state.direction == Direction.SHORT and price > disp.close:
+                retrace = (price - disp.close) / move
             if retrace >= self.config.retrace_reset_pct:
                 return True, f"50% retrace hit (retrace={retrace:.3f})"
 
@@ -1362,38 +2936,303 @@ class CRTEngine:
     All patches wired through here.
     """
 
-    def __init__(self, config: Optional[CRTConfig] = None):
-        # Config MUST be provided via ConfigBuilder.build(instrument).
-        # Direct CRTConfig() fallback is forbidden — it bypasses the market router.
+    def __init__(self, config: CRTConfig,
+                 sweep_tracer: Optional[SweepTraceLogger] = None,
+                 intrabar_exits: Optional[bool] = None,
+                 *,
+                 htf_reset_exempt_sweep: bool,
+                 sl_anchor: str,
+                 exchange_session_windows: Optional[dict],
+                 target_policy: str,
+                 trade_ttl_candles: Optional[int],
+                 decider: str,
+                 entry_semantics: str,
+                 retest_stop_guard: bool):
+        # EPIC-84 (no defaults): every behaviour argument is required and declared. None stays a
+        # declared value where it means "off" (exchange_session_windows=None: static windows;
+        # trade_ttl_candles=None: no time-stop). Production callers use CRTEngine.from_setup.
+        # Config MUST be provided (ConfigBuilder.from_production / load_prod_config_from_registry).
+        # There is no fallback config (EPIC-84: no defaults).
         if config is None:
             raise ValueError(
                 "CRTEngine requires an explicit CRTConfig. "
-                "Use ConfigBuilder.build(instrument) to create one."
+                "Use ConfigBuilder.from_production(instrument) to create one."
             )
-        self.config   = config
-        self.detector = RangeDetector(self.config)
-        self.sm       = StateMachine(self.config)
-        self.risk     = UltronRiskEngine(self.config)
-        self.executor = ExecutionEngine(self.config)
-        self.reset_lg = ResetLogic(self.config)
+        self.config    = config
+        # [trust-layer F2] Resolve the exit-trigger model ONCE (not per candle).
+        # Precedence: explicit arg > env TRUST_INTRABAR_TOUCH (ad-hoc override) >
+        # crt_engine.exit_model config > default intrabar_touch.
+        import os as _os
+        _env = _os.environ.get("TRUST_INTRABAR_TOUCH")
+        if intrabar_exits is not None:
+            self._intrabar_exits = bool(intrabar_exits)
+        elif _env is not None:
+            self._intrabar_exits = (_env == "1")
+        else:
+            self._intrabar_exits = (str(self.config.exit_model) == "intrabar_touch")
+        # Phase-1 state contracts: load + validate once at construction (WHO declarations).
+        # Phase-Topology: legal transition graph is built from the loaded WHO bundle and
+        # injected into StateMachine (Python try_* guards unchanged; no model dispatch).
+        from config_layer.state_contract_loader import load_and_validate_state_contracts
+        from config_layer.state_topology import build_runtime_transition_graph_from_bundle
+        self.state_contracts = load_and_validate_state_contracts()
+        self.runtime_transitions = build_runtime_transition_graph_from_bundle(
+            self.state_contracts
+        )
+        self.detector  = RangeDetector(self.config)
+        self.telemetry = TelemetryCollector()
+        self.sm        = StateMachine(
+            self.config, self.telemetry, valid_transitions=self.runtime_transitions
+        )
+        self.risk      = UltronRiskEngine(self.config)
+        self.executor = ExecutionEngine(
+            self.config, sl_anchor=sl_anchor, target_policy=target_policy,  # [K23 F3] / [83.11]
+        )
+        # [STORY-83.11 §3.2 key 3] Not a CRTConfig field; fed from setup.trade_ttl_candles.
+        # None (default) = no time-stop = today. See §6 for the seam/pricing/counting contract
+        # (§10 Q3): checked here in process_candle (§6.2 engine-side seam), NOT inside
+        # ExecutionEngine.update_trade — that signature is deliberately kept stable because
+        # research parity floors bind to it (see the SEM-021 kill comment just above its call
+        # site). A dedicated `close_timeout` mirrors `close_structural`'s shape instead.
+        if trade_ttl_candles is not None and (
+            not isinstance(trade_ttl_candles, int)
+            or isinstance(trade_ttl_candles, bool)
+            or trade_ttl_candles < 1
+        ):
+            raise ValueError(
+                f"trade_ttl_candles must be an int >= 1 or None, got {trade_ttl_candles!r}"
+            )
+        self.trade_ttl_candles = trade_ttl_candles
+        # [STORY-83.11 §3.2 key 4 / §5] Not a CRTConfig field; fed from setup.decider.
+        # "engine" (default) = today: the state machine founds the trade. "resolver" = mode C
+        # (STORY-83.11b): the CRTStateResolver founds the RETEST -- range, sweep, displacement
+        # and retest candle -- handed over through the founding sidecar
+        # (charts.resolver_overlay.load_founding_map -> set_founding_map), and the engine's own
+        # soft-confirmation / UltronRiskEngine.approve_with_soft_conf / build_trade path decides
+        # execution unchanged (reuse of the one risk authority, not a second copy). In this
+        # mode the engine skips its own EXPANSION->RETEST founding. A comparison arm, never a
+        # parity claim (F-069).
+        if decider not in ("engine", "resolver"):
+            raise ValueError(f"decider must be 'engine' or 'resolver', got {decider!r}")
+        self.decider = decider
+        # [entry-chain 2026-10-01] Not CRTConfig fields; fed from setup.entry_semantics /
+        # setup.retest_stop_guard.
+        #   entry_semantics "approval_bar_legacy" = today: the trade is BUILT at the RETEST close
+        #     but OPENED one bar later, on the soft-confirmation approval bar, which is never
+        #     walked for SL/TP. "resting_order" = the order fills at the RETEST close and every
+        #     soft-confirmation bar is walked; an unconfirmed setup is flattened at that bar's close.
+        #   retest_stop_guard False = today. True = an EXPANSION whose bar CLOSE reaches the stop a
+        #     trade built on that bar would use (ExecutionEngine.stop_price) ends the setup, so a
+        #     RETEST can only be founded on a setup whose stop has never been breached.
+        if entry_semantics not in ("approval_bar_legacy", "resting_order"):
+            raise ValueError(
+                "entry_semantics must be 'approval_bar_legacy' or 'resting_order', "
+                f"got {entry_semantics!r}"
+            )
+        if not isinstance(retest_stop_guard, bool):
+            raise ValueError(f"retest_stop_guard must be a bool, got {retest_stop_guard!r}")
+        if entry_semantics == "resting_order" and decider == "resolver":
+            # Mode C founds its RETEST in `_found_retest_from_resolver`, a separate comparison
+            # arm (never a parity claim, F-069). Resting-order placement is only wired at the
+            # engine's own RETEST commit; fail closed rather than run mode C with legacy timing.
+            raise ValueError(
+                "entry_semantics='resting_order' is not supported with decider='resolver' "
+                "(mode C founds its RETEST outside the engine's RETEST commit)"
+            )
+        self.entry_semantics = entry_semantics
+        self._retest_stop_guard = retest_stop_guard
+        # Mode C only: {bar timestamp (isoformat) -> founding row}. None until set_founding_map.
+        self._founding_map: Optional[dict] = None
+        # Candle buffer cap. "engine": atr_period * atr_buffer_multiplier (today, 42 on v5) --
+        # unchanged. "resolver": widened to also span a full SWEEP -> (DISPLACEMENT) -> EXPANSION
+        # -> RETEST lifetime, because the handed-over sweep/displacement candles are looked up
+        # here by timestamp and an EXPANSION can last up to max_expansion_age_candles. ATR is
+        # unaffected (compute_atr windows the last atr_period true ranges).
+        _atr_cap = config.atr_period * config.atr_buffer_multiplier
+        self._buffer_cap = _atr_cap if decider == "engine" else (
+            _atr_cap + config.max_sweep_age_candles + config.max_expansion_age_candles
+            + config.pending_displacement_ttl_candles
+        )
+        self.reset_lg = ResetLogic(self.config, htf_reset_exempt_sweep=htf_reset_exempt_sweep)
+        # [K23 F2] Not a CRTConfig field (census pins); fed from backtest.exchange_session_windows.
+        # None = legacy static windows. Set = each session is defined in its own exchange zone
+        # and resolved per date via features.broker_clock (filter AND score_time share it).
+        self._exchange_windows = None
+        if exchange_session_windows is not None:
+            from features.broker_clock import parse_exchange_session_windows
+            self._exchange_windows = parse_exchange_session_windows(exchange_session_windows)
+            # Fail-closed: an allowed session that no window can ever produce would silently
+            # never admit. OVERLAP is exempt — a derived name the legacy filter never emits
+            # either (only session_windows keys are matched), so it is inert in both modes.
+            _unproducible = [s for s in self.config.allowed_sessions
+                             if s not in self._exchange_windows and s != "OVERLAP"]
+            if _unproducible:
+                raise ValueError(
+                    f"allowed_sessions {_unproducible} have no exchange_session_windows entry "
+                    f"(declared: {list(self._exchange_windows)}); they could never be admitted.")
+            self.risk.exchange_windows = self._exchange_windows
         self.state    = EngineState()
         self.ev_log   = EventLogger(self.state)    # [PATCH 4]
         self.candle_buffer: list[Candle] = []
+        self._sweep_tracer = sweep_tracer           # Layer 0 sweep trace (optional)
         self.log = logging.getLogger("CRT.Orchestrator")
+        # Optional baseline bar-trace hooks (default None — production behavior unchanged).
+        self.baseline_trace = None
+        # F-066 session-filter fix: resolve ONCE (not per-candle — this is a 47k+ candle hot
+        # loop), reusing the existing feature_pipeline key rather than introducing a duplicate.
+        # "broker_local" (default) preserves prior behavior byte-for-byte; "utc_corrected"
+        # converts the candle timestamp before the session-window comparison (see
+        # process_candle's session-filter block).
+        from config_layer.production_config import get_prod_section
+        self._session_ts_basis = get_prod_section("feature_pipeline")["session_timestamp_basis"]
+        # CH-htfcrt-parent-candle-smc-v1 (2026-08-15): resolve ONCE (hot loop), same pattern
+        # as _session_ts_basis above. enabled:false (v2_multi_2026_04) means process_candle's
+        # parent_state gate below is a structural no-op regardless of what a caller passes —
+        # byte-identical behavior on this config. See config comment "_comment_parent_crt".
+        _pc = get_prod_section("parent_crt")
+        self._parent_crt_enabled = bool(_pc["enabled"])
+        _og = _pc["objective_gate"]
+        self._objective_gate_enabled = bool(_og["enabled"])
+        self._objective_gate_mode = str(_og["mode"])
 
     # ── Public API ────────────────────────────────────────────
 
+    @classmethod
+    def from_production(cls, config: CRTConfig, version: Optional[str] = None, *,
+                        sweep_tracer: Optional[SweepTraceLogger] = None,
+                        intrabar_exits: Optional[bool] = None) -> "CRTEngine":
+        """Engine whose behaviour keys come from the declared production config ``version``
+        (ACTIVE_VERSION when None) via ``Setup.from_prod_config`` -- fail closed on any
+        missing key. ``config`` is the CRTConfig (e.g. ConfigBuilder.from_production)."""
+        from config_layer.production_config import get_active_version
+        from config_layer.setup import Setup
+
+        return cls.from_setup(config, Setup.from_prod_config(version or get_active_version()),
+                              sweep_tracer=sweep_tracer, intrabar_exits=intrabar_exits)
+
+    @classmethod
+    def from_setup(cls, config: CRTConfig, setup, *,
+                   sweep_tracer: Optional[SweepTraceLogger] = None,
+                   intrabar_exits: Optional[bool] = None) -> "CRTEngine":
+        """Engine for a resolved ``config_layer.setup.Setup`` (every behaviour key declared).
+
+        Build the Setup with ``Setup.from_prod_config(version)``; the CRTConfig with
+        ``ConfigBuilder.from_production(instrument, version)``.
+        """
+        return cls(config, sweep_tracer, intrabar_exits,
+                   htf_reset_exempt_sweep=setup.htf_reset_exempt_sweep,
+                   sl_anchor=setup.sl_anchor,
+                   exchange_session_windows=setup.exchange_session_windows,
+                   target_policy=setup.target_policy,
+                   trade_ttl_candles=setup.trade_ttl_candles,
+                   decider=setup.decider,
+                   entry_semantics=setup.entry_semantics,
+                   retest_stop_guard=setup.retest_stop_guard)
+
+    @property
+    def intrabar_exits(self) -> bool:
+        """The RESOLVED exit-trigger model this instance actually runs (read-only).
+
+        [CH-measurement-basis-declaration] Exposes ``self._intrabar_exits`` (resolved
+        once at construction — see the precedence comment above) so a caller can
+        declare the same tie_break the engine actually applied, rather than assuming
+        it from the config's own ``exit_model`` key, which the env-var override can
+        silently disagree with.
+        """
+        return self._intrabar_exits
+
+    def get_state_contract(self, state_id: Optional[str] = None):
+        """Return the Phase-1 StateContract for ``state_id`` or the current SM state.
+
+        Inspection only — does not resolve features or dispatch models.
+        """
+        sid = state_id or self.state.current_state.name
+        return self.state_contracts.get(sid)
+
+    def _baseline_trace_finish(self, action: dict) -> dict:
+        """Finalize optional baseline bar trace. Never mutates action semantics."""
+        _bt = self.baseline_trace
+        if _bt is not None and _bt.enabled:
+            try:
+                from runtime.crt_baseline_trace import snapshot_engine_state
+                _bt.state_after = self.state.current_state.name
+                _bt.snapshot_after = snapshot_engine_state(self.state)
+                _bt.action = dict(action) if action else {}
+            except Exception:
+                pass
+        self.sm.trace_hooks = None
+        return action
+
+    def _displacement_origin_kill(self, trade: Trade, candle: Candle) -> bool:
+        """[SEM-021] True when this bar's CLOSE negates the founding displacement.
+
+        LONG  -> close < open(displacement candle);  SHORT -> close > open(displacement candle)
+
+        CLOSE-triggered by construction, and that is load-bearing rather than incidental: a
+        wick through the origin that closes back inside must NOT fire. An extreme-triggered
+        variant would forfeit the whole reason this rule is measurable -- F-087 put the
+        same-bar ambiguity band of every extreme-reading arm at 0.261R, 12-15x the
+        0.0198-0.0212R spread it would be used to measure, versus ~0.0005R for close and
+        elapsed-time arms. Reading candle.high/candle.low here would silently move this rule
+        into the unrankable half of that grid.
+
+        Fail-quiet on a missing origin is deliberate: any trade built without a displacement
+        candle in scope carries None and must behave exactly as it did before this existed.
+        """
+        if not self.config.displacement_origin_kill_enabled:
+            return False
+        origin = trade.displacement_origin
+        if origin is None:
+            return False
+        if trade.status not in ("OPEN", "TP1"):
+            return False
+        if trade.direction == Direction.LONG:
+            return candle.close < origin
+        return candle.close > origin
+
+    @staticmethod
+    def _intrabar_trigger_price(trade: Trade, candle: Candle) -> float:
+        """[trust-layer F2/WS4B] Intrabar high/low-touch trigger price for the active
+        trade, with conservative same-bar ordering (SL assumed hit before TP when a bar
+        spans both). Returns the price to feed ExecutionEngine.update_trade so its
+        existing TP2>SL>TP1 logic fires; returns candle.close when nothing is touched.
+        MEASURE-ONLY — only reached when TRUST_INTRABAR_TOUCH=1."""
+        is_long = trade.direction == Direction.LONG
+        hi, lo = candle.high, candle.low
+        sl, tp1, tp2 = trade.sl_price, trade.tp1_price, trade.tp2_price
+        sl_touch  = (lo <= sl) if is_long else (hi >= sl)
+        tp1_touch = (hi >= tp1) if is_long else (lo <= tp1)
+        tp2_touch = (hi >= tp2) if is_long else (lo <= tp2)
+        if trade.status == "TP1":          # runner live: TP2 target or BE/trail stop
+            if sl_touch:                   # conservative: stop/BE before further target
+                return sl
+            if tp2_touch:
+                return tp2
+        else:                              # OPEN: full SL or first partial TP1
+            if sl_touch:                   # conservative: SL before TP1 on a spanning bar
+                return sl
+            if tp1_touch:
+                return tp1
+        return candle.close
+
     def initialise_range(
-        self, candles: list[Candle], htf_candle_id: str, session: str = "UNKNOWN"
+        self, candles: list[Candle], htf_candle_id: str, session: str
     ) -> None:
-        # [PATCH 4] Stamp candle indices if missing
-        for i, c in enumerate(candles):
-            if c.index == 0:
+        # B2 (2026-07-24): seed-candle indices come from the loader's ingestion stamp (the single
+        # ingestion authority). The former `if c.index == 0: c.index = i` re-stamp is REMOVED — it
+        # depended on the loader leaving `index` at 0 as an "unstamped" sentinel, a fragile cross-
+        # module coupling. For the one-time seed window (initialise_range runs exactly once, first
+        # HTF range) the loader's global 0-based index equals the old enumerate position, so this
+        # is behaviour-preserving; the spine still re-stamps via process_candle.
+        # A defensive fallback covers callers that build Candles WITHOUT the loader (research
+        # scripts, tests) and leave the default index=0 across the whole list.
+        if all(c.index == 0 for c in candles):
+            for i, c in enumerate(candles):
                 c.index = i
         self.state.active_range = self.detector.detect_htf_range(candles, htf_candle_id, session)
-        self.state.atr = self.detector.compute_atr(candles, self.config.atr_period)
+        self.state.atr_abs = self.detector.compute_atr(candles, self.config.atr_period)
         # [PATCH 1] Bounded buffer
-        cap = self.config.atr_period * self.config.atr_buffer_multiplier
+        cap = self._buffer_cap
         self.candle_buffer = candles[-cap:]
         self.state.current_candle_index = len(candles) - 1
 
@@ -1407,18 +3246,389 @@ class CRTEngine:
         """Return full typed event log as list of dicts (DynamoDB-ready)."""
         return self.ev_log.dump()
 
-    def process_candle(self, candle: Candle, htf_candle_id: str) -> dict:
+    def dump_telemetry(self) -> list[dict]:
+        """Return all Phase-0 telemetry records. Call once at end-of-run."""
+        return self.telemetry.flush()
+
+    def set_founding_map(self, founding_map: dict) -> None:
+        """Mode C (decider="resolver"): install the resolver's founding rows.
+
+        ``founding_map`` is ``{bar timestamp isoformat: row}`` from
+        ``charts.resolver_overlay.load_founding_map``; each row carries ``direction``
+        ("LONG"/"SHORT"/"NONE"), ``h_ref``, ``l_ref`` and the ``sweep_ts`` /
+        ``displacement_ts`` timestamps. It is run input (like the corpus), not a Setup key.
+        """
+        if self.decider != "resolver":
+            raise ValueError("set_founding_map is only meaningful with decider='resolver'")
+        self._founding_map = founding_map
+
+    def _found_retest_from_resolver(self, candle: "Candle", htf_candle_id: str, action: dict) -> bool:
+        """[STORY-83.11b] Mode C founding. True iff this bar was founded as RETEST.
+
+        The resolver decided the structure on this bar; the engine installs the four objects
+        from its own candle buffer (by timestamp), commits RETEST through the SAME
+        `StateMachine._commit_retest` the engine's own founding uses, and opens the normal
+        soft-confirmation window. Everything after -- approve_with_soft_conf, build_trade,
+        exits, resets -- is the engine's unchanged path. Anything missing is a recorded
+        rejection, never a fabricated value.
+        """
+        if self._founding_map is None:
+            raise RuntimeError(
+                "CRTEngine(decider='resolver') requires set_founding_map() before process_candle"
+            )
+        row = self._founding_map.get(candle.timestamp.isoformat())
+        if row is None:
+            return False
+
+        if self.state.active_trade is not None or self.state.evaluating_soft_conf:
+            self.ev_log.record(
+                "RESOLVER_FOUNDING_SKIPPED", candle,
+                reason="resolver_founding_engine_busy",
+                metadata={"active_trade": self.state.active_trade is not None,
+                          "evaluating_soft_conf": self.state.evaluating_soft_conf},
+            )
+            return False
+
+        def _reject(reason: str, **meta) -> bool:
+            self.ev_log.record("RESOLVER_FOUNDING_REJECTED", candle, reason=reason, metadata=meta)
+            action["action"] = "RESOLVER_FOUNDING_REJECTED"
+            action["reason"] = reason
+            return False
+
+        direction = {"LONG": Direction.LONG, "SHORT": Direction.SHORT}.get(row["direction"])
+        if direction is None:
+            return _reject("resolver_founding_direction_unknown", direction=row["direction"])
+
+        by_ts = {c.timestamp.isoformat(): c for c in self.candle_buffer}
+        sweep_c = by_ts.get(row["sweep_ts"])
+        disp_c = by_ts.get(row["displacement_ts"])
+        _missing = [n for n, c in (("sweep", sweep_c), ("displacement", disp_c)) if c is None]
+        if _missing:
+            return _reject("resolver_founding_bar_missing", missing=_missing,
+                           buffer_len=len(self.candle_buffer))
+
+        prior = self.state.active_range
+        if self.state.current_state != CRTState.RANGE:
+            self.sm.reset_to_range(self.state, "resolver_founding", candle, self.ev_log)
+
+        h_ref, l_ref = float(row["h_ref"]), float(row["l_ref"])
+        self.state.direction = direction
+        self.state.active_range = Range(
+            h_ref=h_ref, l_ref=l_ref, equilibrium=(h_ref + l_ref) / 2,
+            formed_at=prior.formed_at if prior is not None else candle.timestamp,
+            htf_candle_id=htf_candle_id,
+            session=prior.session if prior is not None else "UNKNOWN",
+            child_count=prior.child_count if prior is not None else 0,
+        )
+        # The sweep candle is the resolver's; direction, wick price and range follow the same
+        # geometry detect_sweep uses (SHORT = high swept, LONG = low swept). double_confirmed
+        # is not owned by the resolver -> stays False (engine default), not inferred.
+        self.state.sweep_event = SweepEvent(
+            direction=direction,
+            price=sweep_c.high if direction == Direction.SHORT else sweep_c.low,
+            candle=sweep_c, double_confirmed=False, candle_index=sweep_c.index,
+        )
+        self.state.displacement_candle = disp_c
+
+        _loc = "crt_engine_v2.CRTEngine._found_retest_from_resolver"
+        if not self.sm._commit_retest(
+            self.state, candle, self.ev_log,
+            reason=f"Retest founded by resolver | h_ref={h_ref:.5f} l_ref={l_ref:.5f}",
+            guard_operands=[{"name": "resolver_founding_row", "runtime_value": row["timestamp"],
+                             "source_class": "RESOLVER_HANDOVER", "source_name": "founding.csv",
+                             "source_location": _loc, "formula_id": None, "feature_id": None,
+                             "config_key": None}],
+        ):
+            self.sm.reset_to_range(self.state, "resolver_founding_inputs_missing",
+                                   candle, self.ev_log)
+            return _reject("resolver_founding_inputs_missing")
+
+        action["action"] = "RETEST_CONFIRMED"
+        self.state.evaluating_soft_conf = True
+        self.state.soft_conf_candles = 0
+        self.ev_log.record(
+            "BEGIN_SOFT_CONF", candle,
+            reason="Retest founded by resolver — evaluating soft confirmation manifold"
+        )
+        return True
+
+    def _emit_retest_replay(self, candle: "Candle", score: float, *,
+                            accepted: bool, reject_reason: Optional[str]) -> None:
+        """[S0 telemetry, emit-only] Record a TERMINAL RETEST->EXECUTION decision (selected or
+        rejected) so the offline selection-effect study (scripts/research/phase_s_selection_effect.py)
+        can compare selected vs rejected retests. Behavior-neutral: appends ONLY to the off-spine
+        RETEST_REPLAY telemetry (never the trades ledger, never a decision/state change). Defensive —
+        any field error is swallowed so telemetry can never affect the trading path."""
+        # EPIC-84: fields read strictly. Every call site is a terminal RETEST->EXECUTION
+        # decision, so the RETEST guard guarantees displacement/retest candles and the cache.
+        # The old getattr/`if ... else 0.0` fallbacks could only fabricate values; a failure is
+        # now LOGGED (telemetry still never affects the trading path).
+        try:
+            st = self.state
+            disp = st.displacement_candle
+            rt = st.retest_candle
+            self.telemetry.on_retest_replay(
+                candle_index=candle.index,
+                timestamp=str(candle.timestamp),
+                direction=(1 if st.direction == Direction.LONG else -1),
+                entry=float(rt.close),
+                disp_low=float(disp.low),
+                disp_high=float(disp.high),
+                # NOTE the attribute is `atr_abs` (absolute price units), not `atr` — the
+                # canonical FM-041 `atr` is close-relative. A string-based getattr with a 0.0
+                # default silently returned 0.0 here after the rename; kept explicit so a future
+                # rename fails loudly at the attribute rather than degrading telemetry to zero.
+                # Direct attribute access — no `or` default. `atr_abs` is a non-optional
+                # EngineState float field, so a fallback here could only ever MASK a rename
+                # (which is exactly how the old getattr(st, "atr", 0.0) silently zeroed this
+                # telemetry). No silent fallback.
+                atr=float(st.atr_abs),
+                sl_atr_buffer=float(self.config.sl_atr_buffer),
+                tp1_mult=float(self.config.tp1_atr_multiplier),
+                tp2_mult=float(self.config.tp2_atr_multiplier),
+                # EngineState has NO `intent` attribute: the old getattr(st, "intent", "")
+                # recorded "" on every RETEST_REPLAY row. The intent is the one build_trade
+                # derives from the RETEST cache.
+                intent=self.executor._derive_trade_intent(
+                    st.cached_features, self.config.breakout_disp_threshold, st.direction),
+                score=float(score),
+                accepted=accepted,
+                reject_reason=reject_reason,
+            )
+        except Exception as _replay_err:
+            self.log.warning(f"RETEST_REPLAY telemetry skipped: {_replay_err!r}")
+
+    # ── Entry-chain helpers (2026-10-01) ──────────────────────────────────────
+
+    def _session_name_at(self, candle: Candle) -> str:
+        """Session label for `candle` under the declared session basis -- a verbatim extraction of
+        the soft-confirmation session filter so the resting-order open event reuses the one
+        resolution instead of a second copy.
+
+        F-066: self.config.session_windows is authored in UTC (see CRTConfig.session_windows's
+        own "(UTC)" comment), but candle.timestamp on every MT5-sourced corpus is broker-server
+        time, not UTC. Compare against the UTC-converted timestamp when the operator has opted in
+        via the same feature_pipeline.session_timestamp_basis key the FM-052 feature already uses
+        (default "broker_local" = byte-identical prior behavior).
+        """
+        _sess_name = "OFF_SESSION"
+        if self._exchange_windows is not None:
+            # [K23 F2] exact per-date exchange windows; first declared match wins
+            # (so a London/NY overlap resolves to the earlier-declared session).
+            from features.broker_clock import exchange_sessions_at as _esa
+            _hits = _esa(candle.timestamp, self._exchange_windows)
+            if _hits:
+                _sess_name = _hits[0]
+        else:
+            if self._session_ts_basis == "utc_corrected":
+                from features import broker_clock as _bc
+                _ts_time = _bc.mt5_server_to_utc_scalar(candle.timestamp).time()
+            else:
+                _ts_time = candle.timestamp.time()
+            for _name, (_start, _end) in self.config.session_windows.items():
+                if _start <= _ts_time <= _end:
+                    _sess_name = _name
+                    break
+        return _sess_name
+
+    def _expansion_stop_breach(self, candle: Candle) -> Optional[float]:
+        """retest_stop_guard: the stop price when `candle`'s CLOSE has reached it, else None.
+
+        The stop is `ExecutionEngine.stop_price` -- the SAME formula `build_trade` trades -- at
+        this bar's ATR. LONG breaches at close <= stop, SHORT at close >= stop (the same
+        comparison `update_trade` uses for an SL touch).
+        """
+        stop = self.executor.stop_price(self.state)
+        if stop is None:
+            return None
+        if self.state.direction == Direction.LONG:
+            return stop if candle.close <= stop else None
+        return stop if candle.close >= stop else None
+
+    def _place_resting_order(self, candle: Candle, action: dict) -> None:
+        """entry_semantics="resting_order": fill the order at the RETEST close, on the bar that
+        founded the RETEST (called right after BEGIN_SOFT_CONF). The soft-confirmation bars that
+        follow are walked for SL/TP by the trade-management block, which runs before the state
+        machine. No score exists yet, so `build_trade` stamps the floor risk_pct (0.5%); that
+        stamp is not used for sizing (the ledger sizes from backtest.risk_pct_per_trade).
+        """
+        trade = self.executor.build_trade(self.state, self.risk)
+        if trade is None:
+            self._reject_failed_build(candle, 0.0, action)
+            return
+        self.executor.open_trade(trade, candle.timestamp)
+        # [STORY-83.11 §10 Q3d] N counts the entry bar (the RETEST bar for a resting order).
+        trade.open_candle_index = self.state.current_candle_index
+        self.state.active_trade = trade
+        self.ev_log.record(
+            "TRADE_OPENED", candle,
+            direction=trade.direction.value,
+            price=trade.entry_price,
+            metadata={
+                "id": trade.id,
+                "session_name": self._session_name_at(candle),
+                "S_score": None,   # the order is placed before any confirmation score exists
+                "sl": trade.sl_price,
+                "tp1": trade.tp1_price,
+                "tp2": trade.tp2_price,
+                "risk_pct": trade.risk_pct,
+                "entry_semantics": "resting_order",
+            },
+        )
+        action["action"]       = "TRADE_OPENED"
+        action["trade_id"]     = trade.id
+        action["risk_pct"]     = trade.risk_pct
+        action["live_metrics"] = self.get_live_metrics()
+        # The candidate lifecycle stays open until approval (ACCEPTED) or a reset; the trade row
+        # still carries its candidate_id from the bar it fills on.
+        _cid = self.telemetry.active_candidate_id()
+        if _cid is not None:
+            action["candidate_id"] = _cid
+
+    def _flatten_if_resting(self, candle: Candle, reason: str) -> bool:
+        """entry_semantics="resting_order" only: close the live resting order at this bar's CLOSE
+        because its setup was not confirmed. Returns True when an order was flattened (the caller
+        then reports the bar as TRADE_UNCONFIRMED), False for legacy semantics or when no live
+        order exists -- so legacy callers are untouched."""
+        if self.entry_semantics != "resting_order":
+            return False
+        trade = self.state.active_trade
+        if trade is None or trade.status not in ("OPEN", "TP1"):
+            return False
+        self.executor.close_unconfirmed(trade, candle.close)
+        self.ev_log.record(
+            "TRADE_UNCONFIRMED", candle,
+            reason=f"Trade {trade.id} closed: UNCONFIRMED ({reason})",
+            metadata={"pnl": trade.pnl, "unconfirmed_reason": reason},
+        )
+        return True
+
+    def _reject_failed_build(self, candle: Candle, score: float, action: dict) -> None:
+        """`build_trade` refused an otherwise-approved setup: record why, count it, reset.
+
+        The state used to be left in EXECUTION with no trade, no event and no reset (the engine
+        then idled until the next HTF reset) and the run summary reported 0 rejected -- a silent
+        gap (same class as F-079/F-083/F-102). The refusal reason is `last_build_attempt.reason`.
+        """
+        attempt = self.executor.last_build_attempt
+        reason = attempt.reason if attempt is not None and attempt.reason else "unknown"
+        self.ev_log.record(
+            "TRADE_BUILD_REJECTED", candle,
+            reason=f"build_trade refused: {reason}",
+            metadata={
+                "build_reason": reason,
+                "computed_sl": attempt.computed_sl if attempt is not None else None,
+                "entry": attempt.entry if attempt is not None else None,
+            },
+        )
+        # Telemetry BEFORE reset_to_range -- the reset nulls the geometry this record needs.
+        self._emit_retest_replay(candle, score, accepted=False, reject_reason="BUILD_REJECTED")
+        self.sm.reset_to_range(self.state, f"trade_build_rejected:{reason}", candle, self.ev_log)
+        action["action"] = "TRADE_BUILD_REJECTED"
+        action["reason"] = f"trade_build_rejected:{reason}"
+        action["state_after"] = self.state.current_state.name
+
+    def _record_accepted(self, candle: Candle, trade: Trade, effective_s: float,
+                         shadow_ctx: dict, shadow_disp_br: float, action: dict) -> None:
+        """Candidate ACCEPTED telemetry, the RETEST_REPLAY row and the Phase-3b temporal integrity
+        events -- extracted VERBATIM from the legacy open path so the resting-order confirm path
+        records exactly the same facts, in the same order, from one copy."""
+        # [TELEMETRY] Close candidate as ACCEPTED — Phase 4b: include shadow_context; Phase 3:
+        # candle_ts + trade_id so the ACCEPTED row resolves to the frozen PK and
+        # joins to trades.csv / L8; the returned candidate_id rides on `action`
+        # so the runner can stamp trades.csv.candidate_id (chain invariant 4/5).
+        _acc_cid = self.telemetry.on_candidate_accepted(
+            candle.index,
+            score_at_approval=effective_s,
+            candle_ts=candle.timestamp,
+            trade_id=trade.id,
+            shadow_context=shadow_ctx if self.state._came_from_shadow else {},
+            shadow_displacement_br=shadow_disp_br,
+        )
+        if _acc_cid is not None:
+            action["candidate_id"] = _acc_cid
+        self._emit_retest_replay(candle, effective_s, accepted=True, reject_reason=None)
+
+        # ── Phase 3b: Temporal integrity events ───────────────────
+        _struct_age = candle.index - self.state._expansion_entry_idx
+
+        # TEMPORAL_PARADOX (CRITICAL): last-resort guard — trade opened
+        # after TTL should have expired. If this fires, the TTL check
+        # has a gap (e.g. RETEST priority override let a stale trade through).
+        if (self.config.max_expansion_age_candles > 0
+                and _struct_age > self.config.max_expansion_age_candles):
+            emit_integrity_event(
+                "TEMPORAL_PARADOX", "CRITICAL", "crt_engine",
+                {
+                    "candidate_id":  f"CAND-{self.state._expansion_entry_idx}",
+                    "structure_age": _struct_age,
+                    "max_allowed":   self.config.max_expansion_age_candles,
+                    "shadow_used":   self.state._came_from_shadow,
+                    "candle_index":  candle.index,
+                },
+            )
+            # Note: trade is NOT cancelled here — RETEST > EXPIRED by design.
+            # TEMPORAL_PARADOX is informational: it shows TTL was overridden
+            # by a valid retest. Investigate if count > 0 after production run.
+
+        # TEMPORAL_STALE_WIN (WARNING): trade opened from expansion older than
+        # P95 (342 candles). Trade still executes — this labels it for training.
+        _warn_age = self.config.expansion_age_warn_candles
+        if _warn_age > 0 and _struct_age > _warn_age:
+            emit_integrity_event(
+                "TEMPORAL_STALE_WIN", "WARNING", "crt_engine",
+                {
+                    "candidate_id":   f"CAND-{self.state._expansion_entry_idx}",
+                    "structure_age":  _struct_age,
+                    "warn_threshold": _warn_age,
+                    "shadow_used":    self.state._came_from_shadow,
+                    "candle_index":   candle.index,
+                },
+            )
+
+    def process_candle(
+        self, candle: Candle, htf_candle_id: str,
+        parent_state: Optional[Direction] = None,
+        parent_objective=None,
+        *,
+        bar_features: Optional[dict],
+    ) -> dict:
+        """`parent_state`: ParentCRTTrack.bias (C3 direction or NONE).
+        `parent_objective`: ObjectiveStatus from htf_state.resolve_objective.
+        Both default None. Bias veto requires parent_crt.enabled.
+        Objective activation requires parent_crt.objective_gate.enabled (default
+        false — unused kwarg is ledger-neutral)."""
+        # [EPIC-84 A3b] this bar's canonical features (required argument; None = the caller has
+        # no feature row for this bar, which rejects any RETEST on it -- never a fallback value).
+        self.state.bar_features = bar_features
+        # Drop the previous bar's build attempt before any early return.
+        self.executor.last_build_attempt = None
+        # Optional baseline trace: capture state_before (no behavior change when None/disabled).
+        _bt = self.baseline_trace
+        if _bt is not None and _bt.enabled:
+            try:
+                from runtime.crt_baseline_trace import snapshot_engine_state
+                _bt.reset_bar()
+                _bt.state_before = self.state.current_state.name
+                _bt.snapshot_before = snapshot_engine_state(self.state)
+                _bt.events_at_start = len(self.state.event_log)
+                self.sm.trace_hooks = _bt
+            except Exception:
+                pass
+        else:
+            self.sm.trace_hooks = None
+
         # [PATCH 4] Auto-assign candle index
         self.state.current_candle_index += 1
         candle.index = self.state.current_candle_index
 
         # [PATCH 1] Bounded ATR buffer
-        cap = self.config.atr_period * self.config.atr_buffer_multiplier
+        cap = self._buffer_cap
         self.candle_buffer.append(candle)
         if len(self.candle_buffer) > cap:
             self.candle_buffer = self.candle_buffer[-cap:]
 
-        self.state.atr = self.detector.compute_atr(self.candle_buffer, self.config.atr_period)
+        self.state.atr_abs = self.detector.compute_atr(self.candle_buffer, self.config.atr_period)
 
         # Keep EMA state warm every candle — ready when confirmation window opens
         self.state.update_emas(
@@ -1441,8 +3651,11 @@ class CRTEngine:
                 self.log.warning("Active trade aborted on reset.")
                 self.state.active_trade.status = "STOPPED"
                 self.ev_log.record("TRADE_ABORTED", candle, reason="reset forced close")
+            # The reset path does not resolve a session label for the re-seeded range; it is
+            # recorded as "UNKNOWN" (the value the old parameter default supplied, EPIC-84:
+            # now stated explicitly at the call site instead of hidden in the signature).
             self.state.active_range = self.detector.detect_htf_range(
-                self.candle_buffer[-self.config.atr_period:], htf_candle_id
+                self.candle_buffer[-self.config.atr_period:], htf_candle_id, "UNKNOWN"
             )
             self.sm.reset_to_range(self.state, reset_reason, candle, self.ev_log)
             action["action"] = "RESET"
@@ -1454,37 +3667,246 @@ class CRTEngine:
 
         # ── Active trade management ───────────────────────────
         if self.state.active_trade and self.state.active_trade.status in ("OPEN", "TP1"):
-            result = self.executor.update_trade(self.state.active_trade, candle.close)
-            if result in ("STOPPED", "TP2", "TP1"):
+            # [trust-layer F2, 2026-06-10] GOVERNED exit model (resolved once in
+            # __init__ → self._intrabar_exits). intrabar_touch (default): SL/TP fire on a
+            # high/low wick touch with conservative SL-before-TP same-bar ordering, then
+            # drive the partial-TP state machine via the level price. close_only (legacy
+            # optimistic bound): trigger only when candle.close crosses the level. Exit
+            # booking uses the level price (backtest_v2.py:2003/2010/2012) either way, so
+            # fills stay consistent.
+            _t = self.state.active_trade
+            if self._intrabar_exits:
+                _trigger_price = self._intrabar_trigger_price(_t, candle)
+            else:
+                _trigger_price = candle.close
+
+            # [SEM-021] Displacement-origin invalidation. Evaluated HERE rather than inside
+            # ExecutionEngine.update_trade because this is where the CANDLE is in scope --
+            # the rule needs the bar's CLOSE specifically, while update_trade takes a single
+            # scalar trigger price. Keeping update_trade's signature stable also matters
+            # because the research parity floors bind to it.
+            _kill = self._displacement_origin_kill(_t, candle)
+            if _kill and self.config.displacement_origin_kill_precedence == "absolute":
+                result = self.executor.close_structural(_t, candle.close)
+            else:
+                result = self.executor.update_trade(_t, _trigger_price)
+                # after_resting_fills: resting orders (TP2/SL/TP1) fill intrabar and are
+                # mechanically prior, so the kill only speaks once they have been resolved --
+                # and it strictly PREEMPTS the SEM-017 half-way trail, so a bar that reached
+                # TP1 and closed through the origin books the partial and then exits the
+                # runner instead of arming the trail.
+                if _kill and result in ("UNCHANGED", "TP1"):
+                    result = self.executor.close_structural(_t, candle.close)
+
+            # [STORY-83.11 §6] Trade TTL. Checked LAST, only if nothing else fired this bar
+            # (result == "UNCHANGED"): a real SL/TP/structural-kill fill that happens to land
+            # on the deadline bar still wins, because it is a fill the market actually offered,
+            # not a deadline. `trade_ttl_candles is None` (default) skips this entirely --
+            # byte-identical to before this key existed (§6.4 parity requirement). §10 Q3c:
+            # TIMEOUT_MARK_TO_CLOSE — books at the bar's own close, never a trail.
+            if (
+                result == "UNCHANGED"
+                and self.trade_ttl_candles is not None
+                and (self.state.current_candle_index - _t.open_candle_index)
+                    >= self.trade_ttl_candles
+            ):
+                result = self.executor.close_timeout(_t, candle.close)
+
+            if result in ("STOPPED", "TP2", "TP1", "STOPPED_STRUCTURAL", "TIMEOUT"):
                 self.ev_log.record(
                     f"TRADE_{result}", candle,
                     reason=f"Trade {self.state.active_trade.id} closed: {result}",
                     metadata={"pnl": self.state.active_trade.pnl},
                 )
-                self.sm.try_execution_to_resolution(
-                    self.state, f"Trade closed: {result}", candle, self.ev_log
-                )
+                # [entry-chain] A resting order that SL/TP closes while the setup is still in RETEST
+                # (confirmation not yet decided) has no legal RETEST->RESOLUTION edge (RETEST only
+                # reaches EXECUTION|RANGE). Skip the hop and reset directly; the TRADE_* event
+                # above already records the close. Legacy trades are always in EXECUTION here.
+                if not (self.entry_semantics == "resting_order"
+                        and self.state.current_state == CRTState.RETEST):
+                    self.sm.try_execution_to_resolution(
+                        self.state, f"Trade closed: {result}", candle, self.ev_log
+                    )
                 self.sm.reset_to_range(self.state, "Post-resolution reset", candle, self.ev_log)
                 action["action"] = f"TRADE_{result}"
                 action["state_after"] = self.state.current_state.name
-                return action
+                return self._baseline_trace_finish(action)
+
+        # ── [STORY-83.11b] Mode C: RETEST founded by the resolver on this bar ──
+        # decider="engine" (default) never enters this block -- byte-identical to before.
+        if self.decider == "resolver" and self._found_retest_from_resolver(
+                candle, htf_candle_id, action):
+            return self._baseline_trace_finish(action)
 
         # ── State machine processing ──────────────────────────
         s = self.state.current_state
 
         if s == CRTState.RANGE:
+            # ── Pending displacement TTL countdown ─────────────────────
+            # Skip the creating bar: reset_to_range's [DEADLOCK FIX] fall-through
+            # (see the comment above the reset-check block) means a shadow created on
+            # this same candle already reaches this RANGE branch before any new sweep
+            # can be detected. Decrementing here too was an off-by-one — a configured
+            # TTL of N used to yield only N-1 usable bars. pending_displacement_created_idx
+            # is set once, on creation, so this only ever suppresses the very first tick.
+            if (self.state.pending_displacement_ttl > 0
+                    and candle.index != self.state.pending_displacement_created_idx):
+                self.state.pending_displacement_ttl -= 1
+                if self.state.pending_displacement_ttl == 0:
+                    self.log.debug(
+                        f"Shadow memory expired (TTL exhausted) at idx={candle.index}"
+                    )
+                    self.state.pending_displacement_candle = None
+                    self.state.pending_displacement_dir    = Direction.NONE
+                    self.state.pending_displacement_created_idx = 0
+
             sweep = self.detector.detect_sweep(
                 candle, self.state.active_range,
                 self.state.sweep_event, self.state.current_candle_index,  # [PATCH 2]
             )
-            if sweep:
-                self.ev_log.record(
-                    "SWEEP", candle,
-                    direction=sweep.direction.value, price=sweep.price,
-                    metadata={"double_confirmed": sweep.double_confirmed},
+            # Baseline trace: record that sweep detection was evaluated (even if None).
+            if self.sm.trace_hooks is not None:
+                _rng = self.state.active_range
+                self.sm._trace_guard(
+                    guard_id="G_RANGE_SWEEP_DETECT",
+                    guard_name="detect_sweep",
+                    source_location="crt_engine_v2.CRTEngine.process_candle:RANGE",
+                    from_state="RANGE",
+                    candidate_to_state="SWEEP",
+                    result=bool(sweep),
+                    operator="RangeDetector.detect_sweep(...)",
+                    operands=[
+                        {"name": "high", "runtime_value": candle.high, "source_class": "RAW_OHLC",
+                         "source_name": "candle.high", "source_location": "process_candle:RANGE",
+                         "formula_id": None, "feature_id": "high", "config_key": None},
+                        {"name": "low", "runtime_value": candle.low, "source_class": "RAW_OHLC",
+                         "source_name": "candle.low", "source_location": "process_candle:RANGE",
+                         "formula_id": None, "feature_id": "low", "config_key": None},
+                        {"name": "close", "runtime_value": candle.close, "source_class": "RAW_OHLC",
+                         "source_name": "candle.close", "source_location": "process_candle:RANGE",
+                         "formula_id": None, "feature_id": "close", "config_key": None},
+                        {"name": "h_ref", "runtime_value": getattr(_rng, "h_ref", None),
+                         "source_class": "STATE_MEMORY", "source_name": "active_range.h_ref",
+                         "source_location": "process_candle:RANGE",
+                         "formula_id": None, "feature_id": None, "config_key": None},
+                        {"name": "l_ref", "runtime_value": getattr(_rng, "l_ref", None),
+                         "source_class": "STATE_MEMORY", "source_name": "active_range.l_ref",
+                         "source_location": "process_candle:RANGE",
+                         "formula_id": None, "feature_id": None, "config_key": None},
+                    ],
+                    thresholds=[],
+                    short_circuit_status="NONE" if sweep else "NO_SWEEP",
+                    failure_reason=None if sweep else "no_sweep_detected",
                 )
-                self.sm.try_range_to_sweep(self.state, sweep, self.ev_log)
-                action["action"] = "SWEEP_DETECTED"
+            if sweep:
+                # ── Shadow resume path: sweep matches pending displacement ──
+                if (self.state.pending_displacement_candle is not None
+                        and sweep.direction == self.state.pending_displacement_dir):
+                    self.sm.try_range_to_shadow_pending(self.state, sweep, self.ev_log)
+                    action["action"] = "SHADOW_SWEEP_DETECTED"
+                    self.telemetry.on_candidate_opened(
+                        f"CAND-{candle.index}", candle.index, candle.timestamp.isoformat(),
+                        shadow=True,
+                    )
+                else:
+                    # ── Normal sweep path ──────────────────────────────────
+                    self.ev_log.record(
+                        "SWEEP", candle,
+                        direction=sweep.direction.value, price=sweep.price,
+                        metadata={"double_confirmed": sweep.double_confirmed},
+                    )
+                    self.sm.try_range_to_sweep(self.state, sweep, self.ev_log)
+                    action["action"] = "SWEEP_DETECTED"
+                    # [TELEMETRY] Open candidate lifecycle record
+                    self.telemetry.on_candidate_opened(
+                        f"CAND-{candle.index}", candle.index, candle.timestamp.isoformat(),
+                        shadow=False,
+                    )
+                    # ── Layer 0: Sweep Trace Packet ────────────────────────
+                    if self._sweep_tracer is not None and self.state.active_range is not None:
+                        rng = self.state.active_range
+                        _cross_high = _swept_high(candle.high, candle.close, rng.h_ref)
+                        _cross_low  = _swept_low(candle.low, candle.close, rng.l_ref)
+                        _ref        = rng.h_ref if _cross_high else rng.l_ref
+                        _pen_pts    = abs(sweep.price - _ref)
+                        _pen_atr    = _pen_pts / self.state.atr_abs if self.state.atr_abs > 0 else 0.0
+                        self._sweep_tracer.emit(
+                            candle_index      = candle.index,
+                            range_high        = rng.h_ref,
+                            range_low         = rng.l_ref,
+                            candle_open       = candle.open,
+                            candle_high       = candle.high,
+                            candle_low        = candle.low,
+                            candle_close      = candle.close,
+                            cross_high        = _cross_high,
+                            cross_low         = _cross_low,
+                            penetration_points = _pen_pts,
+                            penetration_atr   = _pen_atr,
+                            decision          = "SWEEP_HIGH" if _cross_high else "SWEEP_LOW",
+                            state_before      = "RANGE",
+                            state_after       = "SWEEP",
+                            expired           = False,
+                        )
+
+        elif s == CRTState.SHADOW_PENDING:
+            # ── SHADOW_LEAK integrity check ────────────────────────────────
+            _stored_sweep = self.state.sweep_event
+            _shadow_ok = (
+                _stored_sweep is not None
+                and _stored_sweep.direction == self.state.pending_displacement_dir
+            )
+            if not _shadow_ok:
+                emit_integrity_event(
+                    "SHADOW_LEAK", "ERROR", "crt_engine",
+                    {
+                        "candidate_id": f"CAND-{candle.index}",
+                        "pending_dir":  self.state.pending_displacement_dir.value
+                                        if self.state.pending_displacement_dir else "NONE",
+                        "sweep_dir":    _stored_sweep.direction.value
+                                        if _stored_sweep else "NONE",
+                        "candle_index": candle.index,
+                    },
+                )
+                self.state.pending_displacement_ttl    = 0
+                self.state.pending_displacement_candle = None
+                self.state.pending_displacement_dir    = Direction.NONE
+                self.state.pending_displacement_created_idx = 0
+                self.sm.reset_to_range(
+                    self.state, "SHADOW_LEAK: sweep invalid or direction mismatch",
+                    candle, self.ev_log,
+                )
+                action["action"] = "SHADOW_LEAK"
+            else:
+                # Valid resume: collapse SHADOW_PENDING → SWEEP → EXPANSION
+                _pending_formed = self.state.pending_displacement_formed_idx
+                _pending_src    = self.state.pending_displacement_source_htf
+                if self.sm.try_shadow_pending_to_expansion(self.state, candle, self.ev_log):
+                    action["action"] = "SHADOW_EXPANSION_CONFIRMED"
+                    action["shadow_source_htf"]      = _pending_src
+                    action["shadow_formed_idx"]      = _pending_formed
+                    self.state._came_from_shadow     = True  # persists until reset
+                    # Phase 4b: compute HTF alignment BEFORE clearing pending_displacement_dir
+                    # True = pending direction still aligned with HTF range midpoint (discount/premium ok)
+                    # False = direction conflict; None = no range data available
+                    _rng = self.state.active_range
+                    _pdir = self.state.pending_displacement_dir
+                    if _rng is not None and _pdir != Direction.NONE:
+                        _htf_mid = (_rng.h_ref + _rng.l_ref) / 2.0
+                        self.state._shadow_htf_alignment = (
+                            (_pdir == Direction.LONG  and candle.close < _htf_mid)
+                            or (_pdir == Direction.SHORT and candle.close > _htf_mid)
+                        )
+                    else:
+                        self.state._shadow_htf_alignment = None
+                    # Clear pending memory now that it has been consumed
+                    self.state.pending_displacement_ttl            = 0
+                    self.state.pending_displacement_candle         = None
+                    self.state.pending_displacement_dir            = Direction.NONE
+                    self.state.pending_displacement_source_htf     = ""
+                    self.state.pending_displacement_formed_idx     = 0
+                    self.state.pending_displacement_age_at_reset   = 0
+                    self.state.pending_displacement_reason_created = ""
+                    self.state.pending_displacement_created_idx    = 0
 
         elif s == CRTState.SWEEP:
             # [PATCH 2] Age check happens inside try_sweep_to_displacement
@@ -1495,6 +3917,31 @@ class CRTEngine:
                 (self.state.current_candle_index - self.state.sweep_event.candle_index)
                 > self.config.max_sweep_age_candles
             ):
+                # ── Layer 0: Sweep Trace Packet (expired) — capture BEFORE reset ──
+                if self._sweep_tracer is not None and self.state.active_range is not None:
+                    rng = self.state.active_range
+                    _cross_high = _swept_high(candle.high, candle.close, rng.h_ref)
+                    _cross_low  = _swept_low(candle.low, candle.close, rng.l_ref)
+                    _ref        = rng.h_ref if _cross_high else rng.l_ref
+                    _pen_pts    = abs(candle.high - _ref) if _cross_high else abs(candle.low - _ref)
+                    _pen_atr    = _pen_pts / self.state.atr_abs if self.state.atr_abs > 0 else 0.0
+                    self._sweep_tracer.emit(
+                        candle_index      = candle.index,
+                        range_high        = rng.h_ref,
+                        range_low         = rng.l_ref,
+                        candle_open       = candle.open,
+                        candle_high       = candle.high,
+                        candle_low        = candle.low,
+                        candle_close      = candle.close,
+                        cross_high        = _cross_high,
+                        cross_low         = _cross_low,
+                        penetration_points = _pen_pts,
+                        penetration_atr   = _pen_atr,
+                        decision          = "NONE",
+                        state_before      = "SWEEP",
+                        state_after       = "RANGE",
+                        expired           = True,
+                    )
                 self.sm.reset_to_range(self.state, "Sweep expired", candle, self.ev_log)
                 action["action"] = "SWEEP_EXPIRED"
 
@@ -1505,7 +3952,31 @@ class CRTEngine:
 
         elif s == CRTState.EXPANSION:
             self.log.debug(f"EXPANSION STATE ACTIVE | idx={candle.index}")
-            if self.sm.try_expansion_to_retest(self.state, candle, self.state.atr, self.ev_log):
+
+            # ── RC-Closure: RETEST has priority=4 > EXPIRED priority=3.
+            # Try retest FIRST so a qualifying retest always wins over TTL expiry
+            # on the same candle. If retest fires, we return before the TTL check runs.
+            # [STORY-83.11b] decider="resolver": the engine does NOT found its own RETEST.
+            # [entry-chain 2026-10-01] retest_stop_guard: ResetLogic deliberately lets EXPANSION
+            # outlive the HTF flip (should_reset returns early), so the retrace/extension resets
+            # stop applying after the first flip. A bar CLOSE at/through the stop a trade built on
+            # this bar would use means the setup is already invalidated: end it here, BEFORE a
+            # RETEST can be founded on its bounce. A direct reset (not EXPIRED) keeps the reason
+            # truthful (EXPIRED is the TTL archive state) and costs no dead bar.
+            _stop_breach = (
+                self._expansion_stop_breach(candle) if self._retest_stop_guard else None
+            )
+            if _stop_breach is not None:
+                self.sm.reset_to_range(
+                    self.state,
+                    f"stop_breached (close={candle.close:.5f} stop={_stop_breach:.5f})",
+                    candle, self.ev_log,
+                )
+                action["action"] = "EXPANSION_STOP_BREACHED"
+                action["reason"] = "stop_breached"
+
+            elif self.decider == "engine" and self.sm.try_expansion_to_retest(
+                    self.state, candle, self.state.atr_abs, self.ev_log):
                 action["action"] = "RETEST_CONFIRMED"
                 # Begin soft confirmation window (replaces binary 5-candle gate)
                 self.state.evaluating_soft_conf = True
@@ -1514,6 +3985,87 @@ class CRTEngine:
                     "BEGIN_SOFT_CONF", candle,
                     reason="Retest locked — evaluating soft confirmation manifold"
                 )
+                if self.entry_semantics == "resting_order":
+                    # [entry-chain] the order fills at THIS bar's close (the retest close); the
+                    # soft-confirmation bars that follow are walked for SL/TP.
+                    self._place_resting_order(candle, action)
+
+            else:
+                # ── Phase 3b: Expansion TTL guard ─────────────────────────────────
+                # Runs only when retest did NOT fire on this candle (RC-Closure).
+                _max_c = self.config.max_expansion_age_candles
+                _max_h = self.config.max_expansion_age_hours
+                _exp_age_c = candle.index - self.state._expansion_entry_idx
+
+                # Hour-based age: prefer actual timestamp delta; fall back to M15 approximation
+                if self.state._expansion_entry_ts is not None:
+                    _age_h = (candle.timestamp - self.state._expansion_entry_ts).total_seconds() / 3600.0
+                else:
+                    _age_h = _exp_age_c * 15.0 / 60.0   # M15 approximation
+
+                _ttl_exceeded = (
+                    (_max_c > 0 and _exp_age_c > _max_c)
+                    or (_max_h > 0 and _age_h > _max_h)
+                )
+
+                if _ttl_exceeded:
+                    # ── would_trade_if_alive: structural quality check on displacement candle ──
+                    _dc = self.state.displacement_candle
+                    _would_trade = False
+                    _body_ratio  = 0.0
+                    if _dc is not None:
+                        # Route through the canonical primitive (byte-identical to the prior inline
+                        # body/(high-low) with the rng>0 guard) — single source of truth, no re-derivation.
+                        _body_ratio  = _cm.body_ratio(_dc.open, _dc.high, _dc.low, _dc.close)
+                        _would_trade = _body_ratio >= self.config.body_ratio_min
+
+                    # freshness_ratio = age/ttl (0.20=fresh, 0.80=aging, >1.0=stale)
+                    _freshness_ratio = round(_exp_age_c / _max_c, 3) if _max_c > 0 else 0.0
+                    _age_pct         = round(_freshness_ratio * 100.0, 1)  # % form for on_expansion_ended
+
+                    # retest_distance: how far was price from triggering a retest at expiry?
+                    # depth proxy = max retrace seen during this episode (from telemetry tracker)
+                    _current_depth_abs   = self.telemetry._expansion_max_depth
+                    _retest_ceiling      = self.config.retest_depth_max   # config fraction ceiling
+                    _retest_distance_abs = max(0.0, _retest_ceiling - _current_depth_abs)
+                    _retest_depth_pct    = (
+                        round(_current_depth_abs / _retest_ceiling, 3)
+                        if _retest_ceiling > 0 else 0.0
+                    )
+
+                    emit_integrity_event("EXPANSION_EXPIRED", "WARNING", "crt_engine", {
+                        "candidate_id":          f"CAND-{self.state._expansion_entry_idx}",
+                        "expansion_age_candles": _exp_age_c,
+                        "expansion_age_hours":   round(_age_h, 1),
+                        "source":                "shadow" if self.state._came_from_shadow else "normal",
+                        "shadow_used":           self.state._came_from_shadow,
+                        "would_trade_if_alive":  _would_trade,
+                        "freshness_ratio":       _freshness_ratio,     # RC5: 0.20=fresh, 1.20=stale
+                        "age_pct_of_threshold":  _age_pct,             # e.g. 400/500 → 80.0%
+                        "retest_distance_abs":   round(_retest_distance_abs, 6),  # RC5
+                        "retest_depth_pct":      _retest_depth_pct,    # RC5: 0-1+, >1 = would have triggered
+                        "score":                 round(_body_ratio, 4),
+                        "candle_index":          candle.index,
+                    })
+                    self.telemetry.on_expansion_ended(
+                        candle.index, "EXPIRED",
+                        end_ts=candle.timestamp,
+                        shadow_used=self.state._came_from_shadow,
+                        candidate_age_at_entry=(
+                            self.state._expansion_entry_idx - self.state._displacement_entry_idx
+                        ),
+                        age_pct_of_threshold=_age_pct,
+                    )
+                    self.sm._transition(
+                        self.state, CRTState.EXPIRED, "expansion_ttl_exceeded", candle, self.ev_log
+                    )
+                    action["action"] = "EXPANSION_EXPIRED"
+
+        # ── Phase 3b: EXPIRED branch ──────────────────────────────────────────
+        # One-candle soft archive state: the episode label is committed, now reset to RANGE.
+        elif s == CRTState.EXPIRED:
+            self.sm.reset_to_range(self.state, "expansion_ttl_exceeded", candle, self.ev_log)
+            action["action"] = "EXPANSION_TTL_RESET"
 
         # ── SOFT CONFIRMATION MANIFOLD (replaces binary awaiting_confirmation) ──
         elif self.state.evaluating_soft_conf:
@@ -1531,6 +4083,63 @@ class CRTEngine:
                 self.state, candle
             )
 
+            # ── Phase 4b: Shadow age-decay gate ──────────────────────────────
+            # Applies only to shadow candidates (state._came_from_shadow == True).
+            # effective_S = final_S × exp(−λ × candidate_age_at_entry)
+            # If effective_S < tier_2_threshold, override approval to rejected.
+            _effective_S        = final_S
+            _freshness_mult     = 1.0
+            _shadow_ctx: dict   = {}
+            _shadow_disp_br     = 0.0
+            if self.state._came_from_shadow:
+                _cand_age = (
+                    self.state._expansion_entry_idx - self.state._displacement_entry_idx
+                )
+                _lambda = self.config.shadow_age_penalty_lambda
+                _norm   = self.config.shadow_age_norm_candles  # Phase 4b Variant B
+                if _lambda > 0.0:
+                    # Variant B (normalised) when norm > 0; Variant A (raw) when norm == 0.
+                    # Normalised: λ=1.0 means "at max shadow age (norm candles), score → 1/e".
+                    _age_input      = (_cand_age / _norm) if _norm > 0 else _cand_age
+                    _freshness_mult = math.exp(-_lambda * _age_input)
+                    _effective_S    = final_S * _freshness_mult
+                    # Override: if decay pushed score below threshold, un-approve
+                    if approved and _effective_S < self.config.tier_2_threshold:
+                        approved = False
+                        reason   = RejectReason.LOW_SCORE
+                _shadow_ctx = {
+                    "age":                  _cand_age,
+                    "age_normalised":       round(_cand_age / _norm, 3) if _norm > 0 else None,
+                    "htf_alignment":        self.state._shadow_htf_alignment,
+                    "freshness_multiplier": round(_freshness_mult, 4),
+                    "score_before":         round(final_S, 4),
+                    "score_after":          round(_effective_S, 4),
+                    "lambda":               _lambda,
+                    "norm_candles":         _norm,
+                    "variant":              "B_normalised" if _norm > 0 else "A_raw",
+                }
+                # Pending displacement body_ratio (stored at expansion entry for Phase 5 label)
+                _pdc = self.state.pending_displacement_candle   # already cleared; use cached value
+                # Note: pending_displacement_candle is None here (cleared at SHADOW_EXPANSION_CONFIRMED).
+                # shadow_displacement_br must be computed at expansion entry if needed for Phase 5.
+                # For Phase 4b, we log 0.0; Phase 5 can add a _shadow_displacement_br field to EngineState.
+                _shadow_disp_br = 0.0
+            # ─────────────────────────────────────────────────────────────────
+
+            # [TELEMETRY] Track S-score and decision gap every soft-conf evaluation
+            self.telemetry.on_candidate_score(_effective_S)
+            self.telemetry.on_decision_distance(
+                candle_index=candle.index,
+                score_actual=_effective_S,
+                score_threshold=self.config.tier_2_threshold,
+                accepted=approved,
+                rejection_reason=(
+                    reason.value if reason else ("APPROVED" if approved else "UNKNOWN")
+                ),
+                soft_conf_candle_num=self.state.soft_conf_candles,
+                candle_ts=candle.timestamp,   # Phase 3 — bar-open clock for the frozen PK
+            )
+
             if approved:
                 self.state.evaluating_soft_conf = False
 
@@ -1540,24 +4149,172 @@ class CRTEngine:
                 mid = (rng.h_ref + rng.l_ref) / 2
                 if self.state.direction == Direction.LONG and entry_price > mid:
                     self.ev_log.record("FILTER_REJECTED", candle, reason="Not in discount zone")
+                    # EPIC-84: telemetry BEFORE reset_to_range -- the reset nulls the geometry
+                    # this record needs (displacement/retest/cached_features).
+                    self._emit_retest_replay(candle, _effective_S, accepted=False, reject_reason="ZONE")
+                    _flat = self._flatten_if_resting(candle, "Not in discount zone")
                     self.sm.reset_to_range(self.state, "Not in discount zone", candle, self.ev_log)
-                    action["action"] = "FILTER_REJECTED"
+                    action["action"] = "TRADE_UNCONFIRMED" if _flat else "FILTER_REJECTED"
+                    action["reason"] = "Not in discount zone"
 
                 elif self.state.direction == Direction.SHORT and entry_price < mid:
                     self.ev_log.record("FILTER_REJECTED", candle, reason="Not in premium zone")
+                    self._emit_retest_replay(candle, _effective_S, accepted=False, reject_reason="ZONE")
+                    _flat = self._flatten_if_resting(candle, "Not in premium zone")
                     self.sm.reset_to_range(self.state, "Not in premium zone", candle, self.ev_log)
-                    action["action"] = "FILTER_REJECTED"
+                    action["action"] = "TRADE_UNCONFIRMED" if _flat else "FILTER_REJECTED"
+                    action["reason"] = "Not in premium zone"
+
+                # ── Parent-timeframe bias gate (CH-htfcrt-parent-candle-smc-v1, 2026-08-15) ──
+                # Fires only when parent_crt.enabled is true AND a caller passed a
+                # non-NONE parent_state that disagrees with the M15 setup direction.
+                # BacktestRunner threads ParentCRTFeed.bias (CH-parent-crt-caller-wire).
+                # enabled=false (v2_multi_2026_04) keeps this elif unreachable.
+                elif (
+                    self._parent_crt_enabled
+                    and parent_state is not None
+                    and parent_state != Direction.NONE
+                    and self.state.direction != parent_state
+                ):
+                    self.ev_log.record(
+                        "FILTER_REJECTED", candle,
+                        reason=f"Against parent-timeframe bias ({parent_state.value})",
+                    )
+                    self._emit_retest_replay(candle, _effective_S, accepted=False, reject_reason="PARENT_BIAS")
+                    _flat = self._flatten_if_resting(
+                        candle, f"Against parent-timeframe bias ({parent_state.value})")
+                    self.sm.reset_to_range(
+                        self.state, f"Against parent-timeframe bias ({parent_state.value})",
+                        candle, self.ev_log,
+                    )
+                    action["action"] = "TRADE_UNCONFIRMED" if _flat else "FILTER_REJECTED"
+                    action["reason"] = f"Against parent-timeframe bias ({parent_state.value})"
+
+                elif (
+                    self._objective_gate_enabled
+                    and parent_objective is not None
+                    and not _activation_allows(parent_objective, self._objective_gate_mode)
+                ):
+                    self.ev_log.record(
+                        "FILTER_REJECTED", candle,
+                        reason=f"Against parent-timeframe objective ({parent_objective.value})",
+                    )
+                    self._emit_retest_replay(
+                        candle, _effective_S, accepted=False, reject_reason="PARENT_OBJECTIVE",
+                    )
+                    _flat = self._flatten_if_resting(
+                        candle, f"Against parent-timeframe objective ({parent_objective.value})")
+                    self.sm.reset_to_range(
+                        self.state,
+                        f"Against parent-timeframe objective ({parent_objective.value})",
+                        candle, self.ev_log,
+                    )
+                    action["action"] = "TRADE_UNCONFIRMED" if _flat else "FILTER_REJECTED"
+                    action["reason"] = (
+                        f"Against parent-timeframe objective ({parent_objective.value})"
+                    )
 
                 else:
                     # ── Override final score with fusion S for downstream sizing ──
                     if self.state.risk_score:
                         self.state.risk_score.score_override = final_S
 
-                    self.sm.try_retest_to_execution(self.state, candle, self.ev_log)
+                    # ── Session filter (mirrors engine_runner.allowed_sessions) ──
+                    # Skip trade open if candle's session is not in the allowed set.
+                    # Live mode would reject anyway via adapter_engine; doing it here
+                    # avoids burning a CRT setup on a session that won't trade.
+                    # F-066: self.config.session_windows is authored in UTC (see
+                    # CRTConfig.session_windows's own "(UTC)" comment), but candle.timestamp on
+                    # every MT5-sourced corpus is broker-server time, not UTC. Compare against
+                    # the UTC-converted timestamp when the operator has opted in via the same
+                    # feature_pipeline.session_timestamp_basis key the FM-052 feature already
+                    # uses (default "broker_local" = byte-identical prior behavior).
+                    _sess_name = self._session_name_at(candle)
+                    if _sess_name not in self.config.allowed_sessions:
+                        self.ev_log.record(
+                            "FILTER_REJECTED", candle,
+                            reason=f"off_session:{_sess_name}",
+                            metadata={"session_name": _sess_name},
+                        )
+                        self._emit_retest_replay(candle, _effective_S, accepted=False,
+                                                 reject_reason="OFF_SESSION")
+                        _flat = self._flatten_if_resting(candle, f"off_session:{_sess_name}")
+                        self.sm.reset_to_range(
+                            self.state, "off_session_filter",
+                            candle, self.ev_log,
+                        )
+                        action["action"] = "TRADE_UNCONFIRMED" if _flat else "FILTER_REJECTED"
+                        action["reason"] = f"off_session:{_sess_name}"
+                        action["state_after"] = self.state.current_state.name
+                        return self._baseline_trace_finish(action)
+
+                    # ── Phase 4b: shadow_advisory_only hard block ─────────────
+                    # Shadow still tracks telemetry; EXECUTION is suppressed.
+                    if self.config.shadow_advisory_only and self.state._came_from_shadow:
+                        emit_integrity_event("SHADOW_ADVISORY_BLOCK", "INFO", "crt_engine", {
+                            "candidate_id":         f"CAND-{self.state._expansion_entry_idx}",
+                            "score_before":         round(final_S, 4),
+                            "score_after":          round(_effective_S, 4),
+                            "freshness_multiplier": round(_freshness_mult, 4),
+                            "htf_alignment":        self.state._shadow_htf_alignment,
+                            "candle_index":         candle.index,
+                        })
+                        self._emit_retest_replay(candle, _effective_S, accepted=False,
+                                                 reject_reason="SHADOW_ADVISORY")
+                        _flat = self._flatten_if_resting(candle, "shadow_advisory_only")
+                        self.sm.reset_to_range(
+                            self.state, "shadow_advisory_only", candle, self.ev_log
+                        )
+                        action["action"] = "TRADE_UNCONFIRMED" if _flat else "SHADOW_ADVISORY_BLOCK"
+                        return self._baseline_trace_finish(action)
+                    # ─────────────────────────────────────────────────────────
+
+                    if self.entry_semantics == "resting_order":
+                        # [entry-chain] The order is already live (placed at the RETEST bar by
+                        # `_place_resting_order`; a bar that closed it would have returned in the
+                        # trade-management block above). Approval only CONFIRMS it: move to
+                        # EXECUTION, close the candidate lifecycle ACCEPTED, emit no second
+                        # TRADE_OPENED. `active_trade` is live by construction in this branch.
+                        _live = self.state.active_trade
+                        if _live is None or _live.status not in ("OPEN", "TP1"):
+                            # Unreachable by construction (a closed order resets the setup before
+                            # confirmation can run). Fail loudly rather than confirm nothing.
+                            raise RuntimeError(
+                                "entry_semantics='resting_order' invariant violated: soft "
+                                "confirmation approved with no live resting order "
+                                f"(active_trade={'None' if _live is None else _live.status})"
+                            )
+                        self.sm.try_retest_to_execution(self.state, candle, self.ev_log)
+                        self.ev_log.record(
+                            "TRADE_CONFIRMED", candle,
+                            reason=f"Soft confirmation approved: resting order {_live.id} confirmed",
+                            metadata={"id": _live.id, "S_score": _effective_S},
+                        )
+                        action["action"]   = "TRADE_CONFIRMED"
+                        action["trade_id"] = _live.id
+                        self._record_accepted(candle, _live, _effective_S, _shadow_ctx,
+                                              _shadow_disp_br, action)
+                        action["state_after"] = self.state.current_state.name
+                        return self._baseline_trace_finish(action)
+
+                    # [entry-chain 2026-10-01] Build BEFORE the EXECUTION transition. The state
+                    # used to move to EXECUTION first and `build_trade` ran after it; a refusal
+                    # (e.g. inverted SL, 2024-06-03) then left the engine in EXECUTION with no
+                    # trade, no event and no reset, and the summary reported 0 rejected. `build_trade`
+                    # reads no `current_state`, so for a successful build the event order and every
+                    # value are unchanged (STATE_TRANSITION, then TRADE_OPENED).
                     trade = self.executor.build_trade(self.state, self.risk)
+                    if trade is None:
+                        self._reject_failed_build(candle, _effective_S, action)
+                        return self._baseline_trace_finish(action)
+                    self.sm.try_retest_to_execution(self.state, candle, self.ev_log)
 
                     if trade:
                         self.executor.open_trade(trade, candle.timestamp)
+                        # [STORY-83.11 §10 Q3d] N counts the entry bar: a TTL of N forces
+                        # closure going into bar open_candle_index + N (matches
+                        # pending_displacement_ttl_candles's counting convention, F-068).
+                        trade.open_candle_index = self.state.current_candle_index
                         self.state.active_trade = trade
                         self.ev_log.record(
                             "TRADE_OPENED", candle,
@@ -1565,7 +4322,8 @@ class CRTEngine:
                             price=trade.entry_price,
                             metadata={
                                 "id": trade.id,
-                                "S_score": final_S,
+                                "session_name": _sess_name,
+                                "S_score": _effective_S,   # Phase 4b: log penalised score
                                 "sl": trade.sl_price,
                                 "tp1": trade.tp1_price,
                                 "tp2": trade.tp2_price,
@@ -1578,6 +4336,10 @@ class CRTEngine:
                         # Embed live engine state so the backtest never needs to
                         # reach back into a static batch array for audit columns.
                         action["live_metrics"] = self.get_live_metrics()
+                        # [TELEMETRY] candidate ACCEPTED + replay + temporal integrity events:
+                        # shared with the resting-order confirm path (`_record_accepted`).
+                        self._record_accepted(candle, trade, _effective_S, _shadow_ctx,
+                                              _shadow_disp_br, action)
 
             elif self.state.soft_conf_candles >= self.config.soft_conf_max_candles:
                 # Evaluation window expired — no qualifying manifold found
@@ -1586,10 +4348,15 @@ class CRTEngine:
                     "CONFIRMATION_FAILED", candle,
                     reason=f"Soft confirmation not met within {self.config.soft_conf_max_candles} candles"
                 )
+                self._emit_retest_replay(candle, _effective_S, accepted=False,
+                                         reject_reason="LOW_SCORE")
+                _flat = self._flatten_if_resting(candle, "Soft confirmation timeout")
                 self.sm.reset_to_range(
                     self.state, "Soft confirmation timeout", candle, self.ev_log
                 )
-                action["action"] = "CONFIRMATION_FAILED"
+                action["action"] = "TRADE_UNCONFIRMED" if _flat else "CONFIRMATION_FAILED"
+                if _flat:
+                    action["reason"] = "Soft confirmation timeout"
 
             else:
                 # Still within window — continue evaluating
@@ -1597,7 +4364,7 @@ class CRTEngine:
             
 
         action["state_after"] = self.state.current_state.name
-        return action
+        return self._baseline_trace_finish(action)
 
     # ── Live metrics API ──────────────────────────────────────────
 
@@ -1621,22 +4388,119 @@ class CRTEngine:
                             decision inputs for the trade that was just opened.
 
         Called immediately after TRADE_OPENED so state reflects entry-candle values.
-        Safe to call at any time; returns zeroed/empty values if state is pre-init.
+        Safe to call at any time. EPIC-84 (no fallbacks): before the first RETEST there is no
+        cache, and every cached_* field is None ("not available") instead of a fabricated
+        0.0 / "" / False.
         """
-        cf: dict = self.state.cached_features or {}
+        # H6 (2026-07-31): read the canonical FM-027/FM-028 keys ONLY. `cached_features` is
+        # populated exclusively under these names (see :1600-1624 -- both the zeroed pre-RETEST
+        # dict and the populated post-RETEST dict always carry displacement_retrace/
+        # displacement_atr_ratio, never the legacy retest_depth/disp_strength/disp_str names), so
+        # the previous cross-collision fallback chain (`cf.get("displacement_retrace",
+        # cf.get("retest_depth", 0.0))`) could never actually resolve through its inner branch --
+        # it just re-opened the FM-027/FM-021 and FM-028/FM-020 name collision CH-002 closed on
+        # the cache, for a journal reader who might reasonably (but wrongly) infer that a
+        # cached_retest_depth value could sometimes mean the pipeline's FM-021 quantity. A `0.0`
+        # fallback covered the one real case (cache absent / pre-init). EPIC-84: that case now
+        # reports None; a present cache always carries all six keys (RETEST guard) -> strict.
+        cf = self.state.cached_features
+        if cf is None:
+            _retrace = _disp_atr = _body = _session = _dsweep = None
+        else:
+            _retrace = float(cf["displacement_retrace"])
+            _disp_atr = float(cf["displacement_atr_ratio"])
+            _body = float(cf["body_ratio"])
+            _session = str(cf["session"])
+            _dsweep = bool(cf["double_sweep"])
         return {
             # ── Universe-B raw execution indicators ──────────────────────────
-            "live_atr":              self.state.atr,
+            "live_atr":              self.state.atr_abs,
             "live_ema_fast":         self.state.ema_fast_val,
             "live_ema_slow":         self.state.ema_slow_val,
-            # ── Decision features (computed at RETEST, not at TRADE_OPENED) ──
-            "cached_retest_depth":   float(cf.get("retest_depth",  0.0)),
-            "cached_body_ratio":     float(cf.get("body_ratio",    0.0)),
-            "cached_disp_strength":  float(cf.get("disp_strength", 0.0)),
-            "cached_session":        str(cf.get("session",         "")),
-            "cached_double_sweep":   bool(cf.get("double_sweep",   False)),
+            # ── Decision features at RETEST (CH-002 / F-050 identities) ──────
+            "cached_displacement_retrace":   _retrace,   # FM-027
+            "cached_body_ratio":             _body,
+            "cached_displacement_atr_ratio": _disp_atr,  # FM-028
+            # Legacy journal aliases (same values) — prefer FM names above
+            "cached_retest_depth":   _retrace,
+            "cached_disp_strength":  _disp_atr,
+            "cached_session":        _session,
+            "cached_double_sweep":   _dsweep,
         }
 
 
 def state_risk_score(state: EngineState) -> Optional[float]:
     return state.risk_score.final if state.risk_score else None
+
+
+# ─────────────────────────────────────────────────────────────────
+# PHASE A — CRT TRANSITION PATH VIEW LAYER
+# View type + function that reads existing event_log (no new storage on EngineState).
+# Architecture invariant: CRT never knows strategy outcome.
+#                         StrategyOrchestrator never mutates CRT state.
+# ─────────────────────────────────────────────────────────────────
+
+@dataclass(frozen=True, slots=True)
+class CRTTransitionEvent:
+    """Typed, immutable VIEW of a single CRT state transition.
+
+    Constructed on demand from event_log — never stored on EngineState.
+    `feature_snapshot` is a MappingProxyType (copy-then-freeze) — downstream
+    code that tries to write to it gets a TypeError, enforcing the invariant
+    that StrategyOrchestrator MUST NEVER mutate CRT state.
+    """
+    candle_idx:       int
+    timestamp:        datetime
+    from_state:       str                 # e.g. "SWEEP"
+    to_state:         str                 # e.g. "DISPLACEMENT"
+    trigger_reason:   str                 # copied from EngineEvent.reason
+    sweep_type:       Optional[str]       # from metadata["sweep_type"]
+    disp_strength:    Optional[float]     # FM-028 value; field name retained for path API compat
+    atr:              float               # from metadata["atr"]
+    feature_snapshot: Mapping[str, Any]   # READ-ONLY — MappingProxyType at construction
+
+
+def recent_transition_path(
+    state: EngineState,
+    n: int,
+) -> List[CRTTransitionEvent]:
+    """Build a typed, windowed view of the last *n* state transitions.
+
+    Reads from state.event_log (canonical truth) — no duplicate storage.
+    Returns up to *n* `CRTTransitionEvent` items (fewer if the run has not
+    yet produced that many transitions).
+
+    Usage:
+        path = recent_transition_path(engine.state, n=16)
+        # Inject into features before orchestrator call:
+        features["_transition_path"] = path
+
+    The key ``"_transition_path"`` is the canonical dict key everywhere —
+    never use ``"_transition_history"``.
+    """
+    transitions = [
+        ev for ev in state.event_log
+        if ev.event == "STATE_TRANSITION"
+    ][-n:]
+
+    result: List[CRTTransitionEvent] = []
+    for ev in transitions:
+        # EPIC-84: the STATE_TRANSITION emitter (StateMachine._transition) always writes these
+        # four metadata keys and the from/to/reason fields -- read them strictly.
+        meta = ev.metadata
+        result.append(CRTTransitionEvent(
+            candle_idx      = ev.candle_index,
+            timestamp       = ev.timestamp,
+            from_state      = ev.state_from,
+            to_state        = ev.state_to,
+            trigger_reason  = ev.reason,
+            sweep_type      = meta["sweep_type"],
+            disp_strength   = meta["displacement_atr_ratio"],   # FM-028 (legacy alias removed)
+            atr             = float(meta["atr"]),
+            # dict() copy THEN MappingProxyType:
+            # - dict() prevents ev.metadata["features"]["x"]=y from silently
+            #   reflecting through the proxy after construction.
+            # - MappingProxyType raises TypeError on any write attempt.
+            feature_snapshot = MappingProxyType(dict(meta["features"])),
+        ))
+    return result

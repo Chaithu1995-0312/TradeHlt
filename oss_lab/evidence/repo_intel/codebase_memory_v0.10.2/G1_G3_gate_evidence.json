@@ -1,0 +1,187 @@
+{
+  "gate_id": "OSS-CODEBASE-MEMORY-G1-G3",
+  "oss_id": "OSS-CODEBASE-MEMORY",
+  "assessed_utc": "2026-08-12T20:00:00Z",
+  "assessor": "oss_lab_gate_operator",
+  "authority": "RESEARCH_LAB_ONLY",
+  "result": {
+    "G1": "PASS",
+    "G2": "PASS",
+    "G3": "PASS_WITH_RESIDUALS"
+  },
+  "lifecycle_after_g1g3": "DISCOVERED",
+  "lifecycle_note": "G1–G3 complete. G4–G6 still required for APPROVED_FOR_LAB. No install/execute/run performed beyond download+hash verify of pin archive.",
+  "pin": {
+    "version": "v0.10.2",
+    "tag": "v0.10.2",
+    "commit_sha": "b377c62a4e8b7ad64ccd295e4aa88abc8d275180",
+    "target_commitish": "main",
+    "release_url": "https://github.com/DeusData/codebase-memory-mcp/releases/tag/v0.10.2",
+    "published_at": "2026-08-11T17:08:31Z",
+    "repository": "https://github.com/DeusData/codebase-memory-mcp",
+    "windows_amd64_asset": "codebase-memory-mcp-windows-amd64.zip",
+    "windows_amd64_download_url": "https://github.com/DeusData/codebase-memory-mcp/releases/download/v0.10.2/codebase-memory-mcp-windows-amd64.zip",
+    "windows_amd64_sha256": "8f08e5c5b480e625adf9d4560765a860d493a690df6ded5b94127283ec5b660a",
+    "windows_amd64_bytes": 39152379,
+    "tarball_url": "https://api.github.com/repos/DeusData/codebase-memory-mcp/tarball/v0.10.2",
+    "git_clone_pin": "git clone --branch v0.10.2 https://github.com/DeusData/codebase-memory-mcp.git"
+  },
+  "G1_license": {
+    "status": "PASS",
+    "license_spdx": "MIT",
+    "license_url_at_pin": "https://raw.githubusercontent.com/DeusData/codebase-memory-mcp/b377c62a4e8b7ad64ccd295e4aa88abc8d275180/LICENSE",
+    "local_copy": "oss_lab/evidence/repo_intel/codebase_memory_v0.10.2/LICENSE",
+    "copyright": "Copyright (c) 2025 DeusData",
+    "obligations": [
+      "retain_copyright_notice",
+      "include_license_in_all_copies_or_substantial_portions"
+    ],
+    "verification": "Fetched LICENSE blob at commit b377c62a4e8b7ad64ccd295e4aa88abc8d275180; text is standard MIT."
+  },
+  "G2_version_pin": {
+    "status": "PASS",
+    "exact_tag": "v0.10.2",
+    "exact_commit": "b377c62a4e8b7ad64ccd295e4aa88abc8d275180",
+    "registry_updated": true,
+    "registry_path": "oss_lab/registry/oss_capabilities.jsonl",
+    "reproducible_download_urls": [
+      "https://github.com/DeusData/codebase-memory-mcp/releases/download/v0.10.2/codebase-memory-mcp-windows-amd64.zip",
+      "https://github.com/DeusData/codebase-memory-mcp/releases/download/v0.10.2/checksums.txt",
+      "https://github.com/DeusData/codebase-memory-mcp/releases/download/v0.10.2/sbom.json"
+    ],
+    "tag_ref_api": "https://api.github.com/repos/DeusData/codebase-memory-mcp/git/ref/tags/v0.10.2"
+  },
+  "G3_security_install_surface": {
+    "status": "PASS_WITH_RESIDUALS",
+    "source_audit": {
+      "status": "PASS",
+      "sources_inspected": [
+        "https://raw.githubusercontent.com/DeusData/codebase-memory-mcp/main/README.md",
+        "https://raw.githubusercontent.com/DeusData/codebase-memory-mcp/main/SECURITY.md",
+        "https://github.com/DeusData/codebase-memory-mcp/releases/tag/v0.10.2"
+      ],
+      "reads": [
+        "Source files across indexed repository tree (tree-sitter parse)",
+        "Optional broader filesystem if misconfigured / CBM_ALLOWED_ROOT unset (path containment claimed via realpath)",
+        "Agent configuration discovery paths under user home (for install)"
+      ],
+      "writes": [
+        "Agent MCP config files (Claude, Cursor, VS Code, many others) on install unless --skip-config",
+        "Graph indexes under ~/.cache/codebase-memory-mcp/ (or CBM_CACHE_DIR)",
+        "Optional .codebase-memory/graph.db.zst in repo if export used",
+        "Daemon logs under ${CBM_CACHE_DIR}/logs",
+        "Optional UI on localhost:9749"
+      ],
+      "spawns": [
+        "Background coordination daemon",
+        "Optional watchers / UI HTTP server"
+      ],
+      "explicit_vendor_warning": "Tool reads codebase and writes agent configuration files by design (README + SECURITY.md)."
+    },
+    "binary_provenance": {
+      "status": "PASS_PARTIAL",
+      "checksums_txt": {
+        "url": "https://github.com/DeusData/codebase-memory-mcp/releases/download/v0.10.2/checksums.txt",
+        "local_path": "oss_lab/evidence/repo_intel/codebase_memory_v0.10.2/checksums.txt",
+        "sha256_of_file": "cd9fb0eb42fb7701770f2ee034229d18bdb431479885ae4e772134ce33e836ff",
+        "matches_github_asset_digest": true
+      },
+      "sbom_json": {
+        "url": "https://github.com/DeusData/codebase-memory-mcp/releases/download/v0.10.2/sbom.json",
+        "local_path": "oss_lab/evidence/repo_intel/codebase_memory_v0.10.2/sbom.json",
+        "sha256_of_file": "05e9be8c304a5db14aadda48f837e341525de3dda5d96cd2daf5e31dbd894f77",
+        "matches_github_asset_digest": true
+      },
+      "windows_amd64_zip": {
+        "local_path": "results/oss_lab/repo_intel/codebase_memory_v0.10.2/codebase-memory-mcp-windows-amd64.zip",
+        "bytes": 39152379,
+        "sha256_expected": "8f08e5c5b480e625adf9d4560765a860d493a690df6ded5b94127283ec5b660a",
+        "sha256_computed": "8f08e5c5b480e625adf9d4560765a860d493a690df6ded5b94127283ec5b660a",
+        "match": true,
+        "extracted": false,
+        "executed": false
+      },
+      "slsa_sigstore": {
+        "status": "DECLARED_NOT_LOCALLY_VERIFIED",
+        "vendor_claims": [
+          "SLSA Build Level 3 provenance",
+          "Sigstore cosign keyless signatures (.bundle assets on release)"
+        ],
+        "local_commands_to_run_before_execute": [
+          "gh attestation verify results/oss_lab/repo_intel/codebase_memory_v0.10.2/codebase-memory-mcp-windows-amd64.zip --repo DeusData/codebase-memory-mcp --signer-workflow DeusData/codebase-memory-mcp/.github/workflows/_build.yml",
+          "cosign verify-blob --bundle codebase-memory-mcp-windows-amd64.zip.bundle codebase-memory-mcp-windows-amd64.zip"
+        ],
+        "residual": "gh attestation / cosign not executed in this gate turn — SHA-256 pin match is PASS; SLSA/cosign remains pre-execute residual."
+      },
+      "virustotal": {
+        "status": "VENDOR_PUBLISHED",
+        "note": "Release includes virustotal-*.tsv assets; Microsoft !ml single-engine FP family documented. Not re-queried live this turn."
+      }
+    },
+    "install_isolation": {
+      "status": "PASS",
+      "policy_path": "oss_lab/adapters/codebase_memory/INSTALL_ISOLATION.md",
+      "allowed_install_dir": "tools/oss_lab/codebase-memory/v0.10.2/",
+      "allowed_cache_dir": "results/oss_lab/repo_intel/cbm_cache/",
+      "forbidden": [
+        "venv/",
+        ".venv/",
+        "production agent global MCP config without --skip-config lab mode",
+        "docs/governance/semantic_os/",
+        "configs/production/",
+        "src/core/"
+      ],
+      "install_command_template": "Expand archive under tools/oss_lab/codebase-memory/v0.10.2/; run install.ps1 -Dir that path with --skip-config (or equivalent); set CBM_CACHE_DIR=results/oss_lab/repo_intel/cbm_cache; set CBM_ALLOWED_ROOT=<repo root>",
+      "binary_not_installed_this_turn": true
+    },
+    "network_posture": {
+      "status": "PASS_WITH_RESIDUAL",
+      "indexing_and_queries": "local (SECURITY.md)",
+      "code_upload": "vendor claims none",
+      "documented_outbound": [
+        {
+          "when": "MCP initialize (best-effort background thread)",
+          "destination": "https://api.github.com/repos/DeusData/codebase-memory-mcp/releases/latest",
+          "payload": "no project data; standard HTTPS metadata only",
+          "timeout": "curl --max-time 5",
+          "source": "SECURITY.md Runtime Network Behavior"
+        },
+        {
+          "when": "user-initiated install/update",
+          "destination": "GitHub release assets",
+          "source": "SECURITY.md + README"
+        }
+      ],
+      "lab_mitigation": "Prefer offline/airgap after pin download; block GitHub if required; treat residual update-check as ASSESSED_RISK not zero.",
+      "telemetry": "vendor claims none"
+    },
+    "secrets_env": {
+      "status": "PASS_WITH_CONTROLS",
+      "claudemd_rule": "Never read/print .env secrets",
+      "risks": [
+        "Full-repo index may include accidental secret files if present in tree",
+        "Agent config writes may touch user home MCP configs if install not --skip-config"
+      ],
+      "required_controls_before_index": [
+        "Ensure .env is gitignored and excluded via .cbmignore / ignore layers",
+        "Add .cbmignore entries for .env, **/.env, secrets/, *.pem, credentials",
+        "Set CBM_ALLOWED_ROOT to repo root",
+        "Use --skip-config for lab install so production agent configs are not mutated",
+        "Do not commit results/oss_lab/repo_intel/cbm_cache"
+      ]
+    },
+    "residual_risks": [
+      "SLSA/cosign not locally verified this turn (SHA-256 only)",
+      "Background GitHub update-check thread residual on MCP initialize",
+      "Broad install without --skip-config would mutate agent configs",
+      "Microsoft Defender !ml false-positive family possible on some platforms",
+      "Binary not yet executed — runtime behavior not MEASURED, only DOCUMENTED"
+    ]
+  },
+  "explicit_non_authorization": [
+    "Does NOT authorize Semantic OS YAML mutation",
+    "Does NOT authorize production agent default wiring",
+    "Does NOT authorize APPROVED_FOR_LAB until G4–G6",
+    "Does NOT treat arXiv claims as Tradelatest evidence"
+  ]
+}

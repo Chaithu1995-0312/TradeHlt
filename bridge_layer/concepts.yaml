@@ -1,0 +1,436 @@
+schema_version: bridge_layer/1.0
+generated_by: scripts/analysis/gen_bridge_layer.py
+generated_from:
+  commit: 09ffcb11c6946c83fe8d984fa967a64952db234c
+  branch: grokbotchanges
+  feature_schema_dim: 48
+  schema_hash: d40e7c7d5b624ef6d27670255ad95a35
+  feature_order_hash: 7901bb0d34f3d0af
+ontologies:
+- layer: Measurement
+  authority: src/features/feature_schema.py
+- layer: Feature
+  authority: configs/formulas/market_ontology.yaml
+- layer: State
+  authority: src/features/feature_states.py
+- layer: Decision
+  authority: configs/formulas/crt_state_identity.yaml
+- layer: MarketReality
+  authority: 'configs/market_reality/market_reality_v1.yaml (enabled: false)'
+status_vocabulary:
+  present: declared + authority + reachable
+  present_unwired: declared + authority implemented, not wired to runtime
+  present_no_resolver_predicate: declared + engine constructor; the resolver config carries no predicate
+  present_constructor_unreachable: declared; named blocking gap in capability contract
+  present_undefined: identity slot exists; no definition
+  absent: no declaration, no authority
+coverage:
+  canonical_total: 48
+  named_count: 23
+  named_by_a_concept:
+  - body_ratio
+  - break_of_structure
+  - breaker_distance
+  - change_of_character
+  - close
+  - disp_strength
+  - double_sweep
+  - eqh_distance
+  - eql_distance
+  - fvg_distance
+  - high
+  - liquidity_distance
+  - liquidity_pressure_score
+  - liquidity_sweep
+  - low
+  - mitigation_block_distance
+  - open
+  - order_block_distance
+  - pdh_distance
+  - pdl_distance
+  - sweep_detected
+  - trend_bias
+  - volume
+  not_named:
+  - atr
+  - body_size
+  - candle_range
+  - candles_since_sweep
+  - ema_fast
+  - ema_slow
+  - ema_spread
+  - higher_high
+  - hour_of_day
+  - lower_low
+  - macd_hist_raw
+  - macd_hist_z
+  - macd_line
+  - macd_signal
+  - momentum_score
+  - retest_depth
+  - rsi_14
+  - session
+  - swing_high
+  - swing_low
+  - trend_strength_z
+  - volatility_ratio
+  - volatility_regime
+  - volume_ratio
+  - volume_spike
+concepts:
+- id: C-001
+  concept: OHLCV
+  ontology_section: source_inputs
+  observable_definition: 'The five raw ingested columns per bar: open, high, low, close, volume. As-ingested,
+    no computation, no transform. The DAG roots every other identity grounds out at.'
+  feature_representation: FM-085 open, FM-086 high, FM-087 low, FM-088 close, FM-089 volume
+  state_representation: none - no states block; raw measurement, never banded
+  authority_module: features.feature_pipeline.FeaturePipeline (ingestion); data_ingestion.ohlcv_schema.require_ohlcv_columns
+    (contract)
+  storage_representation: vector indices 0-4; enriched_df float64/int64; feature_vectors float32
+  evidence_artifact: FeaturePipeline.run() -> feature_vectors shape (N, 48); validate_ohlcv_frame(); raw
+    OHLCV identity/hash never mutated
+  observability: directly_observable
+  status: present
+  fm_ids:
+  - FM-085
+  - FM-086
+  - FM-087
+  - FM-088
+  - FM-089
+  notes: volume is TICK_VOLUME identity on Forex; a distinct volume_range_proxy column exists for the
+    zero-volume case (Phase-1 identity closure).
+- id: C-002
+  concept: Range
+  ontology_section: structural_states (foundation) + crt_state_identity (state)
+  observable_definition: 'A frozen reference envelope: h_ref = max(high) / l_ref = min(low) over a seed
+    window, against which a later bar can be tested for boundary pierce. The engine''s founding object
+    for the whole CRT traversal.'
+  feature_representation: none directly - h_ref/l_ref are reference BOUNDARIES, not vector slots; they
+    enter the vector only through derived distances
+  state_representation: CRTState.RANGE (M15 execution ground, CRT-S-RANGE); RANGE_C1 (CRT-S-RANGE_C1,
+    ground of the disjoint parent_three_candle subgraph)
+  authority_module: config_layer.m15_structural_range.M15StructuralLiquidityRange (aliased Range in crt_engine_v2);
+    crt_engine_v2.RangeDetector
+  storage_representation: engine state enumeration; logs/crt_transitions.jsonl (state_entry_counts['RANGE'])
+  evidence_artifact: crt_transitions.jsonl TRANSITION_COUNTER block; state_distribution per-bar occupancy
+    in the run summary JSON
+  observability: derived
+  status: present
+  fm_ids: []
+  notes: NOT the same node as RANGE_C1 - do not collapse (crt_state_identity.yaml:365). HTFBuilder is
+    the reset clock; M15StructuralLiquidityRange is this object. RANGE has TWO increment sites, so state_entry_counts['RANGE']
+    counts entered-or-re-entered.
+- id: C-003
+  concept: Liquidity
+  ontology_section: derived_metrics + structural_states
+  observable_definition: Resting reference levels where price has previously reversed or paused, expressed
+    as an ATR-normalized distance from current close to the nearest such level, plus a bounded pressure
+    score derived from that distance.
+  feature_representation: FM-025 liquidity_distance (idx 36), FM-026 liquidity_pressure_score (idx 37),
+    FM-058 liquidity_sweep (idx 21), FM-059 sweep_detected (idx 20), FM-060 double_sweep (idx 6)
+  state_representation: liquidity_sweep {-1 SellSideSweep, 0 NoSweep, 1 BuySideSweep}; sweep_detected
+    {0 NoSweep, 1 SweepDetected}; double_sweep {0 NoDoubleSweep, 1 DoubleSweep}
+  authority_module: features.derived_math.liquidity_distance / liquidity_pressure_score; features.feature_pipeline.compute_canonical_structure_features
+  storage_representation: vector indices 6, 20, 21, 36, 37; taxonomy.category = Liquidity
+  evidence_artifact: feature vector values; FeatureMonitor drift report; causal_structure_series() arrays
+  observability: derived
+  status: present
+  fm_ids:
+  - FM-025
+  - FM-026
+  - FM-058
+  - FM-059
+  - FM-060
+  notes: liquidity_distance carries a 10.0 NaN sentinel feeding liquidity_pressure_score's exp decay (nan_sentinel=10.0,
+    decay_coeff=-0.5).
+- id: C-004
+  concept: Sweep
+  ontology_section: structural_predicates (SP-001 swept_boundary)
+  observable_definition: 'A bar pierces a reference boundary and closes BACK on the origin side: swept_high
+    := high > h_ref AND close < h_ref; swept_low := low < l_ref AND close > l_ref. Price took the level
+    and failed to hold beyond it.'
+  feature_representation: FM-058 liquidity_sweep (idx 21, signed), FM-059 sweep_detected (idx 20, binary),
+    FM-060 double_sweep (idx 6)
+  state_representation: CRTState.SWEEP (CRT-S-SWEEP); feature states SellSideSweep/BuySideSweep/NoSweep
+  authority_module: structure.predicates.swept_high / swept_low (SP-001 single implementation, SK-1);
+    crt_engine_v2.RangeDetector.detect_sweep delegates to the same kernel
+  storage_representation: vector indices 6, 20, 21; engine state; utils/sweep_trace_logger sweep trace
+    packets
+  evidence_artifact: sweep trace packets (SweepTraceLogger); crt_transitions.jsonl; last_resolver_evidence['sweep_sig']
+  observability: derived
+  status: present
+  fm_ids:
+  - FM-058
+  - FM-059
+  - FM-060
+  notes: sweep_price is the bar's OWN piercing extreme (high on a high sweep), never the reference level.
+    SP-001 collapsed NINE executable copies into one kernel (crt_engine_v2 x3, parent_crt, crt_state_resolver,
+    visual_crt x2, weekly_range x2).
+- id: C-005
+  concept: Displacement
+  ontology_section: structural_predicates (SP-002 directional_impulse) + derived_metrics + structural_states
+  observable_definition: Travel AWAY from the swept side with a bodied move that cleared the swept level
+    (SP-002), and/or a body-dominated candle (body_size > candle_range * strong_body_mult) whose range
+    is large against ATR.
+  feature_representation: FM-020 disp_strength (idx 33), FM-028 displacement_atr_ratio, FM-029 disp_strength_atr_rescale,
+    FM-069 displacement_flag (non-vector); FM-010 body_ratio (idx 29) is the CRT gate quantity (>= 0.70)
+  state_representation: CRTState.DISPLACEMENT (CRT-S-DISPLACEMENT); displacement_flag {0 NoDisplacement,
+    1 Displacement}; body_commitment {Low/Medium/HighCommitment}
+  authority_module: crt_engine_v2.StateMachine.try_sweep_to_displacement; features.derived_math.disp_strength
+    / displacement_atr_ratio / disp_strength_atr_rescale; config_layer.structure_profiles
+  storage_representation: vector index 33 (FM-020); FM-069 is a declared NON-vector stateful identity;
+    logs/crt_transitions.jsonl
+  evidence_artifact: crt_transitions.jsonl (SWEEP->DISPLACEMENT transition + reason); sweep trace packet;
+    telemetry displacement_success counter
+  observability: derived
+  status: present
+  fm_ids:
+  - FM-020
+  - FM-010
+  non_vector_fm_ids:
+  - FM-028
+  - FM-029
+  - FM-069
+  notes: FOUR distinct identities share the word 'displacement' - FM-020 body/(atr*close), FM-028 candle_range/atr,
+    FM-029 disp_strength/atr, and the CRTState. Do not alias them (GD-004 / FU-CRT-MOVE-MISWIRE).
+- id: C-006
+  concept: FVG (Fair Value Gap)
+  ontology_section: derived_metrics
+  observable_definition: 'A 3-candle imbalance at interior position i, tested with candles i-1 and i+1:
+    BULLISH when bars[i-1].high < bars[i+1].low (zone [bars[i-1].high, bars[i+1].low]); BEARISH when bars[i-1].low
+    > bars[i+1].high. Reported as distance to the most recent UNFILLED zone. FILLED once price trades
+    back through any part of the zone.'
+  feature_representation: FM-076 fvg_distance (idx 40), signed ATR-normalized tanh-bounded
+  state_representation: none - continuous distance; no states block. Fill status is internal to the zone
+    object
+  authority_module: features.smc.fvg.fvg_distance (impl); features.smc.fvg.find_active_fvg (zone); features.smc._geometry.signed_atr_distance
+  storage_representation: vector index 40; Zone dataclass (high, low, formed_at_index, bullish)
+  evidence_artifact: fvg_distance value in the canonical vector; find_active_fvg() Zone return
+  observability: derived
+  status: present
+  fm_ids:
+  - FM-076
+  notes: 'IS ontology-declared (derived_metrics.fvg_distance) - NOT a temporal_derivation. temporal_derivations.fair_value_gap
+    exists only in the DISABLED configs/market_reality/market_reality_v1.yaml contract (enabled: false),
+    where it was recorded GENUINELY_ABSENT; FM-076 closes that gap.'
+- id: C-007
+  concept: Order Block
+  ontology_section: derived_metrics
+  observable_definition: 'The last OPPOSITE-coloured candle immediately preceding a structural break:
+    BULLISH OB = the last down-close candle before a close above the most recent confirmed swing high;
+    BEARISH OB = the symmetric case. Zone = that origin candle''s full [low, high]. MITIGATED once price
+    later overlaps the zone (any touch, not a close).'
+  feature_representation: FM-075 order_block_distance (idx 39), signed ATR-normalized tanh-bounded distance
+    to the most recent UNMITIGATED OB's near edge
+  state_representation: none - continuous distance; no states block. Mitigation is internal Zone state
+  authority_module: features.smc.order_block.order_block_distance (impl); find_active_order_block; _origin_candle;
+    _find_break_events; features.smc._geometry.detect_causal_swings
+  storage_representation: vector index 39; Zone dataclass (high, low, formed_at_index, bullish)
+  evidence_artifact: order_block_distance value in the canonical vector; find_active_order_block() Zone
+    return
+  observability: derived
+  status: present
+  fm_ids:
+  - FM-075
+  notes: Mitigation is scanned from the CONFIRMING BREAK, not the origin - the break candle geometrically
+    overlaps the origin range. `break_events` is memoizable across the three break-event families (OB/breaker/mitigation),
+    pinned by test_smc_break_event_memo.py.
+- id: C-008
+  concept: Breaker Block
+  ontology_section: derived_metrics
+  observable_definition: 'An ORDER BLOCK that has been FULLY VIOLATED - a later candle CLOSES beyond the
+    zone''s far edge (not merely a wick touch/mitigation). The broken zone then FLIPS polarity: a failed
+    bullish OB becomes a bearish breaker, and vice versa. Active until retested.'
+  feature_representation: FM-077 breaker_distance (idx 41), signed ATR-normalized tanh-bounded distance
+    to the most recent un-retested breaker's near edge
+  state_representation: none - continuous distance; no states block. Polarity flip is internal Zone state
+  authority_module: features.smc.breaker.breaker_distance (impl) + find_active_breaker; reuses order_block._find_break_events
+    / _origin_candle (intra-package reuse)
+  storage_representation: vector index 41; Zone with bullish = not origin.bullish
+  evidence_artifact: breaker_distance value in the canonical vector; find_active_breaker() Zone return
+  observability: derived
+  status: present
+  fm_ids:
+  - FM-077
+  notes: The violation test is CLOSE-based (c.close < ob.low for a bullish OB), deliberately stricter
+    than mitigation's touch-based test - that distinction is what separates FM-077 from FM-075.
+- id: C-009
+  concept: Mitigation Block
+  ontology_section: derived_metrics
+  observable_definition: Once an order block's OUTER zone has been touched at least once, the CANDLE BODY
+    (open/close range, narrower than the wick range) of the SAME origin candle is the deeper level. The
+    mitigation block is that inner body-only zone, live only after the outer zone is touched and before
+    the inner zone is entered.
+  feature_representation: FM-078 mitigation_block_distance (idx 42), signed ATR-normalized tanh-bounded
+  state_representation: none - continuous distance; no states block
+  authority_module: features.smc.mitigation.mitigation_block_distance (impl) + find_active_mitigation_block;
+    reuses order_block helpers
+  storage_representation: vector index 42; Zone(high=body_high, low=body_low)
+  evidence_artifact: mitigation_block_distance value; find_active_mitigation_block() Zone return
+  observability: derived
+  status: present
+  fm_ids:
+  - FM-078
+  notes: Deliberately a DIFFERENT distance from FM-075, not an alias. Degenerate doji (open == close)
+    yields no usable inner zone and is skipped.
+- id: C-010
+  concept: HTF Context
+  ontology_section: htf_states (SEM-008 HTF_STATE)
+  observable_definition: 'Posture of a CLOSED parent candle against the previous closed parent: EXPANSION
+    (close breaks previous parent), REVERSAL (close breaks previous parent opposite the previous body),
+    DISTRIBUTION (close inside previous parent and range_ratio >= distribution_min), ACCUMULATION (close
+    inside and not DISTRIBUTION). First closed parent is UNKNOWN.'
+  feature_representation: none on the vector - HTF posture is a PARENT-scoped enum, not a per-bar vector
+    slot. Parent OHLC comes from ParentCandleBuilder (calendar-true) or HTFBuilder (count clock)
+  state_representation: HTFState enum {EXPANSION, ACCUMULATION, DISTRIBUTION, REVERSAL, (+UNKNOWN)}; orthogonal
+    to C1/C2/C3; explicitly NOT CRTState
+  authority_module: config_layer.htf_state.classify_htf_state(prev, curr, thresholds); features.parent_candle.ParentCandleBuilder
+    (calendar periods H1/H4/D1/W1/MN1); runtime.backtest_v2.HTFBuilder (count-based, distinct)
+  storage_representation: parent_history deque (up to `keep` CLOSED parents, oldest first); enum value;
+    parent_crt.htf_state config section
+  evidence_artifact: classify_htf_state() HTFState return; ParentCandleBuilder.parent_history; HTFBuilder.parent_candle
+  observability: derived
+  status: present_unwired
+  fm_ids: []
+  notes: Unwired until CH-htf-state-objective. ParentCandleBuilder NEVER exposes the in-progress period's
+    accumulator (no-lookahead, adversarially tested). HTFBuilder and ParentCandleBuilder answer DIFFERENT
+    questions and must not be conflated.
+- id: C-011
+  concept: Manipulation
+  ontology_section: crt_state_identity (parent_three_candle subgraph) + objectives/phases
+  observable_definition: 'At parent scale: a C2 candle sweeps the C1 boundary and closes back inside -
+    the parent-timeframe sweep. A C2 sweep alone does NOT set parent bias; bias requires DISTRIBUTION_C3
+    (F-074 at parent scale).'
+  feature_representation: none on the vector at the parent node - the parent track is driven by parent
+    OHLC, not per-bar vector slots. The M15-scale analogue is FM-058 liquidity_sweep / SP-001
+  state_representation: MANIPULATION_C2 (CRT-S-MANIPULATION_C2), subgraph parent_three_candle, occupancy_class
+    event, requires_memory true, can_emit_bias FALSE, can_emit_signal FALSE
+  authority_module: configs/formulas/crt_state_identity.yaml (identity); runtime/parent_crt.py (constructor);
+    src/research/sujan_manipulation/ (a DIFFERENT research object, SEM-031)
+  storage_representation: CRT state enumeration (parent subgraph); valid_transitions RANGE_C1 -> MANIPULATION_C2
+  evidence_artifact: parent_crt state traversal; valid_transitions edge RANGE_C1[MANIPULATION_C2, RANGE_C1]
+  observability: derived
+  status: present_no_resolver_predicate
+  fm_ids: []
+  notes: 'THREE distinct objects share this word: MANIPULATION_C2 (parent CRT), sujan_manipulation_phase1
+    (research, purges an EXTERNALLY SUPPLIED parent bulk candle; founding at UNK-007), and M15 SP-001
+    sweeps. F-077: do not collapse. market_crt_states.yaml declares NO MANIPULATION_C2 predicate, so the
+    resolver constructor cannot reach it.'
+- id: C-012
+  concept: Distribution
+  ontology_section: crt_state_identity (parent) + htf_states (SEM-008)
+  observable_definition: 'At parent scale: a directional impulse AWAY from the swept side, confirming
+    C2 - the ONLY parent state permitted to emit bias. Distinct from the statistical sense (a sample distribution)
+    and from HTFState.DISTRIBUTION (close inside previous parent with range_ratio >= distribution_min).'
+  feature_representation: none on the vector at the parent node; the statistical sense is measured by
+    backtest_v2.DistributionAnalyser, not by a feature
+  state_representation: DISTRIBUTION_C3 (CRT-S-DISTRIBUTION_C3), subgraph parent_three_candle, can_emit_bias
+    TRUE (the only such state), can_emit_signal FALSE; separately HTFState.DISTRIBUTION
+  authority_module: configs/formulas/crt_state_identity.yaml (identity); runtime/parent_crt.py (can_emit_bias
+    at parent_crt.py:102-110); config_layer.htf_state (HTFState member); runtime/backtest_v2.DistributionAnalyser
+    (statistical sense)
+  storage_representation: CRT state enumeration (parent subgraph); valid_transitions MANIPULATION_C2 ->
+    DISTRIBUTION_C3
+  evidence_artifact: parent_crt state traversal + emitted parent bias; backtest_v2 regime/session distribution
+    blocks in the run summary
+  observability: derived
+  status: present_no_resolver_predicate
+  fm_ids: []
+  notes: 'F-077 TRIPLE COLLISION: DISTRIBUTION_C3 != HTFState.DISTRIBUTION != Romeo/Sujan 4H ''State 3
+    Distribution'' (near-INVERTED meaning at the parent node). Do not collapse any pair. market_crt_states.yaml
+    declares NO DISTRIBUTION_C3 predicate.'
+- id: C-013
+  concept: CHoCH (Change of Character)
+  ontology_section: structural_states
+  observable_definition: A break-of-structure event that goes AGAINST the prevailing trend. A break agreeing
+    with the trend is ordinary continuation (BOS), not CHoCH. Pure algebra over two already-registered
+    identities - no new detection state machine, no pivot scan.
+  feature_representation: FM-083 change_of_character (idx 47), signed {-1, 0, +1}; derived from FM-057
+    break_of_structure (idx 22) x FM-054 trend_bias (idx 10)
+  state_representation: change_of_character {-1 BearishCHoCH, 0 NoCHoCH, 1 BullishCHoCH}
+  authority_module: features.smc.choch.change_of_character(break_of_structure, trend_bias)
+  storage_representation: vector index 47; taxonomy.category = MarketStructure
+  evidence_artifact: change_of_character value; FeatureStateEncoder state BearishCHoCH/NoCHoCH/BullishCHoCH
+  observability: derived
+  status: present
+  fm_ids:
+  - FM-083
+  - FM-057
+  - FM-054
+  notes: Returns 0.0 when there is no break, no defined trend to change FROM (trend_bias == 0), or the
+    break agrees with the trend. The ontology excludes BOS/CHOCH/PIVOT detection state-machines (market_ontology.yaml:32)
+    - this module adds NONE; it recombines output the registry already governs.
+- id: C-014
+  concept: EQH (Equal Highs)
+  ontology_section: derived_metrics
+  observable_definition: Two or more confirmed swing highs within a small ATR-scaled tolerance of each
+    other - the standard resting-liquidity-pool reading (the market treats near-equal highs as one larger
+    liquidity target, not independent levels).
+  feature_representation: FM-081 eqh_distance (idx 45), signed ATR-normalized tanh-bounded distance to
+    the nearest equal-highs cluster above
+  state_representation: none - continuous distance; no states block
+  authority_module: features.smc.levels.eqh_eql_distance (impl) + _nearest_equal_cluster; features.smc._geometry.collect_causal_swings
+  storage_representation: vector index 45; tolerance default tolerance_atr=0.1, max_swings=8; 0.0 when
+    no cluster
+  evidence_artifact: eqh_distance value in the canonical vector; eqh_eql_distance() tuple
+  observability: derived
+  status: present
+  fm_ids:
+  - FM-081
+  notes: Extends FM-025/FM-026 (single-swing liquidity approximation) to CLUSTERS of swings. Returns 0.0
+    when atr <= 0 or fewer than 2 swings are confirmed.
+- id: C-015
+  concept: EQL (Equal Lows)
+  ontology_section: derived_metrics
+  observable_definition: Two or more confirmed swing lows within a small ATR-scaled tolerance of each
+    other. The symmetric counterpart of EQH; same resting-liquidity-pool reading.
+  feature_representation: FM-082 eql_distance (idx 46), signed ATR-normalized tanh-bounded distance to
+    the nearest equal-lows cluster below
+  state_representation: none - continuous distance; no states block
+  authority_module: features.smc.levels.eqh_eql_distance (impl, shared with EQH); features.smc._geometry.collect_causal_swings(kind='low')
+  storage_representation: vector index 46; same tolerance/limits as EQH; 0.0 when no cluster
+  evidence_artifact: eql_distance value in the canonical vector; eqh_eql_distance() tuple
+  observability: derived
+  status: present
+  fm_ids:
+  - FM-082
+  notes: EQH and EQL share ONE implementation (eqh_eql_distance returns a 2-tuple) and are declared as
+    two separate ontology identities with two separate vector slots.
+- id: C-016
+  concept: PDH (Previous-Day High)
+  ontology_section: derived_metrics
+  observable_definition: The high of the most recently CLOSED D1 parent candle (a calendar-true daily
+    close, not a count-based window). Reported as a signed distance from current close to that level.
+  feature_representation: FM-079 pdh_distance (idx 43), signed ATR-normalized tanh-bounded; favorable_sign=-1
+    (below PDH = inside)
+  state_representation: none - continuous distance; no states block
+  authority_module: features.smc.levels.pdh_pdl_distance (impl, shared with PDL); features.parent_candle.ParentCandleBuilder('D1',
+    keep>=1).parent_history
+  storage_representation: vector index 43; source is the shared D1 builder's parent_history (one D1 builder
+    per M15 pipeline, not one per consumer)
+  evidence_artifact: pdh_distance value; ParentCandleBuilder.parent_history[-1].high
+  observability: derived
+  status: present
+  fm_ids:
+  - FM-079
+  notes: NEVER derived from HTFBuilder - that is a count-based reset clock whose boundaries are stream-offset
+    dependent, not calendar-aligned. (0.0, 0.0) when no D1 parent has closed.
+- id: C-017
+  concept: PDL (Previous-Day Low)
+  ontology_section: derived_metrics
+  observable_definition: The low of the most recently CLOSED D1 parent candle. Reported as a signed distance
+    from current close to that level.
+  feature_representation: FM-080 pdl_distance (idx 44), signed ATR-normalized tanh-bounded; favorable_sign=+1
+    (above PDL = inside)
+  state_representation: none - continuous distance; no states block
+  authority_module: features.smc.levels.pdh_pdl_distance (impl, shared with PDH); features.parent_candle.ParentCandleBuilder('D1',
+    keep>=1)
+  storage_representation: vector index 44; same shared D1 builder as PDH
+  evidence_artifact: pdl_distance value; ParentCandleBuilder.parent_history[-1].low
+  observability: derived
+  status: present
+  fm_ids:
+  - FM-080
+  notes: PDH/PDL are the location gate named explicitly in the parent-candle/SMC program study. PDH and
+    PDL share ONE implementation and are declared as two identities.

@@ -1,0 +1,123 @@
+{
+  "schema": "parameter_usage_audit.v1",
+  "policy": "no_silent_fallbacks_or_defaults",
+  "active_version": "v2_htfcrt_2026_08",
+  "evidence_sha": "1890785daf31e9376c59b27e9f4d0e0998b99377",
+  "note": "Created/updated by P2 bind pass. Numbers are from configs/source only; not invented. body_ratio_min p2_bind included from prior Tier-1 bind for inventory completeness.",
+  "params": {
+    "body_ratio_min": {
+      "p2_bind": {
+        "authority": 0.65,
+        "illegal_defaults": [
+          {
+            "site": "src/config_layer/state_identity.py:140",
+            "kind": "dataclass_default",
+            "value": 0.7
+          },
+          {
+            "site": "src/features/crt_state_resolver.py:1803",
+            "kind": "dict_get_fallback",
+            "value": 0.7
+          }
+        ],
+        "engine_bind": "CRTEngine self.config.body_ratio_min via load_prod_config_from_registry params",
+        "drift_class": "Shadowed"
+      }
+    },
+    "atr_multiplier_min": {
+      "p2_bind": {
+        "authority": 1.0,
+        "illegal_defaults": [
+          {
+            "site": "src/config_layer/state_identity.py:141",
+            "kind": "dataclass_default",
+            "value": 1.5
+          },
+          {
+            "site": "src/features/crt_state_resolver.py:1820",
+            "kind": "dict_get_fallback",
+            "value": 1.5
+          },
+          {
+            "site": "configs/production/v2_htfcrt_2026_08.json market_router.classes.FOREX",
+            "kind": "router_class_divergent",
+            "value": 1.5
+          },
+          {
+            "site": "scripts/backtest/manual_backtest.py:49 DISP_WICK_MIN_ATR",
+            "kind": "hardcoded_constant",
+            "value": 1.5
+          }
+        ],
+        "engine_bind": "CRTEngine.try_sweep_to_displacement self.config.atr_multiplier_min (crt_engine_v2.py:1367) after production params merge",
+        "drift_class": "Shadowed"
+      }
+    },
+    "expansion_atr_min_distance": {
+      "p2_bind": {
+        "authority": 0.3,
+        "illegal_defaults": [
+          {
+            "site": "src/config_layer/state_identity.py:152",
+            "kind": "dataclass_default",
+            "value": 0.2
+          },
+          {
+            "site": "src/features/crt_state_resolver.py:1887",
+            "kind": "dict_get_fallback",
+            "value": 0.2
+          },
+          {
+            "site": "configs/production/v2_htfcrt_2026_08.json market_router.classes.FOREX",
+            "kind": "router_class_divergent",
+            "value": 0.08
+          },
+          {
+            "site": "scripts/backtest/manual_backtest.py:50 EXPANSION_ATR_MIN",
+            "kind": "hardcoded_constant",
+            "value": 0.2
+          }
+        ],
+        "engine_bind": "CRTEngine.try_displacement_to_expansion self.config.expansion_atr_min_distance (crt_engine_v2.py:1551) after production params merge",
+        "drift_class": "Shadowed"
+      }
+    },
+    "retest_depth_max": {
+      "p2_bind": {
+        "authority": 0.15,
+        "illegal_defaults": [
+          {
+            "site": "src/config_layer/state_identity.py:142",
+            "kind": "dataclass_default",
+            "value": 0.25
+          },
+          {
+            "site": "src/features/crt_state_resolver.py:1598",
+            "kind": "dict_get_fallback",
+            "value": 0.25
+          },
+          {
+            "site": "scripts/research/retest_divergence_probe.py:135",
+            "kind": "dict_get_fallback",
+            "value": 0.25
+          },
+          {
+            "site": "configs/production/v2_htfcrt_2026_08.json market_router.classes.FOREX",
+            "kind": "router_class_divergent",
+            "value": 0.35
+          }
+        ],
+        "engine_bind": "CRTEngine retest adaptive ceiling self.config.retest_depth_max (crt_engine_v2.py:1633/1989/2083) after production params merge",
+        "drift_class": "Shadowed",
+        "aliases_checked": [
+          "retest_depth_max",
+          "retest_atr_depth_fraction"
+        ],
+        "dead_candidates": {
+          "max_displacement_age_candles": "dead_unconsumed (YAML only; not CRTConfig; resolver unread)",
+          "retest_atr_depth_fraction": "dead@resolver / live@engine; prod params authority 0.3; YAML declare 0.50"
+        }
+      }
+    }
+  }
+}

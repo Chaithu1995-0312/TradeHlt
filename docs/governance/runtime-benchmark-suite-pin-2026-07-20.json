@@ -1,0 +1,228 @@
+{
+  "_doc": "Runtime Benchmark Suite pin \u2014 SEPARATE authority from feature-layer freeze. RB1 primary = XAUUSD 2-month gate ON/OFF. Full multi-year corpora are RB-HEAVY only. Metrics are descriptive; no promotion authority (CLAUDE.md Section 6.5).",
+  "schema_version": "1.0.0",
+  "suite_id": "RUNTIME-BENCHMARK-SUITE-2026-07-20",
+  "status_token": "RUNTIME_BENCHMARK_SUITE = AUTHORITY_ACTIVE",
+  "policy_path": "docs/governance/runtime-benchmark-suite-2026-07-20.md",
+  "feature_freeze_pin": "docs/governance/feature-layer-freeze-pin-2026-07-20.json",
+  "authority_separation": {
+    "feature_freeze_controls": "XAUUSD feature matrix + schema + source SHAs",
+    "runtime_suite_controls": "backtest admission paths, gate mode, ledger hashes, coverage",
+    "rule": "Feature matrix parity does not imply runtime parity and vice versa."
+  },
+  "captured_at_utc": "2026-07-19T20:45:13Z",
+  "active_config_version": "v2_multi_2026_04",
+  "active_config_sha256": "dfa0fa7bf4ad0f1731957bc75b9871eef8b7e28a79165dc5b2491ca56b7fdae1",
+  "acceptance_criteria": {
+    "A1_authority_separation": true,
+    "A2_gate_explicit": true,
+    "A3_corpus_pinned": true,
+    "A4_config_pinned": true,
+    "A5_artifacts_exist": true,
+    "A6_coverage_present": true,
+    "A7_no_edge_claim": true,
+    "B1_same_csv_instrument_config": true,
+    "B2_gate_0_and_1": true,
+    "B3_no_dataset_reject": true,
+    "B4_delta_and_hashes_recorded": true,
+    "B5_artifacts_retained": true
+  },
+  "benchmarks": {
+    "RB1_XAUUSD_W2M": {
+      "name": "XAUUSD 2-month Gate OFF vs Gate ON",
+      "status": "ACCEPTED_PRIMARY",
+      "role": "PRIMARY_ITERATION_BENCHMARK",
+      "csv_path": "data/XAUUSD_W2026-03-23-to-2026-05-21.csv",
+      "csv_sha256": "131647bae4a3235ac8f5df0bc86a50cafcd315c2d2bfc9ad60d6b91679d3d25d",
+      "csv_rows": 3949,
+      "instrument": "XAUUSD",
+      "iteration_cost_note": "~40-50s per arm on this machine; preferred default for all analysis",
+      "arms": {
+        "gate_off": {
+          "run_id": "run_20260720_021316_XAUUSD",
+          "run_dir": "results\\runtime_benchmarks\\RB1_XAUUSD_W2M\\gate_off\\run_20260720_021316_XAUUSD",
+          "backtest_engine_gate": "0",
+          "instrument": "XAUUSD",
+          "active_config_version": "v2_multi_2026_04",
+          "scorer_mode": "calibrated",
+          "cli_argv": [
+            "python",
+            "src/runtime/backtest_v2.py",
+            "--csv",
+            "data/XAUUSD_W2026-03-23-to-2026-05-21.csv",
+            "--instrument",
+            "XAUUSD",
+            "--output",
+            "results\\runtime_benchmarks\\RB1_XAUUSD_W2M\\gate_off",
+            "--scorer",
+            "calibrated"
+          ],
+          "process_env": {
+            "BACKTEST_ENGINE_GATE": "0"
+          },
+          "engine_runner_log_confirmed": true,
+          "summary_metrics": {
+            "total_candles": 3949,
+            "total_setups": 0,
+            "approved_trades": 0,
+            "rejected_trades": 0,
+            "win_rate": 0.0,
+            "avg_rr_net": 0.0,
+            "total_pnl_rr_net": 0.0,
+            "max_drawdown_pct": 0.0,
+            "state_distribution": {
+              "RANGE": 3088,
+              "SWEEP": 589,
+              "DISPLACEMENT": 30,
+              "SHADOW_PENDING": 5,
+              "EXPANSION": 204,
+              "RETEST": 3
+            },
+            "rejection_reasons": {}
+          },
+          "artifact_hashes": {
+            "summary_json": "8627fe380aa7b6f29ee35a35a80af3dabe75f62126e5e1262164a29932245893",
+            "events_jsonl": "c32c38c180620d84eb1efea0aee279f99f1d43cfb7e7ea54845d8ea892f494f7",
+            "trades_csv": null,
+            "crt_telemetry_jsonl": "75eedfb1895f4d62758c82e77435d88cb91cedf3c50f65b067c25d21cce83bfa",
+            "report_txt": "99d687642a121635d1f5baced90a2377266bb1ee011dfd03754cd58a7591dcf6"
+          },
+          "event_stats": {
+            "event_count": 1561,
+            "kinds": {
+              "RESET": 943,
+              "STATE_TRANSITION": 327,
+              "SWEEP": 285,
+              "BEGIN_SOFT_CONF": 3,
+              "FILTER_REJECTED": 3
+            },
+            "state_transitions": {}
+          },
+          "coverage": {
+            "benchmark_class": "RUNTIME_BACKTEST",
+            "backtest_engine_gate": "0",
+            "exercises": {
+              "backtest_v2": true,
+              "crt_state_machine": true,
+              "session_filter": true,
+              "engine_runner_fusion_gate": false,
+              "trade_opened": false,
+              "partial_tp": false,
+              "execution_planner_path": "not_reached",
+              "ultron_risk_gate": "unknown"
+            },
+            "filter_reject_reasons": {
+              "off_session:OFF_SESSION": 2,
+              "off_session:ASIA": 1
+            },
+            "engine_reject_count": 0,
+            "trade_count": 0,
+            "tp1_hits": 0,
+            "tp2_hits": 0,
+            "notes": ""
+          },
+          "metrics_authority": "DESCRIPTIVE_ONLY_NOT_PROMOTION"
+        },
+        "gate_on": {
+          "run_id": "run_20260720_021404_XAUUSD",
+          "run_dir": "results\\runtime_benchmarks\\RB1_XAUUSD_W2M\\gate_on\\run_20260720_021404_XAUUSD",
+          "backtest_engine_gate": "1",
+          "instrument": "XAUUSD",
+          "active_config_version": "v2_multi_2026_04",
+          "scorer_mode": "calibrated",
+          "cli_argv": [
+            "python",
+            "src/runtime/backtest_v2.py",
+            "--csv",
+            "data/XAUUSD_W2026-03-23-to-2026-05-21.csv",
+            "--instrument",
+            "XAUUSD",
+            "--output",
+            "results\\runtime_benchmarks\\RB1_XAUUSD_W2M\\gate_on",
+            "--scorer",
+            "calibrated"
+          ],
+          "process_env": {
+            "BACKTEST_ENGINE_GATE": "1"
+          },
+          "engine_runner_log_confirmed": true,
+          "summary_metrics": {
+            "total_candles": 3949,
+            "total_setups": 0,
+            "approved_trades": 0,
+            "rejected_trades": 0,
+            "win_rate": 0.0,
+            "avg_rr_net": 0.0,
+            "total_pnl_rr_net": 0.0,
+            "max_drawdown_pct": 0.0,
+            "state_distribution": {
+              "RANGE": 3088,
+              "SWEEP": 589,
+              "DISPLACEMENT": 30,
+              "SHADOW_PENDING": 5,
+              "EXPANSION": 204,
+              "RETEST": 3
+            },
+            "rejection_reasons": {}
+          },
+          "artifact_hashes": {
+            "summary_json": "8627fe380aa7b6f29ee35a35a80af3dabe75f62126e5e1262164a29932245893",
+            "events_jsonl": "c32c38c180620d84eb1efea0aee279f99f1d43cfb7e7ea54845d8ea892f494f7",
+            "trades_csv": null,
+            "crt_telemetry_jsonl": "75eedfb1895f4d62758c82e77435d88cb91cedf3c50f65b067c25d21cce83bfa",
+            "report_txt": "99d687642a121635d1f5baced90a2377266bb1ee011dfd03754cd58a7591dcf6"
+          },
+          "event_stats": {
+            "event_count": 1561,
+            "kinds": {
+              "RESET": 943,
+              "STATE_TRANSITION": 327,
+              "SWEEP": 285,
+              "BEGIN_SOFT_CONF": 3,
+              "FILTER_REJECTED": 3
+            },
+            "state_transitions": {}
+          },
+          "coverage": {
+            "benchmark_class": "RUNTIME_BACKTEST",
+            "backtest_engine_gate": "1",
+            "exercises": {
+              "backtest_v2": true,
+              "crt_state_machine": true,
+              "session_filter": true,
+              "engine_runner_fusion_gate": true,
+              "trade_opened": false,
+              "partial_tp": false,
+              "execution_planner_path": "not_reached",
+              "ultron_risk_gate": "unknown"
+            },
+            "filter_reject_reasons": {
+              "off_session:OFF_SESSION": 2,
+              "off_session:ASIA": 1
+            },
+            "engine_reject_count": 0,
+            "trade_count": 0,
+            "tp1_hits": 0,
+            "tp2_hits": 0,
+            "notes": ""
+          },
+          "metrics_authority": "DESCRIPTIVE_ONLY_NOT_PROMOTION"
+        }
+      },
+      "comparison": {
+        "delta_approved_trades": 0,
+        "gate_off_trades": 0,
+        "gate_on_trades": 0,
+        "events_sha_equal": true,
+        "summary_sha_equal": true
+      }
+    },
+    "RB1_HEAVY_BNB_FULL": {
+      "status": "PARTIAL_ARCHIVAL",
+      "note": "Full BNB corpus gate-OFF completed once; gate-ON aborted (iteration cost). Not primary RB1.",
+      "gate_off_run_dir": "results\\runtime_benchmarks\\RB1_BNB_GATE\\gate_off\\run_20260720_015620_BNBUSDT",
+      "gate_off_approved_trades": 13,
+      "gate_on": "ABORTED_USER_COST"
+    }
+  }
+}

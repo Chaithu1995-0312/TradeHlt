@@ -36,6 +36,7 @@ log = logging.getLogger("TrainPipeline")
 # ─────────────────────────────────────────────────────────────────────────────
 
 from features.dataset_validator import MIN_RECORDS_TO_TRAIN, MIN_RECORDS_RECOMMEND
+from features.feature_schema import CANONICAL_FEATURE_DIM
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -75,7 +76,8 @@ def prepare_training_vectors(records: list) -> tuple:
     X, y = [], []
     for i, record in enumerate(records):
         validate_training_record(record)
-        X.append(extract_feature_vector(record["features"]))
+        fv = record["features"]
+        X.append(fv if isinstance(fv, list) else extract_feature_vector(fv))
         y.append(record["label"])
     return X, y
 
@@ -106,7 +108,12 @@ def validate_training_dataset(records: list) -> tuple:
             report["warnings"].append(f"Record {i}: {exc}")
             continue
         try:
-            extract_feature_vector(record["features"])
+            fv = record["features"]
+            if isinstance(fv, list):
+                if len(fv) != CANONICAL_FEATURE_DIM:
+                    raise ValueError(f"Feature vector length {len(fv)} != {CANONICAL_FEATURE_DIM}")
+            else:
+                extract_feature_vector(fv)
         except (ValueError, TypeError, KeyError) as exc:
             report["skipped_bad_features"] += 1
             report["warnings"].append(f"Record {i}: bad feature vector — {exc}")
@@ -266,7 +273,6 @@ def run_gaussian_update(
       gate_checks: dict
     """
     from features.dataset_validator import validate_logs
-    from config_layer.rr.rr_dataset_builder import build_dataset
     from training.trainer import train_gaussian, cross_val_gaussian, save_gaussian_model
     from training.evaluator import evaluate_gaussian
     from training.phase5_calibration import make_calibration_fn
@@ -280,14 +286,20 @@ def run_gaussian_update(
         raise ValueError(
             f"run_gaussian_update: insufficient data — "
             f"{val_report.valid_for_training} valid records "
-            f"(minimum {val_report.valid_for_training} needed). "
+            f"(minimum {MIN_RECORDS_TO_TRAIN} needed). "
             f"Check fusion logs: {log_paths}"
         )
 
     # ── Step 2: build feature matrix ─────────────────────────────────────────
+    # paired_records already have feature_vec + outcome from validate_logs;
+    # bypass rr_dataset_builder.build_dataset (which expects raw OHLCV candles
+    # for FeaturePipeline) and extract directly.
     log.info("run_gaussian_update[%s]: step 2/8 — build_dataset", version)
-    trades = [r for r in paired_records]   # already validated by validate_logs
-    X, y_rr, y_win = build_dataset(trades)
+    from config_layer.rr.rr_dataset_builder import validate_dataset_integrity
+    X     = [r["feature_vec"] for r in paired_records]
+    y_rr  = [float(r["outcome"].get("pnl_rr_net", 0.0)) for r in paired_records]
+    y_win = [int(bool(r["outcome"].get("win", False))) for r in paired_records]
+    validate_dataset_integrity(X, y_rr, y_win)
 
     if save_dataset_path:
         from config_layer.rr.rr_dataset_builder import save_dataset

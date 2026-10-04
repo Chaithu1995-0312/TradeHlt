@@ -1,0 +1,52 @@
+{
+  "change_id": "CH-asymmetry-mc-v1",
+  "date_utc": "2026-08-24",
+  "objective": "Freeze the same-timestamp long−short MFE asymmetry object (SEM-027) in sealed MC-ASYM-XAUUSD-M15-V1, then single-pass measure holdout only on a CLOSED pre-registered PRIMARY (trend_bias contrast sign). Full-sample atlas of 2026-08-24 is hypothesis-generating and is not the success gate. F-086 stride holdout unspent. No G001. No production.",
+  "change_classes": [
+    "SEMANTIC_REGISTRY_CHANGE",
+    "SCRIPT_LIFECYCLE_CHANGE"
+  ],
+  "change_class_rationale": "New research-only SEM node + MC instance + isolated measurer. Not live-spine. Frozen formula sections untouched. No new scripts/** path (python -m research.evidence.asymmetry_contract).",
+  "affected_files": [
+    "configs/formulas/market_ontology.yaml",
+    "configs/research/measurement_contracts/instances/MC-ASYM-XAUUSD-M15-V1.json",
+    "docs/research/asymmetry_object.md",
+    "docs/governance/research_family_registry.json",
+    "docs/governance/build_manifests/CH-asymmetry-mc-v1.impact.json",
+    "src/research/evidence/asymmetry_contract.py",
+    "tests/research/test_asymmetry_contract.py",
+    "tests/test_research_family_registry.py",
+    "docs/topics/research-measurement-contract.md",
+    "docs/analysis/readme.md",
+    "docs/analysis/asymmetry-holdout-2026-08-24.md",
+    "docs/current-findings.md",
+    "CLAUDE.md",
+    "docs/research-readiness/asymmetry/mc_asym_xauusd_m15_v1/metrics.json",
+    "docs/research-readiness/asymmetry/mc_asym_xauusd_m15_v1/split_manifest.json",
+    "docs/research-readiness/asymmetry/mc_asym_xauusd_m15_v1/population_fingerprint.json",
+    "docs/research-readiness/asymmetry/mc_asym_xauusd_m15_v1/mt00.json",
+    "docs/research-readiness/asymmetry/mc_asym_xauusd_m15_v1/mt01.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": ["SEM-027"],
+  "required_checks_ack": [
+    "tests/test_semantic_registry.py",
+    "tests/test_feature_lineage.py",
+    "tests/test_semantic_grounding.py",
+    "tests/test_construction_protocol.py",
+    "tests/test_script_registry.py",
+    "tests/test_script_matrix_sync.py",
+    "tests/research/test_asymmetry_contract.py",
+    "tests/test_measurement_contract.py",
+    "tests/test_research_family_registry.py",
+    "tests/test_topic_docs.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert SEM-027, MC instance, measurer, family row, tests, docs. Evidence layer atlases and parquet corpora untouched. F-086 stride holdout remains unspent.",
+  "authority_granted": "User 2026-08-24: sealed measurement contract on the asymmetry object.",
+  "authority_NOT_granted": "No production, no G001, no F-086 reopen, no hour/session as PRIMARY (F-066), no retune of which states after seeing holdout y, no spending F-086 stride holdout, no treating ΔMFE as a trade PnL.",
+  "production_behavior_changed": "NO"
+}

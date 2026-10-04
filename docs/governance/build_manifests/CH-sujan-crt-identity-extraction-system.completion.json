@@ -1,0 +1,33 @@
+{
+  "change_id": "CH-sujan-crt-identity-extraction-system",
+  "date_utc": "2026-08-28",
+  "declared_files": [
+    "docs/governance/SUJAN_CRT_IDENTITY_EXTRACTION_SYSTEM.md",
+    "docs/governance/build_manifests/CH-sujan-crt-identity-extraction-system.impact.json",
+    "docs/governance/build_manifests/CH-sujan-crt-identity-extraction-system.completion.json",
+    "docs/governance/SEMANTIC_REVIEW_PROTOCOL.md",
+    "docs/research/sujan_veto_chain_object.md",
+    "docs/knowledge-map.md",
+    "docs/timeline.md",
+    "docs/topics/research-measurement-contract.md",
+    "docs/topics/crt-spine.md",
+    "docs/current-findings.md",
+    "docs/analysis/session-log-archive/session-log-2026-08-25_to_2026-08-27.md",
+    "CLAUDE.md",
+    ".grok/rules/GROK.md",
+    ".grok/rules/sujan-crt-identity-lock.md",
+    ".grok/SUJAN_ACCEPTED.md",
+    ".grok/PENDING.md",
+    "assistant_project.md"
+  ],
+  "checks_executed": [
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/governance/test_semantic_review_protocol.py",
+    "tests/test_session_log.py"
+  ],
+  "repo_state_hash": "0fa376884d53+9d3ee3073b7f",
+  "completion_status": "BLOCKED_PREEXISTING_DIRTY_TREE",
+  "completion_note": "This change is DOCUMENTATION_ONLY and did not edit src/, configs/, or models/. validate-completion cannot claim COMPLETE while the working tree already carries unrelated governed behavior surfaces from prior uncommitted work (same residue as P-SUJAN-01). Required doc floors were executed and green (43 passed). Identity lock is on disk and session-load is wired. No G001, no SEM-031 retune."
+}

@@ -84,12 +84,18 @@ def _fusion_explain(instrument: str, engine_result: str = "") -> dict:
 )
 def _planner_plan(instrument: str, decision_json: str = "", features_json: str = "") -> dict:
     try:
-        from config_layer.execution_planner import ExecutionPlannerV1_2
-        from config_layer.production_config import get_prod_config
+        from config_layer.execution_planner import (
+            ExecutionPlannerV1_2,
+            planner_config_from_production,
+        )
+        from config_layer.production_config import get_full_config_dict, get_prod_config
         cfg      = get_prod_config(instrument)
         decision = json.loads(decision_json) if decision_json else {}
         features = json.loads(features_json) if features_json else {}
-        planner  = ExecutionPlannerV1_2(cfg)
+        # EPIC-84: the planner's own declared section. Before, this passed a CRTConfig object,
+        # which is not a dict, so the planner ran on DEFAULT_CONFIG code values entirely.
+        planner  = ExecutionPlannerV1_2(
+            planner_config_from_production(get_full_config_dict(), instrument))
         plan     = planner.plan(decision, features, cfg)
         return plan if isinstance(plan, dict) else {"status": "ok", "plan": str(plan)}
     except Exception as exc:
@@ -129,13 +135,13 @@ def _risk_check(instrument: str, trade_json: str = "") -> dict:
     description="Agent-internal: LLM reasons over component scores and returns TAKE|VETO|RESIZE advice.",
     write=False,
     args_schema={
-        "scores_json":  {"type": "str", "required": True, "desc": "JSON dict with crt, gaussian, zone_gate, rr, fusion scores"},
+        "scores_json":  {"type": "str", "required": True, "desc": "JSON dict with crt, gaussian, feature_cluster_similarity, rr, fusion scores"},
         "instrument":   {"type": "str", "required": False, "desc": "Instrument name (for context)"},
     },
 )
 def _advise_veto(scores_json: str, instrument: str = "") -> dict:
     try:
-        from config_layer.llama_gate import llm_chat
+        from config_layer.llm_inference_client import llm_chat
         scores = json.loads(scores_json)
         scores_text = "\n".join(f"  {k}: {v}" for k, v in scores.items())
         messages = [

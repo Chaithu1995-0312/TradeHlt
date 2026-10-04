@@ -1,0 +1,270 @@
+{
+  "_doc": "PHASE 1 (OHLCV Truth Closure) PASS-B machine-readable output contract: OHLCV Truth -> Candle Mathematics handoff. DERIVED FROM EVIDENCE, NOT ASPIRATION: every guarantee binds an authoritative producer, a runtime enforcer (or 'none'), evidence refs, and a guarantee_status in {PROVEN, UNPROVEN, CONTRADICTED}. A guarantee is PROVEN only with executable/static/reproducible evidence AND an actual enforcer; repository convention, comments, filenames, and external API documentation are NARRATIVE and cannot prove. FAIL-CLOSED consumption rule: a consumer requiring the OHLCV handoff MUST reject any corpus that lacks an identity binding entry or relies on a non-PROVEN handoff-required guarantee. Because handoff-required guarantees are currently UNPROVEN/CONTRADICTED, the layer verdict is BLOCKED (see closure report).",
+  "schema_version": "1.0.0",
+  "contract_id": "OHLCV-OUTPUT-CONTRACT-v1",
+  "created_utc": "2026-07-10T13:09:06Z",
+  "repository_commit": "b48d4d9a7abfb429f2a17c790d4b32083da5dd92",
+  "branch": "feature/truth-registry-v2",
+  "authority": "Governance/architecture only. Grants no economic claims, no remediation authority, no Phase-2 start.",
+  "verdict_echo": "OHLCV_CLOSURE_STATUS = BLOCKED:BC-1,BC-2[mt5|binance|yfinance],BC-3,BC-4,BC-5,BC-6[yfinance]",
+  "guarantees": [
+    {
+      "id": "G-01",
+      "statement": "Every consumed row carries the six mandatory fields (timestamp, open, high, low, close, volume); missing columns fail fast.",
+      "scope": "global",
+      "authoritative_producer": "src/data_ingestion/ohlcv_schema.py:46 REQUIRED_OHLCV_COLUMNS",
+      "runtime_enforcer": "CandleLoader.stream require_ohlcv_columns (backtest_v2.py:732); FeaturePipeline._validate_input (feature_pipeline.py:165)",
+      "evidence": [
+        {"type": "static", "ref": "backtest_v2.py:722-732"},
+        {"type": "executable", "ref": "census 2026-07-10: 224/224 artifacts schema-classified; tests/data_ingestion/test_ohlcv_schema.py green"}
+      ],
+      "contradiction_refs": [],
+      "guarantee_status": "PROVEN"
+    },
+    {
+      "id": "G-02",
+      "statement": "Timestamps within one consumed file are unique and strictly increasing; violations raise at load.",
+      "scope": "global",
+      "authoritative_producer": "CandleLoader inline L2 backstop",
+      "runtime_enforcer": "backtest_v2.py:746-755 (DatasetIntegrityError / ValueError)",
+      "evidence": [
+        {"type": "static", "ref": "backtest_v2.py:746-755"},
+        {"type": "executable", "ref": "census: 0/224 duplicate or out-of-order timestamps; tests/test_dataset_integrity.py:223-232"}
+      ],
+      "contradiction_refs": [],
+      "guarantee_status": "PROVEN"
+    },
+    {
+      "id": "G-03",
+      "statement": "No NaN/inf values, no negative volume, no OHLC geometry violations reach a consumer; violations raise per row.",
+      "scope": "global",
+      "authoritative_producer": "ohlcv_schema.validate_ohlcv_row (:165)",
+      "runtime_enforcer": "backtest_v2.py:764-768",
+      "evidence": [
+        {"type": "static", "ref": "ohlcv_schema.py:165-192"},
+        {"type": "executable", "ref": "census: 0/224 files with nonfinite/negative-volume/OHLC violations"}
+      ],
+      "contradiction_refs": [],
+      "guarantee_status": "PROVEN"
+    },
+    {
+      "id": "G-04",
+      "statement": "Timestamps parse against the canonical format set only; unparseable timestamps raise.",
+      "scope": "global",
+      "authoritative_producer": "ohlcv_schema.OHLCV_DATE_FORMATS (:70-75)",
+      "runtime_enforcer": "parse_ohlcv_timestamp (:78-87) via CandleLoader",
+      "evidence": [
+        {"type": "static", "ref": "ohlcv_schema.py:78-87"},
+        {"type": "executable", "ref": "census: 100% canonical-format timestamps across all OHLCV artifacts"}
+      ],
+      "contradiction_refs": [],
+      "guarantee_status": "PROVEN"
+    },
+    {
+      "id": "G-05",
+      "statement": "A logical corpus id (symbol+timeframe) resolves to exactly one physical artifact with a bound content hash; consumers cannot silently receive different bytes under the same name.",
+      "scope": "global",
+      "authoritative_producer": "none (no logical->physical resolver exists; consumers hard-code paths)",
+      "runtime_enforcer": "none",
+      "evidence": [
+        {"type": "executable", "ref": "census logical_rollup: 12/48 ambiguous, 9 same-logical-different-bytes"},
+        {"type": "executable", "ref": "LIVE counterexample: HANDOFF.md:11 pins data/XAUUSD_M15.csv at sha 4d73f5ce..; on-disk bytes are 486cf361.. (spot-verified 2026-07-10) - the pinned bytes moved to data/mt5/XAUUSD_M15.csv"}
+      ],
+      "contradiction_refs": ["CX-OHLCV-001", "CX-OHLCV-004"],
+      "guarantee_status": "CONTRADICTED"
+    },
+    {
+      "id": "G-06",
+      "statement": "A row's timestamp is the bar OPEN time; the row represents interval [t, t+timeframe).",
+      "scope": "family-scoped",
+      "authoritative_producer": "per family (see corpus_families)",
+      "runtime_enforcer": "none (no label-convention check exists anywhere)",
+      "evidence": [
+        {"type": "static", "ref": "PROVEN subset: resample.py:95 timestamp=bucket start; convert_binance_m1_to_m15.py:15,22 open_time + pandas label=left"},
+        {"type": "narrative", "ref": "acquisition families: MT5 rates['time'] / ccxt row[0] open-time conventions (API docs only; no test in repo references open_time/label conventions - verified 2026-07-10)"}
+      ],
+      "contradiction_refs": [],
+      "guarantee_status": "UNPROVEN",
+      "status_note": "PROVEN only for data/resampled/* and historic converter outputs; UNPROVEN for mt5/binance/yfinance acquisition families and their root descendants."
+    },
+    {
+      "id": "G-07",
+      "statement": "Naive timestamps are UTC wall time.",
+      "scope": "family-scoped",
+      "authoritative_producer": "acquisition code per family",
+      "runtime_enforcer": "none (naive datetimes carry no tz; _utcnow_naive assumes)",
+      "evidence": [
+        {"type": "static", "ref": "PROVEN subset: mt5_candle_fetcher.py:186 and fetch_and_verify_binance.py:96 both fromtimestamp(tz=utc)"},
+        {"type": "narrative", "ref": "yfinance family: no tz normalization code in fetch_forex_yfinance.py; library behavior undocumented in repo"}
+      ],
+      "contradiction_refs": [],
+      "guarantee_status": "UNPROVEN",
+      "status_note": "PROVEN for mt5/binance-produced bytes (and root FX by hash descent); UNPROVEN for yfinance and its root-crypto descendants (BTC/ETH/XRP/DOGE _M15)."
+    },
+    {
+      "id": "G-08",
+      "statement": "The volume field carries one declared semantic per corpus, and consumers can discover it.",
+      "scope": "global",
+      "authoritative_producer": "none (no volume_semantic metadata exists)",
+      "runtime_enforcer": "none",
+      "evidence": [
+        {"type": "static", "ref": "five semantics measured: tick count (mt5_candle_fetcher.py:105), ccxt base volume, synthetic leg-volume/0 (fetch_forex_yfinance.py:130-157), Decimal child-sum (resample.py:93), latent price-range proxy (feature_pipeline.py:214-216)"}
+      ],
+      "contradiction_refs": ["CX-OHLCV-003", "CX-OHLCV-008"],
+      "guarantee_status": "CONTRADICTED"
+    },
+    {
+      "id": "G-09",
+      "statement": "Only COMPLETED bars are persisted/consumed; a forming (incomplete) bar can never enter a corpus.",
+      "scope": "global",
+      "authoritative_producer": "none",
+      "runtime_enforcer": "none (future_ts_tolerance gates LABEL time only, dataset_integrity.py:353; a forming bar labeled in the past passes)",
+      "evidence": [
+        {"type": "static", "ref": "temporal report T-SEM-4: no completed-bar check found in any fetcher"}
+      ],
+      "contradiction_refs": [],
+      "guarantee_status": "UNPROVEN"
+    },
+    {
+      "id": "G-10",
+      "statement": "No undeclared substitution or repair: synthetic/substituted fields are declared to consumers; forbidden substitutions cannot occur silently.",
+      "scope": "global",
+      "authoritative_producer": "ohlcv_schema.py docstring (intent); no mechanism",
+      "runtime_enforcer": "none",
+      "evidence": [
+        {"type": "static", "ref": "CONTRADICTED by construction: T-006 synthetic crosses carry no marker and reached the canonical root (census DUP-010/024/026/029); T-003 volume proxy renames nothing (feature_pipeline.py:214-216, latent, untested)"}
+      ],
+      "contradiction_refs": ["CX-OHLCV-002", "CX-OHLCV-003", "CX-OHLCV-008"],
+      "guarantee_status": "CONTRADICTED"
+    },
+    {
+      "id": "G-11",
+      "statement": "Session-aware gap policy (missing-candle thresholds, market calendar) is enforced before consumption.",
+      "scope": "path-scoped",
+      "authoritative_producer": "dataset_integrity.validate_dataset (:257)",
+      "runtime_enforcer": "ONLY backtest_v2 entry points (:2542/:2586) + fetch gates; ~45 other CandleLoader consumers stream without it (F-039)",
+      "evidence": [
+        {"type": "static", "ref": "dataset_integrity.py:24-31 (documented scope)"},
+        {"type": "executable", "ref": "reports/dataset_integrity/*.json fingerprints exist for gated corpora"}
+      ],
+      "contradiction_refs": ["CX-OHLCV-010"],
+      "guarantee_status": "UNPROVEN",
+      "status_note": "PROVEN scoped to the L3-gated entry points; UNPROVEN as a layer-wide guarantee. Consumers must declare dataset_integrity_level (L1_L2_only vs L1_L2_L3) per the E-MT contract schema."
+    },
+    {
+      "id": "G-12",
+      "statement": "Authoritative corpora were produced through a gated (verified) acquisition path.",
+      "scope": "family-scoped",
+      "authoritative_producer": "fetch_and_verify_{mt5,binance}.py strict gates",
+      "runtime_enforcer": "none at consumption time (nothing checks provenance on load)",
+      "evidence": [
+        {"type": "executable", "ref": "census descent: root crypto BTC/ETH/XRP/DOGE _M15 are byte-identical to the UNGATED yfinance family, NOT the gated binance fetches (DUP-010/024/026/029); root XAUUSD bytes were strict-gate QUARANTINED (DUP-008)"}
+      ],
+      "contradiction_refs": ["CX-OHLCV-002", "CX-OHLCV-004"],
+      "guarantee_status": "CONTRADICTED"
+    },
+    {
+      "id": "G-13",
+      "statement": "Derived corpora (resampled) regenerate deterministically from their parents.",
+      "scope": "family-scoped (resampled)",
+      "authoritative_producer": "research.resample + write_csv (byte-pure functions)",
+      "runtime_enforcer": "tests/research/test_resample_corpus_parity.py pattern + scripts/research/verify_m5_resample_parity.py",
+      "evidence": [
+        {"type": "static", "ref": "resample.py:29-32,139-162 (Decimal sum, repr round-trip, \\n terminator)"},
+        {"type": "reproducible", "ref": "python scripts/research/build_resampled_data.py (re-run and diff)"}
+      ],
+      "contradiction_refs": [],
+      "guarantee_status": "PROVEN",
+      "status_note": "Per-file parent-hash linkage is not recorded (generation log absent) - determinism proven, historical attribution LIKELY."
+    },
+    {
+      "id": "G-14",
+      "statement": "Each corpus's acquisition provenance (source, session, transformation chain) is recorded and reconstructible.",
+      "scope": "global",
+      "authoritative_producer": "none (no acquisition logs exist)",
+      "runtime_enforcer": "none",
+      "evidence": [
+        {"type": "executable", "ref": "census: source_provenance UNKNOWN for the entire data_root family except by hash-descent inference; historic builder scripts have no generation records"}
+      ],
+      "contradiction_refs": [],
+      "guarantee_status": "UNPROVEN"
+    }
+  ],
+  "handoff_required_guarantees": ["G-01", "G-02", "G-03", "G-04", "G-05", "G-06", "G-07", "G-08", "G-09", "G-10"],
+  "handoff_gate_rule": "Phase 1 may hand off to Candle Mathematics only when every handoff-required guarantee is PROVEN. Current: G-01..G-04 PROVEN; G-06/G-07/G-09 UNPROVEN; G-05/G-08/G-10 CONTRADICTED => BLOCKED.",
+  "corpus_families": {
+    "mt5": {
+      "identity_binding_required": ["logical_corpus_id", "physical_path", "sha256", "authority_class", "source_family", "transformation_chain"],
+      "volume_semantic": "tick_count (mt5_candle_fetcher.py:105) - DECLARED here, unenforced in data",
+      "timestamp_semantic": "UTC PROVEN (static); open-time labeling UNPROVEN (narrative)",
+      "admissibility": "ADMISSIBLE_WITH_BINDING",
+      "admissibility_note": "Row-integrity + UTC proven; gated acquisition; consumers must carry the open-time caveat until G-06 is proven for this family."
+    },
+    "binance": {
+      "identity_binding_required": ["logical_corpus_id", "physical_path", "sha256", "authority_class", "source_family", "transformation_chain"],
+      "volume_semantic": "exchange base volume (ccxt unified) - narrative",
+      "timestamp_semantic": "UTC PROVEN (static); open-time labeling UNPROVEN (narrative)",
+      "admissibility": "ADMISSIBLE_WITH_BINDING",
+      "admissibility_note": "Same caveat structure as mt5."
+    },
+    "yfinance": {
+      "identity_binding_required": ["logical_corpus_id", "physical_path", "sha256", "authority_class", "source_family", "transformation_chain"],
+      "volume_semantic": "SYNTHETIC for crosses (leg volume or 0, fetch_forex_yfinance.py:130-157); undeclared in data",
+      "timestamp_semantic": "timezone UNPROVEN; labeling UNKNOWN",
+      "admissibility": "NOT_ADMISSIBLE_AS_AUTHORITATIVE",
+      "admissibility_note": "BC-6: no verify gate, synthetic construction, tz unproven, forming-bar unproven. Usable only as explicitly-declared research scratch data."
+    },
+    "data_root_fx": {
+      "identity_binding_required": ["logical_corpus_id", "physical_path", "sha256", "authority_class", "source_family", "transformation_chain"],
+      "volume_semantic": "tick_count by mt5 hash-descent",
+      "timestamp_semantic": "inherits mt5 (hash-descent)",
+      "admissibility": "ADMISSIBLE_WITH_BINDING",
+      "admissibility_note": "Byte-identical to gated mt5 twins (census DUPs) EXCEPT XAUUSD_M15 - see BC-5: current root bytes were strict-gate quarantined and drifted from the HANDOFF pin; XAUUSD_M15 is NOT_ADMISSIBLE_AS_AUTHORITATIVE until its lineage is adjudicated."
+    },
+    "data_root_crypto": {
+      "identity_binding_required": ["logical_corpus_id", "physical_path", "sha256", "authority_class", "source_family", "transformation_chain"],
+      "volume_semantic": "UNKNOWN (yfinance-descent for BTC/ETH/XRP/DOGE; indistinguishable for BNB/SOL)",
+      "timestamp_semantic": "inherits yfinance UNPROVEN status for BTC/ETH/XRP/DOGE",
+      "admissibility": "NOT_ADMISSIBLE_AS_AUTHORITATIVE",
+      "admissibility_note": "BC-3: descends from the ungated family. This classification does NOT declare binance/ authoritative - that is a remediation decision outside this contract."
+    },
+    "resampled": {
+      "identity_binding_required": ["logical_corpus_id", "physical_path", "sha256", "authority_class", "source_family", "transformation_chain", "derivation_parent_ids"],
+      "volume_semantic": "Decimal sum of parent volumes (semantic inherited from parent)",
+      "timestamp_semantic": "open-time PROVEN (resample.py:95); tz inherited from parent",
+      "admissibility": "ADMISSIBLE_WITH_BINDING",
+      "admissibility_note": "Inherits every parent caveat (parents are data_root crypto majors => parent admissibility gates this family too)."
+    },
+    "archive_quarantine": {
+      "admissibility": "NOT_ADMISSIBLE",
+      "admissibility_note": "_archive_5wk/ frozen snapshots and _rejected/ quarantine. No active reader exists (proven); re-entry via byte-identical twins is the BC-5 channel."
+    },
+    "perp": {
+      "admissibility": "EXCLUDED",
+      "admissibility_note": "Non-OHLCV (funding/basis). Outside this contract."
+    }
+  },
+  "htf_definitions": {
+    "calendar_htf": "research.resample bucket candles (00:00-aligned, causality-invariant) - resample.py:105",
+    "rolling_count_htf": "HTFBuilder N-candle windows (boundaries drift after gaps) - backtest_v2.py:780-808",
+    "rule": "The two are DIFFERENT objects (CX-OHLCV-007). Any downstream doc/config saying 'H4' must say which."
+  },
+  "forbidden_substitutions": [
+    "synthetic volume presented without an is_synthetic declaration (T-003 proxy, T-006 leg-volume)",
+    "synthetic/derived OHLC presented as source data (T-006 cross construction)",
+    "forward/backward fill of candle rows (none exists in src/ today - preserved as a negative guarantee)",
+    "silent dedup policy changes (keep-first vs keep-last divergence, T-009 vs T-006)",
+    "alternate physical file consumed under a bound logical id without hash re-verification (FC-OHLCV-24)",
+    "timestamp shift or relabeling without provenance (FC-OHLCV-04/06)",
+    "replacing a hash-pinned canonical corpus without a recorded promotion decision (the BC-5 event)"
+  ],
+  "trust_status": {
+    "failure_classes_registered": 29,
+    "canonical_seeds_defined": 29,
+    "detectors_implemented": 21,
+    "clean_path_probes_green": "NOT_MEASURED",
+    "mutants_killed": "NOT_MEASURED",
+    "mutation_score": "NOT_MEASURED",
+    "coverage_note": "Mutation REGISTRATION is complete; DETECTION coverage is not. 8 classes (FC-OHLCV-04/05/06/08/19/20/21/24) have no current detector - they require the identity/semantics binding this contract specifies. '29/29 seeds' MUST NOT be read as E-MT-01 COMPLETE."
+  }
+}

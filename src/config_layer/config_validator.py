@@ -102,13 +102,21 @@ def _clamp(v: float, lo: float = 0.0, hi: float = 1.0) -> float:
     return max(lo, min(hi, v))
 
 
-def _params_to_crt_config(params: dict):
-    """Map a flat params dict to CRTConfig, ignoring unknown keys."""
-    from config_layer.crt_engine_v2 import CRTConfig
+def _params_to_crt_config(params: dict, instrument: str):
+    """Candidate params ON TOP OF the production config for ``instrument``.
+
+    EPIC-84 (no defaults): before, the fields a candidate did not name came from CRTConfig
+    code defaults. Now they come from the active production config -- the candidate is
+    judged against the declared config it would replace. Unknown keys are still ignored
+    (the params dict also carries non-CRT knobs); session_windows/conf_weights/sizing_bands
+    are never taken from a flat params dict.
+    """
+    from config_layer.config_builder import ConfigBuilder
+    from config_layer.state_identity import CRTConfig
     known = {f.name for f in CRTConfig.__dataclass_fields__.values()
              if f.name not in ("session_windows", "conf_weights", "sizing_bands")}
     kwargs = {k: v for k, v in params.items() if k in known}
-    return CRTConfig(**kwargs)
+    return ConfigBuilder.from_production(instrument, overrides=kwargs or None)
 
 
 def _fitness_score(
@@ -142,48 +150,43 @@ def _run_instrument(
     crt_config,
     warmup: int | None = None,
 ) -> dict:
-    """Run a single-instrument backtest and return a metrics dict."""
-    try:
-        from runtime.backtest_v2 import BacktestConfig, BacktestRunner, CandleLoader
-        cfg = BacktestConfig.from_prod_config(
-            instrument=instrument,
-            crt_config=crt_config,
-        )
-        # honour explicit warmup override (e.g. from CLI --warmup flag)
-        if warmup is not None:
-            cfg.warmup_candles = warmup
-        loader = CandleLoader(str(csv_path), instrument)
-        runner = BacktestRunner(cfg, csv_path=str(csv_path))
-        m = runner.run(loader.stream(), loader.count(), output_dir="results/validation_tmp")
+    """Run a single-instrument backtest and return a metrics dict. Raises on any failure."""
+    from runtime.backtest_v2 import BacktestConfig, BacktestRunner, CandleLoader
+    cfg = BacktestConfig.from_prod_config(
+        instrument=instrument,
+        crt_config=crt_config,
+        pip_size=0.0001,
+        scorer_mode="calibrated",
+        allow_router_crt_config=False,
+        strategy_id="",
+    )
+    if warmup is not None:
+        cfg.warmup_candles = warmup
+    loader = CandleLoader(str(csv_path), instrument)
+    runner = BacktestRunner(cfg, csv_path=str(csv_path))
+    m = runner.run(loader.stream(), loader.count(), output_dir="results/validation_tmp")
 
-        n_trades   = m.approved_trades
-        win_rate   = _safe(m.win_rate)
-        exp_rr     = _safe(m.avg_rr_net)
-        max_dd     = _safe(m.max_drawdown_pct)
-        total_pnl  = _safe(m.total_pnl_rr_net)
+    n_trades  = m.approved_trades
+    win_rate  = _safe(m.win_rate)
+    exp_rr    = _safe(m.avg_rr_net)
+    max_dd    = _safe(m.max_drawdown_pct)
+    total_pnl = _safe(m.total_pnl_rr_net)
+    total_ret = _safe(m.total_return_pct)
+    score     = _fitness_score(win_rate, exp_rr, n_trades, max_dd)
 
-        score = _fitness_score(win_rate, exp_rr, n_trades, max_dd)
-
-        return {
-            "score":          round(score, 4),
-            "trades":         n_trades,
-            "win_rate":       round(win_rate, 4),
-            "expectancy_rr":  round(exp_rr, 4),
-            "max_drawdown":   round(max_dd, 4),
-            "total_pnl_rr":   round(total_pnl, 4),
-            "error":          None,
-        }
-
-    except Exception as exc:
-        return {
-            "score":         -999.0,
-            "trades":        0,
-            "win_rate":      0.0,
-            "expectancy_rr": 0.0,
-            "max_drawdown":  1.0,
-            "total_pnl_rr":  0.0,
-            "error":         str(exc),
-        }
+    return {
+        "score":         round(score, 4),
+        "trades":        n_trades,
+        "win_rate":      round(win_rate, 4),
+        "expectancy_rr": round(exp_rr, 4),
+        "max_drawdown":  round(max_dd, 4),
+        "total_pnl_rr":  round(total_pnl, 4),
+        # [trust-layer F6, 2026-06-10] Thread ROI out so _aggregate_metrics can surface
+        # total_return_pct_across (it read this key but it was never produced → dead 0.0).
+        # ROI stays additive/measure-only — never folded into final_score.
+        "total_return_pct": round(total_ret, 4),
+        "error":         None,
+    }
 
 
 def _aggregate_metrics(per_instrument: dict) -> dict:
@@ -208,10 +211,17 @@ def _aggregate_metrics(per_instrument: dict) -> dict:
     else:
         std = 0.0
 
+    # [trust-layer F5, 2026-06-10] HALF the cross-instrument score std-dev, used here as
+    # a penalty folded into final_score. Distinct from PromotionManager's `score_std_dev`
+    # (the FULL std, logged as telemetry) — different role, not a duplicate metric.
     consistency_penalty = round(std * 0.5, 4)   # half std-dev as penalty
     final_score         = round(max(0.0, mean_s - consistency_penalty), 4)
     total_trades        = sum(v["trades"] for v in valid.values())
     max_dd              = max(v["max_drawdown"] for v in valid.values())
+
+    # ROI is additive/measure-only — surfaced here but NEVER folded into final_score.
+    roi_vals = [v["total_return_pct"] for v in valid.values() if "total_return_pct" in v]
+    total_return_pct_across = round(sum(roi_vals) / len(roi_vals), 4) if roi_vals else 0.0
 
     return {
         "final_score":         final_score,
@@ -219,6 +229,7 @@ def _aggregate_metrics(per_instrument: dict) -> dict:
         "consistency_penalty": consistency_penalty,
         "total_trades":        total_trades,
         "max_drawdown_across": round(max_dd, 4),
+        "total_return_pct_across": total_return_pct_across,
     }
 
 
@@ -290,6 +301,33 @@ def _run_quality_gates(
             "Fitness may be instrument-specific, not general."
         )
 
+    # -- Goal Layer enforcement (DORMANT — only when goal.enforce=True) ------
+    # The Goal Layer is advisory-by-default; its report is emitted as backtest
+    # telemetry (see backtest_v2._attach_goal_report). Promotion only HARD-blocks
+    # on goal failure when the active config sets goal.enforce=True. Default
+    # enforce=False ⇒ this block is inert (zero behaviour change). config_validator
+    # has only the per-instrument subset of metrics, so trades_per_month / avg_rr
+    # report SKIP here (not counted as FAIL).
+    try:
+        from config_layer.goal_schema import load_goal_spec
+        from config_layer.goal_validator import GoalValidator
+        goal = load_goal_spec()
+        if goal.enabled and goal.enforce:
+            for inst, res in per_instrument.items():
+                if res.get("error"):
+                    continue
+                rpt = GoalValidator.evaluate({
+                    "win_rate":         _safe(res.get("win_rate")),
+                    "expectancy_r":     _safe(res.get("expectancy_rr")),
+                    "max_drawdown_pct": _safe(res.get("max_drawdown")),
+                }, spec=goal)
+                for fc in rpt.failed_criteria:
+                    hard_failures.append(f"{inst}: goal '{goal.goal_id}' FAIL -- {fc}")
+    except Exception as exc:
+        # Fail-OPEN on the enforcement path: a goal-load error must never silently
+        # REJECT a config. The advisory report still surfaces the gap in telemetry.
+        warnings.append(f"goal enforcement skipped (load error): {exc}")
+
     decision = "REJECT" if hard_failures else "APPROVE"
     return decision, hard_failures, warnings
 
@@ -313,6 +351,7 @@ class ConfigValidator:
         config_id: str = "unnamed",
         use_llm: bool = False,
         warmup_candles: int = 30,
+        engine_runner: dict | None = None,
     ) -> dict:
         """
         Validate a params dict against all provided instrument CSVs.
@@ -352,14 +391,8 @@ class ConfigValidator:
                 hard_failures=["No CSV paths provided -- nothing to validate."],
             )
 
-        # Build CRTConfig from params (unknown keys silently ignored)
-        try:
-            crt_config = _params_to_crt_config(params)
-        except Exception as exc:
-            return ConfigValidator._reject(
-                config_id, params,
-                hard_failures=[f"Failed to build CRTConfig from params: {exc}"],
-            )
+        # EPIC-84: the CRTConfig is built per instrument (candidate params on top of that
+        # instrument's production config) inside the loop below.
 
         W = 60
         print(f"\n{'='*W}")
@@ -371,16 +404,40 @@ class ConfigValidator:
         per_instrument: dict = {}
         for inst, csv_path in csv_paths.items():
             if not Path(csv_path).exists():
-                per_instrument[inst] = {
-                    "score": -999.0, "trades": 0,
-                    "win_rate": 0.0, "expectancy_rr": 0.0,
-                    "max_drawdown": 1.0, "total_pnl_rr": 0.0,
-                    "error": f"CSV not found: {csv_path}",
-                }
-                continue
+                return ConfigValidator._reject(
+                    config_id, params,
+                    hard_failures=[f"CSV not found for {inst}: {csv_path}"],
+                )
+
+            # Build CRTConfig: candidate params on top of this instrument's production config
+            # (unknown keys ignored; EPIC-84 -- no code defaults fill unnamed fields).
+            try:
+                crt_config = _params_to_crt_config(params, inst)
+            except Exception as exc:
+                return ConfigValidator._reject(
+                    config_id, params,
+                    hard_failures=[f"Failed to build CRTConfig from params for {inst}: {exc}"],
+                )
+
+            # Apply per-instrument session override so an ROI gain that comes
+            # from allowed_sessions_overrides is scored on the SAME set the live
+            # runtime uses (production_config is the single source of truth).
+            inst_cfg = crt_config
+            if engine_runner is not None:
+                import dataclasses
+                from config_layer.production_config import resolve_allowed_sessions
+                _sessions = resolve_allowed_sessions(engine_runner, inst)
+                if _sessions is not None:
+                    inst_cfg = dataclasses.replace(crt_config, allowed_sessions=_sessions)
 
             print(f"  Running {inst} ...")
-            result = _run_instrument(inst, csv_path, crt_config, warmup=warmup_candles)
+            try:
+                result = _run_instrument(inst, csv_path, inst_cfg, warmup=warmup_candles)
+            except Exception as exc:
+                return ConfigValidator._reject(
+                    config_id, params,
+                    hard_failures=[f"Backtest failed for {inst}: {exc}"],
+                )
             per_instrument[inst] = result
 
             status = "OK" if result["error"] is None else f"ERROR: {result['error']}"
@@ -527,7 +584,7 @@ if __name__ == "__main__":
 
     # validate-params
     vpf = sub.add_parser("validate-params", help="Validate a params JSON file")
-    vpf.add_argument("--params", required=True, help="JSON file with params dict")
+    vpf.add_argument("--params", required=True, help="JSON file path or inline JSON string with params dict")
     vpf.add_argument("--data-dir", default="data")
     vpf.add_argument("--config-id", default="cli_validation")
     vpf.add_argument("--output", default=None)
@@ -543,8 +600,12 @@ if __name__ == "__main__":
             version=args.version, csv_paths=csv_paths
         )
     elif args.cmd == "validate-params":
-        with open(args.params) as f:
-            params = json.load(f)
+        raw = args.params.strip()
+        if raw.startswith("{"):
+            params = json.loads(raw)
+        else:
+            with open(raw) as f:
+                params = json.load(f)
         csv_paths = ConfigValidator._discover_csvs(args.data_dir)
         if not csv_paths:
             print(f"\nNo CSVs found in {args.data_dir}. Provide instrument CSVs.\n")

@@ -1,0 +1,150 @@
+{
+  "_doc": "Normalized comparison matrix template. Every cell needs value, unit, definition, source_artifact, run_id, status. Status ∈ VERIFIED|MEASURED|REPRODUCED|UNKNOWN|NOT_APPLICABLE|FAILED|NOT_RUN. Do not fill missing cells with assumptions.",
+  "matrix_id": "BM-MATRIX-XAUUSD-M15-PHASE1",
+  "scenario_id": "BM-SCENARIO-XAUUSD-M15-PHASE1",
+  "dataset_id": "BM-XAUUSD-M15-PHASE1-FROZEN",
+  "authority": "RESEARCH_LAB_ONLY",
+  "engines": [
+    "Tradelatest",
+    "Qlib",
+    "NautilusTrader",
+    "FinRL-X"
+  ],
+  "metrics": [
+    {
+      "metric": "execution_speed",
+      "cells": {
+        "Tradelatest": {"value": null, "unit": "bars/sec", "definition": "processed bars / wall-clock", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "Qlib": {"value": null, "unit": "bars/sec", "definition": "processed bars / wall-clock", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "NautilusTrader": {"value": null, "unit": "bars/sec", "definition": "processed bars / wall-clock", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "FinRL-X": {"value": null, "unit": "bars/sec", "definition": "processed bars / wall-clock", "source_artifact": null, "run_id": null, "status": "NOT_RUN"}
+      }
+    },
+    {
+      "metric": "data_throughput",
+      "cells": {
+        "Tradelatest": {"value": null, "unit": "MB/sec", "definition": "bytes read / wall-clock load", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "Qlib": {"value": null, "unit": "MB/sec", "definition": "bytes read / wall-clock load", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "NautilusTrader": {"value": null, "unit": "MB/sec", "definition": "bytes read / wall-clock load", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "FinRL-X": {"value": null, "unit": "MB/sec", "definition": "bytes read / wall-clock load", "source_artifact": null, "run_id": null, "status": "NOT_RUN"}
+      }
+    },
+    {
+      "metric": "lookahead_safety",
+      "cells": {
+        "Tradelatest": {"value": null, "unit": "PASS|FAIL", "definition": "future-mutation pre-T identity", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "Qlib": {"value": null, "unit": "PASS|FAIL", "definition": "future-mutation pre-T identity", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "NautilusTrader": {"value": null, "unit": "PASS|FAIL", "definition": "future-mutation pre-T identity", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "FinRL-X": {"value": null, "unit": "PASS|FAIL", "definition": "future-mutation pre-T identity", "source_artifact": null, "run_id": null, "status": "NOT_RUN"}
+      }
+    },
+    {
+      "metric": "transaction_costs",
+      "cells": {
+        "Tradelatest": {"value": null, "unit": "declared", "definition": "fees+spread+slippage+financing separated", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "Qlib": {"value": null, "unit": "declared", "definition": "fees+spread+slippage+financing separated", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "NautilusTrader": {"value": null, "unit": "declared", "definition": "fees+spread+slippage+financing separated", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "FinRL-X": {"value": null, "unit": "declared", "definition": "fees+spread+slippage+financing separated", "source_artifact": null, "run_id": null, "status": "NOT_RUN"}
+      }
+    },
+    {
+      "metric": "slippage",
+      "cells": {
+        "Tradelatest": {"value": null, "unit": "price|ATR", "definition": "requested vs fill under declared model", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "Qlib": {"value": null, "unit": "price|ATR", "definition": "requested vs fill under declared model", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "NautilusTrader": {"value": null, "unit": "price|ATR", "definition": "requested vs fill under declared model", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "FinRL-X": {"value": null, "unit": "price|ATR", "definition": "requested vs fill under declared model", "source_artifact": null, "run_id": null, "status": "NOT_RUN"}
+      }
+    },
+    {
+      "metric": "fill_model",
+      "cells": {
+        "Tradelatest": {"value": "TL-FILL-INTRABAR-FIXED-V1", "unit": "id", "definition": "declared fill experimental variable", "source_artifact": "oss_lab/contracts/fill_model.py", "run_id": null, "status": "MEASURED"},
+        "Qlib": {"value": null, "unit": "id", "definition": "declared fill experimental variable", "source_artifact": null, "run_id": null, "status": "UNKNOWN"},
+        "NautilusTrader": {"value": null, "unit": "id", "definition": "declared fill experimental variable", "source_artifact": null, "run_id": null, "status": "UNKNOWN"},
+        "FinRL-X": {"value": null, "unit": "id", "definition": "declared fill experimental variable", "source_artifact": null, "run_id": null, "status": "UNKNOWN"}
+      }
+    },
+    {
+      "metric": "max_drawdown",
+      "cells": {
+        "Tradelatest": {"value": null, "unit": "currency or R", "definition": "peak-to-trough cumulative net equity from canonical ledger", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "Qlib": {"value": null, "unit": "currency or R", "definition": "peak-to-trough cumulative net equity from canonical ledger", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "NautilusTrader": {"value": null, "unit": "currency or R", "definition": "peak-to-trough cumulative net equity from canonical ledger", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "FinRL-X": {"value": null, "unit": "currency or R", "definition": "peak-to-trough cumulative net equity from canonical ledger", "source_artifact": null, "run_id": null, "status": "NOT_RUN"}
+      }
+    },
+    {
+      "metric": "profit_factor",
+      "cells": {
+        "Tradelatest": {"value": null, "unit": "ratio", "definition": "sum(win net)/abs(sum(loss net))", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "Qlib": {"value": null, "unit": "ratio", "definition": "sum(win net)/abs(sum(loss net))", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "NautilusTrader": {"value": null, "unit": "ratio", "definition": "sum(win net)/abs(sum(loss net))", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "FinRL-X": {"value": null, "unit": "ratio", "definition": "sum(win net)/abs(sum(loss net))", "source_artifact": null, "run_id": null, "status": "NOT_RUN"}
+      }
+    },
+    {
+      "metric": "expectancy",
+      "cells": {
+        "Tradelatest": {"value": null, "unit": "net_pnl mean", "definition": "mean(net_pnl); expectancy_r when risk present", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "Qlib": {"value": null, "unit": "net_pnl mean", "definition": "mean(net_pnl); expectancy_r when risk present", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "NautilusTrader": {"value": null, "unit": "net_pnl mean", "definition": "mean(net_pnl); expectancy_r when risk present", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "FinRL-X": {"value": null, "unit": "net_pnl mean", "definition": "mean(net_pnl); expectancy_r when risk present", "source_artifact": null, "run_id": null, "status": "NOT_RUN"}
+      }
+    },
+    {
+      "metric": "sharpe",
+      "cells": {
+        "Tradelatest": {"value": null, "unit": "ratio", "definition": "requires declared return frequency; never invent annualization", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "Qlib": {"value": null, "unit": "ratio", "definition": "requires declared return frequency; never invent annualization", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "NautilusTrader": {"value": null, "unit": "ratio", "definition": "requires declared return frequency; never invent annualization", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "FinRL-X": {"value": null, "unit": "ratio", "definition": "requires declared return frequency; never invent annualization", "source_artifact": null, "run_id": null, "status": "NOT_RUN"}
+      }
+    },
+    {
+      "metric": "mfe",
+      "cells": {
+        "Tradelatest": {"value": null, "unit": "price or R", "definition": "from canonical OHLC path when possible", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "Qlib": {"value": null, "unit": "price or R", "definition": "from canonical OHLC path when possible", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "NautilusTrader": {"value": null, "unit": "price or R", "definition": "from canonical OHLC path when possible", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "FinRL-X": {"value": null, "unit": "price or R", "definition": "from canonical OHLC path when possible", "source_artifact": null, "run_id": null, "status": "NOT_RUN"}
+      }
+    },
+    {
+      "metric": "mae",
+      "cells": {
+        "Tradelatest": {"value": null, "unit": "price or R", "definition": "from canonical OHLC path when possible", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "Qlib": {"value": null, "unit": "price or R", "definition": "from canonical OHLC path when possible", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "NautilusTrader": {"value": null, "unit": "price or R", "definition": "from canonical OHLC path when possible", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "FinRL-X": {"value": null, "unit": "price or R", "definition": "from canonical OHLC path when possible", "source_artifact": null, "run_id": null, "status": "NOT_RUN"}
+      }
+    },
+    {
+      "metric": "trade_count",
+      "cells": {
+        "Tradelatest": {"value": null, "unit": "count", "definition": "signals vs orders vs fills vs completed — never conflate", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "Qlib": {"value": null, "unit": "count", "definition": "signals vs orders vs fills vs completed — never conflate", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "NautilusTrader": {"value": null, "unit": "count", "definition": "signals vs orders vs fills vs completed — never conflate", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "FinRL-X": {"value": null, "unit": "count", "definition": "signals vs orders vs fills vs completed — never conflate", "source_artifact": null, "run_id": null, "status": "NOT_RUN"}
+      }
+    },
+    {
+      "metric": "latency",
+      "cells": {
+        "Tradelatest": {"value": null, "unit": "seconds", "definition": "separate engine/decision/order/fill/network/broker clocks", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "Qlib": {"value": null, "unit": "seconds", "definition": "separate engine/decision/order/fill/network/broker clocks", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "NautilusTrader": {"value": null, "unit": "seconds", "definition": "separate engine/decision/order/fill/network/broker clocks", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "FinRL-X": {"value": null, "unit": "seconds", "definition": "separate engine/decision/order/fill/network/broker clocks", "source_artifact": null, "run_id": null, "status": "NOT_RUN"}
+      }
+    },
+    {
+      "metric": "reproducibility",
+      "cells": {
+        "Tradelatest": {"value": null, "unit": "PASS|FAIL|VAR", "definition": "triple-run hash equality of signals/orders/fills/trades/equity/metrics", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "Qlib": {"value": null, "unit": "PASS|FAIL|VAR", "definition": "triple-run hash equality of signals/orders/fills/trades/equity/metrics", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "NautilusTrader": {"value": null, "unit": "PASS|FAIL|VAR", "definition": "triple-run hash equality of signals/orders/fills/trades/equity/metrics", "source_artifact": null, "run_id": null, "status": "NOT_RUN"},
+        "FinRL-X": {"value": null, "unit": "PASS|FAIL|VAR", "definition": "triple-run hash equality of signals/orders/fills/trades/equity/metrics", "source_artifact": null, "run_id": null, "status": "NOT_RUN"}
+      }
+    }
+  ]
+}

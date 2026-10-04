@@ -1,0 +1,36 @@
+{
+  "change_id": "CH-l4-l7-context-testimony",
+  "title": "L4 CONTEXT + L7 TESTIMONY structured semantic contracts",
+  "class": ["RESEARCH_SHADOW_SEMANTIC", "OBSERVATION_SURFACE"],
+  "production_behavior_changed": false,
+  "authority": "research_shadow",
+  "surfaces_changed": [
+    "src/features/market_context.py",
+    "src/features/model_evidence.py",
+    "tests/test_market_context.py",
+    "tests/test_model_evidence.py",
+    "scripts/research/xauusd_episode_semantic_reconstruction.py",
+    "scripts/research/xauusd_episode_coverage_census.py",
+    "docs/governance/EPISODE_SEMANTIC_INTEGRATION_PHASE2.md",
+    "docs/book/encyclopedia/E1b-features-registry.md"
+  ],
+  "surfaces_deliberately_not_changed": [
+    "src/core/fusion_engine.py",
+    "src/core/decision_engine.py",
+    "src/config_layer/crt_engine_v2.py",
+    "src/features/feature_schema.py",
+    "src/features/feature_pipeline.py",
+    "configs/production/*",
+    "active_models.yaml (read-only authority for producers)",
+    "src/research/episode_agreement.py (AGREEMENT remains separate)"
+  ],
+  "new_indicators": false,
+  "new_formulas": false,
+  "feature_vector_change": false,
+  "agreement_implemented": false,
+  "notes": [
+    "L4 adds structured dimension_records, completeness, temporal (causality=UNKNOWN), optional magnitude merge",
+    "L7 adds availability/direction/relationship_to_story + CRT_STORY vs CRT_TESTIMONY split",
+    "Flat dimensions map preserved for MarketShapeClassifier substrate"
+  ]
+}

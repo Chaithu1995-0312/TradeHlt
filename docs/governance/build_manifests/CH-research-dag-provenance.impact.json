@@ -1,0 +1,45 @@
+{
+  "change_id": "CH-research-dag-provenance",
+  "date_utc": "2026-08-26",
+  "objective": "Measure, do not assert, the repository's own provenance topology: build a read-only typed DAG that traces every architectural decision (SESSION LOG entries across assistant_project.md + docs/analysis/session-log-archive/, CH-* impact manifests, promotion-log events, closure-index surfaces) backwards to its originating hypothesis (H-*), originating finding (F-*), originating evidence artifact, and originating measurement basis (MC-*/MP-*/Contract sha). Every edge is classified EXPLICIT / INFERRED / UNKNOWN by an ordered, auditable rule set and quantified overall, per slot, per decision type, per timeline era, and by backward reachability to the earliest hypotheses. Gaps are the RESULT and are never backfilled. Read-only: no production code, no config, no ACTIVE_VERSION, no model, no finding registration, no G001.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY",
+    "SCRIPT_LIFECYCLE_CHANGE"
+  ],
+  "change_class_rationale": "New read-only analysis script under scripts/analysis/ (SITS-registered) plus a dated governance artifact, a point-in-time docs/analysis/ write-up, and a pytest floor. No behavior surface: nothing in src/ or configs/ is read for control flow or written. The findings doc is READ via its GENERATED export data/findings.jsonl and is not edited.",
+  "affected_files": [
+    "scripts/analysis/research_dag_provenance.py",
+    "docs/governance/research_dag_provenance-2026-08-26.json",
+    "docs/governance/research_dag_provenance.LATEST.json",
+    "docs/analysis/research-dag-provenance-2026-08-26.md",
+    "docs/analysis/readme.md",
+    "docs/governance/build_manifests/CH-research-dag-provenance.impact.json",
+    "tests/test_research_dag_provenance.py",
+    "docs/governance/script_registry_stubs.jsonl",
+    "docs/governance/script_registry_grandfather.json",
+    "scripts/governance/seed_script_registry.py",
+    "data/script_registry.jsonl",
+    "docs/reference/script-matrix.md",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_research_dag_provenance.py",
+    "tests/test_script_registry.py",
+    "tests/test_script_matrix_sync.py",
+    "tests/test_session_log.py",
+    "tests/test_construction_protocol.py",
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Delete the extractor, both governance artifacts, the write-up, the test floor and this manifest; revert the docs/analysis/readme.md index row and the SITS registry rows. No finding, no ontology node, no config, no ACTIVE_VERSION and no production surface is touched, so rollback is a pure file removal.",
+  "authority_granted": "User 2026-08-26: trace the current architecture backwards to the earliest hypotheses, classify every provenance link EXPLICIT/INFERRED/UNKNOWN, produce the complete DAG and quantify the edge-class percentages. Explicit user instruction: DO NOT FILL GAPS. Write scope approved as 'Analysis package' (script + artifact + write-up + test floor + manifest + SESSION LOG), delivery as JSON + Mermaid + tables.",
+  "authority_NOT_granted": "No finding registration (no new F-id, no CLAUDE.md Repository Truths row) without a separate approval. No production behavior change, no config edit, no ACTIVE_VERSION change, no G001, no ontology node, no gap backfilling, no edit to rotate_session_log.py, no edit to docs/knowledge-map.md or the assistant_project.md doctrine header (drift is SURFACED as a TruthConflict under §6.2 rule 3 and gated by the user).",
+  "production_behavior_changed": "NO",
+  "notes_pre_existing_red": "tests/test_script_registry.py::test_disk_coverage_full_universe and ::test_grandfather_ratchet_live_universe are RED both before and after this change, and name exclusively two untracked repo-root scripts belonging to another session's working tree (_dedent.py, _run_mr.py, dated 2026-08-24, after the pin's last resync 2026-08-22). They are deliberately NOT adopted into the grandfather pin by this change. This change's own path is fully registered: the ratchet reports unclassified=[]. A third failure, ::test_grandfather_paths_match_stubs, WAS red at HEAD (pin 406 vs stubs 378) and is now GREEN - the census run in this turn repaired 28 rows of that pre-existing drift."
+}

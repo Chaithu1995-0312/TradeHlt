@@ -1,0 +1,684 @@
+{
+  "_doc": "Feature-layer GOVERNANCE freeze pin + XAUUSD-only regression benchmark (2026-07-20, scoped 2026-07-20b). Not a scientific claim that feature research is complete. Do not hand-edit vector hashes \u2014 regenerate with FeaturePipeline on the pinned CSV. BNB and multi-instrument runtime benchmarks are deferred to R-1/R-2 runtime suite, not this pin. Mutation of frozen surfaces requires an accepted future-program waiver.",
+  "schema_version": "1.1.0",
+  "freeze_id": "FEATURE-LAYER-MUTATION-FREEZE-2026-07-20",
+  "status_token": "FEATURE_LAYER_MUTATION_FREEZE = ACTIVE",
+  "frozen_at_utc": "2026-07-19T20:16:08Z",
+  "policy_path": "docs/governance/feature-layer-mutation-freeze-2026-07-20.md",
+  "active_config_version": "v2_htfcrt_2026_08",
+  "prod_version_constant": "v2_htfcrt_2026_08",
+  "schema": {
+    "schema_version": "6.0",
+    "schema_hash": "d40e7c7d5b624ef6d27670255ad95a35",
+    "feature_dim": 48,
+    "feature_count": 48,
+    "canonical_features": [
+      "open",
+      "high",
+      "low",
+      "close",
+      "volume",
+      "volume_ratio",
+      "double_sweep",
+      "ema_fast",
+      "ema_slow",
+      "ema_spread",
+      "trend_bias",
+      "trend_strength_z",
+      "momentum_score",
+      "atr",
+      "volatility_ratio",
+      "rsi_14",
+      "macd_line",
+      "macd_signal",
+      "macd_hist_raw",
+      "macd_hist_z",
+      "sweep_detected",
+      "liquidity_sweep",
+      "break_of_structure",
+      "swing_high",
+      "swing_low",
+      "higher_high",
+      "lower_low",
+      "body_size",
+      "candle_range",
+      "body_ratio",
+      "volatility_regime",
+      "session",
+      "hour_of_day",
+      "disp_strength",
+      "retest_depth",
+      "candles_since_sweep",
+      "liquidity_distance",
+      "liquidity_pressure_score",
+      "volume_spike",
+      "order_block_distance",
+      "fvg_distance",
+      "breaker_distance",
+      "mitigation_block_distance",
+      "pdh_distance",
+      "pdl_distance",
+      "eqh_distance",
+      "eql_distance",
+      "change_of_character"
+    ]
+  },
+  "source_file_pins": {
+    "market_ontology.yaml": {
+      "path": "configs/formulas/market_ontology.yaml",
+      "sha256": "bb6f7cd89f69c986762e7d490d338951c1feed2b180ac8174e5f07496d2f373e"
+    },
+    "active_config": {
+      "path": "configs/production/v2_htfcrt_2026_08.json",
+      "sha256": "fbe40700330da01da29385110a8a58d7854cad73a1404b1bbf4cba6f12c96d7d"
+    },
+    "ACTIVE_VERSION": {
+      "path": "configs/production/ACTIVE_VERSION",
+      "sha256": "23f20fbfb4f5925c729eccb84850dc315647c181af117032fcd8fc30401eb889"
+    },
+    "feature_pipeline.py": {
+      "path": "src/features/feature_pipeline.py",
+      "sha256": "220575f5ab5ad7f49c0f7a975a99415b6712f058df01055e190ec4a014afd382"
+    },
+    "feature_schema.py": {
+      "path": "src/features/feature_schema.py",
+      "sha256": "48a52845f0bce29ca800cd321dc623d5edc2471233595f761e3ef546e10a6ebb"
+    },
+    "candle_math.py": {
+      "path": "src/features/candle_math.py",
+      "sha256": "5f577d1b7b571c9923d1fa36978b6bbe42cb05ed78cb085745f06f269d262de1"
+    },
+    "derived_math.py": {
+      "path": "src/features/derived_math.py",
+      "sha256": "2739faccef2c15b27e71283a89ec34aaae1321575712c4da84feff4e2f9e508d"
+    },
+    "causal_structure.py": {
+      "path": "src/features/causal_structure.py",
+      "sha256": "ce6e0de24a8c4ed37f77bc640419745ae93708ad5a79fe3e09839a37a8da8969"
+    },
+    "registry_init.py": {
+      "path": "src/features/registry/__init__.py",
+      "sha256": "d7228bf393d38f94b89bdaf3ff9a5428e3653609680144e6e23f61a0d0aaf3e6"
+    }
+  },
+  "regression_benchmarks": {
+    "XAUUSD_W2026-03-23-to-2026-05-21": {
+      "input_path": "data/XAUUSD_W2026-03-23-to-2026-05-21.csv",
+      "input_sha256": "131647bae4a3235ac8f5df0bc86a50cafcd315c2d2bfc9ad60d6b91679d3d25d",
+      "input_rows": 3949,
+      "output_rows": 3871,
+      "drop": 78,
+      "vector_shape": [
+        3871,
+        48
+      ],
+      "vector_dtype": "float32",
+      "vector_sha256": "3d133d81e085f09ba40348c3e42389145a31a3bf58f2da07979cd8e04ce66a49",
+      "vector_nansum": 130777360.0,
+      "coverage": {
+        "benchmark_class": "FEATURE_MATRIX",
+        "contract": "full CSV -> FeaturePipeline.run() -> float32 (N, 48) SHA-256",
+        "exercises": {
+          "feature_pipeline_batch_run": true,
+          "canonical_38_vector_emission": false,
+          "warmup_dropna_finalize": true,
+          "schema_v3_dim38": false,
+          "canonical_39_vector_emission": true,
+          "schema_v4_dim39": true,
+          "schema_v5_dim48": true,
+          "canonical_48_vector_emission": true
+        },
+        "does_not_exercise": {
+          "note": "Matching this vector SHA does NOT imply full trading-path behavioral equivalence. Runtime/filter/planner/partial-TP coverage belongs in the runtime benchmark suite (R-1/R-2).",
+          "backtest_v2": false,
+          "crt_state_machine": false,
+          "session_filter": false,
+          "zone_gate": false,
+          "fusion_gate": false,
+          "decision_engine": false,
+          "execution_planner": false,
+          "ultron_risk_gate": false,
+          "partial_tp": false,
+          "trade_ledger": false
+        },
+        "feature_rows_in": 3949,
+        "feature_rows_out": 3871,
+        "warmup_drop": 78,
+        "trade_count": null,
+        "trade_count_note": "Not part of this benchmark. Related XAUUSD 2-month BACKTEST (separate artifact) had 0 trades / 3 session-filtered retests \u2014 see results/XAUUSD/backtests/run_20260719_021925_XAUUSD/ and tracker section 13. That is runtime evidence, not a feature-matrix pin field.",
+        "related_runtime_artifact": "results/XAUUSD/backtests/run_20260719_021925_XAUUSD/"
+      }
+    }
+  },
+  "accepted_future_programs": [
+    {
+      "id": "M16-WU-SESSION-ENCODING",
+      "phase": "live_engine_hook consumer-alignment",
+      "note": "user-deferred 2026-07-19; still BLOCKS_ACTIVATION"
+    },
+    {
+      "id": "M16-WU-TREND-STRENGTH-COLLISION",
+      "phase": "live_engine_hook consumer-alignment",
+      "note": "user-deferred 2026-07-19"
+    },
+    {
+      "id": "M16-WU-VOLREGIME-S05",
+      "phase": "live_engine_hook consumer-alignment",
+      "note": "user-deferred 2026-07-19"
+    },
+    {
+      "id": "M16-WU-SUPERSEDED-VECTOR-MIGRATION",
+      "phase": "explicit migration plan + retrain gates",
+      "note": "no silent dim swap"
+    },
+    {
+      "id": "M16-WU-FM025-PROVENANCE",
+      "phase": "ledger provenance only"
+    },
+    {
+      "id": "M16-WU-EMPTY-SHA-FAMILY",
+      "phase": "ledger hygiene"
+    },
+    {
+      "id": "M16-WU-ONTOLOGY-REGISTRATION",
+      "phase": "descriptive registration only; no formula change"
+    },
+    {
+      "id": "M16-WU-L6-PREP",
+      "phase": "activation readiness; requires P1-P5"
+    },
+    {
+      "id": "T-5/T-6",
+      "phase": "warmup/finalize guards",
+      "note": "user-deferred"
+    },
+    {
+      "id": "T-11-FEEDER-HANDSHAKE",
+      "phase": "external EA feed_schema_version + period symmetry"
+    },
+    {
+      "id": "T-17",
+      "phase": "macd_hist z-score semantics revisit"
+    },
+    {
+      "id": "T-18",
+      "phase": "volatility_regime knobs + sibling identities"
+    },
+    {
+      "id": "T-19",
+      "phase": "candles_since_retest rename or ontology note"
+    },
+    {
+      "id": "STATEFUL-6",
+      "phase": "future; user-excluded until pipeline stable"
+    },
+    {
+      "id": "FM-030-031-DIMENSIONAL-MIX-MIGRATION",
+      "phase": "config-gated identity, legacy default; shadow measurement only",
+      "note": "user-authorized 2026-07-22. The freeze POLICY prose already named 'FM-030/031 migration' as a legitimate future program; this entry closes the doc-vs-pin gap by declaring it machine-readably. Scope: additive derived_math.ema_spread_atr/momentum_score_atr + feature_pipeline.normalization_basis knob (default 'atr_relative' == prior literal math, byte-identical) + ontology promotion to active:false + a hash-neutral shadow config. NOT in scope: promotion, ACTIVE_VERSION change, dual_engine threshold recalibration, retrain, dim change, or edits to the four magnitude-sensitive consumers. Evidence: F-061.",
+      "parity_contract": "XAUUSD vector SHA MUST be unchanged; a moved vector SHA means the legacy arm was not transcribed verbatim."
+    },
+    {
+      "id": "SCHEMA-V4-VECTOR-MIGRATION",
+      "phase": "canonical vector v3.0(38) -> v4.0(39); DECLARED BEHAVIOR CHANGE, not a parity migration",
+      "note": "user-authorized 2026-07-22. Three changes to CANONICAL_FEATURES: (1) macd_hist -> macd_hist_raw + macd_hist_z, ending the in-place z-score overwrite that made the emitted value differ from the declared formula (FM-049's own note warned of this); (2) wick_size -> candle_range, the honest name for high-low, which the ontology already declares as FM-002's semantic_quantity with wick_size as misnomer_alias; (3) FM-052 session domain {0,1,2} hour-partition -> {0..4} window model incl. OVERLAP and CLOSED. SCHEMA_HASH and FEATURE_ORDER_HASH are computed over feature NAMES (feature_schema.py:111,122), so (1) and (2) invalidate every stored schema hash with zero math change; (3) changes emitted values on slot 30. Requires baseline recapture and per-artifact reconciliation.",
+      "supersedes_or_absorbs": [
+        "M16-WU-SUPERSEDED-VECTOR-MIGRATION (this IS the explicit migration plan + retrain gates it required; still no silent dim swap)",
+        "M16-WU-SESSION-ENCODING (P1, BLOCKS_ACTIVATION \u2014 the canonical-vs-consumer session encoding permutation is resolved by the single owning module)",
+        "T-17 (macd_hist z-score semantics revisit \u2014 resolved by splitting raw from normalized)",
+        "T-19 (naming revisit \u2014 same class of fix as the candle_range rename)"
+      ],
+      "_supersession_note": "The absorbed ids are RETAINED in this list above, not deleted (CLAUDE.md 6.2 rule 4). They record what was planned and when; this entry records how it was discharged.",
+      "parity_contract": "NONE \u2014 PRODUCTION_BEHAVIOR_CHANGED = YES. The XAUUSD vector SHA, schema hash, feature_dim and canonical_features WILL move and must be regenerated by running the pipeline, never hand-edited. The binding requirement is instead ATTRIBUTION: the gate-ON BNBUSDT ledger delta must be fully explained by the three sub-changes measured independently. An unattributed delta means stop.",
+      "prerequisite": "ZONEGATE-ALIGNMENT-SAFETY-NET must be green FIRST (tests/test_zone_gate_alignment.py). ZoneGate is the only live hard gate (F-041) and consumed the vector POSITIONALLY while silently truncating over-length vectors; migrating the schema before closing that path would have mis-scored silently."
+    },
+    {
+      "id": "ZONEGATE-ALIGNMENT-SAFETY-NET",
+      "phase": "fail-closed vector alignment; prerequisite of SCHEMA-V4-VECTOR-MIGRATION",
+      "note": "2026-07-22. models/zone_registry.json always stored a top-level `feature_order` and nothing read it; zone_gate_engine._extract_vector built from the ambient CANONICAL_FEATURE_ORDER and silently truncated over-length vectors (a v2.0(35)->v3.0(38) back-compat path). Fixed: scoring is now name-anchored to the registry's own feature_order, truncation raises, and a registry naming a feature absent from the live schema raises ZoneFeatureOrderError at LOAD (never fail-open \u2014 a hard gate scoring a misaligned vector is worse than no gate).",
+      "parity_contract": "MUST be a no-op at v3.0: name-anchored extraction == positional extraction while feature_order == CANONICAL_FEATURE_ORDER, and the gate-ON BNBUSDT ledger stays 9bcba138775d4109."
+    },
+    {
+      "id": "SCHEMA-V5-HTFCRT-SMC-MIGRATION",
+      "phase": "active-arm feature-schema migration (v4.0/39dim -> v5.0/48dim) + new CRTState members; NOT parity-preserving by design",
+      "note": "2026-08-15. Adds a real calendar-true HTF parent candle + 3-candle CRT (C1 range/C2 manipulation/C3 distribution) as new CRTState members RANGE_C1/MANIPULATION_C2/DISTRIBUTION_C3 (disjoint sub-graph, parent-timeframe scoped), and registers 9 previously-ABSENT SMC primitives (order block, FVG, breaker, mitigation block, PDH/PDL, EQH/EQL, CHoCH) as canonical vector features. Ships on new active version v2_htfcrt_2026_08 with the arm ON, by explicit user decision accepting a ledger change (not a byte-identity migration like SCHEMA-V4-VECTOR-MIGRATION or FM-030/031).",
+      "parity_contract": "NONE -- PRODUCTION_BEHAVIOR_CHANGED = YES, declared intent. Acceptance bar is fully-attributed ledger diff (every changed trade maps to a named mechanism), not byte-identity. See docs/implementation_plan/study-sujantrader-docs-composed-snowflake.md Phase 6 Verification."
+    },
+    {
+      "id": "SCHEMA-V6-NORMALIZATION-IDENTITY-FIX",
+      "phase": "naming-identity correction (v5.0 -> v6.0); dimension-preserving, value-preserving by contract",
+      "note": "2026-09-16. Renames emitted columns so each name states the quantity it carries, the same defect class SCHEMA-V4-VECTOR-MIGRATION fixed for macd_hist/wick_size. Canonical vector stays 48 dims and keeps its ordering: index 11 trend_strength -> trend_strength_z (the value has always been a rolling z-score, NORMALIZE_COLS overwrote the raw chain in place), index 35 candles_since_retest -> candles_since_sweep (the value has always counted bars since the last liquidity_sweep, verified 47,183/47,183 on the XAUUSD M15 corpus and 0 on exactly the 7,542 sweep bars). Three non-canonical columns move from in-place z-scoring to the existing NORMALIZE_TO_NEW_COL raw/z split: bb_width, price_vs_ma20, price_vs_ma50 each become *_raw + *_z, and trend_strength's raw stage is emitted as trend_strength_raw (non-canonical, NOT a new vector slot, by explicit user decision -- a price-unit non-stationary dim is not added to the model vector). FM-064 and FM-065 refine IN PLACE (same FM ids, version bumped). candles_since_retest_state (FM-070) is a different quantity and keeps its name, including its BitNet call-boundary alias key.",
+      "parity_contract": "STRICT -- PRODUCTION_BEHAVIOR_CHANGED = NO. Names move, values do not. Acceptance bar: (a) the 48-dim vector compared BY POSITION pre/post on data/mt5/XAUUSD_M15.csv is bit-identical; (b) trend_strength_z post == trend_strength pre and candles_since_sweep post == candles_since_retest pre elementwise; (c) a XAUUSD backtest ledger (trades.csv + events.jsonl state sequence + rejection set) is byte-identical modulo run_id. SCHEMA_HASH and FEATURE_ORDER_HASH DO change -- they are derived from the names -- so this pin's schema block and results/baseline are regenerated by running the pipeline, never hand-edited.",
+      "user_authorization": "AskUserQuestion answers 2026-09-16: scope=all five columns; z-scored columns=split raw + z; raw trend_strength stays OUT of the canonical vector; old names=hard rename (no dual-emit); model feature_order JSONs=rewrite the stored lists. Plan approved via ExitPlanMode the same session.",
+      "impact_manifest": "docs/governance/build_manifests/CH-schema-v6-normalization-identity.impact.json"
+    },
+    {
+      "id": "FEATURE-NAME-IDENTITY-BINDING",
+      "phase": "Step 1 of 3 (bind names to identity) -- value-neutral, dimension-preserving, name-set-preserving",
+      "note": "2026-09-16. User asked for a clean feature schema (no gaps, no identity mismatches); a 22-name rename list was agreed, then the user challenged why applying it would touch ~5,900 sites given the feature layer is described as ontology-driven. Verified: formula math and indicator PERIODS are identity/config-bound, but feature NAMES are not -- CANONICAL_FEATURES (src/features/feature_schema.py) is a hand-written literal tuple, ontology lineage.vector_key only mirrors it, and ~575 production src/ call sites (in ~60 files) read canonical names by string literal. Three-step program, each its own change set: STEP 1 (this entry) -- register the 5 base inputs (open/high/low/close/volume) as first-class ontology identities in a NEW section `source_inputs` (added to _ITERATED_SECTIONS, with its own validate_registry exemption branch mirroring rolling_indicators/temporal_context/structural_states -- no scalar callable exists, impl names the ingestion authority), then GENERATE CANONICAL_FEATURES from the ontology (every node with a string lineage.vector_key, ordered by lineage.vector_index) instead of a literal tuple, asserted equal to the prior literal so SCHEMA_HASH/FEATURE_ORDER_HASH do not move. Adds an identity namespace (F.FM_0NN -> current name, feature_name(fm_id)) next to FEATURE_INDEX_MAP. STEP 2 (separate future entry) -- migrate the ~575 production call sites onto the identity namespace. STEP 3 (separate future entry) -- apply the 22 agreed renames as a pure ontology edit; production code needs no changes because it is identity-bound by then. Full rename list: docs/analysis/ scratchpad schema_v7_rename_list.md (not yet committed to the repo at authorization time).",
+      "parity_contract": "STRICT for Step 1 -- PRODUCTION_BEHAVIOR_CHANGED = NO. The generated CANONICAL_FEATURES tuple MUST equal the prior literal tuple byte-for-byte (same 48 names, same order); SCHEMA_HASH and FEATURE_ORDER_HASH MUST NOT move. Mints 5 new FM ids (FM-085..FM-089) and adds one new governed section, which changes the ontology SHA and engages frozen surface #3 (src/features/registry/**) via the validate_registry exemption branch -- but changes no formula, no impl resolution for any EXISTING identity, and no emitted value.",
+      "user_authorization": "AskUserQuestion 2026-09-16: 'Bind names to identity first' (vs. only Step 1, vs. direct renames with no indirection); production call sites reference features by FM id (F.FM_021) not a readable alias or bare function call. Plan approved via ExitPlanMode the same session.",
+      "impact_manifest": "docs/governance/build_manifests/CH-feature-name-identity-binding-step1.impact.json"
+    },
+    {
+      "id": "E01-LIFECYCLE-SWEEP-IDENTITY",
+      "phase": "config-gated corrected identities FM-090..093 (default legacy, byte-identical)",
+      "note": "user-approved 2026-10-03 (Step 6 plan): MKT-E01 lifecycle sweep identities behind feature_pipeline.sweep_semantics; activation NOT authorized"
+    },
+    {
+      "id": "E01-LIFECYCLE-RETEST-IDENTITY",
+      "phase": "config-gated transitive identities FM-094/095 (default legacy, byte-identical)",
+      "note": "user-approved 2026-10-03 ('Plan fm21 fix'): completes E01-LIFECYCLE-SWEEP-IDENTITY; activation NOT authorized"
+    }
+  ],
+  "engineering_focus_after_freeze": "docs/implementation_plan/backtest-runtime-roadmap-2026-07-20.md",
+  "freeze_class": "GOVERNANCE_FREEZE",
+  "freeze_class_note": "Changes require evidence + waiver. Does NOT mean never revisit the feature layer. Accepted future programs remain valid scientific work outside routine engineering.",
+  "scoped_at_utc": "2026-07-19T20:22:58Z",
+  "scope_revision": "2026-07-20b: removed BNB head from feature freeze pin per user directive; feature regression = XAUUSD matrix + schema + source SHAs only. Runtime benchmarks (BNB gate ON/OFF, multi-instrument, ledger parity) open with R-1/R-2.",
+  "waiver_log": [
+    {
+      "date_utc": "2026-07-22",
+      "program_id": "FM-030-031-DIMENSIONAL-MIX-MIGRATION",
+      "source_sha_refresh": "market_ontology.yaml, active_config, feature_pipeline.py",
+      "pre_existing_drift_declared": {
+        "_doc": "NOT laundering: three pinned sources were ALREADY drifted from the 2026-07-20 pin when this session opened, BEFORE any edit by this change set. Provenance of that drift is unidentified (the working tree has been uncommitted since 2026-07-09; the drift is not a line-ending artifact - verified). The refresh below therefore absorbs both the pre-existing drift and this program's intended edits. Bounding evidence: test_xauusd_window_vector_regression PASSED at session open, so whatever the pre-existing drift was, it did NOT change emitted feature values. Recorded per CLAUDE.md 6.2 rule 4 (preserve history, never silently resolve).",
+        "market_ontology.yaml": {
+          "pinned_2026_07_20": "e2dbaa491aa9c7937b92700b6d66089e2fc04c82063ae3c854300eb36b66bf0c",
+          "live_pre_session_2026_07_22": "ae1c2e96c8f01283e026c2f70ec926afe03d3e3a249d16f6e7833a9a132d51ac"
+        },
+        "active_config": {
+          "pinned_2026_07_20": "dfa0fa7bf4ad0f17",
+          "live_pre_session_2026_07_22": "eb9d0a659563771a",
+          "_note": "prefixes only; full live value is recorded in source_file_pins after this change set"
+        },
+        "feature_pipeline.py": {
+          "pinned_2026_07_20": "9c050a0a3681cf87",
+          "live_pre_session_2026_07_22": "7a32b14d7b328183",
+          "_note": "prefixes only"
+        },
+        "unchanged_at_session_open": [
+          "ACTIVE_VERSION",
+          "feature_schema.py",
+          "candle_math.py",
+          "derived_math.py",
+          "causal_structure.py",
+          "registry_init.py"
+        ]
+      }
+    },
+    {
+      "date_utc": "2026-08-01",
+      "program_id": "SEMANTIC-LAYER-CERTIFICATION-AUDIT-TIER1",
+      "source_sha_refresh": [
+        "ACTIVE_VERSION",
+        "active_config",
+        "candle_math.py",
+        "causal_structure.py",
+        "derived_math.py",
+        "feature_pipeline.py",
+        "feature_schema.py",
+        "market_ontology.yaml",
+        "registry_init.py"
+      ],
+      "pre_existing_drift_declared": {
+        "_doc": "Executing the pin-regeneration step the ALREADY-ACCEPTED SCHEMA-V4-VECTOR-MIGRATION program (accepted_future_programs, user-authorized 2026-07-22) explicitly requires and explicitly authorizes ('the pin ... must be regenerated by running the pipeline, never hand-edited') but which was never carried out -- this pin had been stale against schema v4.0 since 2026-07-22, independent of anything in this session. This refresh discharges that already-authorized obligation. On TOP of that pre-existing gap, this session's own additive ontology work (FM-064/FM-065/FM-070, SEM-004; semantic layer audit, Tier 1) further changed market_ontology.yaml's SHA -- captured in the same refresh.",
+        "market_ontology.yaml": {
+          "old": "354dfbfa9e8967776a9e91103135caf461bbb1e6799b18d48c88b607dd903c30",
+          "new": "fb783d71157508275af1fa966bf9bbb67028e14673dde16fac6fe02d26c2f99a"
+        },
+        "feature_schema.py": {
+          "old": "5f3aa984ff5feca1889170b3914bb7df800bc78f1ff57e38555c39aca3436dd1",
+          "new": "61477205087f9a60f31be14f75dd13033eb0ba33d1484fa62f94173af8de5ad2"
+        },
+        "schema_version_before_after": {
+          "before": "3.0",
+          "after": "4.0"
+        },
+        "vector_shape_before_after": {
+          "before": [
+            3871,
+            38
+          ],
+          "after": [
+            3871,
+            39
+          ]
+        },
+        "vector_sha256_before_after": {
+          "before": "adad1a0ba6b42c4549c85f8152e4bcb560c07d7e94f8e910ec6622003d484c0b",
+          "after": "37f43f449af0720ff547dcb9cd0c45243f0e6c421e1f9475e9c9d75517601ef5"
+        },
+        "note": "PRODUCTION_BEHAVIOR_CHANGED=YES was already declared by the SCHEMA-V4-VECTOR-MIGRATION entry itself -- this vector SHA move is the EXPECTED, already-accepted consequence of that migration (MACD split + candle_range rename + FM-052 window model), not a new undocumented change. No feature MATH changed in this Tier-1 session: verified separately by an independent pre/post byte-identity check on data/mt5/XAUUSD_M15.csv (untouched by this refresh, a different corpus) showing the SAME vector SHA before and after every Tier-1 edit."
+      }
+    },
+    {
+      "date_utc": "2026-08-09",
+      "program_id": "F-072-ATR-DIMENSIONAL-MIX-ONTOLOGY-CLOSURE",
+      "source_sha_refresh": [
+        "market_ontology.yaml",
+        "active_config",
+        "feature_pipeline.py"
+      ],
+      "pre_existing_drift_declared": {
+        "_doc": "NOT laundering (CLAUDE.md 6.2 rule 4 discipline, same as the FM-030/031 and Tier-1 precedents above): active_config and feature_pipeline.py were ALREADY drifted from the 2026-08-01 pin before this session's own edit -- neither file is `git status` modified (both equal HEAD), so the drift entered at an earlier commit (most likely the same-day tree-restoration batch B2, `9b1b5ed`, which committed already-modified tracked files without reconciling this pin). market_ontology.yaml's drift is a mix of two sources: (a) this session's own additive FM-074 `atr_absolute` registration plus the FM-028/FM-050 `depends_on` re-point (F-072), and (b) a CONCURRENT session's independent, unrelated Phase-2A magnitude-state work (FM-071 body_commitment / FM-072 atr_magnitude / FM-073 momentum_magnitude -- note these FM ids are unrelated to and do not collide with finding ids F-072/F-073; different registries), which landed in the same shared working tree with its own build manifest (docs/governance/build_manifests/CH-phase2a-magnitude-states.completion.json) declaring PRODUCTION_BEHAVIOR_CHANGED=NO and lifecycle:research. This refresh necessarily captures both, since both are already on disk. Bounding evidence: all 7 non-pin freeze tests (vector shape/SHA/nansum, schema hash, feature-order hash) PASSED at refresh time -- byte-identical output despite all of the above.",
+        "market_ontology.yaml": {
+          "pinned_2026_08_01": "fb783d71157508275af1fa966bf9bbb67028e14673dde16fac6fe02d26c2f99a",
+          "live_2026_08_09": "84507977f23abc5cc4e557fb3684388ec5a8de3df093851dfa8d41298dc7f5bd"
+        },
+        "active_config": {
+          "pinned_2026_07_20": "9f8cb382b28cbd969e0a774e1381aa1e115326421729ca9810dd6772f311d8b4",
+          "live_2026_08_09": "9f9bcc2370b401139164924f0a3e078590e318e06c62485dca8f898dff5d7d5d",
+          "_note": "not touched by this session's edits or the concurrent Phase-2A session; pre-existing, unattributed, matches the exact class the FM-030/031 waiver already documented for this same pin"
+        },
+        "feature_pipeline.py": {
+          "pinned_2026_07_20": "06c971e0ade75b2cf6241f168cdb00b91a28ea053ce2b46e2ef42f0017c26c9d",
+          "live_2026_08_09": "d605650b9ffdacca1f534126f3846bcd3a1c9e32e5e7dfc783b996e415ae018d",
+          "_note": "same as active_config -- pre-existing, not touched by this change set"
+        },
+        "unchanged_at_session_open": [
+          "ACTIVE_VERSION",
+          "feature_schema.py",
+          "candle_math.py",
+          "derived_math.py",
+          "causal_structure.py",
+          "registry_init.py"
+        ]
+      },
+      "this_change_set_scope": {
+        "what": "Registered FM-074 atr_absolute (a first-class ontology identity for the SMA-of-true_range absolute-price ATR intermediate that FM-041 `atr` divides by close to produce), and re-pointed FM-028 displacement_atr_ratio and FM-050 volatility_regime's depends_on/notes at it instead of describing the same gap in prose at each site.",
+        "why": "The ontology itself already documented this exact gap in FM-028's note ('No first-class FM id exists for the bare absolute-ATR intermediate') -- the gap had already caused two prior local-name defects (FM-050 2026-07-19, FM-028 2026-07-31) before producing a third, F-072 (compute_crt_levels / gate_intelligence.py receiving the close-relative ratio where price-unit ATR was required, ~2000x SL error on XAUUSD). This registers the missing node rather than patching a fourth site under a fourth local name.",
+        "not_in_scope": "No emitted feature value changes (registration only, no code touched by this ontology edit). Fixing the F-072 call sites themselves (execution_planner.py, model_runners/adapters/execution_plan.py) is a separate, code-level change in the same session, verified independently via the planner/adapter test suites, not via this feature-freeze pin (those files are not pinned sources)."
+      },
+      "parity_contract": "XAUUSD vector SHA MUST be unchanged; confirmed via tests/test_feature_layer_freeze.py (7/8 tests pass without a pin update; the 8th, test_source_file_pins_match, is exactly the hash check this waiver entry discharges)."
+    },
+    {
+      "date_utc": "2026-08-15",
+      "program_id": "SCHEMA-V5-HTFCRT-SMC-MIGRATION",
+      "source_sha_refresh": "PRE-DECLARATION -- edits not yet made. Intent: touch feature_schema.py, feature_pipeline.py, market_ontology.yaml, ACTIVE_VERSION, active_config, state_identity.py, crt_engine_v2.py.",
+      "pre_existing_drift_declared": {
+        "_doc": "Filed BEFORE any edit in this program, per CLAUDE.md 6.2 rule 4 (declared drift, not silent) and this pin doc own rule (mutation of frozen surfaces requires an accepted future-program waiver). Baseline captured at results/baseline/20260815T112746Z_pre_htfcrt/manifest.json: schema_hash c87a1aba7bc79803d04c680e0232389e, feature_dim 39, config_sha256 a59367c0762ea15be178e3783b0f0f4bbe05300d5d97191979e928ee87f7c6dd (production.version v2_multi_2026_04). Impact manifest: docs/governance/build_manifests/CH-htfcrt-parent-candle-smc-v1.impact.json (IMPACT: APPROVED).",
+        "scope": "CANONICAL_FEATURES 39->48 (9 new SMC primitive slots), SCHEMA_VERSION 4.0->5.0, CRTState 9->12 (RANGE_C1/MANIPULATION_C2/DISTRIBUTION_C3), new active version v2_htfcrt_2026_08 with the arm ON by explicit user decision.",
+        "user_authorization": "AskUserQuestion answers 2026-08-15: 3-candle wiring=new CRT states, TF ladder=H4+D1+W1+MN1, Bucket B scope=all 9 primitives, default arm=ON immediately, feature repr=canonical vector slots 39->48."
+      }
+    },
+    {
+      "date_utc": "2026-08-15",
+      "program_id": "SCHEMA-V5-HTFCRT-SMC-MIGRATION",
+      "source_sha_refresh": [
+        "market_ontology.yaml",
+        "active_config",
+        "feature_pipeline.py",
+        "feature_schema.py"
+      ],
+      "pre_existing_drift_declared": {
+        "_doc": "COMPLETION entry for the pre-declaration filed earlier the same day (see the prior 2026-08-15 waiver_log entry). Registers the actual landed change: CANONICAL_FEATURES 39->48 (9 new SMC primitives FM-075..FM-083), SCHEMA_VERSION 4.0->5.0, plus CRTState 9->12 (RANGE_C1/MANIPULATION_C2/DISTRIBUTION_C3, state_identity.py, not a pinned source of this feature-layer pin). candle_math.py, derived_math.py, causal_structure.py, registry_init.py, ACTIVE_VERSION unchanged by this program (verified: SHAs identical to the 2026-08-09 pin).",
+        "schema_version_before_after": {
+          "before": "4.0",
+          "after": "5.0"
+        },
+        "vector_shape_before_after": {
+          "before": [
+            3871,
+            39
+          ],
+          "after": [
+            3871,
+            48
+          ]
+        },
+        "vector_sha256_before_after": {
+          "before": "37f43f449af0720ff547dcb9cd0c45243f0e6c421e1f9475e9c9d75517601ef5",
+          "after": "3d133d81e085f09ba40348c3e42389145a31a3bf58f2da07979cd8e04ce66a49"
+        },
+        "note": "PRODUCTION_BEHAVIOR_CHANGED=YES was already declared by the accepted_future_programs SCHEMA-V5-HTFCRT-SMC-MIGRATION entry itself -- this vector SHA move is the EXPECTED, already-accepted consequence (9 new SMC primitives appended at indices 39-47; all 39 prior indices unchanged -- verified via test_b0b1_feature_semantic_migration.py pinned positions for ema_spread/momentum_score/atr/rsi_14). Determinism verified: re-ran FeaturePipeline on the same pinned CSV twice, byte-identical vector_sha256 both times.",
+        "downstream_fallout_handled": {
+          "ontology_registration": "9 nodes registered (8 derived_metrics FM-075..FM-082 as signed ATR-normalized distances; 1 structural_state FM-083 change_of_character); DERIVED registry wired (src/features/registry/derived_registry.py); validate_registry() returns [] (0 problems).",
+          "zone_gate_behavior": "Verified NOT newly broken: models/zone_registry.json feature_order (38 names, already stale against v4/39 before this program per stack_version.py pre-existing divergence note) continues to fail-closed correctly (BLOCK, score=0.0) via the existing name-anchored _extract_vector -- confirmed via direct integration test, not just reasoning.",
+          "downstream_dim_pins_fixed": "~30 test assertions across 16 files updated from literal 39 to 48 (or version 4.0 to 5.0), following the exact precedent SCHEMA-V4-VECTOR-MIGRATION set for its own 38->39 bump. Two REAL production-code bugs found and fixed in the process (not just test literals): research.model_runners.schema_resolver._canonical_minus_v4_only and research.clean_labels.builder.LEGACY_FEATURE_NAMES both derived a frozen historical 38-dim schema by subtracting only the ONE v4 addition from the LIVE (now-48) CANONICAL_FEATURES, silently redefining what \"the v3 schema\" meant every time the live schema grows; both fixed with an explicit v5-exclusion set + fail-closed dim guard.",
+          "deferred_not_fixed": [
+            "tests/test_crt_baseline_trace.py::test_artifact_invariants_if_present -- the underlying docs/governance/xauusd_crt_baseline_trace/xauusd_crt_baseline_trace_v1.jsonl artifact is itself frozen under XAUUSD_CRT_BASELINE_TRACE_V1_FREEZE.json and stores per-bar feature_count=39; regenerating it is a separate governed re-certification, not done in this pass.",
+            "Model retraining: all 6 model families (zone_gate/rr/rr_fusion/gaussian/bitnet/tradenet) remain trained on <=39-dim schemas; every fail-closed dim-mismatch mechanism was verified to degrade correctly (BLOCK/refuse-load, never silent truncate), but no artifact was retrained in this pass -- a separately sequenced, compute-bound activity.",
+            "docs/governance/geometry_census.jsonl / geometry_semantic_adjudication.jsonl: pre-existing stale (7-failure baseline before this program began) grew further (80 unadjudicated derivations, some newly contributed by features/smc/*.py); not regenerated in this pass, same pre-existing debt class."
+          ]
+        }
+      }
+    },
+    {
+      "date_utc": "2026-08-17",
+      "program_id": "CH-visual-crt-trade-object",
+      "source_sha_refresh": "market_ontology.yaml",
+      "why_this_is_not_a_feature_layer_mutation": "Added ontology node SEM-012 (VISUAL_CRT_TRADE_OBJECT) to the NON-frozen semantic section 'execution_behaviours'. Frozen surface #4 covers the ontology WHAT layer for NEW FM IDS and FORMULA IDENTITY CHANGES; this change adds neither. No primitive, feature_composition, derived_metric, or rolling_indicator was touched. The pin hashes the whole file, so a semantic-section addition moves the SHA without touching feature math.",
+      "bounding_evidence": "tests/test_feature_layer_freeze.py::test_xauusd_window_vector_regression PASSED with the post-edit file in place (vector_sha256 3d133d81e085f09b... unchanged, 48-dim float32). That single pass bounds BOTH the pre-existing drift below AND this change set's edit: the emitted feature matrix is byte-identical to the pinned benchmark. validate_semantic_registry() -> []. 123 Semantic OS tests green.",
+      "pre_existing_drift_declared": {
+        "_doc": "NOT laundering. The file was ALREADY drifted from the recorded pin before this change set edited it. Measured, not assumed: removing this change set's SEM-012 block from the live file in memory and re-hashing yields 34f237f4..., which is NOT the recorded pin 3530782a.... So the refresh below absorbs a pre-existing delta this change set did not create. Recorded per CLAUDE.md 6.2 rule 4.",
+        "market_ontology.yaml": {
+          "pinned_before_this_change": "3530782a21b26fc3497fcd18fb8e8ee41a02033e457d8c5e7790fac662d1e7eb",
+          "live_pre_edit_measured_2026_08_17": "34f237f4dc8bef290953dc1e800c42fb4053dcfb91d82028f165b7859006f379",
+          "live_post_edit_2026_08_17": "45baab20aa7fba7820c1d6e6ccef2ca6993d46696aee7c1fb5609f1e95db739c"
+        },
+        "provenance_of_pre_existing_drift": "NOT established by this change set. Plausibly the 2026-08-17 SEM-011 epistemic update recorded under P-CRT-LIQ-01 (which states the decision was written into the ontology epistemic block), and/or another concurrent session -- the working tree carries many uncommitted modifications. Stated as a hypothesis, not a finding."
+      },
+      "authority": "Research-lane semantic registration only. No promotion, no G001, no ACTIVE_VERSION change, no feature activation."
+    },
+    {
+      "date_utc": "2026-08-17",
+      "program_id": "CH-visual-crt-lane2-seal",
+      "source_sha_refresh": "market_ontology.yaml",
+      "why_this_is_not_a_feature_layer_mutation": "SEM-012 amended v1->v2 IN PLACE (two pre-registered arms A/B, retest predicate, duplicate rule, arm-B substitution caveat) inside the NON-frozen semantic section 'execution_behaviours'. No FM id and no formula identity added or changed; no primitive, feature_composition, derived_metric, or rolling_indicator touched. Frozen surface #4 is not engaged.",
+      "attribution_measured": {
+        "_doc": "Unlike the previous entry, this delta is FULLY attributed to this change set. Measured: removing the visual_crt_trade_object block from the live file and re-hashing yields 34f237f4..., the SAME value measured before the v2 amendment. Everything outside the node is therefore byte-identical, so the whole 45baab20->d2a6577e delta is this change set's own edit. No pre-existing drift is absorbed by this refresh.",
+        "market_ontology.yaml": {
+          "pinned_before_this_refresh": "45baab20aa7fba7820c1d6e6ccef2ca6993d46696aee7c1fb5609f1e95db739c",
+          "live_after_v2_amendment": "d2a6577e7bdc4d908067005ea53790350cd5d6386d0b145cef03669d57b71fbb",
+          "file_with_sem012_block_removed": "34f237f4dc8bef290953dc1e800c42fb4053dcfb91d82028f165b7859006f379"
+        }
+      },
+      "bounding_evidence": "tests/test_feature_layer_freeze.py::test_xauusd_window_vector_regression PASSED under the PROJECT interpreter venv/Scripts/python.exe with the amended file in place (vector_sha256 3d133d81e085f09b... unchanged, 48-dim float32). validate_semantic_registry() -> []. 156 semantic/isolation/relations tests green; measurement-contract floor 16/16.",
+      "authority": "Research-lane semantic amendment only. No promotion, no G001, no ACTIVE_VERSION change, no feature activation. economic_claims_allowed remains false on MC-VCRT-XAUUSD-M15-V1."
+    },
+    {
+      "date_utc": "2026-09-16",
+      "program_id": "CH-intent-schema-alignment",
+      "source_sha_refresh": "market_ontology.yaml",
+      "why_this_is_not_a_feature_layer_mutation": "FM-027 displacement_retrace and FM-028 displacement_atr_ratio refined IN PLACE: an explicit EPISODE scope contract (new optional lineage.scope field, declared in spec_schema.additive_spec_blocks.lineage), distinctness notes against FM-021/FM-020, and corrected source_of_truth citations. Frozen surface #4 covers NEW FM IDS and FORMULA IDENTITY CHANGES; this change adds neither -- the formula, impl and depends_on strings of both nodes are byte-identical, and no CANONICAL_FEATURES change occurs.",
+      "difference_from_prior_waivers_declared": "Unlike CH-visual-crt-trade-object and CH-visual-crt-lane2-seal (NON-frozen semantic section execution_behaviours), both nodes live in the FROZEN runtime section derived_metrics, and one frozen_runtime_key VALUE changed: version 1 -> 2 on each node, the refine-in-place bump MARKET_ONTOLOGY_EVOLUTION_CONTRACT requires (the v6 rename bumped FM-064/FM-065 the same way). Verified this moves no certification: feature_dag_certify.compute_formula_hash (scripts/governance/feature_dag_certify.py:75) hashes {formula_id, witness, sorted deps} from the DAG spine, not the ontology version, so no STALE cascade is triggered. validate_registry only requires version to be an int. Every other edited key (note, source_of_truth, lineage.scope) is outside spec_schema.frozen_runtime_keys.",
+      "attribution_measured": {
+        "_doc": "FULLY attributed to this change set. Measured, not assumed: pre-edit live SHA matched the pin exactly (9be0e6a6...) immediately before editing; then inverting this change set's edits on an IN-MEMORY copy (newline-aware -- the file is CRLF; a first LF-only inversion attempt failed to match for that reason and was corrected, not taken as evidence of foreign drift) re-hashes to exactly 9be0e6a6.... No pre-existing drift is absorbed by this refresh.",
+        "market_ontology.yaml": {
+          "pinned_before_this_refresh": "9be0e6a6672351661a80cdb6beeb54149370697d8d84c5cb3d546880c1fa7d76",
+          "live_after_edit": "f5d15d9f5e6e93a93fd87b682db04280920d6b2833620d1189ad655b166f7721",
+          "file_with_this_change_inverted_in_memory": "9be0e6a6672351661a80cdb6beeb54149370697d8d84c5cb3d546880c1fa7d76"
+        }
+      },
+      "bounding_evidence": "validate_registry() -> [] and validate_semantic_registry() -> [] with the edited file in place; tests/test_feature_layer_freeze.py::test_xauusd_window_vector_regression is the value-level bound and is re-run in this change set's verification.",
+      "authority": "Identity-contract documentation only. No FM id minted, no formula change, no CANONICAL_FEATURES change, no schema v7.0, no promotion, no G001, no ACTIVE_VERSION change."
+    },
+    {
+      "date_utc": "2026-09-16",
+      "program_id": "FEATURE-NAME-IDENTITY-BINDING-STEP1",
+      "source_sha_refresh": "market_ontology.yaml, registry_init.py, feature_schema.py",
+      "why_this_is_not_a_feature_layer_mutation": "Mints 5 new FM ids (FM-085..FM-089) for open/high/low/close/volume in a NEW `source_inputs` ontology section, adds that section to registry_init.py's _ITERATED_SECTIONS with its own SOURCE-impl exemption branch (same pattern as rolling_indicators/temporal_context/structural_states -- no scalar callable exists), and changes feature_schema.py's CANONICAL_FEATURES from a literal tuple to one GENERATED from the ontology. This DOES engage frozen surface #1 (feature_schema.py) and #3 (src/features/registry/**) by file, but changes no formula, no impl resolution for any EXISTING identity, and no emitted value -- proved below, not merely asserted.",
+      "pre_existing_drift_declared": {
+        "_doc": "NOT laundering (CLAUDE.md 6.2 rule 4, same discipline as the 2026-08-09 F-072 entry above). Before this program's own edit, market_ontology.yaml was ALREADY drifted from this pin's recorded value in TWO ways, neither caused by this program: (a) this session's own prior CH-intent-schema-alignment Part-1 edits (FM-027/FM-028 EPISODE scope), already recorded in this pin's own waiver_log under that program_id but never actually committed to git -- so 'pinned' and 'live' had already diverged again the moment a CONCURRENT session edited the same file; (b) a CONCURRENT session's independent CH-derive-declare-windows work (one `defaults:` field documented in spec_schema.additive_spec_blocks.lineage, plus two `defaults:` blocks added to rolling_indicators entries -- config-default literals for catalog/audit, zero formula/impl change). Isolated via a full 10-hunk diff against the last COMMITTED state (HEAD, git blob 722141766dcbf796935dea4215793fc618b451955310bc3fd235266aad80ceb2): 7 hunks are (a), 3 hunks are (b). Neither is touched, reverted, or absorbed as mine by this refresh.",
+        "market_ontology.yaml": {
+          "pinned_before_this_program": "f5d15d9f5e6e93a93fd87b682db04280920d6b2833620d1189ad655b166f7721",
+          "live_immediately_before_this_program_edit": "342d9c70650152a58bdc74c3424cbe7b1b30c1aa8dc8bc0f9fb88c8e2d382d7f",
+          "head_last_committed": "722141766dcbf796935dea4215793fc618b451955310bc3fd235266aad80ceb2",
+          "note": "live_immediately_before != pinned_before because of the undeclared foreign delta (b) above, layered on top of this session's own not-yet-recommitted (a). Both are strictly OLDER than this program's own edits and are carried forward unchanged."
+        }
+      },
+      "attribution_measured": {
+        "_doc": "FULLY attributed for THIS program's own delta. Measured, not assumed: inverting the exact two Edit operations this program made to market_ontology.yaml (the LAYER SEPARATION comment addition and the new `source_inputs:` section, verified against the literal old_string/new_string text used) reproduces live_immediately_before_this_program_edit EXACTLY.",
+        "market_ontology.yaml": {
+          "live_before_this_programs_edits": "342d9c70650152a58bdc74c3424cbe7b1b30c1aa8dc8bc0f9fb88c8e2d382d7f",
+          "live_after_this_programs_edits": "1c0fd344d28e28e0ea09d1a7a5f79eb43216394892397d6485042bcee6846c63",
+          "file_with_this_programs_2_edits_inverted": "342d9c70650152a58bdc74c3424cbe7b1b30c1aa8dc8bc0f9fb88c8e2d382d7f"
+        },
+        "feature_schema.py": {
+          "pinned_before": "9cd612698e863e93c15773589e47d355e5adb1e3d9d80081ac7831602bba5a75",
+          "live_after": "c354e1381a6a66546e44ea59a09e22a6979947292203da9dc12124b8d2f22eb8",
+          "note": "feature_schema.py and registry_init.py were BYTE-IDENTICAL to their pins immediately before this program (no foreign or unrecommitted drift on either) -- verified before editing. Their deltas are entirely and only this program's own edits."
+        },
+        "registry_init.py": {
+          "pinned_before": "f500598f0057a1863bac083fe28e3b10373064f0d36569776a6638726f7d9766",
+          "live_after": "642ca6a2ca372ece98e9bd5a7763e9f0c206c9ea87e69f36816bdb51b28040cd"
+        }
+      },
+      "value_level_proof": "The load-bearing claim (CANONICAL_FEATURES generated from the ontology equals the prior literal tuple byte-for-byte, so SCHEMA_HASH/FEATURE_ORDER_HASH do not move) was verified BEFORE writing this entry, not after: SCHEMA_HASH d40e7c7d5b624ef6d27670255ad95a35 and FEATURE_ORDER_HASH 7901bb0d34f3d0af, both UNCHANGED from the values already recorded in this pin's own `schema` block above.",
+      "bounding_evidence": "validate_registry() -> [] and validate_semantic_registry() -> [] with all edits in place; this change set's verification re-runs test_xauusd_window_vector_regression (value-level bound) and the full feature-lineage/spec-schema floor.",
+      "authority": "Identity/construction-method change only. No FM id RETIRED or RENAMED (5 NEW ones minted for previously-unregistered base inputs), no CANONICAL_FEATURES membership/order change, no schema version bump, no promotion, no G001, no ACTIVE_VERSION change."
+    },
+    {
+      "date_utc": "2026-09-16",
+      "program_id": "SCHEMA-V6-NORMALIZATION-IDENTITY-FIX (correction, discovered during CH-intent-schema-alignment)",
+      "source_sha_refresh": "feature_pipeline.py",
+      "why_this_refresh_exists": "SELF-INFLICTED STALE PIN, not foreign drift. During CH-schema-v6-normalization-identity the pin's source SHAs were refreshed at ~04:32Z, and THEN two further edits were made to feature_pipeline.py at 04:45:28Z and 04:45:30Z (updating the F-064 startup-warning text 99.70% -> 99.81%) without re-refreshing. tests/test_feature_layer_freeze.py is NOT in the GREEN_FLOOR, so the governance floor could not catch it; it surfaced only when CH-intent-schema-alignment ran that test directly.",
+      "attribution_measured": {
+        "_doc": "FULLY attributed, measured from the session transcript rather than inferred. Exactly two Edit calls touched feature_pipeline.py between 04:30Z and 05:00Z; reversing both on an in-memory copy of the live file re-hashes to exactly the stale pinned value 380d2dce.... Line endings ruled out first: the live file is LF-only and neither LF nor CRLF variants of the live file or the HEAD blob match the pin.",
+        "feature_pipeline.py": {
+          "pinned_stale": "380d2dce1be5536e9cdc016d1710dcae3433de82601b4a8f71257837edfd5609",
+          "live": "466180716eb9ac8694b80bde4ba9ab642bd21c5a067f14ba0af53db1719cb60a",
+          "live_with_the_two_0445Z_edits_inverted": "380d2dce1be5536e9cdc016d1710dcae3433de82601b4a8f71257837edfd5609"
+        },
+        "edits": [
+          "04:45:28Z -- a logger string literal: '... |tanh(momentum_score)|>0.999 on 99.70 pct ' -> '... on 99.81 pct '",
+          "04:45:30Z -- a source comment: '... saturates (>0.999) on 99.70% of bars, and the' -> '... on 99.81% of bars (F-064 re-measured 2026-09-16 on the full 47,197-bar corpus; the earlier 99.70% was n=19,922), and the'"
+        ]
+      },
+      "value_neutrality": "Both edits are a log-message literal and a comment; neither can change an emitted feature value. Bounded mechanically: test_xauusd_window_vector_regression PASSED with this file in place (vector_sha256 unchanged).",
+      "authority": "Pin-hygiene correction only. Corrects the recorded state of a prior change set; grants nothing."
+    },
+    {
+      "date_utc": "2026-09-28",
+      "program_id": "CH-freeze-pin-drift-restore (Stage 0a)",
+      "source_sha_refresh": "market_ontology.yaml, active_config, feature_pipeline.py, feature_schema.py, registry_init.py",
+      "why_this_refresh_exists": "tests/test_feature_layer_freeze.py::test_source_file_pins_match was red (market_ontology.yaml pinned 1c0fd344... vs live 132c9296...); the other 4 pins had also drifted but were masked by the assertion's first-failure short-circuit. Restored under the policy's own 'Bugfixes that restore the pin after accidental drift' allowance (feature-layer-mutation-freeze-2026-07-20.md:181) -- no waiver needed for the restoration itself, but each drift is attributed below per the policy's own waiver-log discipline rather than absorbed silently. Also corrects a standing falsehood: active_config/active_config_version pinned configs/production/v2_multi_2026_04.json while configs/production/ACTIVE_VERSION (the file this pin's own vector-regression test resolves its config through) has pointed at v2_htfcrt_2026_08 since commit 218b9ae2 (2026-09-09; CORRECTED 2026-09-28: was written as 'since 2026-08-15', which is when the config was authored/promoted -- the pointer flip itself is only verified committed 2026-09-09) -- the pin was asserting an active config that was not, in fact, active. Repointed by explicit user decision 2026-09-28.",
+      "attribution_measured": {
+        "_doc": "Measured via `git diff 1890785d -- <file>` (1890785d = 'land remaining 2026-09-16 workstreams', the commit nearest the pin's last recorded refresh) against the current working tree, content-diff (autocrlf-safe; raw sha256_file() on-disk hashing -- used by both this entry and the test itself -- differs from git's LF-normalized blob hashing, so blob-hash bisection was abandoned in favor of `git diff`, which is CRLF-safe). Each diff hunk was read in full, not summarized from an external report.",
+        "market_ontology.yaml": {
+          "pinned_before": "1c0fd344d28e28e0ea09d1a7a5f79eb43216394892397d6485042bcee6846c63",
+          "live_after": "132c92962abf97336ba943aba153785359a7b0ad2605dcbcb82f03a286e74ab9",
+          "diff_content": "5 hunks (CORRECTED 2026-09-28: was written as 3), verified: (1) :670-671 prose fix, `body_ratio >= 0.70` corrected to `body_ratio >= params.body_ratio_min (0.65 on active v2_htfcrt_2026_08)` -- commit 6b0ba386 EPIC-83 Wave 1 per its own subject line; (2) 3x execution_behaviours `version: 1 -> 2` + a `notes:` addendum on each (SEM-015, SEM-017, SEM-018; CORRECTED 2026-09-28: was written as 'SEM-017/018/019-family'), citing CH-measurement-basis-declaration; (3) new additive node `measurement_basis_declaration` / SEM-038 (ValidationRule, `can_compare` 5-axis basis comparator, own manifest docs/governance/build_manifests/CH-measurement-basis-declaration.impact.json). None of the 3 hunks touch a `derived_metrics`/`FM-0xx`/`active:`/`impl:` line for any CANONICAL_FEATURES member -- SEM-038's own `formula:` field defines `can_compare()`, a row-comparability predicate over research-measurement metadata, not a feature-value derivation."
+        },
+        "feature_pipeline.py": {
+          "pinned_before": "466180716eb9ac8694b80bde4ba9ab642bd21c5a067f14ba0af53db1719cb60a",
+          "live_after": "67377f36ff021e98364bfbbe1a3f49823bbcb06ef3aa9872efe91133b4a4505a",
+          "diff_content": "6 hunks (CORRECTED 2026-09-28: was written as 5), every one a docstring/comment: '39/v4.0' -> '48/v6.0' dim-count updates and a v5.0->v6.0 schema-version reference (F-107 rename). Zero code-line changes. Verified by reading the full diff, not inferred from the hunk count."
+        },
+        "feature_schema.py": {
+          "pinned_before": "c354e1381a6a66546e44ea59a09e22a6979947292203da9dc12124b8d2f22eb8",
+          "live_after": "702ae29c4883e5d1b0e286939f74e194594d5160b0f5eec9a113ab5f81f3897d",
+          "diff_content": "3 hunks: 2x comment '48 (schema v5.0)' -> '48 (schema v6.0)'; 1x docstring-example fix `hash=FEATURE_ORDER_HASH` -> `feature_order_hash=FEATURE_ORDER_HASH` (matches the real registrar kwarg name). Zero code-line changes."
+        },
+        "registry_init.py": {
+          "pinned_before": "642ca6a2ca372ece98e9bd5a7763e9f0c206c9ea87e69f36816bdb51b28040cd",
+          "live_after": "6cb4d8403b766fbbf98c840395283c91d7909930c103f84d5a54988a9f7b931e",
+          "diff_content": "Real code, commit dbd88a49 'STORY-83.10: CRTStateResolver reads shared thresholds from CRTConfig (P-1)' per its own subject line: adds a new `crtconfig_read` member to `_VALID_THRESHOLD_REF_KINDS`, extends `validate_crt_threshold_refs()`'s orphan/fabricated-ref checks to cover it, and adds a 'must be absent from thresholds:' rule for that kind. This is a genuine mutation of frozen surface #3 (src/features/registry/**) -- validator-only, no feature/formula/CANONICAL_FEATURES change, but never previously recorded against this pin. Recorded here as the attribution this entry exists to provide."
+        }
+      },
+      "active_config_repoint": {
+        "_doc": "Not a drift restoration -- a declared truth-conflict resolution (CLAUDE.md 6.2 rule 3). The pin's active_config field named v2_multi_2026_04.json, which is neither ACTIVE_VERSION's target nor the file test_xauusd_window_vector_regression's own FeaturePipeline config resolution walks through (get_prod_section -> PROD_VERSION -> ACTIVE_VERSION -> v2_htfcrt_2026_08.json, pointer flip committed 218b9ae2 2026-09-09; CORRECTED 2026-09-28: was 'verified 2026-08-15 by CH-htfcrt-parent-candle-smc-v1's own promotion', which is when the config was promoted, not when the ACTIVE_VERSION pointer commit landed). Repointed to configs/production/v2_htfcrt_2026_08.json (sha256 4f35cdb957997b050feb81b91513d6c6116d45030d2d870855706edbab2c9b3b); active_config_version and prod_version_constant top-level fields updated to v2_htfcrt_2026_08 to match; tests/test_feature_layer_freeze.py:63 updated in the same change set.",
+        "authority": "Truth-conflict resolution only. No ACTIVE_VERSION change (it already read v2_htfcrt_2026_08 before this entry) -- the pin's own field was the stale artifact, not the runtime."
+      },
+      "value_neutrality": "All 5 pinned-file diffs read in full (not summarized from an external audit) before this entry was written. None touches a CANONICAL_FEATURES entry, a derived_metrics formula, an `active:`/`impl:` binding, or feature_schema.py's SCHEMA_HASH/FEATURE_ORDER_HASH constants. Bounded mechanically: the full 8-test tests/test_feature_layer_freeze.py suite is re-run green in this change set's own verification, with test_xauusd_window_vector_regression's vector_sha256 UNCHANGED from the value already recorded in this pin's own `schema`/`regression_benchmarks` blocks.",
+      "authority": "Pin-hygiene restoration + one declared truth-conflict resolution (active_config repoint). Grants no activation authority, no G001, no ACTIVE_VERSION change, no CRT/feature closure reopening. Standalone change set (Stage 0a); the D1/SEM-021 displacement-origin-kill TruthConflict and the EPIC-84 config-missing-key lanes are separate, subsequent work."
+    },
+    {
+      "date_utc": "2026-09-30",
+      "program_id": "EPIC-84 Wave 1 (no defaults, no fallbacks) -- declarations commit + L-C strict-config pass",
+      "source_sha_refresh": "active_config, feature_schema.py, causal_structure.py, registry_init.py",
+      "why_this_refresh_exists": "EPIC-84 lanes L-B/L-E/L-F removed literal defaults from src/core, src/research and 9 other packages; each removed default that fed real running behaviour was declared into configs/production/v2_htfcrt_2026_08.json (commit fc2f661, 33 files) so behaviour stays byte-identical. Separately, L-C's src/features strict-config pass (commit 5c2d733b) added comment-only 'EPIC-84 KEPT' annotations to two of the frozen source files, drifting their pins without changing any code line.",
+      "attribution_measured": {
+        "active_config": {
+          "pinned_before": "4f35cdb957997b050feb81b91513d6c6116d45030d2d870855706edbab2c9b3b",
+          "live_after": "4d7d2b1c110d0f52fb869ff5606a349627b3b0afb706d755f210d6ddad96a8fd",
+          "diff_content": "Additive only: engine_runner.cognitive_layer (enabled:false), fusion_engine.weight_strategy_consensus/regime_fusion_weights, decision_engine.threshold_window/fallback_top_n, acceptance_controller.engine_threshold/fusion_threshold, governance.promotion_base_version, strategy_orchestrator (new section), training_trigger (new section), agent.groq/agent.findings (new sections), bitnet (new section), portfolio.correlation/htf_candles, uat.kill_switch.daily_loss_limit_inr/weekly_loss_limit_inr/state_file, uat.output_dir/signal_accuracy, context_report (new section), capital_management.unknown_pair_pip_value. Every value equals the code literal or dataclass default it replaces, verified against the pre-EPIC-84 source diff key by key before being written, not copied from a lane's self-report."
+        },
+        "feature_schema.py": {
+          "pinned_before": "702ae29c4883e5d1b0e286939f74e194594d5160b0f5eec9a113ab5f81f3897d",
+          "live_after": "ac0751b1f35390eb81dd5193a8a35c03b034bb38d6fe1b4dc07937302de0e7fd",
+          "diff_content": "`git diff 8df8eede HEAD -- src/features/feature_schema.py` is EMPTY -- this pin's prior refresh (Stage 0a, 2026-09-28) already captured this file's content; the sha256 drift here is a core.autocrlf artifact of a fresh worktree checkout (`file` confirms CRLF line terminators on disk; git's blob is LF-normalized so `git diff` sees no change, matching the documented autocrlf gotcha, not a code change). Value-neutral by construction."
+        },
+        "causal_structure.py": {
+          "pinned_before": "2574f189cc4c08470d9c39a6e3f612e4f271dbef75ec7f7e0bb260c05b00d155",
+          "live_after": "2574f189cc4c08470d9c39a6e3f612e4f271dbef75ec7f7e0bb260c05b00d155",
+          "diff_content": "CORRECTED 2026-09-30: this entry originally pinned 0c9ee11696aa... (this file's autocrlf-CRLF sha256 measured inside the epic84-wave1-integration worktree, a fresh checkout). That was a mistake, not a fix: the canonical tree (grokbotchanges / this repo root) has this file as LF on disk, hashing to the ORIGINAL pinned value 2574f189..., which is what the freeze test's sha256_file() actually reads here. `git diff` confirms zero content difference at any point in this program. The pin is restored to its original, correct value -- no drift ever occurred for this file; the prior entry manufactured one by pinning a hash that was never canonical."
+        },
+        "registry_init.py": {
+          "pinned_before": "6cb4d8403b766fbbf98c840395283c91d7909930c103f84d5a54988a9f7b931e",
+          "live_after": "d7228bf393d38f94b89bdaf3ff9a5428e3653609680144e6e23f61a0d0aaf3e6",
+          "diff_content": "Real content change, commit 5c2d733b 'EPIC-84 L-C: src/features strict config read + documented ontology KEPT sites': 5 comment-only 'EPIC-84 KEPT' annotations added above pre-existing `spec.get(key, default)` calls in `validate_registry`/`_validate_spec_schema`, explaining why each safe-navigation default is validator dict-navigation (immediately followed by a completeness check) rather than a masked behavioral default. Zero code-line changes -- read in full, not inferred from the hunk count."
+        }
+      },
+      "value_neutrality": "No key under crt_engine, feature_pipeline, or parent_crt (the sections FeaturePipeline/CRTStateResolver read) was touched, and none of the 4 drifted source files changed a CANONICAL_FEATURES entry, a derived_metrics formula, or an `active:`/`impl:` binding. tests/test_feature_layer_freeze.py::test_xauusd_window_vector_regression's vector_sha256 is unchanged from this pin's own regression_benchmarks block. Independently confirmed by a full-corpus oracle-label regeneration the same day: 565,884 rows x 32 value columns bit-identical (same sha256) across the pre-EPIC-84 bar matrix and a fresh bar matrix built on this commit.",
+      "authority": "Config-declaration bookkeeping + comment-only source-drift attribution. Grants no activation authority, no G001, no ACTIVE_VERSION change, no CRT/feature closure reopening."
+    },
+    {
+      "date_utc": "2026-10-03",
+      "program_id": "E01-LIFECYCLE-SWEEP-IDENTITY",
+      "source_sha_refresh": [
+        "market_ontology.yaml",
+        "active_config",
+        "feature_pipeline.py",
+        "causal_structure.py",
+        "feature_schema.py"
+      ],
+      "what_changed": "Registered FM-090 liquidity_sweep_e01 / FM-091 sweep_detected_e01 / FM-092 double_sweep_e01 (structural_states) and FM-093 candles_since_sweep_e01 (rolling_indicators), all active:false, config_key feature_pipeline.sweep_semantics. feature_pipeline.py + causal_structure.py gained an e01_lifecycle arm (features.level_lifecycle.LevelBook) behind the new strict key; the default 'latest_unconsumed' arm is unchanged. Active config gained feature_pipeline.sweep_semantics = 'latest_unconsumed' (non-params, hash-neutral: params hash 7de09f62 unchanged).",
+      "pre_existing_drift_declared": {
+        "_doc": "NOT laundering (CLAUDE.md 6.2 rule 4): two pinned sources were ALREADY drifted before this program touched anything. (1) active_config equalled HEAD (git LF blob sha aaebad19415bcbab...) before this program's one-line edit, which is not the pinned value. (2) feature_schema.py was NOT edited by this program at all and is git-clean (equals HEAD after line-ending normalisation), yet its working-tree sha is not the pinned value. Most likely entered with merge ad2bddc6 (2026-09-30), which landed after the last pin refresh f45b740b; not proven here. market_ontology.yaml, feature_pipeline.py and causal_structure.py matched their pins at session open (CRLF/LF accounted for).",
+        "active_config": {
+          "pinned": "4d7d2b1c110d0f52fb869ff5606a349627b3b0afb706d755f210d6ddad96a8fd",
+          "live_pre_edit": "aaebad19415bcbabacb76b3ca7c3f03ba9a3af472a6428e30f88fa5d1bcf789a"
+        },
+        "feature_schema.py": {
+          "pinned": "ac0751b1f35390eb81dd5193a8a35c03b034bb38d6fe1b4dc07937302de0e7fd",
+          "live_untouched_by_this_program": "48a52845f0bce29ca800cd321dc623d5edc2471233595f761e3ef546e10a6ebb"
+        }
+      },
+      "bounding_evidence": "tests/test_feature_layer_freeze.py::test_xauusd_window_vector_regression PASSED after the edits (legacy default byte-identical); tests/test_e01_sweep_semantics.py proves batch == causal twin == live FeatureStore in e01_lifecycle mode.",
+      "previous_sha": {
+        "market_ontology.yaml": "132c92962abf97336ba943aba153785359a7b0ad2605dcbcb82f03a286e74ab9",
+        "active_config": "4d7d2b1c110d0f52fb869ff5606a349627b3b0afb706d755f210d6ddad96a8fd",
+        "feature_pipeline.py": "67377f36ff021e98364bfbbe1a3f49823bbcb06ef3aa9872efe91133b4a4505a",
+        "causal_structure.py": "2574f189cc4c08470d9c39a6e3f612e4f271dbef75ec7f7e0bb260c05b00d155",
+        "feature_schema.py": "ac0751b1f35390eb81dd5193a8a35c03b034bb38d6fe1b4dc07937302de0e7fd"
+      },
+      "new_sha": {
+        "market_ontology.yaml": "96ecc604c39ec6b59569bc9b6a1aaea90f2574f0abf52997b773518a12a8920f",
+        "active_config": "fbe40700330da01da29385110a8a58d7854cad73a1404b1bbf4cba6f12c96d7d",
+        "feature_pipeline.py": "e83d3059fa7aebce0c5b5c1f06291c64c14ed98aab60cd075cd0f0324163a52e",
+        "causal_structure.py": "ce6e0de24a8c4ed37f77bc640419745ae93708ad5a79fe3e09839a37a8da8969",
+        "feature_schema.py": "48a52845f0bce29ca800cd321dc623d5edc2471233595f761e3ef546e10a6ebb"
+      }
+    },
+    {
+      "date_utc": "2026-10-03",
+      "program_id": "E01-LIFECYCLE-RETEST-IDENTITY",
+      "source_sha_refresh": [
+        "market_ontology.yaml",
+        "feature_pipeline.py"
+      ],
+      "what_changed": "Registered FM-094 retest_flag_e01 (structural_states) and FM-095 retest_depth_e01 (derived_metrics, flat + additive), both active:false, config_key feature_pipeline.sweep_semantics: FM-061 / FM-021 fed by the MKT-E01 lifecycle sweep, which Step 6 changed without declaring. feature_pipeline.py: COMMENT ONLY (stale 'retest_flag ... no FM id' corrected); no logic change.",
+      "bounding_evidence": "tests/test_feature_layer_freeze.py::test_xauusd_window_vector_regression PASSED after the edits; tests/test_e01_sweep_semantics.py::test_live_feeder_matches_batch_at_every_prefix proves LiveRailFeeder == batch for retest_depth and the sweep slots in both modes.",
+      "previous_sha": {
+        "market_ontology.yaml": "96ecc604c39ec6b59569bc9b6a1aaea90f2574f0abf52997b773518a12a8920f",
+        "feature_pipeline.py": "e83d3059fa7aebce0c5b5c1f06291c64c14ed98aab60cd075cd0f0324163a52e"
+      },
+      "new_sha": {
+        "market_ontology.yaml": "bb6f7cd89f69c986762e7d490d338951c1feed2b180ac8174e5f07496d2f373e",
+        "feature_pipeline.py": "220575f5ab5ad7f49c0f7a975a99415b6712f058df01055e190ec4a014afd382"
+      }
+    }
+  ],
+  "runtime_benchmarks": {
+    "status": "NOT_YET_OPENED",
+    "opens_with": "docs/implementation_plan/backtest-runtime-roadmap-2026-07-20.md R-1/R-2",
+    "planned_examples": [
+      "Runtime Benchmark 1 \u2014 BNB Gate ON/OFF",
+      "Runtime Benchmark 2 \u2014 Multi-instrument execution",
+      "Runtime Benchmark 3 \u2014 Trade ledger parity"
+    ],
+    "note": "Deliberately separate from feature freeze pin so feature parity is not confused with execution-path coverage."
+  }
+}

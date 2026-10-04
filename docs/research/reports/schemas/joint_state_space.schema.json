@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "docs/research/reports/schemas/joint_state_space.schema.json",
+  "title": "JointStateSpace",
+  "type": "object",
+  "required": [
+    "L",
+    "S",
+    "state_id_map"
+  ],
+  "properties": {
+    "L": {
+      "type": "object",
+      "required": [
+        "name",
+        "members"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "const": "OutcomeLabel"
+        },
+        "members": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 3
+        },
+        "role": {
+          "type": "string",
+          "description": "value_domain_only"
+        }
+      }
+    },
+    "S": {
+      "type": "object",
+      "required": [
+        "notation",
+        "definition",
+        "cardinality"
+      ],
+      "properties": {
+        "notation": {
+          "type": "string",
+          "description": "S = L \u00d7 L"
+        },
+        "definition": {
+          "type": "string"
+        },
+        "cardinality": {
+          "type": "integer"
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "state_id_map": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "state_id",
+          "Y_scanner",
+          "Y_oracle"
+        ],
+        "properties": {
+          "state_id": {
+            "type": "string"
+          },
+          "Y_scanner": {
+            "type": "string"
+          },
+          "Y_oracle": {
+            "type": "string"
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "Y_joint": {
+      "type": "object",
+      "properties": {
+        "notation": {
+          "type": "string",
+          "description": "Y_joint : Omega -> S"
+        },
+        "formula": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "additionalProperties": true
+}

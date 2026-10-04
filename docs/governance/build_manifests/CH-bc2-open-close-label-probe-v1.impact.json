@@ -1,0 +1,41 @@
+{
+  "change_id": "CH-bc2-open-close-label-probe-v1",
+  "date_utc": "2026-09-02",
+  "objective": "BC-2 only: pre-register and implement executable_open_vs_close_label_proof scorer for the MT5 M15 family that produced XAUUSD_MT5_PHASE1_20260521. Synthetic tests. Live MT5 capture optional and fail-closed. Do not flip G-06, OHLCV CLOSED, APPROVED, or BC-1 until a live OPEN/CLOSE pair exists.",
+  "change_classes": [
+    "CORPUS_AUTHORITY_CHANGE"
+  ],
+  "change_class_rationale": "Evidence probe for OHLCV BC-2 / G-06 on the admitted dataset's producer family. No admission-gate behavior change. No CAD migration. Scorer is research-only.",
+  "affected_files": [
+    "docs/research/preregistration-bc2-open-close-label.md",
+    "src/research/ohlcv_open_close_label.py",
+    "tests/test_ohlcv_open_close_label.py",
+    "docs/governance/CORPUS_AUTHORITY.md",
+    "docs/governance/build_manifests/CH-bc2-open-close-label-probe-v1.impact.json",
+    ".grok/PENDING.md",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_dataset_registry.py",
+    "tests/test_corpus_authority_decisions.py",
+    "tests/test_xauusd_phase1_frozen_candidate.py",
+    "tests/test_construction_protocol.py",
+    "tests/test_ohlcv_open_close_label.py"
+  ],
+  "unknowns": [
+    {
+      "question": "Whether a live MT5 terminal is available in this environment to capture a mid/post pair this turn.",
+      "blocking": false,
+      "resolution": "Non-blocking. Absence is INSUFFICIENT, not OPEN. Scorer ships with synthetic tests. Live capture is opt-in.",
+      "followup": "Run python -m research.ohlcv_open_close_label capture when MT5 is logged in, mid-bar; score after close."
+    }
+  ],
+  "rollback_boundary": "Delete prereg, scorer, tests, and the evidence-lane pointer. Dataset Identity / R3 / Phase-1 pin stay.",
+  "authority_granted": "User 2026-09-02: authorize BC-2 only — executable_open_vs_close_label_proof on the admitted object.",
+  "authority_NOT_granted": "No BC-4, no BC-5 A/B/C/D, no R3b, no G-06 silent flip, no OHLCV CLOSED, no APPROVED, no G001, no fetcher rewrite on CLOSE.",
+  "production_behavior_changed": "NO"
+}

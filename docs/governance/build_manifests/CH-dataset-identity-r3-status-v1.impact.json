@@ -1,0 +1,30 @@
+{
+  "change_id": "CH-dataset-identity-r3-status-v1",
+  "date_utc": "2026-09-02",
+  "objective": "Pin Construction ≠ Closure on CORPUS_AUTHORITY after R3 v1: BC-1_INFRASTRUCTURE=IMPLEMENTED, BC-1_CLOSURE=NOT_GRANTED; two load regimes (dataset-governed vs path-governed); remaining BC-2..BC-6 attach to the admitted Phase-1 artifact; R3b named as unbound fail-closed. No loader change.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY"
+  ],
+  "change_class_rationale": "Doctrine status pin plus freeze-token test. No src/, configs/, or models/. Does not change OHLCV_CLOSURE_STATUS. Does not grant BC-1 closure.",
+  "affected_files": [
+    "docs/governance/CORPUS_AUTHORITY.md",
+    "docs/governance/build_manifests/CH-dataset-identity-r3-status-v1.impact.json",
+    "docs/knowledge-map.md",
+    "tests/test_corpus_authority_decisions.py",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert the doctrine section, knowledge-map clause, and freeze tokens. R3 code and Dataset Identity freeze stay.",
+  "authority_granted": "User 2026-09-02 characterization of R3: infrastructure not closure; two regimes; remaining blockers on the admitted object.",
+  "authority_NOT_granted": "No BC-1 closure, no R3b, no APPROVED, no OHLCV CLOSED, no G001, no loader edit.",
+  "production_behavior_changed": "NO"
+}

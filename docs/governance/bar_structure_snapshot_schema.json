@@ -1,0 +1,732 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "docs/governance/bar_structure_snapshot_schema.json",
+  "title": "BarStructureSnapshot record (SEM-035)",
+  "description": "One observation-only record per bar. Emitted by src/runtime/bar_structure_snapshot.py under v3_unified_market_structure_2026_09. OUT-OF-VECTOR: adds zero canonical feature dimensions. Derived from the real XAUUSD M15 stream (47,275 records), so the types are what the emitter ACTUALLY produces across a whole corpus, not one sampled row.",
+  "change_id": "CH-v3-unified-market-structure-v1",
+  "schema_version": "1.0.0",
+  "authority": "OBSERVATION_ONLY",
+  "derived_from": {
+    "stream": "logs/bar_structure/XAUUSD_bar_structure.jsonl",
+    "records": 47275,
+    "phase_counts": {
+      "WARMUP": 78,
+      "LIVE": 47197
+    }
+  },
+  "key_order": {
+    "_comment": "LOAD-BEARING. parquet_store._order_violation treats a reordered flatten group as corruption because a scrambled vector raises no error anywhere downstream. Records are emitted as OrderedDict; do not sort these keys.",
+    "LIVE": [
+      "schema_version",
+      "run_id",
+      "instrument",
+      "timeframe",
+      "corpus_path",
+      "corpus_sha256",
+      "config_version",
+      "config_hash",
+      "feature_schema_version",
+      "feature_schema_hash",
+      "bar_index",
+      "engine_candle_index",
+      "timestamp",
+      "timestamp_basis",
+      "htf_candle_id",
+      "emitted_by",
+      "phase",
+      "open",
+      "high",
+      "low",
+      "close",
+      "volume",
+      "atr_abs",
+      "crt_state_before",
+      "crt_state_after",
+      "crt_state_changed",
+      "crt_action",
+      "crt_reject_reason",
+      "crt_direction",
+      "crt_range_h_ref",
+      "crt_range_l_ref",
+      "crt_range_size",
+      "crt_range_session",
+      "crt_range_htf_id",
+      "crt_sweep_price",
+      "crt_sweep_candle_index",
+      "crt_sweep_double_confirmed",
+      "crt_displacement_candle_index",
+      "crt_retest_candle_index",
+      "crt_pending_displacement_ttl",
+      "crt_htf_remaining_candles",
+      "crt_evaluating_soft_conf",
+      "crt_trade_open",
+      "parent_timeframe",
+      "parent_enabled",
+      "parent_crt_state",
+      "parent_bias",
+      "parent_range_h_ref",
+      "parent_range_l_ref",
+      "parent_closed_this_bar",
+      "parent_last_close_ts",
+      "htf_state",
+      "htf_range_ratio",
+      "objective_status",
+      "objective_direction",
+      "objective_target",
+      "objective_invalidate_at",
+      "htf_thresholds",
+      "objective_gate_enabled",
+      "objective_gate_mode",
+      "smc_window_len",
+      "smc_max_window",
+      "smc_swing_window",
+      "fvg_present",
+      "fvg_bullish",
+      "fvg_high",
+      "fvg_low",
+      "fvg_mid",
+      "fvg_formed_at_index",
+      "fvg_age_bars",
+      "fvg_width_atr",
+      "fvg_inside",
+      "fvg_distance",
+      "fvg_window_truncated",
+      "order_block_present",
+      "order_block_bullish",
+      "order_block_high",
+      "order_block_low",
+      "order_block_mid",
+      "order_block_formed_at_index",
+      "order_block_age_bars",
+      "order_block_width_atr",
+      "order_block_inside",
+      "order_block_distance",
+      "order_block_window_truncated",
+      "breaker_present",
+      "breaker_bullish",
+      "breaker_high",
+      "breaker_low",
+      "breaker_mid",
+      "breaker_formed_at_index",
+      "breaker_age_bars",
+      "breaker_width_atr",
+      "breaker_inside",
+      "breaker_distance",
+      "breaker_window_truncated",
+      "mitigation_present",
+      "mitigation_bullish",
+      "mitigation_high",
+      "mitigation_low",
+      "mitigation_mid",
+      "mitigation_formed_at_index",
+      "mitigation_age_bars",
+      "mitigation_width_atr",
+      "mitigation_inside",
+      "mitigation_distance",
+      "mitigation_window_truncated",
+      "pdh_present",
+      "pdh_price",
+      "pdh_distance",
+      "pdl_present",
+      "pdl_price",
+      "pdl_distance",
+      "pdh_pdl_day_ts",
+      "eqh_present",
+      "eqh_distance",
+      "eql_present",
+      "eql_distance",
+      "choch_value",
+      "choch_basis",
+      "break_of_structure",
+      "trend_bias"
+    ],
+    "WARMUP": [
+      "schema_version",
+      "run_id",
+      "instrument",
+      "timeframe",
+      "corpus_path",
+      "corpus_sha256",
+      "config_version",
+      "config_hash",
+      "feature_schema_version",
+      "feature_schema_hash",
+      "bar_index",
+      "engine_candle_index",
+      "timestamp",
+      "timestamp_basis",
+      "htf_candle_id",
+      "emitted_by",
+      "phase",
+      "open",
+      "high",
+      "low",
+      "close",
+      "volume",
+      "atr_abs"
+    ]
+  },
+  "null_semantics": {
+    "zone_distance": "{f}_distance is a float and is NEVER null. Exactly 0.0 means NO STRUCTURE EXISTS (the features.smc convention), not zero distance.",
+    "zone_geometry": "Every other {f}_* field is null if and only if {f}_present is false. There is no third state, so {f}_present is the single presence authority.",
+    "width_atr": "{f}_width_atr is null (not 0.0) when atr_abs <= 0: a zero-ATR width is UNDEFINED, the opposite of the *_distance convention.",
+    "parent_block": "All parent/HTF/objective fields are null when parent_crt.enabled is false (ParentCRTFeed.from_prod_config returns None). Null is the honest reading -- not observed -- never 0 and never a default enum member.",
+    "warmup_rows": "phase=WARMUP rows carry identity + bar only (23 fields). engine_candle_index, htf_candle_id and atr_abs are null because the engine has no state for that bar.",
+    "window_truncated": "{f}_window_truncated is len(window) >= smc_max_window: a window-SATURATION marker, False only for the first ~smc_max_window bars. It is a warmup marker, NOT an exclusion criterion -- use {f}_age_bars against smc_window_len for boundary proximity. Listed in MC-CTXATTR forbidden_metric_substitutions."
+  },
+  "parquet": {
+    "_comment": "The parquet file is a REGENERABLE PROJECTION and never a second authority (CC-PARQUET-PROJECTION). JSONL is the system of record.",
+    "writer": "src/utils/parquet_store.py compact_jsonl",
+    "verifier": "src/utils/parquet_store.py verify_projection (round-trip; a projection that does not verify is DELETED, not shipped)",
+    "family_default": "scripts/maintenance/jsonl_to_parquet.py FAMILY_DEFAULTS '_bar_structure.jsonl' -> ('crt_state_after', None)",
+    "partition_by": "crt_state_after",
+    "partition_rationale": "The attribution program (SEM-036) reads strictly per-stratum -- its primary metric is an overlay computed INSIDE each CRT state -- so partition pruning matches the access pattern exactly. Warmup rows carry a null state and land in their own __null__ partition, which is the honest placement: they have no engine state rather than a RANGE one.",
+    "measured": {
+      "jsonl_bytes": 181942241,
+      "parquet_bytes_approx": 7759462,
+      "compression": "zstd",
+      "partitions_observed": [
+        "RANGE",
+        "SWEEP",
+        "DISPLACEMENT",
+        "EXPANSION",
+        "RETEST",
+        "EXECUTION",
+        "SHADOW_PENDING",
+        "__null__"
+      ],
+      "verified_rows": 47275
+    },
+    "nullability": "parquet_store resolves per-column policy from the observed value set; a column that is sometimes absent gains a __present__ presence mask. Ambiguous columns degrade to lossless JSON text rather than guessing a type."
+  },
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "instrument",
+    "timeframe",
+    "corpus_path",
+    "corpus_sha256",
+    "config_version",
+    "config_hash",
+    "feature_schema_version",
+    "feature_schema_hash",
+    "bar_index",
+    "engine_candle_index",
+    "timestamp",
+    "timestamp_basis",
+    "htf_candle_id",
+    "emitted_by",
+    "phase",
+    "open",
+    "high",
+    "low",
+    "close",
+    "volume",
+    "atr_abs"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "instrument": {
+      "type": "string"
+    },
+    "timeframe": {
+      "type": "string"
+    },
+    "corpus_path": {
+      "type": "string"
+    },
+    "corpus_sha256": {
+      "type": "string"
+    },
+    "config_version": {
+      "type": "string"
+    },
+    "config_hash": {
+      "type": "string"
+    },
+    "feature_schema_version": {
+      "type": "string"
+    },
+    "feature_schema_hash": {
+      "type": "string"
+    },
+    "bar_index": {
+      "type": "integer"
+    },
+    "engine_candle_index": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "timestamp": {
+      "type": "string"
+    },
+    "timestamp_basis": {
+      "type": "string"
+    },
+    "htf_candle_id": {
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    "emitted_by": {
+      "type": "string"
+    },
+    "phase": {
+      "type": "string"
+    },
+    "open": {
+      "type": "number"
+    },
+    "high": {
+      "type": "number"
+    },
+    "low": {
+      "type": "number"
+    },
+    "close": {
+      "type": "number"
+    },
+    "volume": {
+      "type": "number"
+    },
+    "atr_abs": {
+      "type": [
+        "null",
+        "number"
+      ]
+    },
+    "crt_state_before": {
+      "type": "string"
+    },
+    "crt_state_after": {
+      "type": "string"
+    },
+    "crt_state_changed": {
+      "type": "boolean"
+    },
+    "crt_action": {
+      "type": "string"
+    },
+    "crt_reject_reason": {
+      "type": "null"
+    },
+    "crt_direction": {
+      "type": "string"
+    },
+    "crt_range_h_ref": {
+      "type": "number"
+    },
+    "crt_range_l_ref": {
+      "type": "number"
+    },
+    "crt_range_size": {
+      "type": "number"
+    },
+    "crt_range_session": {
+      "type": "string"
+    },
+    "crt_range_htf_id": {
+      "type": "string"
+    },
+    "crt_sweep_price": {
+      "type": [
+        "null",
+        "number"
+      ]
+    },
+    "crt_sweep_candle_index": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "crt_sweep_double_confirmed": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "crt_displacement_candle_index": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "crt_retest_candle_index": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "crt_pending_displacement_ttl": {
+      "type": "integer"
+    },
+    "crt_htf_remaining_candles": {
+      "type": "integer"
+    },
+    "crt_evaluating_soft_conf": {
+      "type": "boolean"
+    },
+    "crt_trade_open": {
+      "type": "boolean"
+    },
+    "parent_timeframe": {
+      "type": "string"
+    },
+    "parent_enabled": {
+      "type": "boolean"
+    },
+    "parent_crt_state": {
+      "type": "string"
+    },
+    "parent_bias": {
+      "type": "string"
+    },
+    "parent_range_h_ref": {
+      "type": "number"
+    },
+    "parent_range_l_ref": {
+      "type": "number"
+    },
+    "parent_closed_this_bar": {
+      "type": "boolean"
+    },
+    "parent_last_close_ts": {
+      "type": "string"
+    },
+    "htf_state": {
+      "type": "string"
+    },
+    "htf_range_ratio": {
+      "type": "number"
+    },
+    "objective_status": {
+      "type": "string"
+    },
+    "objective_direction": {
+      "type": "string"
+    },
+    "objective_target": {
+      "type": [
+        "null",
+        "number"
+      ]
+    },
+    "objective_invalidate_at": {
+      "type": [
+        "null",
+        "number"
+      ]
+    },
+    "htf_thresholds": {
+      "type": "object"
+    },
+    "objective_gate_enabled": {
+      "type": "boolean"
+    },
+    "objective_gate_mode": {
+      "type": "string"
+    },
+    "smc_window_len": {
+      "type": "integer"
+    },
+    "smc_max_window": {
+      "type": "integer"
+    },
+    "smc_swing_window": {
+      "type": "integer"
+    },
+    "fvg_present": {
+      "type": "boolean"
+    },
+    "fvg_bullish": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "fvg_high": {
+      "type": [
+        "null",
+        "number"
+      ]
+    },
+    "fvg_low": {
+      "type": [
+        "null",
+        "number"
+      ]
+    },
+    "fvg_mid": {
+      "type": [
+        "null",
+        "number"
+      ]
+    },
+    "fvg_formed_at_index": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "fvg_age_bars": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "fvg_width_atr": {
+      "type": [
+        "null",
+        "number"
+      ]
+    },
+    "fvg_inside": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "fvg_distance": {
+      "type": "number"
+    },
+    "fvg_window_truncated": {
+      "type": "boolean"
+    },
+    "order_block_present": {
+      "type": "boolean"
+    },
+    "order_block_bullish": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "order_block_high": {
+      "type": [
+        "null",
+        "number"
+      ]
+    },
+    "order_block_low": {
+      "type": [
+        "null",
+        "number"
+      ]
+    },
+    "order_block_mid": {
+      "type": [
+        "null",
+        "number"
+      ]
+    },
+    "order_block_formed_at_index": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "order_block_age_bars": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "order_block_width_atr": {
+      "type": [
+        "null",
+        "number"
+      ]
+    },
+    "order_block_inside": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "order_block_distance": {
+      "type": "number"
+    },
+    "order_block_window_truncated": {
+      "type": "boolean"
+    },
+    "breaker_present": {
+      "type": "boolean"
+    },
+    "breaker_bullish": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "breaker_high": {
+      "type": [
+        "null",
+        "number"
+      ]
+    },
+    "breaker_low": {
+      "type": [
+        "null",
+        "number"
+      ]
+    },
+    "breaker_mid": {
+      "type": [
+        "null",
+        "number"
+      ]
+    },
+    "breaker_formed_at_index": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "breaker_age_bars": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "breaker_width_atr": {
+      "type": [
+        "null",
+        "number"
+      ]
+    },
+    "breaker_inside": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "breaker_distance": {
+      "type": "number"
+    },
+    "breaker_window_truncated": {
+      "type": "boolean"
+    },
+    "mitigation_present": {
+      "type": "boolean"
+    },
+    "mitigation_bullish": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "mitigation_high": {
+      "type": [
+        "null",
+        "number"
+      ]
+    },
+    "mitigation_low": {
+      "type": [
+        "null",
+        "number"
+      ]
+    },
+    "mitigation_mid": {
+      "type": [
+        "null",
+        "number"
+      ]
+    },
+    "mitigation_formed_at_index": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "mitigation_age_bars": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "mitigation_width_atr": {
+      "type": [
+        "null",
+        "number"
+      ]
+    },
+    "mitigation_inside": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "mitigation_distance": {
+      "type": "number"
+    },
+    "mitigation_window_truncated": {
+      "type": "boolean"
+    },
+    "pdh_present": {
+      "type": "boolean"
+    },
+    "pdh_price": {
+      "type": [
+        "null",
+        "number"
+      ]
+    },
+    "pdh_distance": {
+      "type": "number"
+    },
+    "pdl_present": {
+      "type": "boolean"
+    },
+    "pdl_price": {
+      "type": [
+        "null",
+        "number"
+      ]
+    },
+    "pdl_distance": {
+      "type": "number"
+    },
+    "pdh_pdl_day_ts": {
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    "eqh_present": {
+      "type": "boolean"
+    },
+    "eqh_distance": {
+      "type": "number"
+    },
+    "eql_present": {
+      "type": "boolean"
+    },
+    "eql_distance": {
+      "type": "number"
+    },
+    "choch_value": {
+      "type": "number"
+    },
+    "choch_basis": {
+      "type": "string"
+    },
+    "break_of_structure": {
+      "type": "number"
+    },
+    "trend_bias": {
+      "type": "number"
+    }
+  },
+  "additionalProperties": false
+}

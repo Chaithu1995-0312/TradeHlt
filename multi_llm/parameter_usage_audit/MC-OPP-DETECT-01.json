@@ -1,0 +1,72 @@
+{
+  "id": "MC-OPP-DETECT-01",
+  "status": "FROZEN",
+  "frozen_at_ist": "2026-09-20",
+  "layer": "Detection Authority",
+  "goal": "Detect trade opportunities",
+  "authority": "MT5",
+  "source_of_truth": "broker_OHLCV",
+  "immutable": ["trade_id", "dataset_identity"],
+  "may_drift": ["features", "predictions"],
+  "governance": {
+    "schema_change": "requires_user_approval",
+    "feature_drift_under_features_dot": "no_approval_gate"
+  },
+  "observability": {
+    "trace_id": "required_all_stages",
+    "stages": ["jsonl", "parquet", "clean_labels", "measurement"]
+  },
+  "identity_nest": [
+    "dataset_identity",
+    "trace_id",
+    "analysis_id",
+    "run_id",
+    "trade_id"
+  ],
+  "trade_id": {
+    "mint": "sha1(instrument|timestamp_iso|direction|entry:.8f|sl:.8f)[:16]",
+    "legacy_alias": "unit_id",
+    "source_fn": "research.clean_labels.builder._unit_id"
+  },
+  "dataset_identity": {
+    "fields": ["csv_sha256", "dataset_id"],
+    "source": "corpus_store / CorpusAdmission provenance pair"
+  },
+  "required_columns": {
+    "identity": [
+      "trade_id",
+      "trace_id",
+      "analysis_id",
+      "run_id",
+      "dataset_identity.csv_sha256",
+      "dataset_identity.dataset_id",
+      "instrument",
+      "timestamp"
+    ],
+    "geometry": ["direction", "entry", "sl", "tp"],
+    "may_drift_prefixes": ["features."]
+  },
+  "gaps_closed": {
+    "G1_trade_id": "mint + alias to unit_id",
+    "G2_dataset_identity": "csv_sha256 + dataset_id required on row",
+    "G3_schema_governance": "REQUIRED_COLUMNS change needs User approval",
+    "G4_trace_id_parquet": "parquet must preserve identity nest; bare geometry parquet invalid"
+  },
+  "known_noncompliant_artifact": {
+    "path": "logs/XAUUSD/xauusd_phase1_20260723/opportunities.parquet",
+    "n": 94332,
+    "issue": "missing identity columns",
+    "disposition": "regenerate_or_stamp_before_detection_use"
+  },
+  "remediation_bind": ["R1_emit_trade_id", "R2_stamp_dataset_identity", "R3_parquet_preserve_ids", "R4_lifecycle_forward_ids"],
+  "related": {
+    "measurement": "MC-JOINT-01",
+    "scanner": "scripts/research/opportunity_scanner.py",
+    "engine_measurement": "src/research/measurement/trade_lifecycle_engine.py"
+  },
+  "non_goals": [
+    "live_orders",
+    "crt_htf_reset_change",
+    "mc_joint_ontology_change"
+  ]
+}

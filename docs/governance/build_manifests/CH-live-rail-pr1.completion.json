@@ -1,0 +1,40 @@
+{
+  "change_id": "CH-live-rail-pr1",
+  "declared_files": [
+    "src/inout/live_rail/__init__.py",
+    "src/inout/live_rail/types.py",
+    "src/inout/live_rail/config.py",
+    "src/inout/live_rail/resilience.py",
+    "src/inout/live_rail/tickdb_adapter.py",
+    "src/inout/live_rail/bar_builder.py",
+    "src/inout/live_rail/longport_adapter.py",
+    "src/utils/logging_config.py",
+    "tests/test_live_rail_contracts.py",
+    "tests/test_live_rail_tickdb.py",
+    "tests/test_live_rail_bar_builder.py",
+    "tests/fixtures/ticks/xauusd_m15_sample.jsonl",
+    "configs/experimental/spec/live_rail_tickdb_paper.json",
+    "docs/governance/build_manifests/CH-live-rail-pr1.impact.json",
+    "docs/governance/build_manifests/CH-live-rail-pr1.completion.json",
+    "docs/implementation_plan/live-rail-repair-path.md",
+    "assistant_project.md"
+  ],
+  "checks_executed": [
+    "tests/test_live_rail_contracts.py",
+    "tests/test_live_rail_tickdb.py",
+    "tests/test_live_rail_bar_builder.py",
+    "tests/test_feature_math_lint.py",
+    "tests/test_geometry_census.py",
+    "tests/test_current_findings.py"
+  ],
+  "checks_result": {
+    "pr1_tests": "34 passed",
+    "live_rail_census_derivations": 0,
+    "test_current_findings": "passed (as part of the 96-pass bundle)",
+    "test_geometry_census_is_fresh": "FAILED — pre-existing stale census vs untracked msip_1_verification_package / H-SECONDLOW / reports probes. NEW/REMOVED sites are not src/inout/live_rail.",
+    "test_universe_reconciliation_with_census": "FAILED — same pre-existing untracked-package pollution. Not caused by this change."
+  },
+  "repo_state_hash": "PENDING",
+  "completion_status": "INCOMPLETE",
+  "completion_notes": "PR-1 implementation is on disk and its own tests are green. Mechanical COMPLETE is DENIED: (1) working tree already has hundreds of undeclared governed diffs from prior work; (2) RUNTIME_DECISION_PATH_CHANGE required census floors are red for reasons outside this change. Do not regenerate the census as part of PR-1."
+}

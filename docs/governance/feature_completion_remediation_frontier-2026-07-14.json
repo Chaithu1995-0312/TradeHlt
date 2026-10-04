@@ -1,0 +1,241 @@
+{
+  "_doc": "M15 feature completion remediation frontier (not DAG READY/BLOCKED).",
+  "generated_at": "2026-07-14T06:54:00.983097+00:00",
+  "session": "M15",
+  "M15_CHECKPOINT_HASH": "a85a3bc528d09f7b084787a04635cbd6861bf30d68aa836c2185c4b0c96b99d2",
+  "REMEDIATION_FRONTIER_COUNT": 8,
+  "work_units": [
+    {
+      "PRIORITY": 1,
+      "WORK_UNIT_ID": "M16-WU-SESSION-ENCODING",
+      "TARGET_FEATURES": [
+        "session"
+      ],
+      "TARGET_CONSUMERS": [
+        "SESSION_MAP",
+        "dashboard",
+        "CRT/live/backtest session paths"
+      ],
+      "DEFECT_CLASS": "CONSUMER_SEMANTIC_MISMATCH",
+      "WHY_IT_MATTERS": "Canonical session int8 0/1/2 is permuted/offset vs SESSION_MAP and dashboard; cross-surface joins are wrong.",
+      "REQUIRED_AUTHORITY": "consumer-alignment / encoding reconciliation (not formula recert)",
+      "EXPECTED_MUTATION_SURFACE": "session helpers, SESSION_MAP, dashboard labels, CRT/live session readers \u2014 NOT feature_pipeline identity",
+      "BLOCKS_ACTIVATION": true,
+      "BLOCKS_RESEARCH_USE": true,
+      "DOWNSTREAM_SCOPE": "all multi-surface session consumers",
+      "ESTIMATED_COMPLEXITY": "M",
+      "STOP_BOUNDARY": "Do not change FeaturePipeline session piecewise function without new certification; prefer adapter alignment.",
+      "DEBT_IDS": [
+        "DEBT-001"
+      ]
+    },
+    {
+      "PRIORITY": 2,
+      "WORK_UNIT_ID": "M16-WU-TREND-STRENGTH-COLLISION",
+      "TARGET_FEATURES": [
+        "trend_strength"
+      ],
+      "TARGET_CONSUMERS": [
+        "dual_engine.detect_regime",
+        "s07",
+        "s08"
+      ],
+      "DEFECT_CLASS": "NAME_COLLISION_SEMANTIC",
+      "WHY_IT_MATTERS": "dual_engine local trend_strength = abs(ema_spread) \u2260 canonical SMA10(diff(SMA20(close))).",
+      "REQUIRED_AUTHORITY": "consumer rename or explicit dual binding; optional dual_engine config",
+      "EXPECTED_MUTATION_SURFACE": "src/engines dual_engine (or equivalent) local variables + thresholds; NOT canonical trend_strength formula",
+      "BLOCKS_ACTIVATION": true,
+      "BLOCKS_RESEARCH_USE": true,
+      "DOWNSTREAM_SCOPE": "dual_engine regime consumers",
+      "ESTIMATED_COMPLEXITY": "M",
+      "STOP_BOUNDARY": "Do not silently redefine canonical trend_strength; keep M13B identity.",
+      "DEBT_IDS": [
+        "DEBT-002"
+      ]
+    },
+    {
+      "PRIORITY": 3,
+      "WORK_UNIT_ID": "M16-WU-VOLREGIME-S05",
+      "TARGET_FEATURES": [
+        "volatility_regime"
+      ],
+      "TARGET_CONSUMERS": [
+        "s05_grid"
+      ],
+      "DEFECT_CLASS": "CONSUMER_SEMANTIC_MISMATCH",
+      "WHY_IT_MATTERS": "s05_grid interprets string TRENDING; canonical is int8 tercile of absolute ATR14.",
+      "REQUIRED_AUTHORITY": "consumer adapter",
+      "EXPECTED_MUTATION_SURFACE": "s05_grid / research grid code only",
+      "BLOCKS_ACTIVATION": true,
+      "BLOCKS_RESEARCH_USE": true,
+      "DOWNSTREAM_SCOPE": "s05_grid paths",
+      "ESTIMATED_COMPLEXITY": "S",
+      "STOP_BOUNDARY": "Do not change M14B canonical int8 identity or deps [close,high,low].",
+      "DEBT_IDS": [
+        "DEBT-003"
+      ]
+    },
+    {
+      "PRIORITY": 4,
+      "WORK_UNIT_ID": "M16-WU-SUPERSEDED-VECTOR-MIGRATION",
+      "TARGET_FEATURES": [
+        "ema_spread",
+        "momentum_score",
+        "ema_spread_atr",
+        "momentum_score_atr"
+      ],
+      "TARGET_CONSUMERS": [
+        "FeaturePipeline vector",
+        "Gaussian_v4",
+        "Gaussian_live",
+        "future models"
+      ],
+      "DEFECT_CLASS": "PRODUCTION_BINDING_MISMATCH",
+      "WHY_IT_MATTERS": "Legacy SUPERSEDED dims remain in 38-vector; successors certified but UNBOUND. Blocks honest L6 activation of FM-030/031.",
+      "REQUIRED_AUTHORITY": "schema/vector migration + model revalidation authority",
+      "EXPECTED_MUTATION_SURFACE": "feature_schema CANONICAL_FEATURES, pipeline emission order, model retrain/rebind \u2014 major program",
+      "BLOCKS_ACTIVATION": true,
+      "BLOCKS_RESEARCH_USE": true,
+      "DOWNSTREAM_SCOPE": "all 38-dim model consumers",
+      "ESTIMATED_COMPLEXITY": "L",
+      "STOP_BOUNDARY": "No silent dim swap; requires migration plan + retrain gates; no economic claims in this unit.",
+      "DEBT_IDS": [
+        "DEBT-008",
+        "DEBT-007"
+      ]
+    },
+    {
+      "PRIORITY": 5,
+      "WORK_UNIT_ID": "M16-WU-FM025-PROVENANCE",
+      "TARGET_FEATURES": [
+        "liquidity_distance"
+      ],
+      "TARGET_CONSUMERS": [],
+      "DEFECT_CLASS": "PROVENANCE",
+      "WHY_IT_MATTERS": "FM-025 CERTIFIED with empty SHA; M6R remediation left UNRESOLVED (artifact untracked historically). Does NOT taint FM-026 (M7V).",
+      "REQUIRED_AUTHORITY": "append-only provenance remediation / optional recertify",
+      "EXPECTED_MUTATION_SURFACE": "ledger append only (PROVENANCE_REMEDIATED with binding) + git-track evidence artifact; no formula change",
+      "BLOCKS_ACTIVATION": true,
+      "BLOCKS_RESEARCH_USE": false,
+      "DOWNSTREAM_SCOPE": "FM-025 only (not FM-026)",
+      "ESTIMATED_COMPLEXITY": "S",
+      "STOP_BOUNDARY": "Do not auto-invalidate FM-026; preserve independent discharge.",
+      "DEBT_IDS": [
+        "DEBT-004"
+      ]
+    },
+    {
+      "PRIORITY": 6,
+      "WORK_UNIT_ID": "M16-WU-EMPTY-SHA-FAMILY",
+      "TARGET_FEATURES": [
+        "body_size",
+        "lower_wick",
+        "true_range",
+        "upper_wick",
+        "total_wick",
+        "wick_size",
+        "ema_fast",
+        "ema_slow",
+        "rsi_14",
+        "swing_high",
+        "swing_low",
+        "atr",
+        "trend_bias",
+        "disp_strength",
+        "disp_strength_atr_rescale",
+        "ema_spread_atr",
+        "momentum_score_atr",
+        "volume_ratio",
+        "volume_spike",
+        "body_ratio",
+        "displacement_atr_ratio",
+        "volatility_ratio",
+        "candles_since_retest",
+        "double_sweep",
+        "sweep_detected",
+        "liquidity_distance"
+      ],
+      "TARGET_CONSUMERS": [],
+      "DEFECT_CLASS": "PROVENANCE_GOVERNANCE",
+      "WHY_IT_MATTERS": "Historical CERTIFIED events lack binding hex SHA (empty or placeholder). Reconstruction incomplete.",
+      "REQUIRED_AUTHORITY": "batch provenance remediation",
+      "EXPECTED_MUTATION_SURFACE": "ledger append + evidence hashing; no math",
+      "BLOCKS_ACTIVATION": false,
+      "BLOCKS_RESEARCH_USE": false,
+      "DOWNSTREAM_SCOPE": "historical evidence only",
+      "ESTIMATED_COMPLEXITY": "M",
+      "STOP_BOUNDARY": "Do not re-open formula certification unless artifact missing.",
+      "DEBT_IDS": [
+        "DEBT-005"
+      ]
+    },
+    {
+      "PRIORITY": 7,
+      "WORK_UNIT_ID": "M16-WU-ONTOLOGY-REGISTRATION",
+      "TARGET_FEATURES": [
+        "break_of_structure",
+        "candles_since_retest",
+        "double_sweep",
+        "higher_high",
+        "hour_of_day",
+        "liquidity_sweep",
+        "lower_low",
+        "macd_hist",
+        "macd_line",
+        "macd_signal",
+        "session",
+        "sweep_detected",
+        "trend_strength",
+        "volatility_regime"
+      ],
+      "TARGET_CONSUMERS": [],
+      "DEFECT_CLASS": "ONTOLOGY_REGISTRATION",
+      "WHY_IT_MATTERS": "MACD family + several L3/L4 identities lack ontology FM registration; executable identity is pipeline-defined.",
+      "REQUIRED_AUTHORITY": "ontology registration (governance)",
+      "EXPECTED_MUTATION_SURFACE": "configs/formulas/market_ontology.yaml + registry bindings; hash-neutral to runtime if descriptive",
+      "BLOCKS_ACTIVATION": false,
+      "BLOCKS_RESEARCH_USE": false,
+      "DOWNSTREAM_SCOPE": "documentation/registry",
+      "ESTIMATED_COMPLEXITY": "M",
+      "STOP_BOUNDARY": "No formula change; registration must match certified identities.",
+      "DEBT_IDS": [
+        "DEBT-006",
+        "DEBT-009"
+      ]
+    },
+    {
+      "PRIORITY": 8,
+      "WORK_UNIT_ID": "M16-WU-L6-PREP",
+      "TARGET_FEATURES": [
+        "SYSTEM"
+      ],
+      "TARGET_CONSUMERS": [
+        "models",
+        "decision engines"
+      ],
+      "DEFECT_CLASS": "ACTIVATION_READINESS",
+      "WHY_IT_MATTERS": "Identity certification exhausted; L6 model/threshold activation requires consumer alignment + binding + clean provenance package.",
+      "REQUIRED_AUTHORITY": "new L6 activation program (not identity CERTIFY)",
+      "EXPECTED_MUTATION_SURFACE": "activation policy, model binding manifests, possibly schema \u2014 after M16 consumer work",
+      "BLOCKS_ACTIVATION": true,
+      "BLOCKS_RESEARCH_USE": true,
+      "DOWNSTREAM_SCOPE": "entire feature\u2192model surface",
+      "ESTIMATED_COMPLEXITY": "L",
+      "STOP_BOUNDARY": "Do not CERTIFY/PROMOTE further identities as substitute for activation; do not enable models without authority ladder.",
+      "DEBT_IDS": [
+        "DEBT-010"
+      ]
+    }
+  ],
+  "priority_summary": {
+    "PRIORITY_1": "M16-WU-SESSION-ENCODING",
+    "PRIORITY_2": "M16-WU-TREND-STRENGTH-COLLISION",
+    "PRIORITY_3": "M16-WU-VOLREGIME-S05",
+    "PRIORITY_4": "M16-WU-SUPERSEDED-VECTOR-MIGRATION",
+    "PRIORITY_5": "M16-WU-FM025-PROVENANCE",
+    "PRIORITY_6": "M16-WU-EMPTY-SHA-FAMILY",
+    "PRIORITY_7": "M16-WU-ONTOLOGY-REGISTRATION",
+    "PRIORITY_8": "M16-WU-L6-PREP"
+  },
+  "authority": "research/governance only \u2014 no mutations authorized by this document"
+}

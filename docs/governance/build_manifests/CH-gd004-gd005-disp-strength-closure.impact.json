@@ -1,0 +1,52 @@
+{
+  "change_id": "CH-gd004-gd005-disp-strength-closure",
+  "objective": "Micro-phase (FU-SCORING-DISP): close the last two disp_strength formula collisions identity-only. GD-004 scoring_engine local disp_strength=move/atr adjudicated as a THIRD identity (not FM-020, not FM-028 — probe-verified) and registered as FM-029 disp_strength_atr_rescale; GD-005 crt_engine_v2 [PATCH 7] wick_size/atr adjudicated as EXACTLY FM-028 and routed through derived_math.displacement_atr_ratio. Both routings byte-identical. Bare disp_strength derivation is now fully lint-prohibited (no pinned exceptions). The suspected crt_engine.py:23 caller mis-wire is NOT fixed (deferred, FU-CRT-MOVE-MISWIRE). Includes the protocol-required geometry census + gate2b adjudication regeneration (110->117 governed surface; absorbs pre-existing Phase-1 staleness).",
+  "change_classes": [
+    "FEATURE_IDENTITY_CHANGE",
+    "DERIVED_METRIC_CHANGE"
+  ],
+  "affected_files": [
+    "configs/formulas/market_ontology.yaml",
+    "src/features/derived_math.py",
+    "src/features/registry/derived_registry.py",
+    "src/engines/scoring_engine.py",
+    "src/config_layer/crt_engine_v2.py",
+    "scripts/analysis/feature_math_lint.py",
+    "scripts/analysis/gd004_disp_rescale_probe.py",
+    "scripts/analysis/gate2b_adjudication.py",
+    "docs/governance/feature-math-grandfather-retirements.json",
+    "docs/governance/gd004_disp_rescale_probe-2026-07-11.json",
+    "docs/governance/gd004_disp_rescale_probe-2026-07-11.md",
+    "docs/governance/gd004_gd005_disp_strength_closure-2026-07-11.md",
+    "docs/governance/geometry_census.jsonl",
+    "docs/governance/geometry_semantic_adjudication.jsonl",
+    "docs/governance/geometry_family_registry.json",
+    "docs/governance/geometry_static_lineage_report.md",
+    "docs/governance/phase1_duplicate_formula_follow_up_backlog-2026-07-10.json",
+    "docs/current-findings.md",
+    "tests/test_gd004_gd005_identity_closure.py",
+    "tests/test_gate5_lineage_report.py",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [
+    "FM-020",
+    "FM-028",
+    "FM-029"
+  ],
+  "affected_models": "none enabled/changed",
+  "affected_production_config": "none (hash-neutral)",
+  "required_checks_ack": [
+    "tests/test_gd004_gd005_identity_closure.py",
+    "tests/test_feature_math_lint.py",
+    "tests/test_formula_registry.py",
+    "tests/test_feature_lineage.py",
+    "tests/test_derived_math.py",
+    "tests/test_geometry_census.py",
+    "tests/test_gate2b_closure.py",
+    "tests/test_gate5_lineage_report.py",
+    "tests/test_crt_fixes.py",
+    "tests/test_crt_state_invariants.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "single commit: revert ontology/derived_math/registry/scoring_engine/crt_engine_v2/lint/census artifacts/tests together"
+}

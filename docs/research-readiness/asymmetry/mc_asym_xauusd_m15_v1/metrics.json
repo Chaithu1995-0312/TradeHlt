@@ -1,0 +1,95 @@
+{
+  "contract_id": "MC-ASYM-XAUUSD-M15-V1",
+  "sem_id": "SEM-027",
+  "authority": "RESEARCH_ONLY",
+  "economic_claims_allowed": false,
+  "verdict": "DIAGNOSTIC_PASS",
+  "n_pairs": 47166,
+  "train": {
+    "n": 37621,
+    "e_delta_mfe": 0.43763188113021984,
+    "trend_bias": {
+      "plus": {
+        "n": 21431,
+        "e_delta_mfe": 0.616328836731837
+      },
+      "minus": {
+        "n": 16188,
+        "e_delta_mfe": 0.20113978873239435
+      },
+      "contrast": 0.4151890479994427
+    }
+  },
+  "holdout": {
+    "n": 9454,
+    "e_delta_mfe": -0.5462907023482124,
+    "trend_bias": {
+      "plus": {
+        "n": 4942,
+        "e_delta_mfe": -0.32196155402670984
+      },
+      "minus": {
+        "n": 4511,
+        "e_delta_mfe": -0.7905714919086677
+      },
+      "contrast": 0.46860993788195787
+    }
+  },
+  "sign_match": true,
+  "split": {
+    "holdout_start": "2025-12-24 19:15:00",
+    "train_last_allowed": "2025-12-23 19:15:00",
+    "embargo_bars": 96,
+    "purge_horizon_bars": 40,
+    "n_train": 37621,
+    "n_holdout": 9454,
+    "n_embargo_dropped": 91,
+    "f086_stride_spent": false,
+    "full_sample_atlas_is_not_this_split": true
+  },
+  "diagnostic_cells": {
+    "session_holdout": {
+      "0.0": {
+        "n": 2469,
+        "e_delta_mfe": -0.6684799108950993
+      },
+      "1.0": {
+        "n": 2060,
+        "e_delta_mfe": -1.329623932038835
+      },
+      "2.0": {
+        "n": 2062,
+        "e_delta_mfe": -0.02707002909796314
+      },
+      "3.0": {
+        "n": 1648,
+        "e_delta_mfe": -0.6813368932038835
+      },
+      "4.0": {
+        "n": 1215,
+        "e_delta_mfe": 0.3321246913580247
+      }
+    },
+    "volatility_holdout": {
+      "0.0": {
+        "n": 3360,
+        "e_delta_mfe": -0.9389439583333333
+      },
+      "1.0": {
+        "n": 2815,
+        "e_delta_mfe": 0.08844774422735346
+      },
+      "2.0": {
+        "n": 3279,
+        "e_delta_mfe": -0.6888566636169564
+      }
+    }
+  },
+  "not": [
+    "trade PnL",
+    "G001",
+    "full-sample atlas as this holdout",
+    "F-086 stride holdout",
+    "session/hour PRIMARY"
+  ]
+}

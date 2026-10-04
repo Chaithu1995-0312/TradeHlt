@@ -1,0 +1,32 @@
+{
+  "change_id": "CH-crt-object-relations-closure",
+  "date_utc": "2026-08-17",
+  "objective": "Close CT-009 / CRT_OBJECT_RELATIONS for declared joins among existing objects only. Do not close CRT, SEM-011 domain meaning, measurement-contract admissibility, or G001.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY"
+  ],
+  "affected_files": [
+    "docs/governance/crt_object_relations_closure.md",
+    "docs/governance/crt_object_relations.yaml",
+    "docs/governance/closure_authority_index.json",
+    "docs/governance/semantic_os/contracts.yaml",
+    "CLAUDE.md",
+    "tests/test_crt_object_relations.py",
+    "reports/monthly_tv_vs_active_production_semantic_comparison.md",
+    "docs/governance/build_manifests/CH-crt-object-relations-closure.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "required_checks_ack": [
+    "tests/test_crt_object_relations.py",
+    "tests/test_closure_authority_index.py",
+    "tests/test_current_findings.py",
+    "tests/test_topic_docs.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert the new surface, closure artifact, CLAUDE row, CT-009 surface id, and the new test.",
+  "authority_granted": "User: close the relationship contract without prematurely closing the semantic/economic question (2026-08-17).",
+  "production_behavior_changed": "NO"
+}

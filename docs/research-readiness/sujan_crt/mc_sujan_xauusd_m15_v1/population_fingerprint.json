@@ -1,0 +1,7 @@
+{
+  "corpus": "data/mt5/XAUUSD_M15.csv",
+  "corpus_sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+  "n_bars": 47275,
+  "detected_funnel": 6256,
+  "ledger_n": 6221
+}

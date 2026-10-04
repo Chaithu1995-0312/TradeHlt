@@ -1,0 +1,116 @@
+{
+  "change_id": "CH-DISP-ORIGIN-KILL",
+  "status": "IMPLEMENTED_DEFAULT_OFF_REACHABILITY_UNPROVEN",
+  "task_class": "BEHAVIOR_CHANGE_AUTHORIZED",
+  "objective": "Add an EARLY STRUCTURAL INVALIDATION exit to the CRT trade object: when a candle CLOSES beyond the ORIGIN (open) of the specific displacement candle that activated the setup, the structural thesis that justified the entry has failed, so the position is closed at market instead of waiting for the geometric stop. Purpose is to fractionalise the 1R loss on trades whose premise is already falsified. Config-gated, DEFAULT OFF; the default arm must be byte-identical to today.",
+  "change_classes": [
+    "RUNTIME_DECISION_PATH_CHANGE",
+    "PRODUCTION_CONFIG_CHANGE",
+    "SEMANTIC_REGISTRY_CHANGE"
+  ],
+  "why_this_is_rankable": "F-087 established that the extreme-following half of the dynamic-stop grid (ratchet_*, breakeven_*) cannot be ranked from M15 OHLC at all: its same-bar ambiguity band is 0.261R mean over the 12 arms it governs, 12x-15x the 0.0198-0.0212R policy spread being measured. This rule is triggered by a CANDLE CLOSE, not by a running extreme, so it inherits the ambiguity profile of the licensed arms (fixed, production, time_decay_*), whose band is ~0.0005R. It is therefore measurable on the existing corpus without tick data. This is the ONLY component of the user's 2026-08-21 CRT draft that is both new and cleanly rankable.",
+  "affected_files": [
+    "configs/formulas/market_ontology.yaml",
+    "configs/production/v2_dispkill_shadow_2026_08.json",
+    "src/config_layer/state_identity.py",
+    "src/config_layer/crt_engine_v2.py",
+    "tests/test_displacement_origin_kill.py",
+    "tests/test_current_findings.py",
+    "CLAUDE.md",
+    "docs/governance/build_manifests/CH-DISP-ORIGIN-KILL.impact.json",
+    "assistant_project.md"
+  ],
+  "ontology_first": {
+    "required_by": "CLAUDE.md 6.6 - the concept must exist as a canonical node BEFORE the code that implements it, never as a TODO or comment.",
+    "node_id": "SEM-021",
+    "node_name": "DISPLACEMENT_ORIGIN_INVALIDATION",
+    "knowledge_status": "CHARACTERIZED",
+    "lifecycle": "registered_inactive",
+    "depends_on": [
+      "SEM-017",
+      "SEM-019",
+      "F-074"
+    ],
+    "description": "A CLOSE-triggered structural-failure exit, distinct from both the stop PLACEMENT geometry (SEM-017) and the path-following stop POLICY class (SEM-019). It does not move the stop; it terminates the trade on a semantic condition - the displacement that founded the setup has been negated.",
+    "mathematical_definition": "For a LONG activated by displacement candle d, the setup is invalidated at the first bar t > entry_bar with close(t) < open(d). For a SHORT, the first bar t with close(t) > open(d). Exit is booked at close(t), not at open(d). Direction is inherited from F-074: displacement is a directional impulse away from the swept side, so `origin` is unambiguous.",
+    "epistemic": {
+      "known_invariants": [
+        "Close-triggered, so it carries the licensed same-bar ambiguity profile (~0.0005R), not the 0.261R extreme-following band (F-087).",
+        "It can only ever exit EARLIER than the geometric stop when it fires, so per-trade loss magnitude is bounded above by the unmodified arm on those trades.",
+        "It cannot create expectancy the entry did not contain (F-087 line 1: gross expectancy is ~0 at the every-bar level)."
+      ],
+      "unknown_mechanism": "Whether truncating structurally-falsified trades removes more loss than it forgoes in trades that recover after briefly closing through the displacement origin. Unmeasured.",
+      "candidate_hypotheses": [
+        "UNTESTED: the truncated population is disproportionately the 90.55% plain_stop_loss cohort of F-025.",
+        "UNTESTED: recovery-after-origin-breach is common enough to make the rule net-negative, which is the mechanism that made every ratchet arm worse in F-087."
+      ],
+      "resolution_metric": "Paired per-bar delta vs the unmodified arm on the SEM-018 label population, block-bootstrapped at horizon, with the F-083 controls attached.",
+      "falsification_conditions": [
+        "Mean delta vs the do-nothing arm is <= 0 with a CI excluding a positive effect.",
+        "The arm fails to beat long_only / random_entry on the same bars."
+      ]
+    }
+  },
+  "config_surface": {
+    "section": "crt_engine",
+    "keys": [
+      {
+        "key": "displacement_origin_kill_enabled",
+        "type": "bool",
+        "default_on_active": false,
+        "read": "strict _require, no silent default (CLAUDE.md 6.5)"
+      },
+      {
+        "key": "displacement_origin_kill_basis",
+        "type": "str",
+        "allowed": [
+          "displacement_open",
+          "displacement_midpoint"
+        ],
+        "default": "displacement_open"
+      }
+    ],
+    "hash_impact": "crt_engine is inside the params-hashed surface; adding keys to an ACTIVE config requires scripts/maintenance/_compute_hash.py. The default-OFF arm is introduced on a NON-promoted shadow config first, leaving the active config and its hash untouched.",
+    "pattern_followed": "F-061 normalization_basis / F-066 session_timestamp_basis - additive, strict-read, default byte-identical, opt-in arm reachable only via a shadow config."
+  },
+  "affected_feature_ids": [],
+  "affected_models": "none - no retrain, no artifact rebuild. The 6 model families are already stale on <=39-dim schemas (F-076) and this changes no feature.",
+  "affected_production_config": "none in this change - shadow config only. Activating on ACTIVE_VERSION is a SEPARATE gated decision requiring freeze-pin re-certification.",
+  "required_checks_ack": [
+    "tests/test_displacement_origin_kill.py",
+    "tests/research/test_stop_policy.py",
+    "tests/test_crt_baseline_trace.py",
+    "tests/test_crt_state_invariants.py",
+    "tests/test_feature_layer_freeze.py",
+    "tests/test_current_findings.py",
+    "tests/test_topic_docs.py",
+    "tests/test_semantic_registry.py"
+  ],
+  "parity_requirement": "MANDATORY. With displacement_origin_kill_enabled=false the XAUUSD M15 ledger must be BYTE-IDENTICAL to pre-change: same TRADE_OPENED count, same state-occupancy histogram, same exit prices. F-056's lesson applies - presence plus strict-read is NOT parity until the value is proven not to reach behaviour on the default arm.",
+  "unknowns": [
+    "OPEN AND BLOCKING FOR MEASUREMENT -- CALL-SITE REACHABILITY IS UNPROVEN WITH THE ARM ENABLED. Parity proves the DISABLED path is byte-identical, and the unit tests prove the predicate and close_structural behave correctly in isolation, but nothing yet proves a real bar reaches the kill branch and produces STOPPED_STRUCTURAL end to end. That is exactly the F-085 gap (a guard whose protected block never executed) and it must be closed BEFORE any number from this arm is quoted. It was not closed here because backtest_v2 resolves its config solely through configs/production/ACTIVE_VERSION (correctly, 4.0 Tier 0) and there is no config-path override, so exercising the shadow config would require temporarily flipping the production truth pointer -- unacceptable with ~15 concurrent sessions reading it. The right instrument is a driver that accepts an explicit config path, or a focused end-to-end test that drives process_candle with a kill-enabled config.",
+    "NON-BLOCKING: CRT closure stays OPEN (F-074). This node ADDS to the pending 12-state re-certification scope by explicit user decision 2026-08-21; it does not re-close anything.",
+    "NON-BLOCKING: F-047's decision-inertness argument for the live path was voided by F-048 removing the DecisionEngine RR gate, so no CRT-engine change may inherit a live-inertness claim without re-deriving it."
+  ],
+  "explicitly_out_of_scope": [
+    "Session gates - TABLED by user decision 2026-08-21 on F-066 grounds: 53.36% of XAUUSD MT5 session labels derive from broker-server time mislabelled UTC, so a session-gated sweep would measure the wrong hours. F-017 separately falsified session policy as a promotable lever OOS.",
+    "body_ratio unification - NOT NEEDED. Source-verified 2026-08-21: T-16 (2026-07-23) already routed live_engine_hook's runtime body_ratio key to the canonical FM-010 body/candle_range identity. F-047's present-tense claim was stale and has been corrected.",
+    "The time stop (>N candles in the activation FVG) - already measured. F-087's time_decay_6_12 / time_decay_18_12 arms cover this construction and it is inert.",
+    "Range >= 1.5 x ATR and body_ratio >= 0.70 - NOT new code. These are re-parameterisations of existing active-config knobs (crt_engine.atr_min_displacement = 1.2, crt_engine.confirmation_body_min = 0.6), so they belong to the config sweep, not to this build."
+  ],
+  "authority_granted": "User 2026-08-21: implement the displacement-origin kill, scoped this turn to DESIGN + MANIFEST ONLY, stopping before any edit to src/config_layer/crt_engine_v2.py.",
+  "authority_NOT_granted": "No G001. No promotion. No fusion weight. No ACTIVE_VERSION change. No enabling on any promoted config. No CRT re-closure. No economic claim - the arm is measurable, which is not the same as valuable (CLAUDE.md 6.5 Authority Ladder: information, then economic usefulness, then authority, then architecture).",
+  "production_behavior_changed": "NO -- default arm proven byte-identical on the full XAUUSD M15 corpus; the enabled arm exists only on a non-promoted shadow config and ACTIVE_VERSION is untouched.",
+  "implementation_record": {
+    "ontology": "SEM-021 registered in market_ontology.yaml semantic_registry, and MUTATION-VERIFIED: the validator initially REJECTED the node for 15 missing required fields, which is the proof that registration is enforced rather than merely stored. Re-verified by deleting `version` after it went clean -> test_semantic_registry_is_clean failed. 17/17 green.",
+    "config": "CRTConfig gains displacement_origin_kill_enabled (bool, default False) and displacement_origin_kill_precedence (str, default 'after_resting_fills'), both fail-closed in __post_init__ against _VALID_KILL_PRECEDENCE. A typo raises rather than defaulting, because the two arms are not equivalent and a run mislabelled as the other arm looks like evidence.",
+    "trade_field": "Trade.displacement_origin captured at build_trade from state.displacement_candle.open, NOT read from EngineState at kill time -- reset_to_range moves displacement_candle into pending_displacement_candle while the trade may still be open.",
+    "engine": "Predicate CRTEngine._displacement_origin_kill (close-triggered) + ExecutionEngine.close_structural (books at the bar CLOSE, keeps the TP1 partial and kills only the runner). Wired at the single trade-update call site where the candle is in scope, leaving ExecutionEngine.update_trade's signature untouched so the research parity floors still bind.",
+    "tests": "tests/test_displacement_origin_kill.py, 20 tests, MUTATION-VERIFIED twice: making the rule extreme-triggered (low/high instead of close) failed 3 tests including the wick test; booking the structural close at the origin instead of the bar close failed 1."
+  },
+  "parity_proof": {
+    "method": "True before/after ledger diff. The AFTER build was run on the full XAUUSD M15 corpus, then the call site alone was reverted to its pristine 4 lines (rest of the tree held constant) and re-run. Stashing to HEAD was tried first and REJECTED as invalid -- it reverts only two files while the rest of the working tree depends on their newer versions.",
+    "result": "BYTE-IDENTICAL on all 5 artifacts: XAUUSD_trades.csv, XAUUSD_events.jsonl, XAUUSD_crt_telemetry.jsonl, XAUUSD_summary.json, XAUUSD_report.txt. 0 files differing.",
+    "feature_layer": "test_xauusd_window_vector_regression PASS and test_schema_pins_match PASS -- the emitted 48-dim vector is unchanged. test_source_file_pins_match FAILS on the text hash, which was ALREADY stale before this session (pinned d2a6577e) and is deliberately NOT re-pinned, per the same 6.2 rule 3 reasoning both 2026-08-21 write-ups recorded: re-pinning would absorb another session's undocumented drift into this change set."
+  }
+}

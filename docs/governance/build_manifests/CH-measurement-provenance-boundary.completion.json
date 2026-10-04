@@ -1,0 +1,73 @@
+{
+  "change_id": "CH-measurement-provenance-boundary",
+  "date_utc": "2026-08-26",
+  "change_classes": [
+    "DOCUMENTATION_ONLY",
+    "SCRIPT_LIFECYCLE_CHANGE",
+    "JSONL_CLAIM_SURFACE_CHANGE"
+  ],
+  "declared_files": [
+    "docs/current-findings.md",
+    "src/governance/findings_export.py",
+    "scripts/analysis/research_dag_provenance.py",
+    "src/research/measurement/mt00.py",
+    "src/research/evidence/run_close_out.py",
+    "src/research/evidence/asymmetry_contract.py",
+    "src/research/evidence/magnitude_prior.py",
+    "src/research/evidence/mother_range_prior.py",
+    "src/research/evidence/rnet_overlay.py",
+    "scripts/maintenance/rotate_session_log.py",
+    "docs/knowledge-map.md",
+    "assistant_project.md",
+    "configs/research/measurement_result_log.jsonl",
+    "configs/research/measurement_contracts/instances/MC-ASYM-XAUUSD-M15-V1.json",
+    "configs/research/measurement_contracts/instances/MC-MAGPRIOR-XAUUSD-M15-V1.json",
+    "configs/research/measurement_contracts/instances/MC-MRPRIOR-XAUUSD-M15-V1.json",
+    "configs/research/measurement_contracts/instances/MC-RNET-OVERLAY-XAUUSD-M15-V1.json",
+    "docs/governance/research_dag_provenance-2026-08-26.json",
+    "docs/governance/build_manifests/CH-measurement-provenance-boundary.impact.json",
+    "docs/governance/build_manifests/CH-measurement-provenance-boundary.completion.json",
+    "tests/test_current_findings.py",
+    "tests/test_findings_export.py",
+    "tests/test_measurement_result_log.py",
+    "tests/test_research_dag_provenance.py",
+    "data/findings.jsonl"
+  ],
+  "checks_executed": [
+    "tests/test_current_findings.py (11 passed)",
+    "tests/test_findings_export.py (6 passed)",
+    "tests/test_measurement_result_log.py (44 passed)",
+    "tests/test_research_dag_provenance.py (26 passed)",
+    "tests/test_doc_citations.py (passed)",
+    "tests/test_topic_docs.py (passed)"
+  ],
+  "verification": {
+    "mutation_tested_gates": "Both new/tightened gates were verified to FAIL on the defect they exist to catch, not merely to pass. (1) tests/test_current_findings.py: a 64-'a' string planted in F-090's Contract went RED with the resolution message; the PRIOR shape-only regex would have accepted it. (2) tests/test_findings_export.py: removing ('Contract','contract') from _FIELDS went RED naming 'Contract (91/93 findings)' - the exact historical regression.",
+    "determinism": "scripts/analysis/research_dag_provenance.py --date 2026-08-26 run twice: byte-identical. research.evidence.magnitude_prior re-run into a scratch dir: population_fingerprint.json / split_manifest.json / metrics.json byte-identical to the tracked artifacts, so the artifact_hashes recorded in the result log remain valid across re-runs.",
+    "reproduction": "All four evidence modules re-ran and reproduced their published finding numbers exactly: F-091 train +0.4151890 / holdout +0.4686099; F-092 holdout_s +0.2089426 / holdout_t -0.2204294; F-093 train +0.0058094 / holdout +0.0063750 / holdout E[y] -0.5506517; F-094 arm_s -0.8093093 / arm_t -2.6346154, both INSUFFICIENT.",
+    "f083_audit": "governance.measurement_result_log.audit_all() reports ok on all 8 tracked instances, including the two now carrying mt00=PARTIAL backed by real result lines. The gate is no longer vacuous.",
+    "impact_validation": "IMPACT: APPROVED",
+    "rotator": "Verified by --dry-run ONLY, never executed. Parser now sees 171 of 171 entries (was 78) and the preamble stays at 50 lines instead of growing to ~1,194.",
+    "false_positives_caught_in_own_probes": "Three defect claims produced by the new E-MT-00 runner were verified against source and were WRONG, then fixed rather than reported (CLAUDE.md 6.8 'different != wrong'): (a) research/contracts.py 'imports' crt_engine_v2 only under a TYPE_CHECKING guard whose line ends in a comment, so the strip missed it; (b) engine_runner.py genuinely imports rr_fusion, but the contract declares it out-of-path BEHAVIOURALLY ('enabled false'), which an import scan cannot adjudicate - now INCONCLUSIVE, not FAIL; (c) research/evidence/driver.py was matched against a declaration about research/mother_range/driver.py because the probe compared bare filename stems - now compares full dotted module paths."
+  },
+  "pre_existing_failures_not_caused_by_this_change": {
+    "tests/test_session_log.py::test_session_log_entry_count_is_bounded": "81 emoji-visible entries against a cap of 30; already red before this change (the 2026-08-26 audit recorded it red at 78, and at 77 at HEAD). The remedy is running rotate_session_log.py, which this change makes SAFE but deliberately does not run.",
+    "tests/test_active_models_registry.py::test_identity_r2_how_path_ref_parity": "active_models.yaml was already modified in the working tree at session start and is untouched here.",
+    "tests/test_measurement_contract.py::test_mc_instances_validate_schema_and_cannot_claim_economics_while_unrun": "ModuleNotFoundError: no module named 'jsonschema' - environmental, the package is not installed in this interpreter.",
+    "tests/research/test_sujan_crt_contract.py": "21 errors + 1 failure, all FileNotFoundError on configs/research/measurement_contracts/instances/MC-SUJAN-XAUUSD-M15-V1.json. `git log --all` shows that path has never existed in history: a test floor for a contract instance that was never committed. Reported, not fixed.",
+    "tests/test_gate5_lineage_report.py": "two assertions: a geometry census count (142 vs expected 118) and 'assistant_project.md does not cite geometry_static_lineage_report.md'. The second was verified already failing at HEAD via `git show HEAD:assistant_project.md | grep -c` returning 0, so the doctrine-header edit did not cause it.",
+    "tests/test_feature_contract_v1.py, tests/research/test_exit_model_reconcile.py, tests/research/episodes/test_candidate_features.py, tests/governance/test_provenance_remediation.py": "feature/ontology domain. test_provenance_remediation reads docs/governance/feature_certification_ledger.jsonl, which this change does not touch (confirmed clean in git status)."
+  },
+  "reported_not_fixed": {
+    "untracked_contract_instances": "MC-ASYM-XAUUSD-M15-V1.json (backs F-091) and MC-MRPRIOR-XAUUSD-M15-V1.json (backs F-094) are UNTRACKED. measurement_result_log.scanned_instance_paths uses `git ls-files` by design, so both are invisible to the F-083 gate from any other clone - the F-071 class recurring. Not resolved by `git add` here: staging files is the user's call, and concurrent sessions share this tree. CORRECTED 2026-08-27 (CH-measurement-provenance-boundary-followup): user-authorised and both paths staged with `git add`. The F-083 scan universe widened 8 -> 10 and both are `ok`: MC-ASYM at mt00=PARTIAL and MC-MRPRIOR at mt00=FAIL, each backed by a real result line. The FAIL is PRESERVED, not repaired - per the V1 sealing rule a flawed sealed instance stays registered and any correction to its side-vs-direction mismatch requires a NEW MC-* id (the MC-VCRT V1->V2 precedent), never a deletion or a silent edit.",
+    "mt00_verdicts_across_the_scan_universe": "Running the new E-MT-00 runner over all 10 sealed instances gives 3 PARTIAL, 1 FAIL (MC-MRPRIOR: its fingerprint declares 'side' where the contract declares 'direction'), and 6 FAIL on the untracked/absent-artifact axis. Only the four contracts this change executed had their trust_status updated; the other six remain UNRUN and untouched.",
+    "fingerprint_digest_composition": "At least one producer declares 7 population_hash_inputs and mixes 4 of them into the digest - the three constant-per-run identifiers (corpus_path, corpus_sha256, contract_id) are named but not hashed, so two different corpora could in principle collide. Recorded as probe E1-05-FINGERPRINT-DIGEST-COMPOSITION (INCONCLUSIVE by construction), not adjudicated.",
+    "research_cli_manifest": "src/research/cli.py hand-rolls its own manifest dict instead of calling utils.run_manifest.build_manifest, so it lacks network / dry_run / ACTIVE_VERSION / validation_flow_review and validate_manifest_against_intent is near-vacuous on ERP runs. Out of scope."
+  },
+  "repo_state_hash": "0fa376884d53+86d47cc0a661",
+  "completion_status": "WORK_COMPLETE_GATE_BLOCKED_BY_SHARED_DIRTY_TREE",
+  "production_behavior_changed": "NO",
+  "result_summary": "originating_measurement_basis moved from 100.00% UNKNOWN to 98.81% UNKNOWN - the first non-zero explicit measurement-basis provenance in the repository's history. Overall EXPLICIT 18.61% -> 18.86%. Four contracts (MC-ASYM, MC-MAGPRIOR, MC-MRPRIOR, MC-RNET-OVERLAY) executed E-MT-00 and are recorded in configs/research/measurement_result_log.jsonl, which previously held only its meta line. All six bare-sha256 Contract fields resolved - by CONTENT hash - to the sealed instances they name and were rebound to ids, correcting the audit's claim that they resolve to nothing (its extractor resolved by id only). findings_export._FIELDS now carries Contract and Family, so data/findings.jsonl can answer 'what measurement basis?' for the first time. Three existing test floors that had pinned the pre-fix world as an invariant were inverted to assert the durable invariant instead.",
+  "authority_unchanged": "No economic authority was created. economic_claims_allowed is false on every contract, enforced structurally by mt00.seal_verdict requiring mt01_matrix_coverage == COMPLETE (0/27 repo-wide). No finding's verdict or Confidence changed: F-081 and F-090..F-094 are untouched as conclusions. No G001, no promotion, no config, no ACTIVE_VERSION, no ontology node.",
+  "completion_status_explanation": "Every check this change can affect is green (93 passed across its six declared floors, both new gates mutation-verified). Mechanical validate-completion is expected to return BLOCKED because this checkout carries pre-existing unrelated governed changes from concurrent sessions (active_models.yaml, configs/formulas/*.yaml, configs/market_reality/*, configs/production/*). Declaring them would launder unrelated work into this manifest. Same disposition and precedent as CH-research-dag-provenance and CH-evid-01-mr-prior-mc-v1."
+}

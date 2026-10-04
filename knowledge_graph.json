@@ -1,0 +1,1767 @@
+{
+ "meta": {
+  "version": "0.4-UNTRUSTED-MEASUREMENT",
+  "date": "2026-07-10",
+  "root": "TRADING",
+  "sources": {
+   "taxonomy_structure": "GEMINI_THINKING",
+   "method_inventory": "CHATGPT",
+   "gap_discovery": "GROK",
+   "formalization": "DEEPSEEK",
+   "evidence_retrieval": "GEMINI_PRO pass 1 (6 families) + pass 2 (7 families, protocol-verified: 7/7 sections, 33/33 items). GROK completeness audit: CONFIRMED complete (6 gaps)."
+  },
+  "id_convention": "Stable METHOD_IDs per ChatGPT recommendation. Graph, not tree: nodes carry multi-branch membership.",
+  "phase_status": {
+   "phase_2": "KG build + preregistered experiment generation",
+   "phase_2_audit": "2026-07-10 first-principles audit under untrusted-measurement assumption (docs/analysis/knowledge-graph-first-principles-audit-2026-07-10.md)",
+   "phase_3": "Measurement-Trust Gate (E-MT-00/01) + EIG/cost ranking + clean replication. NO region closed by historical F-xxx. PENDING."
+  },
+  "evidence_coverage_gaps": [
+   "Remaining EVIDENCE_PENDING: OF-IMBALANCE, OF-TRADESIGN, ALT-NLP, ALT-SAT/WEB, CRYPTO-ONCHAIN, MOM-BRK, ARB-BASIS(non-crypto), ARB-ETF/INDEX/MERGER, ALLOC-MVO/RP/HRP, RISK-EWS, EXEC-SOR, EVENT-PEAD, VOL-DISP/SKEW subcomponents.",
+   "GAP nodes carry no literature by definition (untested regions). Non-blocking for Phase 3.",
+   "v0.4: missing-family stubs added without literature backfill (SEAS-CAL, XASSET-LEADLAG, REGIME-CORR, CARRY-FUNDING-HARVEST, CARRY-CASH-AND-CARRY, METHOD-METALABEL, FACTOR-CRYPTO-SIMPLE, LIQ-PROXY, MEAS-INTEGRITY)."
+  ],
+  "contamination_note": "Gemini Pro output referenced 'Ultron risk engine' and 'Sherlock intelligence module' — artifacts of that model's own session context, not part of this program. Ignored during merge. 2026-07-10: C-F030 demoted from pre_applied_constraint to untrusted_historical_prior; repo_status strings asserting VALIDATED/FALSIFIED/PRIORITIZED neutralized.",
+  "untrusted_historical_priors": [
+   {
+    "prior_id": "U-F030",
+    "source": "Historical repo finding F-030 (UNTRUSTED under measurement-integrity assumption)",
+    "statement": "Regime-level volatility is predictable but NOT consumable in spot long/short payoff space. Any node whose thesis routes a volatility forecast into a directional spot payoff is architecturally constrained until a volatility-consuming payoff space is wired.",
+    "affected_nodes": [
+     "VOL-VRP",
+     "REGIME-HMM",
+     "REGIME-MOE",
+     "SIZE-VOLTARGET",
+     "GAP-05"
+    ],
+    "authority": "UNTRUSTED_OBSERVATION_REQUIRES_REPLICATION",
+    "effect": "Do NOT treat as architectural law. May motivate clean replication (E-VOL-00, E-P2-01, E-VOL-DIR) but must not close directional or non-directional consumption regions a priori."
+   }
+  ],
+  "governance_vocabulary": {
+   "note": "Labeling discipline retained without importing empirical finding authority.",
+   "outcome_labels": [
+    "UNTESTED",
+    "INSUFFICIENT",
+    "SUPPORTED",
+    "HARMFUL",
+    "ARCHITECTURALLY_CONSTRAINED",
+    "UNTRUSTED_PENDING_REPLICATION"
+   ],
+   "rule": "INSUFFICIENT != HARMFUL. No economic SUPPORTED/HARMFUL until Measurement-Trust Gate passes for the producing pipeline."
+  },
+  "governing_assumption": "Repository findings, backtests, lineage verdicts, profitability claims, nulls, and falsifications are not admissible as finalized economic evidence until bugs are resolved and the measurement pipeline is revalidated.",
+  "audit_ref": "docs/analysis/knowledge-graph-first-principles-audit-2026-07-10.md"
+ },
+ "taxonomy": {
+  "branches": [
+   {
+    "id": "B1",
+    "name": "Market Structure",
+    "sub": [
+     "Asset Classes",
+     "Venues & Architecture",
+     "Regime States"
+    ],
+    "falsification_boundary": "Asset cannot be legally/physically cleared; zero counterparties"
+   },
+   {
+    "id": "B2",
+    "name": "Time Horizons",
+    "sub": [
+     "Ultra-Low Latency",
+     "Intraday/Short-Term",
+     "Medium/Long-Term",
+     "Strategic Allocation"
+    ],
+    "falsification_boundary": "Alpha half-life < infrastructure turnaround; sampling frequency coarser than holding period"
+   },
+   {
+    "id": "B3",
+    "name": "Information Sets",
+    "sub": [
+     "Market Data",
+     "Order Flow & Microstructure",
+     "Fundamental",
+     "Alternative"
+    ],
+    "falsification_boundary": "I(X;Y) ≈ 0 vs forward returns across all tested regimes"
+   },
+   {
+    "id": "B4",
+    "name": "Strategy Archetypes",
+    "sub": [
+     "Momentum/Trend",
+     "Mean Reversion/StatArb",
+     "Structural Arbitrage",
+     "ML/Pattern Recognition"
+    ],
+    "falsification_boundary": "Permanent structural shift eradicates underlying bias/constraint"
+   },
+   {
+    "id": "B5",
+    "name": "Execution & Infrastructure",
+    "sub": [
+     "Latency & Connectivity",
+     "TCA",
+     "Capital & Margin"
+    ],
+    "falsification_boundary": "Total execution drag > gross expected alpha"
+   }
+  ],
+  "cross_dimensions": [
+   "Risk",
+   "Liquidity",
+   "Regime-Dependence"
+  ]
+ },
+ "nodes": [
+  {
+   "id": "MOM-TS",
+   "concept": "Time-series momentum / trend following",
+   "branches": [
+    "B4/Momentum",
+    "B2/Medium-Long"
+   ],
+   "info_set": [
+    "price",
+    "volatility"
+   ],
+   "markets": [
+    "futures",
+    "FX",
+    "crypto",
+    "equities"
+   ],
+   "horizon": "days-months",
+   "assumptions": [
+    "autocorrelation ρ > 0 at horizon h",
+    "liquidity sufficient",
+    "no regime flip"
+   ],
+   "bounds": "SR_max = ρ/√(1-ρ²)·√N·√(h/T); empirical multi-asset ensemble SR 0.5-0.8",
+   "failure_modes": [
+    "ρ→0 collapse",
+    "Hurst < 0.45 anti-persistence",
+    "sharp reversal > 3σ",
+    "crowding corr > 0.8"
+   ],
+   "kill_markers": [
+    "6m Sharpe < 0.3",
+    "costs > 40% gross (3m rolling)",
+    "signal half-life < 1d"
+   ],
+   "evidence": {
+    "seminal": [
+     "Moskowitz, Ooi & Pedersen (2012) — TS momentum across 58 asset classes, century-scale",
+     "Jegadeesh & Titman (1993)"
+    ],
+    "falsifying_constraining": [
+     "Barroso & Santa-Clara (2015) — momentum NOT an unconditional premium; crashes are predictable via volatility, and vol-scaling repairs them",
+     "Huang et al. (2020) — OOS degradation from crowding and faster information diffusion"
+    ],
+    "datasets": [
+     "CRSP/Compustat",
+     "Binance historical OHLCV (2017–), suited to fast-decay validation"
+    ],
+    "implementations": [
+     "zipline-reloaded",
+     "vectorbt"
+    ],
+    "strength": "strong (multi-decade, multi-asset), with documented conditional failure regime"
+   },
+   "confidence": "established",
+   "repo_status": "UNTESTED — PENDING measurement-trust + clean experiments (Phase 3 redefined)"
+  },
+  {
+   "id": "MOM-XS",
+   "concept": "Cross-sectional momentum / relative strength",
+   "branches": [
+    "B4/Momentum"
+   ],
+   "info_set": [
+    "multi-asset prices",
+    "classifications"
+   ],
+   "markets": [
+    "equities",
+    "crypto"
+   ],
+   "horizon": "weeks-months",
+   "assumptions": [
+    "persistent dispersion",
+    "leadership stability"
+   ],
+   "failure_modes": [
+    "momentum crashes on abrupt rebounds",
+    "correlation→1 collapse"
+   ],
+   "evidence": {
+    "seminal": [
+     "Jegadeesh & Titman (1993)"
+    ],
+    "falsifying_constraining": [
+     "Barroso & Santa-Clara (2015) — crash regime",
+     "Hou, Xue & Zhang (2020) — replication attrition context"
+    ],
+    "strength": "strong in equities; crypto evidence thinner"
+   },
+   "confidence": "established (equities) / emerging (crypto)",
+   "repo_status": "UNTESTED — PENDING measurement-trust + clean experiments (Phase 3 redefined)"
+  },
+  {
+   "id": "MOM-BRK",
+   "concept": "Breakout / channel / volatility expansion systems",
+   "branches": [
+    "B4/Momentum",
+    "B2/Intraday"
+   ],
+   "info_set": [
+    "OHLCV",
+    "ATR"
+   ],
+   "markets": [
+    "all"
+   ],
+   "horizon": "hours-weeks",
+   "assumptions": [
+    "breakouts carry information",
+    "vol expansion persistence"
+   ],
+   "failure_modes": [
+    "false breakouts / liquidity sweeps dominate",
+    "vol crush"
+   ],
+   "evidence": "EVIDENCE_PENDING",
+   "confidence": "established",
+   "repo_status": "UNTESTED — PENDING measurement-trust + clean experiments (Phase 3 redefined)"
+  },
+  {
+   "id": "MR-PAIRS",
+   "concept": "Pairs trading / distance & cointegration pairs",
+   "branches": [
+    "B4/MeanReversion"
+   ],
+   "info_set": [
+    "synchronized prices",
+    "borrow"
+   ],
+   "markets": [
+    "equities",
+    "crypto"
+   ],
+   "horizon": "days-weeks",
+   "assumptions": [
+    "cointegration stability",
+    "half-life ≤ 60d",
+    "borrow available"
+   ],
+   "bounds": "realistic SR 0.5-1.5 after costs",
+   "failure_modes": [
+    "cointegration breakdown (β drift > 30%)",
+    "spread > 5σ divergence",
+    "borrow collapse",
+    "correlation spike"
+   ],
+   "kill_markers": [
+    "coint p > 0.10 for >50% pairs",
+    "half-life > 90d",
+    "weekly loss > 5% AUM"
+   ],
+   "evidence": {
+    "seminal": [
+     "Gatev, Goetzmann & Rouwenhorst (2006)"
+    ],
+    "falsifying_constraining": [
+     "Krauss, Do & Huck (2017) — traditional stat-arb alpha decayed to near-zero post-2001 in US equities under algorithmic competition"
+    ],
+    "datasets": [
+     "LOBSTER",
+     "Databento"
+    ],
+    "implementations": [
+     "arbitragelab",
+     "statsmodels (Engle-Granger/Johansen)"
+    ],
+    "strength": "historically strong, DECAYED in developed equities; open question whether crypto microstructure preserves it"
+   },
+   "confidence": "established",
+   "repo_status": "UNTESTED — PENDING measurement-trust + clean experiments (Phase 3 redefined)"
+  },
+  {
+   "id": "MR-PCA",
+   "concept": "PCA/factor residual statistical arbitrage",
+   "branches": [
+    "B4/MeanReversion",
+    "B2/Intraday"
+   ],
+   "info_set": [
+    "large synchronized universe"
+   ],
+   "markets": [
+    "equities",
+    "crypto"
+   ],
+   "horizon": "intraday-days",
+   "assumptions": [
+    "stable factor structure",
+    "stationary residuals"
+   ],
+   "failure_modes": [
+    "factor restructuring",
+    "correlation shock"
+   ],
+   "evidence": {
+    "seminal": [
+     "Avellaneda & Lee (2010)"
+    ],
+    "falsifying_constraining": [
+     "Krauss et al. (2017) decay result applies"
+    ],
+    "strength": "as MR-PAIRS"
+   },
+   "confidence": "established/emerging",
+   "repo_status": "UNTESTED — PENDING measurement-trust + clean experiments (Phase 3 redefined)"
+  },
+  {
+   "id": "MR-INTRADAY",
+   "concept": "Intraday mean reversion (z-score, VWAP, gap fade, liquidity-shock)",
+   "branches": [
+    "B4/MeanReversion",
+    "B2/Intraday"
+   ],
+   "info_set": [
+    "OHLCV",
+    "VWAP",
+    "order flow optional"
+   ],
+   "markets": [
+    "equities",
+    "crypto"
+   ],
+   "horizon": "minutes-hours",
+   "assumptions": [
+    "oscillatory microstructure",
+    "no information shock"
+   ],
+   "failure_modes": [
+    "trend days",
+    "structural repricing",
+    "crash regimes"
+   ],
+   "evidence": {
+    "falsifying_constraining": [
+     "Easley, López de Prado & O'Hara (2012) — Volume Clock: time-based reversion invalidated by toxic flow; volume/activity bars preferred over time bars"
+    ],
+    "strength": "constrained; direct methodological implication for any M15 time-bar pipeline",
+    "note_for_repo": "Volume-bar vs time-bar sampling is an untested axis in the repo — candidate experiment variant."
+   },
+   "confidence": "established",
+   "repo_status": "UNTESTED — PENDING measurement-trust + clean experiments (Phase 3 redefined)"
+  },
+  {
+   "id": "VOL-VRP",
+   "concept": "Variance risk premium harvesting (short implied vs realized)",
+   "branches": [
+    "B4/Structural",
+    "B1/Equities"
+   ],
+   "info_set": [
+    "options chains",
+    "realized vol"
+   ],
+   "markets": [
+    "index options",
+    "crypto options"
+   ],
+   "horizon": "weeks-months",
+   "assumptions": [
+    "persistent IV > RV premium",
+    "hedgeable surface"
+   ],
+   "bounds": "SPX VRP 3-5% var premium; SR 0.3-0.6 with crash tail",
+   "failure_modes": [
+    "vol explosion",
+    "liquidity disappearance",
+    "hedge cost > premium"
+   ],
+   "kill_markers": [
+    "single-day loss > 10% AUM",
+    "contango flip"
+   ],
+   "evidence": {
+    "seminal": [
+     "Carr & Madan (1998) — variance swap replication",
+     "Gatheral (2006)"
+    ],
+    "falsifying_constraining": [
+     "Eraker & Wu (2017) — structural contango decay of long-vol products",
+     "Ammann, Herriger & Mathis (2019) — dispersion profits wiped by correlation spikes"
+    ],
+    "datasets": [
+     "CBOE DataShop",
+     "OptionMetrics"
+    ],
+    "implementations": [
+     "py_vollib",
+     "QuantLib"
+    ],
+    "strength": "strong theory; premium is real but tail-loaded"
+   },
+   "confidence": "established",
+   "repo_status": "UNTRUSTED_PENDING_REPLICATION — historical repo_status was: ARCHITECTURALLY_CONSTRAINED per C-F030 for spot-directional consumption; OPEN via options/funding payoff spaces"
+  },
+  {
+   "id": "CARRY-FX",
+   "concept": "FX carry",
+   "branches": [
+    "B4/Structural",
+    "B1/FX"
+   ],
+   "info_set": [
+    "spot",
+    "forwards",
+    "rates",
+    "vol"
+   ],
+   "markets": [
+    "G10",
+    "EM FX"
+   ],
+   "horizon": "weeks-months",
+   "assumptions": [
+    "UIP deviation persists",
+    "funding stable"
+   ],
+   "bounds": "SR 0.5-0.8 vol-scaled G10",
+   "failure_modes": [
+    "funding currency appreciation",
+    "global deleveraging",
+    "vol spike"
+   ],
+   "evidence": {
+    "seminal": [
+     "Lustig, Roussanov & Verdelhan (2011)",
+     "Koijen et al. (2018) — carry generalizes across asset classes"
+    ],
+    "falsifying_constraining": [
+     "Jurek (2014) — after costs and tail hedging, carry premium ≈ crash-risk compensation",
+     "Clarida et al. (2021) — UIP structure breaks at zero lower bound"
+    ],
+    "datasets": [
+     "FRED",
+     "BIS statistics"
+    ],
+    "implementations": [
+     "QuantEcon"
+    ],
+    "strength": "premium exists; risk-adjusted edge contested"
+   },
+   "confidence": "established",
+   "repo_status": "UNTESTED — PENDING measurement-trust + clean experiments (Phase 3 redefined)"
+  },
+  {
+   "id": "CARRY-CRYPTO-FUNDING",
+   "concept": "Perp funding rate capture / cash-and-carry basis",
+   "branches": [
+    "B4/Structural",
+    "B1/Crypto"
+   ],
+   "info_set": [
+    "spot",
+    "perp funding",
+    "dated futures",
+    "borrow",
+    "collateral"
+   ],
+   "markets": [
+    "crypto"
+   ],
+   "horizon": "hours-weeks",
+   "assumptions": [
+    "funding persistence exceeds execution+counterparty cost",
+    "exchange solvency"
+   ],
+   "failure_modes": [
+    "exchange default",
+    "margin liquidation cascade",
+    "basis persistence exceeds capital horizon"
+   ],
+   "evidence": {
+    "seminal": [
+     "Alexander et al. (2020) — perp funding mechanics and spot-derivative anchoring"
+    ],
+    "falsifying_constraining": [
+     "Makarov & Schoar (2020) — basis capture NOT risk-free: capital fragmentation, counterparty risk, liquidation cascades widen spreads beyond capital horizons"
+    ],
+    "datasets": [
+     "Coinglass — aggregated funding, cross-exchange OI, LIQUIDATION LEVELS"
+    ],
+    "implementations": [
+     "freqtrade"
+    ],
+    "strength": "premium real, tail-loaded; Coinglass resolves E-P2-03 event-data dependency"
+   },
+   "confidence": "established",
+   "repo_status": "UNTESTED — PENDING measurement-trust + clean experiments (Phase 3 redefined)",
+   "note": "Candidate volatility-consuming payoff space for C-F030 resolution: funding magnitude correlates with realized vol regimes"
+  },
+  {
+   "id": "ARB-BASIS",
+   "concept": "Futures/spot basis arbitrage (non-crypto)",
+   "branches": [
+    "B4/Structural"
+   ],
+   "info_set": [
+    "spot",
+    "futures",
+    "funding"
+   ],
+   "markets": [
+    "equities",
+    "commodities",
+    "rates"
+   ],
+   "horizon": "days-months",
+   "failure_modes": [
+    "funding/collateral/delivery constraints dominate"
+   ],
+   "evidence": "EVIDENCE_PENDING",
+   "confidence": "established",
+   "repo_status": "UNTESTED — PENDING measurement-trust + clean experiments (Phase 3 redefined)"
+  },
+  {
+   "id": "ARB-SPATIAL",
+   "concept": "Cross-venue / cross-exchange spatial arbitrage",
+   "branches": [
+    "B4/Structural",
+    "B1/Venues"
+   ],
+   "info_set": [
+    "multi-venue books",
+    "balances",
+    "latency",
+    "fees"
+   ],
+   "markets": [
+    "crypto primarily"
+   ],
+   "horizon": "seconds-minutes",
+   "failure_modes": [
+    "transfer latency",
+    "capital fragmentation",
+    "competition compression"
+   ],
+   "evidence": {
+    "falsifying_constraining": [
+     "Makarov & Schoar (2020) — cross-exchange spreads persist due to capital fragmentation but carry transfer/counterparty risk"
+    ],
+    "strength": "documented, competitive"
+   },
+   "confidence": "established",
+   "repo_status": "UNTESTED — PENDING measurement-trust + clean experiments (Phase 3 redefined)"
+  },
+  {
+   "id": "ARB-AMM",
+   "concept": "AMM arbitrage (CEX-DEX, cross-DEX, atomic)",
+   "branches": [
+    "B4/Structural",
+    "B1/AMM"
+   ],
+   "info_set": [
+    "pool states",
+    "mempool",
+    "CEX prices",
+    "gas"
+   ],
+   "markets": [
+    "DeFi"
+   ],
+   "horizon": "block-time",
+   "failure_modes": [
+    "gas + failed tx + MEV competition > spread"
+   ],
+   "evidence": {
+    "seminal": [
+     "Angeris et al. (2019) — mathematical foundation of x·y=k AMMs and CEX arbitrage synchronization"
+    ],
+    "falsifying_constraining": [
+     "Milionis et al. (2022) — Loss-Versus-Rebalancing (LVR): LPs suffer structural adverse-selection loss to arbitrageurs that GROWS WITH VOLATILITY"
+    ],
+    "datasets": [
+     "The Graph subgraphs"
+    ],
+    "implementations": [
+     "ccxt",
+     "web3.py"
+    ],
+    "strength": "strong theory both directions"
+   },
+   "confidence": "established",
+   "repo_status": "UNTESTED — PENDING measurement-trust + clean experiments (Phase 3 redefined)"
+  },
+  {
+   "id": "LP-AMM",
+   "concept": "Concentrated liquidity LP optimization",
+   "branches": [
+    "B4/Structural",
+    "B1/AMM"
+   ],
+   "info_set": [
+    "pool tx",
+    "vol",
+    "liquidity distribution"
+   ],
+   "markets": [
+    "DeFi"
+   ],
+   "horizon": "days-weeks",
+   "failure_modes": [
+    "impermanent loss + adverse selection > fees",
+    "directional jumps"
+   ],
+   "evidence": {
+    "falsifying_constraining": [
+     "Milionis et al. (2022) LVR — formal proof LP loss scales with volatility"
+    ],
+    "strength": "LVR is the exact theoretical mechanism behind E-P2-01 Arm C: a volatility forecast consumed as LP withdrawal/range-widening is LVR mitigation with published mathematical grounding"
+   },
+   "confidence": "emerging",
+   "repo_status": "UNTESTED — PENDING measurement-trust + clean experiments (Phase 3 redefined)",
+   "note": "LP payoff is short-gamma-like: a volatility-CONSUMING space. Candidate C-F030 resolution route (inverse direction: predictable high vol → withdraw/widen ranges)"
+  },
+  {
+   "id": "MM-LOB",
+   "concept": "Limit-order-book market making (Avellaneda-Stoikov family)",
+   "branches": [
+    "B4/Structural",
+    "B2/UltraLow",
+    "B1/Lit"
+   ],
+   "info_set": [
+    "L2/L3",
+    "queue position",
+    "inventory"
+   ],
+   "markets": [
+    "all lit venues"
+   ],
+   "horizon": "sub-second-minutes",
+   "failure_modes": [
+    "toxic flow",
+    "latency disadvantage",
+    "queue misspecification",
+    "vol jumps"
+   ],
+   "evidence": {
+    "seminal": [
+     "Avellaneda & Stoikov (2008) — inventory-aware optimal quoting"
+    ],
+    "falsifying_constraining": [
+     "Lu et al. (2020) — sim-to-real: latency, hidden liquidity, adversarial queue jumping nullify backtested LOB accuracy"
+    ],
+    "datasets": [
+     "LOBSTER",
+     "Databento"
+    ],
+    "strength": "strong theory; production gap documented"
+   },
+   "confidence": "established",
+   "repo_status": "UNTESTED — PENDING measurement-trust + clean experiments (Phase 3 redefined)"
+  },
+  {
+   "id": "OF-IMBALANCE",
+   "concept": "Order-book imbalance / OFI / microprice signals",
+   "branches": [
+    "B3/OrderFlow",
+    "B2/UltraLow",
+    "B2/Intraday"
+   ],
+   "info_set": [
+    "L1/L2/L3"
+   ],
+   "markets": [
+    "equities",
+    "futures",
+    "crypto"
+   ],
+   "horizon": "seconds-minutes",
+   "assumptions": [
+    "imbalance carries short-horizon information net of fees/latency"
+   ],
+   "failure_modes": [
+    "spoofing",
+    "hidden liquidity",
+    "signal decay < execution latency"
+   ],
+   "evidence": "EVIDENCE_PENDING",
+   "confidence": "established",
+   "repo_status": "UNTESTED — PENDING measurement-trust + clean experiments (Phase 3 redefined)"
+  },
+  {
+   "id": "OF-DEEPLOB",
+   "concept": "Neural LOB prediction (DeepLOB, transformers, GNN)",
+   "branches": [
+    "B3/OrderFlow",
+    "B4/ML"
+   ],
+   "info_set": [
+    "HF LOB tensors"
+   ],
+   "markets": [
+    "equities",
+    "crypto"
+   ],
+   "horizon": "seconds",
+   "failure_modes": [
+    "dataset shift",
+    "classification accuracy ≠ tradable net edge"
+   ],
+   "evidence": {
+    "seminal": [
+     "Zhang, Zohren & Roberts (2019)"
+    ],
+    "falsifying_constraining": [
+     "Vyetrenko et al. (2020) — realism metrics: historical simulators omit endogenous impact and adversarial dynamics"
+    ],
+    "datasets": [
+     "LOBSTER",
+     "Dukascopy tick"
+    ],
+    "strength": "classification benchmarks strong; sim-to-real gap unresolved"
+   },
+   "confidence": "emerging",
+   "repo_status": "UNTESTED — PENDING measurement-trust + clean experiments (Phase 3 redefined)"
+  },
+  {
+   "id": "OF-HAWKES",
+   "concept": "Hawkes / self-exciting point process event models",
+   "branches": [
+    "B3/OrderFlow",
+    "B4/ML"
+   ],
+   "info_set": [
+    "timestamped events"
+   ],
+   "markets": [
+    "microstructure"
+   ],
+   "horizon": "sub-second-minutes",
+   "failure_modes": [
+    "nonstationary event dynamics",
+    "compute latency"
+   ],
+   "evidence": {
+    "implementations": [
+     "tick (X-DataInitiative) — Hawkes processes for self-exciting order flow"
+    ],
+    "strength": "tooling mature"
+   },
+   "confidence": "established/emerging",
+   "repo_status": "UNTESTED — PENDING measurement-trust + clean experiments (Phase 3 redefined)"
+  },
+  {
+   "id": "CANDLE-STATE",
+   "concept": "Candle-state representations & finite-state machines (body/wick geometry, sweeps, retests, FVG, order blocks)",
+   "branches": [
+    "B3/OHLCV",
+    "B2/Intraday"
+   ],
+   "info_set": [
+    "OHLCV",
+    "derived geometry",
+    "multi-timeframe bars"
+   ],
+   "markets": [
+    "crypto",
+    "FX",
+    "equities"
+   ],
+   "horizon": "minutes-hours",
+   "assumptions": [
+    "discretized states carry incremental information AFTER conditioning on vol/trend/costs"
+   ],
+   "failure_modes": [
+    "states are redundant transformations of price",
+    "discretization destroys information",
+    "OOS failure"
+   ],
+   "evidence": {
+    "supporting": [
+     "Neely et al. (2014) — aggregated technical indicators carry significant predictive power distinct from macro variables"
+    ],
+    "falsifying_constraining": [
+     "Aronson (2006), Evidence-Based Technical Analysis — most visual candlestick patterns and multi-timeframe conjunctions FAIL out-of-sample under data-snooping controls"
+    ],
+    "datasets": [
+     "Polygon.io"
+    ],
+    "implementations": [
+     "pandas-ta"
+    ],
+    "strength": "ADVERSARIAL PRIOR EXISTS: Aronson is the published case against; E-P2-05 tests the repo stack directly against it"
+   },
+   "confidence": "emerging/speculative",
+   "repo_status": "UNTRUSTED_PENDING_REPLICATION — historical repo_status was: PARTIALLY_TESTED in TradingLLM (retest_depth, sweep features) — Phase 3 to import exact findings"
+  },
+  {
+   "id": "MTF-MODELS",
+   "concept": "Multi-timeframe conditioning (LTF triggers gated by HTF state)",
+   "branches": [
+    "B3/OHLCV",
+    "B4/ML"
+   ],
+   "info_set": [
+    "synchronized multi-resolution OHLCV"
+   ],
+   "markets": [
+    "crypto",
+    "FX"
+   ],
+   "horizon": "minutes-hours",
+   "failure_modes": [
+    "resampling leakage",
+    "temporal misalignment",
+    "redundant HTF info"
+   ],
+   "evidence": {
+    "falsifying_constraining": [
+     "Aronson (2006) — multi-timeframe conjunctions specifically included in the data-snooping falsification"
+    ],
+    "strength": "as CANDLE-STATE"
+   },
+   "confidence": "emerging",
+   "repo_status": "UNTRUSTED_PENDING_REPLICATION — historical repo_status was: PARTIALLY_TESTED in TradingLLM (regime-aware fusion) — Phase 3 to import"
+  },
+  {
+   "id": "REGIME-HMM",
+   "concept": "Hidden Markov / Markov-switching regime models",
+   "branches": [
+    "B1/RegimeStates",
+    "CrossDim/Regime"
+   ],
+   "info_set": [
+    "returns",
+    "realized vol",
+    "macro"
+   ],
+   "markets": [
+    "all"
+   ],
+   "horizon": "conditioning layer",
+   "failure_modes": [
+    "nonstationary states",
+    "transition faster than detection"
+   ],
+   "evidence": {
+    "seminal": [
+     "Hamilton (1989) — foundational Markov-switching regime model"
+    ],
+    "falsifying_constraining": [
+     "Adams & MacKay (2007) BOCPD — fixed-state HMMs fail on UNPRECEDENTED structural states; dynamic state generation required"
+    ],
+    "implementations": [
+     "hmmlearn"
+    ],
+    "strength": "established with known unprecedented-state failure mode"
+   },
+   "confidence": "established",
+   "repo_status": "UNTRUSTED_PENDING_REPLICATION — historical repo_status was: CONSTRAINED per C-F030: regime detection VALIDATED as predictable in Program 4; spot long/short consumption edge FALSIFIED. Non-directional consumption edges OPEN."
+  },
+  {
+   "id": "REGIME-CPD",
+   "concept": "Change-point detection (CUSUM, BOCPD, structural breaks)",
+   "branches": [
+    "B1/RegimeStates"
+   ],
+   "info_set": [
+    "returns",
+    "vol",
+    "correlations"
+   ],
+   "failure_modes": [
+    "low SNR false positives",
+    "gradual drift not discrete breaks"
+   ],
+   "evidence": {
+    "seminal": [
+     "Adams & MacKay (2007) — Bayesian online changepoint detection"
+    ],
+    "implementations": [
+     "ruptures"
+    ],
+    "strength": "established"
+   },
+   "confidence": "established",
+   "repo_status": "UNTESTED — PENDING measurement-trust + clean experiments (Phase 3 redefined)"
+  },
+  {
+   "id": "REGIME-MOE",
+   "concept": "Mixture-of-experts / regime-gated strategy routing",
+   "branches": [
+    "CrossDim/Regime",
+    "B4/ML"
+   ],
+   "info_set": [
+    "regime features",
+    "expert predictions"
+   ],
+   "failure_modes": [
+    "router error dominates expert benefit",
+    "overfitting"
+   ],
+   "evidence": "EVIDENCE_PENDING",
+   "confidence": "emerging",
+   "repo_status": "UNTRUSTED_PENDING_REPLICATION — historical repo_status was: CONSTRAINED per C-F030 where routing target is spot long/short direction"
+  },
+  {
+   "id": "ML-TREES",
+   "concept": "Tree-ensemble return prediction (GBM/XGBoost/LightGBM)",
+   "branches": [
+    "B4/ML"
+   ],
+   "info_set": [
+    "engineered features + labels"
+   ],
+   "failure_modes": [
+    "leakage",
+    "nonstationarity",
+    "hyperparameter overfitting"
+   ],
+   "bounds": "IC_max ≈ √R²·√(k/n); realistic SR 0.2-0.5",
+   "evidence": {
+    "seminal": [
+     "Gu, Kelly & Xiu (2020) — nonlinear architectures beat linear factor benchmarks"
+    ],
+    "falsifying_constraining": [
+     "Bailey et al. (2014) — backtest overfitting bounds: large search spaces GUARANTEE false high-Sharpe discoveries"
+    ],
+    "datasets": [
+     "M6 Financial Forecasting"
+    ],
+    "implementations": [
+     "mlfinlab (purged CV, meta-labeling)"
+    ],
+    "strength": "supported with mandatory multiplicity controls"
+   },
+   "confidence": "established",
+   "repo_status": "UNTRUSTED_PENDING_REPLICATION — historical repo_status was: PARTIALLY_TESTED (TradeNet feature pipeline) — Phase 3 to import"
+  },
+  {
+   "id": "ML-DEEPSEQ",
+   "concept": "Deep sequence models (CNN/LSTM/TCN/Transformer, TS foundation models)",
+   "branches": [
+    "B4/ML"
+   ],
+   "failure_modes": [
+    "insufficient data",
+    "regime shift",
+    "costs erase small gains"
+   ],
+   "evidence": {
+    "seminal": [
+     "Gu, Kelly & Xiu (2020)",
+     "Zhang, Zohren & Roberts (2019) — DeepLOB"
+    ],
+    "falsifying_constraining": [
+     "Bailey et al. (2014)"
+    ],
+    "strength": "benchmark accuracy documented; net tradability weaker"
+   },
+   "confidence": "emerging",
+   "repo_status": "UNTRUSTED_PENDING_REPLICATION — historical repo_status was: PARTIALLY_TESTED (TradeNet v2 survival heads) — Phase 3 to import"
+  },
+  {
+   "id": "ML-RL",
+   "concept": "Reinforcement learning (execution, MM, allocation)",
+   "branches": [
+    "B4/ML",
+    "B5/TCA"
+   ],
+   "failure_modes": [
+    "sim-to-real gap",
+    "reward misspecification",
+    "nonstationary env"
+   ],
+   "evidence": {
+    "falsifying_constraining": [
+     "Vyetrenko et al. (2020) — agents trained in standard historical sims fail in production: no endogenous market impact, no adversarial herding"
+    ],
+    "implementations": [
+     "FinRL"
+    ],
+    "strength": "constrained; execution use-cases only unless simulator realism solved",
+    "edge_note": "Vyetrenko critique is also direct evidence FOR GAP-01 (agent ecology) relevance."
+   },
+   "confidence": "emerging/speculative; strongest for constrained execution",
+   "repo_status": "UNTESTED — PENDING measurement-trust + clean experiments (Phase 3 redefined)"
+  },
+  {
+   "id": "ML-LLM",
+   "concept": "LLM-based financial models (news parsing, event extraction, hypothesis generation)",
+   "branches": [
+    "B4/ML",
+    "B3/Alternative"
+   ],
+   "failure_modes": [
+    "hallucination",
+    "stale knowledge",
+    "leakage",
+    "no causal link to returns"
+   ],
+   "evidence": "EVIDENCE_PENDING",
+   "confidence": "emerging",
+   "repo_status": "UNTESTED — PENDING measurement-trust + clean experiments (Phase 3 redefined)"
+  },
+  {
+   "id": "ML-SYMB",
+   "concept": "Symbolic regression / automated alpha-expression mining",
+   "branches": [
+    "B4/ML"
+   ],
+   "failure_modes": [
+    "multiple-testing false discovery",
+    "backtest overfitting"
+   ],
+   "evidence": {
+    "falsifying_constraining": [
+     "Bailey et al. (2014) — the formal proof underlying this node's failure mode"
+    ],
+    "strength": "multiplicity control is existential for this node"
+   },
+   "confidence": "emerging/speculative",
+   "repo_status": "UNTESTED — PENDING measurement-trust + clean experiments (Phase 3 redefined)",
+   "note": "Requires the repo's preregistration + multiplicity controls as hard prerequisite"
+  },
+  {
+   "id": "ALT-NLP",
+   "concept": "News/sentiment NLP (FinBERT, event extraction, transformer embeddings)",
+   "branches": [
+    "B3/Alternative"
+   ],
+   "failure_modes": [
+    "already priced",
+    "distribution shift",
+    "source manipulation"
+   ],
+   "evidence": "EVIDENCE_PENDING",
+   "confidence": "established/emerging",
+   "repo_status": "UNTESTED — PENDING measurement-trust + clean experiments (Phase 3 redefined)"
+  },
+  {
+   "id": "CRYPTO-ONCHAIN",
+   "concept": "On-chain predictive models (exchange flows, whale wallets, stablecoin flows)",
+   "branches": [
+    "B3/Alternative",
+    "B1/Crypto"
+   ],
+   "failure_modes": [
+    "address attribution failure",
+    "endogenous adaptation",
+    "relationship decay"
+   ],
+   "evidence": "EVIDENCE_PENDING",
+   "confidence": "emerging/speculative",
+   "repo_status": "UNTESTED — PENDING measurement-trust + clean experiments (Phase 3 redefined)"
+  },
+  {
+   "id": "EVENT-PEAD",
+   "concept": "Post-earnings drift & corporate event strategies",
+   "branches": [
+    "B4/MeanReversion",
+    "B3/Fundamental"
+   ],
+   "failure_modes": [
+    "faster diffusion",
+    "crowding",
+    "leakage"
+   ],
+   "evidence": "EVIDENCE_PENDING",
+   "confidence": "established/emerging",
+   "repo_status": "OUT_OF_SCOPE for crypto-focused repo (provisional) — scope decision only; not an economic falsification"
+  },
+  {
+   "id": "FACTOR-MULTI",
+   "concept": "Cross-sectional multi-factor investing (value/quality/lowvol/momentum)",
+   "branches": [
+    "B4/MeanReversion",
+    "B1/Equities",
+    "B2/MediumLong"
+   ],
+   "failure_modes": [
+    "crowding",
+    "valuation compression",
+    "accounting regime change"
+   ],
+   "evidence": {
+    "seminal": [
+     "Fama & French (1993, 2015)",
+     "Asness, Moskowitz & Pedersen (2013) — value/momentum negative correlation, everywhere"
+    ],
+    "falsifying_constraining": [
+     "Hou, Xue & Zhang (2020) — ~80% of 452 published anomalies fail replication after microcap/cost controls",
+     "Arnott et al. (2021) — intangibles distort book-to-market"
+    ],
+    "datasets": [
+     "Ken French Data Library",
+     "Numerai"
+    ],
+    "implementations": [
+     "alphalens",
+     "Riskfolio-Lib"
+    ],
+    "strength": "core factors robust; anomaly long-tail mostly false discoveries"
+   },
+   "confidence": "established",
+   "repo_status": "OUT_OF_SCOPE (provisional) — scope decision only; not an economic falsification"
+  },
+  {
+   "id": "EXEC-AC",
+   "concept": "Almgren-Chriss optimal execution + IS optimization",
+   "branches": [
+    "B5/TCA"
+   ],
+   "failure_modes": [
+    "impact misspecification",
+    "abrupt liquidity change"
+   ],
+   "evidence": {
+    "seminal": [
+     "Almgren & Chriss (2000)"
+    ],
+    "falsifying_constraining": [
+     "Bouchaud et al. (2008) propagator models — impact is path-dependent, long-memory; static impact functions misspecified"
+    ],
+    "strength": "canonical, refined by propagator literature"
+   },
+   "confidence": "established",
+   "repo_status": "UNTESTED — PENDING measurement-trust + clean experiments (Phase 3 redefined)"
+  },
+  {
+   "id": "EXEC-TCA-ML",
+   "concept": "ML transaction-cost / slippage / fill models",
+   "branches": [
+    "B5/TCA",
+    "B4/ML"
+   ],
+   "failure_modes": [
+    "policy changes data-generating process",
+    "regime shift"
+   ],
+   "evidence": {
+    "implementations": [
+     "Microsoft Qlib — RL execution environments"
+    ],
+    "datasets": [
+     "proprietary FIX fill logs required for true TCA"
+    ],
+    "strength": "tooling exists; data is the constraint"
+   },
+   "confidence": "emerging",
+   "repo_status": "UNTESTED — PENDING measurement-trust + clean experiments (Phase 3 redefined)"
+  },
+  {
+   "id": "SIZE-KELLY",
+   "concept": "Kelly / fractional Kelly sizing",
+   "branches": [
+    "B5/Capital"
+   ],
+   "failure_modes": [
+    "edge estimation error",
+    "unmodeled tails"
+   ],
+   "evidence": {
+    "seminal": [
+     "Kelly (1956)"
+    ],
+    "falsifying_constraining": [
+     "MacLean, Ziemba & Blazenko (1992) — full Kelly parameter sensitivity guarantees catastrophic drawdowns; fractionalization mandatory"
+    ],
+    "implementations": [
+     "cvxpy",
+     "Riskfolio-Lib"
+    ],
+    "strength": "established with hard constraint"
+   },
+   "confidence": "established",
+   "repo_status": "UNTESTED — PENDING measurement-trust + clean experiments (Phase 3 redefined)"
+  },
+  {
+   "id": "SIZE-VOLTARGET",
+   "concept": "Volatility targeting / inverse-vol sizing",
+   "branches": [
+    "B5/Capital",
+    "CrossDim/Regime"
+   ],
+   "failure_modes": [
+    "vol jumps faster than estimate",
+    "late releverage"
+   ],
+   "evidence": {
+    "supporting": [
+     "Harvey et al. (2018) — inverse-volatility sizing improves risk-adjusted returns and manages tails across global asset classes"
+    ],
+    "strength": "SECOND external precedent for E-P2-01 Arm A. Harvey-style trailing inverse-vol IS the naive-scaler sub-baseline: the repo forecast must beat it to justify Program 4b"
+   },
+   "confidence": "established",
+   "repo_status": "UNTRUSTED_PENDING_REPLICATION — historical repo_status was: OPEN and PRIORITIZED: sizing is a non-directional consumption channel for validated Program 4 volatility predictability (C-F030 compatible)"
+  },
+  {
+   "id": "ALLOC-HRP",
+   "concept": "Hierarchical risk parity / clustering allocation",
+   "branches": [
+    "B2/Strategic"
+   ],
+   "failure_modes": [
+    "unstable correlation structure"
+   ],
+   "evidence": "EVIDENCE_PENDING",
+   "confidence": "established/emerging",
+   "repo_status": "UNTESTED — PENDING measurement-trust + clean experiments (Phase 3 redefined)"
+  },
+  {
+   "id": "RISK-EWS",
+   "concept": "Drawdown/ruin controls, stress testing, kill switches",
+   "branches": [
+    "CrossDim/Risk"
+   ],
+   "failure_modes": [
+    "gaps bypass controls",
+    "correlated simultaneous failure"
+   ],
+   "evidence": "EVIDENCE_PENDING",
+   "confidence": "established",
+   "repo_status": "UNTESTED — PENDING measurement-trust + clean experiments (Phase 3 redefined)"
+  },
+  {
+   "id": "MEAS-INTEGRITY",
+   "concept": "Measurement / labeling integrity substrate (leakage, schema, engine identity, cost model, label re-derivation)",
+   "branches": [
+    "B5/Infrastructure",
+    "CrossDim/Risk"
+   ],
+   "info_set": [
+    "code",
+    "schemas",
+    "labels",
+    "timestamps"
+   ],
+   "markets": [
+    "all"
+   ],
+   "horizon": "meta",
+   "assumptions": [
+    "economic claims require a trusted measurement pipeline",
+    "label source must be independently re-derivable"
+   ],
+   "bounds": null,
+   "failure_modes": [
+    "lookahead leakage",
+    "contaminated stream labels",
+    "engine identity mismatch",
+    "cost model mis-specification"
+   ],
+   "kill_markers": [
+    "E-MT-00 fail on any load-bearing path used for economic adjudication"
+   ],
+   "evidence": {
+    "seminal": [
+     "Bailey & Lopez de Prado (2014) — deflated Sharpe / backtest overfitting",
+     "Lopez de Prado (2018) — Advances in Financial Machine Learning (purged CV, meta-labeling)"
+    ]
+   },
+   "confidence": "established (methodology)",
+   "repo_status": "UNTESTED — blocking substrate for all economic claims (E-MT-00/01)"
+  },
+  {
+   "id": "SEAS-CAL",
+   "concept": "Seasonality / calendar microstructure (time-of-day, day-of-week, funding-cycle phase)",
+   "branches": [
+    "B3/OHLCV",
+    "B2/Intraday",
+    "B1/Crypto"
+   ],
+   "info_set": [
+    "timestamps",
+    "OHLCV",
+    "funding clock"
+   ],
+   "markets": [
+    "crypto",
+    "FX",
+    "equities"
+   ],
+   "horizon": "intraday-weekly",
+   "assumptions": [
+    "calendar patterns persist after costs and multiple-testing control"
+   ],
+   "bounds": null,
+   "failure_modes": [
+    "regime shift of session structure",
+    "timezone / DST errors",
+    "data-snooping"
+   ],
+   "kill_markers": null,
+   "evidence": "EVIDENCE_PENDING",
+   "confidence": "established/emerging",
+   "repo_status": "UNTESTED"
+  },
+  {
+   "id": "XASSET-LEADLAG",
+   "concept": "Cross-asset lead-lag (e.g. BTC→alts, equity-index→crypto, DXY→crypto)",
+   "branches": [
+    "B4/Momentum",
+    "B3/MarketData",
+    "B2/Intraday"
+   ],
+   "info_set": [
+    "multi-asset prices"
+   ],
+   "markets": [
+    "crypto",
+    "FX",
+    "equities"
+   ],
+   "horizon": "minutes-days",
+   "assumptions": [
+    "information diffuses across assets with tradable lag net of costs"
+   ],
+   "bounds": null,
+   "failure_modes": [
+    "lag collapses to zero",
+    "common-factor confounding",
+    "execution delay > lag"
+   ],
+   "kill_markers": null,
+   "evidence": "EVIDENCE_PENDING",
+   "confidence": "established/emerging",
+   "repo_status": "UNTESTED"
+  },
+  {
+   "id": "REGIME-CORR",
+   "concept": "Correlation / dispersion regime models (not volatility-level alone)",
+   "branches": [
+    "B1/RegimeStates",
+    "CrossDim/Regime",
+    "CrossDim/Risk"
+   ],
+   "info_set": [
+    "multi-asset returns",
+    "realized correlations"
+   ],
+   "markets": [
+    "crypto",
+    "equities",
+    "FX"
+   ],
+   "horizon": "conditioning layer",
+   "assumptions": [
+    "correlation state is partially predictable and consumable via risk/allocation"
+   ],
+   "bounds": null,
+   "failure_modes": [
+    "correlation breakdown faster than detection",
+    "estimation noise"
+   ],
+   "kill_markers": null,
+   "evidence": "EVIDENCE_PENDING",
+   "confidence": "established/emerging",
+   "repo_status": "UNTESTED"
+  },
+  {
+   "id": "CARRY-FUNDING-HARVEST",
+   "concept": "Perp funding cashflow harvest (hold inventory to collect funding; not a directional price signal)",
+   "branches": [
+    "B4/Structural",
+    "B1/Crypto"
+   ],
+   "info_set": [
+    "perp funding",
+    "spot",
+    "margin",
+    "fees"
+   ],
+   "markets": [
+    "crypto"
+   ],
+   "horizon": "hours-weeks",
+   "assumptions": [
+    "funding income exceeds round-trip costs and adverse price/basis drift under chosen hedge"
+   ],
+   "bounds": null,
+   "failure_modes": [
+    "turnover costs dominate",
+    "basis/price drag",
+    "exchange risk",
+    "liquidation"
+   ],
+   "kill_markers": null,
+   "evidence": "EVIDENCE_PENDING",
+   "confidence": "emerging",
+   "repo_status": "UNTESTED — split from CARRY-CRYPTO-FUNDING signal path; do not inherit historical harvest nulls as closure"
+  },
+  {
+   "id": "CARRY-CASH-AND-CARRY",
+   "concept": "Joint cash-and-carry (basis + funding) structural construction",
+   "branches": [
+    "B4/Structural",
+    "B1/Crypto"
+   ],
+   "info_set": [
+    "spot",
+    "perp/dated futures basis",
+    "funding",
+    "borrow",
+    "fees"
+   ],
+   "markets": [
+    "crypto"
+   ],
+   "horizon": "hours-weeks",
+   "assumptions": [
+    "joint basis+funding edge survives costs and operational constraints"
+   ],
+   "bounds": null,
+   "failure_modes": [
+    "margin stress",
+    "basis blowout",
+    "venue fragmentation"
+   ],
+   "kill_markers": null,
+   "evidence": "EVIDENCE_PENDING",
+   "confidence": "established/emerging",
+   "repo_status": "UNTESTED"
+  },
+  {
+   "id": "METHOD-METALABEL",
+   "concept": "Meta-labeling / triple-barrier labeling methodology (secondary model on primary side decisions)",
+   "branches": [
+    "B4/ML",
+    "B5/TCA"
+   ],
+   "info_set": [
+    "primary signal",
+    "features",
+    "barriers",
+    "costs"
+   ],
+   "markets": [
+    "all"
+   ],
+   "horizon": "depends on primary",
+   "assumptions": [
+    "primary side has non-zero opportunity set; meta-model filters false positives"
+   ],
+   "bounds": null,
+   "failure_modes": [
+    "primary has no edge and meta cannot create one",
+    "label leakage via barriers"
+   ],
+   "kill_markers": null,
+   "evidence": {
+    "seminal": [
+     "Lopez de Prado (2018) — meta-labeling and triple-barrier method"
+    ]
+   },
+   "confidence": "established (methodology)",
+   "repo_status": "UNTESTED"
+  },
+  {
+   "id": "FACTOR-CRYPTO-SIMPLE",
+   "concept": "Simple crypto factor zoo (momentum, volatility, carry/funding, size proxies) as literature baselines",
+   "branches": [
+    "B4/Momentum",
+    "B4/Structural",
+    "B2/Medium-Long"
+   ],
+   "info_set": [
+    "multi-asset prices",
+    "funding",
+    "market caps optional"
+   ],
+   "markets": [
+    "crypto"
+   ],
+   "horizon": "days-months",
+   "assumptions": [
+    "factor premia may exist net of costs under honest WF"
+   ],
+   "bounds": null,
+   "failure_modes": [
+    "crowding",
+    "cost domination",
+    "multiple testing"
+   ],
+   "kill_markers": null,
+   "evidence": "EVIDENCE_PENDING",
+   "confidence": "emerging",
+   "repo_status": "UNTESTED — baseline family before architecture search"
+  },
+  {
+   "id": "LIQ-PROXY",
+   "concept": "Liquidity proxies (Amihud illiquidity, Roll, effective spread / Kyle-lambda proxies)",
+   "branches": [
+    "B3/MarketData",
+    "CrossDim/Liquidity",
+    "B5/TCA"
+   ],
+   "info_set": [
+    "OHLCV",
+    "volume",
+    "optional L1/L2"
+   ],
+   "markets": [
+    "crypto",
+    "FX",
+    "equities"
+   ],
+   "horizon": "intraday-days",
+   "assumptions": [
+    "liquidity state conditions short-horizon edge and costs"
+   ],
+   "bounds": null,
+   "failure_modes": [
+    "proxy mismeasurement",
+    "regime-specific failure"
+   ],
+   "kill_markers": null,
+   "evidence": "EVIDENCE_PENDING",
+   "confidence": "established/emerging",
+   "repo_status": "UNTESTED"
+  }
+ ],
+ "gap_nodes": [
+  {
+   "id": "GAP-01",
+   "concept": "Agent-ecology meta-market dynamics (AI herding, model synchronization crashes)",
+   "source": "GROK",
+   "novelty": "high",
+   "feasibility_for_repo": "low-medium (requires multi-agent simulator)",
+   "tradable_thesis": "anti-herding overlays; exploit correlation induced by common architectures",
+   "repo_status": "UNTESTED"
+  },
+  {
+   "id": "GAP-02",
+   "concept": "Narrative contagion / memetic price formation (SIR/SEIR on social graphs fused with price)",
+   "source": "GROK",
+   "novelty": "high",
+   "feasibility_for_repo": "medium (crypto social data accessible)",
+   "tradable_thesis": "narrative infection-rate factor orthogonal to polarity sentiment",
+   "repo_status": "UNTESTED"
+  },
+  {
+   "id": "GAP-03",
+   "concept": "Tokenized RWA hybrid legal-oracle-governance risk models",
+   "source": "GROK",
+   "novelty": "high",
+   "feasibility_for_repo": "low (legal modeling out of current infra)",
+   "repo_status": "UNTESTED"
+  },
+  {
+   "id": "GAP-04",
+   "concept": "Causal intervention discovery / do-operator aware alpha (natural experiments: funding resets, listings, policy shocks)",
+   "source": "GROK",
+   "novelty": "high",
+   "feasibility_for_repo": "medium-high (crypto has abundant discrete interventions)",
+   "repo_status": "UNTESTED"
+  },
+  {
+   "id": "GAP-05",
+   "concept": "Critical-transition early-warning signals (rising variance, AC1, flickering, TDA) for tipping points / liquidation cascades",
+   "source": "GROK",
+   "novelty": "medium-high",
+   "feasibility_for_repo": "high (OHLCV + funding + OI already in pipeline)",
+   "repo_status": "UNTESTED",
+   "constraint_note": "Historical C-F030 note demoted: consumption path is an open research design choice, not a binding falsification. Status remains UNTESTED."
+  },
+  {
+   "id": "GAP-06",
+   "concept": "Secular structural drift models (demographic/climate/AI-diffusion covariates)",
+   "source": "GROK",
+   "novelty": "medium",
+   "feasibility_for_repo": "low (horizon mismatch with repo)",
+   "repo_status": "UNTESTED"
+  }
+ ],
+ "edges": [
+  {
+   "from": "REGIME-HMM",
+   "to": "MOM-TS",
+   "type": "conditions",
+   "note": "regime gating of trend exposure"
+  },
+  {
+   "from": "REGIME-HMM",
+   "to": "SIZE-VOLTARGET",
+   "type": "feeds",
+   "note": "OPEN C-F030-compatible consumption path"
+  },
+  {
+   "from": "REGIME-HMM",
+   "to": "CARRY-CRYPTO-FUNDING",
+   "type": "feeds",
+   "note": "vol regime → funding magnitude; OPEN consumption path"
+  },
+  {
+   "from": "REGIME-HMM",
+   "to": "LP-AMM",
+   "type": "feeds",
+   "note": "vol regime → LP range width / withdrawal; OPEN consumption path"
+  },
+  {
+   "from": "GAP-05",
+   "to": "RISK-EWS",
+   "type": "extends",
+   "note": "pre-transition warning upgrades reactive kill switches to anticipatory de-risking"
+  },
+  {
+   "from": "GAP-04",
+   "to": "ML-TREES",
+   "type": "critiques",
+   "note": "associative models fragile to confounding; causal layer as robustness filter"
+  },
+  {
+   "from": "GAP-02",
+   "to": "ALT-NLP",
+   "type": "extends",
+   "note": "propagation dynamics vs static polarity"
+  },
+  {
+   "from": "CANDLE-STATE",
+   "to": "MTF-MODELS",
+   "type": "composes"
+  },
+  {
+   "from": "OF-IMBALANCE",
+   "to": "MR-INTRADAY",
+   "type": "enhances",
+   "note": "flow-confirmed reversion entries"
+  },
+  {
+   "from": "OF-IMBALANCE",
+   "to": "CANDLE-STATE",
+   "type": "orthogonality_test",
+   "note": "does flow add information beyond candle geometry?"
+  },
+  {
+   "from": "EXEC-TCA-ML",
+   "to": "ALL_ALPHA_NODES",
+   "type": "gates",
+   "note": "B5 falsification boundary: drag > gross alpha kills any node"
+  },
+  {
+   "from": "GAP-01",
+   "to": "MM-LOB",
+   "type": "threatens",
+   "note": "toxic flow from synchronized agents"
+  },
+  {
+   "from": "MOM-TS",
+   "to": "MR-INTRADAY",
+   "type": "regime_complement",
+   "note": "Hurst > 0.55 favors former; < 0.45 favors latter"
+  },
+  {
+   "from": "MOM-TS",
+   "to": "SIZE-VOLTARGET",
+   "type": "evidence_precedent",
+   "note": "Barroso & Santa-Clara (2015): vol-managed momentum = published precedent that a vol forecast consumed as SIZING (not direction) repairs a strategy. Direct external support for E-P2-01 Arm A and C-F030-compatible consumption."
+  },
+  {
+   "from": "ML-RL",
+   "to": "GAP-01",
+   "type": "evidence_link",
+   "note": "Vyetrenko et al. (2020) sim-to-real failure is empirical footing for agent-ecology gap."
+  },
+  {
+   "from": "LP-AMM",
+   "to": "REGIME-HMM",
+   "type": "evidence_precedent",
+   "note": "Milionis LVR: LP loss ∝ volatility → vol forecast consumed as LP range/withdrawal decision has formal grounding (E-P2-01 Arm C)."
+  },
+  {
+   "from": "SIZE-VOLTARGET",
+   "to": "MOM-TS",
+   "type": "evidence_precedent",
+   "note": "Harvey et al. (2018) generalizes Barroso & Santa-Clara: vol-sizing works broadly. E-P2-01 Arm A bar = beat this naive scaler."
+  },
+  {
+   "from": "CARRY-CRYPTO-FUNDING",
+   "to": "GAP-05",
+   "type": "data_enabler",
+   "note": "Coinglass liquidation-level data resolves E-P2-03 event-definition dependency."
+  },
+  {
+   "from": "REGIME-CPD",
+   "to": "REGIME-HMM",
+   "type": "complements",
+   "note": "BOCPD covers the unprecedented-state failure mode of fixed-state HMMs."
+  },
+  {
+   "from": "MEAS-INTEGRITY",
+   "to": "ALL_ALPHA_NODES",
+   "type": "gates",
+   "note": "Measurement-Trust Gate: no economic adjudication without trusted labels/features/costs."
+  },
+  {
+   "from": "CARRY-CRYPTO-FUNDING",
+   "to": "CARRY-FUNDING-HARVEST",
+   "type": "splits",
+   "note": "Signal path vs cashflow harvest path are distinct economic objects."
+  },
+  {
+   "from": "CARRY-CRYPTO-FUNDING",
+   "to": "CARRY-CASH-AND-CARRY",
+   "type": "composes",
+   "note": "Joint basis+funding construction."
+  },
+  {
+   "from": "ARB-BASIS",
+   "to": "CARRY-CASH-AND-CARRY",
+   "type": "composes",
+   "note": "Basis leg of joint carry."
+  },
+  {
+   "from": "REGIME-CORR",
+   "to": "REGIME-HMM",
+   "type": "complements",
+   "note": "Correlation state complementary to vol/return HMM regimes."
+  },
+  {
+   "from": "XASSET-LEADLAG",
+   "to": "MOM-TS",
+   "type": "enhances",
+   "note": "Cross-asset lag as multi-asset momentum/information diffusion channel."
+  },
+  {
+   "from": "SEAS-CAL",
+   "to": "MR-INTRADAY",
+   "type": "conditions",
+   "note": "Session/calendar conditioning of intraday mean reversion."
+  },
+  {
+   "from": "METHOD-METALABEL",
+   "to": "ML-TREES",
+   "type": "composes",
+   "note": "Meta-label often implemented with tree ensembles on primary side decisions."
+  },
+  {
+   "from": "LIQ-PROXY",
+   "to": "EXEC-TCA-ML",
+   "type": "feeds",
+   "note": "Liquidity state inputs transaction cost models."
+  },
+  {
+   "from": "FACTOR-CRYPTO-SIMPLE",
+   "to": "MOM-TS",
+   "type": "includes",
+   "note": "Simple factor zoo includes TS momentum baseline."
+  },
+  {
+   "from": "FACTOR-CRYPTO-SIMPLE",
+   "to": "CARRY-FUNDING-HARVEST",
+   "type": "includes",
+   "note": "Simple factor zoo includes carry/funding harvest baseline."
+  }
+ ]
+}

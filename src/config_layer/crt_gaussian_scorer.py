@@ -10,12 +10,26 @@ import logging
 import math
 from typing import Optional
 
-# ── Load gaussian_scorer section from production config; fall back to defaults ──
+# ── Load gaussian_scorer section from production config (strict — section is governed) ──
+# Fallback sweep / fail-fast: the `except → {}` config mask was removed. The `gaussian_scorer`
+# section is present in the active config; a missing section is now a load-time error, not a
+# silent empty-dict that would let the scorer degrade to defaults. The ImportError dual-path
+# (package vs standalone-script import) is preserved as legitimate optional-import resilience.
 try:
     from config_layer.production_config import get_prod_section as _get_section
-    _GS_CFG = _get_section("gaussian_scorer")
-except Exception:
-    _GS_CFG = {}
+except ImportError:
+    from production_config import get_prod_section as _get_section  # standalone script path
+try:
+    from config_layer.strict_config import require as _require_cfg
+except ImportError:
+    from strict_config import require as _require_cfg  # standalone script path
+_GS_CFG = _get_section("gaussian_scorer")
+
+
+def _gs(key: str):
+    """Strict read of ``gaussian_scorer.<key>`` (EPIC-84: no code default; absent -> raise)."""
+    return _require_cfg(_GS_CFG, key, section_name="gaussian_scorer",
+                        consumer="CRTGaussianScorer")
 
 
 class CRTGaussianScorer:
@@ -33,12 +47,12 @@ class CRTGaussianScorer:
 
     # Real EURCAD M15 calibration (200 retest observations 2024-2025)
     # Replaces theoretical priors. All parameters computed from empirical distribution.
-    RETEST_MU = _GS_CFG.get("retest_mu", 0.237)
-    RETEST_S2 = _GS_CFG.get("retest_s2", 0.040)  # real mean/variance of retest_depth
-    BODY_MU   = _GS_CFG.get("body_mu",   0.847)
-    BODY_S2   = _GS_CFG.get("body_s2",   0.021)  # real mean/variance of body_ratio
-    DISP_MU   = _GS_CFG.get("disp_mu",   2.177)
-    DISP_S2   = _GS_CFG.get("disp_s2",   1.196)  # real mean/variance of disp_str ATR mult
+    RETEST_MU = _gs("retest_mu")
+    RETEST_S2 = _gs("retest_s2")  # real mean/variance of retest_depth
+    BODY_MU   = _gs("body_mu")
+    BODY_S2   = _gs("body_s2")  # real mean/variance of body_ratio
+    DISP_MU   = _gs("disp_mu")
+    DISP_S2   = _gs("disp_s2")  # real mean/variance of disp_str ATR mult
 
     # Hard filters: 5th/95th percentile of real observed feature range
     RETEST_MIN = 0.025
@@ -46,14 +60,15 @@ class CRTGaussianScorer:
     DISP_MAX   = 3.670  # 95th pct; 1.80 rejected 100% of real trades
 
     # Sigmoid calibration
-    SIGMOID_K  = _GS_CFG.get("sigmoid_k",  4.5)
-    SIGMOID_X0 = _GS_CFG.get("sigmoid_x0", 0.50)
+    SIGMOID_K  = _gs("sigmoid_k")
+    SIGMOID_X0 = _gs("sigmoid_x0")
 
     # Execution threshold (dynamic threshold overrides this per-trade)
-    EXECUTE_P = _GS_CFG.get("execute_p", 0.50)
+    EXECUTE_P = _gs("execute_p")
 
-    def __init__(self, decay_lambda: float = _GS_CFG.get("decay_lambda", 0.05)):
-        self.decay_lambda = decay_lambda
+    def __init__(self, decay_lambda: Optional[float] = None):
+        # None = "use the declared config value" (strict read), not a code literal.
+        self.decay_lambda = _gs("decay_lambda") if decay_lambda is None else decay_lambda
         self._log = logging.getLogger("CRT.GaussianScorer")
         from engines.scoring_engine import ScoringEngine
 
@@ -75,9 +90,11 @@ class CRTGaussianScorer:
     ) -> dict:
         """
         features = {
-            retest_depth:  float  - fraction of displacement retraced (0-1)
-            body_ratio:    float  - body / wick of displacement candle (0-1)
-            disp_str:      float  - displacement size in ATR multiples
+            displacement_retrace (FM-027) or legacy retest_depth:
+                float — fraction of displacement body retraced (0-1)
+            body_ratio:    float  - body / range of displacement candle (0-1)
+            displacement_atr_ratio (FM-028) or legacy disp_str/disp_strength:
+                float — displacement range in ATR multiples
             retest_index:  int    - candle index when retest was confirmed (cached)
         }
         candle_idx/current_index: current candle index for time-decay computation.
@@ -85,16 +102,23 @@ class CRTGaussianScorer:
         """
         if current_index is not None:
             candle_idx = current_index
-        r = features.get("retest_depth", 0.0)
+        # CH-002 / F-050: prefer governed CRT emission keys; accept legacy aliases
+        r = features.get(
+            "displacement_retrace",
+            features.get("retest_depth", 0.0),
+        )
         b = features.get("body_ratio", 0.0)
-        d = features.get("disp_str", 0.0)
-        print(f"[DEBUG] r={r:.3f}, b={b:.3f}, d={d:.3f}")
-        # Use retest_index from cached features; fall back to candles_since_retest
+        d = features.get(
+            "displacement_atr_ratio",
+            features.get("disp_str", features.get("disp_strength", 0.0)),
+        )
+        self._log.debug("r=%.3f, b=%.3f, d=%.3f", r, b, d)
+        # Use retest_index from cached features; fall back to candles_since_sweep
         retest_idx = features.get("retest_index", 0)
         t = (
             max(0, candle_idx - retest_idx)
             if candle_idx > 0
-            else features.get("candles_since_retest", 0)
+            else features.get("candles_since_sweep", 0)
         )
 
         # Hard filters - capital protection
@@ -122,9 +146,9 @@ class CRTGaussianScorer:
             * (s_disp ** 0.20)
             * (s_time ** 0.15)
         )
-        print(
-            f"[GAUSS] s_r={s_retest:.3f}, s_b={s_body:.3f}, "
-            f"s_d={s_disp:.3f}, final={final_score:.4f}"
+        self._log.debug(
+            "s_r=%.3f, s_b=%.3f, s_d=%.3f, final=%.4f",
+            s_retest, s_body, s_disp, final_score,
         )
 
         components = {
@@ -181,12 +205,20 @@ class CRTGaussianScorer:
         disp = state.displacement_candle
         retest = state.retest_candle
         disp_move = abs(disp.close - disp.open)
-        if disp_move == 0 or state.atr == 0:
+        if disp_move == 0 or state.atr_abs == 0:
             return None
-        retest_retrace = abs(retest.close - disp.open) / disp_move
+        # CH-002 / F-050: emit FM-027 / FM-028 identities (match crt_engine_v2 cache)
+        from features import derived_math as _dm
         return {
-            "retest_depth": min(max(retest_retrace, 0.0), 1.0),
+            "displacement_retrace": _dm.displacement_retrace(
+                retest_close=float(retest.close),
+                disp_open=float(disp.open),
+                disp_close=float(disp.close),
+            ),
             "body_ratio": disp.body_ratio,
-            "disp_str": disp.wick_size / state.atr,
+            "displacement_atr_ratio": _dm.displacement_atr_ratio(
+                candle_range=float(disp.wick_size),
+                atr=float(state.atr_abs),
+            ),
             "retest_index": state.retest_candle_index,
         }

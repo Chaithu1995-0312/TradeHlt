@@ -1,0 +1,1581 @@
+{
+  "_doc": "M15 feature consumer alignment index.",
+  "generated_at": "2026-07-14T06:54:00.983097+00:00",
+  "session": "M15",
+  "M15_CHECKPOINT_HASH": "a85a3bc528d09f7b084787a04635cbd6861bf30d68aa836c2185c4b0c96b99d2",
+  "entries": [
+    {
+      "FEATURE": "close",
+      "AUTHORITATIVE_PRODUCER_COUNT": 0,
+      "AUTHORITATIVE_PRODUCER_PATHS": [],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [
+        "body_size",
+        "disp_strength",
+        "displacement_retrace",
+        "ema_fast",
+        "ema_slow",
+        "ema_spread_atr",
+        "liquidity_distance",
+        "lower_wick",
+        "macd_line",
+        "momentum_score",
+        "momentum_score_atr",
+        "retest_depth",
+        "rsi_14",
+        "trend_strength",
+        "true_range",
+        "upper_wick",
+        "volatility_ratio",
+        "volatility_regime"
+      ],
+      "MODEL_CONSUMERS": [
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "NOT_APPLICABLE_RAW"
+    },
+    {
+      "FEATURE": "high",
+      "AUTHORITATIVE_PRODUCER_COUNT": 0,
+      "AUTHORITATIVE_PRODUCER_PATHS": [],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [
+        "swing_high",
+        "true_range",
+        "upper_wick",
+        "volatility_regime",
+        "wick_size"
+      ],
+      "MODEL_CONSUMERS": [
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "NOT_APPLICABLE_RAW"
+    },
+    {
+      "FEATURE": "low",
+      "AUTHORITATIVE_PRODUCER_COUNT": 0,
+      "AUTHORITATIVE_PRODUCER_PATHS": [],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [
+        "lower_wick",
+        "swing_low",
+        "true_range",
+        "volatility_regime",
+        "wick_size"
+      ],
+      "MODEL_CONSUMERS": [
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "NOT_APPLICABLE_RAW"
+    },
+    {
+      "FEATURE": "open",
+      "AUTHORITATIVE_PRODUCER_COUNT": 0,
+      "AUTHORITATIVE_PRODUCER_PATHS": [],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [
+        "body_size",
+        "displacement_retrace",
+        "lower_wick",
+        "upper_wick"
+      ],
+      "MODEL_CONSUMERS": [
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "NOT_APPLICABLE_RAW"
+    },
+    {
+      "FEATURE": "timestamp",
+      "AUTHORITATIVE_PRODUCER_COUNT": 0,
+      "AUTHORITATIVE_PRODUCER_PATHS": [],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [
+        "hour_of_day",
+        "session"
+      ],
+      "MODEL_CONSUMERS": [],
+      "STRATEGY_CONSUMERS": [],
+      "OBSERVABILITY_CONSUMERS": [],
+      "MANIFEST_CONSUMERS": [],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "NOT_APPLICABLE_RAW"
+    },
+    {
+      "FEATURE": "volume",
+      "AUTHORITATIVE_PRODUCER_COUNT": 0,
+      "AUTHORITATIVE_PRODUCER_PATHS": [],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [
+        "volume_ratio"
+      ],
+      "MODEL_CONSUMERS": [
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "NOT_APPLICABLE_RAW"
+    },
+    {
+      "FEATURE": "body_size",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [
+        "body_ratio",
+        "disp_strength"
+      ],
+      "MODEL_CONSUMERS": [
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "PASS"
+    },
+    {
+      "FEATURE": "lower_wick",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [
+        "total_wick"
+      ],
+      "MODEL_CONSUMERS": [],
+      "STRATEGY_CONSUMERS": [],
+      "OBSERVABILITY_CONSUMERS": [],
+      "MANIFEST_CONSUMERS": [],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "PASS"
+    },
+    {
+      "FEATURE": "true_range",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [
+        "atr"
+      ],
+      "MODEL_CONSUMERS": [],
+      "STRATEGY_CONSUMERS": [],
+      "OBSERVABILITY_CONSUMERS": [],
+      "MANIFEST_CONSUMERS": [],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "PASS"
+    },
+    {
+      "FEATURE": "upper_wick",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [
+        "total_wick"
+      ],
+      "MODEL_CONSUMERS": [],
+      "STRATEGY_CONSUMERS": [],
+      "OBSERVABILITY_CONSUMERS": [],
+      "MANIFEST_CONSUMERS": [],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "PASS"
+    },
+    {
+      "FEATURE": "total_wick",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [],
+      "MODEL_CONSUMERS": [],
+      "STRATEGY_CONSUMERS": [],
+      "OBSERVABILITY_CONSUMERS": [],
+      "MANIFEST_CONSUMERS": [],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "NO_CONSUMERS"
+    },
+    {
+      "FEATURE": "wick_size",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [
+        "body_ratio",
+        "displacement_atr_ratio",
+        "volatility_ratio"
+      ],
+      "MODEL_CONSUMERS": [
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "PASS"
+    },
+    {
+      "FEATURE": "ema_fast",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [
+        "ema_spread",
+        "ema_spread_atr",
+        "retest_depth",
+        "trend_bias"
+      ],
+      "MODEL_CONSUMERS": [
+        "Gaussian_live_heuristic",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "Gaussian_live_heuristic",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "PASS"
+    },
+    {
+      "FEATURE": "ema_slow",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [
+        "ema_spread",
+        "ema_spread_atr",
+        "trend_bias"
+      ],
+      "MODEL_CONSUMERS": [
+        "Gaussian_live_heuristic",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "Gaussian_live_heuristic",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "PASS"
+    },
+    {
+      "FEATURE": "macd_line",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [
+        "macd_hist",
+        "macd_signal"
+      ],
+      "MODEL_CONSUMERS": [
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "PASS"
+    },
+    {
+      "FEATURE": "macd_signal",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [
+        "macd_hist"
+      ],
+      "MODEL_CONSUMERS": [
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "PASS"
+    },
+    {
+      "FEATURE": "rsi_14",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [],
+      "MODEL_CONSUMERS": [
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "PASS"
+    },
+    {
+      "FEATURE": "swing_high",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [
+        "break_of_structure",
+        "higher_high",
+        "liquidity_distance",
+        "liquidity_sweep"
+      ],
+      "MODEL_CONSUMERS": [
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "PASS"
+    },
+    {
+      "FEATURE": "swing_low",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [
+        "break_of_structure",
+        "liquidity_distance",
+        "liquidity_sweep",
+        "lower_low"
+      ],
+      "MODEL_CONSUMERS": [
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "PASS"
+    },
+    {
+      "FEATURE": "atr",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [
+        "disp_strength",
+        "disp_strength_atr_rescale",
+        "displacement_atr_ratio",
+        "ema_spread",
+        "ema_spread_atr",
+        "liquidity_distance",
+        "momentum_score",
+        "momentum_score_atr",
+        "retest_depth",
+        "volatility_ratio"
+      ],
+      "MODEL_CONSUMERS": [
+        "BitNet",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "BitNet",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "PASS"
+    },
+    {
+      "FEATURE": "macd_hist",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [],
+      "MODEL_CONSUMERS": [
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "PASS"
+    },
+    {
+      "FEATURE": "trend_bias",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [],
+      "MODEL_CONSUMERS": [
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "PASS"
+    },
+    {
+      "FEATURE": "disp_strength",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [
+        "disp_strength_atr_rescale"
+      ],
+      "MODEL_CONSUMERS": [
+        "BitNet",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "BitNet",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "PASS"
+    },
+    {
+      "FEATURE": "disp_strength_atr_rescale",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [],
+      "MODEL_CONSUMERS": [],
+      "STRATEGY_CONSUMERS": [],
+      "OBSERVABILITY_CONSUMERS": [],
+      "MANIFEST_CONSUMERS": [],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "NO_CONSUMERS"
+    },
+    {
+      "FEATURE": "ema_spread",
+      "AUTHORITATIVE_PRODUCER_COUNT": 0,
+      "AUTHORITATIVE_PRODUCER_PATHS": [],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [],
+      "MODEL_CONSUMERS": [
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [
+        {
+          "consumer": "Gaussian_v4 / FeaturePipeline / BacktestRunner",
+          "expectation": "legacy FM-022 relative spread (SUPERSEDED identity still in 38-vector)",
+          "canonical": "SUPERSEDED; successor = ema_spread_atr (FM-030) NOT in 38-vector",
+          "class": "SUPERSEDED_STILL_BOUND"
+        }
+      ],
+      "D8_STATUS": "SEMANTIC_COLLISION"
+    },
+    {
+      "FEATURE": "ema_spread_atr",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [],
+      "MODEL_CONSUMERS": [],
+      "STRATEGY_CONSUMERS": [],
+      "OBSERVABILITY_CONSUMERS": [],
+      "MANIFEST_CONSUMERS": [],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "NO_CONSUMERS"
+    },
+    {
+      "FEATURE": "momentum_score",
+      "AUTHORITATIVE_PRODUCER_COUNT": 0,
+      "AUTHORITATIVE_PRODUCER_PATHS": [],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [],
+      "MODEL_CONSUMERS": [
+        "Gaussian_live_heuristic",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "Gaussian_live_heuristic",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [
+        {
+          "consumer": "Gaussian_live_heuristic / Gaussian_v4 / FeaturePipeline",
+          "expectation": "legacy FM-023 (SUPERSEDED identity still in 38-vector)",
+          "canonical": "SUPERSEDED; successor = momentum_score_atr (FM-031) NOT in 38-vector",
+          "class": "SUPERSEDED_STILL_BOUND"
+        }
+      ],
+      "D8_STATUS": "SEMANTIC_COLLISION"
+    },
+    {
+      "FEATURE": "momentum_score_atr",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [],
+      "MODEL_CONSUMERS": [],
+      "STRATEGY_CONSUMERS": [],
+      "OBSERVABILITY_CONSUMERS": [],
+      "MANIFEST_CONSUMERS": [],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "NO_CONSUMERS"
+    },
+    {
+      "FEATURE": "volume_ratio",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [
+        "volume_spike"
+      ],
+      "MODEL_CONSUMERS": [
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "PASS"
+    },
+    {
+      "FEATURE": "volume_spike",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [],
+      "MODEL_CONSUMERS": [
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "PASS"
+    },
+    {
+      "FEATURE": "body_ratio",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [],
+      "MODEL_CONSUMERS": [
+        "BitNet",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner",
+        "CRTEngine"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "CRTEngine",
+        "BitNet",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "PASS"
+    },
+    {
+      "FEATURE": "displacement_atr_ratio",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/config_layer/crt_engine_v2.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [],
+      "MODEL_CONSUMERS": [],
+      "STRATEGY_CONSUMERS": [
+        "CRTEngine"
+      ],
+      "OBSERVABILITY_CONSUMERS": [],
+      "MANIFEST_CONSUMERS": [
+        "CRTEngine"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "PASS"
+    },
+    {
+      "FEATURE": "volatility_ratio",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [],
+      "MODEL_CONSUMERS": [
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "PASS"
+    },
+    {
+      "FEATURE": "displacement_retrace",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/config_layer/crt_engine_v2.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [],
+      "MODEL_CONSUMERS": [],
+      "STRATEGY_CONSUMERS": [
+        "CRTEngine"
+      ],
+      "OBSERVABILITY_CONSUMERS": [],
+      "MANIFEST_CONSUMERS": [
+        "CRTEngine"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "PASS"
+    },
+    {
+      "FEATURE": "higher_high",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [],
+      "MODEL_CONSUMERS": [
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "PASS"
+    },
+    {
+      "FEATURE": "break_of_structure",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [
+        "liquidity_distance"
+      ],
+      "MODEL_CONSUMERS": [
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "PASS"
+    },
+    {
+      "FEATURE": "liquidity_sweep",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [
+        "candles_since_retest",
+        "double_sweep",
+        "retest_depth",
+        "sweep_detected"
+      ],
+      "MODEL_CONSUMERS": [
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "PASS"
+    },
+    {
+      "FEATURE": "candles_since_retest",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [],
+      "MODEL_CONSUMERS": [
+        "BitNet",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "BitNet",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "PASS"
+    },
+    {
+      "FEATURE": "double_sweep",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [],
+      "MODEL_CONSUMERS": [
+        "BitNet",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner",
+        "CRTEngine"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "CRTEngine",
+        "BitNet",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "PASS"
+    },
+    {
+      "FEATURE": "lower_low",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [],
+      "MODEL_CONSUMERS": [
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "PASS"
+    },
+    {
+      "FEATURE": "sweep_detected",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [],
+      "MODEL_CONSUMERS": [
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "PASS"
+    },
+    {
+      "FEATURE": "liquidity_distance",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [
+        "liquidity_pressure_score"
+      ],
+      "MODEL_CONSUMERS": [
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "PASS"
+    },
+    {
+      "FEATURE": "retest_depth",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py",
+        "src/features/derived_math.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [],
+      "MODEL_CONSUMERS": [
+        "BitNet",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "BitNet",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "PASS"
+    },
+    {
+      "FEATURE": "hour_of_day",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [],
+      "MODEL_CONSUMERS": [
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": "int8 wall-clock hour 0..23",
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": "int8",
+      "RANGE_EXPECTATIONS": "[0,23]",
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "PASS"
+    },
+    {
+      "FEATURE": "session",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [],
+      "MODEL_CONSUMERS": [
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner",
+        "CRTEngine"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "CRTEngine",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": "int8 {0=Asia 00-07, 1=London 08-15, 2=NY 16-23}",
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": "int8 column / float32 vector",
+      "RANGE_EXPECTATIONS": "[0,2]",
+      "SEMANTIC_COLLISIONS": [
+        {
+          "consumer": "SESSION_MAP / session helpers",
+          "expectation": "london=0, newyork=1, asian=2",
+          "canonical": "Asia=0, London=1, NY=2",
+          "class": "ENCODING_PERMUTATION"
+        },
+        {
+          "consumer": "dashboard SESSION_LABELS",
+          "expectation": "1.0/2.0/3.0",
+          "canonical": "0/1/2 int8",
+          "class": "ENCODING_OFFSET"
+        },
+        {
+          "consumer": "CRT/live/backtest session paths",
+          "expectation": "string or config-window labels",
+          "canonical": "pipeline int8 0/1/2",
+          "class": "LABEL_VS_CODE"
+        }
+      ],
+      "D8_STATUS": "SEMANTIC_COLLISION"
+    },
+    {
+      "FEATURE": "trend_strength",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [],
+      "MODEL_CONSUMERS": [
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": "signed price-scale SMA slope",
+      "DTYPE_EXPECTATIONS": "float64 column / float32 vector",
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [
+        {
+          "consumer": "dual_engine.detect_regime local var trend_strength",
+          "expectation": "abs(ema_spread)",
+          "canonical": "SMA10(diff(SMA20(close))) signed nested rolling",
+          "class": "NAME_COLLISION_SEMANTIC"
+        },
+        {
+          "consumer": "s07/s08 scale-dependent thresholds",
+          "expectation": "thresholded on dual_engine-scale quantity",
+          "canonical": "price-scale nested SMA slope (no normalization)",
+          "class": "SCALE_THRESHOLD_MISMATCH"
+        }
+      ],
+      "D8_STATUS": "SEMANTIC_COLLISION"
+    },
+    {
+      "FEATURE": "liquidity_pressure_score",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [],
+      "MODEL_CONSUMERS": [
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": null,
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": null,
+      "RANGE_EXPECTATIONS": null,
+      "SEMANTIC_COLLISIONS": [],
+      "D8_STATUS": "PASS"
+    },
+    {
+      "FEATURE": "volatility_regime",
+      "AUTHORITATIVE_PRODUCER_COUNT": 1,
+      "AUTHORITATIVE_PRODUCER_PATHS": [
+        "src/features/feature_pipeline.py"
+      ],
+      "TRANSPORT_READER_COUNT": 0,
+      "DERIVED_FEATURE_CONSUMERS": [],
+      "MODEL_CONSUMERS": [
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "STRATEGY_CONSUMERS": [
+        "BacktestRunner"
+      ],
+      "OBSERVABILITY_CONSUMERS": [
+        "FeaturePipeline"
+      ],
+      "MANIFEST_CONSUMERS": [
+        "FeaturePipeline",
+        "BacktestRunner",
+        "Gaussian_v4_mirrored_38dim"
+      ],
+      "CONFIG_REFERENCES": [],
+      "ENCODING_EXPECTATIONS": "int8 {0,1,2} terciles of abs ATR14",
+      "UNITS_EXPECTATIONS": null,
+      "DTYPE_EXPECTATIONS": "int8 column / float32 vector",
+      "RANGE_EXPECTATIONS": "[0,2]",
+      "SEMANTIC_COLLISIONS": [
+        {
+          "consumer": "s05_grid",
+          "expectation": "string 'TRENDING' (and similar labels)",
+          "canonical": "int8 {0,1,2} tercile of absolute ATR14",
+          "class": "STRING_VS_INT8"
+        }
+      ],
+      "D8_STATUS": "SEMANTIC_COLLISION"
+    }
+  ],
+  "known_collisions": {
+    "session": [
+      {
+        "consumer": "SESSION_MAP / session helpers",
+        "expectation": "london=0, newyork=1, asian=2",
+        "canonical": "Asia=0, London=1, NY=2",
+        "class": "ENCODING_PERMUTATION"
+      },
+      {
+        "consumer": "dashboard SESSION_LABELS",
+        "expectation": "1.0/2.0/3.0",
+        "canonical": "0/1/2 int8",
+        "class": "ENCODING_OFFSET"
+      },
+      {
+        "consumer": "CRT/live/backtest session paths",
+        "expectation": "string or config-window labels",
+        "canonical": "pipeline int8 0/1/2",
+        "class": "LABEL_VS_CODE"
+      }
+    ],
+    "trend_strength": [
+      {
+        "consumer": "dual_engine.detect_regime local var trend_strength",
+        "expectation": "abs(ema_spread)",
+        "canonical": "SMA10(diff(SMA20(close))) signed nested rolling",
+        "class": "NAME_COLLISION_SEMANTIC"
+      },
+      {
+        "consumer": "s07/s08 scale-dependent thresholds",
+        "expectation": "thresholded on dual_engine-scale quantity",
+        "canonical": "price-scale nested SMA slope (no normalization)",
+        "class": "SCALE_THRESHOLD_MISMATCH"
+      }
+    ],
+    "volatility_regime": [
+      {
+        "consumer": "s05_grid",
+        "expectation": "string 'TRENDING' (and similar labels)",
+        "canonical": "int8 {0,1,2} tercile of absolute ATR14",
+        "class": "STRING_VS_INT8"
+      }
+    ],
+    "ema_spread": [
+      {
+        "consumer": "Gaussian_v4 / FeaturePipeline / BacktestRunner",
+        "expectation": "legacy FM-022 relative spread (SUPERSEDED identity still in 38-vector)",
+        "canonical": "SUPERSEDED; successor = ema_spread_atr (FM-030) NOT in 38-vector",
+        "class": "SUPERSEDED_STILL_BOUND"
+      }
+    ],
+    "momentum_score": [
+      {
+        "consumer": "Gaussian_live_heuristic / Gaussian_v4 / FeaturePipeline",
+        "expectation": "legacy FM-023 (SUPERSEDED identity still in 38-vector)",
+        "canonical": "SUPERSEDED; successor = momentum_score_atr (FM-031) NOT in 38-vector",
+        "class": "SUPERSEDED_STILL_BOUND"
+      }
+    ]
+  }
+}

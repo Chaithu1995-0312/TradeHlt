@@ -1,0 +1,142 @@
+{
+  "schema_id": "H_RR_THRESHOLD_001_EXPERIMENT_DEFINITION_V1",
+  "program_alias": "H-RR-THRESHOLD-001",
+  "title": "PRODUCTION_R_THRESHOLD_TP1_AND_MIN_RR",
+  "status": "RUN_COMPLETE",
+  "task_class": "EXPLORATORY_RESEARCH",
+  "authority": "research",
+  "created_at_utc": "2026-07-17T00:00:00Z",
+  "pre_registered_before_outcome_measurement": true,
+  "human_doc": "docs/research-readiness/h-rr-threshold-001-preregistration.md",
+  "hard_flags": {
+    "PRODUCTION_BEHAVIOR_CHANGED": false,
+    "ENTRY_DISCOVERY": false,
+    "POST_HOC_THRESHOLD_MINING": false,
+    "RR_FUSION_REENABLE": false,
+    "DERIVED_EDGE_FROM_XAUUSD_DESCRIPTIVE_PACK": false,
+    "AUTO_PROMOTE_CONFIG": false
+  },
+  "motivation": {
+    "trigger": "User explicitly opened preregistered R-threshold study after RR contract D/SL-TP wiring",
+    "related": [
+      "F-025",
+      "F-048",
+      "D_wiring_2026-07-17",
+      "exit_grid.py"
+    ]
+  },
+  "hypothesis": {
+    "arm_A": {
+      "H": "Admission by planned TP1 R >= min_rr improves OOS mean net-R and/or PF of admitted book vs incumbent min_rr=1.5 after costs",
+      "H0": "No pre-registered min_rr cell beats incumbent on primary OOS metric after MTC"
+    },
+    "arm_B": {
+      "H": "Changing primary TP R-multiple improves OOS mean net-R vs incumbent TP cell after costs under intrabar_fixed",
+      "H0": "No pre-registered TP cell beats incumbent (F-025 prior: exit not expectancy alpha)"
+    }
+  },
+  "incumbent": {
+    "min_rr_ratio": 1.5,
+    "tp1_atr_multiplier_default": 1.0,
+    "tp1_atr_multiplier_breakout": 1.5,
+    "tp1_atr_multiplier_pullback": 0.8,
+    "tp1_atr_multiplier_liq_sweep": 1.2,
+    "tp1_atr_multiplier_reversal": 1.0,
+    "tp2_atr_multiplier": 2.0,
+    "sl_atr_buffer": 0.2,
+    "config_ref": "configs/production/v2_multi_2026_04.json"
+  },
+  "grids_frozen": {
+    "arm_A_min_rr": [
+      1.0,
+      1.2,
+      1.5,
+      2.0
+    ],
+    "arm_B_tp_atr_mult": [
+      1.0,
+      1.5,
+      2.0
+    ],
+    "sl_swept": false,
+    "cartesian_A_x_B": "secondary_descriptive_only_not_in_BH"
+  },
+  "population": {
+    "primary_universe": [
+      "BNBUSDT",
+      "BTCUSDT",
+      "ETHUSDT",
+      "SOLUSDT"
+    ],
+    "timeframe": "M15",
+    "optional_diagnostic_universe": [
+      "XAUUSD"
+    ],
+    "entry_stream": "frozen_artifact_pin_required_at_run_start",
+    "entry_families": [
+      "expansion_breakout",
+      "mean_reversion"
+    ],
+    "costs_bps_round_trip": 12,
+    "exit_model": "intrabar_fixed",
+    "oos_split": 0.3,
+    "oos_mode": "time_ordered_70_30",
+    "min_n": 30,
+    "n_perm": 1000
+  },
+  "measurement": {
+    "planned_R": "compute_crt_levels TP1 geometry",
+    "realized_path": "research.exit_grid.net_rr + forward_walk",
+    "primary_metrics": [
+      "mean_net_R",
+      "profit_factor"
+    ],
+    "diagnostic_metrics": [
+      "win_rate",
+      "max_dd_r",
+      "admit_rate"
+    ]
+  },
+  "gates": {
+    "oos_E_ge_0": true,
+    "oos_PF_ge_1": true,
+    "strict_beat_incumbent_E_oos": true,
+    "retention_70_30": true,
+    "permutation_p_le_0.05": true,
+    "bh_fdr": 0.05,
+    "verdicts": [
+      "INSUFFICIENT",
+      "REJECT",
+      "REDUNDANT",
+      "PROMOTE_RESEARCH",
+      "ENGINEERING_ONLY"
+    ]
+  },
+  "forbidden_without_new_prereg": [
+    "trailing_stops",
+    "time_stops",
+    "partials",
+    "full_sl_tp_grid_expansion",
+    "engine_score_cell_selection",
+    "rr_fusion_enable",
+    "near_miss_mfe_exit_rules",
+    "cli_override_of_frozen_grid"
+  ],
+  "priors": [
+    "F-025_exit_not_expectancy_alpha",
+    "higher_min_rr_reduces_throughput",
+    "D_wiring_honesty_not_edge"
+  ],
+  "artifacts_on_run": {
+    "manifest": "results/research/h_rr_threshold_001/manifest.json",
+    "report_json": "results/research/h_rr_threshold_001/report.json",
+    "report_md": "results/research/h_rr_threshold_001/REPORT.md"
+  },
+  "stop_rule": "one_full_primary_universe_run_then_stop",
+  "run_artifacts": "results/research/h_rr_threshold_001/",
+  "run_verdict": {
+    "any_non_incumbent_PROMOTE_RESEARCH": false,
+    "arm_B_all_cells_oos_E_negative": true,
+    "recommendation": "No production config change. REJECT path under prereg gates; leave knobs; config hygiene only if live ops require alignment."
+  }
+}

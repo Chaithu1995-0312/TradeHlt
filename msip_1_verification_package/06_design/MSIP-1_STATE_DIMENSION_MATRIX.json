@@ -1,0 +1,177 @@
+{
+  "_doc": "Proposed MSIP state-dimension matrix (UNDER VERIFICATION \u2014 not implemented).",
+  "generated_at": "2026-07-14T07:08:43Z",
+  "vector_name": "MarketStateVector",
+  "status": "PROPOSED",
+  "dimensions": [
+    {
+      "dimension_id": "MSD-STRUCTURE",
+      "name": "structure_state",
+      "semantic": "Swing/structure regime: range vs break vs sweep presence",
+      "candidate_features": [
+        "swing_high",
+        "swing_low",
+        "higher_high",
+        "lower_low",
+        "break_of_structure",
+        "liquidity_sweep",
+        "sweep_detected",
+        "double_sweep"
+      ],
+      "candidate_fm": [
+        "FM-045",
+        "FM-046"
+      ],
+      "output_type": "categorical_or_int_code",
+      "config_semantics": "thresholds for structure significance if any \u2014 config-owned",
+      "proposed_consumers": [
+        "telemetry",
+        "research",
+        "optional CRT shadow"
+      ],
+      "depends_on_crt": false,
+      "notes": "Must respect FC1-A causal swing publication; do not use historical LEAKING labels from fc05 graph as current truth"
+    },
+    {
+      "dimension_id": "MSD-LIQUIDITY",
+      "name": "liquidity_state",
+      "semantic": "Distance/pressure relative to structural levels",
+      "candidate_features": [
+        "liquidity_distance",
+        "liquidity_pressure_score",
+        "liquidity_sweep"
+      ],
+      "candidate_fm": [
+        "FM-025",
+        "FM-026"
+      ],
+      "output_type": "float_and_or_tercile",
+      "config_semantics": "optional banding thresholds",
+      "proposed_consumers": [
+        "telemetry",
+        "research"
+      ],
+      "depends_on_crt": false,
+      "notes": "FM-025 has UNRESOLVED provenance debt (M6R); FM-026 independently discharged (M7V)"
+    },
+    {
+      "dimension_id": "MSD-VOLATILITY",
+      "name": "volatility_state",
+      "semantic": "Canonical volatility_regime int8 tercile of absolute ATR14",
+      "candidate_features": [
+        "volatility_regime",
+        "atr",
+        "true_range",
+        "volatility_ratio"
+      ],
+      "candidate_fm": [
+        "FM-041",
+        "FM-040",
+        "FM-024"
+      ],
+      "output_type": "int8_{0,1,2}",
+      "config_semantics": "window/edges currently structural in pipeline; externalization is design decision",
+      "proposed_consumers": [
+        "telemetry",
+        "research",
+        "NOT s05 string without adapter"
+      ],
+      "depends_on_crt": false,
+      "notes": "Consumer debt: s05_grid string TRENDING vs int8"
+    },
+    {
+      "dimension_id": "MSD-SESSION",
+      "name": "session_state",
+      "semantic": "Canonical pipeline session int8 Asia=0/London=1/NY=2",
+      "candidate_features": [
+        "session",
+        "hour_of_day"
+      ],
+      "candidate_fm": [],
+      "output_type": "int8_{0,1,2}",
+      "config_semantics": "hour boundaries currently pipeline-hardcoded; externalization is design decision",
+      "proposed_consumers": [
+        "telemetry",
+        "research",
+        "CRT allowed_sessions only via explicit adapter"
+      ],
+      "depends_on_crt": false,
+      "notes": "Encoding debts vs SESSION_MAP/dashboard/CRT strings \u2014 must not silently unify"
+    },
+    {
+      "dimension_id": "MSD-TREND",
+      "name": "trend_state",
+      "semantic": "Canonical trend_strength nested rolling + optional trend_bias sign",
+      "candidate_features": [
+        "trend_strength",
+        "trend_bias",
+        "ema_fast",
+        "ema_slow"
+      ],
+      "candidate_fm": [
+        "FM-043",
+        "FM-044"
+      ],
+      "output_type": "signed_float_plus_sign",
+      "config_semantics": "windows currently structural",
+      "proposed_consumers": [
+        "telemetry",
+        "research"
+      ],
+      "depends_on_crt": false,
+      "notes": "NAME COLLISION: dual_engine local trend_strength = abs(ema_spread) \u2014 different quantity"
+    },
+    {
+      "dimension_id": "MSD-CRT_PHASE",
+      "name": "crt_phase",
+      "semantic": "Optional CRTState projection into MarketStateVector",
+      "candidate_features": [],
+      "candidate_fm": [
+        "FM-010",
+        "FM-027",
+        "FM-028"
+      ],
+      "output_type": "enum_9_states",
+      "config_semantics": "owned by crt_engine / active_models state_contracts \u2014 MSIP MUST NOT fork",
+      "proposed_consumers": [
+        "telemetry",
+        "research",
+        "shadow co-display"
+      ],
+      "depends_on_crt": true,
+      "notes": "OQ-002 unresolved; if included, MSIP is a reader of CRT, not a second SM"
+    },
+    {
+      "dimension_id": "MSD-SETUP_QUALITY",
+      "name": "setup_quality",
+      "semantic": "Optional composite of body_ratio / retest_depth / disp metrics at event bars",
+      "candidate_features": [
+        "body_ratio",
+        "retest_depth",
+        "disp_strength",
+        "displacement_retrace",
+        "displacement_atr_ratio"
+      ],
+      "candidate_fm": [
+        "FM-010",
+        "FM-021",
+        "FM-020",
+        "FM-027",
+        "FM-028"
+      ],
+      "output_type": "float_or_tier",
+      "config_semantics": "weights/thresholds config-owned if introduced",
+      "proposed_consumers": [
+        "research",
+        "shadow only until Authority Ladder"
+      ],
+      "depends_on_crt": "partial",
+      "notes": "FM-021 is gated composition; FM-027 is CRT-cache identity \u2014 do not collapse names"
+    }
+  ],
+  "non_dimensions": [
+    "Economic expectancy / PnL",
+    "Order placement authority",
+    "Model training labels without re-derive"
+  ]
+}

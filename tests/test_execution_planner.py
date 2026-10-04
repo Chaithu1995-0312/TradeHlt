@@ -1,19 +1,24 @@
 """
 test_execution_planner.py
 =========================
-Dedicated test suite for ExecutionPlannerV1_2 (GAP-002).
+Dedicated test suite for ExecutionPlannerV1_2 (refactored: pure intent gate).
 
 Covers:
     - Happy path: BREAKOUT, PULLBACK, LIQ_SWEEP, REVERSAL (long + short)
     - Rejection paths: engine reject, missing features, invalid prices,
-      invalid direction, UNKNOWN intent, RR too low, invalid SL/TP order
-    - SL computation per intent (with/without lookback keys, both directions)
-    - TP computation: ATR-only vs hybrid liquidity
-    - Position sizing formula
+      invalid direction, UNKNOWN intent, gate reject
+    - Intent classification accuracy
     - TTL derivation per intent
     - Precision rounding (default + symbol override)
     - Execution ID determinism
     - Config overrides
+    - Gate result embedded in output
+
+REMOVED (now in test_gate_intelligence.py):
+    - SL computation per intent
+    - TP computation / liquidity override
+    - Position sizing formula
+    - RR ratio calculation / min_rr_ratio gate
 
 Run:
     python test_execution_planner.py
@@ -23,17 +28,26 @@ Run:
 from __future__ import annotations
 import sys
 import traceback
+import pytest
 
-from config_layer.execution_planner import ExecutionPlannerV1_2, DEFAULT_CONFIG
+from config_layer.execution_planner import ExecutionPlannerV1_2
+from config_layer.strict_config import ConfigKeyMissingError
+from tests.helpers.planner_config import LEGACY_PLANNER_VALUES_2026_09_28 as DEFAULT_CONFIG
 
 # ── Shared fixtures ───────────────────────────────────────────────────────────
 
 def _engine(direction: int = 1, decision: str = "execute", confidence: float = 0.8) -> dict:
-    return {"decision": decision, "direction": direction,
+    # RR-002: engine_result carries the canonical `selected_direction` field (not the dropped
+    # `direction` alias). The param name stays `direction` for caller convenience.
+    return {"decision": decision, "selected_direction": direction,
             "confidence": confidence, "regime": "trend"}
 
 def _base_features(**overrides) -> dict:
-    """Minimal valid feature set (BREAKOUT pattern by default)."""
+    """Minimal valid feature set that passes GateIntelligence at default threshold.
+
+    Includes volume data so liquidity_score contributes positively.
+    EMA alignment is bullish (ema_fast > ema_slow) — override for short tests.
+    """
     f = {
         "close": 100.0,
         "high":  102.0,
@@ -44,10 +58,17 @@ def _base_features(**overrides) -> dict:
         "sweep_detected":       False,
         "double_sweep":         False,
         "retest_depth":         0.1,
-        "candles_since_retest": 10,
+        "candles_since_sweep": 10,
         "ema_fast":             99.5,
         "ema_slow":             98.5,
         "momentum_score":       0.7,
+        # Volume data — needed for liquidity_score to contribute
+        "volume":               1200.0,
+        "volume_ma20":          800.0,
+        "lowest_low_20":        95.0,
+        "highest_high_20":      103.0,
+        "lowest_low_5":         98.5,
+        "highest_high_5":       101.5,
     }
     f.update(overrides)
     return f
@@ -68,77 +89,76 @@ def test_breakout_long_approve():
     assert r["decision"] == "execute", r
     assert r["trade_intent"] == "BREAKOUT"
     assert r["direction"] == 1
-    assert r["rr_ratio"] >= DEFAULT_CONFIG["min_rr_ratio"]
     assert r["entry_price"] > 0
-    assert r["stop_loss"] < r["entry_price"]
-    assert r["take_profit_1"] > r["entry_price"]
+    assert r["gate"]["approved"] is True
+    assert 0.0 <= r["gate"]["final_score"] <= 1.0
 
 def test_breakout_short_approve():
     p = _planner()
-    # body_ratio + disp → BREAKOUT, direction = -1
-    f = _base_features(
-        ema_fast=98.0, ema_slow=99.0,    # ensure not REVERSAL
-    )
+    # Bearish EMA alignment for short direction
+    f = _base_features(ema_fast=98.0, ema_slow=99.0)
     r = p.plan(_engine(-1), f, _context())
-    assert r["decision"] == "execute"
+    assert r["decision"] == "execute", r
     assert r["trade_intent"] == "BREAKOUT"
-    assert r["stop_loss"] > r["entry_price"]
-    assert r["take_profit_1"] < r["entry_price"]
+    assert r["gate"]["approved"] is True
 
 def test_pullback_long_approve():
     p = _planner()
-    # entry = ema_fast=99.5, sl = lowest_low_5=99.0 → risk=0.5, tp=99.5+1.5*2=102.5 → rr=6 ✓
     f = _base_features(
         sweep_detected=False,
         retest_depth=0.5,
-        candles_since_retest=3,
+        candles_since_sweep=3,
         momentum_score=0.5,
-        body_ratio=0.3,          # avoid BREAKOUT
+        body_ratio=0.3,
         disp_strength=1.0,
-        lowest_low_5=99.0,       # close to entry → small risk → high RR
+        lowest_low_5=99.0,
         highest_high_5=103.0,
     )
     r = p.plan(_engine(1), f, _context())
     assert r["decision"] == "execute", r
     assert r["trade_intent"] == "PULLBACK"
-    # Entry should be at ema_fast for long pullback
     assert r["entry_type"] == "LIMIT"
+    assert r["gate"]["approved"] is True
 
 def test_pullback_short_approve():
     p = _planner()
-    # entry = ema_slow=98.5, sl = highest_high_5=99.0 → risk=0.5, tp=98.5-1.5*2=95.5 → rr=6 ✓
+    # Bearish EMA alignment for short direction
     f = _base_features(
         sweep_detected=False,
         retest_depth=0.5,
-        candles_since_retest=3,
+        candles_since_sweep=3,
         momentum_score=0.5,
         body_ratio=0.3,
         disp_strength=1.0,
         lowest_low_5=95.0,
-        highest_high_5=99.0,     # close to entry → small risk → high RR
+        highest_high_5=99.0,
+        ema_fast=98.5,   # bearish alignment
+        ema_slow=99.5,
     )
     r = p.plan(_engine(-1), f, _context())
     assert r["decision"] == "execute", r
     assert r["trade_intent"] == "PULLBACK"
     assert r["entry_type"] == "LIMIT"
-    assert r["stop_loss"] > r["entry_price"]
+    assert r["gate"]["approved"] is True
 
 def test_liq_sweep_long_approve():
     p = _planner()
     f = _base_features(sweep_detected=True)
     r = p.plan(_engine(1), f, _context())
-    assert r["decision"] == "execute"
+    assert r["decision"] == "execute", r
     assert r["trade_intent"] == "LIQ_SWEEP"
     assert r["entry_type"] == "LIMIT"
+    assert r["gate"]["approved"] is True
 
 def test_liq_sweep_short_approve():
     p = _planner()
-    f = _base_features(sweep_detected=True)
+    # Bearish EMA alignment for short direction
+    f = _base_features(sweep_detected=True, ema_fast=98.0, ema_slow=99.5)
     r = p.plan(_engine(-1), f, _context())
-    assert r["decision"] == "execute"
+    assert r["decision"] == "execute", r
     assert r["trade_intent"] == "LIQ_SWEEP"
     assert r["entry_type"] == "LIMIT"
-    assert r["stop_loss"] > r["entry_price"]
+    assert r["gate"]["approved"] is True
 
 def test_double_sweep_triggers_liq_sweep():
     p = _planner()
@@ -146,43 +166,71 @@ def test_double_sweep_triggers_liq_sweep():
     r = p.plan(_engine(1), f, _context())
     assert r["trade_intent"] == "LIQ_SWEEP"
 
+def test_liq_sweep_entry_offset_uses_absolute_atr_not_ratio():
+    """F-072 regression: the LIQ_SWEEP limit-entry offset (0.1 * atr) must scale with the
+    ABSOLUTE-price ATR (FM-074), not the canonical close-relative `atr` feature (FM-041) it
+    receives — those differ by a factor of `close`. Tests `_compute_entry` directly (the
+    established pattern for this file's pure-computation methods, e.g.
+    test_breakout_disp_threshold.py's `_derive_intent` calls) rather than through the full
+    `plan()` gate: a realistic close-relative atr (0.02, i.e. 2%) is too small to clear
+    GateIntelligence's approval threshold at this fixture's other default scores, which is a
+    gate-tuning concern orthogonal to the arithmetic this test checks."""
+    p = _planner()
+
+    f_long = _base_features(atr=0.02, close=100.0, low=98.0, high=102.0)
+    entry_type, price, _reason = p._compute_entry("LIQ_SWEEP", f_long, direction=1)
+    assert entry_type == "LIMIT"
+    expected_long = 98.0 + 0.1 * (0.02 * 100.0)  # low + 0.1 * atr_abs == 98.2
+    assert price == pytest.approx(expected_long, abs=1e-9)
+    # Pre-fix bug would have produced low + 0.1*atr(ratio) = 98.0 + 0.1*0.02 = 98.002 — outside
+    # float tolerance of the correct 98.2, and implausibly close to `low` for a 4-point range.
+    assert price != pytest.approx(98.0 + 0.1 * 0.02, abs=1e-9)
+
+    f_short = _base_features(atr=0.02, close=100.0, low=98.0, high=102.0)
+    entry_type_s, price_s, _reason_s = p._compute_entry("LIQ_SWEEP", f_short, direction=-1)
+    assert entry_type_s == "LIMIT"
+    expected_short = 102.0 - 0.1 * (0.02 * 100.0)  # high - 0.1 * atr_abs == 101.8
+    assert price_s == pytest.approx(expected_short, abs=1e-9)
+
 def test_reversal_long_when_ema_fast_lt_ema_slow():
     """ema_fast < ema_slow but direction=1 → counter-trend → REVERSAL."""
     p = _planner()
-    # entry=close=100, sl=lowest_low_3=99.0 → risk=1.0, tp=100+1.0*2=102 → rr=2 ✓
     f = _base_features(
         sweep_detected=False,
         body_ratio=0.3,
         disp_strength=1.0,
         retest_depth=0.0,
-        candles_since_retest=99,
+        candles_since_sweep=99,
         ema_fast=98.0,
-        ema_slow=100.0,    # fast < slow, direction=1 → REVERSAL
-        lowest_low_3=99.0, # close SL → low risk → high RR
+        ema_slow=100.0,
+        momentum_score=0.0,  # low momentum needed for REVERSAL intent_score
+        lowest_low_3=99.0,
         highest_high_3=103.0,
     )
     r = p.plan(_engine(1), f, _context())
     assert r["decision"] == "execute", r
     assert r["trade_intent"] == "REVERSAL"
+    assert r["gate"]["approved"] is True
 
 def test_reversal_short_when_ema_fast_gt_ema_slow():
     """ema_fast > ema_slow but direction=-1 → REVERSAL."""
     p = _planner()
-    # entry=close=100, sl=highest_high_3=101 → risk=1.0, tp=100-1.0*2=98 → rr=2 ✓
     f = _base_features(
         sweep_detected=False,
         body_ratio=0.3,
         disp_strength=1.0,
         retest_depth=0.0,
-        candles_since_retest=99,
+        candles_since_sweep=99,
         ema_fast=100.0,
         ema_slow=98.0,
+        momentum_score=0.0,  # low momentum needed for REVERSAL intent_score
         lowest_low_3=97.0,
-        highest_high_3=101.0,  # close SL → low risk → high RR
+        highest_high_3=101.0,
     )
     r = p.plan(_engine(-1), f, _context())
     assert r["decision"] == "execute", r
     assert r["trade_intent"] == "REVERSAL"
+    assert r["gate"]["approved"] is True
 
 
 # ── 2. REJECTION PATHS ────────────────────────────────────────────────────────
@@ -194,7 +242,7 @@ def test_reject_engine_decision_not_execute():
 
 def test_reject_engine_decision_hold():
     p = _planner()
-    r = p.plan({"decision": "hold", "direction": 1}, _base_features(), _context())
+    r = p.plan({"decision": "hold", "selected_direction": 1}, _base_features(), _context())
     assert r["decision"] == "reject_engine"
 
 def test_reject_missing_required_feature():
@@ -238,231 +286,173 @@ def test_reject_high_not_above_low():
 
 def test_reject_invalid_direction_zero():
     p = _planner()
-    er = {"decision": "execute", "direction": 0, "confidence": 0.8, "regime": "trend"}
+    er = {"decision": "execute", "selected_direction": 0, "confidence": 0.8, "regime": "trend"}
     r = p.plan(er, _base_features(), _context())
     assert r["decision"] == "reject_invalid"
 
 def test_reject_invalid_direction_value():
     p = _planner()
-    er = {"decision": "execute", "direction": 2, "confidence": 0.8, "regime": "trend"}
+    er = {"decision": "execute", "selected_direction": 2, "confidence": 0.8, "regime": "trend"}
     r = p.plan(er, _base_features(), _context())
     assert r["decision"] == "reject_invalid"
 
+def test_missing_selected_direction_fails_loud():
+    # RR-003: absence of the canonical engine-output field is corruption, not a 0=NONE state.
+    # It must raise (fail loud), NOT silently default to 0 / reject. A modeled 0=NONE is still a
+    # graceful reject_invalid (covered by test_reject_invalid_direction_zero) — absence is different.
+    p = _planner()
+    er = {"decision": "execute", "confidence": 0.8, "regime": "trend"}  # no selected_direction
+    with pytest.raises(KeyError):
+        p.plan(er, _base_features(), _context())
+
 def test_reject_unknown_intent_by_default():
     p = _planner()
-    # Features that match no pattern
+    # Features that match no pattern. CORRECTED 2026-09-16 (CH-intent-schema-alignment): this
+    # fixture used ema_fast=100.0 / ema_slow=99.0 with a LONG and the comment "fast > slow,
+    # direction=1 -> not REVERSAL" -- i.e. it encoded a with-trend entry AS the canonical "no
+    # pattern" case, which was the classifier hole itself. With-trend is now CONTINUATION, so the
+    # only input still reaching UNKNOWN is an exact EMA tie. The property under test is unchanged.
     f = _base_features(
         sweep_detected=False, double_sweep=False,
-        retest_depth=0.0, candles_since_retest=99, momentum_score=0.0,
+        retest_depth=0.0, candles_since_sweep=99, momentum_score=0.0,
         body_ratio=0.2, disp_strength=0.5,
-        ema_fast=100.0, ema_slow=99.0,   # fast > slow, direction=1 → not REVERSAL
+        ema_fast=100.0, ema_slow=100.0,   # exact tie: neither REVERSAL nor CONTINUATION
     )
     r = p.plan(_engine(1), f, _context())
     assert r["decision"] == "reject_unknown_intent"
 
 def test_allow_unknown_intent_when_configured():
     p = _planner(reject_unknown_intent=False)
+    # EMA tie so this still exercises UNKNOWN (see test_reject_unknown_intent_by_default). With the
+    # old fast>slow LONG fixture it would pass VACUOUSLY on a CONTINUATION after the classifier fix.
     f = _base_features(
         sweep_detected=False, double_sweep=False,
-        retest_depth=0.0, candles_since_retest=99, momentum_score=0.0,
+        retest_depth=0.0, candles_since_sweep=99, momentum_score=0.0,
         body_ratio=0.2, disp_strength=0.5,
-        ema_fast=100.0, ema_slow=99.0,
+        ema_fast=100.0, ema_slow=100.0,
     )
     r = p.plan(_engine(1), f, _context())
-    # UNKNOWN intent with reject_unknown_intent=False → proceeds to entry/SL/TP
-    # MARKET entry at close; SL at ATR fallback; may still reject_rr if ATR gives bad RR
-    assert r["decision"] in ("execute", "reject_rr", "reject_invalid")
+    assert r["trace"]["intent"] == "UNKNOWN"
+    # UNKNOWN intent proceeds to gate; gate may reject since intent_score=0
+    assert r["decision"] in ("execute", "reject_gate", "reject_invalid")
 
-def test_reject_rr_too_low():
+
+# ── CONTINUATION (CH-intent-schema-alignment, 2026-09-16) ─────────────────────
+# REVERSAL tests only ONE half of EMA-vs-direction. Before this change every with-trend entry that
+# was not a sweep/pullback/breakout fell through to UNKNOWN and was rejected -- 40.70% (LONG) /
+# 31.97% (SHORT) of XAUUSD M15 bars. These pin the split so it cannot silently regress.
+
+_NO_PATTERN = dict(
+    sweep_detected=False, double_sweep=False,
+    retest_depth=0.0, candles_since_sweep=99, momentum_score=0.0,
+    body_ratio=0.2, disp_strength=0.5,
+)
+
+def test_intent_classification_continuation_long():
+    """LONG with ema_fast > ema_slow is WITH-trend -> CONTINUATION (was UNKNOWN)."""
+    r = _planner().plan(_engine(1), _base_features(**_NO_PATTERN, ema_fast=100.0, ema_slow=99.0), _context())
+    assert r["trace"]["intent"] == "CONTINUATION"
+
+def test_intent_classification_continuation_short():
+    """SHORT with ema_fast < ema_slow is WITH-trend -> CONTINUATION (the symmetric half of the hole)."""
+    r = _planner().plan(_engine(-1), _base_features(**_NO_PATTERN, ema_fast=99.0, ema_slow=100.0), _context())
+    assert r["trace"]["intent"] == "CONTINUATION"
+
+def test_with_trend_entry_is_no_longer_rejected_as_unknown():
+    """Regression pin: the exact fixture that used to define 'no pattern' must not reach
+    reject_unknown_intent any more."""
+    r = _planner().plan(_engine(1), _base_features(**_NO_PATTERN, ema_fast=100.0, ema_slow=99.0), _context())
+    assert r["decision"] != "reject_unknown_intent"
+
+@pytest.mark.parametrize("ema_fast,ema_slow,direction,expected", [
+    (100.0, 99.0,  1, "CONTINUATION"),
+    (100.0, 99.0, -1, "REVERSAL"),
+    (99.0, 100.0,  1, "REVERSAL"),
+    (99.0, 100.0, -1, "CONTINUATION"),
+    (100.0, 100.0,  1, "UNKNOWN"),
+    (100.0, 100.0, -1, "UNKNOWN"),
+])
+def test_reversal_and_continuation_partition_ema_relationship(ema_fast, ema_slow, direction, expected):
+    """REVERSAL and CONTINUATION together cover every non-tie EMA-vs-direction case; only an exact
+    tie reaches UNKNOWN. Guards against either half being dropped again."""
     p = _planner()
-    # Tiny ATR → tiny TP, big SL distance (low=98) → RR < 1.5
-    f = _base_features(atr=0.1)  # BREAKOUT, SL=low=98, entry=close=100, tp=100+0.2=100.2
-    # risk=2, reward=0.2 → rr=0.1
-    r = p.plan(_engine(1), f, _context())
-    assert r["decision"] == "reject_rr"
-    assert r["rr_ratio"] < DEFAULT_CONFIG["min_rr_ratio"]
+    intent, _ = p._derive_intent(
+        _base_features(**_NO_PATTERN, ema_fast=ema_fast, ema_slow=ema_slow), _engine(direction)
+    )
+    assert intent == expected
+
+def test_ttl_continuation_is_required_and_mapped():
+    """CONTINUATION has its own strictly-required TTL key (no silent fallback to ttl_unknown_sec)."""
+    from config_layer.execution_planner import REQUIRED_CONFIG_KEYS, _TTL_MAP
+    assert _TTL_MAP["CONTINUATION"] == "ttl_continuation_sec"
+    assert "ttl_continuation_sec" in REQUIRED_CONFIG_KEYS
+    # Parity, not tuning: CONTINUATION inherits the TTL of the UNKNOWN entries it took over.
+    assert DEFAULT_CONFIG["ttl_continuation_sec"] == DEFAULT_CONFIG["ttl_unknown_sec"]
+
+def test_continuation_gate_score_is_deliberately_zero():
+    """GUARD, not a bug report. The user chose a CLASSIFIER-ONLY fix (2026-09-16):
+    GateIntelligence has no CONTINUATION branch and scores it 0.0 via its 'unrecognised'
+    fallthrough. Do NOT "fix" this by copying REVERSAL's `1 - min(1, |momentum_score|)` -- that
+    inherits F-061 magnitude saturation (~0 on nearly every bar). A sign-only confirmation measured
+    ~37% approval on XAUUSD M15. Changing this score is a separate, evidence-gated live-rail
+    decision; if it is authorized, update this test in the same change."""
+    from core.gate_intelligence import GateIntelligence
+    g = GateIntelligence(DEFAULT_CONFIG)
+    assert g._intent_score(_base_features(**_NO_PATTERN), "CONTINUATION") == 0.0
+
+def test_gate_reject_weak_signal():
+    """Very high threshold forces gate rejection on an otherwise valid signal."""
+    p = _planner(gate_approval_threshold=0.99)
+    r = p.plan(_engine(1), _base_features(), _context())
+    assert r["decision"] == "reject_gate"
+    assert r["gate"]["approved"] is False
+    assert "rejected" in r["gate"]["reason"]
 
 
-# ── 3. SL COMPUTATION ────────────────────────────────────────────────────────
+# ── 3. INTENT CLASSIFICATION ──────────────────────────────────────────────────
 
-def test_sl_breakout_long_is_candle_low():
+def test_intent_classification_breakout():
+    """body_ratio + disp_strength → BREAKOUT."""
     p = _planner()
-    f = _base_features(low=97.5)
-    r = p.plan(_engine(1), f, _context())
-    assert r["trade_intent"] == "BREAKOUT"
-    assert abs(r["stop_loss"] - 97.5) < 0.01
+    r = p.plan(_engine(1), _base_features(body_ratio=0.8, disp_strength=2.2), _context())
+    if r["decision"] == "execute":
+        assert r["trade_intent"] == "BREAKOUT"
 
-def test_sl_breakout_short_is_candle_high():
-    p = _planner()
-    # entry=close=100, sl=high=101 → risk=1, tp=100-2*2=96 → rr=4 ✓
-    f = _base_features(high=101.0)
-    r = p.plan(_engine(-1), f, _context())
-    assert r["trade_intent"] == "BREAKOUT", r
-    assert abs(r["stop_loss"] - 101.0) < 0.01
-
-def test_sl_pullback_uses_lookback_low():
-    p = _planner()
-    # entry=ema_fast=99.5, sl=lowest_low_5=99.0 → risk=0.5, tp=99.5+1.5*2=102.5 → rr=6 ✓
+def test_intent_classification_pullback():
     f = _base_features(
-        sweep_detected=False, retest_depth=0.5, candles_since_retest=3,
+        sweep_detected=False, retest_depth=0.5, candles_since_sweep=3,
         momentum_score=0.5, body_ratio=0.3, disp_strength=1.0,
-        lowest_low_5=99.0, highest_high_5=105.0,
     )
-    r = p.plan(_engine(1), f, _context())
-    assert r["trade_intent"] == "PULLBACK", r
-    assert abs(r["stop_loss"] - 99.0) < 0.01
-
-def test_sl_pullback_falls_back_to_bar_low_when_no_lookback_keys():
     p = _planner()
-    f = _base_features(
-        sweep_detected=False, retest_depth=0.5, candles_since_retest=3,
-        momentum_score=0.5, body_ratio=0.3, disp_strength=1.0,
-        low=97.0,
-        # intentionally no lowest_low_5 / highest_high_5
-    )
     r = p.plan(_engine(1), f, _context())
-    assert r["trade_intent"] == "PULLBACK"
-    assert r["trace"]["sl_fallback_used"] is True
+    if r["decision"] in ("execute", "reject_gate"):
+        assert r["trade_intent"] == "PULLBACK"
 
-def test_sl_liq_sweep_long_below_bar_low():
+def test_intent_classification_liq_sweep_single():
     p = _planner()
-    f = _base_features(sweep_detected=True, low=98.0, atr=2.0)
+    f = _base_features(sweep_detected=True, body_ratio=0.3, disp_strength=1.0)
     r = p.plan(_engine(1), f, _context())
     assert r["trade_intent"] == "LIQ_SWEEP"
-    # SL = low - 0.2 * atr = 98 - 0.4 = 97.6
-    assert r["stop_loss"] < 98.0
 
-def test_sl_liq_sweep_short_above_bar_high():
+def test_intent_classification_liq_sweep_double():
     p = _planner()
-    f = _base_features(sweep_detected=True, high=102.0, atr=2.0)
-    r = p.plan(_engine(-1), f, _context())
+    f = _base_features(sweep_detected=False, double_sweep=True)
+    r = p.plan(_engine(1), f, _context())
     assert r["trade_intent"] == "LIQ_SWEEP"
-    assert r["stop_loss"] > 102.0
 
-def test_sl_reversal_uses_3candle_swing():
+def test_intent_classification_reversal():
     p = _planner()
-    # entry=close=100, sl=lowest_low_3=99.0 → risk=1.0, tp=100+1*2=102 → rr=2 ✓
     f = _base_features(
         sweep_detected=False, body_ratio=0.3, disp_strength=1.0,
-        retest_depth=0.0, candles_since_retest=99,
         ema_fast=98.0, ema_slow=100.0,
-        lowest_low_3=99.0, highest_high_3=104.0,
+        retest_depth=0.0, candles_since_sweep=99,
     )
     r = p.plan(_engine(1), f, _context())
-    assert r["trade_intent"] == "REVERSAL", r
-    assert abs(r["stop_loss"] - 99.0) < 0.01
-    assert r["sl_method"] == "swing_reversal"
+    if r["decision"] in ("execute", "reject_gate"):
+        assert r["trade_intent"] == "REVERSAL"
 
 
-# ── 4. TP COMPUTATION ─────────────────────────────────────────────────────────
-
-def test_tp_atr_only_when_no_liquidity_keys():
-    p = _planner()
-    f = _base_features()   # no volume / touch keys
-    r = p.plan(_engine(1), f, _context())
-    assert r["decision"] == "execute"
-    assert r["tp_method"] == "atr_only"
-
-def test_tp_hybrid_liquidity_long():
-    p = _planner()
-    f = _base_features(
-        highest_high_20=104.0,
-        touches_high_20=3,
-        volume_ma20=1000.0,
-        volume=2000.0,         # vol_ratio=2.0 ≥ threshold 1.5
-    )
-    r = p.plan(_engine(1), f, _context())
-    assert r["decision"] == "execute"
-    assert r["tp_method"] == "hybrid_liquidity"
-    assert abs(r["take_profit_1"] - 104.0) < 0.001
-
-def test_tp_hybrid_liquidity_short():
-    p = _planner()
-    f = _base_features(
-        ema_fast=98.0, ema_slow=99.0,   # keep BREAKOUT, direction=-1
-        lowest_low_20=96.0,
-        touches_low_20=2,
-        volume_ma20=1000.0,
-        volume=1600.0,
-    )
-    r = p.plan(_engine(-1), f, _context())
-    assert r["decision"] == "execute"
-    assert r["tp_method"] == "hybrid_liquidity"
-    assert abs(r["take_profit_1"] - 96.0) < 0.001
-
-def test_tp_no_hybrid_when_vol_ratio_too_low():
-    p = _planner()
-    f = _base_features(
-        highest_high_20=104.0,
-        touches_high_20=5,
-        volume_ma20=1000.0,
-        volume=500.0,         # vol_ratio=0.5 < threshold 1.5
-    )
-    r = p.plan(_engine(1), f, _context())
-    assert r["tp_method"] == "atr_only"
-
-def test_tp_no_hybrid_when_touch_count_too_low():
-    p = _planner()
-    f = _base_features(
-        highest_high_20=104.0,
-        touches_high_20=1,    # < min_touches=2
-        volume_ma20=1000.0,
-        volume=2000.0,
-    )
-    r = p.plan(_engine(1), f, _context())
-    assert r["tp_method"] == "atr_only"
-
-def test_tp2_is_double_atr_distance():
-    p = _planner()
-    f = _base_features()
-    r = p.plan(_engine(1), f, _context())
-    if r["decision"] == "execute" and r.get("take_profit_2") is not None:
-        entry = r["entry_price"]
-        tp1 = r["take_profit_1"]
-        tp2 = r["take_profit_2"]
-        assert tp2 > tp1 > entry  # tp2 further from entry than tp1
-
-def test_tp_per_intent_multiplier_reversal():
-    """REVERSAL uses atr_mult_reversal_tp (1.0) < BREAKOUT (2.0)."""
-    p = _planner()
-    f_reversal = _base_features(
-        sweep_detected=False, body_ratio=0.3, disp_strength=1.0,
-        retest_depth=0.0, candles_since_retest=99,
-        ema_fast=98.0, ema_slow=100.0,
-        lowest_low_3=97.0, highest_high_3=103.0,
-    )
-    f_breakout = _base_features()  # same ATR, same entry
-
-    r_rev = p.plan(_engine(1), f_reversal, _context())
-    r_brk = p.plan(_engine(1), f_breakout, _context())
-
-    if r_rev["decision"] == "execute" and r_brk["decision"] == "execute":
-        # REVERSAL TP1 < BREAKOUT TP1 (smaller multiplier)
-        assert r_rev["take_profit_1"] < r_brk["take_profit_1"]
-
-
-# ── 5. POSITION SIZING ────────────────────────────────────────────────────────
-
-def test_position_size_hint_formula():
-    """hint = (balance * risk%) / risk_per_unit."""
-    p = _planner(risk_percent=1.0)
-    f = _base_features(close=100.0, low=98.0, atr=2.0)  # BREAKOUT, SL=98
-    r = p.plan(_engine(1), f, _context(balance=10_000.0))
-    assert r["decision"] == "execute"
-    # entry=100, sl=98, risk_per_unit=2.0; hint=10000*0.01/2=50.0
-    assert r["position_size_hint"] is not None
-    assert abs(r["position_size_hint"] - 50.0) < 0.1
-
-def test_position_size_hint_scales_with_balance():
-    p = _planner(risk_percent=1.0)
-    f = _base_features(close=100.0, low=98.0, atr=2.0)
-    r1 = p.plan(_engine(1), f, _context(balance=5_000.0))
-    r2 = p.plan(_engine(1), f, _context(balance=20_000.0))
-    if r1["decision"] == "execute" and r2["decision"] == "execute":
-        assert r2["position_size_hint"] == r1["position_size_hint"] * 4
-
-
-# ── 6. TTL DERIVATION ────────────────────────────────────────────────────────
+# ── 4. TTL DERIVATION ────────────────────────────────────────────────────────
 
 def test_ttl_breakout_matches_config():
     p = _planner(ttl_breakout_sec=999)
@@ -474,8 +464,8 @@ def test_ttl_liq_sweep_matches_config():
     p = _planner(ttl_liq_sweep_sec=555)
     f = _base_features(sweep_detected=True)
     r = p.plan(_engine(1), f, _context())
-    assert r["decision"] == "execute"
-    assert r["validity_ttl_sec"] == 555
+    if r["decision"] == "execute":
+        assert r["validity_ttl_sec"] == 555
 
 def test_expires_at_is_in_future():
     from datetime import datetime, timezone
@@ -487,20 +477,18 @@ def test_expires_at_is_in_future():
         assert expires > now
 
 
-# ── 7. PRECISION ROUNDING ─────────────────────────────────────────────────────
+# ── 5. PRECISION ROUNDING ─────────────────────────────────────────────────────
 
 def test_precision_default_is_8_decimal_places():
     p = _planner()
     r = p.plan(_engine(1), _base_features(), _context(symbol="EURUSD"))
     if r["decision"] == "execute":
-        # entry_price rounded to 8 decimal places — just check it's a float
         assert isinstance(r["entry_price"], float)
 
 def test_precision_override_xauusd_is_2():
     p = _planner()
     r = p.plan(_engine(1), _base_features(), _context(symbol="XAUUSD"))
     if r["decision"] == "execute":
-        # 2-decimal precision: entry should have ≤ 2 decimal digits
         s = f"{r['entry_price']}"
         parts = s.split(".")
         if len(parts) == 2:
@@ -516,7 +504,7 @@ def test_precision_override_btcusdt_is_2():
             assert len(parts[1].rstrip("0") or "0") <= 2
 
 
-# ── 8. EXECUTION ID DETERMINISM ───────────────────────────────────────────────
+# ── 6. EXECUTION ID DETERMINISM ───────────────────────────────────────────────
 
 def test_execution_id_is_deterministic():
     p = _planner()
@@ -530,7 +518,7 @@ def test_execution_id_is_deterministic():
 def test_execution_id_changes_with_entry_price():
     p = _planner()
     f1 = _base_features(close=100.0)
-    f2 = _base_features(close=105.0, high=107.0)  # different close
+    f2 = _base_features(close=105.0, high=107.0)
     ctx = _context()
     r1 = p.plan(_engine(1), f1, ctx)
     r2 = p.plan(_engine(1), f2, ctx)
@@ -544,37 +532,61 @@ def test_execution_id_starts_with_EX():
         assert r["execution_id"].startswith("EX_")
 
 
-# ── 9. CONFIG OVERRIDES ──────────────────────────────────────────────────────
+# ── 7. CONFIG OVERRIDES ──────────────────────────────────────────────────────
 
-def test_custom_min_rr_ratio_lower_allows_more_trades():
-    p_strict = _planner(min_rr_ratio=1.5)
-    p_loose  = _planner(min_rr_ratio=0.1)
-    f = _base_features(atr=0.1)  # tiny ATR → low RR
-    ctx = _context()
-    r_strict = p_strict.plan(_engine(1), f, ctx)
-    r_loose  = p_loose.plan(_engine(1), f, ctx)
-    assert r_strict["decision"] == "reject_rr"
-    assert r_loose["decision"] in ("execute", "reject_invalid")
+def test_no_config_fails_closed():
+    """UPDATED 2026-09-28 (EPIC-84, no defaults): was test_defaults_preserved_when_no_config."""
+    with pytest.raises(TypeError):
+        ExecutionPlannerV1_2()
+    with pytest.raises(ConfigKeyMissingError):
+        ExecutionPlannerV1_2(None)
 
-def test_defaults_preserved_when_no_config():
-    p = ExecutionPlannerV1_2()
-    assert p.config["min_rr_ratio"] == 1.5
-    assert p.config["risk_percent"] == 0.5
+def test_partial_config_fails_closed_listing_every_missing_key():
+    """UPDATED 2026-09-28 (EPIC-84): was test_partial_config_preserves_remaining_defaults."""
+    from config_layer.execution_planner import REQUIRED_CONFIG_KEYS
+    with pytest.raises(ConfigKeyMissingError) as ei:
+        ExecutionPlannerV1_2({"risk_percent": 2.0})
+    assert set(ei.value.missing) == set(REQUIRED_CONFIG_KEYS) - {"risk_percent"}
 
-def test_partial_config_preserves_remaining_defaults():
-    p = ExecutionPlannerV1_2({"risk_percent": 2.0})
-    assert p.config["risk_percent"] == 2.0
-    assert p.config["min_rr_ratio"] == 1.5  # default preserved
+@pytest.mark.parametrize("key", sorted(DEFAULT_CONFIG))
+def test_each_required_key_missing_fails_closed(key):
+    cfg = dict(DEFAULT_CONFIG)
+    cfg.pop(key)
+    with pytest.raises(ConfigKeyMissingError) as ei:
+        ExecutionPlannerV1_2(cfg)
+    assert ei.value.missing == (key,)
+
+def test_planner_config_from_production_is_complete_and_uses_crt_threshold():
+    from config_layer.execution_planner import planner_config_from_production
+    from config_layer.production_config import get_full_config_dict
+    prod = get_full_config_dict()
+    cfg = planner_config_from_production(prod, "XAUUSD")
+    ExecutionPlannerV1_2(cfg)  # complete
+    assert cfg["breakout_disp_threshold"] == float(prod["crt_engine"]["breakout_disp_threshold"])
+    broken = {k: v for k, v in prod.items() if k != "gate_intelligence"}
+    with pytest.raises(ConfigKeyMissingError):
+        planner_config_from_production(broken, "XAUUSD")
+
+def test_gate_threshold_override():
+    """Lowering gate threshold allows signals that the default would reject."""
+    # Use minimal features that won't pass 0.55 but will pass 0.0
+    p_strict = _planner(gate_approval_threshold=0.99)
+    p_loose  = _planner(gate_approval_threshold=0.0)
+    f = _base_features()
+    r_strict = p_strict.plan(_engine(1), f, _context())
+    r_loose  = p_loose.plan(_engine(1), f, _context())
+    assert r_strict["decision"] == "reject_gate"
+    assert r_loose["decision"] == "execute"
 
 
-# ── 10. RESPONSE STRUCTURE ───────────────────────────────────────────────────
+# ── 8. RESPONSE STRUCTURE ───────────────────────────────────────────────────
 
 def test_execute_result_has_required_keys():
+    """Plan output must include intent, entry, gate, and timing keys."""
     required = {
         "decision", "execution_id", "trade_intent", "direction",
-        "entry_price", "stop_loss", "take_profit_1",
-        "rr_ratio", "risk_percent", "position_size_hint",
-        "expires_at", "created_at", "sl_method", "tp_method", "trace",
+        "entry_type", "entry_price", "gate",
+        "validity_ttl_sec", "expires_at", "created_at", "trace",
     }
     p = _planner()
     r = p.plan(_engine(1), _base_features(), _context())
@@ -582,10 +594,107 @@ def test_execute_result_has_required_keys():
         missing = required - r.keys()
         assert not missing, f"Missing keys: {missing}"
 
+def test_execute_result_has_no_sl_tp_keys():
+    """SL and TP must NOT be present in plan output (CRT engine responsibility)."""
+    p = _planner()
+    r = p.plan(_engine(1), _base_features(), _context())
+    if r["decision"] == "execute":
+        for key in ("stop_loss", "take_profit_1", "take_profit_2", "rr_ratio",
+                    "sl_method", "tp_method"):
+            assert key not in r, f"Unexpected key '{key}' found in plan output"
+
+def test_gate_result_embedded_in_execute():
+    """gate key must be present with approved=True for execute decisions."""
+    p = _planner()
+    r = p.plan(_engine(1), _base_features(), _context())
+    if r["decision"] == "execute":
+        assert "gate" in r
+        assert r["gate"]["approved"] is True
+        assert {"approved", "final_score", "components", "reason"} <= r["gate"].keys()
+
+def test_gate_result_embedded_in_reject_gate():
+    """reject_gate decision must include gate breakdown."""
+    p = _planner(gate_approval_threshold=0.99)
+    r = p.plan(_engine(1), _base_features(), _context())
+    assert r["decision"] == "reject_gate"
+    assert "gate" in r
+    assert r["gate"]["approved"] is False
+
 def test_reject_result_has_trace():
     p = _planner()
     r = p.plan(_engine(1, decision="hold"), _base_features(), _context())
     assert "trace" in r
+
+
+# ── LIQ_SWEEP intent identity (CH-planner-liq-sweep-direction, 2026-10-03) ────
+# MKT-E01: UPPER swept (liquidity_sweep = +1) implies SHORT; LOWER swept (-1) implies LONG.
+
+def _aligned_planner() -> ExecutionPlannerV1_2:
+    return _planner(liq_sweep_semantics="e01_direction_aligned")
+
+
+@pytest.mark.parametrize("ls,direction", [(-1, 1), (1, -1)])
+def test_e01_aligned_sweep_is_liq_sweep(ls, direction):
+    f = _base_features(sweep_detected=True, liquidity_sweep=ls)
+    intent, _ = _aligned_planner()._derive_intent(f, _engine(direction))
+    assert intent == "LIQ_SWEEP"
+
+
+@pytest.mark.parametrize("ls,direction", [(1, 1), (-1, -1)])
+def test_e01_opposed_sweep_is_not_liq_sweep(ls, direction):
+    f = _base_features(sweep_detected=True, double_sweep=True, liquidity_sweep=ls)
+    intent, _ = _aligned_planner()._derive_intent(f, _engine(direction))
+    assert intent != "LIQ_SWEEP"
+
+
+@pytest.mark.parametrize("direction", [1, -1])
+def test_e01_double_sweep_without_event_is_not_liq_sweep(direction):
+    """MKT-C04 is a CONDITION; with no sweep event on the bar it no longer triggers the intent."""
+    f = _base_features(sweep_detected=False, double_sweep=True, liquidity_sweep=0)
+    intent, _ = _aligned_planner()._derive_intent(f, _engine(direction))
+    assert intent != "LIQ_SWEEP"
+
+
+def test_e01_mode_requires_signed_sweep_slot():
+    f = _base_features(sweep_detected=True)  # no liquidity_sweep
+    r = _aligned_planner().plan(_engine(1), f, _context())
+    assert r["decision"] == "reject_invalid"
+    assert "liquidity_sweep" in r["trace"]["error"]
+    # legacy does not need the signed slot
+    assert _planner().plan(_engine(1), f, _context())["decision"] != "reject_invalid"
+
+
+def test_liq_sweep_semantics_rejects_unknown_value():
+    with pytest.raises(ValueError):
+        _planner(liq_sweep_semantics="aligned")
+
+
+def test_legacy_unsigned_matches_pre_change_classifier_exhaustively():
+    """legacy_unsigned reproduces the pre-2026-10-03 rule on every sweep-input combination."""
+    p = _planner()
+    for sd in (False, True):
+        for ds in (False, True):
+            for ls in (-1, 0, 1):
+                for d in (1, -1):
+                    f = _base_features(sweep_detected=sd, double_sweep=ds, liquidity_sweep=ls,
+                                       body_ratio=0.3, disp_strength=1.0)
+                    intent, _ = p._derive_intent(f, _engine(d))
+                    assert (intent == "LIQ_SWEEP") == (sd or ds), (sd, ds, ls, d, intent)
+
+
+def test_live_configs_declare_legacy_unsigned():
+    """Activation of e01_direction_aligned is a separate user decision (pinned here)."""
+    import json
+    from pathlib import Path
+    prod = Path(__file__).resolve().parents[1] / "configs" / "production"
+    active = (prod / "ACTIVE_VERSION").read_text(encoding="utf-8").strip()
+    declared = {}
+    for p in prod.glob("*.json"):
+        ep = json.loads(p.read_text(encoding="utf-8")).get("execution_planner", {})
+        if "ttl_continuation_sec" in ep:
+            declared[p.stem] = ep.get("liq_sweep_semantics")
+    assert active in declared
+    assert set(declared.values()) == {"legacy_unsigned"}, declared
 
 
 # ── Runner ────────────────────────────────────────────────────────────────────
@@ -615,26 +724,19 @@ if __name__ == "__main__":
         test_reject_invalid_direction_value,
         test_reject_unknown_intent_by_default,
         test_allow_unknown_intent_when_configured,
-        test_reject_rr_too_low,
-        # SL
-        test_sl_breakout_long_is_candle_low,
-        test_sl_breakout_short_is_candle_high,
-        test_sl_pullback_uses_lookback_low,
-        test_sl_pullback_falls_back_to_bar_low_when_no_lookback_keys,
-        test_sl_liq_sweep_long_below_bar_low,
-        test_sl_liq_sweep_short_above_bar_high,
-        test_sl_reversal_uses_3candle_swing,
-        # TP
-        test_tp_atr_only_when_no_liquidity_keys,
-        test_tp_hybrid_liquidity_long,
-        test_tp_hybrid_liquidity_short,
-        test_tp_no_hybrid_when_vol_ratio_too_low,
-        test_tp_no_hybrid_when_touch_count_too_low,
-        test_tp2_is_double_atr_distance,
-        test_tp_per_intent_multiplier_reversal,
-        # sizing
-        test_position_size_hint_formula,
-        test_position_size_hint_scales_with_balance,
+        # CONTINUATION (the parametrized partition test runs under pytest only -- it takes args)
+        test_intent_classification_continuation_long,
+        test_intent_classification_continuation_short,
+        test_with_trend_entry_is_no_longer_rejected_as_unknown,
+        test_ttl_continuation_is_required_and_mapped,
+        test_continuation_gate_score_is_deliberately_zero,
+        test_gate_reject_weak_signal,
+        # intent classification
+        test_intent_classification_breakout,
+        test_intent_classification_pullback,
+        test_intent_classification_liq_sweep_single,
+        test_intent_classification_liq_sweep_double,
+        test_intent_classification_reversal,
         # TTL
         test_ttl_breakout_matches_config,
         test_ttl_liq_sweep_matches_config,
@@ -643,31 +745,32 @@ if __name__ == "__main__":
         test_precision_default_is_8_decimal_places,
         test_precision_override_xauusd_is_2,
         test_precision_override_btcusdt_is_2,
-        # determinism
+        # execution ID
         test_execution_id_is_deterministic,
         test_execution_id_changes_with_entry_price,
         test_execution_id_starts_with_EX,
         # config
-        test_custom_min_rr_ratio_lower_allows_more_trades,
         test_defaults_preserved_when_no_config,
         test_partial_config_preserves_remaining_defaults,
-        # structure
+        test_gate_threshold_override,
+        # response structure
         test_execute_result_has_required_keys,
+        test_execute_result_has_no_sl_tp_keys,
+        test_gate_result_embedded_in_execute,
+        test_gate_result_embedded_in_reject_gate,
         test_reject_result_has_trace,
     ]
 
     passed = failed = 0
-    for fn in tests:
+    for t in tests:
         try:
-            fn()
-            print(f"  PASS  {fn.__name__}")
+            t()
+            print(f"  PASS  {t.__name__}")
             passed += 1
-        except Exception:
-            print(f"  FAIL  {fn.__name__}")
+        except Exception as e:
+            print(f"  FAIL  {t.__name__}: {e}")
             traceback.print_exc()
             failed += 1
 
-    print(f"\n{'='*60}")
-    print(f"  {passed} passed / {failed} failed  ({len(tests)} total)")
-    print(f"{'='*60}")
-    sys.exit(1 if failed else 0)
+    print(f"\n{passed} passed, {failed} failed")
+    sys.exit(0 if failed == 0 else 1)

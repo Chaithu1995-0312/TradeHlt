@@ -1,0 +1,94 @@
+{
+  "csv_root": "results",
+  "jsonl_root": "logs",
+  "missing_compressed": [
+    {
+      "instrument": "ETHUSDT",
+      "run_id": "20260519_113806"
+    },
+    {
+      "instrument": "ETHUSDT",
+      "run_id": "20260519_134711"
+    },
+    {
+      "instrument": "ETHUSDT",
+      "run_id": "20260519_134937"
+    },
+    {
+      "instrument": "EURUSD",
+      "run_id": "20260519_002117"
+    }
+  ],
+  "missing_trades": [
+    {
+      "instrument": "ETHUSDT",
+      "run_id": "20260519_113806"
+    },
+    {
+      "instrument": "ETHUSDT",
+      "run_id": "20260519_134711"
+    },
+    {
+      "instrument": "ETHUSDT",
+      "run_id": "20260519_134937"
+    },
+    {
+      "instrument": "ETHUSDT",
+      "run_id": "20260521_145509"
+    },
+    {
+      "instrument": "ETHUSDT",
+      "run_id": "20260521_151624"
+    },
+    {
+      "instrument": "EURUSD",
+      "run_id": "20260519_002117"
+    }
+  ],
+  "n_pairs": 6,
+  "pairs": [
+    {
+      "compressed_json": null,
+      "instrument": "ETHUSDT",
+      "opportunities": "logs/ETHUSDT/20260519_113806/opportunities.jsonl",
+      "run_id": "20260519_113806",
+      "trades_csv": null
+    },
+    {
+      "compressed_json": null,
+      "instrument": "ETHUSDT",
+      "opportunities": "logs/ETHUSDT/20260519_134711/opportunities.jsonl",
+      "run_id": "20260519_134711",
+      "trades_csv": null
+    },
+    {
+      "compressed_json": null,
+      "instrument": "ETHUSDT",
+      "opportunities": "logs/ETHUSDT/20260519_134937/opportunities.jsonl",
+      "run_id": "20260519_134937",
+      "trades_csv": null
+    },
+    {
+      "compressed_json": "logs/ETHUSDT/20260521_145509/compressed.json",
+      "instrument": "ETHUSDT",
+      "opportunities": "logs/ETHUSDT/20260521_145509/opportunities.jsonl",
+      "run_id": "20260521_145509",
+      "trades_csv": null
+    },
+    {
+      "compressed_json": "logs/ETHUSDT/20260521_151624/compressed.json",
+      "instrument": "ETHUSDT",
+      "opportunities": "logs/ETHUSDT/20260521_151624/opportunities.jsonl",
+      "run_id": "20260521_151624",
+      "trades_csv": null
+    },
+    {
+      "compressed_json": null,
+      "instrument": "EURUSD",
+      "opportunities": "logs/EURUSD/20260519_002117/opportunities.jsonl",
+      "run_id": "20260519_002117",
+      "trades_csv": null
+    }
+  ],
+  "strict_layout": false
+}

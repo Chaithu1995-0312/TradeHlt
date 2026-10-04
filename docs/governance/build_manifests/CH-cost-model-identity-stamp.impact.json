@@ -1,0 +1,48 @@
+{
+  "change_id": "CH-cost-model-identity-stamp",
+  "date_utc": "2026-09-16",
+  "objective": "Stamp cost-model identity and R-denominator identity onto every production backtest trade record and run summary, WITHOUT changing any PnL/cost math. Stamp cost/denominator identity onto trades.csv (columns) and summary.json (keys); the events stream is unchanged. Adds cost_model_id, cost_model_params_hash, risk_denominator_id as new output columns on trades.csv (alongside config_version) plus the ids on summary.json and one 'Cost model applied: <id>' line in report.txt. Ids are DERIVED from the existing backtest cost knobs (slippage_enabled, slippage_atr_fraction, slippage_seed, simulated_spread_pct) and pip_size; no config schema change, no decision-path change, no ontology/registry/CANONICAL_FEATURES change, no PnL drift. For run_20260916_101942_XAUUSD the stamp resolves to cost_model_id=backtest_g1g2_v2, risk_denominator_id=entry_fill_to_sl.",
+  "change_classes": [
+    "TRACE_OBSERVATION_JOIN"
+  ],
+  "change_class_rationale": "TRACE_OBSERVATION_JOIN is the declared class: 'Extend an OBSERVATION-ONLY runtime trace stream with new joined or derived metadata fields ... strictly no decision path, no canonical quantity, no CANONICAL_FEATURES change.' The backtest trades.csv/events.jsonl/summary.json are the observation-only outcome trace of the runtime; this change joins cost/denominator identity metadata onto that stream. RUNTIME_DECISION_PATH_CHANGE was considered and deliberately NOT declared: no gate/engine/fusion/planner/risk code changes, no PnL formula change, and completion evidence is parity (byte-identical pnl_rr_* before/after), not behavior change. PRODUCTION_CONFIG_CHANGE is not declared: ids are derived from existing knobs, configs/* is untouched. DATASET_SCHEMA_CHANGE is not declared: CANONICAL_FEATURES/SCHEMA_HASH/FEATURE_ORDER_HASH are untouched.",
+  "decisions": {
+    "pip_size_ownership": "(b) risk_denominator_id. Justified from source: backtest cost in price units derives from simulated_spread_pct (spread_half) and slippage_atr_fraction (slip), neither of which uses pip_size; pip_size appears only in risk_pips=|entry_fill - sl|/pip_size (the R-denominator) and in pips-denominated reporting. Hence pip_size is excluded from cost_model_params_hash and included in risk_denominator_id. Cross-consistency rule: a pip_size change bumps risk_denominator_id (new version), never cost_model_params_hash.",
+    "risk_denominator_id_versioning": "(a) new ID on formula change. 'risk_denominator_id values are versioned; when the denominator formula changes, a new ID is emitted and old IDs remain valid for historical rows. Silent semantic drift of an existing ID is forbidden.'",
+    "cost_model_bps_disposition": "leave in place. The existing cost_model_bps scalar on the research path is untouched; it remains the research-path cost identity, cost_model_id is the production-path identity. Reconciling them is out of scope; F-082's scope note (finding applies to the research cost world only) is the interim record. run_manifest.py and validation_contract.py are NOT modified by this change.",
+    "strict_reads": "Derivation uses strict reads (_require-equivalent, cfg[k]) for all four cost knobs. Missing knob -> construction raises KeyError. No .get(..., default) path.",
+    "backtest_zero_cost_rule": "(iii) reserve only. _cost_model_id is single-valued: whenever the four knobs are present, cost_model_id always == backtest_g1g2_v2, including a zero-cost config (which yields a distinct cost_model_params_hash). backtest_zero_cost is declared but NEVER generated. Test asserts no current config path reaches backtest_zero_cost."
+  },
+  "affected_files": [
+    "docs/governance/build_manifests/CH-cost-model-identity-stamp.impact.json",
+    "docs/governance/build_manifests/CH-cost-model-identity-stamp.completion.json",
+    "src/runtime/backtest_v2.py",
+    "docs/implementation_plan/cost-model-identity-stamping.md",
+    "docs/reference/schemas.md",
+    "docs/current-findings.md",
+    "tests/test_cost_model_stamped.py"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "required_checks_ack": [
+    "tests/test_crt_construction_trace.py",
+    "tests/test_crt_construction_trace_envelope.py",
+    "tests/test_resolver_metadata.py",
+    "tests/test_construction_protocol.py"
+  ],
+  "new_tests": [
+    "tests/test_cost_model_stamped.py: (1) cost_model_params_hash deterministic given the 4 knobs and changes when any knob changes; (2) trades.csv rows carry all 3 fields, constant across rows, equal to summary.json; (3) NEGATIVE: removing ANY of the 4 cost knobs makes construction RAISE (fail closed; never writes '' or a default id or an empty params hash); (4) fixture simulated_spread_pct=0.0002,slippage_atr_fraction=0.1,slippage_seed=42 => cost_model_id=backtest_g1g2_v2; (5) no current config path reaches backtest_zero_cost (reserve-only); (6) old-record load without the fields yields derived id / '' with no crash."
+  ],
+  "unknowns": [],
+  "residual_not_fixed": [
+    "SEM-015/SEM-016 are not wired into backtest_v2, so flat_12bps / metals_mt5_v1 remain reserved ids, not reachable on the production path. cost_model_id becomes a switch only after that separate change.",
+    "run_manifest.py / validation_contract.py cost_model_bps is left in place (research identity), not reconciled with the production identity in this change.",
+    "docs/current-findings.md scope-note edit: F-082 receives 'the finding applies to the research cost world only', and registers the fourth production cost state backtest_g1g2_v2 (2 bps spread + 0.1xATR slip, seed 42) not covered by SEM-015/SEM-016. No conclusion reverses; no new F-id.",
+    "The SIDE-CAR config_dump remains the source of the cost-param VALUES themselves; the trade record carries the identity."
+  ],
+  "rollback_boundary": "Single commit: backtest_v2.py TradeRecord/BacktestConfig/to_csv_rows/_write_summary/_write_report + tests/test_cost_model_stamped.py + docs (schemas.md, current-findings.md, plan doc) revert together. PnL values are untouched, so rollback is purely additive-column removal.",
+  "authority_granted": "User act-mode approval 2026-09-16 to proceed (stamp-only scope; SEM-015/016 wiring explicitly out of scope), confirming decisions (a) research path untouched and (b) no extra change class; plus the five resolution items (verified required_checks; strict reads; backtest_zero_cost=reserve only; F-082 scope-note edit; events stream unchanged).",
+  "authority_NOT_granted": "No SEM-015/SEM-016 wiring into production; no configs/* or ACTIVE_VERSION change; no ontology/registry/CANONICAL_FEATURES change; no PnL/cost math change; no research-path (run_manifest/validation_contract) modification; no retrain/model promotion/G001; new_tests is a required check of the declared class, NOT a separate change class.",
+  "production_behavior_changed": "NO"
+}

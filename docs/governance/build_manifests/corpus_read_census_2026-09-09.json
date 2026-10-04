@@ -1,0 +1,1888 @@
+{
+  "counts": {
+    "CORPUS": 6,
+    "DERIVED": 35,
+    "GATED": 19,
+    "UNKNOWN": 208
+  },
+  "files_scanned": 1608,
+  "findings": [
+    {
+      "call": "reader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "analyze_crt_pipeline.py",
+      "line": 228
+    },
+    {
+      "call": "<syntax-error>",
+      "class": "UNKNOWN",
+      "evidence": "unexpected character after line continuation character (audit.py, line 2)",
+      "file": "audit.py",
+      "line": 2
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "build_zone_registry_forced.py",
+      "line": 24
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "build_zone_registry_from_trades.py",
+      "line": 39
+    },
+    {
+      "call": "<syntax-error>",
+      "class": "UNKNOWN",
+      "evidence": "unexpected character after line continuation character (count_audit_tmp.py, line 4)",
+      "file": "count_audit_tmp.py",
+      "line": 4
+    },
+    {
+      "call": "load_workbook",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['XLSX'])",
+      "file": "reports/xauusd_retest_pathb_counterfactual_probe.py",
+      "line": 75
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "evidence": "literal path: ['transition_decision.parquet']",
+      "file": "scripts/analysis/all_states_economic_probe.py",
+      "line": 80
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "evidence": "literal path: ['envelope_bar.parquet']",
+      "file": "scripts/analysis/all_states_economic_probe.py",
+      "line": 81
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "evidence": "literal path: ['sweep_liquidity_fact.parquet']",
+      "file": "scripts/analysis/all_states_persistence_probe.py",
+      "line": 92
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "evidence": "literal path: ['transition_decision.parquet']",
+      "file": "scripts/analysis/all_states_persistence_probe.py",
+      "line": 93
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "evidence": "literal path: ['episode.parquet']",
+      "file": "scripts/analysis/all_states_persistence_probe.py",
+      "line": 94
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "evidence": "literal path: ['transition_decision.parquet']",
+      "file": "scripts/analysis/all_states_persistence_probe.py",
+      "line": 129
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "evidence": "literal path: ['episode.parquet']",
+      "file": "scripts/analysis/all_states_persistence_probe.py",
+      "line": 130
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "evidence": "literal path: ['envelope_bar.parquet']",
+      "file": "scripts/analysis/all_states_persistence_probe.py",
+      "line": 133
+    },
+    {
+      "call": "read_table",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['atlas', 'fname'])",
+      "file": "scripts/analysis/all_states_persistence_probe.py",
+      "line": 142
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv'])",
+      "file": "scripts/analysis/b2a_feature_candidate_certification.py",
+      "line": 105
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/analysis/blind_label_sample.py",
+      "line": 58
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/analysis/blind_label_score.py",
+      "line": 61
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "scripts/analysis/bnbusdt_trade_anatomy.py",
+      "line": 91
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "scripts/analysis/bnbusdt_trade_anatomy.py",
+      "line": 113
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "evidence": "literal path: ['transition_decision.parquet']",
+      "file": "scripts/analysis/build_sweep_liquidity_fact.py",
+      "line": 113
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/analysis/crt_episode_number_trace.py",
+      "line": 182
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv'])",
+      "file": "scripts/analysis/crt_local_math_authority_probe.py",
+      "line": 27
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['CSV'])",
+      "file": "scripts/analysis/crt_state_transition_audit_4m.py",
+      "line": 465
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['open', 'trades_csv'])",
+      "file": "scripts/analysis/early_invalidation_exectrade_ab.py",
+      "line": 105
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "evidence": "traced to seam via 'csv_path'",
+      "file": "scripts/analysis/export_xauusd_window.py",
+      "line": 95
+    },
+    {
+      "call": "read_csv",
+      "class": "CORPUS",
+      "evidence": "literal path: ['data/mt5/XAUUSD_M15.csv']",
+      "file": "scripts/analysis/feature_38_lineage_census.py",
+      "line": 668
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv'])",
+      "file": "scripts/analysis/feature_dag_rolling_certification.py",
+      "line": 58
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv'])",
+      "file": "scripts/analysis/feature_dag_structural_certification.py",
+      "line": 153
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv'])",
+      "file": "scripts/analysis/feature_math_decision_flip_probe.py",
+      "line": 150
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv'])",
+      "file": "scripts/analysis/feature_math_drift_probe.py",
+      "line": 86
+    },
+    {
+      "call": "read_csv",
+      "class": "CORPUS",
+      "evidence": "corpus constant: ['PHASE1_PHYSICAL_PATH']",
+      "file": "scripts/analysis/feature_pipeline_fc05_closure.py",
+      "line": 1093
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/analysis/feature_semantic_adjudication_pass_a.py",
+      "line": 54
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/analysis/feature_trace_report.py",
+      "line": 997
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['cands', 'open'])",
+      "file": "scripts/analysis/gate_contribution_audit.py",
+      "line": 96
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv'])",
+      "file": "scripts/analysis/gd004_disp_rescale_probe.py",
+      "line": 67
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['ohlcv_path'])",
+      "file": "scripts/analysis/gen_dummy_trades.py",
+      "line": 12
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/analysis/implementation_model_validation_xauusd.py",
+      "line": 239
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/analysis/legacy_feature_fingerprint.py",
+      "line": 56
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/analysis/mature_semantic_audit.py",
+      "line": 130
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/analysis/mother_range_inside_close.py",
+      "line": 297
+    },
+    {
+      "call": "reader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/analysis/ohlcv_census.py",
+      "line": 199
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "scripts/analysis/p001_excursion_probe.py",
+      "line": 105
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['args', 'data'])",
+      "file": "scripts/analysis/p3b_gate_expired_counterfactual_rr.py",
+      "line": 277
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['args', 'trades'])",
+      "file": "scripts/analysis/p3b_gate_expired_counterfactual_rr.py",
+      "line": 285
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/analysis/phase1_run1_feature_truth.py",
+      "line": 134
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv'])",
+      "file": "scripts/analysis/pit_phaseC_feature_certification.py",
+      "line": 62
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv'])",
+      "file": "scripts/analysis/pit_swing_blast_radius.py",
+      "line": 203
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/analysis/pit_swing_gateon_ab.py",
+      "line": 121
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/analysis/pit_swing_gateon_ab.py",
+      "line": 132
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/analysis/pit_swing_gateon_ab.py",
+      "line": 197
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "scripts/analysis/pit_swing_gateon_ab.py",
+      "line": 333
+    },
+    {
+      "call": "read_excel",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/analysis/purge_delay_scan.py",
+      "line": 41
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/analysis/purge_delay_scan.py",
+      "line": 43
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['p'])",
+      "file": "scripts/analysis/purge_slice.py",
+      "line": 52
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/analysis/run_crt_local_math_parity_audit.py",
+      "line": 41
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['d'])",
+      "file": "scripts/analysis/run_crt_trace_workflow.py",
+      "line": 159
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "evidence": "traced to seam via 'corpus'",
+      "file": "scripts/analysis/run_gaussian_xauusd_2m.py",
+      "line": 104
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/analysis/run_msip_shadow.py",
+      "line": 68
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "evidence": "traced to seam via 'corpus'",
+      "file": "scripts/analysis/run_rr_xauusd_2m.py",
+      "line": 216
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "evidence": "traced to seam via 'corpus'",
+      "file": "scripts/analysis/run_zonegate_xauusd_2m.py",
+      "line": 113
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/analysis/schema_audit.py",
+      "line": 25
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "evidence": "traced to seam via 'src'",
+      "file": "scripts/analysis/search_xauusd_candidate_window.py",
+      "line": 173
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/analysis/semantic_layer_validation.py",
+      "line": 397
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/analysis/session_cost_audit.py",
+      "line": 23
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "evidence": "literal path: ['sweep_liquidity_fact.parquet']",
+      "file": "scripts/analysis/sweep_conditional_magnitude_probe.py",
+      "line": 85
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "evidence": "literal path: ['transition_decision.parquet']",
+      "file": "scripts/analysis/sweep_conditional_magnitude_probe.py",
+      "line": 86
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "evidence": "literal path: ['episode.parquet']",
+      "file": "scripts/analysis/sweep_conditional_magnitude_probe.py",
+      "line": 87
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "evidence": "literal path: ['envelope_bar.parquet']",
+      "file": "scripts/analysis/sweep_conditional_magnitude_probe.py",
+      "line": 90
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "evidence": "literal path: ['excursion.parquet']",
+      "file": "scripts/analysis/sweep_conditional_magnitude_probe.py",
+      "line": 92
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "evidence": "literal path: ['sweep_liquidity_fact.parquet']",
+      "file": "scripts/analysis/sweep_state_persistence_probe.py",
+      "line": 113
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "evidence": "literal path: ['transition_decision.parquet']",
+      "file": "scripts/analysis/sweep_state_persistence_probe.py",
+      "line": 114
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "evidence": "literal path: ['episode.parquet']",
+      "file": "scripts/analysis/sweep_state_persistence_probe.py",
+      "line": 115
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "evidence": "literal path: ['sweep_liquidity_fact.parquet']",
+      "file": "scripts/analysis/sweep_structure_economic_probe.py",
+      "line": 129
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "evidence": "literal path: ['transition_decision.parquet']",
+      "file": "scripts/analysis/sweep_structure_economic_probe.py",
+      "line": 130
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "evidence": "literal path: ['envelope_bar.parquet']",
+      "file": "scripts/analysis/sweep_structure_economic_probe.py",
+      "line": 131
+    },
+    {
+      "call": "read_table",
+      "class": "DERIVED",
+      "evidence": "literal path: ['excursion.parquet']",
+      "file": "scripts/analysis/sweep_structure_economic_probe.py",
+      "line": 133
+    },
+    {
+      "call": "load_workbook",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/analysis/test_functionality_excel.py",
+      "line": 896
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['fa'])",
+      "file": "scripts/analysis/v3_config_parity.py",
+      "line": 153
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['fb'])",
+      "file": "scripts/analysis/v3_config_parity.py",
+      "line": 153
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "evidence": "traced to seam via 'csv_path'",
+      "file": "scripts/analysis/xauusd_crt_baseline_trace.py",
+      "line": 118
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "evidence": "traced to seam via 'csv_path'",
+      "file": "scripts/analysis/xauusd_crt_transition_trace.py",
+      "line": 287
+    },
+    {
+      "call": "load_workbook",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/analysis/xauusd_excel_feature_state_trace.py",
+      "line": 188
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/analysis/xauusd_excel_feature_state_trace.py",
+      "line": 208
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/analysis/zone_registry_builder.py",
+      "line": 16
+    },
+    {
+      "call": "reader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/backtest/manual_backtest.py",
+      "line": 206
+    },
+    {
+      "call": "read_csv",
+      "class": "DERIVED",
+      "evidence": "literal path: ['results/manual/manual_trades.csv']",
+      "file": "scripts/backtest/manual_backtest.py",
+      "line": 751
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['args', 'csv'])",
+      "file": "scripts/backtest/manual_backtest.py",
+      "line": 757
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/data/build_m15_unified.py",
+      "line": 73
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/data/build_m15_unified.py",
+      "line": 86
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/data/build_rr_dataset.py",
+      "line": 189
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['inst'])",
+      "file": "scripts/data/check_availability.py",
+      "line": 9
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/data/convert_binance_m1_to_m15.py",
+      "line": 13
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/data/csv_to_excel.py",
+      "line": 15
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/data/fetch_crypto_ccxt.py",
+      "line": 146
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/data/fetch_forex_yfinance.py",
+      "line": 168
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/data/fetch_forex_yfinance.py",
+      "line": 188
+    },
+    {
+      "call": "reader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/data/prepare_data.py",
+      "line": 73
+    },
+    {
+      "call": "reader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/data/prepare_data.py",
+      "line": 119
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['file_path'])",
+      "file": "scripts/data/split_bnb_excel.py",
+      "line": 7
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/data/verify_output.py",
+      "line": 7
+    },
+    {
+      "call": "read_excel",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/data/verify_output.py",
+      "line": 14
+    },
+    {
+      "call": "<syntax-error>",
+      "class": "UNKNOWN",
+      "evidence": "invalid non-printable character U+FEFF (build_g001_consumer_attribution.py, line 1)",
+      "file": "scripts/governance/build_g001_consumer_attribution.py",
+      "line": 1
+    },
+    {
+      "call": "load_workbook",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/governance/enrich_workbooks_with_semantic_identity.py",
+      "line": 186
+    },
+    {
+      "call": "load_workbook",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/governance/enrich_workbooks_with_semantic_identity.py",
+      "line": 279
+    },
+    {
+      "call": "load_workbook",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/governance/enrich_workbooks_with_semantic_identity.py",
+      "line": 331
+    },
+    {
+      "call": "load_workbook",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/governance/enrich_workbooks_with_semantic_identity.py",
+      "line": 384
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/groq_bridge/prepare_retrospective.py",
+      "line": 153
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/groq_bridge/prepare_retrospective.py",
+      "line": 168
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['trade_csv'])",
+      "file": "scripts/misc/build_zone_registry_from_trades.py",
+      "line": 74
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/misc/resample_m1_to_m15.py",
+      "line": 30
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/research/_enrich_xauusd_corpus.py",
+      "line": 41
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['fp', 'open'])",
+      "file": "scripts/research/accepted_trade_attribution.py",
+      "line": 43
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/research/bnbusdt_analyze_report.py",
+      "line": 27
+    },
+    {
+      "call": "open",
+      "class": "CORPUS",
+      "evidence": "module constant CANDLES_CSV = 'data/BNBUSDT_M15.csv'",
+      "file": "scripts/research/bnbusdt_enrich_trades.py",
+      "line": 33
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/research/bnbusdt_enrich_trades.py",
+      "line": 34
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/research/bnbusdt_enrich_trades.py",
+      "line": 57
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/research/build_bar_matrix.py",
+      "line": 154
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "evidence": "traced to seam via 'guarded'",
+      "file": "scripts/research/certify_xauusd_corpus.py",
+      "line": 57
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/research/crt_range_rebuild_probe.py",
+      "line": 96
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "scripts/research/crt_resolver_economic_comparison.py",
+      "line": 124
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['ohlcv_path'])",
+      "file": "scripts/research/crt_resolver_economic_comparison.py",
+      "line": 235
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['ohlcv_path'])",
+      "file": "scripts/research/crt_state_confusion_matrix.py",
+      "line": 109
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['ohlcv_path'])",
+      "file": "scripts/research/crt_state_confusion_matrix.py",
+      "line": 281
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['ohlcv_path'])",
+      "file": "scripts/research/crt_state_confusion_matrix.py",
+      "line": 364
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['ohlcv_path'])",
+      "file": "scripts/research/crt_state_confusion_matrix.py",
+      "line": 1068
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['ohlcv_path'])",
+      "file": "scripts/research/crt_state_window_trace.py",
+      "line": 100
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['ohlcv_path'])",
+      "file": "scripts/research/crt_state_window_trace.py",
+      "line": 137
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['open', 'trd_path'])",
+      "file": "scripts/research/execution_planner_replay.py",
+      "line": 211
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['matrix_csv'])",
+      "file": "scripts/research/exit_geometry_scan.py",
+      "line": 99
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['Path', 'bm_manifest'])",
+      "file": "scripts/research/exit_geometry_scan.py",
+      "line": 100
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['CSV_PATH'])",
+      "file": "scripts/research/gaussian_rr_scatter.py",
+      "line": 69
+    },
+    {
+      "call": "read_parquet",
+      "class": "DERIVED",
+      "evidence": "module constant CANDIDATES_PARQUET = 'xauusd_m15_candidates.parquet'",
+      "file": "scripts/research/high_acceptance_activity_conditioning.py",
+      "line": 296
+    },
+    {
+      "call": "read_parquet",
+      "class": "DERIVED",
+      "evidence": "module constant FEATURES_PARQUET = 'xauusd_m15_structural_features.parquet'",
+      "file": "scripts/research/high_acceptance_activity_conditioning.py",
+      "line": 303
+    },
+    {
+      "call": "read_parquet",
+      "class": "DERIVED",
+      "evidence": "module constant RAW_PARQUET = 'xauusd_m15.parquet'",
+      "file": "scripts/research/high_acceptance_gap_policy.py",
+      "line": 62
+    },
+    {
+      "call": "read_parquet",
+      "class": "DERIVED",
+      "evidence": "module constant FEATURES_PARQUET = 'xauusd_m15_structural_features.parquet'",
+      "file": "scripts/research/high_acceptance_group_ablation.py",
+      "line": 89
+    },
+    {
+      "call": "read_parquet",
+      "class": "DERIVED",
+      "evidence": "module constant RAW_PARQUET = 'xauusd_m15.parquet'",
+      "file": "scripts/research/high_acceptance_group_ablation.py",
+      "line": 90
+    },
+    {
+      "call": "read_parquet",
+      "class": "DERIVED",
+      "evidence": "module constant FEATURES_PARQUET = 'xauusd_m15_structural_features.parquet'",
+      "file": "scripts/research/high_acceptance_multivariate_model.py",
+      "line": 73
+    },
+    {
+      "call": "read_parquet",
+      "class": "DERIVED",
+      "evidence": "module constant FEATURES_PARQUET = 'xauusd_m15_structural_features.parquet'",
+      "file": "scripts/research/high_acceptance_normalization_control.py",
+      "line": 105
+    },
+    {
+      "call": "read_parquet",
+      "class": "DERIVED",
+      "evidence": "module constant RAW_PARQUET = 'xauusd_m15.parquet'",
+      "file": "scripts/research/high_acceptance_normalization_control.py",
+      "line": 106
+    },
+    {
+      "call": "read_parquet",
+      "class": "DERIVED",
+      "evidence": "module constant FEATURES_PARQUET = 'xauusd_m15_structural_features.parquet'",
+      "file": "scripts/research/high_acceptance_regime_stability.py",
+      "line": 112
+    },
+    {
+      "call": "read_parquet",
+      "class": "DERIVED",
+      "evidence": "module constant RAW_PARQUET = 'xauusd_m15.parquet'",
+      "file": "scripts/research/high_acceptance_regime_stability.py",
+      "line": 113
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['SRC_CSV'])",
+      "file": "scripts/research/high_acceptance_scan.py",
+      "line": 64
+    },
+    {
+      "call": "read_parquet",
+      "class": "DERIVED",
+      "evidence": "module constant RAW_PARQUET = 'xauusd_m15.parquet'",
+      "file": "scripts/research/high_acceptance_structural_scan.py",
+      "line": 70
+    },
+    {
+      "call": "read_parquet",
+      "class": "DERIVED",
+      "evidence": "module constant CANDIDATES_PARQUET = 'xauusd_m15_candidates.parquet'",
+      "file": "scripts/research/high_acceptance_structural_scan.py",
+      "line": 71
+    },
+    {
+      "call": "read_parquet",
+      "class": "DERIVED",
+      "evidence": "module constant RAW_PARQUET = 'xauusd_m15.parquet'",
+      "file": "scripts/research/high_acceptance_structural_scan.py",
+      "line": 92
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "scripts/research/ingest_live_outcomes.py",
+      "line": 103
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/research/inspect_old_runs.py",
+      "line": 14
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['anatomy_path'])",
+      "file": "scripts/research/jse001_crt_context_join.py",
+      "line": 215
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['anatomy_path'])",
+      "file": "scripts/research/jse002_engine_state_path_geometry.py",
+      "line": 328
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['l003h_path'])",
+      "file": "scripts/research/jse002_engine_state_path_geometry.py",
+      "line": 341
+    },
+    {
+      "call": "<syntax-error>",
+      "class": "UNKNOWN",
+      "evidence": "invalid non-printable character U+FEFF (jse003_engine_context_history_path_geometry.py, line 1)",
+      "file": "scripts/research/jse003_engine_context_history_path_geometry.py",
+      "line": 1
+    },
+    {
+      "call": "<syntax-error>",
+      "class": "UNKNOWN",
+      "evidence": "invalid non-printable character U+FEFF (l003h_trail_exit_transition_replay.py, line 1)",
+      "file": "scripts/research/l003h_trail_exit_transition_replay.py",
+      "line": 1
+    },
+    {
+      "call": "<syntax-error>",
+      "class": "UNKNOWN",
+      "evidence": "invalid non-printable character U+FEFF (l003i_trail_baseline_inversion.py, line 1)",
+      "file": "scripts/research/l003i_trail_baseline_inversion.py",
+      "line": 1
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['open', 'path'])",
+      "file": "scripts/research/live_path_replay.py",
+      "line": 101
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/research/mc_cpr_l0_residual_harness.py",
+      "line": 60
+    },
+    {
+      "call": "read_csv",
+      "class": "CORPUS",
+      "evidence": "module constant CANDLES_CSV = 'data/BNBUSDT_M15.csv'",
+      "file": "scripts/research/momentum_continuation_bnbusdt.py",
+      "line": 969
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/research/opportunity_scanner.py",
+      "line": 43
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['matrix_csv'])",
+      "file": "scripts/research/oracle_pattern_scan.py",
+      "line": 123
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['labels_csv'])",
+      "file": "scripts/research/oracle_pattern_scan.py",
+      "line": 124
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/research/p_struct_01_displacement_evidence.py",
+      "line": 151
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/research/rr_l2_feature_truth.py",
+      "line": 82
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "scripts/research/rr_l3_label_generation.py",
+      "line": 63
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "evidence": "traced to seam via 'ADMISSION'",
+      "file": "scripts/research/run_crt_state_on_mt5_xauusd.py",
+      "line": 54
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/research/run_h_g001_001_sweep_veto.py",
+      "line": 115
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['corpus'])",
+      "file": "scripts/research/run_h_msip_001.py",
+      "line": 185
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "evidence": "traced to seam via 'corpus'",
+      "file": "scripts/research/run_xau_metals_protocol_v1.py",
+      "line": 1039
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['args', 'csv'])",
+      "file": "scripts/research/shape_statistics_survey.py",
+      "line": 37
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['args', 'csv'])",
+      "file": "scripts/research/smc_feature_month_extract.py",
+      "line": 94
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/research/smc_visual_verification.py",
+      "line": 130
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['ohlcv_path'])",
+      "file": "scripts/research/trace_sweep_geometry.py",
+      "line": 223
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "scripts/research/trace_zone_gate_xauusd.py",
+      "line": 79
+    },
+    {
+      "call": "read_parquet",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/research/validate_crt_state_resolver.py",
+      "line": 409
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/research/validate_crt_state_resolver.py",
+      "line": 411
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['args', 'csv'])",
+      "file": "scripts/research/validate_fm030_bands.py",
+      "line": 55
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['matrix_csv'])",
+      "file": "scripts/research/validate_oracle_harness.py",
+      "line": 249
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['labels_csv'])",
+      "file": "scripts/research/validate_oracle_harness.py",
+      "line": 250
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "scripts/research/visual_state_sample.py",
+      "line": 205
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/research/xauusd_episode_semantic_reconstruction.py",
+      "line": 63
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "evidence": "traced to seam via 'guarded'",
+      "file": "scripts/research/xauusd_gaussian_econ_ledger.py",
+      "line": 175
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "evidence": "traced to seam via 'guarded'",
+      "file": "scripts/research/xauusd_gaussian_econ_units.py",
+      "line": 192
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "evidence": "traced to seam via 'path'",
+      "file": "scripts/research/xauusd_price_cost_trace.py",
+      "line": 134
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "scripts/research/zone_x_o4_gap_study.py",
+      "line": 113
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "scripts/training/phase5_calibration.py",
+      "line": 340
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "evidence": "traced to seam via 'csv_path'",
+      "file": "scripts/training/train_bitnet.py",
+      "line": 96
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "evidence": "traced to seam via 'corpus'",
+      "file": "scripts/training/train_gaussian_xauusd.py",
+      "line": 582
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "src/analytics/sl_tp_comparator.py",
+      "line": 493
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "src/analytics/sl_tp_comparator.py",
+      "line": 555
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['p'])",
+      "file": "src/bitnet/contract_c_trainer.py",
+      "line": 177
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "src/bitnet/population_label_audit.py",
+      "line": 136
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "src/control_plane/dashboard_api.py",
+      "line": 152
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "src/control_plane/dashboard_api.py",
+      "line": 859
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "src/control_plane/dashboard_api.py",
+      "line": 901
+    },
+    {
+      "call": "read_excel",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['p'])",
+      "file": "src/data_ingestion/clock_detector.py",
+      "line": 110
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['p'])",
+      "file": "src/data_ingestion/clock_detector.py",
+      "line": 117
+    },
+    {
+      "call": "reader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "src/data_ingestion/dataset_integrity.py",
+      "line": 536
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "src/data_ingestion/historical_fetcher.py",
+      "line": 509
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "src/governance/portfolio_validation.py",
+      "line": 493
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['self', 'trades_path'])",
+      "file": "src/governance/reflection_buffer_advanced.py",
+      "line": 41
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['output_csv', 'self'])",
+      "file": "src/governance/shadow_promotion_gate.py",
+      "line": 180
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "src/governance/strategy_backtest.py",
+      "line": 147
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['splitlines', 'text'])",
+      "file": "src/identity/certify.py",
+      "line": 97
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "src/inout/live_rail/ohlcv_replay_port.py",
+      "line": 59
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "src/llm_research/forward_tester.py",
+      "line": 223
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "src/llm_research/pattern_extractor.py",
+      "line": 95
+    },
+    {
+      "call": "reader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "src/replay/timing_reconstructor.py",
+      "line": 188
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "src/research/adapters/spine_signal_source.py",
+      "line": 203
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "src/research/cross_sectional.py",
+      "line": 86
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "src/research/cross_sectional.py",
+      "line": 95
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "src/research/episodes/flat.py",
+      "line": 153
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "src/research/episodes/projectors/spine.py",
+      "line": 64
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "src/research/evidence/context_attribution.py",
+      "line": 250
+    },
+    {
+      "call": "read_table",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['parquet_path'])",
+      "file": "src/research/evidence/driver.py",
+      "line": 43
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['open', 'path'])",
+      "file": "src/research/evidence/mother_range_prior.py",
+      "line": 39
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "src/research/goal_alignment.py",
+      "line": 42
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "src/research/ic002_entry_evolution/build_trajectories.py",
+      "line": 32
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['ohlcv_csv'])",
+      "file": "src/research/model_runners/adapters/crt_state_machine.py",
+      "line": 49
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "src/research/model_runners/substrate.py",
+      "line": 84
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['open', 'path'])",
+      "file": "src/research/mother_range/driver.py",
+      "line": 46
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "src/research/ohlcv_volume_semantics.py",
+      "line": 424
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['matrix_csv'])",
+      "file": "src/research/oracle/labeler.py",
+      "line": 293
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['Path', 'bm_manifest'])",
+      "file": "src/research/oracle/labeler.py",
+      "line": 296
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['corpus'])",
+      "file": "src/research/rc003_distinct_object/driver.py",
+      "line": 98
+    },
+    {
+      "call": "read_excel",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "src/research/secondlow_v1/detector.py",
+      "line": 47
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "src/research/secondlow_v1/detector.py",
+      "line": 49
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['open', 'path'])",
+      "file": "src/research/sujan_crt/driver.py",
+      "line": 72
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['open', 'path'])",
+      "file": "src/research/sujan_manipulation/driver.py",
+      "line": 76
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['splitlines', 'text'])",
+      "file": "src/research/sujan_manipulation/parent.py",
+      "line": 185
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "src/research/visual_crt/driver.py",
+      "line": 116
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "src/research/zone_mapping/build_corpus_zone_map.py",
+      "line": 60
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "evidence": "traced to seam via 'guarded'",
+      "file": "src/research/zone_mapping/collect_trade_opened_features.py",
+      "line": 117
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "src/research/zone_mapping/crt_zone_crosstab.py",
+      "line": 80
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "src/research/zone_mapping/gaussian_family_shadow_eval.py",
+      "line": 174
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv_path'])",
+      "file": "src/research/zone_mapping/gaussian_family_shadow_eval.py",
+      "line": 673
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['data_path'])",
+      "file": "src/runtime/backtest_bitnet.py",
+      "line": 199
+    },
+    {
+      "call": "reader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "src/runtime/backtest_v2.py",
+      "line": 782
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "evidence": "traced to seam via 'self.csv_path'",
+      "file": "src/runtime/backtest_v2.py",
+      "line": 1878
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "evidence": "traced to seam via 'csv_path'",
+      "file": "src/runtime/backtest_v2.py",
+      "line": 3584
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "src/runtime/exit_model_band.py",
+      "line": 39
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['data_path'])",
+      "file": "src/runtime/unified_replay_harness.py",
+      "line": 73
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "tests/analytics/test_metrics_oracle_parity.py",
+      "line": 57
+    },
+    {
+      "call": "reader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "tests/research/episodes/test_spine_projector.py",
+      "line": 257
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "tests/research/test_sujan_crt_contract.py",
+      "line": 285
+    },
+    {
+      "call": "read_csv",
+      "class": "GATED",
+      "evidence": "traced to seam via 'guarded'",
+      "file": "tests/research/test_xauusd_qualification_smoke.py",
+      "line": 37
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "tests/test_chart_series.py",
+      "line": 272
+    },
+    {
+      "call": "open",
+      "class": "CORPUS",
+      "evidence": "corpus constant: ['CORPUS']",
+      "file": "tests/test_chart_series.py",
+      "line": 284
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['f'])",
+      "file": "tests/test_chart_series.py",
+      "line": 285
+    },
+    {
+      "call": "load_workbook",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "tests/test_claude_intent_workbook.py",
+      "line": 33
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "tests/test_feature_layer_freeze.py",
+      "line": 123
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv'])",
+      "file": "tests/test_fm030_031_implementation_validation.py",
+      "line": 165
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['CSV'])",
+      "file": "tests/test_fm030_031_normalization_basis.py",
+      "line": 54
+    },
+    {
+      "call": "load_workbook",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "tests/test_grok_intent_workbook.py",
+      "line": 31
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "tests/test_phase1_duplicate_formula_identity_closure.py",
+      "line": 90
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['_CSV', 'open'])",
+      "file": "tests/test_predicate_definition_binding.py",
+      "line": 51
+    },
+    {
+      "call": "load_workbook",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['_WB_SCRIPTS'])",
+      "file": "tests/test_semantic_identity_workbooks.py",
+      "line": 59
+    },
+    {
+      "call": "load_workbook",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['_WB_SRC'])",
+      "file": "tests/test_semantic_identity_workbooks.py",
+      "line": 69
+    },
+    {
+      "call": "load_workbook",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['_WB_TESTS'])",
+      "file": "tests/test_semantic_identity_workbooks.py",
+      "line": 79
+    },
+    {
+      "call": "load_workbook",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['_WB_TESTS'])",
+      "file": "tests/test_semantic_identity_workbooks.py",
+      "line": 94
+    },
+    {
+      "call": "load_workbook",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['path'])",
+      "file": "tests/test_semantic_identity_workbooks.py",
+      "line": 128
+    },
+    {
+      "call": "load_workbook",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['tmp_path'])",
+      "file": "tests/test_semantic_identity_workbooks.py",
+      "line": 157
+    },
+    {
+      "call": "load_workbook",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['tmp_path'])",
+      "file": "tests/test_semantic_identity_workbooks.py",
+      "line": 166
+    },
+    {
+      "call": "load_workbook",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['_WB_TESTS'])",
+      "file": "tests/test_semantic_identity_workbooks.py",
+      "line": 182
+    },
+    {
+      "call": "read_csv",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['CSV'])",
+      "file": "tests/test_session_timestamp_basis.py",
+      "line": 55
+    },
+    {
+      "call": "read_csv",
+      "class": "CORPUS",
+      "evidence": "literal path: ['data/mt5/XAUUSD_M15.csv']",
+      "file": "tests/test_shape_hypothesis_pit.py",
+      "line": 81
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['_CSV', 'open'])",
+      "file": "tests/test_structure_predicates.py",
+      "line": 62
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['csv_path', 'open'])",
+      "file": "tests/test_tv_forensic_smoke.py",
+      "line": 637
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "tools/btcusdt_crt_v3_replay.py",
+      "line": 121
+    },
+    {
+      "call": "DictReader",
+      "class": "UNKNOWN",
+      "evidence": "unresolvable path expression (names=['fh'])",
+      "file": "tools/tv_forensic/build_disp_exp_plan.py",
+      "line": 65
+    }
+  ],
+  "script_version": "1.0.0"
+}

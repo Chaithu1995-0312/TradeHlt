@@ -5,10 +5,15 @@ import math
 from typing import Dict, Optional
 
 from features.feature_schema import CANONICAL_FEATURES
-from config_layer.llama_gate import llm_score_safe
+from config_layer.llm_scorer import llm_score_safe
 from features.schema_validator import validate_feature_values, validate_features
+from features.fm_resolve import bind_phase3b_scoring_callables
 
 log = logging.getLogger("ScoringEngine")
+
+# Phase-3b: FM-029 via resolve_fm (identity == derived_math.disp_strength_atr_rescale).
+# Bound once at import — same discipline as crt_engine_v2 Phase-2 _FM_CRT.
+_FM_SCORING: dict = bind_phase3b_scoring_callables()
 
 
 def compute_scores(
@@ -16,17 +21,21 @@ def compute_scores(
     move: float,
     atr: float,
     retest_depth: float,
-    candles_since_retest: int,
+    candles_since_sweep: int,
     sweep_detected: bool,
     double_sweep: bool,
     lambda_decay: float = 0.05,
+    score_weights: tuple = (0.35, 0.25, 0.20, 0.20),
 ) -> dict:
     """
     Canonical CRT scoring function.
 
     All sub-scores are bounded to [0, 1]. Decay is applied once.
+    score_weights: (sweep, breakout, retest, time) — configurable via crt_engine.score_component_weights.
     """
-    disp_strength = move / atr if atr > 0 else 0.0
+    # FM-029 disp_strength_atr_rescale (GD-004 closure): the caller passes the FM-020 feature as
+    # `move`, so this is a DISTINCT rescaled quantity — resolved via FORMULA_REGISTRY (Phase-3b).
+    disp_strength_atr_rescale = _FM_SCORING["FM-029"](move, atr)
 
     if not sweep_detected:
         s_sweep = 0.0
@@ -35,11 +44,12 @@ def compute_scores(
     else:
         s_sweep = 0.7
 
-    s_breakout = 0.5 * min(body_ratio, 1.0) + 0.5 * min(disp_strength / 2.0, 1.0)
+    s_breakout = 0.5 * min(body_ratio, 1.0) + 0.5 * min(disp_strength_atr_rescale / 2.0, 1.0)
     s_retest = math.exp(-((retest_depth - 0.5) ** 2) / 0.04)
-    s_time = math.exp(-lambda_decay * max(0, candles_since_retest))
+    s_time = math.exp(-lambda_decay * max(0, candles_since_sweep))
 
-    s_final = 0.35 * s_sweep + 0.25 * s_breakout + 0.20 * s_retest + 0.20 * s_time
+    w_sweep, w_breakout, w_retest, w_time = score_weights
+    s_final = w_sweep * s_sweep + w_breakout * s_breakout + w_retest * s_retest + w_time * s_time
 
     return {
         "sweep": round(s_sweep, 4),
@@ -56,10 +66,16 @@ def compute_gaussian_score(features: list, params: dict) -> float:
     Compute weighted Gaussian score from a feature vector and zone params.
     """
     try:
-        from bitnet.search_engine import compute_gaussian_score as _cgs
+        from bitnet.zone_cosine_searcher import compute_gaussian_score as _cgs
 
         return _cgs(features, params)
     except ImportError:
+        # EPIC-84 KEPT: this whole branch is the optional-import fail-open
+        # fallback for when bitnet.zone_cosine_searcher is unavailable (only
+        # exercised today by src/bitnet/_smoke_test.py). Forcing these to
+        # raise on absence would turn a graceful degraded-score path into a
+        # hard crash when an optional dependency is missing — contrary to
+        # this repo's documented optional-import error mode.
         mu = params.get("mu", {})
         sigma = params.get("sigma", {})
         weights = params.get("weights", {})
@@ -145,17 +161,17 @@ class ScoringEngine:
             },
         }
 
-    def score(self, features: dict, gaussian_score: float, sub_scores: Optional[Dict] = None) -> Dict:
+    def score(self, features: dict, ema_momentum_kernel_score: float, sub_scores: Optional[Dict] = None) -> Dict:
         """
         Score a trade setup by mode.
         """
         if self.mode == "deterministic":
             result = {
-                "final_score": gaussian_score,
-                "gaussian": gaussian_score,
+                "final_score": ema_momentum_kernel_score,
+                "ema_momentum_kernel": ema_momentum_kernel_score,
                 "neural": None,
                 "llm": None,
-                "decision": "EXECUTE" if gaussian_score >= self.threshold else "BLOCK",
+                "decision": "EXECUTE" if ema_momentum_kernel_score >= self.threshold else "BLOCK",
                 "reason": "deterministic_rule",
                 "override": False,
             }
@@ -174,23 +190,23 @@ class ScoringEngine:
             except Exception:
                 neural = 0.0
 
-        if self.llm_enabled and self._should_trigger_llm(gaussian_score, neural):
+        if self.llm_enabled and self._should_trigger_llm(ema_momentum_kernel_score, neural):
             try:
                 llm = float(llm_score_safe(features))
             except Exception:
                 llm = 1.0
 
-        final_score = 0.6 * gaussian_score + 0.3 * neural + 0.1 * llm
+        final_score = 0.6 * ema_momentum_kernel_score + 0.3 * neural + 0.1 * llm
 
         if llm < 0.2:
             decision = "BLOCK"
             reason = "LLM_low_confidence"
             override = True
-        elif neural > 0.8 and gaussian_score < self.threshold:
+        elif neural > 0.8 and ema_momentum_kernel_score < self.threshold:
             decision = "EXECUTE"
             reason = "neural_override_rescue"
             override = True
-        elif neural < 0.3 and gaussian_score < self.threshold:
+        elif neural < 0.3 and ema_momentum_kernel_score < self.threshold:
             decision = "BLOCK"
             reason = "weak_confluence"
             override = True
@@ -203,7 +219,7 @@ class ScoringEngine:
 
         result = {
             "final_score": round(final_score, 4),
-            "gaussian": round(gaussian_score, 4),
+            "ema_momentum_kernel": round(ema_momentum_kernel_score, 4),
             "neural": round(neural, 4),
             "llm": round(llm, 4),
             "decision": decision,

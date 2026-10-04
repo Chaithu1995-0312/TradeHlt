@@ -1,0 +1,24 @@
+{
+  "change_id": "CH-active-models-identity",
+  "objective": "Add WHO identity version-binding blocks under existing active_models.yaml family entries (schema file-format 2.2, truth layers stay 2.0). Mirror registry actives; spine_binding + how_path_ref parity only — no path authority, no EngineRunner/production JSON behavior change, no version_history ledger.",
+  "change_classes": [
+    "ACTIVE_MODEL_CHANGE"
+  ],
+  "affected_files": [
+    "active_models.yaml",
+    "tests/test_active_models_registry.py",
+    "docs/topics/model-intent-and-feature-ownership.md",
+    "docs/governance/build_manifests/CH-active-models-identity.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "identity mirror only for zone_gate, rr_model (rr_fusion), gaussian, bitnet, tradenet — no activate/deactivate/rewire",
+  "affected_production_config": "none — how_path_ref is parity documentation only",
+  "required_checks_ack": [
+    "tests/test_active_models_registry.py",
+    "tests/test_current_findings.py",
+    "tests/test_config_reachability.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "single commit; revert active_models identity blocks + test extensions + topic line"
+}

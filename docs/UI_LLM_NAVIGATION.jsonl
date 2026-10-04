@@ -1,0 +1,132 @@
+{"type": "view", "id": "runs", "label": "Runs / Launcher", "kit": ["ui_kits/control_plane/"], "entry": "ui_kits/control_plane/App.jsx", "mockup": "ui-mock-02", "semantic_names": ["ControlPlaneHttpServer", "ControlPlaneCommandSpecRegistryCatalog", "ControlPlaneJobManager", "ControlPlaneControlPlaneDashboardMonitor", "RunReportAPIExcelGeneration", "ContextReportAPIClaudePowered"], "apis": ["GET /commands", "GET /runs", "GET /runs/{id}", "GET /runs/{id}/logs", "GET /runs/{id}/artifacts", "GET /runs/{id}/monitors", "POST /commands/{id}/runs", "POST /runs/{id}/stop", "GET /runs/{id}/report/excel", "POST /runs/{id}/report/llm", "POST /runs/{id}/context/report"], "scaffold_vs_live": "live via realApi.js"}
+{"type": "view", "id": "ops_overview", "label": "Ops Overview", "kit": ["ui_kits/crt_dashboard/"], "entry": "ui_kits/crt_dashboard/app.jsx", "mockup": "ui-mock-01", "semantic_names": ["ControlPlaneDashboardApi", "ControlPlaneHttpServer", "HealthCheckerLightweightStdlib"], "apis": ["GET /api/status", "GET /api/instruments", "GET /api/equity_curve", "GET /api/opportunity_stats", "GET /api/trades"], "scaffold_vs_live": "hybrid; ALERTS/KPI deltas scaffold"}
+{"type": "view", "id": "trades_alerts", "label": "Trades & Alerts", "kit": ["ui_kits/crt_dashboard/"], "entry": "ui_kits/crt_dashboard/page4_trades.jsx", "mockup": "ui-mock-03", "semantic_names": ["ControlPlaneDashboardApi", "LiveDecisionTelegramAlertEngine", "TelegramAlertTransportBridge", "ExecutionAlertManager"], "apis": ["GET /api/trades", "GET /api/equity_curve", "GET /api/opportunities", "GET /api/opportunity_stats"], "scaffold_vs_live": "trades live; alert feed scaffold; telegram backend live"}
+{"type": "view", "id": "models", "label": "Models", "kit": ["ui_kits/crt_dashboard/"], "entry": "ui_kits/crt_dashboard/page3_models.jsx", "mockup": "ui-mock-04", "semantic_names": ["ControlPlaneDashboardApi", "ActiveModelRegistry"], "apis": ["GET /api/models", "GET /api/zone_gate_models", "GET /api/rr_models", "GET /api/tradenet_models", "POST /api/promote_model", "POST /api/promote_zone_gate", "POST /api/promote_rr", "POST /api/promote_tradenet", "POST /api/explain_model"], "scaffold_vs_live": "live registries + promote"}
+{"type": "view", "id": "research", "label": "Research", "kit": ["ui_kits/crt_dashboard/"], "entry": "ui_kits/crt_dashboard/page2_research.jsx", "mockup": "ui-mock-05", "semantic_names": ["ControlPlaneDashboardApi", "ReplayMemoryEngine", "BacktestMetricsRecomputeOracle"], "apis": ["GET /api/opportunity_analytics", "GET /api/scan_jobs", "GET /api/backtest_history", "GET /api/opportunities"], "scaffold_vs_live": "analytics/backtests live; many sidebar subs IA scaffold"}
+{"type": "view", "id": "pipeline_agent", "label": "Pipeline & Agent", "kit": ["ui_kits/control_plane/"], "entry": "ui_kits/control_plane/App.jsx", "mockup": "ui-mock-06", "semantic_names": ["ControlPlaneCommandSpecRegistryCatalog", "ControlPlaneFlowResolutionArchitecturalGraph", "ControlPlaneASTBasedExtractionContext", "AgentPostRunFindingsGroqLlama", "InRepoAgentCore", "AgentGrokAgenticAIInteractiveREPL", "ControlPlaneHttpServer"], "apis": ["GET /api/agent/findings", "GET /api/agent/audit", "GET /api/agent/llm_requests", "POST /api/agent/synthesize", "GET /commands"], "scaffold_vs_live": "mermaid static; explore/agent live"}
+{"type": "component", "id": "App", "path": "ui_kits/control_plane/App.jsx", "views": ["runs", "pipeline_agent"], "semantic_names": ["ControlPlaneHttpServer"]}
+{"type": "component", "id": "Header", "path": "ui_kits/control_plane/Header.jsx", "views": ["runs", "pipeline_agent"], "semantic_names": ["ControlPlaneCommandSpecRegistryCatalog"]}
+{"type": "component", "id": "PlaybookPanel", "path": "ui_kits/control_plane/PlaybookPanel.jsx", "views": ["runs"], "semantic_names": ["ControlPlaneCommandSpecRegistryCatalog"]}
+{"type": "component", "id": "LauncherPanel", "path": "ui_kits/control_plane/LauncherPanel.jsx", "views": ["runs"], "semantic_names": ["ControlPlaneHttpServer", "ControlPlaneJobManager", "ControlPlaneCommandSpecRegistryCatalog"]}
+{"type": "component", "id": "InspectorPanel", "path": "ui_kits/control_plane/InspectorPanel.jsx", "views": ["runs"], "semantic_names": ["ControlPlaneControlPlaneDashboardMonitor", "RunReportAPIExcelGeneration", "ContextReportAPIClaudePowered"]}
+{"type": "component", "id": "DashboardView", "path": "ui_kits/control_plane/DashboardView.jsx", "views": ["runs"], "semantic_names": ["ControlPlaneControlPlaneDashboardMonitor"]}
+{"type": "component", "id": "WorkflowPanel", "path": "ui_kits/control_plane/WorkflowPanel.jsx", "views": ["pipeline_agent"], "semantic_names": ["ControlPlaneCommandSpecRegistryCatalog"]}
+{"type": "component", "id": "ExplorerPanel", "path": "ui_kits/control_plane/ExplorerPanel.jsx", "views": ["pipeline_agent"], "semantic_names": ["ControlPlaneFlowResolutionArchitecturalGraph", "ControlPlaneASTBasedExtractionContext"]}
+{"type": "component", "id": "AgentPanel", "path": "ui_kits/control_plane/AgentPanel.jsx", "views": ["pipeline_agent"], "semantic_names": ["AgentPostRunFindingsGroqLlama", "InRepoAgentCore"]}
+{"type": "component", "id": "Tour", "path": "ui_kits/control_plane/Tour.jsx", "views": ["runs"], "semantic_names": []}
+{"type": "component", "id": "realApi", "path": "ui_kits/control_plane/realApi.js", "views": ["runs", "pipeline_agent"], "semantic_names": ["ControlPlaneHttpServer"]}
+{"type": "component", "id": "CrtDashboard", "path": "ui_kits/crt_dashboard/app.jsx", "views": ["ops_overview", "trades_alerts", "models", "research"], "semantic_names": ["ControlPlaneDashboardApi"]}
+{"type": "component", "id": "TopBar", "path": "ui_kits/crt_dashboard/shared.jsx", "views": ["ops_overview", "trades_alerts", "models", "research"], "semantic_names": ["ControlPlaneDashboardApi", "ActiveModelRegistry"]}
+{"type": "component", "id": "SidebarNew", "path": "ui_kits/crt_dashboard/shared.jsx", "views": ["ops_overview", "trades_alerts", "models", "research"], "semantic_names": []}
+{"type": "component", "id": "ExecutivePage", "path": "ui_kits/crt_dashboard/page0_executive.jsx", "views": ["ops_overview"], "semantic_names": ["ControlPlaneDashboardApi"]}
+{"type": "component", "id": "RuntimePage", "path": "ui_kits/crt_dashboard/page1_runtime.jsx", "views": ["ops_overview", "trades_alerts"], "semantic_names": ["ControlPlaneDashboardApi"]}
+{"type": "component", "id": "ResearchPage", "path": "ui_kits/crt_dashboard/page2_research.jsx", "views": ["research"], "semantic_names": ["ControlPlaneDashboardApi"]}
+{"type": "component", "id": "ModelsPage", "path": "ui_kits/crt_dashboard/page3_models.jsx", "views": ["models"], "semantic_names": ["ControlPlaneDashboardApi", "ActiveModelRegistry"]}
+{"type": "component", "id": "TradesPage", "path": "ui_kits/crt_dashboard/page4_trades.jsx", "views": ["trades_alerts"], "semantic_names": ["ControlPlaneDashboardApi"]}
+{"type": "component", "id": "BacktestsPage", "path": "ui_kits/crt_dashboard/page5_backtests.jsx", "views": ["research"], "semantic_names": ["ControlPlaneDashboardApi", "BacktestMetricsRecomputeOracle"]}
+{"type": "component", "id": "IntelligencePage", "path": "ui_kits/crt_dashboard/page7_intelligence.jsx", "views": ["research"], "semantic_names": []}
+{"type": "component", "id": "ReplayPage", "path": "ui_kits/crt_dashboard/page8_replay.jsx", "views": ["research"], "semantic_names": ["ReplayMemoryEngine"]}
+{"type": "component", "id": "charts", "path": "ui_kits/crt_dashboard/charts.jsx", "views": ["ops_overview", "trades_alerts", "research"], "semantic_names": []}
+{"type": "component", "id": "apiClient", "path": "ui_kits/crt_dashboard/apiClient.js", "views": ["ops_overview", "trades_alerts", "models", "research"], "semantic_names": ["ControlPlaneDashboardApi", "ControlPlaneHttpServer"]}
+{"type": "component", "id": "data_scaffold", "path": "ui_kits/crt_dashboard/data.js", "views": ["ops_overview", "trades_alerts"], "semantic_names": []}
+{"type": "edge", "from": "runs", "to": "ops_overview", "rel": "nav"}
+{"type": "edge", "from": "runs", "to": "pipeline_agent", "rel": "nav"}
+{"type": "edge", "from": "runs", "to": "trades_alerts", "rel": "nav"}
+{"type": "edge", "from": "ops_overview", "to": "trades_alerts", "rel": "nav"}
+{"type": "edge", "from": "ops_overview", "to": "models", "rel": "nav"}
+{"type": "edge", "from": "ops_overview", "to": "research", "rel": "nav"}
+{"type": "edge", "from": "ops_overview", "to": "runs", "rel": "nav"}
+{"type": "edge", "from": "trades_alerts", "to": "ops_overview", "rel": "nav"}
+{"type": "edge", "from": "trades_alerts", "to": "models", "rel": "nav"}
+{"type": "edge", "from": "trades_alerts", "to": "research", "rel": "nav"}
+{"type": "edge", "from": "trades_alerts", "to": "runs", "rel": "nav"}
+{"type": "edge", "from": "models", "to": "research", "rel": "nav"}
+{"type": "edge", "from": "models", "to": "ops_overview", "rel": "nav"}
+{"type": "edge", "from": "models", "to": "pipeline_agent", "rel": "nav"}
+{"type": "edge", "from": "research", "to": "models", "rel": "nav"}
+{"type": "edge", "from": "research", "to": "runs", "rel": "nav"}
+{"type": "edge", "from": "research", "to": "trades_alerts", "rel": "nav"}
+{"type": "edge", "from": "research", "to": "pipeline_agent", "rel": "nav"}
+{"type": "edge", "from": "pipeline_agent", "to": "runs", "rel": "nav"}
+{"type": "edge", "from": "pipeline_agent", "to": "models", "rel": "nav"}
+{"type": "edge", "from": "pipeline_agent", "to": "research", "rel": "nav"}
+{"type": "edge", "from": "runs", "to": "ui_kits/control_plane/PlaybookPanel.jsx", "rel": "renders"}
+{"type": "edge", "from": "runs", "to": "ui_kits/control_plane/LauncherPanel.jsx", "rel": "renders"}
+{"type": "edge", "from": "runs", "to": "ui_kits/control_plane/InspectorPanel.jsx", "rel": "renders"}
+{"type": "edge", "from": "runs", "to": "ui_kits/control_plane/Header.jsx", "rel": "renders"}
+{"type": "edge", "from": "ops_overview", "to": "ui_kits/crt_dashboard/page0_executive.jsx", "rel": "renders"}
+{"type": "edge", "from": "ops_overview", "to": "ui_kits/crt_dashboard/page1_runtime.jsx", "rel": "renders"}
+{"type": "edge", "from": "ops_overview", "to": "ui_kits/crt_dashboard/shared.jsx", "rel": "renders"}
+{"type": "edge", "from": "trades_alerts", "to": "ui_kits/crt_dashboard/page4_trades.jsx", "rel": "renders"}
+{"type": "edge", "from": "trades_alerts", "to": "ui_kits/crt_dashboard/page1_runtime.jsx", "rel": "renders"}
+{"type": "edge", "from": "models", "to": "ui_kits/crt_dashboard/page3_models.jsx", "rel": "renders"}
+{"type": "edge", "from": "research", "to": "ui_kits/crt_dashboard/page2_research.jsx", "rel": "renders"}
+{"type": "edge", "from": "research", "to": "ui_kits/crt_dashboard/page5_backtests.jsx", "rel": "renders"}
+{"type": "edge", "from": "research", "to": "ui_kits/crt_dashboard/page8_replay.jsx", "rel": "renders"}
+{"type": "edge", "from": "pipeline_agent", "to": "ui_kits/control_plane/WorkflowPanel.jsx", "rel": "renders"}
+{"type": "edge", "from": "pipeline_agent", "to": "ui_kits/control_plane/ExplorerPanel.jsx", "rel": "renders"}
+{"type": "edge", "from": "pipeline_agent", "to": "ui_kits/control_plane/AgentPanel.jsx", "rel": "renders"}
+{"type": "edge", "from": "LauncherPanel", "to": "ControlPlaneHttpServer", "rel": "binds_to_semantic"}
+{"type": "edge", "from": "LauncherPanel", "to": "ControlPlaneJobManager", "rel": "binds_to_semantic"}
+{"type": "edge", "from": "LauncherPanel", "to": "ControlPlaneCommandSpecRegistryCatalog", "rel": "binds_to_semantic"}
+{"type": "edge", "from": "InspectorPanel", "to": "ControlPlaneControlPlaneDashboardMonitor", "rel": "binds_to_semantic"}
+{"type": "edge", "from": "InspectorPanel", "to": "RunReportAPIExcelGeneration", "rel": "binds_to_semantic"}
+{"type": "edge", "from": "InspectorPanel", "to": "ContextReportAPIClaudePowered", "rel": "binds_to_semantic"}
+{"type": "edge", "from": "PlaybookPanel", "to": "ControlPlaneCommandSpecRegistryCatalog", "rel": "binds_to_semantic"}
+{"type": "edge", "from": "WorkflowPanel", "to": "ControlPlaneCommandSpecRegistryCatalog", "rel": "binds_to_semantic"}
+{"type": "edge", "from": "ExplorerPanel", "to": "ControlPlaneFlowResolutionArchitecturalGraph", "rel": "binds_to_semantic"}
+{"type": "edge", "from": "ExplorerPanel", "to": "ControlPlaneASTBasedExtractionContext", "rel": "binds_to_semantic"}
+{"type": "edge", "from": "AgentPanel", "to": "AgentPostRunFindingsGroqLlama", "rel": "binds_to_semantic"}
+{"type": "edge", "from": "AgentPanel", "to": "InRepoAgentCore", "rel": "binds_to_semantic"}
+{"type": "edge", "from": "realApi", "to": "ControlPlaneHttpServer", "rel": "binds_to_semantic"}
+{"type": "edge", "from": "CrtDashboard", "to": "ControlPlaneDashboardApi", "rel": "binds_to_semantic"}
+{"type": "edge", "from": "apiClient", "to": "ControlPlaneDashboardApi", "rel": "binds_to_semantic"}
+{"type": "edge", "from": "apiClient", "to": "ControlPlaneHttpServer", "rel": "binds_to_semantic"}
+{"type": "edge", "from": "TopBar", "to": "ControlPlaneDashboardApi", "rel": "binds_to_semantic"}
+{"type": "edge", "from": "TopBar", "to": "ActiveModelRegistry", "rel": "binds_to_semantic"}
+{"type": "edge", "from": "RuntimePage", "to": "ControlPlaneDashboardApi", "rel": "binds_to_semantic"}
+{"type": "edge", "from": "ExecutivePage", "to": "ControlPlaneDashboardApi", "rel": "binds_to_semantic"}
+{"type": "edge", "from": "TradesPage", "to": "ControlPlaneDashboardApi", "rel": "binds_to_semantic"}
+{"type": "edge", "from": "TradesPage", "to": "LiveDecisionTelegramAlertEngine", "rel": "binds_to_semantic"}
+{"type": "edge", "from": "TradesPage", "to": "TelegramAlertTransportBridge", "rel": "binds_to_semantic"}
+{"type": "edge", "from": "TradesPage", "to": "ExecutionAlertManager", "rel": "binds_to_semantic"}
+{"type": "edge", "from": "ModelsPage", "to": "ControlPlaneDashboardApi", "rel": "binds_to_semantic"}
+{"type": "edge", "from": "ModelsPage", "to": "ActiveModelRegistry", "rel": "binds_to_semantic"}
+{"type": "edge", "from": "ResearchPage", "to": "ControlPlaneDashboardApi", "rel": "binds_to_semantic"}
+{"type": "edge", "from": "BacktestsPage", "to": "ControlPlaneDashboardApi", "rel": "binds_to_semantic"}
+{"type": "edge", "from": "BacktestsPage", "to": "BacktestMetricsRecomputeOracle", "rel": "binds_to_semantic"}
+{"type": "edge", "from": "ReplayPage", "to": "ReplayMemoryEngine", "rel": "binds_to_semantic"}
+{"type": "edge", "from": "ops_overview", "to": "HealthCheckerLightweightStdlib", "rel": "binds_to_semantic"}
+{"type": "edge", "from": "trades_alerts", "to": "TelegramAlertTransportBridge", "rel": "binds_to_semantic"}
+{"type": "edge", "from": "models", "to": "ActiveModelRegistry", "rel": "binds_to_semantic"}
+{"type": "edge", "from": "pipeline_agent", "to": "AgentGrokAgenticAIInteractiveREPL", "rel": "binds_to_semantic"}
+{"type": "edge", "from": "Header", "to": "dashboard", "rel": "kit_view_nav"}
+{"type": "edge", "from": "Header", "to": "workflow", "rel": "kit_view_nav"}
+{"type": "edge", "from": "Header", "to": "explore", "rel": "kit_view_nav"}
+{"type": "edge", "from": "Header", "to": "agent", "rel": "kit_view_nav"}
+{"type": "edge", "from": "WorkflowPanel", "to": "ExplorerPanel", "rel": "opens_flow"}
+{"type": "edge", "from": "pipeline_agent", "to": "runs", "rel": "launches_command"}
+{"type":"live_tab","id":"Executive","page":"ui_kits/crt_dashboard/page0_executive.jsx","view_id":"ops_overview","shot":"docs/ui_mocks/live_tabs/01_executive.png","status":"partial_scaffold_kpi"}
+{"type":"live_tab","id":"Runtime","page":"ui_kits/crt_dashboard/page1_runtime.jsx","view_id":"ops_overview","shot":"docs/ui_mocks/live_tabs/02_runtime.png","status":"partial_live"}
+{"type":"live_tab","id":"Trades","page":"ui_kits/crt_dashboard/page4_trades.jsx","view_id":"trades_alerts","shot":"docs/ui_mocks/live_tabs/03_trades.png","status":"partial"}
+{"type":"live_tab","id":"Models","page":"ui_kits/crt_dashboard/page3_models.jsx","view_id":"models","shot":"docs/ui_mocks/live_tabs/04_models.png","status":"registry_live"}
+{"type":"live_tab","id":"Backtests","page":"ui_kits/crt_dashboard/page5_backtests.jsx","view_id":"research","shot":"docs/ui_mocks/live_tabs/05_backtests.png","status":"partial"}
+{"type":"live_tab","id":"System","page":"ui_kits/crt_dashboard/page6_system.jsx","view_id":"system_health","shot":"docs/ui_mocks/live_tabs/06_system.png","status":"scaffold"}
+{"type":"live_tab","id":"Intelligence","page":"ui_kits/crt_dashboard/page7_intelligence.jsx","view_id":"intelligence","shot":"docs/ui_mocks/live_tabs/07_intelligence.png","status":"inventable"}
+{"type":"live_tab","id":"Replay Lab","page":"ui_kits/crt_dashboard/page8_replay.jsx","view_id":"replay","shot":"docs/ui_mocks/live_tabs/08_replay_lab.png","status":"synthetic"}
+{"type":"edge","from":"Executive","to":"ops_overview","rel":"maps_to_design_view"}
+{"type":"edge","from":"Runtime","to":"ops_overview","rel":"maps_to_design_view"}
+{"type":"edge","from":"runs","to":"ui_kits/control_plane/","rel":"other_kit_not_in_topbar"}
+{"type": "view", "id": "sealed_contracts", "label": "Sealed Contracts / MC Kit", "kit": ["ui_kits/crt_dashboard/"], "entry": "docs/research/ui/MC_KIT_SEALED_CONTRACT_UIUX.md", "mockup": "design-2026-09-14", "status": "design_only", "screens": ["registry", "step0", "composer", "primitives"], "frontier": "F-086…F-097", "economic_claims_allowed": false}
+{"type": "design_doc", "id": "mc_kit_uiux", "path": "docs/research/ui/MC_KIT_SEALED_CONTRACT_UIUX.md", "views": ["sealed_contracts"]}
+{"type": "planned_module", "id": "mc_kit", "path": "src/research/mc_kit/", "views": ["sealed_contracts"], "status": "not_built"}
+{"type": "edge", "from": "research", "to": "sealed_contracts", "rel": "nav"}
+{"type": "edge", "from": "sealed_contracts", "to": "research", "rel": "parent"}
+{"type": "edge", "from": "sealed_contracts", "to": "runs", "rel": "optional_step0_jobs"}
+{"type": "edge", "from": "sealed_contracts", "to": "pipeline_agent", "rel": "optional_migrate_jobs"}
+{"type": "edge", "from": "sealed_contracts", "to": "mc_kit_uiux", "rel": "design_source"}
+{"type": "edge", "from": "sealed_contracts", "to": "mc_kit", "rel": "planned_bind"}
+{"type": "edge", "from": "sealed_contracts", "to": "src/research/mother_range/driver.py", "rel": "pre_migration_exemplar"}
+{"type": "edge", "from": "sealed_contracts", "to": "src/research/sujan_crt/driver.py", "rel": "pre_migration_exemplar"}
+{"type": "edge", "from": "sealed_contracts", "to": "docs/research-readiness/", "rel": "step0_baselines"}
+{"type": "edge", "from": "sealed_contracts", "to": "ui_kits/crt_dashboard/page2_research.jsx", "rel": "reuses_chrome"}

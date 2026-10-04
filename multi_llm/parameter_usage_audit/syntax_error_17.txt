@@ -1,0 +1,17 @@
+D:\Tradelatest\tests\test_auto_tuner_multi.py
+D:\Tradelatest\tests\test_crt_adversarial_closure.py
+D:\Tradelatest\tests\test_crt_config_provenance.py
+D:\Tradelatest\tests\test_crt_states_yaml_transition_parity.py
+D:\Tradelatest\tests\test_directional_displacement.py
+D:\Tradelatest\tests\test_fm_resolution_phase2.py
+D:\Tradelatest\tests\test_parent_crt_wiring.py
+D:\Tradelatest\tests\test_plan001_retest_min_depth_how.py
+D:\Tradelatest\tests\test_retrace_reset_direction.py
+D:\Tradelatest\tests\test_shadow_ttl_lifecycle.py
+D:\Tradelatest\tests\test_soft_conf_ema_probe.py
+D:\Tradelatest\tests\test_state_contracts.py
+D:\Tradelatest\tests\test_state_topology_phase.py
+D:\Tradelatest\tests\Grok\test_C_parity.py
+D:\Tradelatest\tests\Grok\test_E_config_split_brain.py
+D:\Tradelatest\tests\Grok\test_I_parent_htf_journeys.py
+D:\Tradelatest\tests\Grok\_fixtures.py

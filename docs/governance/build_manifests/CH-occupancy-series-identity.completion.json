@@ -1,0 +1,34 @@
+{
+  "change_id": "CH-occupancy-series-identity",
+  "completed_utc": "2026-09-05T00:00:00Z",
+  "completion_status": "PARTIAL",
+  "repo_state_hash": "0fa376884d53+96d9450fccb3",
+  "declared_files": [
+    "docs/governance/CANONICAL_LAYER_IDENTITY_CONTRACT.md",
+    "docs/governance/STORAGE_PRESERVATION_CONTRACT.md",
+    "docs/governance/PHYSICAL_STORAGE_ARCHITECTURE.md",
+    "docs/knowledge-map.md",
+    "docs/governance/build_manifests/CH-occupancy-series-identity.impact.json",
+    "docs/governance/build_manifests/CH-occupancy-series-identity.completion.json",
+    "tests/governance/test_occupancy_series_identity.py",
+    "assistant_project.md"
+  ],
+  "checks_executed": [
+    "scripts/governance/construction_protocol.py validate-impact docs/governance/build_manifests/CH-occupancy-series-identity.impact.json",
+    "tests/governance/test_occupancy_series_identity.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/test_current_findings.py"
+  ],
+  "check_results": {
+    "validate-impact": "APPROVED",
+    "tests/governance/test_occupancy_series_identity.py": "GREEN 5/5",
+    "tests/test_doc_citations.py": "GREEN (this change)",
+    "tests/test_topic_docs.py": "GREEN (this change)",
+    "tests/test_current_findings.py": "RED pre-existing — stale Revalidate-by on F-001…F-015; F-096 absent from CLAUDE.md index; F-096 evidence paths untracked. Not caused by this amendment. Out of scope."
+  },
+  "completion_status_reason": "Additive lineage named; bar occupancy PK unchanged; FROZEN v1.0.0 survived. This change's pin + citation + topic floors are green. COMPLETE is not claimed: (1) class-required test_current_findings.py is pre-existing RED (F-096 / stale revalidate dates); (2) working tree is dirty from concurrent sessions so validate-completion undeclared-surface check cannot isolate this change. Honest PARTIAL.",
+  "production_behavior_changed": "NO",
+  "LAYER_IDENTITY_STATUS": "CLOSED",
+  "pk_rewritten": false
+}

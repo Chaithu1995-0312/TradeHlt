@@ -1,0 +1,795 @@
+{
+ "_doc": "F-049 Gate-2B FAMILY + IMPLEMENTATION_VARIANT registries (derived from the adjudication artifact).",
+ "family_count": 24,
+ "variant_count": 82,
+ "families": {
+  "FAM-12-F2-RANGE": {
+   "family_id": "FAM-12-F2-RANGE",
+   "member_site_ids": [
+    "GEO-D-8a09b98126",
+    "GEO-D-11d525bf85",
+    "GEO-D-c617bc2178",
+    "GEO-D-b9618aa387",
+    "GEO-D-697c0d629e",
+    "GEO-D-27daba8926",
+    "GEO-D-2349f3cf9d",
+    "GEO-D-40f9d890da",
+    "GEO-D-77f3562935",
+    "GEO-D-6e883742d7",
+    "GEO-D-04c39c21b8",
+    "GEO-D-94e9f2e210",
+    "GEO-D-0d8ab24cb2",
+    "GEO-D-0043394747",
+    "GEO-D-8563f0c6b3",
+    "GEO-D-8b76a85166",
+    "GEO-D-05b0146bf1",
+    "GEO-D-d29ce158c8",
+    "GEO-D-d204d30c06",
+    "GEO-D-c5f55b5021",
+    "GEO-D-d1899728b8",
+    "GEO-D-5849ee4ee7",
+    "GEO-D-1c579312c3",
+    "GEO-D-5db26218e2",
+    "GEO-D-d6cc53d211",
+    "GEO-D-ef389e2772",
+    "GEO-D-842a7be87d",
+    "GEO-D-402781bb97",
+    "GEO-D-ba2ff1bf63",
+    "GEO-D-3735575847",
+    "GEO-D-d711a57aa8",
+    "GEO-D-872d20a75e",
+    "GEO-D-f80cc5f083",
+    "GEO-D-d041042fbd",
+    "GEO-D-625cd17967",
+    "GEO-D-b097d7e4ec",
+    "GEO-D-ce0288a17a",
+    "GEO-D-cff53a8f24",
+    "GEO-D-e169fbf3cf",
+    "GEO-D-ffc903aa56",
+    "GEO-D-956d5d89a3",
+    "GEO-D-b9508dc26e",
+    "GEO-D-a4c94fbb85"
+   ],
+   "variants": {
+    "V-window-mean": [
+     "GEO-D-8a09b98126",
+     "GEO-D-11d525bf85",
+     "GEO-D-f80cc5f083"
+    ],
+    "V-exact": [
+     "GEO-D-c617bc2178",
+     "GEO-D-b9618aa387",
+     "GEO-D-8563f0c6b3",
+     "GEO-D-8b76a85166",
+     "GEO-D-05b0146bf1",
+     "GEO-D-d29ce158c8",
+     "GEO-D-5849ee4ee7",
+     "GEO-D-d6cc53d211",
+     "GEO-D-ef389e2772",
+     "GEO-D-842a7be87d",
+     "GEO-D-402781bb97",
+     "GEO-D-ba2ff1bf63",
+     "GEO-D-3735575847",
+     "GEO-D-d041042fbd",
+     "GEO-D-625cd17967",
+     "GEO-D-b097d7e4ec",
+     "GEO-D-ce0288a17a",
+     "GEO-D-cff53a8f24",
+     "GEO-D-e169fbf3cf",
+     "GEO-D-ffc903aa56",
+     "GEO-D-956d5d89a3",
+     "GEO-D-b9508dc26e"
+    ],
+    "V-vectorized": [
+     "GEO-D-697c0d629e",
+     "GEO-D-d711a57aa8",
+     "GEO-D-872d20a75e"
+    ],
+    "V-verification-package": [
+     "GEO-D-27daba8926"
+    ],
+    "V-routed-call": [
+     "GEO-D-2349f3cf9d",
+     "GEO-D-40f9d890da",
+     "GEO-D-77f3562935"
+    ],
+    "V-probe-replica": [
+     "GEO-D-6e883742d7",
+     "GEO-D-0d8ab24cb2"
+    ],
+    "V-probe": [
+     "GEO-D-04c39c21b8",
+     "GEO-D-94e9f2e210"
+    ],
+    "V-script-replica": [
+     "GEO-D-0043394747",
+     "GEO-D-d204d30c06",
+     "GEO-D-c5f55b5021",
+     "GEO-D-d1899728b8"
+    ],
+    "V-floor0.001-table3": [
+     "GEO-D-1c579312c3",
+     "GEO-D-5db26218e2"
+    ],
+    "V-orphan": [
+     "GEO-D-a4c94fbb85"
+    ]
+   }
+  },
+  "FAM-05-TRUE-RANGE": {
+   "family_id": "FAM-05-TRUE-RANGE",
+   "member_site_ids": [
+    "GEO-D-edfd1258e4",
+    "GEO-D-d53e285e15",
+    "GEO-D-a67d5bf33b",
+    "GEO-D-2d162a4e84",
+    "GEO-D-3edfb9f453",
+    "GEO-D-6aac4a0f53",
+    "GEO-D-6cd22d720a",
+    "GEO-D-69788d3f2e",
+    "GEO-D-6fc25f7664",
+    "GEO-D-7ab850e684",
+    "GEO-D-97e2ebc249",
+    "GEO-D-83ddb8a117",
+    "GEO-D-3402da1970",
+    "GEO-D-e544008ffd",
+    "GEO-D-c1cbd287a6",
+    "GEO-D-875c03e798",
+    "GEO-D-761de6121f",
+    "GEO-D-004d3e320d",
+    "GEO-D-420c6bc369",
+    "GEO-D-a52a975155",
+    "GEO-D-0839452638",
+    "GEO-D-a5c7a69990",
+    "GEO-D-034ea282b4",
+    "GEO-D-0906e13c6c",
+    "GEO-D-a1f97aa77f",
+    "GEO-D-83bd6f4976",
+    "GEO-D-c67edb8310",
+    "GEO-D-ffbe3e638c",
+    "GEO-D-10d03e6c1d",
+    "GEO-D-02d9633230",
+    "GEO-D-aa73f44401",
+    "GEO-D-ae4a3d7fba",
+    "GEO-D-f8ab4a6163",
+    "GEO-D-d5c0d9c5aa",
+    "GEO-D-bca6a9a3e1"
+   ],
+   "variants": {
+    "V-wilder": [
+     "GEO-D-edfd1258e4",
+     "GEO-D-d53e285e15",
+     "GEO-D-a67d5bf33b",
+     "GEO-D-2d162a4e84",
+     "GEO-D-3edfb9f453",
+     "GEO-D-6aac4a0f53",
+     "GEO-D-6cd22d720a",
+     "GEO-D-69788d3f2e",
+     "GEO-D-6fc25f7664",
+     "GEO-D-7ab850e684",
+     "GEO-D-97e2ebc249",
+     "GEO-D-83ddb8a117",
+     "GEO-D-3402da1970",
+     "GEO-D-e544008ffd",
+     "GEO-D-c1cbd287a6",
+     "GEO-D-875c03e798",
+     "GEO-D-761de6121f",
+     "GEO-D-420c6bc369",
+     "GEO-D-a52a975155",
+     "GEO-D-a5c7a69990",
+     "GEO-D-034ea282b4",
+     "GEO-D-0906e13c6c",
+     "GEO-D-a1f97aa77f",
+     "GEO-D-83bd6f4976",
+     "GEO-D-c67edb8310",
+     "GEO-D-ffbe3e638c",
+     "GEO-D-10d03e6c1d",
+     "GEO-D-02d9633230",
+     "GEO-D-aa73f44401",
+     "GEO-D-f8ab4a6163",
+     "GEO-D-d5c0d9c5aa",
+     "GEO-D-bca6a9a3e1"
+    ],
+    "V-wilder-mean": [
+     "GEO-D-004d3e320d"
+    ],
+    "V-wilder-scalar": [
+     "GEO-D-0839452638",
+     "GEO-D-ae4a3d7fba"
+    ]
+   }
+  },
+  "FAM-01-F1-BODY": {
+   "family_id": "FAM-01-F1-BODY",
+   "member_site_ids": [
+    "GEO-D-af22cba807",
+    "GEO-D-c45c36b5da",
+    "GEO-D-2a1b96fb1f",
+    "GEO-D-426687f1b2",
+    "GEO-D-49dd86e5cd",
+    "GEO-D-8ff31f8726",
+    "GEO-D-2ad0775164",
+    "GEO-D-5b8c005365",
+    "GEO-D-1afa288d92",
+    "GEO-D-679019d5ae",
+    "GEO-D-31528e0085",
+    "GEO-D-215462b574",
+    "GEO-D-921822f751",
+    "GEO-D-037fa62f2f",
+    "GEO-D-40bbbd8d24",
+    "GEO-D-0b15c210a1",
+    "GEO-D-9460023c74",
+    "GEO-D-cd057d99b7",
+    "GEO-D-d6f8d7c230",
+    "GEO-D-db6351fa92",
+    "GEO-D-92a1389d0b",
+    "GEO-D-960dda70e0",
+    "GEO-D-e39138d69b",
+    "GEO-D-c7b1bc4ed3",
+    "GEO-D-929c4fca3f",
+    "GEO-D-31f1e90563",
+    "GEO-D-8f3aea000d",
+    "GEO-D-f1040d8d17",
+    "GEO-D-dd9a79df47",
+    "GEO-D-3ca89e4db5",
+    "GEO-D-6c74e7e2cb",
+    "GEO-D-ed66212642"
+   ],
+   "variants": {
+    "V-exact": [
+     "GEO-D-af22cba807",
+     "GEO-D-037fa62f2f",
+     "GEO-D-40bbbd8d24",
+     "GEO-D-0b15c210a1",
+     "GEO-D-cd057d99b7",
+     "GEO-D-d6f8d7c230",
+     "GEO-D-db6351fa92",
+     "GEO-D-92a1389d0b",
+     "GEO-D-960dda70e0",
+     "GEO-D-e39138d69b",
+     "GEO-D-c7b1bc4ed3",
+     "GEO-D-31f1e90563",
+     "GEO-D-ed66212642"
+    ],
+    "V-verification-package": [
+     "GEO-D-c45c36b5da",
+     "GEO-D-2a1b96fb1f",
+     "GEO-D-426687f1b2",
+     "GEO-D-49dd86e5cd"
+    ],
+    "V-routed-call": [
+     "GEO-D-8ff31f8726",
+     "GEO-D-2ad0775164",
+     "GEO-D-8f3aea000d"
+    ],
+    "V-probe-replica": [
+     "GEO-D-5b8c005365",
+     "GEO-D-1afa288d92",
+     "GEO-D-679019d5ae",
+     "GEO-D-31528e0085"
+    ],
+    "V-script-replica": [
+     "GEO-D-215462b574",
+     "GEO-D-921822f751"
+    ],
+    "V-guard-nonzero": [
+     "GEO-D-9460023c74"
+    ],
+    "V-vectorized-methodabs": [
+     "GEO-D-929c4fca3f"
+    ],
+    "V-orphan": [
+     "GEO-D-f1040d8d17",
+     "GEO-D-dd9a79df47",
+     "GEO-D-3ca89e4db5"
+    ],
+    "V-window-mean": [
+     "GEO-D-6c74e7e2cb"
+    ]
+   }
+  },
+  "FAM-13-F3-UPPER": {
+   "family_id": "FAM-13-F3-UPPER",
+   "member_site_ids": [
+    "GEO-D-62b020659c",
+    "GEO-D-50c7eb1113",
+    "GEO-D-e38e7c53a7",
+    "GEO-D-ca421e0283",
+    "GEO-D-105e1b37de",
+    "GEO-D-fc87e2cf8c",
+    "GEO-D-bdee65943f",
+    "GEO-D-bf7906c402",
+    "GEO-D-1adaad7a9c"
+   ],
+   "variants": {
+    "V-exact": [
+     "GEO-D-62b020659c",
+     "GEO-D-bdee65943f"
+    ],
+    "V-verification-package": [
+     "GEO-D-50c7eb1113",
+     "GEO-D-e38e7c53a7"
+    ],
+    "V-script-replica": [
+     "GEO-D-ca421e0283",
+     "GEO-D-105e1b37de",
+     "GEO-D-fc87e2cf8c"
+    ],
+    "V-vectorized": [
+     "GEO-D-bf7906c402"
+    ],
+    "V-orphan": [
+     "GEO-D-1adaad7a9c"
+    ]
+   }
+  },
+  "FAM-14-F4-LOWER": {
+   "family_id": "FAM-14-F4-LOWER",
+   "member_site_ids": [
+    "GEO-D-3bf0bfabe0",
+    "GEO-D-a908b49c5e",
+    "GEO-D-5ec20668e1",
+    "GEO-D-3edcb06bbd",
+    "GEO-D-27feba213f",
+    "GEO-D-d51dd588c2",
+    "GEO-D-ad056e5059",
+    "GEO-D-e9aefac917",
+    "GEO-D-9b060e0c0d"
+   ],
+   "variants": {
+    "V-exact": [
+     "GEO-D-3bf0bfabe0",
+     "GEO-D-ad056e5059"
+    ],
+    "V-verification-package": [
+     "GEO-D-a908b49c5e",
+     "GEO-D-5ec20668e1"
+    ],
+    "V-script-replica": [
+     "GEO-D-3edcb06bbd",
+     "GEO-D-27feba213f",
+     "GEO-D-d51dd588c2"
+    ],
+    "V-vectorized": [
+     "GEO-D-e9aefac917"
+    ],
+    "V-orphan": [
+     "GEO-D-9b060e0c0d"
+    ]
+   }
+  },
+  "FAM-15-F5-TOTALW": {
+   "family_id": "FAM-15-F5-TOTALW",
+   "member_site_ids": [
+    "GEO-D-f9b8c68869",
+    "GEO-D-ed1543cd29",
+    "GEO-D-b835c51454",
+    "GEO-D-9fd8587764",
+    "GEO-D-8587152f8e"
+   ],
+   "variants": {
+    "V-exact": [
+     "GEO-D-f9b8c68869",
+     "GEO-D-9fd8587764"
+    ],
+    "V-probe-replica-clip0": [
+     "GEO-D-ed1543cd29",
+     "GEO-D-b835c51454"
+    ],
+    "V-routed-call": [
+     "GEO-D-8587152f8e"
+    ]
+   }
+  },
+  "FAM-16-F6-BODY-RATIO": {
+   "family_id": "FAM-16-F6-BODY-RATIO",
+   "member_site_ids": [
+    "GEO-D-7f15238ee2",
+    "GEO-D-2453f7a695",
+    "GEO-D-58c1b9e175",
+    "GEO-D-bbdaac9947",
+    "GEO-D-81f33dbbe4",
+    "GEO-D-e2f83356c4",
+    "GEO-D-1a8e3e2101",
+    "GEO-D-801a4e8d0b",
+    "GEO-D-3361e3b2f8",
+    "GEO-D-a6b4eb962c",
+    "GEO-D-407bdf299a",
+    "GEO-D-9cfdebb29f",
+    "GEO-D-d2bf99b3d6",
+    "GEO-D-9c07b7f3d8",
+    "GEO-D-fd9b1a3c4f",
+    "GEO-D-fc4742dc07",
+    "GEO-D-60aed81d72",
+    "GEO-D-7a90754ac8",
+    "GEO-D-01b4a1fe17",
+    "GEO-D-c75f80bb69",
+    "GEO-D-58a4d604f2",
+    "GEO-D-a8ddd8e8e3",
+    "GEO-D-1afb089255",
+    "GEO-D-ee943c55cb",
+    "GEO-D-bbc94343d5",
+    "GEO-D-ce54387905",
+    "GEO-D-c177cbd057"
+   ],
+   "variants": {
+    "V-guard0": [
+     "GEO-D-7f15238ee2",
+     "GEO-D-c75f80bb69"
+    ],
+    "V-verification-package": [
+     "GEO-D-2453f7a695",
+     "GEO-D-58c1b9e175",
+     "GEO-D-bbdaac9947",
+     "GEO-D-81f33dbbe4"
+    ],
+    "V-routed-call": [
+     "GEO-D-e2f83356c4",
+     "GEO-D-801a4e8d0b",
+     "GEO-D-7a90754ac8",
+     "GEO-D-ce54387905"
+    ],
+    "V-script-replica": [
+     "GEO-D-1a8e3e2101",
+     "GEO-D-a6b4eb962c",
+     "GEO-D-fd9b1a3c4f",
+     "GEO-D-fc4742dc07",
+     "GEO-D-60aed81d72"
+    ],
+    "V-probe-replica-guard0": [
+     "GEO-D-3361e3b2f8"
+    ],
+    "V-guard0-script": [
+     "GEO-D-407bdf299a",
+     "GEO-D-9cfdebb29f",
+     "GEO-D-d2bf99b3d6"
+    ],
+    "V-guard0-research": [
+     "GEO-D-9c07b7f3d8",
+     "GEO-D-ee943c55cb"
+    ],
+    "V-floored-denom": [
+     "GEO-D-01b4a1fe17"
+    ],
+    "V-exact": [
+     "GEO-D-58a4d604f2",
+     "GEO-D-bbc94343d5"
+    ],
+    "V-derived-math": [
+     "GEO-D-a8ddd8e8e3",
+     "GEO-D-c177cbd057"
+    ],
+    "V-guard0-vectorized": [
+     "GEO-D-1afb089255"
+    ]
+   }
+  },
+  "FAM-02-GD001-BODY-OVER-TOTALW": {
+   "family_id": "FAM-02-GD001-BODY-OVER-TOTALW",
+   "member_site_ids": [
+    "GEO-D-35c230f0f0",
+    "GEO-D-bfe47ca6d7",
+    "GEO-D-e96bf892ce",
+    "GEO-D-a4c49a20c5"
+   ],
+   "variants": {
+    "V-registered-impl-FM013": [
+     "GEO-D-35c230f0f0",
+     "GEO-D-a4c49a20c5"
+    ],
+    "V-probe-replica": [
+     "GEO-D-bfe47ca6d7",
+     "GEO-D-e96bf892ce"
+    ]
+   }
+  },
+  "FAM-17-FM020-DISPSTR": {
+   "family_id": "FAM-17-FM020-DISPSTR",
+   "member_site_ids": [
+    "GEO-D-fa64171d51",
+    "GEO-D-5c2d8b80f9"
+   ],
+   "variants": {
+    "V-clip0-3": [
+     "GEO-D-fa64171d51"
+    ],
+    "V-vectorized-clip": [
+     "GEO-D-5c2d8b80f9"
+    ]
+   }
+  },
+  "FAM-19-VOLUME-PROXY": {
+   "family_id": "FAM-19-VOLUME-PROXY",
+   "member_site_ids": [
+    "GEO-D-ce66f9b9be",
+    "GEO-D-4a33d151bb",
+    "GEO-D-b11dee2065",
+    "GEO-D-66f31db072"
+   ],
+   "variants": {
+    "V-verification-package": [
+     "GEO-D-ce66f9b9be",
+     "GEO-D-4a33d151bb",
+     "GEO-D-b11dee2065",
+     "GEO-D-66f31db072"
+    ]
+   }
+  },
+  "FAM-21-POLARITY-FRACTIONS": {
+   "family_id": "FAM-21-POLARITY-FRACTIONS",
+   "member_site_ids": [
+    "GEO-D-e139a8acd9",
+    "GEO-D-b5af1359d7",
+    "GEO-D-595bb0edd2",
+    "GEO-D-d240021ddb",
+    "GEO-D-bac280b6be"
+   ],
+   "variants": {
+    "V-verification-package": [
+     "GEO-D-e139a8acd9"
+    ],
+    "V-exact": [
+     "GEO-D-b5af1359d7",
+     "GEO-D-bac280b6be"
+    ],
+    "V-plain": [
+     "GEO-D-595bb0edd2",
+     "GEO-D-d240021ddb"
+    ]
+   }
+  },
+  "FAM-09-SOFTCONF-SCORES": {
+   "family_id": "FAM-09-SOFTCONF-SCORES",
+   "member_site_ids": [
+    "GEO-D-3dba5d1bff",
+    "GEO-D-099fc6a31e",
+    "GEO-D-7f2a097c79",
+    "GEO-D-645a80eff0",
+    "GEO-D-ca368c4132",
+    "GEO-D-cf3ffe1da3",
+    "GEO-D-e5ef711849",
+    "GEO-D-0075663f9f",
+    "GEO-D-fe0436e18d",
+    "GEO-D-61575bbb4c",
+    "GEO-D-3aae421e99",
+    "GEO-D-373ac0d94d"
+   ],
+   "variants": {
+    "V-verification-package": [
+     "GEO-D-3dba5d1bff",
+     "GEO-D-099fc6a31e",
+     "GEO-D-7f2a097c79",
+     "GEO-D-645a80eff0",
+     "GEO-D-ca368c4132",
+     "GEO-D-cf3ffe1da3"
+    ],
+    "V-script-replica": [
+     "GEO-D-e5ef711849",
+     "GEO-D-0075663f9f"
+    ],
+    "V-norm-body-min": [
+     "GEO-D-fe0436e18d",
+     "GEO-D-61575bbb4c"
+    ],
+    "V-engine": [
+     "GEO-D-3aae421e99"
+    ],
+    "V-breakout-blend": [
+     "GEO-D-373ac0d94d"
+    ]
+   }
+  },
+  "FAM-99-AUTO-STUB": {
+   "family_id": "FAM-99-AUTO-STUB",
+   "member_site_ids": [
+    "GEO-D-1537c82917",
+    "GEO-D-46db3c8de6",
+    "GEO-D-bfb8fac3d9",
+    "GEO-D-e6bdbc2e84",
+    "GEO-D-74cfeaa9bc",
+    "GEO-D-e4afedd345",
+    "GEO-D-6eae36fbb8",
+    "GEO-D-ce36986148",
+    "GEO-D-99042b9771",
+    "GEO-D-49caa5a314",
+    "GEO-D-0aa1f37648",
+    "GEO-D-52d2c1af05"
+   ],
+   "variants": {
+    "V-script": [
+     "GEO-D-1537c82917",
+     "GEO-D-46db3c8de6",
+     "GEO-D-bfb8fac3d9",
+     "GEO-D-e6bdbc2e84",
+     "GEO-D-74cfeaa9bc",
+     "GEO-D-e4afedd345",
+     "GEO-D-6eae36fbb8",
+     "GEO-D-ce36986148",
+     "GEO-D-52d2c1af05"
+    ],
+    "V-src": [
+     "GEO-D-99042b9771",
+     "GEO-D-49caa5a314",
+     "GEO-D-0aa1f37648"
+    ]
+   }
+  },
+  "FAM-06-RANGE-ATR-MULTIPLE": {
+   "family_id": "FAM-06-RANGE-ATR-MULTIPLE",
+   "member_site_ids": [
+    "GEO-D-28e1cb2108",
+    "GEO-D-6793062934",
+    "GEO-D-97e89bbef1",
+    "GEO-D-debb0a6283",
+    "GEO-D-a28413e2ca",
+    "GEO-D-1d9a18480a",
+    "GEO-D-4cc99bf89d",
+    "GEO-D-db0e1218ce",
+    "GEO-D-8353bf67fa"
+   ],
+   "variants": {
+    "V-probe": [
+     "GEO-D-28e1cb2108"
+    ],
+    "V-script": [
+     "GEO-D-6793062934",
+     "GEO-D-97e89bbef1"
+    ],
+    "V-plain": [
+     "GEO-D-debb0a6283",
+     "GEO-D-1d9a18480a"
+    ],
+    "V-div3-cap1": [
+     "GEO-D-a28413e2ca"
+    ],
+    "V-tent": [
+     "GEO-D-4cc99bf89d"
+    ],
+    "V-registered-impl-FM028": [
+     "GEO-D-db0e1218ce"
+    ],
+    "V-research": [
+     "GEO-D-8353bf67fa"
+    ]
+   }
+  },
+  "FAM-04-TABLE3-FLOORED-WICK": {
+   "family_id": "FAM-04-TABLE3-FLOORED-WICK",
+   "member_site_ids": [
+    "GEO-D-1f1f2aa424",
+    "GEO-D-ed54426d11",
+    "GEO-D-2cba327f94",
+    "GEO-D-933fffa7c4",
+    "GEO-D-d463035ce7",
+    "GEO-D-af3b0f42b1"
+   ],
+   "variants": {
+    "V-floored-ratio": [
+     "GEO-D-1f1f2aa424",
+     "GEO-D-ed54426d11",
+     "GEO-D-2cba327f94",
+     "GEO-D-933fffa7c4",
+     "GEO-D-d463035ce7",
+     "GEO-D-af3b0f42b1"
+    ]
+   }
+  },
+  "FAM-24-BODY-PCT-OF-PRICE": {
+   "family_id": "FAM-24-BODY-PCT-OF-PRICE",
+   "member_site_ids": [
+    "GEO-D-6c191b4372"
+   ],
+   "variants": {
+    "V-x100": [
+     "GEO-D-6c191b4372"
+    ]
+   }
+  },
+  "FAM-10-BODY-ATR-MULTIPLE": {
+   "family_id": "FAM-10-BODY-ATR-MULTIPLE",
+   "member_site_ids": [
+    "GEO-D-bc29e58710"
+   ],
+   "variants": {
+    "V-1.5atr-cap1": [
+     "GEO-D-bc29e58710"
+    ]
+   }
+  },
+  "FAM-18-FM024-VOLRATIO": {
+   "family_id": "FAM-18-FM024-VOLRATIO",
+   "member_site_ids": [
+    "GEO-D-be7c91a27d",
+    "GEO-D-7f36107b04"
+   ],
+   "variants": {
+    "V-fallback1": [
+     "GEO-D-be7c91a27d"
+    ],
+    "V-vectorized-fallback1": [
+     "GEO-D-7f36107b04"
+    ]
+   }
+  },
+  "FAM-11-RANGE-EXPANSION": {
+   "family_id": "FAM-11-RANGE-EXPANSION",
+   "member_site_ids": [
+    "GEO-D-4b2c09e3fb",
+    "GEO-D-8bc78794f3",
+    "GEO-D-084ee14cf0",
+    "GEO-D-9a24cb83ec"
+   ],
+   "variants": {
+    "V-proxy-ratio-fallback1": [
+     "GEO-D-4b2c09e3fb"
+    ],
+    "V-mean-prior": [
+     "GEO-D-8bc78794f3"
+    ],
+    "V-avg-range": [
+     "GEO-D-084ee14cf0",
+     "GEO-D-9a24cb83ec"
+    ]
+   }
+  },
+  "FAM-19-PRICE-POSITION": {
+   "family_id": "FAM-19-PRICE-POSITION",
+   "member_site_ids": [
+    "GEO-D-6ecfa452af"
+   ],
+   "variants": {
+    "V-guard05": [
+     "GEO-D-6ecfa452af"
+    ]
+   }
+  },
+  "FAM-07-REGISTRY-EXEC": {
+   "family_id": "FAM-07-REGISTRY-EXEC",
+   "member_site_ids": [
+    "GEO-D-c5c9512506",
+    "GEO-D-f3b7841c09"
+   ],
+   "variants": {
+    "V-config-num-den": [
+     "GEO-D-c5c9512506"
+    ],
+    "V-signature-dispatch": [
+     "GEO-D-f3b7841c09"
+    ]
+   }
+  },
+  "FAM-22-F7-UPPER-RATIO": {
+   "family_id": "FAM-22-F7-UPPER-RATIO",
+   "member_site_ids": [
+    "GEO-D-6ef5ae9aa0"
+   ],
+   "variants": {
+    "V-guard0-research": [
+     "GEO-D-6ef5ae9aa0"
+    ]
+   }
+  },
+  "FAM-23-F8-LOWER-RATIO": {
+   "family_id": "FAM-23-F8-LOWER-RATIO",
+   "member_site_ids": [
+    "GEO-D-be276363fc"
+   ],
+   "variants": {
+    "V-guard0-research": [
+     "GEO-D-be276363fc"
+    ]
+   }
+  },
+  "FAM-08-F6-EQUIV-SKIPPOLICY": {
+   "family_id": "FAM-08-F6-EQUIV-SKIPPOLICY",
+   "member_site_ids": [
+    "GEO-D-0dd143f10a"
+   ],
+   "variants": {
+    "V-skip-none": [
+     "GEO-D-0dd143f10a"
+    ]
+   }
+  }
+ }
+}

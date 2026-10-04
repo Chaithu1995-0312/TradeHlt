@@ -1,0 +1,112 @@
+{
+  "contract_id": "MC-MRPRIOR-XAUUSD-M15-V1",
+  "sem_id": "SEM-030",
+  "authority": "RESEARCH_ONLY",
+  "economic_claims_allowed": false,
+  "p_goal_04_opened": false,
+  "side_picker": false,
+  "sem028_primary_not_retuned": true,
+  "arm_s": {
+    "y": "y_mfe_r",
+    "train": {
+      "agree": {
+        "n": 31,
+        "mean": 4.445629032258064,
+        "p_gt_0": 0.967741935483871,
+        "e_given_gt_0": 4.593816666666666
+      },
+      "disagree": {
+        "n": 224,
+        "mean": 4.15408125,
+        "p_gt_0": 0.9955357142857143,
+        "e_given_gt_0": 4.172709417040359
+      },
+      "contrast": 0.2915477822580641,
+      "n_trend_zero_or_unknown": 0,
+      "n_null_y": 0
+    },
+    "holdout": {
+      "agree": {
+        "n": 9,
+        "mean": 2.956088888888889,
+        "p_gt_0": 1.0,
+        "e_given_gt_0": 2.956088888888889
+      },
+      "disagree": {
+        "n": 55,
+        "mean": 3.7653981818181816,
+        "p_gt_0": 0.9636363636363636,
+        "e_given_gt_0": 3.907488679245283
+      },
+      "contrast": -0.8093092929292927,
+      "n_trend_zero_or_unknown": 0,
+      "n_null_y": 0
+    },
+    "sign_match": false,
+    "verdict": "INSUFFICIENT"
+  },
+  "arm_t": {
+    "y": "y_time_to_mfe",
+    "train": {
+      "agree": {
+        "n": 29,
+        "mean": 5.482758620689655,
+        "p_gt_0": 1.0,
+        "e_given_gt_0": 5.482758620689655
+      },
+      "disagree": {
+        "n": 213,
+        "mean": 5.262910798122066,
+        "p_gt_0": 1.0,
+        "e_given_gt_0": 5.262910798122066
+      },
+      "contrast": 0.21984782256758884,
+      "n_trend_zero_or_unknown": 0,
+      "n_null_y": 13
+    },
+    "holdout": {
+      "agree": {
+        "n": 9,
+        "mean": 2.0,
+        "p_gt_0": 1.0,
+        "e_given_gt_0": 2.0
+      },
+      "disagree": {
+        "n": 52,
+        "mean": 4.634615384615385,
+        "p_gt_0": 1.0,
+        "e_given_gt_0": 4.634615384615385
+      },
+      "contrast": -2.634615384615385,
+      "n_trend_zero_or_unknown": 0,
+      "n_null_y": 3
+    },
+    "sign_match": false,
+    "verdict": "INSUFFICIENT"
+  },
+  "n_entries": 320,
+  "split": {
+    "holdout_start": "2025-12-24 19:15:00",
+    "train_last_allowed": "2025-12-23 19:15:00",
+    "embargo_bars": 96,
+    "purge_horizon_bars": 40,
+    "n_train": 255,
+    "n_holdout": 64,
+    "n_embargo_dropped": 1,
+    "f086_stride_spent": false,
+    "sem030_primary_not_retuned": true,
+    "sparse_signal_is_sem026_entries": true
+  },
+  "not": [
+    "trade PnL",
+    "G001",
+    "P-GOAL-04",
+    "SEM-026 ledger SL/TP walk",
+    "SEM-029 y_R_net overlay",
+    "SEM-028 every-bar agree",
+    "side picker",
+    "F-086 stride holdout",
+    "session/hour PRIMARY",
+    "xauusd_identity_l5"
+  ]
+}

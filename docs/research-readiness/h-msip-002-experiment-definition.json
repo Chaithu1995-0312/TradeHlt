@@ -1,0 +1,117 @@
+{
+  "schema_id": "H_MSIP_002_EXPERIMENT_DEFINITION_V1",
+  "program_alias": "H-MSIP-002",
+  "registry_id": "H-018",
+  "title": "H017_MATCH_ATTRITION_AND_ESTIMAND_ROBUSTNESS",
+  "status": "RUN_COMPLETE_AWAITING_OWNER_REVIEW",
+  "task_class": "EXPLORATORY_RESEARCH",
+  "authority": "research",
+  "created_at_utc": "2026-07-14T12:05:00Z",
+  "pre_registered_before_alternative_estimand_outcomes": true,
+  "execution_authorized": true,
+  "parent": {
+    "registry_id": "H-017",
+    "program_alias": "H-MSIP-001",
+    "owner_verdict": "RESEARCH_SUPPORTIVE_MICRO_EFFECT",
+    "evidence_scope": "MATCHED_SUBPOPULATION_UNDER_FROZEN_H017_PROTOCOL",
+    "thread_status": "SUPPORTED_BUT_NOT_CLOSED"
+  },
+  "hard_flags": {
+    "ECONOMIC_EDGE_CLAIM": false,
+    "TRADING_AUTHORITY": false,
+    "MSIP_AUTHORITY_CHANGE": false,
+    "CRT_BEHAVIOR_CHANGE": false,
+    "THRESHOLD_RESEARCH": false,
+    "MIGRATION_AUTHORIZED": false,
+    "PRODUCTION_AUTHORITY": false,
+    "NEW_MSV_PARTITIONS": false,
+    "NEW_HORIZONS": false,
+    "POSTHOC_SUBGROUP_DISCOVERY": false
+  },
+  "fixed_target": {
+    "partition_id": "P-BOS",
+    "field": "structure_state.break_of_structure",
+    "level": 1,
+    "primary_outcome": "R_h",
+    "horizon": 8,
+    "occupancy": "ACTIVE_STATES_and_candidate_episode_id",
+    "corpus_sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56"
+  },
+  "primary_question": "Does H-017 P-BOS=+1 residual remain directionally and statistically stable under alternative pre-registered control constructions that reduce dependence on \u00b132-bar exact matching?",
+  "composition_diagnostics_before_outcomes": {
+    "compare": [
+      "matched_treatment",
+      "unmatched_treatment"
+    ],
+    "fields": [
+      "calendar_month",
+      "calendar_fold",
+      "crt_lifecycle_state",
+      "episode_duration",
+      "episode_age_at_bar",
+      "session",
+      "volatility_regime",
+      "trend_bias",
+      "P-BOS_prevalence",
+      "P-BOS_plus1_share"
+    ],
+    "imbalance_flags": {
+      "smd_abs_gt": 0.25,
+      "p_bos_plus1_prevalence_gap_pp_gt": 10
+    }
+  },
+  "estimands": [
+    {
+      "id": "E0",
+      "name": "h017_matched_subpopulation_replication",
+      "control": "exact_block_session_vol_trend_nearest_RANGE_within_32_bars",
+      "treatment_universe": "matched_occupancy_P_BOS_eq_1"
+    },
+    {
+      "id": "E1",
+      "name": "overlap_weighted_broader_treatment",
+      "control": "RANGE_with_IPTW_or_stabilized_weights_on_session_vol_trend",
+      "treatment_universe": "all_occupancy_P_BOS_eq_1",
+      "common_support_alpha": 0.05,
+      "min_treatment_retained_fraction": 0.5,
+      "covariates_only": [
+        "session",
+        "volatility_regime",
+        "trend_bias"
+      ]
+    },
+    {
+      "id": "E2",
+      "name": "time_blocked_stratified",
+      "control": "within_session_vol_trend_and_calendar_quarter_block_RANGE_mean",
+      "calendar_blocks": "four_contiguous_equal_count_eligible_bar_folds_as_H017",
+      "min_n_per_stratum_arm": 20,
+      "aggregate": [
+        "inverse_variance_weighted",
+        "sample_size_weighted"
+      ]
+    }
+  ],
+  "shared_guards": {
+    "permutation_n": 2000,
+    "permutation_seed": 20260714,
+    "held_out_fold": 3,
+    "min_effective_n_per_arm": 80,
+    "direction_reference": "H017_negative_delta_on_R8_for_P_BOS_plus1"
+  },
+  "exit_classes": [
+    "ROBUST",
+    "MATCHING_DEPENDENT",
+    "INCONCLUSIVE",
+    "PROTOCOL_FAILURE"
+  ],
+  "exit_rules": {
+    "ROBUST": "direction survives E0+E1+E2 when support-OK; held-out direction survives; no severe E1 overlap violation",
+    "MATCHING_DEPENDENT": "E0 preserves H017 direction but E1 and/or E2 lose or reverse it",
+    "INCONCLUSIVE": "support or overlap insufficient on critical estimands",
+    "PROTOCOL_FAILURE": "causal alignment, provenance, or frozen-protocol violation"
+  },
+  "preregistration_doc": "docs/research-readiness/h-msip-002-match-attrition-preregistration.md",
+  "run_verdict": "MATCHING_DEPENDENT",
+  "run_artifacts": "results/research/h_msip_002/"
+}

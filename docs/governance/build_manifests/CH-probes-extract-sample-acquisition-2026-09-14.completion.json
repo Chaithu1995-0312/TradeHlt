@@ -1,0 +1,14 @@
+{
+  "change_id": "CH-probes-extract-sample-acquisition-2026-09-14",
+  "change_classes": [
+    "REFACTOR_EXTRACT",
+    "BUGFIX_COMPAT"
+  ],
+  "declared_files": [
+    "scripts/analysis/phase1_resolver_replay_sample_acquisition.py",
+    "archive/probes_extraction_sample_acquisition_2026-09-14/MANIFEST.csv",
+    "docs/research/probes_extraction_audit_2026-09-14.md"
+  ],
+  "completion_status": "COMPLETE_LOCAL",
+  "behavior_evidence": "Same sample-acquisition flow; corpus/governance via research.probes; phase1-local symbols still from evidence module."
+}

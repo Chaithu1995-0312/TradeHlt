@@ -1,0 +1,326 @@
+# Run-bound coding-LLM reasoning context pack.
+# NOT a Context. NOT a MeasurementContract. NOT a Finding. NOT an ODP.
+# Load this file FIRST before any CREATE / four-arm / session / HTF / H20
+# claim about run_20260909_202201.
+#
+# Lane: measurement / evidence.
+# economic_claims_allowed: false
+# authority: none
+# rebuild_completed: true  (CREATE context rebuilt on event-timestamp→CSV 2026-09-10)
+
+artifact: coding_llm_reasoning_context_pack
+pack_role: loadable_reasoning_gate
+
+# SUPERSEDED 2026-09-10 by CH-analysis-trace-linkage. Kept, never deleted (CLAUDE.md 6.2 rule 4):
+# this pack is the record of how the run was gated, and of the user ruling that resolved it.
+superseded_by:
+  analysis_id: AN-SHADOWMEM-XAUUSD-M15-V1
+  location: docs/governance/run_linkage_registry.json  ->  XAUUSD._analyses / XAUUSD._traces
+  change_id: CH-analysis-trace-linkage
+  validator: tests/test_run_linkage_traces.py
+  reason: >
+    This pack is bound to a single run_id, but the analysis consumed five runs (three
+    registered, two not) and six of eight artifact groups carry no run_id at all. A run has
+    no claims; an analysis does. Bound at the wrong grain, the pack needed TWO admission
+    mechanisms with no precedence between them -- trust_table marks
+    create_H20_context_economics VALID while forbidden_inferences lists
+    quote_create_h20_headline -- so two readers each correctly following the pack reach
+    opposite verdicts. The AN/TR records carry one mechanism at the analysis grain.
+  copy_to_reference: >
+    trust_table is by this file's own header a "strict key-copy" of schema_bridge.surfaces,
+    guarded by "if this table disagrees ... this pack is STALE". The replacement cites
+    surfaces as '<run_id>#<surface>' pointers into that same block, so the staleness class is
+    removed structurally rather than warned about.
+  user_ruling_preserved: >
+    2026-09-10: forbidden_inferences outranks trust_table for this run. That ruling is why
+    the parent_crt and session statements sit in AN-SHADOWMEM-XAUUSD-M15-V1.withdrawn_claims
+    with reason FORBIDDEN rather than appearing as claims.
+  still_authoritative_here:
+    - the forbidden_inferences list itself (the ruling's subject)
+    - two_clocks worked example
+    - sparse_contexts object-boundary notes
+does_not_replace:
+  - Context
+  - MeasurementContract
+  - Finding
+  - ODP
+status: evidence_instance
+binds_to_run_id: run_20260909_202201
+schema_rests_on:
+  context_schema: docs/design/context-finding-odp/schemas/context.schema.yaml
+  context_schema_version: "0.5.0"
+  run_linkage_registry: docs/governance/run_linkage_registry.json
+  census_index_join: results/analysis/phase1_resolver_replay/run_20260909_202201/create_economic_census/census.json
+  census_note: docs/research/phase1_shadow_create_economic_census_note.md
+  evidence_note: docs/research/phase1_resolver_replay_evidence_note.md
+  timing_race_note: docs/research/phase1_shadow_memory_timing_race_note.md
+
+load_first:
+  required: true
+  required_before:
+    - CREATE context inference
+    - four-arm / session / HTF / parent / H20 claims about this run
+  if_not_loaded:
+    create_context_session_htf_parent_h20:
+      action: REFUSE
+      phrase: "CREATE-context inference refused: coding-LLM context pack not loaded for run_20260909_202201"
+    four_arm_economics_or_H20:
+      action: REFUSE
+      phrase: "four-arm citation refused: pack not loaded for run_20260909_202201; surfaces are VALID but coverage pooling is the failure mode"
+  after_load:
+    four_arm_economics_or_H20: ADMIT when named surface is VALID and unmixed
+
+# Strict key-copy of schema_bridge.has for this run_id. No extras.
+# Missing slots omitted. Do not mint contract_id / MC-* / mt00 /
+# mx_id / finding_id / F-* / record_id.
+# PR-3 landed: coding_llm_context_pack added to registry has AND this map.
+registry_has:
+  source_run_id: run_20260906_013609
+  logical_corpus_id: XAUUSD_M15
+  decision_id: CAD-XAUUSD_M15-PHASE1-FROZEN
+  dataset_id: XAUUSD_MT5_PHASE1_20260521
+  symbol: XAUUSD
+  source_family: mt5
+  clock_basis: broker_local
+  volume_semantic: TICK_VOLUME
+  canonical_artifact:
+    path: data/mt5/XAUUSD_M15.csv
+    sha256: 4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56
+  parent_timeframe_source: derived_h4
+  decision_status: FROZEN_CANDIDATE_PENDING_PHASE1_VALIDATION
+  approved_physical_path: null
+  economic_claims_allowed: false
+  cost_model_id: component_measured.v1
+  scoreboard: results/analysis/phase1_resolver_replay/run_20260909_202201/scoreboard.json
+  create_census: results/analysis/phase1_resolver_replay/run_20260909_202201/create_economic_census/census.json
+  create_census_funnel_counts: VALID
+  create_census_context_join: EVENT_TIMESTAMP_TO_CSV
+  create_census_context_inference: REBUILT_TIMESTAMP_JOIN
+  coding_llm_context_pack: docs/research/phase1_run_20260909_202201_coding_llm_context.yaml
+
+# True facts the registry has object does not carry. Not registry-addressable.
+identity_facts:
+  active_version: v2_htfcrt_2026_08
+  source_parquet_config_version: v4_dual_construction_2026_09
+  resolve_artifacts:
+    method: registry
+    resolved_run: null
+    has_parquet: true
+  # load_policy is a different object on Dataset Identity, not a sibling of
+  # parent_timeframe_source. Not copied into registry_has.
+
+# Registry is source of truth. If this table disagrees with
+# schema_bridge.surfaces, this pack is STALE.
+trust_table:
+  four_arm_economics: VALID
+  four_arm_H20: VALID
+  create_lifecycle_counts: VALID
+  create_timing_race_counts: VALID
+  create_age_at_reset_distributions: VALID
+  create_session_hour_tables: VALID
+  create_htf_parent_context_tables: VALID
+  create_H20_context_economics: VALID
+  rebuild_completed: true
+  join_logic_fixed_for_future_rebuild: true
+
+index_join:
+  four_arm_path: CSV_PARQUET_BAR_INDEX
+  create_census_join: EVENT_TIMESTAMP_TO_CSV
+  same_defect_as_registry_has: create_census_context_join=EVENT_TIMESTAMP_TO_CSV
+  offset_csv_minus_engine: 62
+  n_creates_offset_checked: 69
+  offset_constant: true
+  funnel_counts: VALID
+  do_not_infer: []
+  worked_example:
+    first_create_event_ts: "2024-06-07 11:15"
+    true_csv_bar_index: 1135
+    census_used_csv_bar_index: 1135
+    census_used_bar_ts: "2024-06-07 11:15"
+    four_arm_verified_bar_index: 785
+    four_arm_verified_ts: "2024-06-03 15:45:00"
+    four_arm_verified_ohlc: { open: 2333.18, close: 2334.07 }
+
+claim_protocol:
+  every_claim_must_name: schema_bridge.surfaces key
+  refuse_unnamed_surface: true
+  refuse_invalidated: true
+  refuse_mix_valid_lifecycle_with_invalidated_h20_session_htf: true
+  economic_claims_allowed: false
+  authority: none
+  pack_not_loaded:
+    create_context_session_htf_parent_h20: REFUSE phrase A
+    four_arm_economics_or_H20: REFUSE phrase B
+
+# Sparse Context sketches. Not sealed. Not schema-valid Context documents.
+# structure stays omitted (not empty {}). No contract_ref.
+# Census rows now carry parent_crt / session / htf at the timestamp-joined bar.
+# Sketches stay sparse (null = not conditioned). Not sealed Contexts.
+# variant_id = standing_contract keys exactly. Do not concatenate arm adjectives.
+sparse_contexts:
+  engine_atlas:
+    state_producer: engine
+    variant_id: null
+    state: EXPANSION
+    transition:
+      from_state: DISPLACEMENT   # 142; remainder SWEEP 6
+      to_state: EXPANSION
+      edge_id: null
+    parent_crt: null
+    objective: null
+    location:
+      instrument: XAUUSD
+      timeframe: M15
+      session_id: null
+      htf_bucket: null
+    notes: "Engine EXP = mostly DISP→EXP. Not Resolver EXP. Do not pool with n=31."
+  resolver_memory:
+    state_producer: resolver
+    variant_id: resolver_memory
+    state: EXPANSION
+    transition:
+      from_state: SHADOW_PENDING
+      to_state: EXPANSION
+      edge_id: null
+    parent_crt: null
+    objective: null
+    location:
+      instrument: XAUUSD
+      timeframe: M15
+      session_id: null
+      htf_bucket: null
+    notes: "Resolver EXP = SHADOW→EXP + pending_displacement_dir (strict_memory). n=31. variant_id = standing_contract key resolver_memory. strict_memory is notes-only."
+  resolver_trendbias:
+    state_producer: resolver
+    variant_id: resolver_trendbias
+    state: EXPANSION
+    transition:
+      from_state: SHADOW_PENDING
+      to_state: EXPANSION
+      edge_id: null
+    parent_crt: null
+    objective: null
+    location:
+      instrument: XAUUSD
+      timeframe: M15
+      session_id: null
+      htf_bucket: null
+    notes: "Resolver EXP = SHADOW→EXP + trend_bias sign. n=31. Direction agree with Memory: 0/31. variant_id = standing_contract key resolver_trendbias. Do not pool variant_id."
+  always_long_control:
+    not_a_context: true
+    reason: "Stride-H20 control walk. Do not assign state EXPANSION."
+  create_lifecycle_pending_memory:
+    state_producer: engine
+    variant_id: null
+    state: DISPLACEMENT
+    transition:
+      from_state: DISPLACEMENT
+      to_state: null
+      edge_id: HTF_CHANGED_WHILE_DISPLACEMENT
+    parent_crt: null          # sketch unconditioned; census rows carry timestamp-joined parent_crt
+    objective: null
+    location:
+      instrument: XAUUSD
+      timeframe: M15
+      session_id: null        # sketch unconditioned; census rows carry timestamp-joined session
+      htf_bucket: null
+    notes: >
+      Unit = CREATE of HTF-displacement pending memory (n=69), not SHADOW→EXP
+      restore (n=6) and not Resolver EXP (n=31). Do not bind state EXPANSION.
+
+two_clocks:
+  clock_a_engine_candle_timestamp:
+    owns:
+      - create_lifecycle_counts
+      - create_timing_race_counts
+      - create_age_at_reset_distributions   # ages only
+      - pending_dir_event_native_labels
+    expire_row_0:
+      derived_expire_ts_from_create_plus_4_m15: "2024-06-07 12:15:00"
+      hour_broker_local: 12
+      session_hour_bucket_broker_local: LONDON_8_13
+      created_idx_engine_domain: 1073
+      note: "hour_broker_local is the on-disk field; 12:15 is derived (CREATE 11:15 + 4 M15). No timestamp key on expire_rows_timing[0]."
+  clock_b_csv_parquet_bar_index:
+    owns:
+      - four_arm_economics
+      - four_arm_H20
+    misjoined_create_bar:
+      csv_bar_index: 1073
+      csv_timestamp: "2024-06-06 18:45:00"
+      census_hour_of_day: 18.0
+      census_session_bucket: NY_17_22
+    true_create_bar:
+      csv_bar_index: 1135
+      csv_timestamp: "2024-06-07 11:15:00"
+  do_not_mix: true
+
+authoritative_numbers:
+  n_eligible_corpus: 47255
+  four_arm_H20:
+    Engine-Atlas:     { n: 148,  coverage_pct: 0.3132, expectancy:  0.027665, PF: 1.0221, win_rate: 0.4662, power: WEAK }
+    Resolver-Memory:  { n: 31,   coverage_pct: 0.0656, expectancy:  0.348100, PF: 1.3739, win_rate: 0.5484, power: WEAK }
+    Resolver-TrendBias: { n: 31, coverage_pct: 0.0656, expectancy: -0.466977, PF: 0.6508, win_rate: 0.4516, power: WEAK }
+    Always-Long:      { n: 2359, coverage_pct: 4.9921, expectancy:  0.255069, PF: 1.2143, win_rate: 0.5354, power: WEAK }
+  engine_from_state: { DISPLACEMENT: 142, SWEEP: 6 }
+  memory_vs_trendbias_dir_agree: "0/31"
+  case_call: A
+  case_call_status: interpretive_only
+  create_funnel:
+    CREATE: 69
+    EXPIRED_TTL: 45
+    CLEARED_OR_OVERWRITTEN: 18
+    RESTORED_TO_EXPANSION: 6
+  restore_given_shadow_pending: "6/6"
+  coverage_rule: "n / n_eligible_corpus; never 31/148"
+  pending_dir_event_native:
+    SHORT: 39
+    LONG: 26
+    unlabeled: 4
+    notes: "Rebuild fill: 41 SHORT / 28 LONG (event overlay plus parquet crt_direction at created_idx-1). Age_at_reset still engine-domain; 4 rows have no overlay formed_idx (UNKNOWN age)."
+
+forbidden_inferences:
+  - coverage_31_over_148
+  - pool_engine_resolver_exp
+  - quote_create_h20_headline
+  - quote_create_session_hour
+  - quote_create_htf_parent
+  - quote_create_h20_buckets
+  - mix_timing_race_hour_with_create_parquet_session
+  - optimize_6_of_6_restore
+  - mint_mc_or_finding
+  - mint_variant_id_adjective
+  - promote_or_g001
+  - dashboard_absence_means_run_missing
+  - context_is_s_t
+  - parent_crt_as_l3
+  - create_parent_crt_selector
+  - treat_pack_as_measurement_contract
+  - rebuild_now
+  - discard_the_run
+  - attach_h20_to_valid_age_buckets
+
+future_rebuild:
+  authorized: true
+  rebuild_completed: true
+  join_logic_fixed_for_future_rebuild: true
+  rule:
+    created_idx: "event timestamp → CSV/parquet bar_index"
+    keep_engine_candle_index: true
+    age_at_reset: "engine-domain delta (engine_candle_index - formed_idx)"
+    rebuild_scope: "CREATE context tables only"
+    keep_funnel: [69, 45, 18, 6]
+    four_arm: untouched
+  do_not:
+    - flip_TTL
+    - expand_years_or_instruments
+    - optimize_restores
+    - change_production_config_or_spine
+
+existing_f_ids_cited_not_minted:
+  - F-066
+  - F-069
+  - F-077
+  - F-079
+  - F-083
+  - F-098

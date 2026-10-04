@@ -1,0 +1,1172 @@
+# Semantic OS v2 — CONCEPT CONTRACTS (meaning plane). Slice 1: Geometry + Market. Slice 2: Trading.
+# Slice 3: Decision/Execution.
+#
+# Spec:      docs/governance/SEMANTIC_OS_V2_MEANING_PLANE.md
+# Companion: configs/formulas/representation_registry/*.yaml  (representation -> concept)
+#            configs/formulas/terminal_reason_map.yaml        (legacy RESET reason -> authority)
+#
+# AUTHORITY: meaning authority (CLAUDE.md §6.6). Grants NO runtime authority (§6.5).
+# "Contract" alone means a Semantic OS CT-* behaviour contract (advisory). These are CONCEPT contracts.
+#
+# Field rules (enforced by the validator — see the handoff brief):
+#   status ACCEPTED  = contractually definable from an identified REPO source or explicit USER_DECISION.
+#                      NOT validated, NOT economically useful, NOT universal trading knowledge.
+#   status PROPOSED  = no representation and no consumer may bind to it (I-18).
+#   authority.sources must be git-tracked paths (ACCEPTED only; at least one).
+#   inputs reference concepts in the same or a LOWER layer only (I-12).
+#   every parameter declares identity_bearing (I-17).
+#   kind MEASUREMENT must declare units.unit and units.normalization_basis (I-4).
+#   `representation` and `consumers` are NOT stored here: the REP registry is the single source for
+#   representation -> concept, and consumers are derived mechanically from code (I-14).
+#   divergences: current-vs-contract differences. Recorded, never fixed in place (Phase B).
+#   legacy_values: parameter values that existing REPRESENTATIONS carry but the contract does not
+#                  accept; a representation may use one only if a matching divergence is recorded.
+
+schema: concept_contracts/v1
+version: 1
+slice: 3
+layers_in_slice: [GEOMETRY, MARKET, TRADING, DECISION_EXECUTION]
+
+concepts:
+
+  # ═══════════════════════════════ GEOMETRY ═══════════════════════════════
+
+  GP-01:
+    canonical_name: pierce
+    layer: GEOMETRY
+    kind: PRIMITIVE
+    status: ACCEPTED
+    definition: "The bar's extreme trades strictly beyond a price on the given side."
+    identity: {reference: price, timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {side: {domain: [UPPER, LOWER], identity_bearing: true}}
+    inputs: []
+    rule: "UPPER: high > L ; LOWER: low < L. Equality is NOT a pierce."
+    units: {domain: bool}
+    absence: "Undefined when L is absent; callers must not pass a sentinel price."
+    authority: {evidence: [REPO], sources: [src/structure/predicates.py, src/features/causal_structure.py], lineage: [SP-001]}
+    divergences: []
+    version: 1
+
+  GP-02:
+    canonical_name: beyond
+    layer: GEOMETRY
+    kind: PRIMITIVE
+    status: ACCEPTED
+    definition: "The bar closes strictly beyond a price on the given side (acceptance)."
+    identity: {reference: price, timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {side: {domain: [UPPER, LOWER], identity_bearing: true}}
+    inputs: []
+    rule: "UPPER: close > L ; LOWER: close < L. Equality is NOT beyond."
+    units: {domain: bool}
+    absence: "Undefined when L is absent."
+    authority: {evidence: [REPO], sources: [src/features/causal_structure.py, src/features/smc/breaker.py, src/config_layer/htf_state.py], lineage: [FM-057]}
+    divergences: []
+    version: 1
+
+  GP-03:
+    canonical_name: reach
+    layer: GEOMETRY
+    kind: PRIMITIVE
+    status: ACCEPTED
+    definition: "The bar closes at or beyond a price on the given side."
+    identity: {reference: price, timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {side: {domain: [UPPER, LOWER], identity_bearing: true}}
+    inputs: []
+    rule: "UPPER: close >= L ; LOWER: close <= L. Equality IS a reach."
+    units: {domain: bool}
+    absence: "Undefined when L is absent."
+    authority: {evidence: [REPO], sources: [src/config_layer/htf_state.py], lineage: [SEM-009]}
+    divergences: []
+    version: 1
+
+  GP-04:
+    canonical_name: pierce_and_reject
+    layer: GEOMETRY
+    kind: PRIMITIVE
+    status: ACCEPTED
+    definition: "The bar pierces a price and closes strictly back on the origin side."
+    identity: {reference: price, timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {side: {domain: [UPPER, LOWER], identity_bearing: true}}
+    inputs: []
+    rule: "UPPER: high > L and close < L ; LOWER: low < L and close > L (SP-001 swept_high/swept_low). A close exactly AT L is neither GP-02 nor GP-04."
+    units: {domain: bool}
+    absence: "Undefined when L is absent."
+    authority: {evidence: [REPO], sources: [src/structure/predicates.py], lineage: [SP-001]}
+    divergences:
+      - {surface: "FM-058 liquidity_sweep (src/features/causal_structure.py, src/features/feature_pipeline.py)", current: "inclusive close-back (close <= ref)", contract: "strict (close < ref)", evidence: "XAUUSD M15 47,275 bars: 7,567 inclusive vs 7,537 strict sweeps, 30 tie-only bars (0.40%)", disposition: PHASE_B_CANDIDATE}
+    version: 1
+
+  GP-05:
+    canonical_name: overlap
+    layer: GEOMETRY
+    kind: PRIMITIVE
+    status: ACCEPTED
+    definition: "The bar's range intersects a price interval, edges inclusive."
+    identity: {reference: zone, timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {}
+    inputs: []
+    rule: "low <= zone_high and high >= zone_low (features.smc._geometry.is_mitigated)."
+    units: {domain: bool}
+    absence: "Undefined when the zone is absent."
+    authority: {evidence: [REPO], sources: [src/features/smc/_geometry.py], lineage: []}
+    divergences: []
+    version: 1
+
+  GP-06:
+    canonical_name: directional_impulse
+    layer: GEOMETRY
+    kind: PRIMITIVE
+    status: ACCEPTED
+    definition: "A bar whose body travels away from the swept side and closes beyond the swept price."
+    identity: {reference: sweep_price, timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {bias: {domain: [LONG, SHORT], identity_bearing: true}}
+    inputs: []
+    rule: "LONG: close > open and close > sweep_price ; SHORT: close < open and close < sweep_price (SP-002, F-074). Bias is inherited from the sweep, never re-derived from this bar."
+    units: {domain: bool}
+    absence: "Undefined without a sweep."
+    authority: {evidence: [REPO], sources: [src/structure/predicates.py], lineage: [SP-002, F-074]}
+    divergences: []
+    version: 1
+
+  GP-07:
+    canonical_name: in_band
+    layer: GEOMETRY
+    kind: PRIMITIVE
+    status: PROPOSED
+    definition: "The bar trades inside a band around a reference price."
+    identity: {reference: price, timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {}
+    inputs: []
+    rule: "UNDEFINED — SP-003 retest_band definition is deferred on OQ7 (src/structure/predicates.py:33)."
+    units: {domain: bool}
+    absence: "n/a"
+    authority: {evidence: [], sources: [], lineage: [SP-003]}
+    divergences:
+      - {surface: "feature_pipeline retest_flag (src/features/feature_pipeline.py compute_canonical_structure_features)", current: "internal ATR band after a recent sweep; FM-061 (legacy sweep input) / FM-094 (MKT-E01 sweep input, sweep_semantics e01_lifecycle). CORRECTED 2026-10-03: was 'no FM id'", contract: "no definition yet", disposition: RECORDED}
+    version: 1
+
+  # ═══════════════════════════════ MARKET — LEVELS ═══════════════════════════════
+
+  MKT-L01:
+    canonical_name: liquidity_level
+    layer: MARKET
+    kind: LEVEL
+    status: ACCEPTED
+    definition: "A price the market founded (by structure, calendar or chart) that is hypothesised to hold resting orders on its outer side. A level is never a role (objective/stop)."
+    identity: {reference: founding, timeframe: per_founding, clock: per_founding, availability_rule: per_founding}
+    parameterization:
+      founding: {domain: [m15_structural_range, parent_candle, weekly_mon_tue, visual_pool, swing_pivot, prior_day, equal_cluster, mother_range, htf_range_resolver], identity_bearing: true}
+      k: {domain: int, identity_bearing: true, applies_to: [swing_pivot, equal_cluster], default_ref: feature_pipeline.swing_window}
+      tolerance_atr: {domain: float, identity_bearing: true, applies_to: [equal_cluster]}
+    inputs: []
+    rule: "Per founding. swing_pivot(k): pivot at bar j published at j+k (FC1-A causal). m15_structural_range: SEM-011 envelope h_ref/l_ref. prior_day: previous D1 high/low on a declared clock. equal_cluster: most recent swing with another swing within tolerance_atr*ATR."
+    units: {unit: price, normalization_basis: none, sign_convention: "side UPPER = +1, LOWER = -1"}
+    lifecycle: {states: [ACTIVE, SWEPT, BROKEN, EXPIRED], transitions: {MKT-E01: SWEPT, GP-02: BROKEN}, terminal_authority: MARKET}
+    absence: "No level = None. Never a sentinel price (causal_structure encodes 'no swing yet' as 0.0 — recorded divergence)."
+    authority: {evidence: [REPO, USER_DECISION], sources: [configs/formulas/structure_profiles.yaml, src/config_layer/m15_structural_range.py, src/features/causal_structure.py, src/features/smc/levels.py], lineage: [SEM-011, SPP-001, SPP-002, SPP-003, SPP-004]}
+    divergences:
+      - {surface: "causal_structure _last_swing_*_price", current: "0.0 means no swing yet", contract: "absence distinguishable from every valid value (I-7)", disposition: RECORDED}
+      - {surface: "features.smc._geometry.detect_causal_swings", current: "second causal swing detector", contract: "one swing_pivot founding", evidence: "equivalence with causal_structure swings UNVERIFIED", disposition: RECORDED}
+      - {surface: "liquidity_* features (FM-025/026)", current: "distances only; no level object", contract: "liquidity_level object", disposition: RECORDED}
+      - {surface: "causal_structure._centered_flags (causal_structure.py:66-69)", current: "high[j] == window max marks a pivot, so equal highs inside one window are each a pivot and a flat window confirms pivots", contract: "rule says 'pivot' and is silent on whether the extreme must be unique", evidence: "slice-1 swing_levels follows causal_structure (Grok question, verified 2026-10-02)", disposition: RECORDED}
+      - {surface: "causal_structure FM-025 liquidity_distance (causal_structure.py:179-180)", current: "a non-finite distance (no usable level) is stored as 10.0, the same number as a real distance of 10", contract: "absence distinguishable from every valid value (I-7)", evidence: "slot is unmapped in slice 1 (MEASUREMENT); verified 2026-10-02", disposition: RECORDED}
+    version: 1
+
+  MKT-L02:
+    canonical_name: derived_level
+    layer: MARKET
+    kind: LEVEL
+    status: ACCEPTED
+    definition: "A price derived from another market object: a retracement or extension of a move, a candle extreme, or a range equilibrium. Identity includes its anchor."
+    identity: {reference: anchor, timeframe: per_anchor, clock: bar_close, availability_rule: "anchor available_at"}
+    parameterization:
+      kind: {domain: [retracement, extension, candle_extreme, equilibrium], identity_bearing: true}
+      fraction: {domain: float, identity_bearing: true, applies_to: [retracement], default_ref: crt_engine.retrace_reset_pct}
+      fib: {domain: float, identity_bearing: true, applies_to: [extension], default_ref: crt_engine.extension_reset_fib}
+    inputs: [MKT-L01, MKT-E04]
+    rule: "retracement = end - fraction*(end-start); extension = origin + fib*(end-origin); equilibrium = (upper+lower)/2; candle_extreme = high|low of the anchor bar."
+    units: {unit: price, normalization_basis: none}
+    lifecycle: null
+    absence: "No anchor -> no level (None)."
+    authority: {evidence: [REPO], sources: [src/config_layer/crt_engine_v2.py, src/config_layer/m15_structural_range.py], lineage: []}
+    divergences:
+      - {surface: "range equilibrium vs 50% displacement retracement", current: "both 'a 50% level', anchors implicit", contract: "distinct identities via anchor", disposition: RECORDED}
+    version: 1
+
+  # ═══════════════════════════════ MARKET — ZONES ═══════════════════════════════
+
+  MKT-Z01:
+    canonical_name: range
+    layer: MARKET
+    kind: ZONE
+    status: ACCEPTED
+    definition: "The interval between an upper and a lower liquidity level of one founding."
+    identity: {reference: founding, timeframe: per_founding, clock: per_founding, availability_rule: "max(available_at of both levels)"}
+    parameterization: {founding: {domain: "MKT-L01.founding", identity_bearing: true}}
+    inputs: [MKT-L01]
+    rule: "[lower.price, upper.price] of two MKT-L01 levels with equal founding and formation."
+    units: {unit: price, normalization_basis: none}
+    lifecycle: {states: [ACTIVE, REFOUNDED], transitions: {MKT-E12: REFOUNDED}, terminal_authority: MARKET}
+    absence: "No range = None."
+    authority: {evidence: [REPO], sources: [src/config_layer/m15_structural_range.py], lineage: [SEM-011]}
+    divergences:
+      - {surface: "the word 'range'", current: "names a zone, the CRT RANGE stage, the HTFBuilder clock and bar measurements", contract: "zone only; stage = AWAITING_SWEEP; clock = htf_period", disposition: RECORDED}
+    version: 1
+
+  MKT-Z02:
+    canonical_name: fvg
+    layer: MARKET
+    kind: ZONE
+    status: ACCEPTED
+    definition: "Fair value gap: the price interval left untraded between candle i-1 and candle i+1 around a middle candle i."
+    identity: {reference: three_candle_pattern, timeframe: bar, clock: bar_close, availability_rule: "close of bar i+1"}
+    parameterization: {}
+    inputs: [GP-05]
+    rule: "bullish if high[i-1] < low[i+1]: zone [high[i-1], low[i+1]]; bearish if low[i-1] > high[i+1]: zone [high[i+1], low[i-1]] (features.smc.fvg._find_fvg_events)."
+    units: {unit: price, normalization_basis: none}
+    lifecycle: {states: [ACTIVE, TOUCHED], proposed_states: [FILLED], transitions: {MKT-E06: TOUCHED}, terminal_authority: MARKET}
+    absence: "No active zone = present:false (distance slot 0.0 is ambiguous — recorded divergence)."
+    authority: {evidence: [REPO], sources: [src/features/smc/fvg.py, src/features/smc/_geometry.py], lineage: [F-076]}
+    divergences:
+      - {surface: "fvg_distance slot", current: "0.0 = no zone AND 0.0 = at the edge", contract: "distance + separate presence (I-7)", disposition: PHASE_B_CANDIDATE}
+      - {surface: "lifecycle", current: "one touch = mitigated/filled", contract: "TOUCHED accepted; FILLED (fully traded through) PROPOSED", disposition: RECORDED}
+    version: 1
+
+  MKT-Z03:
+    canonical_name: order_block
+    layer: MARKET
+    kind: ZONE
+    status: ACCEPTED
+    definition: "The last opposite-coloured candle before a structural break, as a zone."
+    identity: {reference: structure_break_origin, timeframe: bar, clock: bar_close, availability_rule: "bar of the founding break"}
+    parameterization: {k: {domain: int, identity_bearing: true, default_ref: feature_pipeline.swing_window}}
+    inputs: [MKT-E02, GP-05]
+    rule: "features.smc.order_block: origin candle found by _origin_candle before a break from _find_break_events; zone = origin high/low."
+    units: {unit: price, normalization_basis: none}
+    lifecycle: {states: [ACTIVE, TOUCHED, BROKEN], transitions: {MKT-E06: TOUCHED, MKT-E07: BROKEN}, terminal_authority: MARKET}
+    absence: "present:false."
+    authority: {evidence: [REPO], sources: [src/features/smc/order_block.py], lineage: [F-076]}
+    divergences:
+      - {surface: "_find_break_events", current: "a break 'event' on every bar beyond the swing (re-fires)", contract: "founded on MKT-E02 onset", disposition: PHASE_B_CANDIDATE}
+      - {surface: "order_block_distance slot", current: "0.0 = none", contract: "presence (I-7)", disposition: PHASE_B_CANDIDATE}
+    version: 1
+
+  MKT-Z04:
+    canonical_name: breaker
+    layer: MARKET
+    kind: ZONE
+    status: ACCEPTED
+    definition: "An order block that price closed through (BROKEN), with its polarity flipped."
+    identity: {reference: order_block, timeframe: bar, clock: bar_close, availability_rule: "bar of the close-through"}
+    parameterization: {k: {domain: int, identity_bearing: true}}
+    inputs: [MKT-Z03, MKT-E07, GP-05]
+    rule: "features.smc.breaker.find_active_breaker."
+    units: {unit: price, normalization_basis: none}
+    lifecycle: {states: [FLIPPED, TOUCHED], transitions: {MKT-E06: TOUCHED}, terminal_authority: MARKET}
+    absence: "present:false."
+    authority: {evidence: [REPO], sources: [src/features/smc/breaker.py], lineage: [F-076]}
+    divergences:
+      - {surface: "features.smc.breaker.find_active_breaker (breaker.py:64-66)", current: "Zone.formed_at_index is the order-block ORIGIN candle; the close-through bar (local violated_at) is not stored on the zone", contract: "available_at = bar of the close-through", evidence: "slice-1 breaker_views sets available_at to the first bar the finder returns the zone (Grok, verified 2026-10-02)", disposition: RECORDED}
+    version: 1
+
+  MKT-Z05:
+    canonical_name: ob_body_zone
+    layer: MARKET
+    kind: ZONE
+    status: ACCEPTED
+    definition: "The body-only inner zone of an order block whose outer zone has already been touched (today's 'mitigation block')."
+    identity: {reference: order_block, timeframe: bar, clock: bar_close, availability_rule: "bar of first outer touch"}
+    parameterization: {k: {domain: int, identity_bearing: true}}
+    inputs: [MKT-Z03, GP-05]
+    rule: "features.smc.mitigation.find_active_mitigation_block."
+    units: {unit: price, normalization_basis: none}
+    lifecycle: {states: [ACTIVE, TOUCHED], transitions: {MKT-E06: TOUCHED}, terminal_authority: MARKET}
+    absence: "present:false."
+    authority: {evidence: [REPO], sources: [src/features/smc/mitigation.py], lineage: [F-076]}
+    divergences:
+      - {surface: "name 'mitigation'", current: "both the touch verb and this zone type", contract: "verb = zone_touch (MKT-E06); zone = ob_body_zone", disposition: RECORDED}
+      - {surface: "features.smc.mitigation.find_active_mitigation_block (mitigation.py:53-63)", current: "returns None when the first outer touch bar also enters the body; the inner zone is then never reported, not even for one bar", contract: "zone exists from the bar of first outer touch, then TOUCHED", evidence: "the inner touch test scans the same bars as the outer touch test (verified 2026-10-02)", disposition: RECORDED}
+    version: 1
+
+  MKT-Z06:
+    canonical_name: retest_band
+    layer: MARKET
+    kind: ZONE
+    status: PROPOSED
+    definition: "The band around a reference that price must return into to count as a retest."
+    identity: {reference: UNKNOWN, timeframe: bar, clock: bar_close, availability_rule: UNKNOWN}
+    parameterization: {}
+    inputs: [GP-07]
+    rule: "UNDEFINED (OQ7)."
+    units: {unit: price, normalization_basis: UNKNOWN}
+    lifecycle: null
+    absence: "n/a"
+    authority: {evidence: [], sources: [], lineage: [SP-003]}
+    divergences: []
+    version: 1
+
+  # ═══════════════════════════════ MARKET — EVENTS ═══════════════════════════════
+
+  MKT-E01:
+    canonical_name: sweep
+    layer: MARKET
+    kind: EVENT
+    status: ACCEPTED
+    definition: "Price trades beyond a liquidity level and closes back on the origin side in the same bar."
+    identity: {reference: "MKT-L01 founding", timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization:
+      founding: {domain: "MKT-L01.founding", identity_bearing: true}
+      tie: {domain: [strict], legacy_values: [inclusive], identity_bearing: true}
+    inputs: [MKT-L01, GP-04]
+    rule: "GP-04 on an ACTIVE, already-available MKT-L01. swept_side = level side; implied_bias = SHORT if UPPER swept, LONG if LOWER swept. The event carries sweep_extreme = the sweep bar's high (UPPER swept) or low (LOWER swept): the ONE canonical displacement reference price (R1-A). MKT-E04, TRS-03 and MKT-E11 consume MKT-E01 sweep_extreme and never define their own."
+    units: {domain: event, sign_convention: "+1 = UPPER level swept (implied bias SHORT)"}
+    lifecycle: null
+    absence: "No sweep on a bar = no event. A bar with no available reference level is distinct from 'no sweep'."
+    authority: {evidence: [REPO], sources: [src/structure/predicates.py, src/config_layer/crt_engine_v2.py, src/features/causal_structure.py], lineage: [SP-001, FM-058, FM-059]}
+    divergences:
+      - {surface: "at least 7 detectors (engine detect_sweep, parent_crt, resolver _detect_htf_range_sweep, FM-058, sujan_crt, visual_crt, weekly_sweep)", current: "independent implementations", contract: "one composition (GP-04) parameterised by founding (I-8)", disposition: RECORDED}
+      - {surface: "FM-058 tie", current: "inclusive", contract: "strict", evidence: "0.40% of sweep bars on XAUUSD M15", disposition: PHASE_B_CANDIDATE}
+      - {surface: "feature_pipeline.liquidity_sweep two-sided bar", current: "both upper and lower founding levels swept on the same bar -> encoded upper only (+1)", contract: "both sides swept", evidence: "C7, XAUUSD_W2026-07-06-to-2026-08-07, sha dcaf88a7, 2026-10-03: 0 genuinely two-sided bars under the MKT-L01 lifecycle. CORRECTED twice: 6 -> 3 -> 0. The first count (6) compared against the latest swing level only; the second (3: bars 372, 1101, 1740) came from a classifier that called a bar two-sided when the slot's OWN rule fired on both sides, without requiring a contract MKT-E01 event on both. On all three the contract has a single LOWER event (the latest upper level was already SWEPT), so the lost side is part of the lifecycle defect, not this divergence. The divergence remains a structural property of the one-slot representation: a bar with events on both sides is encoded UPPER only (UPPER-first projection, also under FM-090). A representation/encoding divergence, not a detection defect. How MKT-E01 multiplicity is represented is UNRESOLVED; the user kept the 48-slot v6 representation (2026-10-03)", disposition: RECORDED}
+      - {surface: "engine SweepEvent.double_confirmed (crt_engine_v2.py:965) + score_sweep double_bonus + adjusted +0.10 + RejectReason.NO_DOUBLE_SWEEP", current: "structurally constant False (detect_sweep runs only in RANGE where sweep_event is always None); 0 true in 873,561 recorded SWEEP events", contract: "DEPRECATED (unreachable semantics, I-13)", disposition: DEPRECATED}
+      - {surface: "config_layer/execution_planner.py:389 _derive_intent LIQ_SWEEP + :441-447 _compute_entry + core/gate_intelligence.py:245-246 _intent_score", current: "reads unsigned sweep_detected (FM-059) / double_sweep (C04); never compares the swept side's implied_bias with selected_direction, yet prices the entry 'beyond the sweep wick' of the side the trade direction assumes; signed liquidity_sweep is consumed nowhere on the planner path. CH-planner-liq-sweep-direction (2026-10-03): the conforming identity is selectable as execution_planner.liq_sweep_semantics = e01_direction_aligned (LIQ_SWEEP iff liquidity_sweep != 0 and implied_bias == selected_direction); every config declares legacy_unsigned, so this row stays RECORDED until activation", contract: "a sweep-reversal entry requires implied_bias == trade direction (rule: SHORT if UPPER swept, LONG if LOWER swept)", evidence: "gate census 2026-10-03 (docs/analysis/e01-lifecycle-downstream-consumers-2026-10-03.md, section B1-L), XAUUSD M15 47,197 bars x both directions, live-faithful features: every event-triggered LIQ_SWEEP bar is labelled for BOTH directions (7,542 aligned / 7,542 opposed active; 5,033 / 5,033 e01_lifecycle); gate-approved LIQ_SWEEP 49 of 93 opposed (active), 41 of 81 (e01_lifecycle). Per-bar hypothetical calls, not trades; production direction comes from EngineRunner, so the live mismatch rate is UNVERIFIED", disposition: RECORDED}
+      - {surface: "core/gate_intelligence.py:298-311 _liquidity_score sweep-extent half", current: "an 8th independent sweep detector (20-bar vs 5-bar extreme penetration / atr) whose inputs lowest_low_20/5 and highest_high_20/5 have no producer in src/ (FeatureStore and LiveRailFeeder carry exactly the 48 canonical keys, feature_pipeline.build_features:403), so it is a constant 0; it also divides price units by close-relative atr (F-109 class)", contract: "one composition (GP-04, I-8); displacement reference = MKT-E01 sweep_extreme (R1-A)", evidence: "grep 2026-10-03: no producer; gate census 2026-10-03 live-faithful: liquidity_score non-zero on 0 of 94,394 calls per arm", disposition: RECORDED}
+    version: 2   # R1-A: sweep_extreme is the canonical displacement reference price
+
+  MKT-E02:
+    canonical_name: structure_break
+    layer: MARKET
+    kind: EVENT
+    status: ACCEPTED
+    definition: "The bar on which price first closes beyond the most recent confirmed swing level (a transition, not a state)."
+    identity: {reference: "MKT-L01 swing_pivot", timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization:
+      k: {domain: int, identity_bearing: true, default_ref: feature_pipeline.swing_window}
+      consumption: {domain: [onset], proposed_values: [once_per_level], identity_bearing: true}
+    inputs: [MKT-C01]
+    rule: "Event at bar t iff structural_position[t] in {ABOVE_LAST_SWING_HIGH, BELOW_LAST_SWING_LOW} and structural_position[t] != structural_position[t-1]. 'once_per_level' (a level is consumed by its break) is PROPOSED."
+    units: {domain: event, sign_convention: "+1 = UPPER (bullish break)"}
+    lifecycle: null
+    absence: "No break = no event; undefined position = no event."
+    authority: {evidence: [REPO, USER_DECISION], sources: [src/features/smc/order_block.py, configs/formulas/market_ontology.yaml], lineage: [FM-057]}
+    divergences:
+      - {surface: "FM-057 break_of_structure slot", current: "non-zero on every bar beyond the level (37.75% of XAUUSD bars, 26% first-of-run)", contract: "that slot represents MKT-C01; this event has no representation yet", disposition: RECORDED}
+      - {surface: "market_ontology.yaml:40 scope", current: "ontology excludes BOS/CHoCH/pivot detection state machines", contract: "ontology scope v2 owns these semantics (deferred change id)", disposition: RECORDED}
+    version: 1
+
+  MKT-E03:
+    canonical_name: choch
+    layer: MARKET
+    kind: EVENT
+    status: PROPOSED
+    definition: "Change of character. Two candidate definitions, undecided: (B) a structure_break opposite the last structure_break; (C) a structure_break that ends a HH/HL or LH/LL swing sequence."
+    identity: {reference: UNKNOWN, timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {}
+    inputs: [MKT-E02]
+    rule: "UNDEFINED. The repo's FM-083 meaning is MKT-C07, not this concept."
+    units: {domain: event}
+    lifecycle: null
+    absence: "n/a"
+    authority: {evidence: [TK], sources: [], lineage: []}
+    divergences: []
+    version: 1
+
+  MKT-E04:
+    canonical_name: crt_displacement
+    layer: MARKET
+    kind: EVENT
+    status: ACCEPTED
+    definition: "A directional impulse away from the side of a specific prior sweep."
+    identity: {reference: MKT-E01, timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {}
+    inputs: [MKT-E01, GP-06]
+    rule: "GP-06 with bias = the sweep's implied bias and sweep_price = MKT-E01 sweep_extreme (R1-A). Magnitude gates (body quality, ATR size, sweep age) are caller parameters, not part of the primitive."
+    units: {domain: event}
+    lifecycle: null
+    absence: "No prior sweep -> undefined, not 'no displacement'."
+    authority: {evidence: [REPO], sources: [src/structure/predicates.py, src/config_layer/crt_engine_v2.py], lineage: [SP-002, F-074]}
+    divergences: []
+    version: 2   # R1-A
+
+  MKT-E05:
+    canonical_name: impulse_candle
+    layer: MARKET
+    kind: EVENT
+    status: ACCEPTED
+    definition: "A large-bodied candle with no sweep reference (energy only)."
+    identity: {reference: none, timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {}
+    inputs: []
+    rule: "feature_pipeline displacement_flag (body/ATR thresholds)."
+    units: {domain: event}
+    lifecycle: null
+    absence: "n/a"
+    authority: {evidence: [REPO], sources: [src/features/feature_pipeline.py], lineage: []}
+    divergences:
+      - {surface: "name 'displacement'", current: "used for both this and MKT-E04", contract: "distinct concepts", disposition: RECORDED}
+    version: 1
+
+  MKT-E06:
+    canonical_name: zone_touch
+    layer: MARKET
+    kind: EVENT
+    status: ACCEPTED
+    definition: "The first bar after a zone becomes available whose range overlaps it."
+    identity: {reference: zone, timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {}
+    inputs: [GP-05]
+    rule: "GP-05 on a zone with available_at < bar."
+    units: {domain: event}
+    lifecycle: null
+    absence: "n/a"
+    authority: {evidence: [REPO], sources: [src/features/smc/_geometry.py], lineage: []}
+    divergences: []
+    version: 1
+
+  MKT-E07:
+    canonical_name: zone_break
+    layer: MARKET
+    kind: EVENT
+    status: ACCEPTED
+    definition: "The bar that closes beyond a zone's far edge."
+    identity: {reference: zone, timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {}
+    inputs: [GP-02]
+    rule: "GP-02 on the far edge (bullish zone: close < low; bearish zone: close > high) — features.smc.breaker violation rule."
+    units: {domain: event}
+    lifecycle: null
+    absence: "n/a"
+    authority: {evidence: [REPO], sources: [src/features/smc/breaker.py], lineage: []}
+    divergences: []
+    version: 1
+
+  MKT-E08:
+    canonical_name: level_pierce
+    layer: MARKET
+    kind: EVENT
+    status: ACCEPTED
+    definition: "The bar's extreme trades beyond a level, regardless of the close."
+    identity: {reference: "MKT-L01 founding", timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {founding: {domain: "MKT-L01.founding", identity_bearing: true}}
+    inputs: [MKT-L01, GP-01]
+    rule: "GP-01 on an available MKT-L01."
+    units: {domain: event, sign_convention: "+1 = UPPER"}
+    lifecycle: null
+    absence: "No reference level -> undefined."
+    authority: {evidence: [REPO], sources: [src/features/causal_structure.py], lineage: []}
+    divergences: []
+    version: 1
+
+  MKT-E09:
+    canonical_name: retest_touch
+    aliases: [retest_entry]   # renamed 2026-10-02 (slice 2): "entry" is a Trading-layer role (TRS-04)
+    layer: MARKET
+    kind: EVENT
+    status: ACCEPTED
+    definition: "The bar on which the engine's CRT episode enters its retest stage."
+    identity: {reference: MKT-P01, timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {}
+    inputs: [MKT-E04]
+    rule: "Engine EXPANSION->RETEST transition (try_expansion_to_retest). The band semantics behind it are OQ7 (MKT-Z06 PROPOSED)."
+    units: {domain: event}
+    lifecycle: null
+    absence: "n/a"
+    authority: {evidence: [REPO], sources: [src/config_layer/crt_engine_v2.py], lineage: []}
+    divergences:
+      - {surface: "retest meaning", current: "engine rule exists, ontology definition deferred (OQ7)", contract: "event accepted, band PROPOSED", disposition: RECORDED}
+    version: 1
+
+  MKT-E10:
+    canonical_name: retrace_breach
+    layer: MARKET
+    kind: EVENT
+    status: ACCEPTED
+    definition: "Price closes beyond a retracement level against the move it retraces."
+    identity: {reference: "MKT-L02 retracement", timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {}
+    inputs: [MKT-L02, GP-02]
+    rule: "GP-02 against the move on the retracement level."
+    units: {domain: event}
+    lifecycle: null
+    absence: "n/a"
+    authority: {evidence: [REPO], sources: [src/config_layer/crt_engine_v2.py], lineage: []}
+    divergences:
+      - {surface: "ResetLogic.should_reset (crt_engine_v2.py:2898-2910)", current: "retrace measured from disp.close as a fraction of the move; emitted only as RESET 'N% retrace hit'", contract: "a market event; the thesis binds it as FAILED (Trading layer, later slice)", disposition: RECORDED}
+    version: 1
+
+  MKT-E11:
+    canonical_name: extension_reach
+    layer: MARKET
+    kind: EVENT
+    status: ACCEPTED
+    definition: "Price closes at or beyond an extension level in the move's direction."
+    identity: {reference: "MKT-L02 extension", timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {}
+    inputs: [MKT-L02, GP-03]
+    rule: "GP-03 with the move on the extension level. For a thesis the move runs from MKT-E01 sweep_extreme to the MKT-E04 close (R1-A)."
+    units: {domain: event}
+    lifecycle: null
+    absence: "n/a"
+    authority: {evidence: [REPO], sources: [src/config_layer/crt_engine_v2.py], lineage: []}
+    divergences:
+      - {surface: "ResetLogic.should_reset (crt_engine_v2.py:2912-2923)", current: "emitted only as RESET '1.618 extension hit'", contract: "a market event; the thesis binds it as SPENT", disposition: RECORDED}
+      - {surface: "ResetLogic.should_reset HTF protection (crt_engine_v2.py:2882-2891)", current: "after the HTF clock flips during EXPANSION/RETEST the function returns before the extension rule, so it never fires again for that setup", contract: "a thesis that survives a rollover (R1-B) can still be SPENT", evidence: "integration run results/semantic_os_integration/20261002T192245Z", disposition: RECORDED}
+    version: 2   # R1-A, R1-B
+
+  MKT-E12:
+    canonical_name: clock_rollover
+    layer: MARKET
+    kind: EVENT
+    status: ACCEPTED
+    definition: "The governing clock enters a new period (HTF period, session, broker day)."
+    identity: {reference: clock, timeframe: bar, clock: declared, availability_rule: "first bar of the new period"}
+    parameterization: {clock: {domain: [htf_period, session, broker_day], identity_bearing: true}}
+    inputs: []
+    rule: "clock_id[t] != clock_id[t-1]."
+    units: {domain: event}
+    lifecycle: null
+    absence: "n/a"
+    authority: {evidence: [REPO], sources: [src/config_layer/crt_engine_v2.py, src/config_layer/m15_structural_range.py], lineage: []}
+    divergences:
+      - {surface: "runtime.backtest_v2.HTFBuilder with backtest.htf_clock_basis = count (active config)", current: "the htf_period clock is a bar counter that flips every htf_candles_per_range bars counted from the FIRST ROW OF THE LOADED FILE, so the same bar falls in a different period depending on where the input starts; an unaligned slice re-tiles every period and the engine follows a different trajectory (0 of 2 trades reproduced, R1-C scan 2026-10-03)", contract: "a clock period is a property of time, not of the input file; the calendar basis (features.calendar_periods) satisfies it", evidence: "results/semantic_os_integration/r1c_scan/selection.json", disposition: RECORDED}
+    version: 2   # count-clock divergence recorded (R1-C)
+
+  # ═══════════════════════════════ MARKET — CONDITIONS ═══════════════════════════════
+
+  MKT-C01:
+    canonical_name: structural_position
+    layer: MARKET
+    kind: CONDITION
+    status: ACCEPTED
+    definition: "Where the close sits relative to the most recent confirmed swing high and swing low."
+    identity: {reference: "MKT-L01 swing_pivot", timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {k: {domain: int, identity_bearing: true, default_ref: feature_pipeline.swing_window}}
+    inputs: [MKT-L01, GP-02]
+    rule: "ABOVE_LAST_SWING_HIGH if close > last confirmed swing high (as of t-1); BELOW_LAST_SWING_LOW if close < last confirmed swing low; else INSIDE."
+    units: {domain: [BELOW_LAST_SWING_LOW, INSIDE, ABOVE_LAST_SWING_HIGH], sign_convention: "-1/0/+1"}
+    lifecycle: null
+    absence: "No confirmed swing yet = UNDEFINED (distinct from INSIDE)."
+    authority: {evidence: [REPO, USER_DECISION], sources: [src/features/causal_structure.py], lineage: [FM-057]}
+    divergences:
+      - {surface: "FM-057 break_of_structure slot 22", current: "named 'break' (an event) but measures this condition; 0 when no swing exists", contract: "condition + UNDEFINED", disposition: RECORDED}
+    version: 1
+
+  MKT-C02:
+    canonical_name: structural_trend
+    layer: MARKET
+    kind: CONDITION
+    status: PROPOSED
+    definition: "Direction of the most recent structure_break."
+    identity: {reference: MKT-E02, timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {}
+    inputs: [MKT-E02]
+    rule: "UNDEFINED until MKT-E03 is decided; no repository basis."
+    units: {domain: [UP, DOWN]}
+    lifecycle: null
+    absence: "n/a"
+    authority: {evidence: [TK], sources: [], lineage: []}
+    divergences: []
+    version: 1
+
+  MKT-C03:
+    canonical_name: momentum_bias
+    layer: MARKET
+    kind: CONDITION
+    status: ACCEPTED
+    definition: "Sign of short-vs-long EMA momentum. Momentum, not structure."
+    identity: {reference: ema_pair, timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization:
+      ema_fast_span: {domain: int, identity_bearing: true, default_ref: feature_pipeline.ema_fast_span}
+      ema_slow_span: {domain: int, identity_bearing: true, default_ref: feature_pipeline.ema_slow_span}
+    inputs: []
+    rule: "FM-054 trend_bias."
+    units: {domain: [-1, 0, 1]}
+    lifecycle: null
+    absence: "Before EMA warmup = UNDEFINED."
+    authority: {evidence: [REPO], sources: [configs/formulas/market_ontology.yaml, src/features/feature_pipeline.py], lineage: [FM-054]}
+    divergences:
+      - {surface: "name trend_bias", current: "implies structural trend", contract: "momentum_bias (alias)", disposition: RECORDED}
+    version: 1
+
+  MKT-C04:
+    canonical_name: two_sided_sweep
+    layer: MARKET
+    kind: CONDITION
+    status: ACCEPTED
+    definition: "Swing-founded sweeps of BOTH sides occurred within the last W bars."
+    identity: {reference: "MKT-E01 swing_pivot", timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization:
+      k: {domain: int, identity_bearing: true, default_ref: feature_pipeline.swing_window}
+      window: {domain: int, identity_bearing: true, default_ref: feature_pipeline.double_sweep_window}
+    inputs: [MKT-E01]
+    rule: "At least one UPPER-side and at least one LOWER-side MKT-E01{swing_pivot(k)} event in the last W bars (bar i included). MKT-E01 events are taken from the MKT-L01 lifecycle (any ACTIVE level, consumed once SWEPT or BROKEN); one bar with both is two events and counts. Never computed from a signed sweep slot."
+    units: {domain: bool}
+    lifecycle: null
+    absence: "Fewer than one reference level = UNDEFINED."
+    authority: {evidence: [REPO], sources: [src/features/causal_structure.py, configs/formulas/market_ontology.yaml], lineage: [FM-060]}
+    divergences:
+      - {surface: "name double_sweep", current: "same key also used for the engine's dead double_confirmed (crt_engine_v2.py:1912)", contract: "two_sided_sweep{k,W}; engine attribute DEPRECATED", disposition: RECORDED}
+      - {surface: "feature_pipeline.py:281 comment", current: "says tuning W 'redefines no registered math'", contract: "W is identity-bearing: a new W is a new parameterization_id (I-17)", disposition: RECORDED}
+      - {surface: "inherited FM-058 tie", current: "inclusive", contract: "strict (GP-04)", disposition: PHASE_B_CANDIDATE}
+      - {surface: "FM-060 rule on the liquidity_sweep slot (feature_pipeline.py double_sweep; causal_structure double_sweep; core/feature_store.py liquidity_sweep history)", current: "any(liquidity_sweep > 0) and any(liquidity_sweep < 0) over W: inherits the slot's one-side encoding of a two-sided bar and its latest-level, never-consumed sweep", contract: "MKT-E01 events of both sides within W (rule above)", evidence: "C7 2026-10-03, XAUUSD_W2026-07-06-to-2026-08-07 sha dcaf88a7: 119 disagreeing bars vs the definition reading. Rule superseded in contract v2 (user decision 2026-10-03); producers unchanged", disposition: RECORDED}
+      - {surface: "config_layer/execution_planner.py:389 (double_sweep alone triggers LIQ_SWEEP) + core/gate_intelligence.py:246 (0.5 bonus)", current: "the planner treats this CONDITION as a sweep EVENT on the current bar (LIQ_SWEEP intent, entry priced off the current bar's wick) and the gate adds +0.5 to the sweep intent. CORRECTED 2026-10-03 (Step C): was 'scores it as confirmation of a one-directional reversal'. That was an ungrounded inference that the consumer meant same-side confirmation. Code lineage says the bonus descends from the engine's SweepEvent.double_confirmed (crt_engine_v2.py:965-968: the previous sweep was the OPPOSITE side, an ordered two-sided sequence ending in the current sweep; active_models.yaml:301), which is structurally always False and has never executed. Every reader (engine score_sweep +0.4, risk +0.10, engines/scoring_engine 0.7->1.0, s10_trap +0.10, this gate +0.5) applies it as a bonus. Measured: on bars with a current sweep event whose bias equals the trade direction, this rule is IDENTICAL to the ordered within-W reading (latest_unconsumed: 1,655/1,655 bars; e01_lifecycle: 740 of 778, the rest bar-local two-sided). The unordered reading only differs when no event is on the bar, the case liq_sweep_semantics=e01_direction_aligned removes", contract: "two_sided_sweep is a CONDITION meaning BOTH sides were taken within W: it confirms no single side and carries no implied_bias", evidence: "gate census 2026-10-03 (docs/analysis/e01-lifecycle-downstream-consumers-2026-10-03.md, section B1-L): live-faithful vol and liquidity components are constant 0 (F-109 legacy_relative; volume_ma20 and lowest_low_* not emitted), so final = 0.35*intent + 0.25*structure and a LIQ_SWEEP clears 0.55 only with sweep_detected AND double_sweep (intent 1.0); this condition is therefore NECESSARY for every live LIQ_SWEEP approval. double_sweep-only LIQ_SWEEP: 2,794 calls (active) / 1,870 (e01_lifecycle), 0 approved", disposition: RECORDED}
+      - {surface: "FM-060/FM-092 registered interpretation (market_ontology.yaml 'trap / whipsaw ... neither side is in control') vs every consumer's bonus polarity", current: "the representation's registered meaning reads as a caution; the intended consumer meaning (engine double_confirmed lineage) is an ordered opposite-side-then-current sweep, treated as a strengthening bonus", contract: "UNDECIDED which meaning, if any, this condition should carry for a sweep-reversal consumer", evidence: "Step C 2026-10-03, XAUUSD M15 full corpus (docs/analysis/e01-lifecycle-downstream-consumers-2026-10-03.md section B1-C), RESEARCH_PROXY outcome (signal-bar close, compute_crt_levels(atr_abs), multi_tp_walk), time-block bootstrap over bar index. No decision-time candidate shows a stable effect: current/ordered-within-W train +0.043R / holdout -0.101R (latest_unconsumed), +0.124R / -0.090R (e01_lifecycle); engine-literal train +0.016 / holdout -0.028, +0.065 / -0.033. Signs flip and every all-sample CI crosses 0. Removing the bonus gives 0 live approvals (gate arithmetic)", decide_in: "step_D_double_sweep_role", decision: "user: adopt the ordered meaning as a PROPOSED concept / keep C04 and fix its wording / move confirmation to MKT-E04 / remove the bonus. Evidence shows no stable outcome information for any decision-time candidate", disposition: RECORDED}
+    version: 2   # rule now consumes MKT-E01 events, not the lossy slot (was v1: FM-060 on liquidity_sweep)
+
+  MKT-C05:
+    canonical_name: htf_posture
+    layer: MARKET
+    kind: CONDITION
+    status: ACCEPTED
+    definition: "How a closed parent bar relates to the previous closed parent bar: broke with the prior bar's direction, broke against it, or closed inside (wide or narrow)."
+    identity: {reference: parent_bar_pair, timeframe: parent, clock: parent_close, availability_rule: "parent bar close"}
+    parameterization:
+      distribution_min_range_ratio: {domain: float, identity_bearing: true}
+      accumulation_max_range_ratio: {domain: float, identity_bearing: true}
+    inputs: [GP-02]
+    rule: "config_layer.htf_state.classify_htf_state. Values: BREAK_WITH_PRIOR (EXPANSION), BREAK_AGAINST_PRIOR (REVERSAL), INSIDE_WIDE (DISTRIBUTION), INSIDE_NARROW (ACCUMULATION)."
+    units: {domain: [BREAK_WITH_PRIOR, BREAK_AGAINST_PRIOR, INSIDE_WIDE, INSIDE_NARROW, UNKNOWN]}
+    lifecycle: null
+    absence: "UNKNOWN before two closed parents."
+    authority: {evidence: [REPO], sources: [src/config_layer/htf_state.py], lineage: [SEM-008, F-078]}
+    divergences:
+      - {surface: "htf_state.py:105-108", current: "two consecutive branches both return EXPANSION -> expansion_min_range_ratio decides nothing", contract: "parameter DEPRECATED as inert (I-13)", disposition: DEPRECATED}
+      - {surface: "htf_state.py:100", current: "'prior direction' = previous candle colour; a doji counts as bearish", contract: "recorded", disposition: RECORDED}
+      - {surface: "htf_state.py:109-113", current: "ratio between the two thresholds falls through to ACCUMULATION", contract: "recorded", disposition: RECORDED}
+      - {surface: "HTFState value names", current: "EXPANSION/DISTRIBUTION/ACCUMULATION collide with CRT and weekly meanings", contract: "renamed values (alias)", disposition: RECORDED}
+    version: 1
+
+  MKT-C06:
+    canonical_name: session
+    layer: MARKET
+    kind: CONDITION
+    status: ACCEPTED
+    definition: "The trading session a bar belongs to, on a declared clock."
+    identity: {reference: clock, timeframe: bar, clock: declared, availability_rule: bar_open}
+    parameterization: {session_timestamp_basis: {domain: [broker_local, utc_corrected], identity_bearing: true, default_ref: feature_pipeline.session_timestamp_basis}}
+    inputs: []
+    rule: "FM-052."
+    units: {domain: session_ordinal}
+    lifecycle: null
+    absence: "n/a"
+    authority: {evidence: [REPO], sources: [src/features/feature_pipeline.py], lineage: [FM-052, F-066]}
+    divergences:
+      - {surface: "MT5 broker clock", current: "broker-local labelled as UTC (F-066)", contract: "clock declared via parameter", disposition: RECORDED}
+    version: 1
+
+  MKT-C07:
+    canonical_name: break_against_momentum
+    layer: MARKET
+    kind: CONDITION
+    status: ACCEPTED
+    definition: "A non-inside structural position whose sign opposes momentum_bias. This is FM-083's documented meaning, NOT the conventional CHoCH."
+    identity: {reference: "MKT-C01 x MKT-C03", timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {}
+    inputs: [MKT-C01, MKT-C03]
+    rule: "position if position != 0 and momentum != 0 and sign(position) != sign(momentum), else 0 (features.smc.choch.change_of_character)."
+    units: {domain: [-1, 0, 1]}
+    lifecycle: null
+    absence: "UNDEFINED if either input is UNDEFINED."
+    authority: {evidence: [REPO], sources: [src/features/smc/choch.py, configs/formulas/market_ontology.yaml], lineage: [FM-083]}
+    divergences:
+      - {surface: "name change_of_character / CHoCH", current: "suggests the conventional structure-reversal CHoCH", contract: "alias break_against_momentum; 'choch' reserved for MKT-E03 (PROPOSED)", disposition: RECORDED}
+      - {surface: "input is MKT-C01 (a condition)", current: "inherits BOS re-firing (runs ~2 bars)", contract: "recorded", disposition: RECORDED}
+    version: 1
+
+  # ═══════════════════════════════ MARKET — EPISODE ═══════════════════════════════
+
+  MKT-P01:
+    canonical_name: crt_episode
+    layer: MARKET
+    kind: EPISODE
+    status: ACCEPTED
+    definition: "One instance of the CRT structure: a founded range, a sweep of one side, a directional displacement away from it, extension, and a retest. Market stages only — execution and resolution belong to the position lifecycle."
+    identity: {reference: "MKT-L01 founding", timeframe: per_founding, clock: per_founding, availability_rule: "stage entry bar"}
+    parameterization: {founding: {domain: "MKT-L01.founding", identity_bearing: true}}
+    inputs: [MKT-L01, MKT-E01, MKT-E04, MKT-E09, MKT-E10, MKT-E11, MKT-E12]
+    rule: "Engine state machine (crt_engine_v2) projected onto stages. Instance key = (run_id, bar of the first stage after AWAITING_SWEEP). Terminations carry terminal_authority via configs/formulas/terminal_reason_map.yaml."
+    units: {domain: episode}
+    lifecycle:
+      states: [AWAITING_SWEEP, SWEPT, SHADOW_PENDING, DISPLACED, EXTENDED, RETESTING]
+      terminal_authority: [MARKET, OBSERVATION, PRODUCER, DECISION, EXECUTION]
+      handover: "entry eligibility at RETESTING -> Trading layer (later slice)"
+    absence: "n/a"
+    authority: {evidence: [REPO, USER_DECISION], sources: [src/config_layer/crt_engine_v2.py, src/config_layer/state_identity.py], lineage: [SEM-003]}
+    divergences:
+      - {surface: "crt_state_identity.yaml occupancy_class", current: "SWEEP/DISPLACEMENT/EXPANSION/RETEST labelled 'event'", contract: "kind EPISODE_STAGE (entered by an event); measured dwell EXPANSION median 5, max 395 bars", disposition: RECORDED}
+      - {surface: "CRTState EXECUTION / RESOLUTION", current: "in the same state machine as market stages", contract: "position lifecycle (Execution layer); requires L3 v2.0.0 (deferred)", disposition: RECORDED}
+      - {surface: "RESET", current: "one event kind for market, observation, producer, decision and execution terminations; decision vetoes reset the episode (F-055)", contract: "terminal_authority on every termination; series declares policy_shaped/observation_shaped (I-3, I-3a)", disposition: RECORDED}
+      - {surface: "L3 §7.1", current: "no canonical setup_id", contract: "episode_id (L3 v2.0.0, deferred)", disposition: RECORDED}
+    version: 1
+
+  MKT-P01.AWAITING_SWEEP:
+    canonical_name: awaiting_sweep
+    layer: MARKET
+    kind: EPISODE_STAGE
+    status: ACCEPTED
+    definition: "A founded range exists and no sweep has occurred yet."
+    identity: {reference: MKT-P01, timeframe: per_founding, clock: per_founding, availability_rule: "entry bar"}
+    parameterization: {}
+    inputs: [MKT-P01]
+    rule: "Engine CRTState.RANGE."
+    units: {domain: stage}
+    lifecycle: {entry_events: [founding, termination], exit_events: [MKT-E01]}
+    absence: "n/a"
+    authority: {evidence: [REPO], sources: [src/config_layer/state_identity.py], lineage: []}
+    divergences: []
+    version: 1
+
+  MKT-P01.SWEPT:
+    canonical_name: swept
+    layer: MARKET
+    kind: EPISODE_STAGE
+    status: ACCEPTED
+    definition: "One side of the founding range has been swept; awaiting displacement."
+    identity: {reference: MKT-P01, timeframe: per_founding, clock: per_founding, availability_rule: "entry bar"}
+    parameterization: {}
+    inputs: [MKT-P01, MKT-E01]
+    rule: "Engine CRTState.SWEEP."
+    units: {domain: stage}
+    lifecycle: {entry_events: [MKT-E01], exit_events: [MKT-E04, MKT-E12, termination]}
+    absence: "n/a"
+    authority: {evidence: [REPO], sources: [src/config_layer/state_identity.py], lineage: []}
+    divergences: []
+    version: 1
+
+  MKT-P01.SHADOW_PENDING:
+    canonical_name: shadow_pending
+    layer: MARKET
+    kind: EPISODE_STAGE
+    status: ACCEPTED
+    definition: "A displacement was seen before its confirming sweep; the confirming sweep has now occurred."
+    identity: {reference: MKT-P01, timeframe: per_founding, clock: per_founding, availability_rule: "entry bar"}
+    parameterization: {}
+    inputs: [MKT-P01, MKT-E01]
+    rule: "Engine CRTState.SHADOW_PENDING."
+    units: {domain: stage}
+    lifecycle: {entry_events: [MKT-E01], exit_events: [stage_SWEPT]}
+    absence: "n/a"
+    authority: {evidence: [REPO], sources: [src/config_layer/state_identity.py], lineage: []}
+    divergences: []
+    version: 1
+
+  MKT-P01.DISPLACED:
+    canonical_name: displaced
+    layer: MARKET
+    kind: EPISODE_STAGE
+    status: ACCEPTED
+    definition: "A directional displacement away from the swept side has occurred."
+    identity: {reference: MKT-P01, timeframe: per_founding, clock: per_founding, availability_rule: "entry bar"}
+    parameterization: {}
+    inputs: [MKT-P01, MKT-E04]
+    rule: "Engine CRTState.DISPLACEMENT."
+    units: {domain: stage}
+    lifecycle: {entry_events: [MKT-E04], exit_events: [stage_EXTENDED, MKT-E10, MKT-E11, MKT-E12]}
+    absence: "n/a"
+    authority: {evidence: [REPO], sources: [src/config_layer/state_identity.py], lineage: []}
+    divergences: []
+    version: 1
+
+  MKT-P01.EXTENDED:
+    canonical_name: extended
+    layer: MARKET
+    kind: EPISODE_STAGE
+    status: ACCEPTED
+    definition: "Price continues away from the swept side after displacement, before any retest."
+    identity: {reference: MKT-P01, timeframe: per_founding, clock: per_founding, availability_rule: "entry bar"}
+    parameterization: {}
+    inputs: [MKT-P01, MKT-E04]
+    rule: "Engine CRTState.EXPANSION (renamed: EXPANSION collides with htf_posture)."
+    units: {domain: stage}
+    lifecycle: {entry_events: [MKT-E04], exit_events: [MKT-E09, MKT-E10, MKT-E11, MKT-E12]}
+    absence: "n/a"
+    authority: {evidence: [REPO], sources: [src/config_layer/state_identity.py], lineage: []}
+    divergences:
+      - {surface: "ResetLogic.should_reset (crt_engine_v2.py:2881-2891)", current: "EXTENDED/RETESTING survive the HTF rollover and that early return also skips the retrace/extension rules (F-110)", contract: "recorded", disposition: RECORDED}
+    version: 1
+
+  MKT-P01.RETESTING:
+    canonical_name: retesting
+    layer: MARKET
+    kind: EPISODE_STAGE
+    status: ACCEPTED
+    definition: "Price has returned toward the displacement origin after extension."
+    identity: {reference: MKT-P01, timeframe: per_founding, clock: per_founding, availability_rule: "entry bar"}
+    parameterization: {}
+    inputs: [MKT-P01, MKT-E09]
+    rule: "Engine CRTState.RETEST."
+    units: {domain: stage}
+    lifecycle: {entry_events: [MKT-E09], exit_events: [entry_eligible, termination]}
+    absence: "n/a"
+    authority: {evidence: [REPO], sources: [src/config_layer/state_identity.py], lineage: []}
+    divergences: []
+    version: 1
+
+  # ═══════════════════════════════ TRADING (slice 2) ═══════════════════════════════
+  # What a trade PLAN means: thesis, its roles on market prices, cost, measured outcome.
+  # Roles never write a level's status (I-10). Fills, position lifecycle, approval and the exit
+  # schedule (partial fractions, stop management) are Decision/Execution — slice 3 (user, D2-6).
+
+  TRS-01:
+    canonical_name: thesis
+    layer: TRADING
+    kind: THESIS
+    status: ACCEPTED
+    definition: "A directional claim on one MKT-P01 episode, born on the bar of its MKT-E04 displacement. A sweep with no displacement is an episode that never became a thesis, not a failed thesis."
+    identity: {reference: MKT-P01, timeframe: per_founding, clock: per_founding, availability_rule: "bar of MKT-E04"}
+    parameterization: {founding: {domain: "MKT-L01.founding", identity_bearing: true}}
+    inputs: [MKT-P01, MKT-E01, MKT-E04]
+    rule: "direction = the implied bias of the MKT-E01 sweep, confirmed by MKT-E04 (GP-06 away from the swept side, F-074). A thesis binds exactly one TRS-03 invalidation and one TRS-05 stop (I-11); it may bind a TRS-02 objective, a TRS-04 entry and TRS-06 targets."
+    roles: {invalidation: TRS-03, stop: TRS-05, objective: TRS-02, entry: TRS-04, target: TRS-06}
+    units: {domain: direction, values: [LONG, SHORT]}
+    lifecycle: {states: [ACTIVE, FAILED, SPENT, EXPIRED], transitions: {TRS-03: FAILED, MKT-E11: SPENT, MKT-E12: EXPIRED}, terminal_authority: MARKET, expiry_rule: "MKT-E12 expires the thesis only while its episode is at MKT-P01.DISPLACED. From MKT-P01.EXTENDED on, a rollover is context, not termination (R1-B): the thesis then ends by TRS-03, MKT-E11, or the episode's expansion TTL (PRODUCER, O-4)."}
+    absence: "No MKT-E04 after the sweep -> no thesis (None)."
+    authority: {evidence: [REPO, USER_DECISION], sources: [src/config_layer/crt_engine_v2.py, src/structure/predicates.py], lineage: [F-074, D2-1]}
+    divergences:
+      - {surface: "CRTEngine.try_range_to_sweep (crt_engine_v2.py:1112)", current: "state.direction is set on the SWEEP transition, before any displacement", contract: "direction belongs to a thesis, which exists only from MKT-E04 (D2-1)", disposition: RECORDED}
+    version: 2   # R1-B: stage-dependent expiry
+
+  TRS-02:
+    canonical_name: objective
+    layer: TRADING
+    kind: OBJECTIVE
+    status: ACCEPTED
+    definition: "A role on a market level: the price a directional bias expects to reach. The level keeps its own status (I-10)."
+    identity: {reference: "MKT-L01 founding", timeframe: per_founding, clock: per_founding, availability_rule: "bar the bias exists and the level is available"}
+    parameterization:
+      scope: {domain: [parent_range], identity_bearing: true}
+    inputs: [MKT-L01, GP-02, GP-03]
+    rule: "LONG: target = h_ref; SHORT: target = l_ref. ACHIEVED = GP-03 REACH of the target; INVALIDATED = GP-02 BEYOND of the opposite range edge; otherwise EXISTS; NONE until a bias exists (htf_state.resolve_objective). Scope parent_range only: the bias is the parent-track C3 bias; an M15 objective is PROPOSED (spec §11)."
+    units: {unit: price, normalization_basis: none}
+    lifecycle: {states: [NONE, EXISTS, ACHIEVED, INVALIDATED], transitions: {GP-03: ACHIEVED, GP-02: INVALIDATED}, terminal_authority: MARKET}
+    absence: "status NONE with target None."
+    authority: {evidence: [REPO], sources: [src/config_layer/htf_state.py], lineage: [F-078]}
+    divergences:
+      - {surface: "htf_state.resolve_objective / Objective (htf_state.py:116-141)", current: "one record carries both the target and invalidate_at", contract: "the target is TRS-02; the opposite edge is an invalidation role (TRS-03 family) on the same range", disposition: RECORDED}
+      - {surface: "parent C3 bias", current: "the bias input is the parent-track C3 state, whose stage mapping is PROPOSED (F-075/F-077)", contract: "scope parent_range is accepted on the htf_state rule alone", disposition: RECORDED}
+    version: 1
+
+  TRS-03:
+    canonical_name: invalidation
+    layer: TRADING
+    kind: INVALIDATION
+    status: ACCEPTED
+    definition: "The rule that says a thesis is wrong. It ends the thesis, not the position. Expiry (MKT-E12) and a spent move (MKT-E11) end a thesis without falsifying it and are not invalidations."
+    identity: {reference: TRS-01, timeframe: per_founding, clock: per_founding, availability_rule: "the role (its retracement level) on the MKT-E04 bar; its firing (MKT-E10) on the breach bar"}
+    parameterization:
+      retrace_fraction: {domain: float, identity_bearing: true, default_ref: crt_engine.retrace_reset_pct}
+    inputs: [TRS-01, MKT-E10, MKT-L02]
+    rule: "MKT-E10 against the thesis direction on the MKT-L02 retracement of the displacement move at retrace_fraction. The displacement move runs from MKT-E01 sweep_extreme (the sweep bar's wick, R1-A) to the MKT-E04 close; MKT-E11 (SPENT) measures its extension on the same move (user, 2026-10-02; reference price normalised 2026-10-03). The invalidation still applies after a rollover the thesis survives (R1-B)."
+    units: {domain: event}
+    lifecycle: null
+    absence: "n/a (a thesis without an invalidation is not tradable, I-11)."
+    authority: {evidence: [REPO, USER_DECISION], sources: [src/config_layer/crt_engine_v2.py], lineage: [D2-2]}
+    divergences:
+      - {surface: "ResetLogic.should_reset retrace (crt_engine_v2.py:2898-2909)", current: "the move is the displacement candle body abs(close-open), and the retrace fires at retrace >= retrace_reset_pct (inclusive); the 1.618 extension (:2911-2923) measures from sweep_event.price, the sweep WICK, to the displacement close (CORRECTED 2026-10-03: previously recorded as 'sweep level'; found by integration run 20261002T192245Z bar 1019)", contract: "one move (MKT-E01 sweep_extreme to displacement close) for both invalidation and extension; the breach is GP-02 strict. The engine's extension now matches the contract; the retrace (body, >=) still differs", disposition: RECORDED}
+      - {surface: "ResetLogic.should_reset HTF protection (crt_engine_v2.py:2882-2891)", current: "after the HTF clock flips during EXPANSION/RETEST the function returns before the retrace rule, so a surviving setup is never invalidated by price again", contract: "a thesis that survives a rollover (R1-B) can still FAIL on MKT-E10", evidence: "integration run results/semantic_os_integration/20261002T192245Z", disposition: RECORDED}
+      - {surface: "ResetLogic.should_reset (crt_engine_v2.py:2876)", current: "all resets are suppressed while a trade is OPEN or TP1, so an invalidation after entry is neither acted on nor recorded", contract: "the invalidation is recorded on the thesis; whether it also closes the position is a Decision/Execution policy", disposition: RECORDED, decided_in: slice_3, decision: "When a thesis is invalidated while its position is open, does the position close?", resolution: "a policy, not a rule: DEX-07 exit_rule parameter on_invalidation in {hold, close_on_invalidation, close_on_origin}; the invalidation is always recorded on the thesis (user, D3-1)"}
+    version: 2   # R1-A, R1-B
+
+  TRS-04:
+    canonical_name: entry
+    layer: TRADING
+    kind: ENTRY
+    status: ACCEPTED
+    definition: "The price and bar at which a plan is entered. The fill is observable only on or after the bar of the decision to enter (I-6)."
+    identity: {reference: TRS-01, timeframe: bar, clock: bar_close, availability_rule: "fill bar"}
+    parameterization:
+      entry_semantics: {domain: [resting_order], legacy_values: [approval_bar_legacy], identity_bearing: true}
+    inputs: [TRS-01, MKT-E09]
+    rule: "resting_order: the plan is decided and filled at the close of the MKT-E09 retest bar; the confirmation bars after it are walked, and an unconfirmed plan is closed at that bar's close (crt_engine_v2.py entry_semantics)."
+    units: {unit: price, normalization_basis: none}
+    lifecycle: null
+    absence: "No retest after the thesis -> no entry (None)."
+    authority: {evidence: [REPO], sources: [src/config_layer/crt_engine_v2.py], lineage: [F-110]}
+    divergences:
+      - {surface: "setup.entry_semantics = approval_bar_legacy (active config)", current: "the RETEST close is booked on the later approval bar and the bar between is never walked for SL/TP", contract: "resting_order; a fill is never priced from before its own decision bar without walking the bars between (I-6)", evidence: "F-110: 16 of 16 filled orders end within one bar", disposition: RECORDED}
+    version: 1
+
+  TRS-05:
+    canonical_name: stop
+    layer: TRADING
+    kind: STOP
+    status: ACCEPTED
+    definition: "The price that closes the position at a loss. A role on a market price; distinct from the thesis invalidation (I-11)."
+    identity: {reference: TRS-01, timeframe: bar, clock: bar_close, availability_rule: "bar the plan is built"}
+    parameterization:
+      anchor: {domain: [displacement, sweep_extreme], identity_bearing: true, default_ref: backtest.sl_anchor}
+      buffer_atr: {domain: float, identity_bearing: true, default_ref: crt_engine.sl_atr_buffer}
+    inputs: [TRS-01, MKT-E01, MKT-E04, MKT-L02]
+    rule: "LONG: anchor low - buffer_atr * ATR; SHORT: anchor high + buffer_atr * ATR. anchor displacement = the MKT-E04 candle's extreme (a MKT-L02 candle_extreme); sweep_extreme = the swept candle's wick extreme. ATR is the plan bar's absolute ATR (FM-074). A stop on the wrong side of entry rejects the plan (ExecutionEngine.stop_price / build_trade)."
+    units: {unit: price, normalization_basis: none}
+    lifecycle: null
+    absence: "None when there is no displacement candle, no direction, or anchor sweep_extreme without a sweep."
+    authority: {evidence: [REPO], sources: [src/config_layer/crt_engine_v2.py], lineage: [F-072]}
+    divergences:
+      - {surface: "other stop constructions in the active config", current: "strategy_engine.s01..s10.sl_atr_mult, inout.exit.sl_atr_buffer_mult, sl_tp_comparison.legacy_sl_atr_mult build stops by other rules", contract: "one stop concept; other constructions are separate representations (unmapped in slice 2)", disposition: RECORDED}
+    version: 1
+
+  TRS-06:
+    canonical_name: target
+    layer: TRADING
+    kind: TARGET
+    status: ACCEPTED
+    definition: "A price at which the plan expects to take profit. A role: either derived from the plan (a multiple of R) or placed on a market level."
+    identity: {reference: TRS-01, timeframe: bar, clock: bar_close, availability_rule: "bar the plan is built"}
+    parameterization:
+      ordinal: {domain: [1, 2], identity_bearing: true}
+      target_policy: {domain: [fixed_r, structural_tp2], identity_bearing: true, applies_to: [2], default_ref: setup.target_policy}
+      r_multiple: {domain: float, identity_bearing: true}
+      intent: {domain: [liq_sweep, pullback, breakout, reversal], identity_bearing: true, applies_to: [1]}
+    inputs: [TRS-01, TRS-04, TRS-05, MKT-L01]
+    rule: "R = |entry - stop|. fixed_r: target = entry +/- r_multiple * R. structural_tp2: target 2 = the opposite edge of the founding range (a MKT-L01 level in a TARGET role); the plan is rejected if that edge is behind entry or closer than 1R; under structural_tp2 r_multiple is not used and is not part of that target's identity. Target 1's r_multiple is chosen by intent (ExecutionEngine._derive_trade_intent, crt_engine_v2.py:2529)."
+    units: {unit: price, normalization_basis: none, multiplier_unit: R}
+    lifecycle: null
+    absence: "None when the plan has no stop (R undefined)."
+    authority: {evidence: [REPO], sources: [src/config_layer/crt_engine_v2.py, src/config_layer/state_identity.py], lineage: [STORY-83.11]}
+    divergences:
+      - {surface: "config keys tp1_atr_multiplier_* / tp2_atr_multiplier", current: "named ATR multipliers", contract: "they multiply R (crt_engine_v2.py build_trade)", disposition: RECORDED}
+      - {surface: "intent labels", current: "a classifier over RETEST features selects the target-1 multiple", contract: "the labels carry no defined market meaning yet; they are a parameter of the target, not concepts", disposition: RECORDED}
+    version: 1
+
+  TRS-07:
+    canonical_name: cost
+    layer: TRADING
+    kind: MEASUREMENT
+    status: ACCEPTED
+    definition: "The round-trip cost of one plan, in price and in R (cost_r = cost_price / R)."
+    identity: {reference: TRS-01, timeframe: plan, clock: bar_close, availability_rule: "flat_bps: bar the plan is built; component: the exit bar (it depends on the exit kind)"}
+    parameterization:
+      cost_model: {domain: [component, flat_bps], identity_bearing: true}
+      cost_source: {domain: str, identity_bearing: true}
+    inputs: [TRS-04, TRS-05]   # plus the exit kind of the walk that consumes it (TRS-08); not listed to keep the graph acyclic
+    rule: "component: research.costs.ComponentCostModel (half spread both legs, commission per leg, entry slippage, stop slippage only on stop exits; SEM-015); the exit kind is the walk's actual exit (stop exit = forward_walk SL_HIT, or multi_tp_walk.is_stop_exit), never a caller's assumption. flat_bps: research.costs.CostModel (round-trip bps of entry). cost_source names the calibration (manifest + sha256, or SYNTHETIC)."
+    units: {unit: R, normalization_basis: "risk distance |entry - stop|", missing_rule: "a cost model with status UNKNOWN yields no cost (None), never 0"}
+    lifecycle: null
+    absence: "None when the cost model is UNKNOWN or the plan has no stop."
+    authority: {evidence: [REPO], sources: [src/research/costs.py], lineage: [SEM-015, F-082]}
+    divergences:
+      - {surface: "research flat 12 bps default", current: "~11x the measured XAUUSD cost (F-082)", contract: "the cost model is part of every outcome's identity (I-15)", disposition: RECORDED}
+    version: 1
+
+  TRS-08:
+    canonical_name: outcome
+    layer: TRADING
+    kind: OUTCOME
+    status: ACCEPTED
+    definition: "The R result of walking one plan forward through a named walk under a named cost model (I-15)."
+    identity: {reference: TRS-01, timeframe: bar, clock: bar_close, availability_rule: "exit bar"}
+    parameterization:
+      walk: {domain: [forward_walk, multi_tp_walk], identity_bearing: true}   # forward_walk_oco removed 2026-10-02: it walks a two-sided box, not the thesis direction
+      basis: {domain: [gross, net], identity_bearing: true}
+      cost_model: {domain: [component, flat_bps, none], identity_bearing: true}
+      cost_source: {domain: str, identity_bearing: true, applies_to: [net]}
+      walk_params: {domain: mapping, identity_bearing: true}
+    inputs: [TRS-04, TRS-05, TRS-06, TRS-07]
+    rule: "gross: R from the walk (intrabar high/low touch; stop is checked before targets on the same bar), cost_model none. net: gross minus TRS-07 cost_r computed from the walk's actual exit; cost_model and cost_source name the TRS-07 model and its calibration. A walk_params value that is a dataclass (SEM-016 AdverseFill) enters the identity as its type name plus fields. walk_params holds every walk argument that changes the result (multi_tp_walk partial_fraction, trail_fraction, stop_policy, tie_break, max_forward; forward_walk exit_model, max_forward) and is declared by the caller at measurement time, so a REP names the walk and the measurement records walk_params."
+    units: {unit: R, normalization_basis: "risk distance |entry - stop|", missing_rule: "an unwalkable plan (no future bars) has no outcome (None)"}
+    lifecycle: null
+    absence: "None until the walk reaches an exit or its horizon."
+    authority: {evidence: [REPO], sources: [src/research/measurement/forward_walk.py, src/research/oracle/multi_tp_walk.py], lineage: [SEM-017, F-088]}
+    divergences:
+      - {surface: "forward_walk", current: "one target, no partial exit, no stop move", contract: "an outcome is only comparable to production when its walk matches production's exit plan; the walk is identity-bearing", evidence: "F-088", disposition: RECORDED}
+    version: 1
+
+  # ═══════════════════════════════ DECISION / EXECUTION (slice 3) ═══════════════════════════════
+  # What happens to a real position: size, admission, fill, approval, lifecycle, exits, carry,
+  # realised result. Never redefines a market or trading concept (I-3); a decision may end a
+  # PLAN or a POSITION, never a thesis. User decisions D3-1..D3-6 (spec §14).
+  # Order of one position: plan (TRADING) -> DEX-01 size -> DEX-02 admission -> DEX-03 fill ->
+  # DEX-04 approval (before the fill under approval_bar_legacy, after it under resting_order) ->
+  # DEX-05 position under DEX-06 schedule and DEX-07 rules -> DEX-08 carry -> DEX-09 result.
+
+  DEX-01:
+    canonical_name: position_size
+    layer: DECISION_EXECUTION
+    kind: EXECUTION_SPEC
+    status: ACCEPTED
+    definition: "How much to trade: the quantity at which hitting the plan's stop loses exactly the chosen fraction of equity."
+    identity: {reference: TRS-01, timeframe: plan, clock: bar_close, availability_rule: "bar the plan is built (equity as of that bar)"}
+    parameterization:
+      risk_fraction: {domain: float, identity_bearing: true, default_ref: backtest.risk_pct_per_trade}
+      equity_basis: {domain: [initial_capital, current_equity], identity_bearing: true}
+    inputs: [TRS-04, TRS-05]
+    rule: "quantity = risk_fraction * equity / R, R = |entry - stop| in price per unit. risk_fraction is a FRACTION (0.01 = 1 percent), never a percent. equity_basis initial_capital uses the starting capital for every position; current_equity uses realised equity at the plan bar (closed positions only, never open P&L). Rounding to a broker lot step is execution detail outside this concept."
+    units: {unit: instrument_units, normalization_basis: "risk distance |entry - stop|", missing_rule: "no stop -> no size (None)"}
+    lifecycle: null
+    absence: "None when the plan has no stop (R undefined) or R == 0."
+    authority: {evidence: [REPO, USER_DECISION], sources: [src/config_layer/crt_engine_v2.py, src/core/ultron_risk_gate.py, src/runtime/backtest_v2.py], lineage: [F-111]}
+    divergences:
+      - {surface: "execution_planner.risk_percent / ultron_risk_gate.max_risk_per_trade_pct (live rail)", current: "a PERCENT (1.0 = 1 percent)", contract: "risk_fraction is a fraction", evidence: "F-111 (docs/governance/config_unit_registry.json)", disposition: RECORDED}
+      - {surface: "backtest.sizing_mode = fixed_investment_inr with per_trade_investment_inr", current: "the backtest ledger sizes by a fixed rupee investment per trade, not by risk", contract: "size from risk_fraction and R", disposition: RECORDED}
+      - {surface: "Trade.risk_pct (crt_engine_v2.py:215)", current: "a dataclass default 0.01 that the engine never reads from config", contract: "risk_fraction is an identity-bearing value declared by the caller", disposition: RECORDED}
+    version: 1
+
+  DEX-02:
+    canonical_name: portfolio_admission
+    layer: DECISION_EXECUTION
+    kind: DECISION
+    status: ACCEPTED
+    definition: "Whether the portfolio has room for one more position. A plan over a cap is FILTERED, never shrunk to fit."
+    identity: {reference: TRS-01, timeframe: bar, clock: bar_close, availability_rule: "fill bar (the open positions are those open at that bar's close)"}
+    parameterization:
+      max_concurrent_positions: {domain: int, identity_bearing: true}
+      max_open_risk: {domain: float, identity_bearing: true}
+    inputs: [DEX-01]   # plus the open DEX-05 positions at the fill bar; not listed to keep the graph acyclic
+    rule: "ADMITTED iff (open positions + 1 <= max_concurrent_positions) and (sum of open positions' risk_fraction + this plan's risk_fraction <= max_open_risk). Otherwise FILTERED with reason_code portfolio_cap (terminal DECISION/FILTERED of the PLAN only). The size is never trimmed to fit. A filtered plan does not end its thesis: a later plan of the same ACTIVE thesis may be admitted. Positions of the same thesis count like any other and may overlap (user, D3-4/D3-5). Open risk is the risk_fraction at entry; a stop moved after TP1 does not reduce it. max_open_risk is a fraction of equity."
+    units: {domain: verdict, values: [ADMITTED, FILTERED]}
+    lifecycle: null
+    absence: "n/a (every plan that reaches its fill bar gets a verdict)."
+    authority: {evidence: [REPO, USER_DECISION], sources: [src/core/ultron_risk_gate.py, src/portfolio/allocator.py], lineage: [F-013, F-111]}
+    divergences:
+      - {surface: "PortfolioAllocator.allocate (src/portfolio/allocator.py:85-99)", current: "sizes risk from signal confidence and TRIMS it to fit the remaining cap; no count cap; nothing calls it (F-013)", contract: "fixed risk_fraction; over a cap the plan is FILTERED, never trimmed", disposition: RECORDED}
+      - {surface: "UltronRiskGate.evaluate check 5 (ultron_risk_gate.py:363-372)", current: "rejects over_exposure on the open-risk cap, in PERCENT (max_portfolio_risk_pct 5.0), using min(risk, max_risk_per_trade_pct)", contract: "fractions; this plan's own risk_fraction", disposition: RECORDED}
+      - {surface: "EngineState.active_trade (crt_engine_v2.py)", current: "the CRT engine holds one trade at a time, so it never opens a second position on any thesis", contract: "count and risk caps only; overlap allowed", disposition: RECORDED}
+      - {surface: "inout.risk.max_concurrent_trades = 3 (active config)", current: "declared for the inout rail; no reader found in src/ by grep 2026-10-02", contract: "max_concurrent_positions", disposition: RECORDED}
+    version: 1
+
+  DEX-03:
+    canonical_name: fill
+    layer: DECISION_EXECUTION
+    kind: EXECUTION
+    status: ACCEPTED
+    definition: "The moment an admitted plan becomes a position: one fill bar and one fill price."
+    identity: {reference: TRS-01, timeframe: bar, clock: bar_close, availability_rule: "fill bar"}
+    parameterization:
+      entry_semantics: {domain: TRS-04.entry_semantics, legacy_values: [approval_bar_legacy], identity_bearing: true}
+    inputs: [TRS-04, DEX-02]
+    rule: "resting_order: fill bar = the MKT-E09 retest bar, fill price = its close (TRS-04). Entry slippage is a cost (TRS-07 component), never folded into the fill price, so it is charged once. An unadmitted plan never fills. A fill is observable only on its own bar or later (I-6)."
+    units: {unit: price, normalization_basis: none}
+    lifecycle: null
+    absence: "None when the plan is FILTERED (DEX-02) or has no entry."
+    authority: {evidence: [REPO], sources: [src/config_layer/crt_engine_v2.py], lineage: [F-110]}
+    divergences:
+      - {surface: "setup.entry_semantics = approval_bar_legacy (active config)", current: "booked one bar after the retest at the retest close", contract: "see TRS-04", evidence: "F-110", disposition: RECORDED}
+    version: 1
+
+  DEX-04:
+    canonical_name: approval
+    layer: DECISION_EXECUTION
+    kind: DECISION
+    status: ACCEPTED
+    definition: "A decision rail's verdict on one plan: APPROVED, or FILTERED with a reason code. It ends a plan or a position, never a thesis or a market object (I-3)."
+    identity: {reference: TRS-01, timeframe: bar, clock: bar_close, availability_rule: "bar the rail decides"}
+    parameterization:
+      rail: {domain: [crt_engine, planner_ultron], identity_bearing: true}
+    inputs: [TRS-01, TRS-04, TRS-05, TRS-06, DEX-03]
+    rule: "The rail is identity-bearing because the two rails approve different populations (F-103). Under approval_bar_legacy the verdict precedes the fill. Under resting_order the order fills at the retest close and the verdict follows on a later confirmation bar: APPROVED keeps the position; FILTERED closes it at that bar's close with exit reason UNCONFIRMED (crt_engine_v2.py close_unconfirmed). FILTERED reason codes come from terminal_reason_map.yaml class FILTERED. A FILTERED plan ends that plan only; the thesis stays ACTIVE (D3-4)."
+    units: {domain: verdict, values: [APPROVED, FILTERED]}
+    lifecycle: null
+    absence: "None until the rail decides; a plan never reaching a decision bar has no verdict."
+    authority: {evidence: [REPO], sources: [src/config_layer/crt_engine_v2.py, src/config_layer/execution_planner.py, src/core/ultron_risk_gate.py], lineage: [F-103, F-109, F-110]}
+    divergences:
+      - {surface: "backtest rail vs live rail", current: "backtest reaches the CRT engine filters but never ExecutionPlannerV1_2 / UltronRiskGate; live reaches the planner and Ultron but has no CRT state machine", contract: "one approval concept; the rail is a parameter", evidence: "F-103", disposition: RECORDED}
+      - {surface: "planner_ultron on XAUUSD", current: "the planner gate cannot approve REVERSAL/CONTINUATION (ceiling 0.45 < 0.55); 26 of 27 replayed CRT trades reject_gate", contract: "a verdict means what the rail decided, not that the rail can approve", evidence: "F-109", disposition: RECORDED}
+      - {surface: "CRT engine DECISION/FILTERED resets", current: "a filter resets the whole episode to RANGE", contract: "a filter ends the plan; the thesis keeps its own lifecycle (TRS-01)", disposition: RECORDED}
+    version: 1
+
+  DEX-05:
+    canonical_name: position
+    layer: DECISION_EXECUTION
+    kind: EXECUTION
+    status: ACCEPTED
+    definition: "One filled plan from its fill to its close. A thesis may found several positions, which may overlap (D3-4/D3-5)."
+    identity: {reference: TRS-01, timeframe: bar, clock: bar_close, availability_rule: "fill bar; each transition on its own bar"}
+    parameterization: {}
+    inputs: [DEX-01, DEX-03, DEX-06, DEX-07]
+    rule: "instance_key = (anchor = fill bar, side = direction, parent = the thesis instance). OPEN on the fill bar; PARTIAL when the DEX-06 partial fills at target 1; CLOSED on the bar of exactly one exit_reason: STOP (initial stop, before target 1), TRAIL_STOP (runner stop after target 1), TARGET_FINAL (target 2), INVALIDATION or ORIGIN (DEX-07), TIMEOUT (DEX-07 ttl), UNCONFIRMED (DEX-04 FILTERED after a resting fill). Termination is EXECUTION/POSITION_CLOSED. Closing a position never changes its thesis's state, and a thesis ending never closes a position by itself (only DEX-07 can)."
+    units: {domain: lifecycle}
+    lifecycle: {states: [OPEN, PARTIAL, CLOSED], exit_reasons: [STOP, TRAIL_STOP, TARGET_FINAL, INVALIDATION, ORIGIN, TIMEOUT, UNCONFIRMED], terminal_authority: EXECUTION}
+    absence: "None when there is no fill."
+    authority: {evidence: [REPO, USER_DECISION], sources: [src/config_layer/crt_engine_v2.py], lineage: [F-088, F-110]}
+    divergences:
+      - {surface: "Trade.status (crt_engine_v2.py:2710-2844)", current: "PENDING / OPEN / TP1 / TP2 / STOPPED / STOPPED_STRUCTURAL / TIMEOUT / UNCONFIRMED; STOPPED covers both the initial stop and the runner's trailed stop", contract: "state and exit_reason are separate; STOP and TRAIL_STOP are distinct reasons", disposition: RECORDED}
+      - {surface: "CRTState.EXECUTION / RESOLUTION", current: "position lifecycle carried as market CRT states", contract: "a position is not an episode stage (§3); remapping waits for L3 v2.0.0 (D-4)", disposition: RECORDED}
+    version: 1
+
+  DEX-06:
+    canonical_name: exit_schedule
+    layer: DECISION_EXECUTION
+    kind: EXECUTION_SPEC
+    status: ACCEPTED
+    definition: "The resting exits of a position: how much closes at target 1, where the runner's stop moves after it, and which exit wins when one bar touches several."
+    identity: {reference: TRS-01, timeframe: plan, clock: bar_close, availability_rule: "bar the plan is built"}
+    parameterization:
+      partial_fraction: {domain: float, identity_bearing: true, default_ref: execution_planner.partial_tp_fraction}
+      trail_fraction: {domain: float, identity_bearing: true}
+      tie_break: {domain: [stop_first], identity_bearing: true}
+    inputs: [TRS-04, TRS-05, TRS-06]
+    rule: "At target 1, partial_fraction of the position closes at target 1 and the runner's stop moves to entry + trail_fraction * (target1 - entry) (0 = breakeven; 0.5 = half way). The runner then exits at target 2 or the moved stop. stop_first: when one bar's range touches the stop and a target, the stop fills (intrabar touch on high/low). These are the multi_tp_walk arguments partial_fraction, trail_fraction and tie_break production (F-088), so a DEX-09 bar_replay result must equal multi_tp_walk under the same values."
+    units: {unit: fraction, normalization_basis: "position quantity (partial_fraction); target1 - entry distance (trail_fraction)"}
+    lifecycle: null
+    absence: "n/a (every position has a schedule; a single-target plan is partial_fraction 1.0)."
+    authority: {evidence: [REPO], sources: [src/config_layer/crt_engine_v2.py, src/research/oracle/multi_tp_walk.py], lineage: [SEM-017, F-088, F-056]}
+    divergences:
+      - {surface: "ExecutionEngine.update_trade (crt_engine_v2.py:2735, 2762)", current: "the partial 0.5 is a literal in the engine, while execution_planner.partial_tp_fraction is declared separately", contract: "partial_fraction is one identity-bearing value", disposition: RECORDED}
+      - {surface: "execution_planner.partial_tp_breakeven_enabled", current: "named breakeven, but the runner stop moves half way to target 1 (crt_engine_v2.py:2765)", contract: "trail_fraction 0.5; the name is a recorded naming trap", evidence: "F-088", disposition: RECORDED}
+      - {surface: "ExecutionEngine.update_trade docstring", current: "declares priority TP2 > SL > TP1", contract: "stop_first is the effective rule (_intrabar_trigger_price)", evidence: "F-088", disposition: RECORDED}
+    version: 1
+
+  DEX-07:
+    canonical_name: exit_rule
+    layer: DECISION_EXECUTION
+    kind: EXECUTION_SPEC
+    status: ACCEPTED
+    definition: "The non-resting reasons a position closes: what to do when its thesis is invalidated, and an optional time limit."
+    identity: {reference: TRS-01, timeframe: bar, clock: bar_close, availability_rule: "bar the plan is built; each firing on its own bar's close"}
+    parameterization:
+      on_invalidation: {domain: [hold, close_on_invalidation, close_on_origin], identity_bearing: true}
+      precedence: {domain: [after_resting_fills], legacy_values: [absolute], identity_bearing: true, default_ref: crt_engine.displacement_origin_kill_precedence}
+      ttl_bars: {domain: int, identity_bearing: true, default_ref: setup.trade_ttl_candles}
+    inputs: [TRS-01, TRS-03, MKT-E04, DEX-06]
+    rule: "D2-2 settled as a policy (user, D3-1). The TRS-03 invalidation is ALWAYS recorded on the thesis (FAILED), whatever the value. hold: the position ignores it and ends by DEX-06 exits or ttl. close_on_invalidation: close at the close of the MKT-E10 breach bar (exit_reason INVALIDATION). close_on_origin: close at the close of the first bar after the fill that closes beyond the open of the founding MKT-E04 candle against the direction (exit_reason ORIGIN; SEM-021). Both are close-triggered and booked at that close. after_resting_fills: on that bar the stop, targets and partial fill first; the rule closes what is left. ttl_bars: close at the close of the ttl-th bar after the fill if nothing else fired (exit_reason TIMEOUT); no value = no time limit. No setting claims economic value (SEM-021 is unmeasured)."
+    units: {domain: policy}
+    lifecycle: null
+    absence: "n/a"
+    authority: {evidence: [REPO, USER_DECISION], sources: [src/config_layer/crt_engine_v2.py, src/config_layer/state_identity.py], lineage: [D2-2, SEM-021, STORY-83.11]}
+    divergences:
+      - {surface: "ResetLogic.should_reset (crt_engine_v2.py:2876)", current: "an invalidation after entry is neither acted on nor recorded", contract: "always recorded on the thesis", disposition: RECORDED}
+      - {surface: "crt_engine.displacement_origin_kill_precedence = absolute", current: "evaluates the kill before resting fills on the same bar, which can cancel a fill that already happened", contract: "after_resting_fills; absolute is a declared measurement weakness (SEM-021)", disposition: RECORDED}
+      - {surface: "active config crt_engine.displacement_origin_kill_enabled = true", current: "the active engine is close_on_origin", contract: "on_invalidation is a declared value; close_on_origin is one of three", disposition: RECORDED}
+    version: 1
+
+  DEX-08:
+    canonical_name: carry
+    layer: DECISION_EXECUTION
+    kind: MEASUREMENT
+    status: ACCEPTED
+    definition: "Overnight financing (swap) a position pays or earns for the broker days it is held."
+    identity: {reference: TRS-01, timeframe: position, clock: broker_server_day, availability_rule: "exit bar"}
+    parameterization:
+      cost_source: {domain: str, identity_bearing: true}
+    inputs: [DEX-03, DEX-05]
+    rule: "nights = number of broker rollovers crossed: the distinct broker-server calendar dates that have bars, after the fill bar's date, up to and including the exit bar's date (weekends without bars add none). weighted_nights = sum over those rollovers of 3 on the calibration's triple-swap weekday, else 1. carry = research.costs.ComponentCostModel carry with nights_held = weighted_nights, in price, and in R over |entry - stop|. A debit is a cost; the cost model decides the sign rule. Broker-server time is the clock (MT5 bar stamps are server time, F-066)."
+    units: {unit: R, normalization_basis: "risk distance |entry - stop|", missing_rule: "a position held over at least one rollover with swap or the triple-swap weekday unmeasured has no carry (None), never 0; zero rollovers is a real 0"}
+    lifecycle: null
+    absence: "None when swap or the triple-swap weekday is unmeasured and nights > 0."
+    authority: {evidence: [REPO, USER_DECISION], sources: [src/research/costs.py], lineage: [SEM-015, F-066]}
+    divergences:
+      - {surface: "ComponentCostModel (research/costs.py:122-123, 232-261)", current: "per-night swap only; no triple-swap weekday field; slice-2 outcomes pass nights_held = 0", contract: "weighted nights from a calibrated triple-swap weekday", disposition: RECORDED}
+    version: 1
+
+  DEX-09:
+    canonical_name: position_result
+    layer: DECISION_EXECUTION
+    kind: OUTCOME
+    status: ACCEPTED
+    definition: "The realised R of one whole position: every partial and final exit, net of costs and carry when net."
+    identity: {reference: TRS-01, timeframe: position, clock: bar_close, availability_rule: "exit bar"}
+    parameterization:
+      walk: {domain: [bar_replay, broker_fills], identity_bearing: true}
+      basis: {domain: [gross, net], identity_bearing: true}
+      cost_model: {domain: TRS-08.cost_model, identity_bearing: true}
+      cost_source: {domain: str, identity_bearing: true, applies_to: [net]}
+    inputs: [DEX-03, DEX-05, DEX-06, DEX-07, DEX-08, TRS-07]
+    rule: "gross R = sum over exits of (exit fraction * signed exit move) / R. net = gross - TRS-07 cost_r for the position's actual exits - DEX-08 carry. The position's identity also carries its DEX-01, DEX-06 and DEX-07 parameterizations. bar_replay walks OHLC bars (backtest); broker_fills uses the broker's executed fills (live / paper) - the two are never pooled (F-010). Under on_invalidation hold and ttl none, a bar_replay gross result must equal research.oracle.multi_tp_walk with the same partial_fraction, trail_fraction and tie_break."
+    units: {unit: R, normalization_basis: "risk distance |entry - stop|", missing_rule: "an open position has no result (None)"}
+    lifecycle: null
+    absence: "None until the position is CLOSED; None for net when carry or cost is None."
+    authority: {evidence: [REPO], sources: [src/config_layer/crt_engine_v2.py, src/research/oracle/multi_tp_walk.py], lineage: [F-010, F-088, F-110]}
+    divergences:
+      - {surface: "Trade.pnl (crt_engine_v2.py)", current: "price per unit, gross, blended by literal 0.5 weights", contract: "R, with basis and cost model in identity", disposition: RECORDED}
+      - {surface: "F-110 ledger fix", current: "the TP1 partial was not booked in the ledger before 2026-10-01", contract: "every exit is part of the result", evidence: "F-110", disposition: RECORDED}
+    version: 1

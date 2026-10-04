@@ -1,0 +1,12 @@
+{
+  "decisions": 1177,
+  "edges": 4708,
+  "generated_for_date": "2026-08-26",
+  "path": "docs/governance/research_dag_provenance-2026-08-26.json",
+  "payload_sha256": "6bcde504f05a10ff53f3a106360d6c08a6b1bcc26d9ddd17a406c9f231afeac4",
+  "pct": {
+    "EXPLICIT": 18.95,
+    "INFERRED": 18.1,
+    "UNKNOWN": 62.96
+  }
+}

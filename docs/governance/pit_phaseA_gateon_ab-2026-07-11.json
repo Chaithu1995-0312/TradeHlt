@@ -1,0 +1,394 @@
+{
+  "generated_at": "2026-07-11T07:23:02.126706+00:00",
+  "active_version": "v2_multi_2026_04",
+  "probe": "pit_swing_gateon_ab",
+  "behavior_changed": false,
+  "contaminated_10": [
+    "double_sweep",
+    "sweep_detected",
+    "liquidity_sweep",
+    "break_of_structure",
+    "swing_high",
+    "swing_low",
+    "higher_high",
+    "lower_low",
+    "liquidity_distance",
+    "liquidity_pressure_score"
+  ],
+  "instruments": {
+    "BNBUSDT": {
+      "instrument": "BNBUSDT",
+      "status": "OK",
+      "stop": false,
+      "stop_reason": null,
+      "corpus_parity": {
+        "path": "D:/Tradelatest/data/BNBUSDT_M15.csv",
+        "sha256": "083f2bdf32b917648f36bd7596c97c0b5702c06aebef7b80df80219618bcddce",
+        "n_rows": 70080,
+        "n_cols": 6
+      },
+      "intervention_isolation": {
+        "pass": true,
+        "bars": 7922,
+        "other_28_column_failures": [],
+        "contaminated_10_diffs": [
+          {
+            "col": "double_sweep",
+            "n_differ": 232,
+            "differ_rate": 0.0292855339560717
+          },
+          {
+            "col": "sweep_detected",
+            "n_differ": 531,
+            "differ_rate": 0.06702852814945721
+          },
+          {
+            "col": "liquidity_sweep",
+            "n_differ": 537,
+            "differ_rate": 0.06778591264832114
+          },
+          {
+            "col": "break_of_structure",
+            "n_differ": 897,
+            "differ_rate": 0.11322898258015653
+          },
+          {
+            "col": "swing_high",
+            "n_differ": 2460,
+            "differ_rate": 0.31052764453420856
+          },
+          {
+            "col": "swing_low",
+            "n_differ": 2440,
+            "differ_rate": 0.30800302953799547
+          },
+          {
+            "col": "higher_high",
+            "n_differ": 740,
+            "differ_rate": 0.09341075485988387
+          },
+          {
+            "col": "lower_low",
+            "n_differ": 700,
+            "differ_rate": 0.08836152486745771
+          },
+          {
+            "col": "liquidity_distance",
+            "n_differ": 1323,
+            "differ_rate": 0.16700328199949507
+          },
+          {
+            "col": "liquidity_pressure_score",
+            "n_differ": 1323,
+            "differ_rate": 0.16700328199949507
+          }
+        ],
+        "vector_other_cell_diffs": 0,
+        "note": "The 10 columns are a DEPENDENCY GRAPH, not independent variables. Measured effect = TOTAL effect of switching production structure graph from centered to causal. No feature-level attribution claimed."
+      },
+      "pc1": {
+        "pass": true,
+        "bars_checked": 2000,
+        "bars_score_moved": 2000,
+        "move_rate": 1.0,
+        "formula_constants_ok": true,
+        "channel": "scoring_engine.compute_scores s_sweep / final",
+        "note": "PC-1 failure = channel harness INVALID \u2192 STOP"
+      },
+      "pc2": {
+        "pass_as_sensitivity": false,
+        "baseline": {
+          "label": "pc2_baseline",
+          "instrument": "BNBUSDT",
+          "engine_gate": "1",
+          "pipeline_mode": "FeaturePipeline",
+          "prod_version": "v2_multi_2026_04",
+          "approved_trades": 11,
+          "win_rate": 0.2727,
+          "expectancy_rr": -0.3865,
+          "profit_factor": 0.509,
+          "total_return_pct": -0.042418,
+          "max_drawdown_pct": 0.056251,
+          "funnel_execution": 43,
+          "funnel_retest": 47,
+          "candles": 70080,
+          "elapsed_s": 24.5,
+          "output_dir": "D:/Tradelatest/results/pit_phaseA_gateon_ab/BNBUSDT/pc2_baseline"
+        },
+        "strong": {
+          "label": "pc2_strong",
+          "instrument": "BNBUSDT",
+          "engine_gate": "1",
+          "pipeline_mode": "pc2_zero_structure",
+          "prod_version": "v2_multi_2026_04",
+          "approved_trades": 11,
+          "win_rate": 0.2727,
+          "expectancy_rr": -0.3865,
+          "profit_factor": 0.509,
+          "total_return_pct": -0.042418,
+          "max_drawdown_pct": 0.056251,
+          "funnel_execution": 43,
+          "funnel_retest": 47,
+          "candles": 70080,
+          "elapsed_s": 23.6,
+          "output_dir": "D:/Tradelatest/results/pit_phaseA_gateon_ab/BNBUSDT/pc2_strong"
+        },
+        "ledger_diff": {
+          "n_a": 11,
+          "n_b": 11,
+          "added": 0,
+          "removed": 0,
+          "overlap": 11,
+          "overlap_pct": 100.0,
+          "identical": true,
+          "added_keys_sample": [],
+          "removed_keys_sample": []
+        },
+        "note": "PC-2 failure is a REPORTED SENSITIVITY LIMITATION, not harness failure"
+      },
+      "gateon_ab": {
+        "centered": {
+          "label": "gateon_centered",
+          "instrument": "BNBUSDT",
+          "engine_gate": "1",
+          "pipeline_mode": "FeaturePipeline",
+          "prod_version": "v2_multi_2026_04",
+          "approved_trades": 11,
+          "win_rate": 0.2727,
+          "expectancy_rr": -0.3865,
+          "profit_factor": 0.509,
+          "total_return_pct": -0.042418,
+          "max_drawdown_pct": 0.056251,
+          "funnel_execution": 43,
+          "funnel_retest": 47,
+          "candles": 70080,
+          "elapsed_s": 23.0,
+          "output_dir": "D:/Tradelatest/results/pit_phaseA_gateon_ab/BNBUSDT/gateon_centered"
+        },
+        "causal": {
+          "label": "gateon_causal",
+          "instrument": "BNBUSDT",
+          "engine_gate": "1",
+          "pipeline_mode": "causal_structure_graph",
+          "prod_version": "v2_multi_2026_04",
+          "approved_trades": 11,
+          "win_rate": 0.2727,
+          "expectancy_rr": -0.3865,
+          "profit_factor": 0.509,
+          "total_return_pct": -0.042418,
+          "max_drawdown_pct": 0.056251,
+          "funnel_execution": 43,
+          "funnel_retest": 47,
+          "candles": 70080,
+          "elapsed_s": 24.4,
+          "output_dir": "D:/Tradelatest/results/pit_phaseA_gateon_ab/BNBUSDT/gateon_causal"
+        },
+        "ledger_diff": {
+          "n_a": 11,
+          "n_b": 11,
+          "added": 0,
+          "removed": 0,
+          "overlap": 11,
+          "overlap_pct": 100.0,
+          "identical": true,
+          "added_keys_sample": [],
+          "removed_keys_sample": []
+        },
+        "identical": true
+      },
+      "gateoff_f029_replay": {
+        "centered": {
+          "label": "gateoff_centered",
+          "instrument": "BNBUSDT",
+          "engine_gate": "0",
+          "pipeline_mode": "FeaturePipeline",
+          "prod_version": "v2_multi_2026_04",
+          "approved_trades": 13,
+          "win_rate": 0.3077,
+          "expectancy_rr": -0.3574,
+          "profit_factor": 0.5233,
+          "total_return_pct": -0.046302,
+          "max_drawdown_pct": 0.066419,
+          "funnel_execution": 43,
+          "funnel_retest": 47,
+          "candles": 70080,
+          "elapsed_s": 24.1,
+          "output_dir": "D:/Tradelatest/results/pit_phaseA_gateon_ab/BNBUSDT/gateoff_centered"
+        },
+        "causal": {
+          "label": "gateoff_causal",
+          "instrument": "BNBUSDT",
+          "engine_gate": "0",
+          "pipeline_mode": "causal_structure_graph",
+          "prod_version": "v2_multi_2026_04",
+          "approved_trades": 13,
+          "win_rate": 0.3077,
+          "expectancy_rr": -0.3574,
+          "profit_factor": 0.5233,
+          "total_return_pct": -0.046302,
+          "max_drawdown_pct": 0.066419,
+          "funnel_execution": 43,
+          "funnel_retest": 47,
+          "candles": 70080,
+          "elapsed_s": 23.7,
+          "output_dir": "D:/Tradelatest/results/pit_phaseA_gateon_ab/BNBUSDT/gateoff_causal"
+        },
+        "ledger_diff": {
+          "n_a": 13,
+          "n_b": 13,
+          "added": 0,
+          "removed": 0,
+          "overlap": 13,
+          "overlap_pct": 100.0,
+          "identical": true,
+          "added_keys_sample": [],
+          "removed_keys_sample": []
+        },
+        "f029_byte_identical": true,
+        "truth_conflict": false,
+        "note": "F-029 refined (scope=gate-OFF trade generation) STANDS"
+      },
+      "pc2_sensitivity_ok": false
+    },
+    "SOLUSDT": {
+      "instrument": "SOLUSDT",
+      "status": "OK",
+      "stop": false,
+      "stop_reason": null,
+      "corpus_parity": {
+        "path": "D:/Tradelatest/data/SOLUSDT_M15.csv",
+        "sha256": "ce595bd202eec9e9f0ecbed4898d51a407d7b363c81aad5c7cab93287e4fb695",
+        "n_rows": 70080,
+        "n_cols": 6
+      },
+      "intervention_isolation": {
+        "pass": true,
+        "bars": 7922,
+        "other_28_column_failures": [],
+        "contaminated_10_diffs": [
+          {
+            "col": "double_sweep",
+            "n_differ": 249,
+            "differ_rate": 0.031431456702852814
+          },
+          {
+            "col": "sweep_detected",
+            "n_differ": 525,
+            "differ_rate": 0.06627114365059328
+          },
+          {
+            "col": "liquidity_sweep",
+            "n_differ": 534,
+            "differ_rate": 0.06740722039888918
+          },
+          {
+            "col": "break_of_structure",
+            "n_differ": 934,
+            "differ_rate": 0.11789952032315072
+          },
+          {
+            "col": "swing_high",
+            "n_differ": 2250,
+            "differ_rate": 0.2840191870739712
+          },
+          {
+            "col": "swing_low",
+            "n_differ": 2298,
+            "differ_rate": 0.2900782630648826
+          },
+          {
+            "col": "higher_high",
+            "n_differ": 724,
+            "differ_rate": 0.0913910628629134
+          },
+          {
+            "col": "lower_low",
+            "n_differ": 750,
+            "differ_rate": 0.0946730623579904
+          },
+          {
+            "col": "liquidity_distance",
+            "n_differ": 1352,
+            "differ_rate": 0.17066397374400405
+          },
+          {
+            "col": "liquidity_pressure_score",
+            "n_differ": 1352,
+            "differ_rate": 0.17066397374400405
+          }
+        ],
+        "vector_other_cell_diffs": 0,
+        "note": "The 10 columns are a DEPENDENCY GRAPH, not independent variables. Measured effect = TOTAL effect of switching production structure graph from centered to causal. No feature-level attribution claimed."
+      },
+      "pc1": {
+        "pass": true,
+        "bars_checked": 2000,
+        "bars_score_moved": 2000,
+        "move_rate": 1.0,
+        "formula_constants_ok": true,
+        "channel": "scoring_engine.compute_scores s_sweep / final",
+        "note": "PC-1 failure = channel harness INVALID \u2192 STOP"
+      },
+      "gateon_ab": {
+        "centered": {
+          "label": "gateon_centered",
+          "instrument": "SOLUSDT",
+          "engine_gate": "1",
+          "pipeline_mode": "FeaturePipeline",
+          "prod_version": "v2_multi_2026_04",
+          "approved_trades": 6,
+          "win_rate": 0.8333,
+          "expectancy_rr": 1.0518,
+          "profit_factor": 7.3785,
+          "total_return_pct": 0.064496,
+          "max_drawdown_pct": 0.009893,
+          "funnel_execution": 73,
+          "funnel_retest": 41,
+          "candles": 70080,
+          "elapsed_s": 23.8,
+          "output_dir": "D:/Tradelatest/results/pit_phaseA_gateon_ab/SOLUSDT/gateon_centered"
+        },
+        "causal": {
+          "label": "gateon_causal",
+          "instrument": "SOLUSDT",
+          "engine_gate": "1",
+          "pipeline_mode": "causal_structure_graph",
+          "prod_version": "v2_multi_2026_04",
+          "approved_trades": 6,
+          "win_rate": 0.8333,
+          "expectancy_rr": 1.0518,
+          "profit_factor": 7.3785,
+          "total_return_pct": 0.064496,
+          "max_drawdown_pct": 0.009893,
+          "funnel_execution": 73,
+          "funnel_retest": 41,
+          "candles": 70080,
+          "elapsed_s": 24.3,
+          "output_dir": "D:/Tradelatest/results/pit_phaseA_gateon_ab/SOLUSDT/gateon_causal"
+        },
+        "ledger_diff": {
+          "n_a": 6,
+          "n_b": 6,
+          "added": 0,
+          "removed": 0,
+          "overlap": 6,
+          "overlap_pct": 100.0,
+          "identical": true,
+          "added_keys_sample": [],
+          "removed_keys_sample": []
+        },
+        "identical": true
+      },
+      "pc2_sensitivity_ok": null
+    }
+  },
+  "staged_expansion": {
+    "decision": "IDENTICAL_THEN_ONE_MORE",
+    "primary_identical": true,
+    "expanded": [
+      "SOLUSDT"
+    ],
+    "selection_metric": "any_of_10_differ_rate",
+    "selected_rate": 0.6314837153196623
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "change_id": "CH-physical-storage-architecture",
+  "date_utc": "2026-08-23",
+  "objective": "Phase 3 specification only: a file-backed physical architecture that satisfies CANONICAL_LAYER_IDENTITY_CONTRACT.md v1.0.0 / CH-canonical-layer-identity and STORAGE_PRESERVATION_CONTRACT.md v1.0.0 / CH-storage-preservation-contract. Admissibility table all-YES via identity records that embed frozen PKs, content-addressed declaration snapshots (hashes validate without HEAD), tracked bindings, Identity Check as the only load, occupancy stored not folded, RESET first-class. No writers, readers, migrations, or store engine as authority.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY"
+  ],
+  "change_class_rationale": "New architecture specification plus navigation pointers. Does not reopen LAYER_IDENTITY_STATUS or STORAGE_PRESERVATION_STATUS. No src/, configs/, scripts/, tests/, or models/ edit. Not claimed CLOSED in the Closure Index this turn.",
+  "affected_files": [
+    "docs/governance/PHYSICAL_STORAGE_ARCHITECTURE.md",
+    "docs/governance/STORAGE_PRESERVATION_CONTRACT.md",
+    "docs/governance/CANONICAL_LAYER_IDENTITY_CONTRACT.md",
+    "docs/governance/build_manifests/CH-physical-storage-architecture.impact.json",
+    "docs/knowledge-map.md",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/test_closure_authority_index.py"
+  ],
+  "unknowns": [
+    {
+      "question": "Whether the user will accept Phase 3 as CLOSED the way Phases 1–2 were accepted.",
+      "blocking": false,
+      "resolution": "Specified FROZEN v1.0.0, not claimed CLOSED this turn.",
+      "followup": "User freeze-acceptance, if given, is a separate change id. Phase 4 writers remain forbidden until then plus explicit authorization."
+    }
+  ],
+  "rollback_boundary": "Delete PHYSICAL_STORAGE_ARCHITECTURE.md and this manifest; revert preservation/identity Phase 3 pointers and the knowledge-map row. Identity and preservation closures stay CLOSED.",
+  "authority_granted": "User 2026-08-23 asked the Phase 3 gate question. This change answers it with an architecture. No implementation.",
+  "authority_NOT_granted": "No writers, readers, migrations, replay, Parquet/DuckDB as authority, G001, promotion, ACTIVE_VERSION change, Semantic OS id, F-id, and no reopen of identity or preservation.",
+  "production_behavior_changed": "NO"
+}

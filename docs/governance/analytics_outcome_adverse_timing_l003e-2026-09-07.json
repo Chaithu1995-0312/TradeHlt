@@ -1,0 +1,3542 @@
+{
+  "finding_id": "L-003E",
+  "parent": "L-003D",
+  "prior_run_id": "l003d_path_mechanics_20260907_180219",
+  "run_id": "l003e_adverse_timing_20260907_181752",
+  "generated_at_utc": "2026-09-07T18:17:52.190Z",
+  "git_commit_sha": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+  "version": "L-003E.v1",
+  "status": "MEASURED",
+  "column_semantics": {
+    "T_MAE": "time_to_bottom_path",
+    "definition": "bars until deepest adverse (MAE) over exit-agnostic PEAK_HORIZON (~96 bars)",
+    "NOT": "first time stop was threatened / FAE-to-stop (would require candle replay; out of scope)",
+    "bars_to_peak_within_trade": "favorable peak within governing trade duration",
+    "favorable_first": "from horizon_excursion (binary order signal)",
+    "source_script": "scripts/analysis/bnbusdt_trade_anatomy.py",
+    "T_MAE_prose": "early MAE timing / early-path minimum; timing of deepest adverse on PEAK_HORIZON path (not magnitude+timing; not first stop-threat; not FAE)"
+  },
+  "falsification_criteria": {
+    "candidate_predicts": [
+      "early adverse (low T_MAE) + late peak enrichment for DISAGREE_SL_TP",
+      "higher adverse-before-completion patterns vs AGREE"
+    ],
+    "would_weaken_falsify": [
+      "DISAGREE_SL_TP T_MAE distribution similar to AGREE (or later, not earlier)",
+      "Early T_MAE buckets do not show elevated DISAGREE_SL_TP after conditioning on peak",
+      "Sequence early-bottom + late-peak not enriched in disagreement"
+    ],
+    "hypothesis_claim_class": "trailing-stop hypothesis (unmeasured) / path-mechanics hypothesis",
+    "early_stop_note": "Detector stopped early is INFERENCE not observation; would need detector_exit_ts < oracle_tp_ts (unmeasured)."
+  },
+  "bucket_definitions": {
+    "tmae_short": "<=2, 3-5, 6-10, >10 (user-style; expect mass in >10)",
+    "tmae_dist": "<=5, 6-20, 21-40, 41-70, >70 (distribution-aware for right-skew median~40-45, max 96)",
+    "peak": "<=2, 3-5, 6-10, >10 (same as L-003D)",
+    "early_mae": "T_MAE <= 5",
+    "late_peak": "bars_to_peak_within_trade > 10"
+  },
+  "primary_metric": "DISAGREE_SL_TP = (art_outcome==SL_HIT AND outcome==TP_HIT)",
+  "populations": {
+    "DISAGREE_SL_TP": "art_outcome==SL_HIT & outcome==TP_HIT",
+    "AGREE": "art_outcome==outcome",
+    "ALL": "full rows"
+  },
+  "sources": {
+    "BNBUSDT": {
+      "path": "D:/Tradelatest/results/research/bnbusdt_trade_anatomy/trade_dataset_BNBUSDT.csv",
+      "sha256": "f8bdabbe683fe43f54f3853dcce809f113fe22e9385828210d48c6cc2aa34934",
+      "n_rows": 139942
+    },
+    "BTCUSDT": {
+      "path": "D:/Tradelatest/results/research/btcusdt_trade_anatomy/trade_dataset_BTCUSDT.csv",
+      "sha256": "09baca48253a50011a8869c991d6618bef79b99cc51764cb0ee71db2a2de0233",
+      "n_rows": 139942
+    },
+    "ETHUSDT": {
+      "path": "D:/Tradelatest/results/research/ethusdt_trade_anatomy/trade_dataset_ETHUSDT.csv",
+      "sha256": "530c9a35f0db2c120cb9d3bcdbba7013ec4176c44109ae2d318a23556a39e1a0",
+      "n_rows": 139942
+    },
+    "SOLUSDT": {
+      "path": "D:/Tradelatest/results/research/solusdt_trade_anatomy/trade_dataset_SOLUSDT.csv",
+      "sha256": "69cdc70ea422b19937c9d50d4762e4fbbd0050a7f495707f548ad9b9238f5bbc",
+      "n_rows": 139942
+    }
+  },
+  "sanity": {
+    "BNB_DISAGREE_SL_TP_n": 44791,
+    "BNB_expected": 44791,
+    "match": true,
+    "aggregate_n": 559768,
+    "aggregate_expected_approx": 559768
+  },
+  "aggregate": {
+    "n_all": 559768,
+    "n_DISAGREE_SL_TP": 176471,
+    "rate_DISAGREE_SL_TP": 0.31525739234825856,
+    "n_AGREE": 375705,
+    "rate_AGREE": 0.6711798459361735,
+    "tmae_distribution_by_population": {
+      "ALL": {
+        "n_finite": 557535,
+        "min": 1.0,
+        "p10": 3.0,
+        "p25": 14.0,
+        "median": 44.0,
+        "p75": 77.0,
+        "p90": 92.0,
+        "max": 96.0,
+        "mean": 45.64371205395177
+      },
+      "DISAGREE_SL_TP": {
+        "n_finite": 174508,
+        "min": 1.0,
+        "p10": 1.0,
+        "p25": 5.0,
+        "median": 40.0,
+        "p75": 77.0,
+        "p90": 92.0,
+        "max": 96.0,
+        "mean": 42.678668026680725
+      },
+      "AGREE": {
+        "n_finite": 375445,
+        "min": 1.0,
+        "p10": 6.0,
+        "p25": 17.0,
+        "median": 45.0,
+        "p75": 77.0,
+        "p90": 92.0,
+        "max": 96.0,
+        "mean": 46.93474676716963
+      }
+    },
+    "tmae_short_marginal": [
+      {
+        "bucket": "tmae_le_2",
+        "label": "T_MAE <= 2",
+        "n": 50343,
+        "n_DISAGREE_SL_TP": 35864,
+        "rate_DISAGREE_SL_TP": 0.7123929841288759,
+        "n_AGREE": 13650,
+        "rate_AGREE": 0.2711399797389905
+      },
+      {
+        "bucket": "tmae_3_5",
+        "label": "T_MAE 3-5",
+        "n": 32062,
+        "n_DISAGREE_SL_TP": 9659,
+        "rate_DISAGREE_SL_TP": 0.301260058636392,
+        "n_AGREE": 21893,
+        "rate_AGREE": 0.6828332605576695
+      },
+      {
+        "bucket": "tmae_6_10",
+        "label": "T_MAE 6-10",
+        "n": 37681,
+        "n_DISAGREE_SL_TP": 7366,
+        "rate_DISAGREE_SL_TP": 0.19548313473633927,
+        "n_AGREE": 29816,
+        "rate_AGREE": 0.7912741169289562
+      },
+      {
+        "bucket": "tmae_gt_10",
+        "label": "T_MAE >10",
+        "n": 437449,
+        "n_DISAGREE_SL_TP": 121619,
+        "rate_DISAGREE_SL_TP": 0.27801869475070234,
+        "n_AGREE": 310086,
+        "rate_AGREE": 0.7088506317307847
+      },
+      {
+        "bucket": "tmae_missing",
+        "label": "T_MAE missing/non-finite",
+        "n": 2233,
+        "n_DISAGREE_SL_TP": 1963,
+        "rate_DISAGREE_SL_TP": 0.8790864308105687,
+        "n_AGREE": 260,
+        "rate_AGREE": 0.11643528884908196
+      }
+    ],
+    "tmae_dist_marginal": [
+      {
+        "bucket": "tmae_le_5",
+        "label": "T_MAE <= 5",
+        "n": 82405,
+        "n_DISAGREE_SL_TP": 45523,
+        "rate_DISAGREE_SL_TP": 0.552430070990838,
+        "n_AGREE": 35543,
+        "rate_AGREE": 0.4313209149930223
+      },
+      {
+        "bucket": "tmae_6_20",
+        "label": "T_MAE 6-20",
+        "n": 94610,
+        "n_DISAGREE_SL_TP": 19234,
+        "rate_DISAGREE_SL_TP": 0.20329774865236233,
+        "n_AGREE": 74302,
+        "rate_AGREE": 0.7853503857943135
+      },
+      {
+        "bucket": "tmae_21_40",
+        "label": "T_MAE 21-40",
+        "n": 88255,
+        "n_DISAGREE_SL_TP": 22953,
+        "rate_DISAGREE_SL_TP": 0.26007591637867544,
+        "n_AGREE": 64719,
+        "rate_AGREE": 0.7333182255962835
+      },
+      {
+        "bucket": "tmae_41_70",
+        "label": "T_MAE 41-70",
+        "n": 123025,
+        "n_DISAGREE_SL_TP": 35282,
+        "rate_DISAGREE_SL_TP": 0.28678723836618575,
+        "n_AGREE": 86065,
+        "rate_AGREE": 0.6995732574679943
+      },
+      {
+        "bucket": "tmae_gt_70",
+        "label": "T_MAE >70",
+        "n": 169240,
+        "n_DISAGREE_SL_TP": 51516,
+        "rate_DISAGREE_SL_TP": 0.30439612384779013,
+        "n_AGREE": 114816,
+        "rate_AGREE": 0.6784211770267077
+      },
+      {
+        "bucket": "tmae_missing",
+        "label": "T_MAE missing/non-finite",
+        "n": 2233,
+        "n_DISAGREE_SL_TP": 1963,
+        "rate_DISAGREE_SL_TP": 0.8790864308105687,
+        "n_AGREE": 260,
+        "rate_AGREE": 0.11643528884908196
+      }
+    ],
+    "composition_DISAGREE_SL_TP_short": {
+      "n": 176471,
+      "buckets": {
+        "tmae_le_2": {
+          "n": 35864,
+          "share": 0.20322885913266203
+        },
+        "tmae_3_5": {
+          "n": 9659,
+          "share": 0.05473420562018689
+        },
+        "tmae_6_10": {
+          "n": 7366,
+          "share": 0.041740569272005035
+        },
+        "tmae_gt_10": {
+          "n": 121619,
+          "share": 0.689172725263641
+        },
+        "tmae_missing": {
+          "n": 1963,
+          "share": 0.011123640711505007
+        }
+      }
+    },
+    "composition_AGREE_short": {
+      "n": 375705,
+      "buckets": {
+        "tmae_le_2": {
+          "n": 13650,
+          "share": 0.036331696410747794
+        },
+        "tmae_3_5": {
+          "n": 21893,
+          "share": 0.05827178238245432
+        },
+        "tmae_6_10": {
+          "n": 29816,
+          "share": 0.07936013627713233
+        },
+        "tmae_gt_10": {
+          "n": 310086,
+          "share": 0.8253443526170798
+        },
+        "tmae_missing": {
+          "n": 260,
+          "share": 0.0006920323125856723
+        }
+      }
+    },
+    "composition_DISAGREE_SL_TP_dist": {
+      "n": 176471,
+      "buckets": {
+        "tmae_le_5": {
+          "n": 45523,
+          "share": 0.2579630647528489
+        },
+        "tmae_6_20": {
+          "n": 19234,
+          "share": 0.10899241235103785
+        },
+        "tmae_21_40": {
+          "n": 22953,
+          "share": 0.13006669651104147
+        },
+        "tmae_41_70": {
+          "n": 35282,
+          "share": 0.1999308668279774
+        },
+        "tmae_gt_70": {
+          "n": 51516,
+          "share": 0.29192331884558936
+        },
+        "tmae_missing": {
+          "n": 1963,
+          "share": 0.011123640711505007
+        }
+      }
+    },
+    "composition_AGREE_dist": {
+      "n": 375705,
+      "buckets": {
+        "tmae_le_5": {
+          "n": 35543,
+          "share": 0.09460347879320212
+        },
+        "tmae_6_20": {
+          "n": 74302,
+          "share": 0.19776686496054086
+        },
+        "tmae_21_40": {
+          "n": 64719,
+          "share": 0.1722601509162774
+        },
+        "tmae_41_70": {
+          "n": 86065,
+          "share": 0.22907600377956108
+        },
+        "tmae_gt_70": {
+          "n": 114816,
+          "share": 0.3056014692378329
+        },
+        "tmae_missing": {
+          "n": 260,
+          "share": 0.0006920323125856723
+        }
+      }
+    },
+    "cross_tmae_short_x_peak": [
+      {
+        "tmae_bucket": "tmae_le_2",
+        "peak_bucket": "peak_le_2",
+        "tmae_label": "T_MAE <= 2",
+        "peak_label": "Peak <= 2 bars",
+        "n": 17462,
+        "n_DISAGREE_SL_TP": 5186,
+        "rate_DISAGREE_SL_TP": 0.2969877448173176
+      },
+      {
+        "tmae_bucket": "tmae_le_2",
+        "peak_bucket": "peak_3_5",
+        "tmae_label": "T_MAE <= 2",
+        "peak_label": "Peak 3-5",
+        "n": 13136,
+        "n_DISAGREE_SL_TP": 12764,
+        "rate_DISAGREE_SL_TP": 0.9716808769792935
+      },
+      {
+        "tmae_bucket": "tmae_le_2",
+        "peak_bucket": "peak_6_10",
+        "tmae_label": "T_MAE <= 2",
+        "peak_label": "Peak 6-10",
+        "n": 10736,
+        "n_DISAGREE_SL_TP": 10553,
+        "rate_DISAGREE_SL_TP": 0.9829545454545454
+      },
+      {
+        "tmae_bucket": "tmae_le_2",
+        "peak_bucket": "peak_gt_10",
+        "tmae_label": "T_MAE <= 2",
+        "peak_label": "Peak >10",
+        "n": 7873,
+        "n_DISAGREE_SL_TP": 7361,
+        "rate_DISAGREE_SL_TP": 0.934967610821796
+      },
+      {
+        "tmae_bucket": "tmae_le_2",
+        "peak_bucket": "peak_missing",
+        "tmae_label": "T_MAE <= 2",
+        "peak_label": "Peak missing/non-finite",
+        "n": 1136,
+        "n_DISAGREE_SL_TP": 0,
+        "rate_DISAGREE_SL_TP": 0.0
+      },
+      {
+        "tmae_bucket": "tmae_3_5",
+        "peak_bucket": "peak_le_2",
+        "tmae_label": "T_MAE 3-5",
+        "peak_label": "Peak <= 2 bars",
+        "n": 19371,
+        "n_DISAGREE_SL_TP": 541,
+        "rate_DISAGREE_SL_TP": 0.027928346497341387
+      },
+      {
+        "tmae_bucket": "tmae_3_5",
+        "peak_bucket": "peak_3_5",
+        "tmae_label": "T_MAE 3-5",
+        "peak_label": "Peak 3-5",
+        "n": 3143,
+        "n_DISAGREE_SL_TP": 1207,
+        "rate_DISAGREE_SL_TP": 0.38402799872733057
+      },
+      {
+        "tmae_bucket": "tmae_3_5",
+        "peak_bucket": "peak_6_10",
+        "tmae_label": "T_MAE 3-5",
+        "peak_label": "Peak 6-10",
+        "n": 3893,
+        "n_DISAGREE_SL_TP": 3785,
+        "rate_DISAGREE_SL_TP": 0.9722578987927049
+      },
+      {
+        "tmae_bucket": "tmae_3_5",
+        "peak_bucket": "peak_gt_10",
+        "tmae_label": "T_MAE 3-5",
+        "peak_label": "Peak >10",
+        "n": 4519,
+        "n_DISAGREE_SL_TP": 4126,
+        "rate_DISAGREE_SL_TP": 0.9130338570480194
+      },
+      {
+        "tmae_bucket": "tmae_3_5",
+        "peak_bucket": "peak_missing",
+        "tmae_label": "T_MAE 3-5",
+        "peak_label": "Peak missing/non-finite",
+        "n": 1136,
+        "n_DISAGREE_SL_TP": 0,
+        "rate_DISAGREE_SL_TP": 0.0
+      },
+      {
+        "tmae_bucket": "tmae_6_10",
+        "peak_bucket": "peak_le_2",
+        "tmae_label": "T_MAE 6-10",
+        "peak_label": "Peak <= 2 bars",
+        "n": 22430,
+        "n_DISAGREE_SL_TP": 1082,
+        "rate_DISAGREE_SL_TP": 0.04823896567097637
+      },
+      {
+        "tmae_bucket": "tmae_6_10",
+        "peak_bucket": "peak_3_5",
+        "tmae_label": "T_MAE 6-10",
+        "peak_label": "Peak 3-5",
+        "n": 7670,
+        "n_DISAGREE_SL_TP": 1497,
+        "rate_DISAGREE_SL_TP": 0.1951760104302477
+      },
+      {
+        "tmae_bucket": "tmae_6_10",
+        "peak_bucket": "peak_6_10",
+        "tmae_label": "T_MAE 6-10",
+        "peak_label": "Peak 6-10",
+        "n": 2429,
+        "n_DISAGREE_SL_TP": 1239,
+        "rate_DISAGREE_SL_TP": 0.5100864553314121
+      },
+      {
+        "tmae_bucket": "tmae_6_10",
+        "peak_bucket": "peak_gt_10",
+        "tmae_label": "T_MAE 6-10",
+        "peak_label": "Peak >10",
+        "n": 3951,
+        "n_DISAGREE_SL_TP": 3548,
+        "rate_DISAGREE_SL_TP": 0.8980005062009618
+      },
+      {
+        "tmae_bucket": "tmae_6_10",
+        "peak_bucket": "peak_missing",
+        "tmae_label": "T_MAE 6-10",
+        "peak_label": "Peak missing/non-finite",
+        "n": 1201,
+        "n_DISAGREE_SL_TP": 0,
+        "rate_DISAGREE_SL_TP": 0.0
+      },
+      {
+        "tmae_bucket": "tmae_gt_10",
+        "peak_bucket": "peak_le_2",
+        "tmae_label": "T_MAE >10",
+        "peak_label": "Peak <= 2 bars",
+        "n": 221473,
+        "n_DISAGREE_SL_TP": 17248,
+        "rate_DISAGREE_SL_TP": 0.07787856759063182
+      },
+      {
+        "tmae_bucket": "tmae_gt_10",
+        "peak_bucket": "peak_3_5",
+        "tmae_label": "T_MAE >10",
+        "peak_label": "Peak 3-5",
+        "n": 96166,
+        "n_DISAGREE_SL_TP": 39035,
+        "rate_DISAGREE_SL_TP": 0.40591269263565083
+      },
+      {
+        "tmae_bucket": "tmae_gt_10",
+        "peak_bucket": "peak_6_10",
+        "tmae_label": "T_MAE >10",
+        "peak_label": "Peak 6-10",
+        "n": 61639,
+        "n_DISAGREE_SL_TP": 34906,
+        "rate_DISAGREE_SL_TP": 0.5662973117669008
+      },
+      {
+        "tmae_bucket": "tmae_gt_10",
+        "peak_bucket": "peak_gt_10",
+        "tmae_label": "T_MAE >10",
+        "peak_label": "Peak >10",
+        "n": 45449,
+        "n_DISAGREE_SL_TP": 30430,
+        "rate_DISAGREE_SL_TP": 0.6695416840854584
+      },
+      {
+        "tmae_bucket": "tmae_gt_10",
+        "peak_bucket": "peak_missing",
+        "tmae_label": "T_MAE >10",
+        "peak_label": "Peak missing/non-finite",
+        "n": 12722,
+        "n_DISAGREE_SL_TP": 0,
+        "rate_DISAGREE_SL_TP": 0.0
+      },
+      {
+        "tmae_bucket": "tmae_missing",
+        "peak_bucket": "peak_le_2",
+        "tmae_label": "T_MAE missing/non-finite",
+        "peak_label": "Peak <= 2 bars",
+        "n": 908,
+        "n_DISAGREE_SL_TP": 647,
+        "rate_DISAGREE_SL_TP": 0.7125550660792952
+      },
+      {
+        "tmae_bucket": "tmae_missing",
+        "peak_bucket": "peak_3_5",
+        "tmae_label": "T_MAE missing/non-finite",
+        "peak_label": "Peak 3-5",
+        "n": 744,
+        "n_DISAGREE_SL_TP": 743,
+        "rate_DISAGREE_SL_TP": 0.9986559139784946
+      },
+      {
+        "tmae_bucket": "tmae_missing",
+        "peak_bucket": "peak_6_10",
+        "tmae_label": "T_MAE missing/non-finite",
+        "peak_label": "Peak 6-10",
+        "n": 411,
+        "n_DISAGREE_SL_TP": 409,
+        "rate_DISAGREE_SL_TP": 0.9951338199513382
+      },
+      {
+        "tmae_bucket": "tmae_missing",
+        "peak_bucket": "peak_gt_10",
+        "tmae_label": "T_MAE missing/non-finite",
+        "peak_label": "Peak >10",
+        "n": 170,
+        "n_DISAGREE_SL_TP": 164,
+        "rate_DISAGREE_SL_TP": 0.9647058823529412
+      },
+      {
+        "tmae_bucket": "tmae_missing",
+        "peak_bucket": "peak_missing",
+        "tmae_label": "T_MAE missing/non-finite",
+        "peak_label": "Peak missing/non-finite",
+        "n": 0,
+        "n_DISAGREE_SL_TP": 0,
+        "rate_DISAGREE_SL_TP": null
+      }
+    ],
+    "cross_tmae_dist_x_peak": [
+      {
+        "tmae_bucket": "tmae_le_5",
+        "peak_bucket": "peak_le_2",
+        "tmae_label": "T_MAE <= 5",
+        "peak_label": "Peak <= 2 bars",
+        "n": 36833,
+        "n_DISAGREE_SL_TP": 5727,
+        "rate_DISAGREE_SL_TP": 0.15548557000515842
+      },
+      {
+        "tmae_bucket": "tmae_le_5",
+        "peak_bucket": "peak_3_5",
+        "tmae_label": "T_MAE <= 5",
+        "peak_label": "Peak 3-5",
+        "n": 16279,
+        "n_DISAGREE_SL_TP": 13971,
+        "rate_DISAGREE_SL_TP": 0.8582222495239266
+      },
+      {
+        "tmae_bucket": "tmae_le_5",
+        "peak_bucket": "peak_6_10",
+        "tmae_label": "T_MAE <= 5",
+        "peak_label": "Peak 6-10",
+        "n": 14629,
+        "n_DISAGREE_SL_TP": 14338,
+        "rate_DISAGREE_SL_TP": 0.9801080046483013
+      },
+      {
+        "tmae_bucket": "tmae_le_5",
+        "peak_bucket": "peak_gt_10",
+        "tmae_label": "T_MAE <= 5",
+        "peak_label": "Peak >10",
+        "n": 12392,
+        "n_DISAGREE_SL_TP": 11487,
+        "rate_DISAGREE_SL_TP": 0.926969012265978
+      },
+      {
+        "tmae_bucket": "tmae_le_5",
+        "peak_bucket": "peak_missing",
+        "tmae_label": "T_MAE <= 5",
+        "peak_label": "Peak missing/non-finite",
+        "n": 2272,
+        "n_DISAGREE_SL_TP": 0,
+        "rate_DISAGREE_SL_TP": 0.0
+      },
+      {
+        "tmae_bucket": "tmae_6_20",
+        "peak_bucket": "peak_le_2",
+        "tmae_label": "T_MAE 6-20",
+        "peak_label": "Peak <= 2 bars",
+        "n": 52841,
+        "n_DISAGREE_SL_TP": 3098,
+        "rate_DISAGREE_SL_TP": 0.05862871633769232
+      },
+      {
+        "tmae_bucket": "tmae_6_20",
+        "peak_bucket": "peak_3_5",
+        "tmae_label": "T_MAE 6-20",
+        "peak_label": "Peak 3-5",
+        "n": 21034,
+        "n_DISAGREE_SL_TP": 5598,
+        "rate_DISAGREE_SL_TP": 0.26614053437292
+      },
+      {
+        "tmae_bucket": "tmae_6_20",
+        "peak_bucket": "peak_6_10",
+        "tmae_label": "T_MAE 6-20",
+        "peak_label": "Peak 6-10",
+        "n": 9911,
+        "n_DISAGREE_SL_TP": 4187,
+        "rate_DISAGREE_SL_TP": 0.42245989304812837
+      },
+      {
+        "tmae_bucket": "tmae_6_20",
+        "peak_bucket": "peak_gt_10",
+        "tmae_label": "T_MAE 6-20",
+        "peak_label": "Peak >10",
+        "n": 8070,
+        "n_DISAGREE_SL_TP": 6351,
+        "rate_DISAGREE_SL_TP": 0.7869888475836431
+      },
+      {
+        "tmae_bucket": "tmae_6_20",
+        "peak_bucket": "peak_missing",
+        "tmae_label": "T_MAE 6-20",
+        "peak_label": "Peak missing/non-finite",
+        "n": 2754,
+        "n_DISAGREE_SL_TP": 0,
+        "rate_DISAGREE_SL_TP": 0.0
+      },
+      {
+        "tmae_bucket": "tmae_21_40",
+        "peak_bucket": "peak_le_2",
+        "tmae_label": "T_MAE 21-40",
+        "peak_label": "Peak <= 2 bars",
+        "n": 45134,
+        "n_DISAGREE_SL_TP": 3403,
+        "rate_DISAGREE_SL_TP": 0.07539770461293038
+      },
+      {
+        "tmae_bucket": "tmae_21_40",
+        "peak_bucket": "peak_3_5",
+        "tmae_label": "T_MAE 21-40",
+        "peak_label": "Peak 3-5",
+        "n": 19633,
+        "n_DISAGREE_SL_TP": 7831,
+        "rate_DISAGREE_SL_TP": 0.3988692507512861
+      },
+      {
+        "tmae_bucket": "tmae_21_40",
+        "peak_bucket": "peak_6_10",
+        "tmae_label": "T_MAE 21-40",
+        "peak_label": "Peak 6-10",
+        "n": 12726,
+        "n_DISAGREE_SL_TP": 6931,
+        "rate_DISAGREE_SL_TP": 0.5446330347320446
+      },
+      {
+        "tmae_bucket": "tmae_21_40",
+        "peak_bucket": "peak_gt_10",
+        "tmae_label": "T_MAE 21-40",
+        "peak_label": "Peak >10",
+        "n": 8141,
+        "n_DISAGREE_SL_TP": 4788,
+        "rate_DISAGREE_SL_TP": 0.588134135855546
+      },
+      {
+        "tmae_bucket": "tmae_21_40",
+        "peak_bucket": "peak_missing",
+        "tmae_label": "T_MAE 21-40",
+        "peak_label": "Peak missing/non-finite",
+        "n": 2621,
+        "n_DISAGREE_SL_TP": 0,
+        "rate_DISAGREE_SL_TP": 0.0
+      },
+      {
+        "tmae_bucket": "tmae_41_70",
+        "peak_bucket": "peak_le_2",
+        "tmae_label": "T_MAE 41-70",
+        "peak_label": "Peak <= 2 bars",
+        "n": 62258,
+        "n_DISAGREE_SL_TP": 4909,
+        "rate_DISAGREE_SL_TP": 0.0788493045070513
+      },
+      {
+        "tmae_bucket": "tmae_41_70",
+        "peak_bucket": "peak_3_5",
+        "tmae_label": "T_MAE 41-70",
+        "peak_label": "Peak 3-5",
+        "n": 26634,
+        "n_DISAGREE_SL_TP": 11143,
+        "rate_DISAGREE_SL_TP": 0.41837500938649846
+      },
+      {
+        "tmae_bucket": "tmae_41_70",
+        "peak_bucket": "peak_6_10",
+        "tmae_label": "T_MAE 41-70",
+        "peak_label": "Peak 6-10",
+        "n": 17173,
+        "n_DISAGREE_SL_TP": 10220,
+        "rate_DISAGREE_SL_TP": 0.5951202468992023
+      },
+      {
+        "tmae_bucket": "tmae_41_70",
+        "peak_bucket": "peak_gt_10",
+        "tmae_label": "T_MAE 41-70",
+        "peak_label": "Peak >10",
+        "n": 13197,
+        "n_DISAGREE_SL_TP": 9010,
+        "rate_DISAGREE_SL_TP": 0.6827309236947792
+      },
+      {
+        "tmae_bucket": "tmae_41_70",
+        "peak_bucket": "peak_missing",
+        "tmae_label": "T_MAE 41-70",
+        "peak_label": "Peak missing/non-finite",
+        "n": 3763,
+        "n_DISAGREE_SL_TP": 0,
+        "rate_DISAGREE_SL_TP": 0.0
+      },
+      {
+        "tmae_bucket": "tmae_gt_70",
+        "peak_bucket": "peak_le_2",
+        "tmae_label": "T_MAE >70",
+        "peak_label": "Peak <= 2 bars",
+        "n": 83670,
+        "n_DISAGREE_SL_TP": 6920,
+        "rate_DISAGREE_SL_TP": 0.08270586829209992
+      },
+      {
+        "tmae_bucket": "tmae_gt_70",
+        "peak_bucket": "peak_3_5",
+        "tmae_label": "T_MAE >70",
+        "peak_label": "Peak 3-5",
+        "n": 36535,
+        "n_DISAGREE_SL_TP": 15960,
+        "rate_DISAGREE_SL_TP": 0.43684138497331326
+      },
+      {
+        "tmae_bucket": "tmae_gt_70",
+        "peak_bucket": "peak_6_10",
+        "tmae_label": "T_MAE >70",
+        "peak_label": "Peak 6-10",
+        "n": 24258,
+        "n_DISAGREE_SL_TP": 14807,
+        "rate_DISAGREE_SL_TP": 0.6103965702036441
+      },
+      {
+        "tmae_bucket": "tmae_gt_70",
+        "peak_bucket": "peak_gt_10",
+        "tmae_label": "T_MAE >70",
+        "peak_label": "Peak >10",
+        "n": 19992,
+        "n_DISAGREE_SL_TP": 13829,
+        "rate_DISAGREE_SL_TP": 0.6917266906762705
+      },
+      {
+        "tmae_bucket": "tmae_gt_70",
+        "peak_bucket": "peak_missing",
+        "tmae_label": "T_MAE >70",
+        "peak_label": "Peak missing/non-finite",
+        "n": 4785,
+        "n_DISAGREE_SL_TP": 0,
+        "rate_DISAGREE_SL_TP": 0.0
+      },
+      {
+        "tmae_bucket": "tmae_missing",
+        "peak_bucket": "peak_le_2",
+        "tmae_label": "T_MAE missing/non-finite",
+        "peak_label": "Peak <= 2 bars",
+        "n": 908,
+        "n_DISAGREE_SL_TP": 647,
+        "rate_DISAGREE_SL_TP": 0.7125550660792952
+      },
+      {
+        "tmae_bucket": "tmae_missing",
+        "peak_bucket": "peak_3_5",
+        "tmae_label": "T_MAE missing/non-finite",
+        "peak_label": "Peak 3-5",
+        "n": 744,
+        "n_DISAGREE_SL_TP": 743,
+        "rate_DISAGREE_SL_TP": 0.9986559139784946
+      },
+      {
+        "tmae_bucket": "tmae_missing",
+        "peak_bucket": "peak_6_10",
+        "tmae_label": "T_MAE missing/non-finite",
+        "peak_label": "Peak 6-10",
+        "n": 411,
+        "n_DISAGREE_SL_TP": 409,
+        "rate_DISAGREE_SL_TP": 0.9951338199513382
+      },
+      {
+        "tmae_bucket": "tmae_missing",
+        "peak_bucket": "peak_gt_10",
+        "tmae_label": "T_MAE missing/non-finite",
+        "peak_label": "Peak >10",
+        "n": 170,
+        "n_DISAGREE_SL_TP": 164,
+        "rate_DISAGREE_SL_TP": 0.9647058823529412
+      },
+      {
+        "tmae_bucket": "tmae_missing",
+        "peak_bucket": "peak_missing",
+        "tmae_label": "T_MAE missing/non-finite",
+        "peak_label": "Peak missing/non-finite",
+        "n": 0,
+        "n_DISAGREE_SL_TP": 0,
+        "rate_DISAGREE_SL_TP": null
+      }
+    ],
+    "sequence_combos": {
+      "definition": {
+        "early_mae": "T_MAE <= 5",
+        "late_peak": "bars_to_peak_within_trade > 10",
+        "note": "T_MAE = time_to_bottom_path (deepest adverse over PEAK_HORIZON~96), NOT first-adverse-to-stop"
+      },
+      "early_mae_AND_late_peak": {
+        "n": 12392,
+        "n_DISAGREE_SL_TP": 11487,
+        "rate_DISAGREE_SL_TP": 0.926969012265978
+      },
+      "early_mae_AND_NOT_late_peak": {
+        "n": 67741,
+        "n_DISAGREE_SL_TP": 34036,
+        "rate_DISAGREE_SL_TP": 0.502443128976543
+      },
+      "NOT_early_mae_AND_late_peak": {
+        "n": 49400,
+        "n_DISAGREE_SL_TP": 33978,
+        "rate_DISAGREE_SL_TP": 0.6878137651821863
+      },
+      "NOT_early_mae_AND_NOT_late_peak": {
+        "n": 411807,
+        "n_DISAGREE_SL_TP": 95007,
+        "rate_DISAGREE_SL_TP": 0.2307075887490985
+      },
+      "baseline_ALL": {
+        "n": 559768,
+        "n_DISAGREE_SL_TP": 176471,
+        "rate_DISAGREE_SL_TP": 0.31525739234825856
+      }
+    },
+    "sequence_composition": {
+      "DISAGREE_SL_TP": {
+        "n": 174508,
+        "n_early_late": 11487,
+        "share_early_late": 0.06582506246131982,
+        "n_early": 45523,
+        "share_early": 0.26086483141174044,
+        "n_late_peak": 45465,
+        "share_late_peak": 0.2605324684255163
+      },
+      "AGREE": {
+        "n": 359250,
+        "n_early_late": 12,
+        "share_early_late": 3.340292275574113e-05,
+        "n_early": 33271,
+        "share_early": 0.0926123869171886,
+        "n_late_peak": 11301,
+        "share_late_peak": 0.0314572025052192
+      },
+      "ALL": {
+        "n": 541340,
+        "n_early_late": 12392,
+        "share_early_late": 0.022891343702663762,
+        "n_early": 80133,
+        "share_early": 0.14802711789263678
+      }
+    },
+    "favorable_first": {
+      "DISAGREE_SL_TP": {
+        "n": 176471,
+        "n_favorable_first": 123444,
+        "rate_favorable_first": 0.6995143677998085
+      },
+      "AGREE": {
+        "n": 375705,
+        "n_favorable_first": 70214,
+        "rate_favorable_first": 0.1868859876765015
+      },
+      "ALL": {
+        "n": 559768,
+        "n_favorable_first": 197475,
+        "rate_favorable_first": 0.3527800803189893
+      }
+    },
+    "mae_r_by_population": {
+      "DISAGREE_SL_TP": {
+        "n": 176471,
+        "median": -0.8561,
+        "mean": -2.167567366876144,
+        "p10": -5.7189,
+        "p25": -2.6964,
+        "p75": -0.4074,
+        "p90": -0.1437,
+        "abs_median": 0.8561,
+        "abs_mean": 2.167567366876144
+      },
+      "AGREE": {
+        "n": 375705,
+        "median": -3.5975,
+        "mean": -4.811339158116075,
+        "p10": -9.54916,
+        "p25": -6.0805,
+        "p75": -2.1191,
+        "p90": -1.4031,
+        "abs_median": 3.5975,
+        "abs_mean": 4.811339158116075
+      },
+      "ALL": {
+        "n": 559768,
+        "median": -2.76585,
+        "mean": -3.92369675740664,
+        "p10": -8.60226,
+        "p25": -5.2136,
+        "p75": -1.254,
+        "p90": -0.4812,
+        "abs_median": 2.76585,
+        "abs_mean": 3.92369675740664
+      }
+    }
+  },
+  "per_instrument": {
+    "BNBUSDT": {
+      "n_all": 139942,
+      "n_DISAGREE_SL_TP": 44791,
+      "rate_DISAGREE_SL_TP": 0.32006831401580654,
+      "n_AGREE": 93683,
+      "rate_AGREE": 0.6694416258164096,
+      "tmae_distribution": {
+        "n_finite": 139279,
+        "min": 1.0,
+        "p10": 3.0,
+        "p25": 13.0,
+        "median": 44.0,
+        "p75": 78.0,
+        "p90": 92.0,
+        "max": 96.0,
+        "mean": 45.89013419108408
+      },
+      "tmae_short_marginal": [
+        {
+          "bucket": "tmae_le_2",
+          "label": "T_MAE <= 2",
+          "n": 12714,
+          "n_DISAGREE_SL_TP": 9193,
+          "rate_DISAGREE_SL_TP": 0.7230611923863458,
+          "n_AGREE": 3377,
+          "rate_AGREE": 0.26561271039798645
+        },
+        {
+          "bucket": "tmae_3_5",
+          "label": "T_MAE 3-5",
+          "n": 8025,
+          "n_DISAGREE_SL_TP": 2440,
+          "rate_DISAGREE_SL_TP": 0.3040498442367601,
+          "n_AGREE": 5490,
+          "rate_AGREE": 0.6841121495327103
+        },
+        {
+          "bucket": "tmae_6_10",
+          "label": "T_MAE 6-10",
+          "n": 9464,
+          "n_DISAGREE_SL_TP": 1876,
+          "rate_DISAGREE_SL_TP": 0.19822485207100593,
+          "n_AGREE": 7481,
+          "rate_AGREE": 0.790469146238377
+        },
+        {
+          "bucket": "tmae_gt_10",
+          "label": "T_MAE >10",
+          "n": 109076,
+          "n_DISAGREE_SL_TP": 30694,
+          "rate_DISAGREE_SL_TP": 0.2814001246837068,
+          "n_AGREE": 77263,
+          "rate_AGREE": 0.7083409732663464
+        },
+        {
+          "bucket": "tmae_missing",
+          "label": "T_MAE missing/non-finite",
+          "n": 663,
+          "n_DISAGREE_SL_TP": 588,
+          "rate_DISAGREE_SL_TP": 0.8868778280542986,
+          "n_AGREE": 72,
+          "rate_AGREE": 0.1085972850678733
+        }
+      ],
+      "tmae_dist_marginal": [
+        {
+          "bucket": "tmae_le_5",
+          "label": "T_MAE <= 5",
+          "n": 20739,
+          "n_DISAGREE_SL_TP": 11633,
+          "rate_DISAGREE_SL_TP": 0.5609238632528087,
+          "n_AGREE": 8867,
+          "rate_AGREE": 0.42755195525338735
+        },
+        {
+          "bucket": "tmae_6_20",
+          "label": "T_MAE 6-20",
+          "n": 23578,
+          "n_DISAGREE_SL_TP": 4803,
+          "rate_DISAGREE_SL_TP": 0.20370684536432268,
+          "n_AGREE": 18559,
+          "rate_AGREE": 0.7871320722707609
+        },
+        {
+          "bucket": "tmae_21_40",
+          "label": "T_MAE 21-40",
+          "n": 21513,
+          "n_DISAGREE_SL_TP": 5466,
+          "rate_DISAGREE_SL_TP": 0.2540789290196625,
+          "n_AGREE": 15908,
+          "rate_AGREE": 0.7394598614791057
+        },
+        {
+          "bucket": "tmae_41_70",
+          "label": "T_MAE 41-70",
+          "n": 30417,
+          "n_DISAGREE_SL_TP": 8830,
+          "rate_DISAGREE_SL_TP": 0.2902981885130026,
+          "n_AGREE": 21301,
+          "rate_AGREE": 0.7002991748035639
+        },
+        {
+          "bucket": "tmae_gt_70",
+          "label": "T_MAE >70",
+          "n": 43032,
+          "n_DISAGREE_SL_TP": 13471,
+          "rate_DISAGREE_SL_TP": 0.3130461052240193,
+          "n_AGREE": 28976,
+          "rate_AGREE": 0.6733593604759249
+        },
+        {
+          "bucket": "tmae_missing",
+          "label": "T_MAE missing/non-finite",
+          "n": 663,
+          "n_DISAGREE_SL_TP": 588,
+          "rate_DISAGREE_SL_TP": 0.8868778280542986,
+          "n_AGREE": 72,
+          "rate_AGREE": 0.1085972850678733
+        }
+      ],
+      "tmae_short_rank": [
+        {
+          "bucket": "tmae_le_2",
+          "rate": 0.7230611923863458,
+          "n": 12714,
+          "rank": 1
+        },
+        {
+          "bucket": "tmae_3_5",
+          "rate": 0.3040498442367601,
+          "n": 8025,
+          "rank": 2
+        },
+        {
+          "bucket": "tmae_gt_10",
+          "rate": 0.2814001246837068,
+          "n": 109076,
+          "rank": 3
+        },
+        {
+          "bucket": "tmae_6_10",
+          "rate": 0.19822485207100593,
+          "n": 9464,
+          "rank": 4
+        }
+      ],
+      "tmae_dist_rank": [
+        {
+          "bucket": "tmae_le_5",
+          "rate": 0.5609238632528087,
+          "n": 20739,
+          "rank": 1
+        },
+        {
+          "bucket": "tmae_gt_70",
+          "rate": 0.3130461052240193,
+          "n": 43032,
+          "rank": 2
+        },
+        {
+          "bucket": "tmae_41_70",
+          "rate": 0.2902981885130026,
+          "n": 30417,
+          "rank": 3
+        },
+        {
+          "bucket": "tmae_21_40",
+          "rate": 0.2540789290196625,
+          "n": 21513,
+          "rank": 4
+        },
+        {
+          "bucket": "tmae_6_20",
+          "rate": 0.20370684536432268,
+          "n": 23578,
+          "rank": 5
+        }
+      ],
+      "composition_DISAGREE_SL_TP_short": {
+        "n": 44791,
+        "buckets": {
+          "tmae_le_2": {
+            "n": 9193,
+            "share": 0.20524212453394655
+          },
+          "tmae_3_5": {
+            "n": 2440,
+            "share": 0.05447522939876315
+          },
+          "tmae_6_10": {
+            "n": 1876,
+            "share": 0.04188341407872117
+          },
+          "tmae_gt_10": {
+            "n": 30694,
+            "share": 0.6852715947400148
+          },
+          "tmae_missing": {
+            "n": 588,
+            "share": 0.013127637248554397
+          }
+        }
+      },
+      "composition_AGREE_short": {
+        "n": 93683,
+        "buckets": {
+          "tmae_le_2": {
+            "n": 3377,
+            "share": 0.036047094990553245
+          },
+          "tmae_3_5": {
+            "n": 5490,
+            "share": 0.05860188081081946
+          },
+          "tmae_6_10": {
+            "n": 7481,
+            "share": 0.07985440261306748
+          },
+          "tmae_gt_10": {
+            "n": 77263,
+            "share": 0.8247280723290245
+          },
+          "tmae_missing": {
+            "n": 72,
+            "share": 0.0007685492565353372
+          }
+        }
+      },
+      "composition_DISAGREE_SL_TP_dist": {
+        "n": 44791,
+        "buckets": {
+          "tmae_le_5": {
+            "n": 11633,
+            "share": 0.25971735393270967
+          },
+          "tmae_6_20": {
+            "n": 4803,
+            "share": 0.10723136344354893
+          },
+          "tmae_21_40": {
+            "n": 5466,
+            "share": 0.12203344421870466
+          },
+          "tmae_41_70": {
+            "n": 8830,
+            "share": 0.19713781786519613
+          },
+          "tmae_gt_70": {
+            "n": 13471,
+            "share": 0.3007523832912862
+          },
+          "tmae_missing": {
+            "n": 588,
+            "share": 0.013127637248554397
+          }
+        }
+      },
+      "composition_AGREE_dist": {
+        "n": 93683,
+        "buckets": {
+          "tmae_le_5": {
+            "n": 8867,
+            "share": 0.09464897580137271
+          },
+          "tmae_6_20": {
+            "n": 18559,
+            "share": 0.19810424516721284
+          },
+          "tmae_21_40": {
+            "n": 15908,
+            "share": 0.1698066885133909
+          },
+          "tmae_41_70": {
+            "n": 21301,
+            "share": 0.22737316268693358
+          },
+          "tmae_gt_70": {
+            "n": 28976,
+            "share": 0.3092983785745546
+          },
+          "tmae_missing": {
+            "n": 72,
+            "share": 0.0007685492565353372
+          }
+        }
+      }
+    },
+    "BTCUSDT": {
+      "n_all": 139942,
+      "n_DISAGREE_SL_TP": 43392,
+      "rate_DISAGREE_SL_TP": 0.3100713152591788,
+      "n_AGREE": 94068,
+      "rate_AGREE": 0.6721927655743094,
+      "tmae_distribution": {
+        "n_finite": 139355,
+        "min": 1.0,
+        "p10": 3.0,
+        "p25": 14.0,
+        "median": 44.0,
+        "p75": 77.0,
+        "p90": 92.0,
+        "max": 96.0,
+        "mean": 45.54717807039575
+      },
+      "tmae_short_marginal": [
+        {
+          "bucket": "tmae_le_2",
+          "label": "T_MAE <= 2",
+          "n": 12103,
+          "n_DISAGREE_SL_TP": 8376,
+          "rate_DISAGREE_SL_TP": 0.6920598198793687,
+          "n_AGREE": 3425,
+          "rate_AGREE": 0.2829876890027266
+        },
+        {
+          "bucket": "tmae_3_5",
+          "label": "T_MAE 3-5",
+          "n": 8061,
+          "n_DISAGREE_SL_TP": 2371,
+          "rate_DISAGREE_SL_TP": 0.2941322416573626,
+          "n_AGREE": 5499,
+          "rate_AGREE": 0.6821734276144399
+        },
+        {
+          "bucket": "tmae_6_10",
+          "label": "T_MAE 6-10",
+          "n": 9441,
+          "n_DISAGREE_SL_TP": 1834,
+          "rate_DISAGREE_SL_TP": 0.19425908272428768,
+          "n_AGREE": 7435,
+          "rate_AGREE": 0.7875225082088761
+        },
+        {
+          "bucket": "tmae_gt_10",
+          "label": "T_MAE >10",
+          "n": 109750,
+          "n_DISAGREE_SL_TP": 30312,
+          "rate_DISAGREE_SL_TP": 0.27619134396355355,
+          "n_AGREE": 77623,
+          "rate_AGREE": 0.7072710706150341
+        },
+        {
+          "bucket": "tmae_missing",
+          "label": "T_MAE missing/non-finite",
+          "n": 587,
+          "n_DISAGREE_SL_TP": 499,
+          "rate_DISAGREE_SL_TP": 0.8500851788756388,
+          "n_AGREE": 86,
+          "rate_AGREE": 0.1465076660988075
+        }
+      ],
+      "tmae_dist_marginal": [
+        {
+          "bucket": "tmae_le_5",
+          "label": "T_MAE <= 5",
+          "n": 20164,
+          "n_DISAGREE_SL_TP": 10747,
+          "rate_DISAGREE_SL_TP": 0.5329795675461217,
+          "n_AGREE": 8924,
+          "rate_AGREE": 0.44257091846855784
+        },
+        {
+          "bucket": "tmae_6_20",
+          "label": "T_MAE 6-20",
+          "n": 23812,
+          "n_DISAGREE_SL_TP": 4889,
+          "rate_DISAGREE_SL_TP": 0.20531664706870487,
+          "n_AGREE": 18573,
+          "rate_AGREE": 0.7799848815723165
+        },
+        {
+          "bucket": "tmae_21_40",
+          "label": "T_MAE 21-40",
+          "n": 22569,
+          "n_DISAGREE_SL_TP": 5903,
+          "rate_DISAGREE_SL_TP": 0.2615534582834862,
+          "n_AGREE": 16473,
+          "rate_AGREE": 0.729894988701316
+        },
+        {
+          "bucket": "tmae_41_70",
+          "label": "T_MAE 41-70",
+          "n": 31000,
+          "n_DISAGREE_SL_TP": 9064,
+          "rate_DISAGREE_SL_TP": 0.29238709677419356,
+          "n_AGREE": 21407,
+          "rate_AGREE": 0.6905483870967742
+        },
+        {
+          "bucket": "tmae_gt_70",
+          "label": "T_MAE >70",
+          "n": 41810,
+          "n_DISAGREE_SL_TP": 12290,
+          "rate_DISAGREE_SL_TP": 0.2939488160727099,
+          "n_AGREE": 28605,
+          "rate_AGREE": 0.684166467352308
+        },
+        {
+          "bucket": "tmae_missing",
+          "label": "T_MAE missing/non-finite",
+          "n": 587,
+          "n_DISAGREE_SL_TP": 499,
+          "rate_DISAGREE_SL_TP": 0.8500851788756388,
+          "n_AGREE": 86,
+          "rate_AGREE": 0.1465076660988075
+        }
+      ],
+      "tmae_short_rank": [
+        {
+          "bucket": "tmae_le_2",
+          "rate": 0.6920598198793687,
+          "n": 12103,
+          "rank": 1
+        },
+        {
+          "bucket": "tmae_3_5",
+          "rate": 0.2941322416573626,
+          "n": 8061,
+          "rank": 2
+        },
+        {
+          "bucket": "tmae_gt_10",
+          "rate": 0.27619134396355355,
+          "n": 109750,
+          "rank": 3
+        },
+        {
+          "bucket": "tmae_6_10",
+          "rate": 0.19425908272428768,
+          "n": 9441,
+          "rank": 4
+        }
+      ],
+      "tmae_dist_rank": [
+        {
+          "bucket": "tmae_le_5",
+          "rate": 0.5329795675461217,
+          "n": 20164,
+          "rank": 1
+        },
+        {
+          "bucket": "tmae_gt_70",
+          "rate": 0.2939488160727099,
+          "n": 41810,
+          "rank": 2
+        },
+        {
+          "bucket": "tmae_41_70",
+          "rate": 0.29238709677419356,
+          "n": 31000,
+          "rank": 3
+        },
+        {
+          "bucket": "tmae_21_40",
+          "rate": 0.2615534582834862,
+          "n": 22569,
+          "rank": 4
+        },
+        {
+          "bucket": "tmae_6_20",
+          "rate": 0.20531664706870487,
+          "n": 23812,
+          "rank": 5
+        }
+      ],
+      "composition_DISAGREE_SL_TP_short": {
+        "n": 43392,
+        "buckets": {
+          "tmae_le_2": {
+            "n": 8376,
+            "share": 0.19303097345132744
+          },
+          "tmae_3_5": {
+            "n": 2371,
+            "share": 0.05464140855457227
+          },
+          "tmae_6_10": {
+            "n": 1834,
+            "share": 0.042265855457227136
+          },
+          "tmae_gt_10": {
+            "n": 30312,
+            "share": 0.6985619469026548
+          },
+          "tmae_missing": {
+            "n": 499,
+            "share": 0.011499815634218289
+          }
+        }
+      },
+      "composition_AGREE_short": {
+        "n": 94068,
+        "buckets": {
+          "tmae_le_2": {
+            "n": 3425,
+            "share": 0.03640983118595059
+          },
+          "tmae_3_5": {
+            "n": 5499,
+            "share": 0.05845771144278607
+          },
+          "tmae_6_10": {
+            "n": 7435,
+            "share": 0.079038567844538
+          },
+          "tmae_gt_10": {
+            "n": 77623,
+            "share": 0.8251796572692095
+          },
+          "tmae_missing": {
+            "n": 86,
+            "share": 0.0009142322575158396
+          }
+        }
+      },
+      "composition_DISAGREE_SL_TP_dist": {
+        "n": 43392,
+        "buckets": {
+          "tmae_le_5": {
+            "n": 10747,
+            "share": 0.2476723820058997
+          },
+          "tmae_6_20": {
+            "n": 4889,
+            "share": 0.11267053834808259
+          },
+          "tmae_21_40": {
+            "n": 5903,
+            "share": 0.136038901179941
+          },
+          "tmae_41_70": {
+            "n": 9064,
+            "share": 0.20888643067846607
+          },
+          "tmae_gt_70": {
+            "n": 12290,
+            "share": 0.2832319321533923
+          },
+          "tmae_missing": {
+            "n": 499,
+            "share": 0.011499815634218289
+          }
+        }
+      },
+      "composition_AGREE_dist": {
+        "n": 94068,
+        "buckets": {
+          "tmae_le_5": {
+            "n": 8924,
+            "share": 0.09486754262873666
+          },
+          "tmae_6_20": {
+            "n": 18573,
+            "share": 0.19744227580048476
+          },
+          "tmae_21_40": {
+            "n": 16473,
+            "share": 0.17511799974486542
+          },
+          "tmae_41_70": {
+            "n": 21407,
+            "share": 0.22756941786792534
+          },
+          "tmae_gt_70": {
+            "n": 28605,
+            "share": 0.304088531700472
+          },
+          "tmae_missing": {
+            "n": 86,
+            "share": 0.0009142322575158396
+          }
+        }
+      }
+    },
+    "ETHUSDT": {
+      "n_all": 139942,
+      "n_DISAGREE_SL_TP": 43725,
+      "rate_DISAGREE_SL_TP": 0.31245087250432324,
+      "n_AGREE": 94175,
+      "rate_AGREE": 0.6729573680524789,
+      "tmae_distribution": {
+        "n_finite": 139480,
+        "min": 1.0,
+        "p10": 3.0,
+        "p25": 13.0,
+        "median": 42.0,
+        "p75": 76.0,
+        "p90": 91.0,
+        "max": 96.0,
+        "mean": 44.737840550616575
+      },
+      "tmae_short_marginal": [
+        {
+          "bucket": "tmae_le_2",
+          "label": "T_MAE <= 2",
+          "n": 12797,
+          "n_DISAGREE_SL_TP": 8916,
+          "rate_DISAGREE_SL_TP": 0.6967257951082285,
+          "n_AGREE": 3668,
+          "rate_AGREE": 0.286629678830976
+        },
+        {
+          "bucket": "tmae_3_5",
+          "label": "T_MAE 3-5",
+          "n": 8203,
+          "n_DISAGREE_SL_TP": 2431,
+          "rate_DISAGREE_SL_TP": 0.29635499207606975,
+          "n_AGREE": 5643,
+          "rate_AGREE": 0.6879190540046325
+        },
+        {
+          "bucket": "tmae_6_10",
+          "label": "T_MAE 6-10",
+          "n": 9699,
+          "n_DISAGREE_SL_TP": 1903,
+          "rate_DISAGREE_SL_TP": 0.19620579441179503,
+          "n_AGREE": 7682,
+          "rate_AGREE": 0.7920404165377875
+        },
+        {
+          "bucket": "tmae_gt_10",
+          "label": "T_MAE >10",
+          "n": 108781,
+          "n_DISAGREE_SL_TP": 30071,
+          "rate_DISAGREE_SL_TP": 0.2764361423410338,
+          "n_AGREE": 77128,
+          "rate_AGREE": 0.7090208768075307
+        },
+        {
+          "bucket": "tmae_missing",
+          "label": "T_MAE missing/non-finite",
+          "n": 462,
+          "n_DISAGREE_SL_TP": 404,
+          "rate_DISAGREE_SL_TP": 0.8744588744588745,
+          "n_AGREE": 54,
+          "rate_AGREE": 0.11688311688311688
+        }
+      ],
+      "tmae_dist_marginal": [
+        {
+          "bucket": "tmae_le_5",
+          "label": "T_MAE <= 5",
+          "n": 21000,
+          "n_DISAGREE_SL_TP": 11347,
+          "rate_DISAGREE_SL_TP": 0.5403333333333333,
+          "n_AGREE": 9311,
+          "rate_AGREE": 0.4433809523809524
+        },
+        {
+          "bucket": "tmae_6_20",
+          "label": "T_MAE 6-20",
+          "n": 24281,
+          "n_DISAGREE_SL_TP": 4929,
+          "rate_DISAGREE_SL_TP": 0.20299822906799556,
+          "n_AGREE": 19067,
+          "rate_AGREE": 0.7852641983443845
+        },
+        {
+          "bucket": "tmae_21_40",
+          "label": "T_MAE 21-40",
+          "n": 22493,
+          "n_DISAGREE_SL_TP": 5837,
+          "rate_DISAGREE_SL_TP": 0.2595029564753479,
+          "n_AGREE": 16497,
+          "rate_AGREE": 0.7334281776552706
+        },
+        {
+          "bucket": "tmae_41_70",
+          "label": "T_MAE 41-70",
+          "n": 31192,
+          "n_DISAGREE_SL_TP": 8781,
+          "rate_DISAGREE_SL_TP": 0.28151449089510133,
+          "n_AGREE": 21949,
+          "rate_AGREE": 0.7036740189792254
+        },
+        {
+          "bucket": "tmae_gt_70",
+          "label": "T_MAE >70",
+          "n": 40514,
+          "n_DISAGREE_SL_TP": 12427,
+          "rate_DISAGREE_SL_TP": 0.3067334748482006,
+          "n_AGREE": 27297,
+          "rate_AGREE": 0.6737670928567903
+        },
+        {
+          "bucket": "tmae_missing",
+          "label": "T_MAE missing/non-finite",
+          "n": 462,
+          "n_DISAGREE_SL_TP": 404,
+          "rate_DISAGREE_SL_TP": 0.8744588744588745,
+          "n_AGREE": 54,
+          "rate_AGREE": 0.11688311688311688
+        }
+      ],
+      "tmae_short_rank": [
+        {
+          "bucket": "tmae_le_2",
+          "rate": 0.6967257951082285,
+          "n": 12797,
+          "rank": 1
+        },
+        {
+          "bucket": "tmae_3_5",
+          "rate": 0.29635499207606975,
+          "n": 8203,
+          "rank": 2
+        },
+        {
+          "bucket": "tmae_gt_10",
+          "rate": 0.2764361423410338,
+          "n": 108781,
+          "rank": 3
+        },
+        {
+          "bucket": "tmae_6_10",
+          "rate": 0.19620579441179503,
+          "n": 9699,
+          "rank": 4
+        }
+      ],
+      "tmae_dist_rank": [
+        {
+          "bucket": "tmae_le_5",
+          "rate": 0.5403333333333333,
+          "n": 21000,
+          "rank": 1
+        },
+        {
+          "bucket": "tmae_gt_70",
+          "rate": 0.3067334748482006,
+          "n": 40514,
+          "rank": 2
+        },
+        {
+          "bucket": "tmae_41_70",
+          "rate": 0.28151449089510133,
+          "n": 31192,
+          "rank": 3
+        },
+        {
+          "bucket": "tmae_21_40",
+          "rate": 0.2595029564753479,
+          "n": 22493,
+          "rank": 4
+        },
+        {
+          "bucket": "tmae_6_20",
+          "rate": 0.20299822906799556,
+          "n": 24281,
+          "rank": 5
+        }
+      ],
+      "composition_DISAGREE_SL_TP_short": {
+        "n": 43725,
+        "buckets": {
+          "tmae_le_2": {
+            "n": 8916,
+            "share": 0.20391080617495713
+          },
+          "tmae_3_5": {
+            "n": 2431,
+            "share": 0.05559748427672956
+          },
+          "tmae_6_10": {
+            "n": 1903,
+            "share": 0.043522012578616355
+          },
+          "tmae_gt_10": {
+            "n": 30071,
+            "share": 0.6877301315037164
+          },
+          "tmae_missing": {
+            "n": 404,
+            "share": 0.00923956546598056
+          }
+        }
+      },
+      "composition_AGREE_short": {
+        "n": 94175,
+        "buckets": {
+          "tmae_le_2": {
+            "n": 3668,
+            "share": 0.03894876559596496
+          },
+          "tmae_3_5": {
+            "n": 5643,
+            "share": 0.05992036102999734
+          },
+          "tmae_6_10": {
+            "n": 7682,
+            "share": 0.08157154234138572
+          },
+          "tmae_gt_10": {
+            "n": 77128,
+            "share": 0.8189859304486329
+          },
+          "tmae_missing": {
+            "n": 54,
+            "share": 0.0005734005840191134
+          }
+        }
+      },
+      "composition_DISAGREE_SL_TP_dist": {
+        "n": 43725,
+        "buckets": {
+          "tmae_le_5": {
+            "n": 11347,
+            "share": 0.25950829045168666
+          },
+          "tmae_6_20": {
+            "n": 4929,
+            "share": 0.11272727272727273
+          },
+          "tmae_21_40": {
+            "n": 5837,
+            "share": 0.13349342481417953
+          },
+          "tmae_41_70": {
+            "n": 8781,
+            "share": 0.20082332761578045
+          },
+          "tmae_gt_70": {
+            "n": 12427,
+            "share": 0.28420811892510006
+          },
+          "tmae_missing": {
+            "n": 404,
+            "share": 0.00923956546598056
+          }
+        }
+      },
+      "composition_AGREE_dist": {
+        "n": 94175,
+        "buckets": {
+          "tmae_le_5": {
+            "n": 9311,
+            "share": 0.0988691266259623
+          },
+          "tmae_6_20": {
+            "n": 19067,
+            "share": 0.20246349880541545
+          },
+          "tmae_21_40": {
+            "n": 16497,
+            "share": 0.17517387841783913
+          },
+          "tmae_41_70": {
+            "n": 21949,
+            "share": 0.2330661003451022
+          },
+          "tmae_gt_70": {
+            "n": 27297,
+            "share": 0.2898539952216618
+          },
+          "tmae_missing": {
+            "n": 54,
+            "share": 0.0005734005840191134
+          }
+        }
+      }
+    },
+    "SOLUSDT": {
+      "n_all": 139942,
+      "n_DISAGREE_SL_TP": 44563,
+      "rate_DISAGREE_SL_TP": 0.3184390676137257,
+      "n_AGREE": 93779,
+      "rate_AGREE": 0.6701276243014963,
+      "tmae_distribution": {
+        "n_finite": 139421,
+        "min": 1.0,
+        "p10": 3.0,
+        "p25": 14.0,
+        "median": 45.0,
+        "p75": 78.0,
+        "p90": 92.0,
+        "max": 96.0,
+        "mean": 46.4002840318173
+      },
+      "tmae_short_marginal": [
+        {
+          "bucket": "tmae_le_2",
+          "label": "T_MAE <= 2",
+          "n": 12729,
+          "n_DISAGREE_SL_TP": 9379,
+          "rate_DISAGREE_SL_TP": 0.7368214313771703,
+          "n_AGREE": 3180,
+          "rate_AGREE": 0.24982323827480557
+        },
+        {
+          "bucket": "tmae_3_5",
+          "label": "T_MAE 3-5",
+          "n": 7773,
+          "n_DISAGREE_SL_TP": 2417,
+          "rate_DISAGREE_SL_TP": 0.3109481538659462,
+          "n_AGREE": 5261,
+          "rate_AGREE": 0.6768300527466873
+        },
+        {
+          "bucket": "tmae_6_10",
+          "label": "T_MAE 6-10",
+          "n": 9077,
+          "n_DISAGREE_SL_TP": 1753,
+          "rate_DISAGREE_SL_TP": 0.19312548198744078,
+          "n_AGREE": 7218,
+          "rate_AGREE": 0.79519665087584
+        },
+        {
+          "bucket": "tmae_gt_10",
+          "label": "T_MAE >10",
+          "n": 109842,
+          "n_DISAGREE_SL_TP": 30542,
+          "rate_DISAGREE_SL_TP": 0.2780539320114346,
+          "n_AGREE": 78072,
+          "rate_AGREE": 0.7107663735183263
+        },
+        {
+          "bucket": "tmae_missing",
+          "label": "T_MAE missing/non-finite",
+          "n": 521,
+          "n_DISAGREE_SL_TP": 472,
+          "rate_DISAGREE_SL_TP": 0.9059500959692899,
+          "n_AGREE": 48,
+          "rate_AGREE": 0.09213051823416507
+        }
+      ],
+      "tmae_dist_marginal": [
+        {
+          "bucket": "tmae_le_5",
+          "label": "T_MAE <= 5",
+          "n": 20502,
+          "n_DISAGREE_SL_TP": 11796,
+          "rate_DISAGREE_SL_TP": 0.5753585016095991,
+          "n_AGREE": 8441,
+          "rate_AGREE": 0.4117159301531558
+        },
+        {
+          "bucket": "tmae_6_20",
+          "label": "T_MAE 6-20",
+          "n": 22939,
+          "n_DISAGREE_SL_TP": 4613,
+          "rate_DISAGREE_SL_TP": 0.20109856576136712,
+          "n_AGREE": 18103,
+          "rate_AGREE": 0.7891799991281224
+        },
+        {
+          "bucket": "tmae_21_40",
+          "label": "T_MAE 21-40",
+          "n": 21680,
+          "n_DISAGREE_SL_TP": 5747,
+          "rate_DISAGREE_SL_TP": 0.2650830258302583,
+          "n_AGREE": 15841,
+          "rate_AGREE": 0.7306734317343173
+        },
+        {
+          "bucket": "tmae_41_70",
+          "label": "T_MAE 41-70",
+          "n": 30416,
+          "n_DISAGREE_SL_TP": 8607,
+          "rate_DISAGREE_SL_TP": 0.28297606522882696,
+          "n_AGREE": 21408,
+          "rate_AGREE": 0.7038400841662283
+        },
+        {
+          "bucket": "tmae_gt_70",
+          "label": "T_MAE >70",
+          "n": 43884,
+          "n_DISAGREE_SL_TP": 13328,
+          "rate_DISAGREE_SL_TP": 0.3037097803299608,
+          "n_AGREE": 29938,
+          "rate_AGREE": 0.6822076383192052
+        },
+        {
+          "bucket": "tmae_missing",
+          "label": "T_MAE missing/non-finite",
+          "n": 521,
+          "n_DISAGREE_SL_TP": 472,
+          "rate_DISAGREE_SL_TP": 0.9059500959692899,
+          "n_AGREE": 48,
+          "rate_AGREE": 0.09213051823416507
+        }
+      ],
+      "tmae_short_rank": [
+        {
+          "bucket": "tmae_le_2",
+          "rate": 0.7368214313771703,
+          "n": 12729,
+          "rank": 1
+        },
+        {
+          "bucket": "tmae_3_5",
+          "rate": 0.3109481538659462,
+          "n": 7773,
+          "rank": 2
+        },
+        {
+          "bucket": "tmae_gt_10",
+          "rate": 0.2780539320114346,
+          "n": 109842,
+          "rank": 3
+        },
+        {
+          "bucket": "tmae_6_10",
+          "rate": 0.19312548198744078,
+          "n": 9077,
+          "rank": 4
+        }
+      ],
+      "tmae_dist_rank": [
+        {
+          "bucket": "tmae_le_5",
+          "rate": 0.5753585016095991,
+          "n": 20502,
+          "rank": 1
+        },
+        {
+          "bucket": "tmae_gt_70",
+          "rate": 0.3037097803299608,
+          "n": 43884,
+          "rank": 2
+        },
+        {
+          "bucket": "tmae_41_70",
+          "rate": 0.28297606522882696,
+          "n": 30416,
+          "rank": 3
+        },
+        {
+          "bucket": "tmae_21_40",
+          "rate": 0.2650830258302583,
+          "n": 21680,
+          "rank": 4
+        },
+        {
+          "bucket": "tmae_6_20",
+          "rate": 0.20109856576136712,
+          "n": 22939,
+          "rank": 5
+        }
+      ],
+      "composition_DISAGREE_SL_TP_short": {
+        "n": 44563,
+        "buckets": {
+          "tmae_le_2": {
+            "n": 9379,
+            "share": 0.21046608172699324
+          },
+          "tmae_3_5": {
+            "n": 2417,
+            "share": 0.054237820613513454
+          },
+          "tmae_6_10": {
+            "n": 1753,
+            "share": 0.03933756703992101
+          },
+          "tmae_gt_10": {
+            "n": 30542,
+            "share": 0.6853667841034041
+          },
+          "tmae_missing": {
+            "n": 472,
+            "share": 0.010591746516168121
+          }
+        }
+      },
+      "composition_AGREE_short": {
+        "n": 93779,
+        "buckets": {
+          "tmae_le_2": {
+            "n": 3180,
+            "share": 0.03390951065803645
+          },
+          "tmae_3_5": {
+            "n": 5261,
+            "share": 0.05609997973960055
+          },
+          "tmae_6_10": {
+            "n": 7218,
+            "share": 0.07696819117286387
+          },
+          "tmae_gt_10": {
+            "n": 78072,
+            "share": 0.8325104767591892
+          },
+          "tmae_missing": {
+            "n": 48,
+            "share": 0.0005118416703099841
+          }
+        }
+      },
+      "composition_DISAGREE_SL_TP_dist": {
+        "n": 44563,
+        "buckets": {
+          "tmae_le_5": {
+            "n": 11796,
+            "share": 0.2647039023405067
+          },
+          "tmae_6_20": {
+            "n": 4613,
+            "share": 0.10351637008280412
+          },
+          "tmae_21_40": {
+            "n": 5747,
+            "share": 0.12896348989071652
+          },
+          "tmae_41_70": {
+            "n": 8607,
+            "share": 0.19314229293359964
+          },
+          "tmae_gt_70": {
+            "n": 13328,
+            "share": 0.2990821982362049
+          },
+          "tmae_missing": {
+            "n": 472,
+            "share": 0.010591746516168121
+          }
+        }
+      },
+      "composition_AGREE_dist": {
+        "n": 93779,
+        "buckets": {
+          "tmae_le_5": {
+            "n": 8441,
+            "share": 0.090009490397637
+          },
+          "tmae_6_20": {
+            "n": 18103,
+            "share": 0.1930389532837842
+          },
+          "tmae_21_40": {
+            "n": 15841,
+            "share": 0.16891841457042622
+          },
+          "tmae_41_70": {
+            "n": 21408,
+            "share": 0.22828138495825293
+          },
+          "tmae_gt_70": {
+            "n": 29938,
+            "share": 0.31923991511958966
+          },
+          "tmae_missing": {
+            "n": 48,
+            "share": 0.0005118416703099841
+          }
+        }
+      }
+    }
+  },
+  "holdout_survival": {
+    "chronological_holdout_used": false,
+    "reason": "No chronological IS/OOS in anatomy corpus; instrument leave-one-out only",
+    "instrument_holdout": [
+      {
+        "held_out": "BNBUSDT",
+        "train_instruments": [
+          "BTCUSDT",
+          "ETHUSDT",
+          "SOLUSDT"
+        ],
+        "tmae_dist_spearman_rho": 0.9999999999999999,
+        "tmae_dist_spearman_p": 1.4042654220543608e-24,
+        "tmae_short_spearman_rho": 1.0,
+        "tmae_short_spearman_p": 0.0,
+        "train_dist_rank": [
+          {
+            "bucket": "tmae_le_5",
+            "rate": 0.549573508902799,
+            "n": 61666,
+            "rank": 1
+          },
+          {
+            "bucket": "tmae_gt_70",
+            "rate": 0.30144681795131845,
+            "n": 126208,
+            "rank": 2
+          },
+          {
+            "bucket": "tmae_41_70",
+            "rate": 0.28563407049067036,
+            "n": 92608,
+            "rank": 3
+          },
+          {
+            "bucket": "tmae_21_40",
+            "rate": 0.2620089299092026,
+            "n": 66742,
+            "rank": 4
+          },
+          {
+            "bucket": "tmae_6_20",
+            "rate": 0.20316195517513233,
+            "n": 71032,
+            "rank": 5
+          }
+        ],
+        "holdout_dist_rank": [
+          {
+            "bucket": "tmae_le_5",
+            "rate": 0.5609238632528087,
+            "n": 20739,
+            "rank": 1
+          },
+          {
+            "bucket": "tmae_gt_70",
+            "rate": 0.3130461052240193,
+            "n": 43032,
+            "rank": 2
+          },
+          {
+            "bucket": "tmae_41_70",
+            "rate": 0.2902981885130026,
+            "n": 30417,
+            "rank": 3
+          },
+          {
+            "bucket": "tmae_21_40",
+            "rate": 0.2540789290196625,
+            "n": 21513,
+            "rank": 4
+          },
+          {
+            "bucket": "tmae_6_20",
+            "rate": 0.20370684536432268,
+            "n": 23578,
+            "rank": 5
+          }
+        ],
+        "train_short_rank": [
+          {
+            "bucket": "tmae_le_2",
+            "rate": 0.7087884344521512,
+            "n": 37629,
+            "rank": 1
+          },
+          {
+            "bucket": "tmae_3_5",
+            "rate": 0.30032865998252695,
+            "n": 24037,
+            "rank": 2
+          },
+          {
+            "bucket": "tmae_gt_10",
+            "rate": 0.27689548166262146,
+            "n": 328373,
+            "rank": 3
+          },
+          {
+            "bucket": "tmae_6_10",
+            "rate": 0.194563560973881,
+            "n": 28217,
+            "rank": 4
+          }
+        ],
+        "holdout_short_rank": [
+          {
+            "bucket": "tmae_le_2",
+            "rate": 0.7230611923863458,
+            "n": 12714,
+            "rank": 1
+          },
+          {
+            "bucket": "tmae_3_5",
+            "rate": 0.3040498442367601,
+            "n": 8025,
+            "rank": 2
+          },
+          {
+            "bucket": "tmae_gt_10",
+            "rate": 0.2814001246837068,
+            "n": 109076,
+            "rank": 3
+          },
+          {
+            "bucket": "tmae_6_10",
+            "rate": 0.19822485207100593,
+            "n": 9464,
+            "rank": 4
+          }
+        ]
+      },
+      {
+        "held_out": "BTCUSDT",
+        "train_instruments": [
+          "BNBUSDT",
+          "ETHUSDT",
+          "SOLUSDT"
+        ],
+        "tmae_dist_spearman_rho": 0.9999999999999999,
+        "tmae_dist_spearman_p": 1.4042654220543608e-24,
+        "tmae_short_spearman_rho": 1.0,
+        "tmae_short_spearman_p": 0.0,
+        "train_dist_rank": [
+          {
+            "bucket": "tmae_le_5",
+            "rate": 0.5587313828505326,
+            "n": 62241,
+            "rank": 1
+          },
+          {
+            "bucket": "tmae_gt_70",
+            "rate": 0.3078239033194695,
+            "n": 127430,
+            "rank": 2
+          },
+          {
+            "bucket": "tmae_41_70",
+            "rate": 0.28490084216245587,
+            "n": 92025,
+            "rank": 3
+          },
+          {
+            "bucket": "tmae_21_40",
+            "rate": 0.25956824894193586,
+            "n": 65686,
+            "rank": 4
+          },
+          {
+            "bucket": "tmae_6_20",
+            "rate": 0.20261871804288256,
+            "n": 70798,
+            "rank": 5
+          }
+        ],
+        "holdout_dist_rank": [
+          {
+            "bucket": "tmae_le_5",
+            "rate": 0.5329795675461217,
+            "n": 20164,
+            "rank": 1
+          },
+          {
+            "bucket": "tmae_gt_70",
+            "rate": 0.2939488160727099,
+            "n": 41810,
+            "rank": 2
+          },
+          {
+            "bucket": "tmae_41_70",
+            "rate": 0.29238709677419356,
+            "n": 31000,
+            "rank": 3
+          },
+          {
+            "bucket": "tmae_21_40",
+            "rate": 0.2615534582834862,
+            "n": 22569,
+            "rank": 4
+          },
+          {
+            "bucket": "tmae_6_20",
+            "rate": 0.20531664706870487,
+            "n": 23812,
+            "rank": 5
+          }
+        ],
+        "train_short_rank": [
+          {
+            "bucket": "tmae_le_2",
+            "rate": 0.7188284518828452,
+            "n": 38240,
+            "rank": 1
+          },
+          {
+            "bucket": "tmae_3_5",
+            "rate": 0.303654014416066,
+            "n": 24001,
+            "rank": 2
+          },
+          {
+            "bucket": "tmae_gt_10",
+            "rate": 0.27863069463135376,
+            "n": 327699,
+            "rank": 3
+          },
+          {
+            "bucket": "tmae_6_10",
+            "rate": 0.19589235127478755,
+            "n": 28240,
+            "rank": 4
+          }
+        ],
+        "holdout_short_rank": [
+          {
+            "bucket": "tmae_le_2",
+            "rate": 0.6920598198793687,
+            "n": 12103,
+            "rank": 1
+          },
+          {
+            "bucket": "tmae_3_5",
+            "rate": 0.2941322416573626,
+            "n": 8061,
+            "rank": 2
+          },
+          {
+            "bucket": "tmae_gt_10",
+            "rate": 0.27619134396355355,
+            "n": 109750,
+            "rank": 3
+          },
+          {
+            "bucket": "tmae_6_10",
+            "rate": 0.19425908272428768,
+            "n": 9441,
+            "rank": 4
+          }
+        ]
+      },
+      {
+        "held_out": "ETHUSDT",
+        "train_instruments": [
+          "BNBUSDT",
+          "BTCUSDT",
+          "SOLUSDT"
+        ],
+        "tmae_dist_spearman_rho": 0.9999999999999999,
+        "tmae_dist_spearman_p": 1.4042654220543608e-24,
+        "tmae_short_spearman_rho": 1.0,
+        "tmae_short_spearman_p": 0.0,
+        "train_dist_rank": [
+          {
+            "bucket": "tmae_le_5",
+            "rate": 0.5565670548000977,
+            "n": 61405,
+            "rank": 1
+          },
+          {
+            "bucket": "tmae_gt_70",
+            "rate": 0.3036604881686683,
+            "n": 128726,
+            "rank": 2
+          },
+          {
+            "bucket": "tmae_41_70",
+            "rate": 0.28857817995709606,
+            "n": 91833,
+            "rank": 3
+          },
+          {
+            "bucket": "tmae_21_40",
+            "rate": 0.26027188954107233,
+            "n": 65762,
+            "rank": 4
+          },
+          {
+            "bucket": "tmae_6_20",
+            "rate": 0.20340115741728163,
+            "n": 70329,
+            "rank": 5
+          }
+        ],
+        "holdout_dist_rank": [
+          {
+            "bucket": "tmae_le_5",
+            "rate": 0.5403333333333333,
+            "n": 21000,
+            "rank": 1
+          },
+          {
+            "bucket": "tmae_gt_70",
+            "rate": 0.3067334748482006,
+            "n": 40514,
+            "rank": 2
+          },
+          {
+            "bucket": "tmae_41_70",
+            "rate": 0.28151449089510133,
+            "n": 31192,
+            "rank": 3
+          },
+          {
+            "bucket": "tmae_21_40",
+            "rate": 0.2595029564753479,
+            "n": 22493,
+            "rank": 4
+          },
+          {
+            "bucket": "tmae_6_20",
+            "rate": 0.20299822906799556,
+            "n": 24281,
+            "rank": 5
+          }
+        ],
+        "train_short_rank": [
+          {
+            "bucket": "tmae_le_2",
+            "rate": 0.7177329142918021,
+            "n": 37546,
+            "rank": 1
+          },
+          {
+            "bucket": "tmae_3_5",
+            "rate": 0.30294647722033613,
+            "n": 23859,
+            "rank": 2
+          },
+          {
+            "bucket": "tmae_gt_10",
+            "rate": 0.2785424805578882,
+            "n": 328668,
+            "rank": 3
+          },
+          {
+            "bucket": "tmae_6_10",
+            "rate": 0.1952326495604317,
+            "n": 27982,
+            "rank": 4
+          }
+        ],
+        "holdout_short_rank": [
+          {
+            "bucket": "tmae_le_2",
+            "rate": 0.6967257951082285,
+            "n": 12797,
+            "rank": 1
+          },
+          {
+            "bucket": "tmae_3_5",
+            "rate": 0.29635499207606975,
+            "n": 8203,
+            "rank": 2
+          },
+          {
+            "bucket": "tmae_gt_10",
+            "rate": 0.2764361423410338,
+            "n": 108781,
+            "rank": 3
+          },
+          {
+            "bucket": "tmae_6_10",
+            "rate": 0.19620579441179503,
+            "n": 9699,
+            "rank": 4
+          }
+        ]
+      },
+      {
+        "held_out": "SOLUSDT",
+        "train_instruments": [
+          "BNBUSDT",
+          "BTCUSDT",
+          "ETHUSDT"
+        ],
+        "tmae_dist_spearman_rho": 0.9999999999999999,
+        "tmae_dist_spearman_p": 1.4042654220543608e-24,
+        "tmae_short_spearman_rho": 1.0,
+        "tmae_short_spearman_p": 0.0,
+        "train_dist_rank": [
+          {
+            "bucket": "tmae_le_5",
+            "rate": 0.544836276109397,
+            "n": 61903,
+            "rank": 1
+          },
+          {
+            "bucket": "tmae_gt_70",
+            "rate": 0.30463639554548644,
+            "n": 125356,
+            "rank": 2
+          },
+          {
+            "bucket": "tmae_41_70",
+            "rate": 0.28803895949637726,
+            "n": 92609,
+            "rank": 3
+          },
+          {
+            "bucket": "tmae_21_40",
+            "rate": 0.2584453623732632,
+            "n": 66575,
+            "rank": 4
+          },
+          {
+            "bucket": "tmae_6_20",
+            "rate": 0.20400161850678797,
+            "n": 71671,
+            "rank": 5
+          }
+        ],
+        "holdout_dist_rank": [
+          {
+            "bucket": "tmae_le_5",
+            "rate": 0.5753585016095991,
+            "n": 20502,
+            "rank": 1
+          },
+          {
+            "bucket": "tmae_gt_70",
+            "rate": 0.3037097803299608,
+            "n": 43884,
+            "rank": 2
+          },
+          {
+            "bucket": "tmae_41_70",
+            "rate": 0.28297606522882696,
+            "n": 30416,
+            "rank": 3
+          },
+          {
+            "bucket": "tmae_21_40",
+            "rate": 0.2650830258302583,
+            "n": 21680,
+            "rank": 4
+          },
+          {
+            "bucket": "tmae_6_20",
+            "rate": 0.20109856576136712,
+            "n": 22939,
+            "rank": 5
+          }
+        ],
+        "train_short_rank": [
+          {
+            "bucket": "tmae_le_2",
+            "rate": 0.7041261232519807,
+            "n": 37614,
+            "rank": 1
+          },
+          {
+            "bucket": "tmae_3_5",
+            "rate": 0.29815966075178063,
+            "n": 24289,
+            "rank": 2
+          },
+          {
+            "bucket": "tmae_gt_10",
+            "rate": 0.27800688019486763,
+            "n": 327607,
+            "rank": 3
+          },
+          {
+            "bucket": "tmae_6_10",
+            "rate": 0.1962312963221927,
+            "n": 28604,
+            "rank": 4
+          }
+        ],
+        "holdout_short_rank": [
+          {
+            "bucket": "tmae_le_2",
+            "rate": 0.7368214313771703,
+            "n": 12729,
+            "rank": 1
+          },
+          {
+            "bucket": "tmae_3_5",
+            "rate": 0.3109481538659462,
+            "n": 7773,
+            "rank": 2
+          },
+          {
+            "bucket": "tmae_gt_10",
+            "rate": 0.2780539320114346,
+            "n": 109842,
+            "rank": 3
+          },
+          {
+            "bucket": "tmae_6_10",
+            "rate": 0.19312548198744078,
+            "n": 9077,
+            "rank": 4
+          }
+        ]
+      }
+    ],
+    "tmae_dist_rank_by_instrument": {
+      "BNBUSDT": [
+        {
+          "bucket": "tmae_le_5",
+          "rate": 0.5609238632528087,
+          "n": 20739,
+          "rank": 1
+        },
+        {
+          "bucket": "tmae_gt_70",
+          "rate": 0.3130461052240193,
+          "n": 43032,
+          "rank": 2
+        },
+        {
+          "bucket": "tmae_41_70",
+          "rate": 0.2902981885130026,
+          "n": 30417,
+          "rank": 3
+        },
+        {
+          "bucket": "tmae_21_40",
+          "rate": 0.2540789290196625,
+          "n": 21513,
+          "rank": 4
+        },
+        {
+          "bucket": "tmae_6_20",
+          "rate": 0.20370684536432268,
+          "n": 23578,
+          "rank": 5
+        }
+      ],
+      "BTCUSDT": [
+        {
+          "bucket": "tmae_le_5",
+          "rate": 0.5329795675461217,
+          "n": 20164,
+          "rank": 1
+        },
+        {
+          "bucket": "tmae_gt_70",
+          "rate": 0.2939488160727099,
+          "n": 41810,
+          "rank": 2
+        },
+        {
+          "bucket": "tmae_41_70",
+          "rate": 0.29238709677419356,
+          "n": 31000,
+          "rank": 3
+        },
+        {
+          "bucket": "tmae_21_40",
+          "rate": 0.2615534582834862,
+          "n": 22569,
+          "rank": 4
+        },
+        {
+          "bucket": "tmae_6_20",
+          "rate": 0.20531664706870487,
+          "n": 23812,
+          "rank": 5
+        }
+      ],
+      "ETHUSDT": [
+        {
+          "bucket": "tmae_le_5",
+          "rate": 0.5403333333333333,
+          "n": 21000,
+          "rank": 1
+        },
+        {
+          "bucket": "tmae_gt_70",
+          "rate": 0.3067334748482006,
+          "n": 40514,
+          "rank": 2
+        },
+        {
+          "bucket": "tmae_41_70",
+          "rate": 0.28151449089510133,
+          "n": 31192,
+          "rank": 3
+        },
+        {
+          "bucket": "tmae_21_40",
+          "rate": 0.2595029564753479,
+          "n": 22493,
+          "rank": 4
+        },
+        {
+          "bucket": "tmae_6_20",
+          "rate": 0.20299822906799556,
+          "n": 24281,
+          "rank": 5
+        }
+      ],
+      "SOLUSDT": [
+        {
+          "bucket": "tmae_le_5",
+          "rate": 0.5753585016095991,
+          "n": 20502,
+          "rank": 1
+        },
+        {
+          "bucket": "tmae_gt_70",
+          "rate": 0.3037097803299608,
+          "n": 43884,
+          "rank": 2
+        },
+        {
+          "bucket": "tmae_41_70",
+          "rate": 0.28297606522882696,
+          "n": 30416,
+          "rank": 3
+        },
+        {
+          "bucket": "tmae_21_40",
+          "rate": 0.2650830258302583,
+          "n": 21680,
+          "rank": 4
+        },
+        {
+          "bucket": "tmae_6_20",
+          "rate": 0.20109856576136712,
+          "n": 22939,
+          "rank": 5
+        }
+      ]
+    },
+    "tmae_short_rank_by_instrument": {
+      "BNBUSDT": [
+        {
+          "bucket": "tmae_le_2",
+          "rate": 0.7230611923863458,
+          "n": 12714,
+          "rank": 1
+        },
+        {
+          "bucket": "tmae_3_5",
+          "rate": 0.3040498442367601,
+          "n": 8025,
+          "rank": 2
+        },
+        {
+          "bucket": "tmae_gt_10",
+          "rate": 0.2814001246837068,
+          "n": 109076,
+          "rank": 3
+        },
+        {
+          "bucket": "tmae_6_10",
+          "rate": 0.19822485207100593,
+          "n": 9464,
+          "rank": 4
+        }
+      ],
+      "BTCUSDT": [
+        {
+          "bucket": "tmae_le_2",
+          "rate": 0.6920598198793687,
+          "n": 12103,
+          "rank": 1
+        },
+        {
+          "bucket": "tmae_3_5",
+          "rate": 0.2941322416573626,
+          "n": 8061,
+          "rank": 2
+        },
+        {
+          "bucket": "tmae_gt_10",
+          "rate": 0.27619134396355355,
+          "n": 109750,
+          "rank": 3
+        },
+        {
+          "bucket": "tmae_6_10",
+          "rate": 0.19425908272428768,
+          "n": 9441,
+          "rank": 4
+        }
+      ],
+      "ETHUSDT": [
+        {
+          "bucket": "tmae_le_2",
+          "rate": 0.6967257951082285,
+          "n": 12797,
+          "rank": 1
+        },
+        {
+          "bucket": "tmae_3_5",
+          "rate": 0.29635499207606975,
+          "n": 8203,
+          "rank": 2
+        },
+        {
+          "bucket": "tmae_gt_10",
+          "rate": 0.2764361423410338,
+          "n": 108781,
+          "rank": 3
+        },
+        {
+          "bucket": "tmae_6_10",
+          "rate": 0.19620579441179503,
+          "n": 9699,
+          "rank": 4
+        }
+      ],
+      "SOLUSDT": [
+        {
+          "bucket": "tmae_le_2",
+          "rate": 0.7368214313771703,
+          "n": 12729,
+          "rank": 1
+        },
+        {
+          "bucket": "tmae_3_5",
+          "rate": 0.3109481538659462,
+          "n": 7773,
+          "rank": 2
+        },
+        {
+          "bucket": "tmae_gt_10",
+          "rate": 0.2780539320114346,
+          "n": 109842,
+          "rank": 3
+        },
+        {
+          "bucket": "tmae_6_10",
+          "rate": 0.19312548198744078,
+          "n": 9077,
+          "rank": 4
+        }
+      ]
+    },
+    "summary": {
+      "tmae_dist_loo_spearman_min": 0.9999999999999999,
+      "tmae_dist_loo_spearman_mean": 0.9999999999999999,
+      "tmae_short_loo_spearman_min": 1.0,
+      "tmae_short_loo_spearman_mean": 1.0,
+      "ranking_stable_tmae_dist": true,
+      "ranking_stable_tmae_short": true,
+      "note_short": "Short buckets (<=2,3-5,6-10,>10) put nearly all mass in >10; rank signal may be weak/degenerate"
+    }
+  },
+  "conditioning_on_peak": {
+    "by_peak": {
+      "peak_le_2": {
+        "peak_label": "Peak <= 2 bars",
+        "n": 281644,
+        "baseline_rate_DISAGREE_SL_TP": 0.08771356748235361,
+        "early_mae_rate": {
+          "n": 36833,
+          "n_DISAGREE_SL_TP": 5727,
+          "rate_DISAGREE_SL_TP": 0.15548557000515842
+        },
+        "not_early_mae_rate": {
+          "n": 243903,
+          "n_DISAGREE_SL_TP": 18330,
+          "rate_DISAGREE_SL_TP": 0.07515282714849755
+        },
+        "early_vs_not_delta": 0.08033274285666087,
+        "tmae_dist_marginal": [
+          {
+            "bucket": "tmae_le_5",
+            "label": "T_MAE <= 5",
+            "n": 36833,
+            "n_DISAGREE_SL_TP": 5727,
+            "rate_DISAGREE_SL_TP": 0.15548557000515842,
+            "n_AGREE": 30992,
+            "rate_AGREE": 0.8414193793608992
+          },
+          {
+            "bucket": "tmae_6_20",
+            "label": "T_MAE 6-20",
+            "n": 52841,
+            "n_DISAGREE_SL_TP": 3098,
+            "rate_DISAGREE_SL_TP": 0.05862871633769232,
+            "n_AGREE": 49632,
+            "rate_AGREE": 0.9392706421150243
+          },
+          {
+            "bucket": "tmae_21_40",
+            "label": "T_MAE 21-40",
+            "n": 45134,
+            "n_DISAGREE_SL_TP": 3403,
+            "rate_DISAGREE_SL_TP": 0.07539770461293038,
+            "n_AGREE": 41686,
+            "rate_AGREE": 0.9236052643240129
+          },
+          {
+            "bucket": "tmae_41_70",
+            "label": "T_MAE 41-70",
+            "n": 62258,
+            "n_DISAGREE_SL_TP": 4909,
+            "rate_DISAGREE_SL_TP": 0.0788493045070513,
+            "n_AGREE": 57231,
+            "rate_AGREE": 0.9192553567413023
+          },
+          {
+            "bucket": "tmae_gt_70",
+            "label": "T_MAE >70",
+            "n": 83670,
+            "n_DISAGREE_SL_TP": 6920,
+            "rate_DISAGREE_SL_TP": 0.08270586829209992,
+            "n_AGREE": 76613,
+            "rate_AGREE": 0.9156567467431577
+          },
+          {
+            "bucket": "tmae_missing",
+            "label": "T_MAE missing/non-finite",
+            "n": 908,
+            "n_DISAGREE_SL_TP": 647,
+            "rate_DISAGREE_SL_TP": 0.7125550660792952,
+            "n_AGREE": 260,
+            "rate_AGREE": 0.28634361233480177
+          }
+        ],
+        "tmae_short_marginal": [
+          {
+            "bucket": "tmae_le_2",
+            "label": "T_MAE <= 2",
+            "n": 17462,
+            "n_DISAGREE_SL_TP": 5186,
+            "rate_DISAGREE_SL_TP": 0.2969877448173176,
+            "n_AGREE": 12188,
+            "rate_AGREE": 0.6979727408086129
+          },
+          {
+            "bucket": "tmae_3_5",
+            "label": "T_MAE 3-5",
+            "n": 19371,
+            "n_DISAGREE_SL_TP": 541,
+            "rate_DISAGREE_SL_TP": 0.027928346497341387,
+            "n_AGREE": 18804,
+            "rate_AGREE": 0.9707294409168344
+          },
+          {
+            "bucket": "tmae_6_10",
+            "label": "T_MAE 6-10",
+            "n": 22430,
+            "n_DISAGREE_SL_TP": 1082,
+            "rate_DISAGREE_SL_TP": 0.04823896567097637,
+            "n_AGREE": 21299,
+            "rate_AGREE": 0.9495764600980829
+          },
+          {
+            "bucket": "tmae_gt_10",
+            "label": "T_MAE >10",
+            "n": 221473,
+            "n_DISAGREE_SL_TP": 17248,
+            "rate_DISAGREE_SL_TP": 0.07787856759063182,
+            "n_AGREE": 203863,
+            "rate_AGREE": 0.9204869216563645
+          },
+          {
+            "bucket": "tmae_missing",
+            "label": "T_MAE missing/non-finite",
+            "n": 908,
+            "n_DISAGREE_SL_TP": 647,
+            "rate_DISAGREE_SL_TP": 0.7125550660792952,
+            "n_AGREE": 260,
+            "rate_AGREE": 0.28634361233480177
+          }
+        ],
+        "tmae_dist_rate_span_n_ge_100": 0.0968568536674661
+      },
+      "peak_3_5": {
+        "peak_label": "Peak 3-5",
+        "n": 120859,
+        "baseline_rate_DISAGREE_SL_TP": 0.45711117914263727,
+        "early_mae_rate": {
+          "n": 16279,
+          "n_DISAGREE_SL_TP": 13971,
+          "rate_DISAGREE_SL_TP": 0.8582222495239266
+        },
+        "not_early_mae_rate": {
+          "n": 103836,
+          "n_DISAGREE_SL_TP": 40532,
+          "rate_DISAGREE_SL_TP": 0.3903463153434262
+        },
+        "early_vs_not_delta": 0.4678759341805004,
+        "tmae_dist_marginal": [
+          {
+            "bucket": "tmae_le_5",
+            "label": "T_MAE <= 5",
+            "n": 16279,
+            "n_DISAGREE_SL_TP": 13971,
+            "rate_DISAGREE_SL_TP": 0.8582222495239266,
+            "n_AGREE": 2198,
+            "rate_AGREE": 0.13502057865962283
+          },
+          {
+            "bucket": "tmae_6_20",
+            "label": "T_MAE 6-20",
+            "n": 21034,
+            "n_DISAGREE_SL_TP": 5598,
+            "rate_DISAGREE_SL_TP": 0.26614053437292,
+            "n_AGREE": 15308,
+            "rate_AGREE": 0.7277740800608539
+          },
+          {
+            "bucket": "tmae_21_40",
+            "label": "T_MAE 21-40",
+            "n": 19633,
+            "n_DISAGREE_SL_TP": 7831,
+            "rate_DISAGREE_SL_TP": 0.3988692507512861,
+            "n_AGREE": 11733,
+            "rate_AGREE": 0.5976162583405491
+          },
+          {
+            "bucket": "tmae_41_70",
+            "label": "T_MAE 41-70",
+            "n": 26634,
+            "n_DISAGREE_SL_TP": 11143,
+            "rate_DISAGREE_SL_TP": 0.41837500938649846,
+            "n_AGREE": 15304,
+            "rate_AGREE": 0.5746038897649621
+          },
+          {
+            "bucket": "tmae_gt_70",
+            "label": "T_MAE >70",
+            "n": 36535,
+            "n_DISAGREE_SL_TP": 15960,
+            "rate_DISAGREE_SL_TP": 0.43684138497331326,
+            "n_AGREE": 20285,
+            "rate_AGREE": 0.5552210209388257
+          },
+          {
+            "bucket": "tmae_missing",
+            "label": "T_MAE missing/non-finite",
+            "n": 744,
+            "n_DISAGREE_SL_TP": 743,
+            "rate_DISAGREE_SL_TP": 0.9986559139784946,
+            "n_AGREE": 0,
+            "rate_AGREE": 0.0
+          }
+        ],
+        "tmae_short_marginal": [
+          {
+            "bucket": "tmae_le_2",
+            "label": "T_MAE <= 2",
+            "n": 13136,
+            "n_DISAGREE_SL_TP": 12764,
+            "rate_DISAGREE_SL_TP": 0.9716808769792935,
+            "n_AGREE": 284,
+            "rate_AGREE": 0.021619975639464068
+          },
+          {
+            "bucket": "tmae_3_5",
+            "label": "T_MAE 3-5",
+            "n": 3143,
+            "n_DISAGREE_SL_TP": 1207,
+            "rate_DISAGREE_SL_TP": 0.38402799872733057,
+            "n_AGREE": 1914,
+            "rate_AGREE": 0.6089723194400255
+          },
+          {
+            "bucket": "tmae_6_10",
+            "label": "T_MAE 6-10",
+            "n": 7670,
+            "n_DISAGREE_SL_TP": 1497,
+            "rate_DISAGREE_SL_TP": 0.1951760104302477,
+            "n_AGREE": 6132,
+            "rate_AGREE": 0.7994784876140808
+          },
+          {
+            "bucket": "tmae_gt_10",
+            "label": "T_MAE >10",
+            "n": 96166,
+            "n_DISAGREE_SL_TP": 39035,
+            "rate_DISAGREE_SL_TP": 0.40591269263565083,
+            "n_AGREE": 56498,
+            "rate_AGREE": 0.587504939375663
+          },
+          {
+            "bucket": "tmae_missing",
+            "label": "T_MAE missing/non-finite",
+            "n": 744,
+            "n_DISAGREE_SL_TP": 743,
+            "rate_DISAGREE_SL_TP": 0.9986559139784946,
+            "n_AGREE": 0,
+            "rate_AGREE": 0.0
+          }
+        ],
+        "tmae_dist_rate_span_n_ge_100": 0.5920817151510065
+      },
+      "peak_6_10": {
+        "peak_label": "Peak 6-10",
+        "n": 79108,
+        "baseline_rate_DISAGREE_SL_TP": 0.6433230520301361,
+        "early_mae_rate": {
+          "n": 14629,
+          "n_DISAGREE_SL_TP": 14338,
+          "rate_DISAGREE_SL_TP": 0.9801080046483013
+        },
+        "not_early_mae_rate": {
+          "n": 64068,
+          "n_DISAGREE_SL_TP": 36145,
+          "rate_DISAGREE_SL_TP": 0.5641661984141849
+        },
+        "early_vs_not_delta": 0.41594180623411636,
+        "tmae_dist_marginal": [
+          {
+            "bucket": "tmae_le_5",
+            "label": "T_MAE <= 5",
+            "n": 14629,
+            "n_DISAGREE_SL_TP": 14338,
+            "rate_DISAGREE_SL_TP": 0.9801080046483013,
+            "n_AGREE": 69,
+            "rate_AGREE": 0.004716658691639893
+          },
+          {
+            "bucket": "tmae_6_20",
+            "label": "T_MAE 6-20",
+            "n": 9911,
+            "n_DISAGREE_SL_TP": 4187,
+            "rate_DISAGREE_SL_TP": 0.42245989304812837,
+            "n_AGREE": 5617,
+            "rate_AGREE": 0.5667440217939663
+          },
+          {
+            "bucket": "tmae_21_40",
+            "label": "T_MAE 21-40",
+            "n": 12726,
+            "n_DISAGREE_SL_TP": 6931,
+            "rate_DISAGREE_SL_TP": 0.5446330347320446,
+            "n_AGREE": 5637,
+            "rate_AGREE": 0.44295143800094294
+          },
+          {
+            "bucket": "tmae_41_70",
+            "label": "T_MAE 41-70",
+            "n": 17173,
+            "n_DISAGREE_SL_TP": 10220,
+            "rate_DISAGREE_SL_TP": 0.5951202468992023,
+            "n_AGREE": 6668,
+            "rate_AGREE": 0.3882839340825715
+          },
+          {
+            "bucket": "tmae_gt_70",
+            "label": "T_MAE >70",
+            "n": 24258,
+            "n_DISAGREE_SL_TP": 14807,
+            "rate_DISAGREE_SL_TP": 0.6103965702036441,
+            "n_AGREE": 8976,
+            "rate_AGREE": 0.3700222606975019
+          },
+          {
+            "bucket": "tmae_missing",
+            "label": "T_MAE missing/non-finite",
+            "n": 411,
+            "n_DISAGREE_SL_TP": 409,
+            "rate_DISAGREE_SL_TP": 0.9951338199513382,
+            "n_AGREE": 0,
+            "rate_AGREE": 0.0
+          }
+        ],
+        "tmae_short_marginal": [
+          {
+            "bucket": "tmae_le_2",
+            "label": "T_MAE <= 2",
+            "n": 10736,
+            "n_DISAGREE_SL_TP": 10553,
+            "rate_DISAGREE_SL_TP": 0.9829545454545454,
+            "n_AGREE": 38,
+            "rate_AGREE": 0.0035394932935916544
+          },
+          {
+            "bucket": "tmae_3_5",
+            "label": "T_MAE 3-5",
+            "n": 3893,
+            "n_DISAGREE_SL_TP": 3785,
+            "rate_DISAGREE_SL_TP": 0.9722578987927049,
+            "n_AGREE": 31,
+            "rate_AGREE": 0.007963010531723606
+          },
+          {
+            "bucket": "tmae_6_10",
+            "label": "T_MAE 6-10",
+            "n": 2429,
+            "n_DISAGREE_SL_TP": 1239,
+            "rate_DISAGREE_SL_TP": 0.5100864553314121,
+            "n_AGREE": 1172,
+            "rate_AGREE": 0.48250308769040756
+          },
+          {
+            "bucket": "tmae_gt_10",
+            "label": "T_MAE >10",
+            "n": 61639,
+            "n_DISAGREE_SL_TP": 34906,
+            "rate_DISAGREE_SL_TP": 0.5662973117669008,
+            "n_AGREE": 25726,
+            "rate_AGREE": 0.41736562890377843
+          },
+          {
+            "bucket": "tmae_missing",
+            "label": "T_MAE missing/non-finite",
+            "n": 411,
+            "n_DISAGREE_SL_TP": 409,
+            "rate_DISAGREE_SL_TP": 0.9951338199513382,
+            "n_AGREE": 0,
+            "rate_AGREE": 0.0
+          }
+        ],
+        "tmae_dist_rate_span_n_ge_100": 0.5576481116001729
+      },
+      "peak_gt_10": {
+        "peak_label": "Peak >10",
+        "n": 61962,
+        "baseline_rate_DISAGREE_SL_TP": 0.7364029566508505,
+        "early_mae_rate": {
+          "n": 12392,
+          "n_DISAGREE_SL_TP": 11487,
+          "rate_DISAGREE_SL_TP": 0.926969012265978
+        },
+        "not_early_mae_rate": {
+          "n": 49400,
+          "n_DISAGREE_SL_TP": 33978,
+          "rate_DISAGREE_SL_TP": 0.6878137651821863
+        },
+        "early_vs_not_delta": 0.23915524708379177,
+        "tmae_dist_marginal": [
+          {
+            "bucket": "tmae_le_5",
+            "label": "T_MAE <= 5",
+            "n": 12392,
+            "n_DISAGREE_SL_TP": 11487,
+            "rate_DISAGREE_SL_TP": 0.926969012265978,
+            "n_AGREE": 12,
+            "rate_AGREE": 0.0009683666881859264
+          },
+          {
+            "bucket": "tmae_6_20",
+            "label": "T_MAE 6-20",
+            "n": 8070,
+            "n_DISAGREE_SL_TP": 6351,
+            "rate_DISAGREE_SL_TP": 0.7869888475836431,
+            "n_AGREE": 991,
+            "rate_AGREE": 0.12280049566294919
+          },
+          {
+            "bucket": "tmae_21_40",
+            "label": "T_MAE 21-40",
+            "n": 8141,
+            "n_DISAGREE_SL_TP": 4788,
+            "rate_DISAGREE_SL_TP": 0.588134135855546,
+            "n_AGREE": 3042,
+            "rate_AGREE": 0.3736641690210048
+          },
+          {
+            "bucket": "tmae_41_70",
+            "label": "T_MAE 41-70",
+            "n": 13197,
+            "n_DISAGREE_SL_TP": 9010,
+            "rate_DISAGREE_SL_TP": 0.6827309236947792,
+            "n_AGREE": 3099,
+            "rate_AGREE": 0.23482609684019096
+          },
+          {
+            "bucket": "tmae_gt_70",
+            "label": "T_MAE >70",
+            "n": 19992,
+            "n_DISAGREE_SL_TP": 13829,
+            "rate_DISAGREE_SL_TP": 0.6917266906762705,
+            "n_AGREE": 4157,
+            "rate_AGREE": 0.20793317326930771
+          },
+          {
+            "bucket": "tmae_missing",
+            "label": "T_MAE missing/non-finite",
+            "n": 170,
+            "n_DISAGREE_SL_TP": 164,
+            "rate_DISAGREE_SL_TP": 0.9647058823529412,
+            "n_AGREE": 0,
+            "rate_AGREE": 0.0
+          }
+        ],
+        "tmae_short_marginal": [
+          {
+            "bucket": "tmae_le_2",
+            "label": "T_MAE <= 2",
+            "n": 7873,
+            "n_DISAGREE_SL_TP": 7361,
+            "rate_DISAGREE_SL_TP": 0.934967610821796,
+            "n_AGREE": 4,
+            "rate_AGREE": 0.0005080655404547187
+          },
+          {
+            "bucket": "tmae_3_5",
+            "label": "T_MAE 3-5",
+            "n": 4519,
+            "n_DISAGREE_SL_TP": 4126,
+            "rate_DISAGREE_SL_TP": 0.9130338570480194,
+            "n_AGREE": 8,
+            "rate_AGREE": 0.0017703031644169065
+          },
+          {
+            "bucket": "tmae_6_10",
+            "label": "T_MAE 6-10",
+            "n": 3951,
+            "n_DISAGREE_SL_TP": 3548,
+            "rate_DISAGREE_SL_TP": 0.8980005062009618,
+            "n_AGREE": 12,
+            "rate_AGREE": 0.0030372057706909645
+          },
+          {
+            "bucket": "tmae_gt_10",
+            "label": "T_MAE >10",
+            "n": 45449,
+            "n_DISAGREE_SL_TP": 30430,
+            "rate_DISAGREE_SL_TP": 0.6695416840854584,
+            "n_AGREE": 11277,
+            "rate_AGREE": 0.24812427116108166
+          },
+          {
+            "bucket": "tmae_missing",
+            "label": "T_MAE missing/non-finite",
+            "n": 170,
+            "n_DISAGREE_SL_TP": 164,
+            "rate_DISAGREE_SL_TP": 0.9647058823529412,
+            "n_AGREE": 0,
+            "rate_AGREE": 0.0
+          }
+        ],
+        "tmae_dist_rate_span_n_ge_100": 0.3388348764104321
+      }
+    },
+    "summary": {
+      "unconditional_early_mae_rate": {
+        "n": 82405,
+        "n_DISAGREE_SL_TP": 45523,
+        "rate_DISAGREE_SL_TP": 0.552430070990838
+      },
+      "unconditional_not_early_mae_rate": {
+        "n": 475130,
+        "n_DISAGREE_SL_TP": 128985,
+        "rate_DISAGREE_SL_TP": 0.271473070528066
+      },
+      "unconditional_early_vs_not_delta": 0.28095700046277194,
+      "within_peak_early_vs_not_deltas": {
+        "peak_le_2": 0.08033274285666087,
+        "peak_3_5": 0.4678759341805004,
+        "peak_6_10": 0.41594180623411636,
+        "peak_gt_10": 0.23915524708379177
+      },
+      "mean_abs_within_peak_delta": 0.30082643258876735,
+      "max_abs_within_peak_delta": 0.4678759341805004,
+      "mean_within_peak_dist_span": 0.3963553892072694,
+      "peak_marginal_rate_span_L003D": 0.6487
+    }
+  },
+  "falsification_assessment": {
+    "hypothesis_under_test": "Trailing-interaction candidate predicts DISAGREE_SL_TP enrichment for early adverse timing (low T_MAE) combined with late peak (high bars_to_peak_within_trade)",
+    "measured_quantity": "T_MAE = time_to_bottom_path (bars until deepest adverse over PEAK_HORIZON~96); PROXY only — NOT FAE-to-stop",
+    "predictions": [
+      "DISAGREE_SL_TP has earlier T_MAE than AGREE",
+      "Early T_MAE buckets show elevated DISAGREE_SL_TP rate (esp. after conditioning on peak)",
+      "Sequence pattern early_mae + late_peak enriched in DISAGREE vs AGREE"
+    ],
+    "observations": {
+      "DISAGREE_SL_TP_T_MAE_median": 40.0,
+      "AGREE_T_MAE_median": 45.0,
+      "median_delta_DISAGREE_minus_AGREE": -5.0,
+      "rate_T_MAE_le_5": 0.552430070990838,
+      "rates_late_T_MAE_41plus": [
+        0.28678723836618575,
+        0.30439612384779013
+      ],
+      "early_mae_AND_late_peak_rate": 0.926969012265978,
+      "baseline_DISAGREE_SL_TP_rate": 0.31525739234825856,
+      "share_early_in_DISAGREE": 0.2579630647528489,
+      "share_early_in_AGREE": 0.09460347879320212,
+      "share_early_late_in_DISAGREE": 0.06582506246131982,
+      "share_early_late_in_AGREE": 3.340292275574113e-05,
+      "unconditional_early_vs_not_delta": 0.28095700046277194,
+      "within_peak_deltas": {
+        "peak_le_2": 0.08033274285666087,
+        "peak_3_5": 0.4678759341805004,
+        "peak_6_10": 0.41594180623411636,
+        "peak_gt_10": 0.23915524708379177
+      },
+      "mean_abs_within_peak_delta": 0.30082643258876735
+    },
+    "binary_checks": {
+      "disagree_earlier_T_MAE": true,
+      "early_bucket_elevated_vs_late": true,
+      "early_late_elevated_vs_baseline": true,
+      "early_late_enriched_in_disagree": true,
+      "tmae_separates_within_peak": true
+    },
+    "support_count": 5,
+    "support_of": 5,
+    "evidence_lean": "leans SUPPORT early-adverse enrichment on T_MAE proxy (still not causal; not FAE)"
+  },
+  "promotion_flags": {
+    "economic_claims_allowed": false,
+    "attribution_unblocked": false,
+    "l003_frozen": false,
+    "registry_column_added": false,
+    "registry_edits": false,
+    "chronological_holdout_used": false
+  },
+  "explicit_non_claims": [
+    "T_MAE is NOT first-adverse-to-stop (FAE); candle replay out of scope",
+    "No causal proof or disproof of trailing-stop",
+    "No CRT/HTF",
+    "No edge / attribution unlock",
+    "No registry promotion",
+    "Descriptive measurement only"
+  ],
+  "terminology_parity": {
+    "version": "L-003-TERM.v1",
+    "run_id": "l003_terminology_parity_20260907_182845",
+    "generated_at_utc": "2026-09-07T18:28:45.866Z",
+    "git_commit_sha": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+    "pass_type": "documentation_terminology_parity_only",
+    "no_new_measurements": true,
+    "canonical_terms": {
+      "scanner_outcome": {
+        "emitter": "opportunity_scanner._simulate",
+        "labels": [
+          "SL_HIT",
+          "TP_HIT",
+          "TIMEOUT"
+        ],
+        "csv_column": "art_outcome",
+        "former_aliases": [
+          "art_outcome",
+          "detection outcome",
+          "DETECTION_STREAM.outcome"
+        ]
+      },
+      "oracle_outcome": {
+        "emitter": "forward_walk(intrabar_fixed)",
+        "labels": [
+          "SL_HIT",
+          "TP_HIT",
+          "TIMEOUT"
+        ],
+        "csv_column": "outcome",
+        "former_aliases": [
+          "outcome",
+          "governing outcome",
+          "GOVERNING_ORACLE.outcome"
+        ]
+      },
+      "live_outcome": {
+        "emitter": "ingest_live_outcomes",
+        "labels": [
+          "WIN",
+          "LOSS",
+          "BREAKEVEN"
+        ],
+        "former_aliases": [
+          "LIVE_INGEST_TWIN outcome"
+        ]
+      },
+      "attribution_target": {
+        "meaning": "trade edge realization (implicit eligibility target; not a scanner/oracle terminal label)"
+      },
+      "LABEL_MATCH": {
+        "formula": "scanner_outcome == oracle_outcome",
+        "meaning": "terminal label equality only; NOT semantic/process agreement",
+        "historical_synonym": "AGREE"
+      },
+      "LABEL_MISMATCH": {
+        "formula": "scanner_outcome != oracle_outcome",
+        "historical_synonym": "DISAGREE"
+      },
+      "LABEL_MISMATCH_SL_TP": {
+        "formula": "scanner_outcome==SL_HIT AND oracle_outcome==TP_HIT",
+        "historical_synonym": "DISAGREE_SL_TP",
+        "primary_mismatch_class": true
+      },
+      "path_geometry_or_path_shape_metrics": {
+        "measured_set": [
+          "time_to_peak / bars_to_peak_within_trade",
+          "MFE / mfe_r",
+          "T_MAE / time_to_bottom_path"
+        ],
+        "note": "Prefer 'path geometry' / 'path-shape metrics' for the measured set; 'path mechanics' retained as finding-id narrative only"
+      },
+      "T_MAE": {
+        "formula": "time_to_bottom_path = timing of deepest adverse on PEAK_HORIZON path",
+        "not": [
+          "magnitude+timing composite",
+          "first stop-threat",
+          "true FAE-to-stop"
+        ],
+        "preferred_prose": "early MAE timing / early-path minimum"
+      },
+      "trailing_stop_hypothesis": {
+        "claim_class": "hypothesis_only_unmeasured",
+        "labels": [
+          "path-mechanics hypothesis",
+          "trailing-stop hypothesis (unmeasured)"
+        ],
+        "unmeasured": [
+          "trail activation",
+          "trail move",
+          "trail exit",
+          "trail touch"
+        ]
+      },
+      "early_stop_inference": {
+        "claim_class": "INFERENCE_not_observation",
+        "observation_is_only": "terminal label pair (scanner_outcome, oracle_outcome)",
+        "would_require": "detector_exit_ts < oracle_tp_ts (unmeasured)"
+      }
+    },
+    "attribution_blockers": {
+      "ATTRIBUTION_BLOCKER_IDENTITY": "12 opportunities.produced_by UNKNOWN (L-001)",
+      "ATTRIBUTION_BLOCKER_OUTCOME_SEMANTICS": "scanner_outcome ≠ oracle_outcome as RVs (L-003B HOMONYM)"
+    },
+    "machine_key_policy": "Existing JSON keys AGREE / DISAGREE / DISAGREE_SL_TP / art_outcome / outcome retained for prior run_id reproducibility; see label_vocabulary aliases."
+  },
+  "label_vocabulary": {
+    "canonical": {
+      "LABEL_MATCH": "scanner_outcome == oracle_outcome (terminal equality only)",
+      "LABEL_MISMATCH": "scanner_outcome != oracle_outcome",
+      "LABEL_MISMATCH_SL_TP": "scanner SL_HIT × oracle TP_HIT",
+      "scanner_outcome": "art_outcome / opportunities outcome field",
+      "oracle_outcome": "anatomy column outcome (forward_walk)",
+      "live_outcome": "WIN/LOSS/BREAKEVEN"
+    },
+    "historical_machine_keys_retained": true,
+    "historical_synonyms": {
+      "AGREE": "LABEL_MATCH",
+      "DISAGREE": "LABEL_MISMATCH",
+      "DISAGREE_SL_TP": "LABEL_MISMATCH_SL_TP",
+      "DISAGREE_OTHER": "LABEL_MISMATCH_OTHER",
+      "art_outcome": "scanner_outcome",
+      "outcome (anatomy)": "oracle_outcome"
+    },
+    "note": "Machine keys AGREE/DISAGREE/... kept for prior run_id reproducibility; prose uses canonical terms."
+  }
+}

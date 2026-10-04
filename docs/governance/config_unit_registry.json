@@ -1,0 +1,76 @@
+{
+  "schema": "config_unit_registry.v1",
+  "purpose": "Declares the UNIT and consumer of every semantically loaded scalar in the ACTIVE production config, so `_pct` (percent vs fraction), money and capital keys cannot be read in the wrong unit silently. Floor: tests/governance/test_config_semantic_invariants.py. Observation-only: this registry never changes a config value.",
+  "created": "2026-10-01",
+  "units": {
+    "percent": "value in percent points; 0.5 == 0.5%. Normalised /100 for cross-key comparison. Range [0, 100].",
+    "fraction": "value in [0, 1]; 0.005 == 0.5%. Range [0, 1].",
+    "inr": "Indian rupees (deposit currency, portfolio.currency). Must be >= 0.",
+    "money_unspecified": "money amount whose currency is not declared at the key or its consumer. Must be >= 0.",
+    "rate": "conversion rate (e.g. INR per USD). Must be > 0.",
+    "UNVERIFIED": "unit not established from a consumer; excluded from range/agreement checks. Count is a shrink-only ratchet."
+  },
+  "statuses": {
+    "LIVE": "read by src/ on a runtime, backtest, governance or goal path (consumer cited)",
+    "SHADOW": "read only by src/ sidecar systems (strategies/, uat/) — F-012 class",
+    "TOOLING": "read only by scripts/",
+    "DEAD": "no consumer found. NOTE: config_reachability matches by leaf token, so a same-named key in another section can mark a DEAD key READ_AND_USED (e.g. capital_management.max_risk_per_trade_pct vs ultron_risk_gate's)"
+  },
+  "completeness_pattern": "(_pct|percent(?!ile)|_inr|capital|balance)",
+  "keys": [
+    {"path": "execution_planner.risk_percent", "unit": "percent", "status": "LIVE", "concept": "risk_per_trade", "consumer": "src/runtime/live_engine_hook.py:1195 (balance * risk_percent / 100); src/research/model_runners/adapters/execution_plan.py:316"},
+    {"path": "execution_planner.default_account_balance", "unit": "money_unspecified", "status": "LIVE", "concept": "capital", "consumer": "src/research/model_runners/adapters/execution_plan.py:126; src/agent/modes/pipeline_mode.py:253"},
+    {"path": "ultron_risk_gate.max_risk_per_trade_pct", "unit": "percent", "status": "LIVE", "concept": "risk_per_trade_cap", "consumer": "src/core/ultron_risk_gate.py:366 (min(risk_percent, cap))"},
+    {"path": "ultron_risk_gate.max_portfolio_risk_pct", "unit": "percent", "status": "LIVE", "concept": "portfolio_risk_cap", "consumer": "src/core/ultron_risk_gate.py:370"},
+    {"path": "ultron_risk_gate.max_daily_loss_pct", "unit": "percent", "status": "LIVE", "concept": "daily_loss_limit", "consumer": "src/core/ultron_risk_gate.py:345 (logged as %)"},
+    {"path": "crt_engine.max_spread_pct", "unit": "fraction", "status": "LIVE", "concept": "spread_cap", "consumer": "src/config_layer/crt_engine_v2.py:2252 vs (ask-bid)/mid at :2081"},
+    {"path": "crt_engine.retrace_reset_pct", "unit": "fraction", "status": "LIVE", "concept": "retrace_reset", "consumer": "src/config_layer/setup.py:153 (validated in (0, 1])"},
+    {"path": "portfolio.initial_capital", "unit": "inr", "status": "LIVE", "concept": "capital", "consumer": "src/governance/portfolio_validation.py:42"},
+    {"path": "portfolio.risk_pct", "unit": "fraction", "status": "LIVE", "concept": "risk_per_trade", "consumer": "src/governance/portfolio_validation.py:44 -> risk_pct_per_trade (:341) -> CapitalCurve"},
+    {"path": "portfolio.per_trade_investment_inr", "unit": "inr", "status": "TOOLING", "concept": "per_trade_investment", "consumer": "scripts/research/setup_grid_s4.py"},
+    {"path": "config_validator.max_drawdown_pct", "unit": "fraction", "status": "LIVE", "concept": "drawdown_gate", "consumer": "src/config_layer/config_validator.py:81 (dd_norm = 1 - max_drawdown_pct at :137)"},
+    {"path": "backtest.simulated_spread_pct", "unit": "fraction", "status": "LIVE", "concept": "simulated_spread", "consumer": "src/runtime/backtest_v2.py:3697 (close * pct / 2)"},
+    {"path": "backtest.initial_capital", "unit": "inr", "status": "LIVE", "concept": "capital", "consumer": "src/runtime/backtest_v2.py:454 -> CapitalCurve"},
+    {"path": "backtest.risk_pct_per_trade", "unit": "fraction", "status": "LIVE", "concept": "risk_per_trade", "consumer": "src/runtime/backtest_v2.py:700 (base * risk_pct)"},
+    {"path": "backtest.per_trade_investment_inr", "unit": "inr", "status": "TOOLING", "concept": "per_trade_investment", "consumer": "scripts/research/setup_grid_s4.py"},
+    {"path": "inout.exit.high_atr_pct_skip", "unit": "UNVERIFIED", "status": "TOOLING", "concept": "inout_exit", "consumer": "scripts only (config_reachability)"},
+    {"path": "inout.risk.max_total_exposure_pct", "unit": "UNVERIFIED", "status": "TOOLING", "concept": "inout_risk", "consumer": "scripts only (config_reachability)"},
+    {"path": "inout.risk.risk_per_trade_pct", "unit": "UNVERIFIED", "status": "TOOLING", "concept": "inout_risk", "consumer": "scripts only; the last src consumer is archived (archive/inout_legacy/ARCHIVED_2026_05_02/controller.py:319)"},
+    {"path": "capital_management.total_capital_inr", "unit": "inr", "status": "SHADOW", "concept": "capital", "consumer": "src/strategies/base_strategy.py:61"},
+    {"path": "capital_management.max_risk_per_trade_pct", "unit": "UNVERIFIED", "status": "DEAD", "concept": "risk_per_trade_cap", "consumer": "none in src/ (homonym of ultron_risk_gate.max_risk_per_trade_pct). Value 0.25 == max_risk_per_trade_inr/total_capital_inr implies fraction — inferred, not read"},
+    {"path": "capital_management.max_risk_per_trade_inr", "unit": "inr", "status": "SHADOW", "concept": "risk_per_trade_cap_money", "consumer": "src/strategies/base_strategy.py:62"},
+    {"path": "capital_management.max_monthly_drawdown_pct", "unit": "UNVERIFIED", "status": "DEAD", "concept": "drawdown_limit", "consumer": "none (config_reachability READ_BUT_INERT, no evidence)"},
+    {"path": "capital_management.max_monthly_drawdown_inr", "unit": "inr", "status": "DEAD", "concept": "drawdown_limit", "consumer": "none (config_reachability READ_BUT_INERT, no evidence)"},
+    {"path": "capital_management.monthly_drawdown_warn_inr", "unit": "inr", "status": "DEAD", "concept": "drawdown_limit", "consumer": "none (config_reachability READ_BUT_INERT, no evidence)"},
+    {"path": "capital_management.kill_switch_daily_loss_inr", "unit": "inr", "status": "DEAD", "concept": "daily_loss_limit", "consumer": "none (config_reachability READ_BUT_INERT, no evidence)"},
+    {"path": "capital_management.usd_to_inr_rate", "unit": "rate", "status": "LIVE", "concept": "fx_rate", "consumer": "src/core/position_sizing.py; src/runtime/backtest_v2.py:3301"},
+    {"path": "capital_management.per_trade_investment_inr", "unit": "inr", "status": "TOOLING", "concept": "per_trade_investment", "consumer": "scripts/research/setup_grid_s4.py"},
+    {"path": "capital_management.per_trade_investment_pct", "unit": "UNVERIFIED", "status": "DEAD", "concept": "per_trade_investment", "consumer": "none (config_reachability READ_BUT_INERT, no evidence)"},
+    {"path": "strategy_engine.s02_mean_reversion.bb_proximity_pct", "unit": "UNVERIFIED", "status": "SHADOW", "concept": "strategy_param", "consumer": "src/strategies/s02_mean_reversion.py"},
+    {"path": "strategy_engine.s06_scalping.max_spread_pct", "unit": "UNVERIFIED", "status": "SHADOW", "concept": "strategy_param", "consumer": "src/strategies/s06_scalping.py:110"},
+    {"path": "strategy_engine.s07_news_sentiment.max_spread_pct", "unit": "UNVERIFIED", "status": "SHADOW", "concept": "strategy_param", "consumer": "src/strategies/s07_news_sentiment.py:102"},
+    {"path": "dataset_integrity.max_missing_pct", "unit": "fraction", "status": "LIVE", "concept": "data_gate", "consumer": "src/data_ingestion/dataset_integrity.py:651 (formatted :.2%)"},
+    {"path": "dataset_integrity.strict_fetch.max_missing_pct", "unit": "fraction", "status": "TOOLING", "concept": "data_gate", "consumer": "scripts/analysis/xauusd_strict_reject_forensic.py"},
+    {"path": "uat.kill_switch.daily_loss_limit_inr", "unit": "inr", "status": "SHADOW", "concept": "daily_loss_limit", "consumer": "src/uat/kill_switch.py:96"},
+    {"path": "uat.kill_switch.weekly_loss_limit_inr", "unit": "inr", "status": "SHADOW", "concept": "weekly_loss_limit", "consumer": "src/uat/kill_switch.py"},
+    {"path": "uat.monte_carlo.initial_capital_inr", "unit": "inr", "status": "SHADOW", "concept": "capital", "consumer": "src/uat/monte_carlo.py"},
+    {"path": "uat.monte_carlo.ruin_threshold_pct", "unit": "fraction", "status": "SHADOW", "concept": "ruin_threshold", "consumer": "src/uat/monte_carlo.py:138 (capital * (1 - pct))"},
+    {"path": "goal.risk_per_trade.target", "unit": "fraction", "status": "LIVE", "concept": "risk_per_trade_goal", "consumer": "src/config_layer/goal_schema.py:128 (advisory; goal.enforce=false)"},
+    {"path": "goal.max_drawdown_pct.max", "unit": "fraction", "status": "LIVE", "concept": "drawdown_goal", "consumer": "src/config_layer/goal_schema.py:127 vs metrics max_drawdown_pct (peak-to-trough fraction)"},
+    {"path": "multi_strategy_validator.max_portfolio_drawdown", "unit": "inr", "status": "LIVE", "concept": "drawdown_limit", "consumer": "src/governance/multi_strategy_validator.py:99"}
+  ],
+  "capital_reference": "backtest.initial_capital",
+  "resolved_divergences": [
+    {"id": "RISK-01", "resolved": "2026-10-01", "finding": "F-111", "was": "AGREE:risk_per_trade:0.005|0.01", "resolution": "User decision: 1% backtest risk is deliberate; live execution_planner.risk_percent 0.5 -> 1.0 (percent) so live and backtest both size at 1%."},
+    {"id": "DD-01", "resolved": "2026-10-01", "finding": "F-111", "was": "SCALE:multi_strategy_validator.max_portfolio_drawdown:75000000>100000", "resolution": "User decision: scale mistake; intended 75,000 INR. Config 75000000.0 -> 75000.0 and the code default _MAX_PORTFOLIO_DRAWDOWN in src/governance/multi_strategy_validator.py aligned."}
+  ],
+  "known_divergences": [
+    {"id": "CAP-01", "violation": "AGREE:capital:10000|100000", "reason": "execution_planner.default_account_balance=10000 (currency undeclared) vs 100000 INR everywhere else (backtest/portfolio). Already called 'two unreconciled capital truths' in the ultron_risk_gate config comment.", "verdict": "USER AUTHORIZATION REQUIRED"},
+    {"id": "PIP-01", "violation": "PIP:fx_pip_size_on_non_fx_instruments", "reason": "ultron_risk_gate.pip_size=0.0001 (FX convention) while instrument_specs declares only XAUUSD (MT5-measured point 0.01). Dormant: every pip_size consumer (spread_pips/slippage_pips/min_sl_pips) is 0. The floor fails HARD if any becomes > 0 while this divergence stands.", "verdict": "DORMANT BUT VALID"}
+  ],
+  "out_of_scope_notes": [
+    "backtest.warmup_candles=78 vs feature_pipeline 200-bar windows — ALREADY GUARDED by tests/test_feature_warmup_coupling.py (T-16): the 78 is derived (required_warmup_rows) from the windows that NaN the canonical vector, bound to the measured finalize() drop, and warmup_candles must be >= it. The 200-bar windows do not set the drop count; the config comment's 79-vs-78 is the first-valid-index vs dropped-count off-by-one that floor documents.",
+    "engine_runner.ultron_gate_enabled vs ultron_risk_gate.disabled — INTENTIONAL SEMANTIC SEPARATION: the former gates RegimeGovernor (src/core/engine_runner.py:485).",
+    "Session names/windows, instrument universes, Groq model names, goal H1 vs parent_crt H4 — naming/stale-declaration hazards, not encoded as rules."
+  ]
+}

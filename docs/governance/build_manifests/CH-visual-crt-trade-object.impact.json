@@ -1,0 +1,38 @@
+{
+  "change_id": "CH-visual-crt-trade-object",
+  "date_utc": "2026-08-17",
+  "objective": "Lane 1 (semantic certification) of P-CRT-LANE-02: define and freeze the Visual CRT trade object (SEM-012) BEFORE any outcome is computed. Pool-founded sweep + F-074 directional displacement, as pure research geometry. No ledger, no corpus run, no economic claim.",
+  "change_classes": [
+    "RESEARCH_ONLY"
+  ],
+  "change_class_rationale": "New package under src/research/ with no runtime import of the live spine (AST-enforced), plus a spec doc, an ontology node, and a floor test. No src/config_layer, src/runtime, src/core, models, or configs/production edit. P-CRT-LIQ-01 is untouched: this is a research interpreter, not a second CRT liquidity object.",
+  "affected_files": [
+    "src/research/visual_crt/__init__.py",
+    "src/research/visual_crt/pools.py",
+    "src/research/visual_crt/geometry.py",
+    "docs/research/visual_crt_trade_object.md",
+    "configs/formulas/market_ontology.yaml",
+    "docs/governance/semantic_os/concepts.yaml",
+    "tests/research/test_visual_crt_trade_object.py",
+    "docs/governance/build_manifests/CH-visual-crt-trade-object.impact.json",
+    ".grok/PENDING.md",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [
+    "SEM-012"
+  ],
+  "required_checks_ack": [
+    "tests/research/test_visual_crt_trade_object.py",
+    "tests/test_semantic_registry.py",
+    "tests/test_semantic_os.py",
+    "tests/test_semantic_grounding.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Delete src/research/visual_crt/, docs/research/visual_crt_trade_object.md, the test, and this manifest; revert the SEM-012 ontology node and the CN-011 ontology_ids entry.",
+  "authority_granted": "User 2026-08-17: work the three lanes in order (semantic accuracy -> measurement/evidence -> economic improvement) and answer the TradingView profitable-trade question. Trade object = visual CRT setup; corpus = full 2-year XAUUSD. Lane 1 only in this change.",
+  "authority_NOT_granted": "No promotion, no gate flip, no G001, no ACTIVE_VERSION change, no claim that this construction is the correct or institutional reading of CRT, and no economic result of any kind.",
+  "production_behavior_changed": "NO"
+}

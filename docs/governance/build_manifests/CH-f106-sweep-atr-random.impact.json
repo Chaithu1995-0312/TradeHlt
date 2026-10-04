@@ -1,0 +1,30 @@
+{
+  "change_id": "CH-f106-sweep-atr-random",
+  "date_utc": "2026-09-15",
+  "objective": "Register F-106 after random-control independence PASS: M15 engine SWEEP occupancy at ATR 1:2 is indistinguishable from random entry. Documentation only.",
+  "change_classes": ["DOCUMENTATION_ONLY"],
+  "change_class_rationale": "Finding + analysis note + CLAUDE.md index row. No src/config behavior change.",
+  "affected_files": [
+    "docs/current-findings.md",
+    "CLAUDE.md",
+    "docs/analysis/sweep-conditional-three-arm-2026-09-15.md",
+    "docs/analysis/feature-state-census-2026-09-16.md",
+    "docs/analysis/README.md",
+    "docs/topics/feature-schema.md",
+    "docs/governance/build_manifests/CH-f106-sweep-atr-random.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py"
+  ],
+  "unknowns": [],
+  "problem_addressed": {
+    "summary": "User-directed register of SWEEP-conditional ATR 1:2 vs random, after independence check on TP-hit sets."
+  }
+}

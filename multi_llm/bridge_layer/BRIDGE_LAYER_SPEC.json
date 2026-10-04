@@ -1,0 +1,739 @@
+{
+  "title": "Tradelatest Bridge Layer Specification",
+  "generated_at_ist": "2026-09-24 01:18 IST",
+  "authority": "repository-only; fail-closed",
+  "schema_version_features": "6.0",
+  "canonical_feature_dim": 48,
+  "ontology_chain": {
+    "order": [
+      "OHLCV ingestion",
+      "Feature Ontology",
+      "State Ontology",
+      "Decision Ontology",
+      "Measurement Ontology"
+    ],
+    "layers": [
+      {
+        "layer": "OHLCV ingestion",
+        "owns": [
+          "src/data_ingestion/ohlcv_schema.py",
+          "src/data_ingestion/corpus_store.py",
+          "src/data_ingestion/corpus_gate.py"
+        ],
+        "layer_dependency_graph_node": "data_ingestion"
+      },
+      {
+        "layer": "Feature Ontology",
+        "owns": [
+          "src/features/feature_schema.py",
+          "src/features/feature_pipeline.py",
+          "userinvestigation/CANONICAL_FEATURES.html",
+          "src/features/smc/*"
+        ],
+        "layer_dependency_graph_node": "features"
+      },
+      {
+        "layer": "State Ontology",
+        "owns": [
+          "src/features/crt_state_resolver.py",
+          "src/config_layer/crt_engine_v2.py",
+          "src/config_layer/state_identity.py",
+          "configs/formulas/market_crt_states.yaml",
+          "src/config_layer/parent_crt.py"
+        ],
+        "layer_dependency_graph_node": "config_layer"
+      },
+      {
+        "layer": "Decision Ontology",
+        "owns": [
+          "active_models.yaml",
+          "src/core/decision_engine.py",
+          "src/core/engine_runner.py",
+          "src/core/gate_intelligence.py",
+          "src/engines/*"
+        ],
+        "layer_dependency_graph_node": "core / engines"
+      },
+      {
+        "layer": "Measurement Ontology",
+        "owns": [
+          "multi_llm/parameter_usage_audit/MC-OPP-DETECT-01.json",
+          "multi_llm/parameter_usage_audit/MC-JOINT-01.json",
+          "src/research/measurement/trade_lifecycle_engine.py",
+          "src/research/measurement/forward_walk.py"
+        ],
+        "layer_dependency_graph_node": "research"
+      }
+    ],
+    "layer_dependency_graph_citation": "multi_llm/layer_dependency_graph.jsonl",
+    "story_dependency_graph_citation": "multi_llm/story_dependency_graph.jsonl"
+  },
+  "concepts": [
+    {
+      "name": "OHLCV",
+      "status": "BOUND",
+      "observable_definition": "Mandatory broker bar contract: columns {timestamp, open, high, low, close, volume}. Presence, integrity, and reviewed clock provenance enforced before feature work (data_ingestion.ohlcv_schema.REQUIRED_OHLCV_COLUMNS / require_ohlcv_columns / validate_ohlcv_frame).",
+      "feature_representation": {
+        "canonical_indices": {
+          "open": 0,
+          "high": 1,
+          "low": 2,
+          "close": 3,
+          "volume": 4
+        },
+        "schema_version": "6.0",
+        "dim": 48
+      },
+      "state_representation": "None as CRT enum; raw bar is pre-state. CRTEngine.process_candle consumes Candle from OHLCV.",
+      "authority_module": {
+        "path": "src/data_ingestion/ohlcv_schema.py",
+        "symbols": [
+          "REQUIRED_OHLCV_COLUMNS",
+          "require_ohlcv_columns",
+          "validate_ohlcv_frame"
+        ]
+      },
+      "storage_representation": [
+        "Admitted corpus via data_ingestion.corpus_store (Parquet read-cache over broker OHLCV)",
+        "MC-OPP-DETECT-01 dataset_identity.{csv_sha256, dataset_id} stamps opportunity rows"
+      ],
+      "evidence_artifact": [
+        "src/data_ingestion/ohlcv_schema.py",
+        "docs/architecture/module-roles.generated.md",
+        "multi_llm/parameter_usage_audit/MC-OPP-DETECT-01.json"
+      ],
+      "observability": "OBSERVABLE",
+      "citations": [
+        "src/data_ingestion/ohlcv_schema.py",
+        "src/features/feature_schema.py",
+        "docs/architecture/code-map.generated.md"
+      ],
+      "missing_fields": [],
+      "notes": ""
+    },
+    {
+      "name": "range",
+      "status": "BOUND",
+      "observable_definition": "Three repo bindings kept separate: (1) CRT ground state RANGE (configs/formulas/market_crt_states.yaml + CRTState.RANGE); (2) M15 structural liquidity range / active_range — h_ref=max(high), l_ref=min(low) over child window (config_layer.m15_structural_range.from_child_window / RangeDetector.detect_m15_structural_range); (3) vector feature candle_range = high-low (CANONICAL index 28). Parent reference candle state is RANGE_C1 (disjoint sub-graph).",
+      "feature_representation": {
+        "candle_range": {
+          "index": 28,
+          "formula": "high - low"
+        }
+      },
+      "state_representation": {
+        "execution": "RANGE",
+        "parent": "RANGE_C1",
+        "engine_object": "M15StructuralLiquidityRange {h_ref, l_ref, equilibrium, clock_id}"
+      },
+      "authority_module": {
+        "path": "src/config_layer/crt_engine_v2.py",
+        "symbols": [
+          "RangeDetector.detect_m15_structural_range",
+          "RangeDetector.detect_htf_range"
+        ],
+        "also": [
+          "src/config_layer/m15_structural_range.py::from_child_window",
+          "src/features/crt_state_resolver.py",
+          "src/config_layer/parent_crt.py::ParentCRTTrack._become_c1"
+        ]
+      },
+      "storage_representation": [
+        "Feature column candle_range in pipeline / clean_labels vectors",
+        "Engine active_range fields; results/layer_trace/*_layer_trace.jsonl joins"
+      ],
+      "evidence_artifact": [
+        "src/config_layer/m15_structural_range.py",
+        "configs/formulas/market_crt_states.yaml",
+        "src/features/feature_schema.py",
+        "active_models.yaml"
+      ],
+      "observability": "MIXED: candle_range=OBSERVABLE; structural active_range and CRT RANGE=DERIVED",
+      "citations": [
+        "src/config_layer/crt_engine_v2.py::RangeDetector",
+        "src/config_layer/m15_structural_range.py",
+        "src/features/feature_schema.py",
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "missing_fields": [],
+      "notes": ""
+    },
+    {
+      "name": "liquidity",
+      "status": "BOUND",
+      "observable_definition": "Resting reference levels/pools via distance and pressure, plus the M15 structural liquidity range used as the CRT sweep envelope. Features: liquidity_distance (ATR-normalised distance to nearest liquidity level), liquidity_pressure_score ([0,1]). EQH/EQL/PDH/PDL are resting-liquidity levels. No standalone boolean feature named only liquidity.",
+      "feature_representation": {
+        "liquidity_distance": {
+          "index": 36
+        },
+        "liquidity_pressure_score": {
+          "index": 37
+        },
+        "liquidity_sweep": {
+          "index": 21,
+          "role": "event on liquidity levels"
+        },
+        "related_levels": [
+          "eqh_distance",
+          "eql_distance",
+          "pdh_distance",
+          "pdl_distance"
+        ]
+      },
+      "state_representation": "No CRT enum LIQUIDITY. Envelope: M15_STRUCTURAL_LIQUIDITY_RANGE (SEM-011).",
+      "authority_module": {
+        "path": "src/features/feature_pipeline.py",
+        "symbols": [
+          "FeaturePipeline.compute_structure_liquidity",
+          "FeaturePipeline.compute_liquidity_distance"
+        ],
+        "also": [
+          "src/config_layer/m15_structural_range.py",
+          "src/features/smc/levels.py"
+        ]
+      },
+      "storage_representation": [
+        "Canonical vector slots 36-37",
+        "clean_labels / opportunities features.* (MC-OPP-DETECT-01 may_drift_prefixes)"
+      ],
+      "evidence_artifact": [
+        "src/features/feature_schema.py",
+        "userinvestigation/CANONICAL_FEATURES.html",
+        "docs/architecture/module-roles.generated.md"
+      ],
+      "observability": "DERIVED",
+      "citations": [
+        "src/features/feature_schema.py",
+        "src/features/feature_pipeline.py",
+        "src/config_layer/m15_structural_range.py"
+      ],
+      "missing_fields": [],
+      "notes": ""
+    },
+    {
+      "name": "sweep",
+      "status": "BOUND",
+      "observable_definition": "Engine: RangeDetector.detect_sweep — pierce active_range boundary then close back inside (swept_high/swept_low); founds CRTState.SWEEP via try_range_to_sweep. Features: liquidity_sweep in {+1,-1,0} from (high>ref_high & close<=ref_high)/(low<ref_low & close>=ref_low); sweep_detected=(liquidity_sweep!=0); double_sweep; candles_since_sweep. Resolver SWEEP.when may be bypassed for founding when thresholds.sweep_geometry=htf_range.",
+      "feature_representation": {
+        "sweep_detected": {
+          "index": 20
+        },
+        "liquidity_sweep": {
+          "index": 21
+        },
+        "double_sweep": {
+          "index": 6
+        },
+        "candles_since_sweep": {
+          "index": 35
+        }
+      },
+      "state_representation": {
+        "execution": "SWEEP",
+        "memory": "SHADOW_PENDING",
+        "parent_analogue": "MANIPULATION_C2"
+      },
+      "authority_module": {
+        "path": "src/config_layer/crt_engine_v2.py",
+        "symbols": [
+          "RangeDetector.detect_sweep",
+          "StateMachine.try_range_to_sweep"
+        ],
+        "also": [
+          "src/features/feature_pipeline.py::compute_structure_liquidity",
+          "src/features/crt_state_resolver.py"
+        ]
+      },
+      "storage_representation": [
+        "Feature columns sweep_detected, liquidity_sweep, double_sweep, candles_since_sweep",
+        "SweepEvent on engine state; layer_trace / CRT traces"
+      ],
+      "evidence_artifact": [
+        "src/config_layer/crt_engine_v2.py::RangeDetector.detect_sweep",
+        "configs/formulas/market_crt_states.yaml",
+        "userinvestigation/CANONICAL_FEATURES.html"
+      ],
+      "observability": "DERIVED (requires active_range or swing refs)",
+      "citations": [
+        "src/config_layer/crt_engine_v2.py",
+        "src/features/feature_pipeline.py",
+        "configs/formulas/market_crt_states.yaml",
+        "src/features/feature_schema.py"
+      ],
+      "missing_fields": [],
+      "notes": ""
+    },
+    {
+      "name": "displacement",
+      "status": "BOUND",
+      "observable_definition": "CRT funnel SWEEP->DISPLACEMENT only (try_sweep_to_displacement): ATR body size, body_ratio, candle_range gates plus directional impulse away from swept side. Feature: disp_strength = clip(body_size/(atr*close), ...) at index 33. Parent analogue impulse = DISTRIBUTION_C3.",
+      "feature_representation": {
+        "disp_strength": {
+          "index": 33
+        },
+        "supporting": [
+          "body_ratio",
+          "candle_range",
+          "atr",
+          "change_of_character"
+        ]
+      },
+      "state_representation": {
+        "execution": "DISPLACEMENT",
+        "downstream": "EXPANSION",
+        "memory_flag": "pending_displacement_active"
+      },
+      "authority_module": {
+        "path": "src/config_layer/crt_engine_v2.py",
+        "symbols": [
+          "StateMachine.try_sweep_to_displacement",
+          "StateMachine.try_displacement_to_expansion"
+        ],
+        "also": [
+          "src/features/crt_state_resolver.py",
+          "src/features/feature_pipeline.py"
+        ]
+      },
+      "storage_representation": [
+        "Feature column disp_strength",
+        "Engine displacement_candle / direction",
+        "CRT state timelines"
+      ],
+      "evidence_artifact": [
+        "configs/formulas/market_crt_states.yaml",
+        "active_models.yaml",
+        "src/features/feature_schema.py"
+      ],
+      "observability": "MIXED: disp_strength local OBSERVABLE; CRT DISPLACEMENT state DERIVED",
+      "citations": [
+        "src/config_layer/crt_engine_v2.py",
+        "src/features/crt_state_resolver.py",
+        "src/features/feature_schema.py"
+      ],
+      "missing_fields": [],
+      "notes": ""
+    },
+    {
+      "name": "FVG",
+      "status": "BOUND",
+      "observable_definition": "features.smc.fvg: 3-candle imbalance — bullish when bars[i-1].high < bars[i+1].low; bearish when bars[i-1].low > bars[i+1].high. Active = most recent unfilled zone; fvg_distance = signed ATR-normalised tanh-bounded distance to near edge (0.0 if none).",
+      "feature_representation": {
+        "fvg_distance": {
+          "index": 40
+        }
+      },
+      "state_representation": "No CRT enum. Zone object in features.smc._geometry.",
+      "authority_module": {
+        "path": "src/features/smc/fvg.py",
+        "symbols": [
+          "find_active_fvg",
+          "fvg_distance",
+          "_find_fvg_events"
+        ]
+      },
+      "storage_representation": [
+        "Canonical vector index 40",
+        "bar_structure_snapshot ZONE_FAMILIES includes fvg"
+      ],
+      "evidence_artifact": [
+        "src/features/smc/fvg.py",
+        "src/features/feature_schema.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "observability": "OBSERVABLE (OHLCV local 3-bar window)",
+      "citations": [
+        "src/features/smc/fvg.py",
+        "src/features/feature_schema.py"
+      ],
+      "missing_fields": [],
+      "notes": ""
+    },
+    {
+      "name": "order block",
+      "status": "BOUND",
+      "observable_definition": "features.smc.order_block: last opposite-color origin candle before a causal swing break (close beyond confirmed swing). Zone = origin [low, high]. Mitigated on later overlap. order_block_distance = signed ATR distance to nearest unmitigated OB near edge.",
+      "feature_representation": {
+        "order_block_distance": {
+          "index": 39
+        }
+      },
+      "state_representation": "No CRT enum. Zone + break_events shared with breaker/mitigation.",
+      "authority_module": {
+        "path": "src/features/smc/order_block.py",
+        "symbols": [
+          "find_active_order_block",
+          "order_block_distance",
+          "_find_break_events"
+        ]
+      },
+      "storage_representation": [
+        "Canonical vector index 39",
+        "ZONE_FAMILIES order_block"
+      ],
+      "evidence_artifact": [
+        "src/features/smc/order_block.py",
+        "src/features/feature_schema.py",
+        "docs/CODEBASE_SEMANTIC_NAMES.md"
+      ],
+      "observability": "DERIVED (needs confirmed swings / break events)",
+      "citations": [
+        "src/features/smc/order_block.py",
+        "src/features/feature_schema.py"
+      ],
+      "missing_fields": [],
+      "notes": ""
+    },
+    {
+      "name": "breaker",
+      "status": "BOUND",
+      "observable_definition": "features.smc.breaker: order block fully violated (later close beyond far edge) then polarity flip; active until retest/mitigation of flipped zone. breaker_distance = signed ATR distance to nearest un-retested breaker.",
+      "feature_representation": {
+        "breaker_distance": {
+          "index": 41
+        }
+      },
+      "state_representation": "No CRT enum. Flipped Zone.",
+      "authority_module": {
+        "path": "src/features/smc/breaker.py",
+        "symbols": [
+          "find_active_breaker",
+          "breaker_distance"
+        ]
+      },
+      "storage_representation": [
+        "Canonical vector index 41",
+        "ZONE_FAMILIES breaker"
+      ],
+      "evidence_artifact": [
+        "src/features/smc/breaker.py",
+        "src/features/feature_schema.py",
+        "tests/test_smc_break_event_memo.py"
+      ],
+      "observability": "DERIVED (requires prior OB violation)",
+      "citations": [
+        "src/features/smc/breaker.py",
+        "src/features/feature_schema.py"
+      ],
+      "missing_fields": [],
+      "notes": ""
+    },
+    {
+      "name": "HTF context",
+      "status": "BOUND",
+      "observable_definition": "Not a single CANONICAL feature. Composition of: (1) HTFBuilder reset CLOCK id on M15 structural range; (2) ResetLogic.should_reset on clock_id change (protects EXPANSION/RETEST); (3) ParentCandleBuilder calendar-true parents feeding ParentCRTTrack; (4) optional htf_state.HTFState posture {UNKNOWN, EXPANSION, ACCUMULATION, DISTRIBUTION, REVERSAL} — explicitly NOT CRTState. Parent bias enters CRTEngine.process_candle via parent_state only.",
+      "feature_representation": {
+        "canonical_feature_named_htf_context": null,
+        "related": [
+          "session",
+          "hour_of_day",
+          "pdh_distance",
+          "pdl_distance"
+        ]
+      },
+      "state_representation": {
+        "reset": "ResetLogic -> FORCE RANGE (except protected states)",
+        "parent_crt": [
+          "RANGE_C1",
+          "MANIPULATION_C2",
+          "DISTRIBUTION_C3"
+        ],
+        "htf_state_posture": [
+          "UNKNOWN",
+          "EXPANSION",
+          "ACCUMULATION",
+          "DISTRIBUTION",
+          "REVERSAL"
+        ]
+      },
+      "authority_module": {
+        "path": "src/config_layer/crt_engine_v2.py",
+        "symbols": [
+          "ResetLogic.should_reset"
+        ],
+        "also": [
+          "src/config_layer/parent_crt.py::ParentCRTTrack",
+          "src/features/parent_candle.py::ParentCandleBuilder",
+          "src/config_layer/htf_state.py::HTFState",
+          "src/runtime/parent_crt_feed.py"
+        ]
+      },
+      "storage_representation": [
+        "active_range.clock_id / htf_candle_id",
+        "parent_state on process_candle path",
+        "layer_trace plane joins"
+      ],
+      "evidence_artifact": [
+        "src/config_layer/crt_engine_v2.py::ResetLogic",
+        "src/config_layer/parent_crt.py",
+        "src/config_layer/htf_state.py",
+        "src/config_layer/state_identity.py",
+        "active_models.yaml"
+      ],
+      "observability": "DERIVED",
+      "citations": [
+        "src/config_layer/crt_engine_v2.py",
+        "src/config_layer/parent_crt.py",
+        "src/config_layer/htf_state.py",
+        "src/config_layer/m15_structural_range.py"
+      ],
+      "notes": "SURPRISE: htf_state.DISTRIBUTION != CRTState.DISTRIBUTION_C3 (F-077).",
+      "missing_fields": []
+    },
+    {
+      "name": "manipulation",
+      "status": "BOUND",
+      "observable_definition": "Parent-timeframe only: CRTState.MANIPULATION_C2 — C2 parent candle that sweeps C1 ParentRange boundary and closes back inside. ParentCRTTrack._detect_parent_sweep (swept_high/swept_low). Bias not set until DISTRIBUTION_C3. Execution M15 machine has no MANIPULATION state.",
+      "feature_representation": {
+        "canonical_feature": null
+      },
+      "state_representation": "MANIPULATION_C2 (PARENT_TIMEFRAME_STATES; disjoint from execution graph)",
+      "authority_module": {
+        "path": "src/config_layer/parent_crt.py",
+        "symbols": [
+          "ParentCRTTrack.on_parent_close",
+          "_detect_parent_sweep",
+          "ParentSweepEvent"
+        ]
+      },
+      "storage_representation": [
+        "ParentCRTTrack.state / sweep event",
+        "runtime.parent_crt_feed stream"
+      ],
+      "evidence_artifact": [
+        "src/config_layer/parent_crt.py",
+        "src/config_layer/state_identity.py",
+        "active_models.yaml",
+        "src/config_layer/_crt_state_generated.py"
+      ],
+      "observability": "DERIVED",
+      "citations": [
+        "src/config_layer/parent_crt.py",
+        "src/config_layer/state_identity.py",
+        "active_models.yaml"
+      ],
+      "missing_fields": [],
+      "notes": ""
+    },
+    {
+      "name": "distribution",
+      "status": "BOUND",
+      "observable_definition": "Primary: CRTState.DISTRIBUTION_C3 — C3 parent impulse away from swept side after MANIPULATION_C2 (directional_impulse). Only then ParentCRTTrack.bias becomes LONG/SHORT. Second binding: htf_state.HTFState.DISTRIBUTION — orthogonal posture (large-in-range); not DISTRIBUTION_C3.",
+      "feature_representation": {
+        "canonical_feature": null
+      },
+      "state_representation": {
+        "parent_crt": "DISTRIBUTION_C3",
+        "htf_state_posture": "HTFState.DISTRIBUTION (orthogonal)"
+      },
+      "authority_module": {
+        "path": "src/config_layer/parent_crt.py",
+        "symbols": [
+          "ParentCRTTrack._directional_impulse_confirmed"
+        ],
+        "also": [
+          "src/config_layer/htf_state.py::HTFState"
+        ]
+      },
+      "storage_representation": [
+        "ParentCRTTrack.state + bias",
+        "htf_state posture fields if enabled"
+      ],
+      "evidence_artifact": [
+        "src/config_layer/parent_crt.py",
+        "src/config_layer/htf_state.py",
+        "src/config_layer/state_identity.py",
+        "active_models.yaml"
+      ],
+      "observability": "DERIVED",
+      "citations": [
+        "src/config_layer/parent_crt.py",
+        "src/config_layer/htf_state.py",
+        "src/config_layer/state_identity.py"
+      ],
+      "notes": "Dual meaning — consumers must name which DISTRIBUTION.",
+      "missing_fields": []
+    },
+    {
+      "name": "CHoCH",
+      "status": "BOUND",
+      "observable_definition": "change_of_character: signed {-1,0,+1} = break_of_structure when it disagrees with trend_bias; else 0. features.smc.choch.change_of_character — algebraic combo only (no standalone CHOCH state-machine). Resolver LINK-001 may require BullishCHoCH/BearishCHoCH during DISPLACEMENT dwell.",
+      "feature_representation": {
+        "change_of_character": {
+          "index": 47
+        }
+      },
+      "state_representation": {
+        "feature_states": [
+          "NoCHoCH",
+          "BullishCHoCH",
+          "BearishCHoCH"
+        ],
+        "crt_enum": null
+      },
+      "authority_module": {
+        "path": "src/features/smc/choch.py",
+        "symbols": [
+          "change_of_character"
+        ]
+      },
+      "storage_representation": [
+        "Canonical vector index 47"
+      ],
+      "evidence_artifact": [
+        "src/features/smc/choch.py",
+        "src/features/feature_schema.py",
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "observability": "DERIVED (needs break_of_structure + trend_bias)",
+      "citations": [
+        "src/features/smc/choch.py",
+        "src/features/feature_schema.py",
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "missing_fields": [],
+      "notes": ""
+    },
+    {
+      "name": "EQH",
+      "status": "BOUND",
+      "observable_definition": "features.smc.levels: equal-highs cluster — 2+ confirmed swing highs within tolerance_atr*atr; eqh_distance = signed ATR distance from close to nearest EQH cluster (0.0 if none).",
+      "feature_representation": {
+        "eqh_distance": {
+          "index": 45
+        }
+      },
+      "state_representation": "No CRT enum.",
+      "authority_module": {
+        "path": "src/features/smc/levels.py",
+        "symbols": [
+          "eqh_eql_distance",
+          "_nearest_equal_cluster"
+        ]
+      },
+      "storage_representation": [
+        "Canonical vector index 45"
+      ],
+      "evidence_artifact": [
+        "src/features/smc/levels.py",
+        "src/features/feature_schema.py"
+      ],
+      "observability": "DERIVED",
+      "citations": [
+        "src/features/smc/levels.py",
+        "src/features/feature_schema.py"
+      ],
+      "missing_fields": [],
+      "notes": ""
+    },
+    {
+      "name": "EQL",
+      "status": "BOUND",
+      "observable_definition": "Symmetric to EQH on swing lows; eql_distance at CANONICAL index 46 (features.smc.levels.eqh_eql_distance).",
+      "feature_representation": {
+        "eql_distance": {
+          "index": 46
+        }
+      },
+      "state_representation": "No CRT enum.",
+      "authority_module": {
+        "path": "src/features/smc/levels.py",
+        "symbols": [
+          "eqh_eql_distance"
+        ]
+      },
+      "storage_representation": [
+        "Canonical vector index 46"
+      ],
+      "evidence_artifact": [
+        "src/features/smc/levels.py",
+        "src/features/feature_schema.py"
+      ],
+      "observability": "DERIVED",
+      "citations": [
+        "src/features/smc/levels.py",
+        "src/features/feature_schema.py"
+      ],
+      "missing_fields": [],
+      "notes": ""
+    },
+    {
+      "name": "PDH",
+      "status": "BOUND",
+      "observable_definition": "Previous-day high = most recently CLOSED D1 parent candle high from ParentCandleBuilder('D1').parent_history; pdh_distance = signed ATR distance from close.",
+      "feature_representation": {
+        "pdh_distance": {
+          "index": 43
+        }
+      },
+      "state_representation": "No CRT enum; depends on D1 parent close stream.",
+      "authority_module": {
+        "path": "src/features/smc/levels.py",
+        "symbols": [
+          "pdh_pdl_distance"
+        ],
+        "also": [
+          "src/features/parent_candle.py::ParentCandleBuilder"
+        ]
+      },
+      "storage_representation": [
+        "Canonical vector index 43"
+      ],
+      "evidence_artifact": [
+        "src/features/smc/levels.py",
+        "src/features/feature_schema.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "observability": "DERIVED (needs D1 parent_history)",
+      "citations": [
+        "src/features/smc/levels.py",
+        "src/features/parent_candle.py",
+        "src/features/feature_schema.py"
+      ],
+      "missing_fields": [],
+      "notes": ""
+    },
+    {
+      "name": "PDL",
+      "status": "BOUND",
+      "observable_definition": "Previous-day low from same D1 parent_history[-1].low; pdl_distance at CANONICAL index 44.",
+      "feature_representation": {
+        "pdl_distance": {
+          "index": 44
+        }
+      },
+      "state_representation": "No CRT enum.",
+      "authority_module": {
+        "path": "src/features/smc/levels.py",
+        "symbols": [
+          "pdh_pdl_distance"
+        ]
+      },
+      "storage_representation": [
+        "Canonical vector index 44"
+      ],
+      "evidence_artifact": [
+        "src/features/smc/levels.py",
+        "src/features/feature_schema.py"
+      ],
+      "observability": "DERIVED",
+      "citations": [
+        "src/features/smc/levels.py",
+        "src/features/feature_schema.py"
+      ],
+      "missing_fields": [],
+      "notes": ""
+    }
+  ],
+  "status_counts": {
+    "BOUND": 16,
+    "PARTIAL": 0,
+    "UNBOUND": 0
+  },
+  "authority_surprises": [
+    "htf_state.HTFState.DISTRIBUTION is orthogonal to CRTState.DISTRIBUTION_C3 (src/config_layer/htf_state.py F-077).",
+    "active_models.yaml documents crt fusion score (engines.crt_engine.compute) as distinct from CRTState machine in crt_engine_v2.",
+    "CANONICAL_FEATURES is derived from configs/formulas/market_ontology.yaml at import; HTML catalog mirrors vector slots.",
+    "Parent MANIPULATION_C2/DISTRIBUTION_C3 share no transition edges with execution SWEEP/DISPLACEMENT (state_identity partition).",
+    "MC-OPP-DETECT-01 marks logs/XAUUSD/xauusd_phase1_20260723/opportunities.parquet noncompliant (missing identity nest)."
+  ]
+}

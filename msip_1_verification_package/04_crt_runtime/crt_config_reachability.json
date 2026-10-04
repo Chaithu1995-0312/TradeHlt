@@ -1,0 +1,1361 @@
+{
+  "schema": "crt_config_reachability.v1",
+  "phase": 5,
+  "program": "CRT_CLOSURE",
+  "generated_at_utc": "2026-07-09T09:57:16Z",
+  "active_version": "v2_multi_2026_04",
+  "instrument_probe": "BNBUSDT",
+  "load_chain": {
+    "function": "load_prod_config_from_registry(version, instrument)",
+    "steps": [
+      "1. Load production JSON by version",
+      "2. Hash-verify params",
+      "3. Merge: coerced crt_engine + params (params wins)",
+      "4. allowed_sessions from engine_runner via resolve_allowed_sessions(instrument)",
+      "5. instrument_overrides from crt_engine.instrument_overrides if any",
+      "6. ConfigBuilder.build(instrument, overrides=merged)",
+      "6a. base = market_router.get_crt_config(instrument) [CRYPTO/FOREX 5-key profile]",
+      "6b. replace(base, **overrides) \u2014 prod merge wins for all provided keys"
+    ],
+    "bnb_market_class_bug": {
+      "classify_market('BNBUSDT')": "FOREX",
+      "CRYPTO_SYMBOLS": [
+        "BTCUSDT",
+        "ETHUSDT"
+      ],
+      "impact": "Latent: only affects keys NOT present in prod merge. For BNB baseline, params/crt_engine cover profile keys so final values are prod. Misclassification still wrong architecture for crypto majors SOL/BNB.",
+      "severity": "MED"
+    }
+  },
+  "field_count": 51,
+  "status_histogram": {
+    "REACHABLE": 43,
+    "DEAD_LOADED": 1,
+    "LEGACY_ONLY": 1,
+    "CONSUMED_DYNAMIC": 4
+  },
+  "matrix": [
+    {
+      "key": "allowed_sessions",
+      "runtime_value_bnbusdt": [
+        "LONDON",
+        "NEWYORK",
+        "OVERLAP"
+      ],
+      "load_authority": "engine_runner.resolve_allowed_sessions",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "engine_runner.allowed_sessions (+ overrides)",
+          "value": [
+            "london",
+            "new_york",
+            "overlap"
+          ],
+          "resolver": "resolve_allowed_sessions"
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:2697"
+      ],
+      "note": ""
+    },
+    {
+      "key": "atr_buffer_multiplier",
+      "runtime_value_bnbusdt": 3,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": 3
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:2209",
+        "src/config_layer/crt_engine_v2.py:2263"
+      ],
+      "note": ""
+    },
+    {
+      "key": "atr_min_displacement",
+      "runtime_value_bnbusdt": 1.2,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": 1.2
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:1213"
+      ],
+      "note": ""
+    },
+    {
+      "key": "atr_multiplier_min",
+      "runtime_value_bnbusdt": 1.0,
+      "load_authority": "params (wins merge)",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "params",
+          "value": 1.0,
+          "wins_over": "crt_engine"
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": true,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": 1.5,
+      "market_router_btc_base": 1.0,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:1238",
+        "src/config_layer/crt_engine_v2.py:1241"
+      ],
+      "note": ""
+    },
+    {
+      "key": "atr_period",
+      "runtime_value_bnbusdt": 14,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": 14
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:2207",
+        "src/config_layer/crt_engine_v2.py:2209",
+        "src/config_layer/crt_engine_v2.py:2263",
+        "src/config_layer/crt_engine_v2.py:2268",
+        "src/config_layer/crt_engine_v2.py:2292"
+      ],
+      "note": ""
+    },
+    {
+      "key": "bitnet_main_threshold",
+      "runtime_value_bnbusdt": 0.55,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": 0.55
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:1736",
+        "src/config_layer/crt_engine_v2.py:1806"
+      ],
+      "note": ""
+    },
+    {
+      "key": "body_ratio_min",
+      "runtime_value_bnbusdt": 0.65,
+      "load_authority": "params (wins merge)",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "params",
+          "value": 0.65,
+          "wins_over": "crt_engine"
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": true,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": 0.6,
+      "market_router_btc_base": 0.5,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:1231",
+        "src/config_layer/crt_engine_v2.py:1234",
+        "src/config_layer/crt_engine_v2.py:2541"
+      ],
+      "note": ""
+    },
+    {
+      "key": "breakout_disp_threshold",
+      "runtime_value_bnbusdt": 1.5,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": 1.5
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:1955"
+      ],
+      "note": ""
+    },
+    {
+      "key": "conf_alpha",
+      "runtime_value_bnbusdt": 0.7,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": 0.7
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:1747",
+        "src/config_layer/crt_engine_v2.py:1750"
+      ],
+      "note": ""
+    },
+    {
+      "key": "conf_beta",
+      "runtime_value_bnbusdt": 0.3,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": 0.3
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:1747",
+        "src/config_layer/crt_engine_v2.py:1751"
+      ],
+      "note": ""
+    },
+    {
+      "key": "conf_floor",
+      "runtime_value_bnbusdt": 0.2,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": 0.2
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:1688"
+      ],
+      "note": ""
+    },
+    {
+      "key": "conf_weights",
+      "runtime_value_bnbusdt": [
+        0.35,
+        0.35,
+        0.15,
+        0.15
+      ],
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": [
+            0.35,
+            0.35,
+            0.15,
+            0.15
+          ]
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:1655"
+      ],
+      "note": ""
+    },
+    {
+      "key": "confirmation_body_min",
+      "runtime_value_bnbusdt": 0.6,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": 0.6
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:1658"
+      ],
+      "note": ""
+    },
+    {
+      "key": "ema_fast",
+      "runtime_value_bnbusdt": 2,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": 2
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:2273",
+        "src/config_layer/crt_engine_v2.py:2598"
+      ],
+      "note": ""
+    },
+    {
+      "key": "ema_slow",
+      "runtime_value_bnbusdt": 5,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": 5
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:2274",
+        "src/config_layer/crt_engine_v2.py:2599"
+      ],
+      "note": ""
+    },
+    {
+      "key": "exit_model",
+      "runtime_value_bnbusdt": "intrabar_touch",
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": "intrabar_touch"
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:2158 getattr(self.config, 'exit_model', 'intrabar_touch')"
+      ],
+      "note": "Read via getattr in CRTEngine.__init__ for _intrabar_exits resolution"
+    },
+    {
+      "key": "expansion_age_warn_candles",
+      "runtime_value_bnbusdt": 342,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": 342
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:2793"
+      ],
+      "note": ""
+    },
+    {
+      "key": "expansion_atr_min_distance",
+      "runtime_value_bnbusdt": 0.3,
+      "load_authority": "params (wins merge)",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "params",
+          "value": 0.3,
+          "wins_over": "crt_engine"
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": true,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": 0.08,
+      "market_router_btc_base": 0.15,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:1289",
+        "src/config_layer/crt_engine_v2.py:1293"
+      ],
+      "note": ""
+    },
+    {
+      "key": "extension_reset_fib",
+      "runtime_value_bnbusdt": 1.618,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": 1.618
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:2112"
+      ],
+      "note": ""
+    },
+    {
+      "key": "max_displacement_strength",
+      "runtime_value_bnbusdt": 2.0,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": 2.0
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:1356",
+        "src/config_layer/crt_engine_v2.py:1359"
+      ],
+      "note": ""
+    },
+    {
+      "key": "max_expansion_age_candles",
+      "runtime_value_bnbusdt": 495,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": 495
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:2517",
+        "src/config_layer/crt_engine_v2.py:2775",
+        "src/config_layer/crt_engine_v2.py:2776",
+        "src/config_layer/crt_engine_v2.py:2782"
+      ],
+      "note": ""
+    },
+    {
+      "key": "max_expansion_age_hours",
+      "runtime_value_bnbusdt": 124,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": 124
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:2518"
+      ],
+      "note": ""
+    },
+    {
+      "key": "max_spread_pct",
+      "runtime_value_bnbusdt": 0.05,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": 0.05
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:1712",
+        "src/config_layer/crt_engine_v2.py:1773"
+      ],
+      "note": ""
+    },
+    {
+      "key": "max_sweep_age_candles",
+      "runtime_value_bnbusdt": 20,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": 20
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:1219",
+        "src/config_layer/crt_engine_v2.py:1221",
+        "src/config_layer/crt_engine_v2.py:1227",
+        "src/config_layer/crt_engine_v2.py:2463"
+      ],
+      "note": ""
+    },
+    {
+      "key": "news_blackout_minutes",
+      "runtime_value_bnbusdt": 15,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": 15
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "DEAD_LOADED",
+      "consumption_sites": [],
+      "note": "Present on CRTConfig and in prod JSON; never read in engine. News gate uses external set_news(bool) only"
+    },
+    {
+      "key": "pending_displacement_ttl_candles",
+      "runtime_value_bnbusdt": 4,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": 4
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:1493"
+      ],
+      "note": ""
+    },
+    {
+      "key": "retest_atr_depth_fraction",
+      "runtime_value_bnbusdt": 0.3,
+      "load_authority": "params (wins merge)",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "params",
+          "value": 0.3,
+          "wins_over": "crt_engine"
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": true,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": 0.5,
+      "market_router_btc_base": 0.3,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:1320",
+        "src/config_layer/crt_engine_v2.py:1575",
+        "src/config_layer/crt_engine_v2.py:1668"
+      ],
+      "note": ""
+    },
+    {
+      "key": "retest_depth_max",
+      "runtime_value_bnbusdt": 0.15,
+      "load_authority": "params (wins merge)",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "params",
+          "value": 0.15,
+          "wins_over": "crt_engine"
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": true,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": 0.35,
+      "market_router_btc_base": 0.25,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:1319",
+        "src/config_layer/crt_engine_v2.py:1574",
+        "src/config_layer/crt_engine_v2.py:1667",
+        "src/config_layer/crt_engine_v2.py:2550"
+      ],
+      "note": ""
+    },
+    {
+      "key": "retest_min_depth_atr_fraction",
+      "runtime_value_bnbusdt": 0.1,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": 0.1,
+          "wins_over": "dataclass_default"
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:1379"
+      ],
+      "note": "IC-007 PLAN-001: HOW-owned retest min-depth ATR fraction (legacy hardcoded 0.1*ATR)"
+    },
+    {
+      "key": "retrace_reset_pct",
+      "runtime_value_bnbusdt": 0.5,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": 0.5
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:2106"
+      ],
+      "note": ""
+    },
+    {
+      "key": "score_decay_lambda",
+      "runtime_value_bnbusdt": 0.05,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": 0.05
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:1599",
+        "src/config_layer/crt_engine_v2.py:1601"
+      ],
+      "note": ""
+    },
+    {
+      "key": "score_threshold",
+      "runtime_value_bnbusdt": 0.45,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": 0.45
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "LEGACY_ONLY",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:1827 UltronRiskEngine.approve only"
+      ],
+      "note": "Primary path uses approve_with_soft_conf + tier_1/tier_2; score_threshold not on soft-conf path"
+    },
+    {
+      "key": "session_windows",
+      "runtime_value_bnbusdt": {
+        "LONDON": [
+          "07:00:00",
+          "10:00:00"
+        ],
+        "NEWYORK": [
+          "13:00:00",
+          "16:00:00"
+        ],
+        "ASIA": [
+          "00:00:00",
+          "03:00:00"
+        ]
+      },
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": {
+            "LONDON": [
+              "07:00",
+              "10:00"
+            ],
+            "NEWYORK": [
+              "13:00",
+              "16:00"
+            ],
+            "ASIA": [
+              "00:00",
+              "03:00"
+            ]
+          }
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:1583",
+        "src/config_layer/crt_engine_v2.py:2693"
+      ],
+      "note": ""
+    },
+    {
+      "key": "shadow_advisory_only",
+      "runtime_value_bnbusdt": false,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": false
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:2715"
+      ],
+      "note": ""
+    },
+    {
+      "key": "shadow_age_norm_candles",
+      "runtime_value_bnbusdt": 0,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": 0
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:2620"
+      ],
+      "note": ""
+    },
+    {
+      "key": "shadow_age_penalty_lambda",
+      "runtime_value_bnbusdt": 0.0,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": 0.0
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:2619"
+      ],
+      "note": ""
+    },
+    {
+      "key": "sizing_bands",
+      "runtime_value_bnbusdt": [
+        [
+          0.75,
+          0.01
+        ],
+        [
+          0.55,
+          0.005
+        ]
+      ],
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": [
+            [
+              0.75,
+              0.01
+            ],
+            [
+              0.55,
+              0.005
+            ]
+          ]
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:1634"
+      ],
+      "note": ""
+    },
+    {
+      "key": "sl_atr_buffer",
+      "runtime_value_bnbusdt": 0.2,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": 0.2
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:1922",
+        "src/config_layer/crt_engine_v2.py:1929",
+        "src/config_layer/crt_engine_v2.py:2246"
+      ],
+      "note": ""
+    },
+    {
+      "key": "soft_conf_max_candles",
+      "runtime_value_bnbusdt": 3,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": 3
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:2806",
+        "src/config_layer/crt_engine_v2.py:2811"
+      ],
+      "note": ""
+    },
+    {
+      "key": "tier_1_threshold",
+      "runtime_value_bnbusdt": 0.75,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": 0.75
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:1754"
+      ],
+      "note": ""
+    },
+    {
+      "key": "tier_2_threshold",
+      "runtime_value_bnbusdt": 0.3,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": 0.3
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:1757",
+        "src/config_layer/crt_engine_v2.py:1761",
+        "src/config_layer/crt_engine_v2.py:2628",
+        "src/config_layer/crt_engine_v2.py:2655"
+      ],
+      "note": ""
+    },
+    {
+      "key": "tp1_atr_multiplier",
+      "runtime_value_bnbusdt": 1.0,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": 1.0
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:1958",
+        "src/config_layer/crt_engine_v2.py:2247"
+      ],
+      "note": ""
+    },
+    {
+      "key": "tp1_atr_multiplier_breakout",
+      "runtime_value_bnbusdt": 1.5,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": 1.5
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "CONSUMED_DYNAMIC",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:1957-1958 getattr(f'tp1_atr_multiplier_{intent}')"
+      ],
+      "note": "Consumed via getattr dynamic key from _derive_trade_intent"
+    },
+    {
+      "key": "tp1_atr_multiplier_liq_sweep",
+      "runtime_value_bnbusdt": 1.2,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": 1.2
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "CONSUMED_DYNAMIC",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:1957-1958"
+      ],
+      "note": "Consumed via getattr dynamic key"
+    },
+    {
+      "key": "tp1_atr_multiplier_pullback",
+      "runtime_value_bnbusdt": 0.8,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": 0.8
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "CONSUMED_DYNAMIC",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:1957-1958"
+      ],
+      "note": "Consumed via getattr dynamic key"
+    },
+    {
+      "key": "tp1_atr_multiplier_reversal",
+      "runtime_value_bnbusdt": 1.0,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": 1.0
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "CONSUMED_DYNAMIC",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:1957-1958"
+      ],
+      "note": "Consumed via getattr dynamic key"
+    },
+    {
+      "key": "tp2_atr_multiplier",
+      "runtime_value_bnbusdt": 2.0,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": 2.0
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:1959",
+        "src/config_layer/crt_engine_v2.py:2248"
+      ],
+      "note": ""
+    },
+    {
+      "key": "use_bitnet",
+      "runtime_value_bnbusdt": false,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": false
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:1733"
+      ],
+      "note": ""
+    },
+    {
+      "key": "weak_link_weight",
+      "runtime_value_bnbusdt": 0.3,
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": 0.3
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:1686"
+      ],
+      "note": ""
+    },
+    {
+      "key": "risk_score_weights",
+      "runtime_value_bnbusdt": [
+        0.35,
+        0.25,
+        0.2,
+        0.2
+      ],
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": [
+            0.35,
+            0.25,
+            0.2,
+            0.2
+          ],
+          "wins_over": "dataclass_default"
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/config_layer/crt_engine_v2.py:1699"
+      ],
+      "note": "IC-007 PLAN-002: HOW-owned RiskScore.final weights (sweep,breakout,retest,time) \u2014 DISTINCT from score_component_weights + conf_weights"
+    },
+    {
+      "key": "score_component_weights",
+      "runtime_value_bnbusdt": [
+        0.35,
+        0.25,
+        0.2,
+        0.2
+      ],
+      "load_authority": "crt_engine",
+      "in_production_json": true,
+      "prod_sources": [
+        {
+          "tier": "crt_engine",
+          "value": [
+            0.35,
+            0.25,
+            0.2,
+            0.2
+          ],
+          "wins_over": "dataclass_default"
+        }
+      ],
+      "dataclass_default_present": true,
+      "market_router_profile_key": false,
+      "market_router_bnb_class": "FOREX",
+      "market_router_bnb_base": null,
+      "market_router_btc_base": null,
+      "consumption_status": "REACHABLE",
+      "consumption_sites": [
+        "src/core/engine_runner.py (crt_compute context injection)",
+        "src/engines/scoring_engine.py:compute_scores"
+      ],
+      "note": "IC-007 PLAN-002: HOW-owned engines-path CRT component weights \u2014 EngineRunner strict-reads and injects as crt_compute context (previously context={} so the CODE default always won)"
+    }
+  ],
+  "hardcoded_shadows": [
+    {
+      "id": "HC-G-WEIGHTS",
+      "literal": "0.35/0.25/0.20/0.20",
+      "site": "src/config_layer/crt_engine_v2.py:216-219",
+      "shadows": "no CRTConfig field; conf_weights is separate soft-conf blend",
+      "severity": "HIGH"
+    },
+    {
+      "id": "HC-RETEST-MIN-DEPTH",
+      "literal": "self.config.retest_min_depth_atr_fraction * atr",
+      "site": "src/config_layer/crt_engine_v2.py:try_expansion_to_retest",
+      "shadows": "REMEDIATED_PLAN001 \u2014 CRTConfig.retest_min_depth_atr_fraction (default 0.10)",
+      "severity": "REMEDIATED",
+      "remediation": "IC-007 PLAN-001"
+    },
+    {
+      "id": "HC-SESSION-PENALTY",
+      "literal": "0.10",
+      "site": "src/config_layer/crt_engine_v2.py:1817",
+      "shadows": "legacy approve() only",
+      "severity": "LOW"
+    },
+    {
+      "id": "HC-DOUBLE-SWEEP-BONUS",
+      "literal": "0.10",
+      "site": "src/config_layer/crt_engine_v2.py:1822",
+      "shadows": "legacy approve() only",
+      "severity": "LOW"
+    },
+    {
+      "id": "HC-RISK-FLOOR",
+      "literal": "0.005 / 0.015 clamp",
+      "site": "src/config_layer/crt_engine_v2.py:1975-1981",
+      "shadows": "sizing_bands floor fallback",
+      "severity": "MED"
+    }
+  ],
+  "environment_overrides": [
+    {
+      "name": "TRUST_INTRABAR_TOUCH",
+      "site": "src/config_layer/crt_engine_v2.py:2151",
+      "effect": "overrides exit_model when set",
+      "precedence": "ctor arg > env > config.exit_model > default intrabar_touch"
+    }
+  ],
+  "dual_authorities": [
+    {
+      "id": "DA-PARAMS-VS-CRT-ENGINE",
+      "description": "params and crt_engine both can set CRTConfig fields; params wins",
+      "evidence": "production_config.load_prod_config_from_registry merge"
+    },
+    {
+      "id": "DA-MARKET-ROUTER-VS-PROD",
+      "description": "market_router FOREX/CRYPTO 5-key profile seeds base before prod overrides",
+      "evidence": "market_router.py:12-27; ConfigBuilder.build"
+    },
+    {
+      "id": "DA-ALLOWED-SESSIONS",
+      "description": "allowed_sessions not in crt_engine JSON; injected from engine_runner",
+      "evidence": "load_prod_config_from_registry resolve_allowed_sessions"
+    }
+  ],
+  "highest_risk": [
+    "HC-G-WEIGHTS (structural score weights not config)",
+    "HC-RETEST-MIN-DEPTH (0.1*atr hardcoded)",
+    "news_blackout_minutes DEAD_LOADED",
+    "score_threshold LEGACY_ONLY on soft-conf path",
+    "BNB/SOL classified FOREX in market_router (latent)"
+  ],
+  "phase5_status": "PASS",
+  "blockers": [],
+  "next_phase": "Phase 6 \u2014 13-candidate CRT causal provenance"
+}

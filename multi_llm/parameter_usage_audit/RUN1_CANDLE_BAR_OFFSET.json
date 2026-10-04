@@ -1,0 +1,66 @@
+{
+  "lt_run_id": "lt_20260916_172925_XAUUSD",
+  "l3_bar_idx_range": [
+    78,
+    47274
+  ],
+  "trades": [
+    {
+      "trade_id": "CRT-0001",
+      "trades.candle_idx": 11427,
+      "events.candle_index": 11364,
+      "trades.opened_at": "2024-11-12T15:30:00",
+      "events.timestamp": "2024-11-12T15:30:00",
+      "layer.bar_idx_at_open_ts": 11426,
+      "layer.bar_ts_matched": "2024-11-12T15:30:00",
+      "layer.bar_ts_at_candle_idx": "2024-11-12T15:45:00",
+      "layer.bar_ts_at_event_candle_index": "2024-11-11T23:00:00",
+      "offset_candle_idx_minus_bar_idx": 1,
+      "offset_event_candle_index_minus_bar_idx": -62,
+      "offset_candle_idx_minus_event_candle_index": 63
+    },
+    {
+      "trade_id": "CRT-0002",
+      "trades.candle_idx": 11672,
+      "events.candle_index": 11609,
+      "trades.opened_at": "2024-11-15T07:45:00",
+      "events.timestamp": "2024-11-15T07:45:00",
+      "layer.bar_idx_at_open_ts": 11671,
+      "layer.bar_ts_matched": "2024-11-15T07:45:00",
+      "layer.bar_ts_at_candle_idx": "2024-11-15T08:00:00",
+      "layer.bar_ts_at_event_candle_index": "2024-11-14T15:15:00",
+      "offset_candle_idx_minus_bar_idx": 1,
+      "offset_event_candle_index_minus_bar_idx": -62,
+      "offset_candle_idx_minus_event_candle_index": 63
+    },
+    {
+      "trade_id": "CRT-0003",
+      "trades.candle_idx": 18092,
+      "events.candle_index": 18029,
+      "trades.opened_at": "2025-02-25T15:45:00",
+      "events.timestamp": "2025-02-25T15:45:00",
+      "layer.bar_idx_at_open_ts": 18091,
+      "layer.bar_ts_matched": "2025-02-25T15:45:00",
+      "layer.bar_ts_at_candle_idx": "2025-02-25T16:00:00",
+      "layer.bar_ts_at_event_candle_index": "2025-02-24T23:15:00",
+      "offset_candle_idx_minus_bar_idx": 1,
+      "offset_event_candle_index_minus_bar_idx": -62,
+      "offset_candle_idx_minus_event_candle_index": 63
+    }
+  ],
+  "constant_offset_trades_minus_events": [
+    63,
+    63,
+    63
+  ],
+  "constant_offset_trades_minus_bar": [
+    1,
+    1,
+    1
+  ],
+  "constant_offset_events_minus_bar": [
+    -62,
+    -62,
+    -62
+  ]
+}

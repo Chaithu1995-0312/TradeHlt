@@ -1,0 +1,843 @@
+{
+  "schema": "three_authority_declaration_surplus_census.v1",
+  "census_id": "three_authority_declaration_surplus_census",
+  "date": "2026-07-11",
+  "status": "CENSUS_ONLY",
+  "authority": "observational \u2014 grants no enablement, promotion, or topology change",
+  "non_effects": [
+    "no runtime code change",
+    "no YAML/formula/config mutation by this census",
+    "no behavior change",
+    "no fourth YAML recommended"
+  ],
+  "authority_model": {
+    "WHAT": {
+      "home": "configs/formulas/market_ontology.yaml",
+      "owns": "FM identity, formula meaning, impl bindings, depends_on"
+    },
+    "WHO": {
+      "home": "active_models.yaml",
+      "owns": "model selection, state identities, transitions, required_fm, config key names, eligible_models",
+      "must_not_own": "numeric thresholds, formula text, eval expressions"
+    },
+    "HOW": {
+      "home": "configs/production/v2_multi_2026_04.json (+ CRTConfig fields)",
+      "owns": "threshold values, TTLs, flags, paths"
+    },
+    "CODE": {
+      "home": "src/config_layer/crt_engine_v2.py (+ features/*)",
+      "owns": "executable guards, CRTState enum, VALID_TRANSITIONS seed, formula callables"
+    }
+  },
+  "active_version": "v2_multi_2026_04",
+  "surfaces_scanned": {
+    "who": "D:/Tradelatest/active_models.yaml",
+    "what": "D:/Tradelatest/configs/formulas/market_ontology.yaml",
+    "how_production": "D:/Tradelatest/configs/production/v2_multi_2026_04.json",
+    "how_schema": "CRTConfig fields in src/config_layer/crt_engine_v2.py",
+    "topology_seed": "VALID_TRANSITIONS",
+    "topology_artifact": "D:/Tradelatest/docs/governance/crt_executable_state_graph.json"
+  },
+  "summary": {
+    "detection_default_count": 9,
+    "threshold_entry_count": 48,
+    "how_drift_count": 6,
+    "formula_prose_count": 17,
+    "state_contract_count": 9,
+    "state_contract_field_violations": 0,
+    "contract_required_fm": [
+      "FM-002",
+      "FM-010",
+      "FM-027",
+      "FM-028"
+    ],
+    "contract_config_keys_n": 39,
+    "ontology_fm_n": 19,
+    "ontology_fm_not_in_contracts_n": 15,
+    "topology_yaml_code_equal": true,
+    "surplus_record_count": 12,
+    "implementation_candidate_count": 11,
+    "p1_candidates": [
+      "IC-001",
+      "IC-002",
+      "IC-008"
+    ]
+  },
+  "surplus_records": [
+    {
+      "id": "SUR-001",
+      "class": "NUMERIC_DEFAULT_IN_WHO",
+      "surplus_layer": "WHO",
+      "owner_layer": "HOW",
+      "path": "active_models.yaml crt.runtime.detection.*.defaults",
+      "evidence": "9 numeric defaults under detection blocks (displacement/expansion/retest/expired). Restate CRTConfig/HOW seeds; not loaded by state_contract_loader or Phase-Topology.",
+      "runtime_consumed": false,
+      "authority_risk": "HIGH_DOC_DRIFT",
+      "count": 9,
+      "details": [
+        {
+          "detection_state": "displacement",
+          "key": "atr_min_displacement",
+          "am_default": 1.2,
+          "crtconfig_default": 1.2,
+          "on_crtconfig": true,
+          "prod_params": null,
+          "prod_crt_engine": 1.2,
+          "active_how": 1.2,
+          "am_equals_code_default": true,
+          "am_equals_active_how": true
+        },
+        {
+          "detection_state": "displacement",
+          "key": "body_ratio_min",
+          "am_default": 0.7,
+          "crtconfig_default": 0.7,
+          "on_crtconfig": true,
+          "prod_params": 0.65,
+          "prod_crt_engine": null,
+          "active_how": 0.65,
+          "am_equals_code_default": true,
+          "am_equals_active_how": false
+        },
+        {
+          "detection_state": "displacement",
+          "key": "atr_multiplier_min",
+          "am_default": 1.5,
+          "crtconfig_default": 1.5,
+          "on_crtconfig": true,
+          "prod_params": 1.0,
+          "prod_crt_engine": null,
+          "active_how": 1.0,
+          "am_equals_code_default": true,
+          "am_equals_active_how": false
+        },
+        {
+          "detection_state": "displacement",
+          "key": "max_sweep_age_candles",
+          "am_default": 20,
+          "crtconfig_default": 20,
+          "on_crtconfig": true,
+          "prod_params": null,
+          "prod_crt_engine": 20,
+          "active_how": 20,
+          "am_equals_code_default": true,
+          "am_equals_active_how": true
+        },
+        {
+          "detection_state": "expansion",
+          "key": "expansion_atr_min_distance",
+          "am_default": 0.2,
+          "crtconfig_default": 0.2,
+          "on_crtconfig": true,
+          "prod_params": 0.3,
+          "prod_crt_engine": null,
+          "active_how": 0.3,
+          "am_equals_code_default": true,
+          "am_equals_active_how": false
+        },
+        {
+          "detection_state": "retest",
+          "key": "retest_depth_max",
+          "am_default": 0.25,
+          "crtconfig_default": 0.25,
+          "on_crtconfig": true,
+          "prod_params": 0.15,
+          "prod_crt_engine": null,
+          "active_how": 0.15,
+          "am_equals_code_default": true,
+          "am_equals_active_how": false
+        },
+        {
+          "detection_state": "retest",
+          "key": "retest_atr_depth_fraction",
+          "am_default": 0.5,
+          "crtconfig_default": 0.5,
+          "on_crtconfig": true,
+          "prod_params": 0.3,
+          "prod_crt_engine": null,
+          "active_how": 0.3,
+          "am_equals_code_default": true,
+          "am_equals_active_how": false
+        },
+        {
+          "detection_state": "expired",
+          "key": "max_expansion_age_candles",
+          "am_default": 495,
+          "crtconfig_default": 495,
+          "on_crtconfig": true,
+          "prod_params": null,
+          "prod_crt_engine": 495,
+          "active_how": 495,
+          "am_equals_code_default": true,
+          "am_equals_active_how": true
+        },
+        {
+          "detection_state": "expired",
+          "key": "max_expansion_age_hours",
+          "am_default": 124,
+          "crtconfig_default": 124,
+          "on_crtconfig": true,
+          "prod_params": null,
+          "prod_crt_engine": 124,
+          "active_how": 124,
+          "am_equals_code_default": true,
+          "am_equals_active_how": true
+        }
+      ],
+      "implementation_candidate_id": "IC-001"
+    },
+    {
+      "id": "SUR-002",
+      "class": "NUMERIC_DEFAULT_IN_WHO",
+      "surplus_layer": "WHO",
+      "owner_layer": "HOW",
+      "path": "active_models.yaml crt.runtime.thresholds",
+      "evidence": "48 threshold entries with embedded default values. Mirror CRTConfig dataclass defaults; session readers may treat as runtime HOW.",
+      "runtime_consumed": false,
+      "authority_risk": "HIGH_DOC_DRIFT",
+      "count": 48,
+      "details": {
+        "keys": [
+          "allowed_sessions",
+          "atr_buffer_multiplier",
+          "atr_min_displacement",
+          "atr_multiplier_min",
+          "atr_period",
+          "bitnet_main_threshold",
+          "body_ratio_min",
+          "breakout_disp_threshold",
+          "conf_alpha",
+          "conf_beta",
+          "conf_floor",
+          "conf_weights",
+          "confirmation_body_min",
+          "ema_fast",
+          "ema_slow",
+          "exit_model",
+          "expansion_age_warn_candles",
+          "expansion_atr_min_distance",
+          "extension_reset_fib",
+          "max_displacement_strength",
+          "max_expansion_age_candles",
+          "max_expansion_age_hours",
+          "max_spread_pct",
+          "max_sweep_age_candles",
+          "news_blackout_minutes",
+          "pending_displacement_ttl_candles",
+          "retest_atr_depth_fraction",
+          "retest_depth_max",
+          "retrace_reset_pct",
+          "score_decay_lambda",
+          "score_threshold",
+          "session_windows",
+          "shadow_advisory_only",
+          "shadow_age_norm_candles",
+          "shadow_age_penalty_lambda",
+          "sizing_bands",
+          "sl_atr_buffer",
+          "soft_conf_max_candles",
+          "tier_1_threshold",
+          "tier_2_threshold",
+          "tp1_atr_multiplier",
+          "tp1_atr_multiplier_breakout",
+          "tp1_atr_multiplier_liq_sweep",
+          "tp1_atr_multiplier_pullback",
+          "tp1_atr_multiplier_reversal",
+          "tp2_atr_multiplier",
+          "use_bitnet",
+          "weak_link_weight"
+        ],
+        "how_drift_count": 6
+      },
+      "implementation_candidate_id": "IC-002"
+    },
+    {
+      "id": "SUR-003",
+      "class": "HOW_ACTIVE_VS_WHO_DEFAULT_DRIFT",
+      "surplus_layer": "WHO",
+      "owner_layer": "HOW",
+      "path": "params / crt_engine vs crt.runtime.thresholds|detection.defaults",
+      "evidence": "6 keys where active production value \u2260 WHO declared default (e.g. body_ratio_min params=0.65 vs WHO 0.70). Runtime follows HOW when loaded.",
+      "runtime_consumed": false,
+      "authority_risk": "HIGH_SESSION_MISREAD",
+      "count": 6,
+      "details": [
+        {
+          "key": "body_ratio_min",
+          "am_default": 0.7,
+          "on_crtconfig": true,
+          "crtconfig_default": 0.7,
+          "prod_params": 0.65,
+          "prod_crt_engine": null,
+          "active_how": 0.65,
+          "am_equals_code_default": true,
+          "am_equals_active_how": false
+        },
+        {
+          "key": "atr_multiplier_min",
+          "am_default": 1.5,
+          "on_crtconfig": true,
+          "crtconfig_default": 1.5,
+          "prod_params": 1.0,
+          "prod_crt_engine": null,
+          "active_how": 1.0,
+          "am_equals_code_default": true,
+          "am_equals_active_how": false
+        },
+        {
+          "key": "retest_depth_max",
+          "am_default": 0.25,
+          "on_crtconfig": true,
+          "crtconfig_default": 0.25,
+          "prod_params": 0.15,
+          "prod_crt_engine": null,
+          "active_how": 0.15,
+          "am_equals_code_default": true,
+          "am_equals_active_how": false
+        },
+        {
+          "key": "retest_atr_depth_fraction",
+          "am_default": 0.5,
+          "on_crtconfig": true,
+          "crtconfig_default": 0.5,
+          "prod_params": 0.3,
+          "prod_crt_engine": null,
+          "active_how": 0.3,
+          "am_equals_code_default": true,
+          "am_equals_active_how": false
+        },
+        {
+          "key": "expansion_atr_min_distance",
+          "am_default": 0.2,
+          "on_crtconfig": true,
+          "crtconfig_default": 0.2,
+          "prod_params": 0.3,
+          "prod_crt_engine": null,
+          "active_how": 0.3,
+          "am_equals_code_default": true,
+          "am_equals_active_how": false
+        },
+        {
+          "key": "session_windows",
+          "am_default": null,
+          "on_crtconfig": true,
+          "crtconfig_default": {
+            "LONDON": [
+              "07:00:00",
+              "10:00:00"
+            ],
+            "NEWYORK": [
+              "13:00:00",
+              "16:00:00"
+            ],
+            "ASIA": [
+              "00:00:00",
+              "03:00:00"
+            ]
+          },
+          "prod_params": null,
+          "prod_crt_engine": {
+            "LONDON": [
+              "07:00",
+              "10:00"
+            ],
+            "NEWYORK": [
+              "13:00",
+              "16:00"
+            ],
+            "ASIA": [
+              "00:00",
+              "03:00"
+            ]
+          },
+          "active_how": {
+            "LONDON": [
+              "07:00",
+              "10:00"
+            ],
+            "NEWYORK": [
+              "13:00",
+              "16:00"
+            ],
+            "ASIA": [
+              "00:00",
+              "03:00"
+            ]
+          },
+          "am_equals_code_default": false,
+          "am_equals_active_how": false
+        }
+      ],
+      "implementation_candidate_id": "IC-008"
+    },
+    {
+      "id": "SUR-004",
+      "class": "FORMULA_PROSE_IN_WHO",
+      "surplus_layer": "WHO",
+      "owner_layer": "CODE_OR_WHAT",
+      "path": "active_models.yaml crt.runtime.detection|scoring logic strings",
+      "evidence": "17 formula-like prose strings in detection/scoring. Not executable; risk of dual-math narrative vs candle_math/derived_math/code.",
+      "runtime_consumed": false,
+      "authority_risk": "MEDIUM_DOC_DRIFT",
+      "count": 17,
+      "details": [
+        {
+          "path": "crt.runtime.detection.range.logic",
+          "text": "h_ref = max(c.high); l_ref = min(c.low) over HTF window"
+        },
+        {
+          "path": "crt.runtime.detection.sweep.logic_long",
+          "text": "candle.high > range.h_ref AND candle.close < range.h_ref"
+        },
+        {
+          "path": "crt.runtime.detection.sweep.logic_short",
+          "text": "candle.low  < range.l_ref AND candle.close > range.l_ref"
+        },
+        {
+          "path": "crt.runtime.detection.sweep.double_confirmed",
+          "text": "prev_sweep exists AND direction differs"
+        },
+        {
+          "path": "crt.runtime.detection.displacement.logic.gate_1",
+          "text": "abs(close-open) >= atr_min_displacement \u00d7 ATR"
+        },
+        {
+          "path": "crt.runtime.detection.displacement.logic.gate_2",
+          "text": "body_ratio >= body_ratio_min"
+        },
+        {
+          "path": "crt.runtime.detection.displacement.logic.gate_3",
+          "text": "wick_size >= atr_multiplier_min \u00d7 ATR"
+        },
+        {
+          "path": "crt.runtime.detection.displacement.logic.gate_4",
+          "text": "sweep age <= max_sweep_age_candles"
+        },
+        {
+          "path": "crt.runtime.detection.expansion.logic[0]",
+          "text": "close > displacement_candle.close (long) / close < disp.close (short)"
+        },
+        {
+          "path": "crt.runtime.detection.expansion.logic[1]",
+          "text": "abs(close - disp_close) >= expansion_atr_min_distance \u00d7 ATR"
+        },
+        {
+          "path": "crt.runtime.detection.retest.adaptive_ceiling",
+          "text": "max(0.25\u00d7range_size, 0.50\u00d7ATR)"
+        },
+        {
+          "path": "crt.runtime.detection.retest.min_depth",
+          "text": "0.1 \u00d7 ATR"
+        },
+        {
+          "path": "crt.runtime.detection.expired.logic",
+          "text": "age_candles > max_expansion_age_candles OR age_hours > max_expansion_age_hours"
+        },
+        {
+          "path": "crt.runtime.scoring.raw_formula",
+          "text": "0.35\u00d7sweep + 0.25\u00d7breakout + 0.20\u00d7retest + 0.20\u00d7time"
+        },
+        {
+          "path": "crt.runtime.scoring.decay",
+          "text": "exp(-0.05 \u00d7 candles_since_retest)"
+        },
+        {
+          "path": "crt.runtime.scoring.soft_conf_fusion",
+          "text": "S = G^0.70 \u00d7 C^0.30"
+        },
+        {
+          "path": "crt.runtime.scoring.gates[3].session_filter (hard",
+          "text": "LONDON/NEWYORK/OVERLAP)"
+        }
+      ],
+      "implementation_candidate_id": "IC-003"
+    },
+    {
+      "id": "SUR-005",
+      "class": "SCORING_WEIGHTS_IN_WHO",
+      "surplus_layer": "WHO",
+      "owner_layer": "CODE",
+      "path": "active_models.yaml crt.runtime.scoring",
+      "evidence": "raw_formula embeds 0.35/0.25/0.20/0.20; soft_conf G^0.70\u00d7C^0.30; decay exp(-0.05\u00d7\u2026). Parallel to code hardcodes; no FM ids.",
+      "runtime_consumed": false,
+      "authority_risk": "MEDIUM_DOC_DRIFT",
+      "count": 3,
+      "details": {
+        "raw_formula": "0.35\u00d7sweep + 0.25\u00d7breakout + 0.20\u00d7retest + 0.20\u00d7time",
+        "decay": "exp(-0.05 \u00d7 candles_since_retest)",
+        "soft_conf_fusion": "S = G^0.70 \u00d7 C^0.30"
+      },
+      "implementation_candidate_id": "IC-004"
+    },
+    {
+      "id": "SUR-006",
+      "class": "DUAL_TOPOLOGY_LOAD_BEARING",
+      "surplus_layer": "WHO+CODE",
+      "owner_layer": "WHO_RUNTIME_GRAPH+CODE_SEED",
+      "path": "valid_transitions \u2194 VALID_TRANSITIONS",
+      "evidence": "YAML transitions parity with code seed: True. Phase-Topology injects WHO graph into StateMachine; module dict remains seed. state_list==CRTState: True.",
+      "runtime_consumed": true,
+      "authority_risk": "LOW_IF_PARITY_ENFORCED",
+      "count": 9,
+      "details": {
+        "yaml_states": [
+          "DISPLACEMENT",
+          "EXECUTION",
+          "EXPANSION",
+          "EXPIRED",
+          "RANGE",
+          "RESOLUTION",
+          "RETEST",
+          "SHADOW_PENDING",
+          "SWEEP"
+        ],
+        "code_states": [
+          "DISPLACEMENT",
+          "EXECUTION",
+          "EXPANSION",
+          "EXPIRED",
+          "RANGE",
+          "RESOLUTION",
+          "RETEST",
+          "SHADOW_PENDING",
+          "SWEEP"
+        ],
+        "transitions_equal": true,
+        "states_equal": true
+      },
+      "implementation_candidate_id": "IC-005"
+    },
+    {
+      "id": "SUR-007",
+      "class": "TRIPLE_TOPOLOGY_ARTIFACT",
+      "surplus_layer": "DOCS",
+      "owner_layer": "CODE",
+      "path": "docs/governance/crt_executable_state_graph.json",
+      "evidence": "Third topology home exists=True; states match state_list: True. Pinned by tests/test_crt_executable_state_graph.py.",
+      "runtime_consumed": false,
+      "authority_risk": "LOW_TEST_PINNED",
+      "count": 9,
+      "details": {
+        "graph_exists": true,
+        "states_match": true
+      },
+      "implementation_candidate_id": "IC-006"
+    },
+    {
+      "id": "SUR-008",
+      "class": "HARDCODED_BEHAVIORAL_IN_CODE",
+      "surplus_layer": "CODE",
+      "owner_layer": "SHOULD_BE_HOW",
+      "path": "crt_engine_v2 min_depth=0.1*ATR; RiskScore weights",
+      "evidence": "detection.retest.min_depth prose '0.1 \u00d7 ATR' and scoring weights lack production keys \u2014 behavioral constants frozen in code (matrix \u00a711.6 deferred gaps).",
+      "runtime_consumed": true,
+      "authority_risk": "MEDIUM_CONFIG_FIRST_GAP",
+      "count": 2,
+      "details": {
+        "min_depth_prose": "0.1 \u00d7 ATR",
+        "adaptive_ceiling_prose": "max(0.25\u00d7range_size, 0.50\u00d7ATR)"
+      },
+      "implementation_candidate_id": "IC-007"
+    },
+    {
+      "id": "SUR-009",
+      "class": "KEY_NAME_REDUNDANCY",
+      "surplus_layer": "WHO",
+      "owner_layer": "WHO_STATE_CONTRACTS",
+      "path": "detection.*.config_keys vs state_contracts.*.config_keys",
+      "evidence": "detection config_keys (9) are subset of state_contracts config_keys (39). detection_only=[]; intersection_n=9.",
+      "runtime_consumed": false,
+      "authority_risk": "LOW",
+      "count": 9,
+      "details": {
+        "detection_config_keys": [
+          "atr_min_displacement",
+          "atr_multiplier_min",
+          "body_ratio_min",
+          "expansion_atr_min_distance",
+          "max_expansion_age_candles",
+          "max_expansion_age_hours",
+          "max_sweep_age_candles",
+          "retest_atr_depth_fraction",
+          "retest_depth_max"
+        ],
+        "contract_config_keys_n": 39,
+        "intersection": [
+          "atr_min_displacement",
+          "atr_multiplier_min",
+          "body_ratio_min",
+          "expansion_atr_min_distance",
+          "max_expansion_age_candles",
+          "max_expansion_age_hours",
+          "max_sweep_age_candles",
+          "retest_atr_depth_fraction",
+          "retest_depth_max"
+        ]
+      },
+      "implementation_candidate_id": "IC-009"
+    },
+    {
+      "id": "SUR-010",
+      "class": "THRESHOLDS_NOT_IN_STATE_CONTRACTS",
+      "surplus_layer": "WHO_INDEX_GAP",
+      "owner_layer": "HOW",
+      "path": "thresholds keys absent from state_contracts.config_keys",
+      "evidence": "9 threshold keys not listed on any state contract (still on CRTConfig / crt_engine). Not surplus ownership \u2014 coverage gap in WHO contracts.",
+      "runtime_consumed": false,
+      "authority_risk": "LOW_NAVIGATION",
+      "count": 9,
+      "details": {
+        "keys": [
+          "breakout_disp_threshold",
+          "expansion_age_warn_candles",
+          "max_spread_pct",
+          "news_blackout_minutes",
+          "score_threshold",
+          "tp1_atr_multiplier_breakout",
+          "tp1_atr_multiplier_liq_sweep",
+          "tp1_atr_multiplier_pullback",
+          "tp1_atr_multiplier_reversal"
+        ]
+      },
+      "implementation_candidate_id": "IC-002"
+    },
+    {
+      "id": "SUR-011",
+      "class": "CLEAN_STATE_CONTRACTS",
+      "surplus_layer": "NONE",
+      "owner_layer": "WHO",
+      "path": "active_models.yaml crt.runtime.state_contracts",
+      "evidence": "9 state contracts; allowed fields only; violations=none; required_fm=['FM-002', 'FM-010', 'FM-027', 'FM-028']; no numeric thresholds in contracts.",
+      "runtime_consumed": true,
+      "authority_risk": "NONE_POSITIVE_CONTROL",
+      "count": 9,
+      "details": {
+        "states": [
+          "DISPLACEMENT",
+          "EXECUTION",
+          "EXPANSION",
+          "EXPIRED",
+          "RANGE",
+          "RESOLUTION",
+          "RETEST",
+          "SHADOW_PENDING",
+          "SWEEP"
+        ],
+        "required_fm": [
+          "FM-002",
+          "FM-010",
+          "FM-027",
+          "FM-028"
+        ],
+        "violations": [],
+        "cached_fm_ids": [
+          "FM-027",
+          "FM-010",
+          "FM-028"
+        ],
+        "cached_feature_names": [
+          "displacement_retrace",
+          "body_ratio",
+          "displacement_atr_ratio",
+          "retest_index",
+          "session",
+          "double_sweep"
+        ]
+      },
+      "implementation_candidate_id": "IC-KEEP"
+    },
+    {
+      "id": "SUR-012",
+      "class": "ONTOLOGY_FM_NOT_IN_CONTRACTS",
+      "surplus_layer": "NONE",
+      "owner_layer": "WHAT",
+      "path": "market_ontology.yaml FM ids without state_contracts.required_fm",
+      "evidence": "15 ontology FMs not declared on CRT state contracts. Not surplus; optional navigation (used_by_states DESC).",
+      "runtime_consumed": false,
+      "authority_risk": "NONE",
+      "count": 15,
+      "details": {
+        "fm_ids": [
+          "FM-001",
+          "FM-003",
+          "FM-004",
+          "FM-005",
+          "FM-011",
+          "FM-012",
+          "FM-013",
+          "FM-020",
+          "FM-021",
+          "FM-022",
+          "FM-023",
+          "FM-024",
+          "FM-025",
+          "FM-026",
+          "FM-029"
+        ]
+      },
+      "implementation_candidate_id": "IC-010"
+    }
+  ],
+  "implementation_candidate_ledger": [
+    {
+      "id": "IC-001",
+      "title": "Mark/strip detection.defaults numeric block",
+      "action": "MARK_NON_AUTHORITATIVE_OR_STRIP",
+      "priority": "P1",
+      "touches": [
+        "active_models.yaml crt.runtime.detection.*.defaults"
+      ],
+      "parity_required": true,
+      "runtime_impact": "none if currently unread (verify)",
+      "depends_on": [],
+      "note": "WHO must not own HOW numbers; keep config_keys names only"
+    },
+    {
+      "id": "IC-002",
+      "title": "Mark/strip crt.runtime.thresholds numeric defaults",
+      "action": "MARK_NON_AUTHORITATIVE_OR_STRIP",
+      "priority": "P1",
+      "touches": [
+        "active_models.yaml crt.runtime.thresholds"
+      ],
+      "parity_required": true,
+      "runtime_impact": "none if unread; session-doc only today",
+      "depends_on": [],
+      "note": "Replace with key-name index pointing at HOW/CRTConfig"
+    },
+    {
+      "id": "IC-003",
+      "title": "Convert detection logic strings \u2192 closed guard IDs",
+      "action": "CONVERT_TO_GUARD_ID_REFS",
+      "priority": "P2",
+      "touches": [
+        "active_models.yaml detection.*.logic*"
+      ],
+      "parity_required": true,
+      "runtime_impact": "none until dispatch phase; docs only first",
+      "depends_on": [
+        "guard-registry phase"
+      ],
+      "note": "Never eval strings; Python registry remains executable"
+    },
+    {
+      "id": "IC-004",
+      "title": "Convert scoring formula prose \u2192 code/FM refs; optional HOW weights",
+      "action": "CONVERT_TO_REFS_OR_HOWLIZE",
+      "priority": "P2",
+      "touches": [
+        "active_models.yaml scoring.raw_formula",
+        "scoring.decay",
+        "scoring.soft_conf_fusion"
+      ],
+      "parity_required": true,
+      "runtime_impact": "externalizing weights changes HOW surface only if wired",
+      "depends_on": [],
+      "note": "RiskScore 0.35/0.25/0.20/0.20 + soft-conf exponents are dual-homed"
+    },
+    {
+      "id": "IC-005",
+      "title": "Topology dual authority \u2014 keep parity or codegen seed",
+      "action": "KEEP_LOAD_BEARING_DUAL_OR_CODEGEN",
+      "priority": "P2",
+      "touches": [
+        "active_models.yaml valid_transitions",
+        "crt_engine_v2.VALID_TRANSITIONS"
+      ],
+      "parity_required": true,
+      "runtime_impact": "Phase-Topology already uses WHO graph; seed is baseline",
+      "depends_on": [],
+      "note": "Do not drop code seed without explicit approval"
+    },
+    {
+      "id": "IC-006",
+      "title": "Mark crt_executable_state_graph.json as DERIVED or re-pin",
+      "action": "MARK_DERIVED_OR_REGENERATE",
+      "priority": "P3",
+      "touches": [
+        "docs/governance/crt_executable_state_graph.json"
+      ],
+      "parity_required": true,
+      "runtime_impact": "none (docs/tests only)",
+      "depends_on": [],
+      "note": "Third topology home; tests already pin to code"
+    },
+    {
+      "id": "IC-007",
+      "title": "Externalize hardcoded min_depth 0.1*ATR + RiskScore weights to HOW",
+      "action": "HOWLIZE_HARDCODED_BEHAVIORAL",
+      "priority": "P3",
+      "touches": [
+        "crt_engine_v2 try_expansion_to_retest",
+        "score_* weights",
+        "production crt_engine"
+      ],
+      "parity_required": true,
+      "runtime_impact": "requires config keys + parity proof",
+      "depends_on": [
+        "\u00a76.5 config-first"
+      ],
+      "note": "Deferred gaps from matrix \u00a711.6"
+    },
+    {
+      "id": "IC-008",
+      "title": "Annotate WHO defaults that disagree with active HOW params",
+      "action": "ANNOTATE_SEED_VS_ACTIVE_HOW",
+      "priority": "P1",
+      "touches": [
+        "active_models thresholds/detection defaults",
+        "params"
+      ],
+      "parity_required": false,
+      "runtime_impact": "docs only",
+      "depends_on": [],
+      "note": "body_ratio_min/params 0.65 vs WHO 0.70 etc. \u2014 prevent session misread"
+    },
+    {
+      "id": "IC-009",
+      "title": "Deduplicate detection.config_keys vs state_contracts.config_keys",
+      "action": "SINGLE_SOURCE_KEY_NAMES",
+      "priority": "P3",
+      "touches": [
+        "detection.*.config_keys",
+        "state_contracts"
+      ],
+      "parity_required": true,
+      "runtime_impact": "none if contracts remain loader authority",
+      "depends_on": [],
+      "note": "detection config_keys are strict subset of contracts today"
+    },
+    {
+      "id": "IC-010",
+      "title": "Optional used_by_states on ontology FMs (DESC only)",
+      "action": "OPTIONAL_DESC_TAG",
+      "priority": "P3",
+      "touches": [
+        "market_ontology.yaml"
+      ],
+      "parity_required": false,
+      "runtime_impact": "none",
+      "depends_on": [],
+      "note": "Not surplus cleanup; navigation aid only"
+    },
+    {
+      "id": "IC-KEEP",
+      "title": "Keep state_contracts as WHO dependency authority",
+      "action": "KEEP",
+      "priority": "P0",
+      "touches": [
+        "state_contracts"
+      ],
+      "parity_required": true,
+      "runtime_impact": "already load-bearing",
+      "depends_on": [],
+      "note": "Positive control \u2014 not surplus"
+    }
+  ],
+  "positive_controls": {
+    "state_contracts_ids_only": true,
+    "required_fm_in_ontology": true,
+    "contract_keys_on_crtconfig": true,
+    "cached_features_use_fm_ids": true
+  }
+}

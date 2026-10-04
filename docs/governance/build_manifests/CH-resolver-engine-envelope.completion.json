@@ -1,0 +1,40 @@
+{
+  "change_id": "CH-resolver-engine-envelope",
+  "date_utc": "2026-09-05",
+  "declared_files": [
+    "src/features/crt_state_resolver.py",
+    "src/runtime/crt_construction_trace.py",
+    "src/runtime/backtest_v2.py",
+    "configs/production/v4_dual_construction_2026_09.json",
+    "docs/governance/change_contracts.json",
+    "docs/governance/build_manifests/CH-resolver-engine-envelope.impact.json",
+    "docs/governance/build_manifests/CH-resolver-engine-envelope.completion.json",
+    "tests/test_resolver_metadata.py",
+    "tests/test_crt_construction_trace_envelope.py",
+    "tests/test_crt_construction_trace.py",
+    "tests/test_construction_protocol.py",
+    "docs/reference/schemas.md",
+    "docs/memory/runtime-memory.md",
+    "docs/topics/crt-spine.md",
+    "docs/current-findings.md",
+    "assistant_project.md"
+  ],
+  "checks_executed": [
+    "tests/test_crt_construction_trace.py",
+    "tests/test_crt_construction_trace_envelope.py",
+    "tests/test_resolver_metadata.py",
+    "tests/test_construction_protocol.py"
+  ],
+  "repo_state_hash": "PENDING",
+  "completion_status": "BLOCKED_PREEXISTING_DIRTY_TREE",
+  "completion_note": "STATUS is BLOCKED_PREEXISTING_DIRTY_TREE, following the CH-v3-unified-market-structure-v1 and CH-sujan-crt-identity-extraction-system precedent. validate-completion compares the whole porcelain tree against declared_files (construction_protocol.py GOVERNED_SURFACE_PREFIXES = src/ configs/ scripts/ models/ tests/). This worktree carries ~365 undeclared governed paths from concurrent sessions. They are NOT added to declared_files: declaring another session's files to turn the gate green would be the laundering the gate exists to prevent.\n\nMixed files this change TOUCHED but did not solely own (disclosed, not absorbed): src/features/crt_state_resolver.py also carries ~685 concurrent insertions (RC-003 sites / links registry / SP-001) reported in the impact unknowns; src/runtime/backtest_v2.py also carries concurrent v3 snapshot / parent-CRT wiring; docs/reference/schemas.md already had a concurrent +170 (§9.14 Grounding / §9.15 claim catalog) before this change added §9.17; docs/current-findings.md already had concurrent +423 before the F-069 Note. scripts/research/emit_dual_construction_trace.py is a pre-existing untracked v4 harness and is NOT declared (would fire SCRIPT_LIFECYCLE_CHANGE / SITS).\n\nChange-specific work is done: TRACE_OBSERVATION_JOIN registered; resolve_metadata() + ResolverMetadata observation-only; CRTConstructionTrace schema v2.0.0 envelope (engine.transitions is a LIST); spine wiring post-process_candle; record_resolver_engine on non-active v4_dual_construction_2026_09; class artifacts_to_update synced (schemas.md §9.17, runtime-memory.md, crt-spine.md P-FLOW-17 correction, F-069 Note only — no new F-id). ACTIVE_VERSION remains v2_htfcrt_2026_08. params hash unchanged. production_behavior_changed=NO.\n\n3-arm A/B/C with the v2 envelope ON (do not confuse with the 2026-09-03 v1 run under logs/dual_construction/): logs/dual_construction_v2/XAUUSD_dual_construction_run_summary.json — corpus 2300 bars, decision_neutral_a_vs_b=true, decision_neutral_b_vs_c=true, crt_construction_rows=2300, schema_version 2.0.0. LIVE rows carry resolver.l2_map / predicate_affinity / engine.live_context / engine.transitions list.\n\nObserved validate-completion 2026-09-05: COMPLETION BLOCKED on the first eight undeclared governed surfaces (configs/data_provenance/, two live_rail_tickdb_paper*.json, configs/formulas/{crt_resolver_links,crt_state_identity,market_crt_states,market_ontology,market_shapes}.yaml) — none created by this change. Required pytest of the four class checks: 60 passed / 0 failed (venv 3.12). Observed repo_state 3948650a2339+95ca650efe8e is recorded here rather than bound as repo_state_hash, because a hash of this tree would bind concurrent sessions' work as much as this change.",
+  "production_behavior_changed": "NO",
+  "evidence": {
+    "schema": "TRACE_SCHEMA_VERSION=2.0.0 at src/runtime/crt_construction_trace.py; warmup and LIVE rows share columns (tests/test_crt_construction_trace_envelope.py V2_COLUMNS)",
+    "neutrality_unit": "tests/test_resolver_metadata.py::test_behavior_neutral",
+    "neutrality_e2e": "logs/dual_construction_v2/XAUUSD_dual_construction_run_summary.json",
+    "stream": "logs/dual_construction_v2/XAUUSD_crt_construction.jsonl",
+    "active_version": "configs/production/ACTIVE_VERSION unchanged at v2_htfcrt_2026_08",
+    "config": "v4_dual_construction_2026_09 crt_construction_trace.schema_version 2.0.0 + record_resolver_engine true; section is outside params so config_hash unchanged"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "scheme": "single_holdout_chronologic",
+  "n_bars": 47275,
+  "boundary_index": 35456,
+  "boundary_timestamp": "2025-11-18 21:30:00",
+  "embargo_bars": 96,
+  "purge": "candidates whose forward window crosses the boundary, or that sit in the embargo, are dropped from BOTH partitions",
+  "seed": 20260822,
+  "oos_fraction": 0.25,
+  "written_by_the_run": true
+}

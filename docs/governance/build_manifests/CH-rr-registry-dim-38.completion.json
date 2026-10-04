@@ -1,0 +1,38 @@
+{
+  "change_id": "CH-rr-registry-dim-38",
+  "date_utc": "2026-07-23",
+  "change_classes": [
+    "MODEL_ARTIFACT_CHANGE"
+  ],
+  "declared_files": [
+    "models/rr_registry.json",
+    "active_models.yaml",
+    "docs/governance/build_manifests/CH-rr-registry-dim-38.impact.json",
+    "docs/governance/build_manifests/CH-rr-registry-dim-38.completion.json",
+    "docs/governance/model_lineage_rollup.md",
+    "assistant_project.md"
+  ],
+  "checks_executed": [
+    "registry n_features == artifact n_features -> 38 == 38 (PASS)",
+    "artifact sha256 unchanged -> models/rr_model.json 6ed92d26ff612538 before and after (PASS)",
+    "artifact sha256 unchanged -> models/rr_model_202605_bnb_v2.json 6ed92d26ff612538 (PASS)",
+    "active_models.yaml mirrors the updated registry -> selection 38, compatibility 38 (PASS)",
+    "pytest tests/test_active_models_registry.py tests/test_state_contracts.py tests/test_doc_citations.py -> 57 passed (PASS)"
+  ],
+  "checks_note": "test_state_contracts.py is included deliberately: it proves the CRT state-contract runtime contract that reads active_models.yaml (src/config_layer/state_contract_loader.py:38) is untouched by the mirror edit.",
+  "completion_status": "COMPLETE",
+  "behavior_evidence": {
+    "PRODUCTION_BEHAVIOR_CHANGED": "NO",
+    "artifact_bytes_changed": false,
+    "config_hash_changed": false,
+    "decision_path_touched": false,
+    "rationale": "Metadata-only correction. rr_fusion.enabled remains false; the sole runtime reader of the field is the control-plane dashboard display (dashboard_api.py:492), whose output is now correct rather than stale."
+  },
+  "residual_disclosure": [
+    "n_samples:0 on the same entry contradicts metrics.n_train:49000 and remains unfixed - the true total is unknown and was not guessed.",
+    "Six other rr_registry entries still declare n_features:35; four are dangling and unverifiable against any artifact.",
+    "tradenet identity feature_schema_dim:35 remains UNVERIFIED (binary .pth, no registry dim field).",
+    "No invariant yet enforces registry<->artifact dimension parity; the drift corrected here was unguarded and survived until the lifecycle audit found it. Candidate (d) in model_lineage_rollup.md sec 10.7 remains open."
+  ],
+  "authority": "Corrects metadata to match a verified artifact. Grants no promote, enable, retrain, or wiring right (CLAUDE.md 6.5)."
+}

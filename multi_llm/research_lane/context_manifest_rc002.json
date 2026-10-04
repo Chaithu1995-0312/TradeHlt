@@ -1,0 +1,47 @@
+{
+  "schema_version": "1.0",
+  "description": "RC-002 cycle-scoped context (Position B revisit) - NOT the ERP manifest, NOT a full-repo scan",
+  "max_chars_per_file_default": 120000,
+  "docs": [
+    {
+      "path": "multi_llm/research_lane/cycles/RC-002/EVIDENCE_DOSSIER.md",
+      "role": "the_evidence_read_this_first",
+      "priority": 1
+    },
+    {
+      "path": "src/features/smc/choch.py",
+      "role": "choch_formula_source",
+      "priority": 2
+    },
+    {
+      "path": "configs/formulas/market_shapes.yaml",
+      "role": "blocked_shapes_incl_sweepreversal_entry",
+      "priority": 3
+    },
+    {
+      "path": "docs/governance/SEMANTIC_REVIEW_PROTOCOL.md",
+      "role": "the_ten_verdicts_and_never_conclude_defect_from_difference",
+      "priority": 4
+    },
+    {
+      "path": "docs/governance/MARKET_ONTOLOGY_EVOLUTION_CONTRACT.md",
+      "role": "identity_first_refinement_ladder_unknown_nodes",
+      "priority": 5
+    },
+    {
+      "path": "docs/governance/EPISTEMIC_INTEGRITY.md",
+      "role": "e001_preregistration_ritual_and_authority_ladder",
+      "priority": 6
+    },
+    {
+      "path": "multi_llm/research_lane/RESEARCH_ROLES.md",
+      "role": "your_role_and_the_no_voting_rule",
+      "priority": 7
+    },
+    {
+      "path": "multi_llm/research_lane/package_schema.json",
+      "role": "package_contract_your_output_must_validate",
+      "priority": 8
+    }
+  ]
+}

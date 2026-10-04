@@ -1,0 +1,48 @@
+{
+  "change_id": "CH-k23-f2-exchange-session-windows",
+  "date_utc": "2026-09-24",
+  "objective": "K23 fix F2: opt-in exact per-date exchange-session windows for the CRT session filter and time score. Each session is defined in its own exchange zone (Tokyo 09-18 JST, London 08-17 London time, NY 08-17 NY time) and resolved per bar via the existing NY-DST broker->UTC rule in features.broker_clock. Default is the legacy static broker-time windows, so every existing config is byte-identical.",
+  "change_classes": [
+    "RUNTIME_DECISION_PATH_CHANGE"
+  ],
+  "change_class_rationale": "Changes CRTEngine.process_candle's session filter, UltronRiskEngine.score_time and BacktestRunner._session only when backtest.session_window_basis='exchange_local'. Optional backtest-section keys with a legacy default, passed BacktestRunner -> CRTEngine as a constructor argument. Deliberately NOT CRTConfig fields (census pins every field; same reasoning as CH-k23-f3/f4). broker_clock.py gains pure functions only (no change to the existing conversions). No feature math, model, ontology formula or production config edit.",
+  "affected_files": [
+    "src/features/broker_clock.py",
+    "src/config_layer/crt_engine_v2.py",
+    "src/runtime/backtest_v2.py",
+    "tests/test_exchange_session_windows.py",
+    "docs/governance/build_manifests/CH-k23-f2-exchange-session-windows.impact.json"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_sl_anchor_sweep_extreme.py",
+    "tests/test_htf_reset_sweep_exempt.py",
+    "tests/test_feature_math_lint.py",
+    "tests/test_geometry_census.py",
+    "tests/test_current_findings.py"
+  ],
+  "unknowns": [
+    {
+      "blocking": false,
+      "item": "TOKYO is not in engine_runner.allowed_sessions on any config. Under exchange_local the engine fails closed on an allowed session with no window, but does NOT add TOKYO to admission; a shadow config must add it deliberately.",
+      "why_non_blocking": "Admission is a config decision, out of scope; this change only makes the mechanism exist."
+    },
+    {
+      "blocking": false,
+      "item": "OVERLAP is allowed in engine_runner.allowed_sessions but no window produces that name in either mode (the legacy filter only matches session_windows keys). It is exempted from the fail-closed check and remains inert; a London/NY overlap resolves to the first-declared session.",
+      "why_non_blocking": "Pre-existing behaviour, preserved and documented; changing it would be a separate economic decision."
+    },
+    {
+      "blocking": false,
+      "item": "No shadow config sets session_window_basis='exchange_local', so the effect on entries/trades on the real XAUUSD corpus is UNMEASURED.",
+      "why_non_blocking": "Shadow config is the next step (design doc 9.3), separately authorized."
+    }
+  ],
+  "rollback_boundary": "Remove the exchange_session_windows constructor argument from CRTEngine/UltronRiskEngine, the BacktestConfig fields/parse/plumbing/stamp, the BacktestRunner._session branch, the broker_clock additions, the test file and this manifest. With the default the behaviour is the pre-change behaviour.",
+  "authority_granted": "User 2026-09-24: F2 = real exchange hours converted with a US-DST-aware rule (design doc 8c); exact per-date windows chosen in-session over static windows.",
+  "authority_NOT_granted": "No shadow config created, no ACTIVE_VERSION change, no promotion, no G001, no claim the windows improve anything. Feature `session` labels (FM-052) and session_timestamp_basis are untouched.",
+  "production_behavior_changed": "NO"
+}

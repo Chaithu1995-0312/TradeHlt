@@ -1,0 +1,116 @@
+{
+  "_doc": "M14B volatility_regime certification \u2014 absolute ATR14 rolling tercile.",
+  "schema_version": "1.0",
+  "generated_at": "2026-07-14T06:39:05.357054+00:00",
+  "session_program": "M14B",
+  "feature": "volatility_regime",
+  "checkpoint_before": {
+    "PROMOTED_PRODUCTION": 45,
+    "READY_TO_CERTIFY": 1,
+    "SUPERSEDED": 2
+  },
+  "governed_identity": "int8 tercile of trailing rank(pct=True,average) over absolute ATR14 from TR(high,low,close); N=200 min_periods=1; edges 0.33/0.66; NaN pct=>2",
+  "previous_dependency_contract": [
+    "atr"
+  ],
+  "corrected_dependency_contract": [
+    "close",
+    "high",
+    "low"
+  ],
+  "dependency_correction_reason": "production ranks atr_14 absolute SMA14(TR), not published relative atr",
+  "raw_roots": [
+    "high",
+    "low",
+    "close"
+  ],
+  "TR_identity": "max(H-L,|H-Cprev|,|L-Cprev|); TR[0]=NaN",
+  "ATR14_identity": "SMA14(TR) min_periods=14; first finite index 14",
+  "rank_identity": "rolling(200,min_periods=1).rank(pct=True, method=average)",
+  "tie_semantics": "average rank",
+  "NaN_semantics": "NaN excluded from rank set; NaN pct => regime 2",
+  "bin_boundaries": {
+    "0": "pct<0.33",
+    "1": "0.33<=pct<0.66",
+    "2": "else incl NaN"
+  },
+  "column_dtype": "int8",
+  "vector_dtype": "float32",
+  "oracle_description": "independent TR + SMA14 + average-tie pct rank + tercile",
+  "oracle_independence": "no pandas rolling/rank; no pipeline atr columns",
+  "probes": {
+    "tr_atr": {
+      "1_5_TR_first_row_nan": "PASS",
+      "6_ATR_first_finite_14": "PASS",
+      "7_8_ATR_parity_pipeline": "PASS",
+      "short_no_atr": "PASS"
+    },
+    "rank": {
+      "11_23_rank_vs_pandas": "PASS",
+      "13_all_equal": "PASS",
+      "14_16_ties": "PASS",
+      "17_single_valid": "PASS",
+      "18_19_nan_in_window": "PASS"
+    },
+    "bins": {
+      "24_below_033": "PASS",
+      "25_eq_033": "PASS",
+      "26_above_033": "PASS",
+      "27_below_066": "PASS",
+      "28_eq_066": "PASS",
+      "29_above_066": "PASS",
+      "30_nan": "PASS",
+      "31_one": "PASS"
+    },
+    "composition": {
+      "32_pipeline_parity": "PASS",
+      "33_dtype_int8": "PASS",
+      "34_domain": "PASS",
+      "35_float32_cast": "PASS",
+      "36_early_warmup_regime_2": "PASS",
+      "37_38_no_relative_atr": "PASS",
+      "const_ohlc_parity": "PASS",
+      "39_40_sidecars_not_production": "PASS",
+      "41_env_cannot_rewrite_production": "PASS"
+    },
+    "pit": {
+      "42_prefix": "PASS",
+      "43_future_mutation": "PASS",
+      "45_current_bar_isolation": "PASS",
+      "46_determinism": "PASS"
+    },
+    "fences": {
+      "47_oracle_independent": "PASS",
+      "forbidden_hits": [],
+      "48_numeric_domain": "PASS",
+      "49_s05_string_collision_deferred": "PASS",
+      "50_single_producer": "PASS"
+    },
+    "series_parity": {
+      "row_count": 400,
+      "exact_matches": 400,
+      "mismatch_count": 0,
+      "oracle_dtype": "int8",
+      "pipeline_dtype": "int8",
+      "domain": [
+        0,
+        1,
+        2
+      ],
+      "prefix_ok": true,
+      "future_ok": true,
+      "determinism": true
+    },
+    "overall_verdict": "CERTIFIED",
+    "all_probes_pass": true,
+    "oracle_source_sha256": "81df2550a3112b229f76ef0d07a0f06507b93d2001ce6b31e9c31d4cc027847d"
+  },
+  "sidecar_isolation": "global_batch and expanding_causal are non-production",
+  "consumer_collision_note": "s05_grid string TRENDING is external debt",
+  "authoritative_producer_census": 1,
+  "PER_NODE_VERDICT": "CERTIFIED",
+  "PRODUCTION_BEHAVIOR_CHANGED": "NO",
+  "FEATURE_PROGRAM_CLOSED": "NO",
+  "CANONICAL_VECTOR_DIMENSION": 38,
+  "authority": "research/governance only \u2014 descriptive certification; grants no runtime authority (\u00a76.5)"
+}

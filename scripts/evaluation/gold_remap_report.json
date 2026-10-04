@@ -1,0 +1,1535 @@
+{
+  "generated_at": "2026-09-13T10:11:34Z",
+  "index_files": 2943,
+  "questions_total": 100,
+  "questions_changed": 2,
+  "unmatched_refs": 0,
+  "census_replacement": "docs/analysis/feature_state_lineage_census.md",
+  "per_question": [
+    {
+      "id": 1,
+      "old_files": [
+        "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md"
+      ],
+      "new_files": [
+        "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md",
+        "docs/architecture/goal.md"
+      ],
+      "rules": [
+        "R4_add_arch_surface:docs/architecture/goal.md",
+        "R2_domains:['architecture']->['INTENDED']"
+      ],
+      "unmatched": [],
+      "changed": true
+    },
+    {
+      "id": 2,
+      "old_files": [
+        "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md"
+      ],
+      "new_files": [
+        "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md"
+      ],
+      "rules": [
+        "R2_domains:['architecture']->['INTENDED']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 3,
+      "old_files": [
+        "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md",
+        "docs/architecture/opportunity-episode-platform-design.md"
+      ],
+      "new_files": [
+        "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md",
+        "docs/architecture/opportunity-episode-platform-design.md"
+      ],
+      "rules": [
+        "R2_domains:['architecture']->['INTENDED']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 4,
+      "old_files": [
+        "src/features/registry/__init__.py",
+        "src/features/fm_resolve.py",
+        "src/features/crt_state_resolver.py"
+      ],
+      "new_files": [
+        "src/features/registry/__init__.py",
+        "src/features/fm_resolve.py",
+        "src/features/crt_state_resolver.py"
+      ],
+      "rules": [
+        "R2_domains:['source_code']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 5,
+      "old_files": [
+        "active_models.yaml",
+        "src/engines/crt_engine.py",
+        "src/engines/llm_engine.py",
+        "src/core/fusion_engine.py"
+      ],
+      "new_files": [
+        "active_models.yaml",
+        "src/engines/crt_engine.py",
+        "src/engines/llm_engine.py",
+        "src/core/fusion_engine.py"
+      ],
+      "rules": [
+        "R2_domains:['source_code', 'config']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 6,
+      "old_files": [
+        "docs/analysis/ONTOLOGY_RUNTIME_REACHABILITY.md",
+        "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md"
+      ],
+      "new_files": [
+        "docs/analysis/ONTOLOGY_RUNTIME_REACHABILITY.md",
+        "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md"
+      ],
+      "rules": [
+        "R2_domains:['analysis', 'architecture']->['HISTORICAL', 'INTENDED']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 7,
+      "old_files": [
+        "src/features/registry/__init__.py",
+        "src/engines/crt_engine.py",
+        "src/core/fusion_engine.py"
+      ],
+      "new_files": [
+        "src/features/registry/__init__.py",
+        "src/engines/crt_engine.py",
+        "src/core/fusion_engine.py"
+      ],
+      "rules": [
+        "R2_domains:['source_code']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 8,
+      "old_files": [
+        "src/runtime/backtest_v2.py",
+        "src/strategies/s01_crt_wrapper.py"
+      ],
+      "new_files": [
+        "src/runtime/backtest_v2.py",
+        "src/strategies/s01_crt_wrapper.py"
+      ],
+      "rules": [
+        "R2_domains:['source_code']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 9,
+      "old_files": [
+        "docs/architecture/EXISTING_TO_FRAMEWORK_MAP.md",
+        "docs/architecture/opportunity-episode-platform-design.md"
+      ],
+      "new_files": [
+        "docs/architecture/EXISTING_TO_FRAMEWORK_MAP.md",
+        "docs/architecture/opportunity-episode-platform-design.md"
+      ],
+      "rules": [
+        "R2_domains:['architecture']->['INTENDED']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 10,
+      "old_files": [
+        "active_models.yaml",
+        "src/control_plane/registry.py"
+      ],
+      "new_files": [
+        "active_models.yaml",
+        "src/control_plane/registry.py"
+      ],
+      "rules": [
+        "R2_domains:['config', 'source_code']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 11,
+      "old_files": [
+        "python_source_static_census.jsonl",
+        "python_source_static_census_summary.json"
+      ],
+      "new_files": [
+        "docs/analysis/feature_state_lineage_census.md"
+      ],
+      "rules": [
+        "R1_replace_absent_census:python_source_static_census.jsonl->docs/analysis/feature_state_lineage_census.md",
+        "R1_replace_absent_census:python_source_static_census_summary.json->docs/analysis/feature_state_lineage_census.md",
+        "R2_domains:['analysis']->['HISTORICAL']"
+      ],
+      "unmatched": [],
+      "changed": true
+    },
+    {
+      "id": 12,
+      "old_files": [
+        "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md"
+      ],
+      "new_files": [
+        "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md"
+      ],
+      "rules": [
+        "R2_domains:['architecture']->['INTENDED']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 13,
+      "old_files": [],
+      "new_files": [],
+      "rules": [],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 14,
+      "old_files": [],
+      "new_files": [],
+      "rules": [],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 15,
+      "old_files": [
+        "docs/implementation_plan/001_FRAMEWORK_REGISTRY.md",
+        "docs/implementation_plan/FULL_BUILD_SPECIFICATION.md"
+      ],
+      "new_files": [
+        "docs/implementation_plan/001_FRAMEWORK_REGISTRY.md",
+        "docs/implementation_plan/FULL_BUILD_SPECIFICATION.md"
+      ],
+      "rules": [
+        "R2_domains:['architecture']->['INTENDED']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 16,
+      "old_files": [
+        "docs/PROJECT_HISTORY.md"
+      ],
+      "new_files": [
+        "docs/PROJECT_HISTORY.md"
+      ],
+      "rules": [
+        "R2_domains:['governance']->['RECORDED']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 17,
+      "old_files": [
+        "docs/knowledge-map.md"
+      ],
+      "new_files": [
+        "docs/knowledge-map.md"
+      ],
+      "rules": [
+        "R2_domains:['governance']->['RECORDED']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 18,
+      "old_files": [
+        "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md",
+        "docs/architecture/opportunity-episode-platform-design.md"
+      ],
+      "new_files": [
+        "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md",
+        "docs/architecture/opportunity-episode-platform-design.md"
+      ],
+      "rules": [
+        "R2_domains:['architecture']->['INTENDED']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 19,
+      "old_files": [
+        "docs/operations/CURRENT_STATE.md",
+        "docs/operations/KNOWN_ILLUSIONS.md",
+        "docs/operations/DEPENDENCY_GRAPH.md",
+        "docs/operations/TRUST_TIER_INDEX.md"
+      ],
+      "new_files": [
+        "docs/operations/CURRENT_STATE.md",
+        "docs/operations/KNOWN_ILLUSIONS.md",
+        "docs/operations/DEPENDENCY_GRAPH.md",
+        "docs/operations/TRUST_TIER_INDEX.md"
+      ],
+      "rules": [
+        "R2_domains:['operations']->[]"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 20,
+      "old_files": [
+        "README.md",
+        "CLAUDE.md"
+      ],
+      "new_files": [
+        "README.md",
+        "CLAUDE.md"
+      ],
+      "rules": [
+        "R2_domains:['governance']->['RECORDED']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 21,
+      "old_files": [
+        "src/features/registry/__init__.py"
+      ],
+      "new_files": [
+        "src/features/registry/__init__.py"
+      ],
+      "rules": [
+        "R2_domains:['source_code']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 22,
+      "old_files": [
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "new_files": [
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "rules": [
+        "R2_domains:['config']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 23,
+      "old_files": [
+        "configs/formulas/market_crt_states.yaml",
+        "src/features/registry/__init__.py"
+      ],
+      "new_files": [
+        "configs/formulas/market_crt_states.yaml",
+        "src/features/registry/__init__.py"
+      ],
+      "rules": [
+        "R2_domains:['config', 'source_code']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 24,
+      "old_files": [
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "new_files": [
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "rules": [
+        "R2_domains:['config']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 25,
+      "old_files": [
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "new_files": [
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "rules": [
+        "R2_domains:['config']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 26,
+      "old_files": [
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "new_files": [
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "rules": [
+        "R2_domains:['config']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 27,
+      "old_files": [
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "new_files": [
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "rules": [
+        "R2_domains:['config']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 28,
+      "old_files": [
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "new_files": [
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "rules": [
+        "R2_domains:['config']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 29,
+      "old_files": [
+        "src/features/registry/__init__.py",
+        "src/features/fm_resolve.py"
+      ],
+      "new_files": [
+        "src/features/registry/__init__.py",
+        "src/features/fm_resolve.py"
+      ],
+      "rules": [
+        "R2_domains:['source_code']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 30,
+      "old_files": [
+        "src/features/registry/__init__.py"
+      ],
+      "new_files": [
+        "src/features/registry/__init__.py"
+      ],
+      "rules": [
+        "R2_domains:['source_code']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 31,
+      "old_files": [
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "new_files": [
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "rules": [
+        "R2_domains:['config']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 32,
+      "old_files": [
+        "configs/formulas/market_crt_states.yaml",
+        "src/features/registry/__init__.py"
+      ],
+      "new_files": [
+        "configs/formulas/market_crt_states.yaml",
+        "src/features/registry/__init__.py"
+      ],
+      "rules": [
+        "R2_domains:['config', 'source_code']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 33,
+      "old_files": [
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "new_files": [
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "rules": [
+        "R2_domains:['config']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 34,
+      "old_files": [
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "new_files": [
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "rules": [
+        "R2_domains:['config']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 35,
+      "old_files": [
+        "src/features/registry/__init__.py",
+        "src/features/fm_resolve.py"
+      ],
+      "new_files": [
+        "src/features/registry/__init__.py",
+        "src/features/fm_resolve.py"
+      ],
+      "rules": [
+        "R2_domains:['source_code']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 36,
+      "old_files": [
+        "src/engines/crt_engine.py"
+      ],
+      "new_files": [
+        "src/engines/crt_engine.py"
+      ],
+      "rules": [
+        "R2_domains:['source_code']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 37,
+      "old_files": [
+        "configs/formulas/market_crt_states.yaml",
+        "src/engines/crt_engine.py"
+      ],
+      "new_files": [
+        "configs/formulas/market_crt_states.yaml",
+        "src/engines/crt_engine.py"
+      ],
+      "rules": [
+        "R2_domains:['config', 'source_code']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 38,
+      "old_files": [
+        "src/engines/crt_engine.py",
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "new_files": [
+        "src/engines/crt_engine.py",
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "rules": [
+        "R2_domains:['source_code', 'config']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 39,
+      "old_files": [
+        "src/engines/crt_engine.py",
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "new_files": [
+        "src/engines/crt_engine.py",
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "rules": [
+        "R2_domains:['source_code', 'config']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 40,
+      "old_files": [
+        "src/engines/crt_engine.py",
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "new_files": [
+        "src/engines/crt_engine.py",
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "rules": [
+        "R2_domains:['source_code', 'config']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 41,
+      "old_files": [
+        "src/engines/crt_engine.py",
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "new_files": [
+        "src/engines/crt_engine.py",
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "rules": [
+        "R2_domains:['source_code', 'config']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 42,
+      "old_files": [
+        "src/engines/crt_engine.py",
+        "src/strategies/s01_crt_wrapper.py"
+      ],
+      "new_files": [
+        "src/engines/crt_engine.py",
+        "src/strategies/s01_crt_wrapper.py"
+      ],
+      "rules": [
+        "R2_domains:['source_code']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 43,
+      "old_files": [
+        "src/engines/crt_engine.py",
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "new_files": [
+        "src/engines/crt_engine.py",
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "rules": [
+        "R2_domains:['source_code', 'config']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 44,
+      "old_files": [
+        "tests/test_retrieval_pipeline.py"
+      ],
+      "new_files": [
+        "tests/test_retrieval_pipeline.py"
+      ],
+      "rules": [
+        "R2_domains:['tests']->[]"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 45,
+      "old_files": [
+        "docs/analysis/CRT_AUDIT_REPORT.md",
+        "docs/analysis/ONTOLOGY_RUNTIME_REACHABILITY.md"
+      ],
+      "new_files": [
+        "docs/analysis/CRT_AUDIT_REPORT.md",
+        "docs/analysis/ONTOLOGY_RUNTIME_REACHABILITY.md"
+      ],
+      "rules": [
+        "R2_domains:['analysis']->['HISTORICAL']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 46,
+      "old_files": [
+        "src/config_layer/crt_engine_v2.py",
+        "src/engines/crt_engine.py"
+      ],
+      "new_files": [
+        "src/config_layer/crt_engine_v2.py",
+        "src/engines/crt_engine.py"
+      ],
+      "rules": [
+        "R2_domains:['source_code']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 47,
+      "old_files": [
+        "docs/current-findings.md",
+        "docs/analysis/CRT_AUDIT_REPORT.md"
+      ],
+      "new_files": [
+        "docs/current-findings.md",
+        "docs/analysis/CRT_AUDIT_REPORT.md"
+      ],
+      "rules": [
+        "R2_domains:['analysis']->['HISTORICAL']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 48,
+      "old_files": [
+        "docs/current-findings.md",
+        "docs/governance/fm026_session_log-2026-07-13.json"
+      ],
+      "new_files": [
+        "docs/current-findings.md",
+        "docs/governance/fm026_session_log-2026-07-13.json"
+      ],
+      "rules": [
+        "R2_domains:['analysis', 'governance']->['HISTORICAL', 'RECORDED']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 49,
+      "old_files": [
+        "tests/test_retrieval_pipeline.py"
+      ],
+      "new_files": [
+        "tests/test_retrieval_pipeline.py"
+      ],
+      "rules": [
+        "R2_domains:['tests']->[]"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 50,
+      "old_files": [
+        "docs/governance/fm026_certification-2026-07-13.json",
+        "docs/analysis/CRT_AUDIT_REPORT.md"
+      ],
+      "new_files": [
+        "docs/governance/fm026_certification-2026-07-13.json",
+        "docs/analysis/CRT_AUDIT_REPORT.md"
+      ],
+      "rules": [
+        "R2_domains:['governance', 'analysis']->['RECORDED', 'HISTORICAL']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 51,
+      "old_files": [
+        "active_models.yaml"
+      ],
+      "new_files": [
+        "active_models.yaml"
+      ],
+      "rules": [
+        "R2_domains:['config']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 52,
+      "old_files": [
+        "active_models.yaml"
+      ],
+      "new_files": [
+        "active_models.yaml"
+      ],
+      "rules": [
+        "R2_domains:['config']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 53,
+      "old_files": [
+        "active_models.yaml"
+      ],
+      "new_files": [
+        "active_models.yaml"
+      ],
+      "rules": [
+        "R2_domains:['config']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 54,
+      "old_files": [
+        "active_models.yaml"
+      ],
+      "new_files": [
+        "active_models.yaml"
+      ],
+      "rules": [
+        "R2_domains:['config']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 55,
+      "old_files": [
+        "active_models.yaml"
+      ],
+      "new_files": [
+        "active_models.yaml"
+      ],
+      "rules": [
+        "R2_domains:['config']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 56,
+      "old_files": [
+        "active_models.yaml",
+        "docs/analysis/ZONEGATE_AUDIT_REPORT.md"
+      ],
+      "new_files": [
+        "active_models.yaml",
+        "docs/analysis/ZONEGATE_AUDIT_REPORT.md"
+      ],
+      "rules": [
+        "R2_domains:['config', 'analysis']->['CURRENT', 'HISTORICAL']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 57,
+      "old_files": [
+        "active_models.yaml",
+        "docs/analysis/COMPLETE_MODEL_LAYER_AUDIT.md"
+      ],
+      "new_files": [
+        "active_models.yaml",
+        "docs/analysis/COMPLETE_MODEL_LAYER_AUDIT.md"
+      ],
+      "rules": [
+        "R2_domains:['config', 'analysis']->['CURRENT', 'HISTORICAL']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 58,
+      "old_files": [
+        "active_models.yaml",
+        "docs/analysis/GAUSSIAN_AUDIT_REPORT.md"
+      ],
+      "new_files": [
+        "active_models.yaml",
+        "docs/analysis/GAUSSIAN_AUDIT_REPORT.md"
+      ],
+      "rules": [
+        "R2_domains:['config', 'analysis']->['CURRENT', 'HISTORICAL']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 59,
+      "old_files": [
+        "active_models.yaml",
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "new_files": [
+        "active_models.yaml",
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "rules": [
+        "R2_domains:['config']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 60,
+      "old_files": [
+        "active_models.yaml",
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "new_files": [
+        "active_models.yaml",
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "rules": [
+        "R2_domains:['config']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 61,
+      "old_files": [
+        "active_models.yaml",
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "new_files": [
+        "active_models.yaml",
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "rules": [
+        "R2_domains:['config']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 62,
+      "old_files": [
+        "active_models.yaml",
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "new_files": [
+        "active_models.yaml",
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "rules": [
+        "R2_domains:['config']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 63,
+      "old_files": [
+        "active_models.yaml"
+      ],
+      "new_files": [
+        "active_models.yaml"
+      ],
+      "rules": [
+        "R2_domains:['config']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 64,
+      "old_files": [
+        "active_models.yaml",
+        "src/core/fusion_engine.py"
+      ],
+      "new_files": [
+        "active_models.yaml",
+        "src/core/fusion_engine.py"
+      ],
+      "rules": [
+        "R2_domains:['config', 'source_code']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 65,
+      "old_files": [
+        "active_models.yaml",
+        "docs/governance/fm026_certification-2026-07-13.json"
+      ],
+      "new_files": [
+        "active_models.yaml",
+        "docs/governance/fm026_certification-2026-07-13.json"
+      ],
+      "rules": [
+        "R2_domains:['config', 'governance']->['CURRENT', 'RECORDED']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 66,
+      "old_files": [
+        "configs/production/ACTIVE_VERSION"
+      ],
+      "new_files": [
+        "configs/production/ACTIVE_VERSION"
+      ],
+      "rules": [
+        "R2_domains:['config']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 67,
+      "old_files": [
+        "configs/production/ACTIVE_VERSION"
+      ],
+      "new_files": [
+        "configs/production/ACTIVE_VERSION"
+      ],
+      "rules": [
+        "R2_domains:['config']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 68,
+      "old_files": [
+        "configs/market_reality/market_reality_v1.yaml"
+      ],
+      "new_files": [
+        "configs/market_reality/market_reality_v1.yaml"
+      ],
+      "rules": [
+        "R2_domains:['config']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 69,
+      "old_files": [
+        "src/features/registry/__init__.py",
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "new_files": [
+        "src/features/registry/__init__.py",
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "rules": [
+        "R2_domains:['source_code', 'config']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 70,
+      "old_files": [
+        "src/features/registry/__init__.py",
+        "src/features/fm_resolve.py"
+      ],
+      "new_files": [
+        "src/features/registry/__init__.py",
+        "src/features/fm_resolve.py"
+      ],
+      "rules": [
+        "R2_domains:['source_code']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 71,
+      "old_files": [
+        "active_models.yaml",
+        "configs/market_reality/market_reality_v1.yaml",
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "new_files": [
+        "active_models.yaml",
+        "configs/market_reality/market_reality_v1.yaml",
+        "configs/formulas/market_crt_states.yaml"
+      ],
+      "rules": [
+        "R2_domains:['config']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 72,
+      "old_files": [
+        "docs/behavior_contracts.md"
+      ],
+      "new_files": [
+        "docs/behavior_contracts.md"
+      ],
+      "rules": [
+        "R2_domains:['intent']->['INTENDED']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 73,
+      "old_files": [
+        "docs/behavior_contracts.md"
+      ],
+      "new_files": [
+        "docs/behavior_contracts.md"
+      ],
+      "rules": [
+        "R2_domains:['intent']->['INTENDED']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 74,
+      "old_files": [
+        "src/control_plane/registry.py"
+      ],
+      "new_files": [
+        "src/control_plane/registry.py"
+      ],
+      "rules": [
+        "R2_domains:['source_code']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 75,
+      "old_files": [
+        "docs/behavior_contracts.md",
+        "docs/intent/100_execution.md"
+      ],
+      "new_files": [
+        "docs/behavior_contracts.md",
+        "docs/intent/100_execution.md"
+      ],
+      "rules": [
+        "R2_domains:['intent']->['INTENDED']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 76,
+      "old_files": [
+        "docs/PROJECT_HISTORY.md"
+      ],
+      "new_files": [
+        "docs/PROJECT_HISTORY.md"
+      ],
+      "rules": [
+        "R2_domains:['governance']->['RECORDED']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 77,
+      "old_files": [
+        "docs/knowledge-map.md"
+      ],
+      "new_files": [
+        "docs/knowledge-map.md"
+      ],
+      "rules": [
+        "R2_domains:['governance']->['RECORDED']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 78,
+      "old_files": [
+        "docs/behavior_contracts.md"
+      ],
+      "new_files": [
+        "docs/behavior_contracts.md"
+      ],
+      "rules": [
+        "R2_domains:['intent']->['INTENDED']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 79,
+      "old_files": [
+        "docs/governance/EPISTEMIC_INTEGRITY.md"
+      ],
+      "new_files": [
+        "docs/governance/EPISTEMIC_INTEGRITY.md"
+      ],
+      "rules": [
+        "R2_domains:['governance']->['RECORDED']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 80,
+      "old_files": [
+        "docs/implementation_plan/001_FRAMEWORK_REGISTRY.md"
+      ],
+      "new_files": [
+        "docs/implementation_plan/001_FRAMEWORK_REGISTRY.md"
+      ],
+      "rules": [
+        "R2_domains:['architecture']->['INTENDED']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 81,
+      "old_files": [
+        "docs/governance/geometry_static_lineage_report.md",
+        "docs/governance/finding_dependency_audit.md"
+      ],
+      "new_files": [
+        "docs/governance/geometry_static_lineage_report.md",
+        "docs/governance/finding_dependency_audit.md"
+      ],
+      "rules": [
+        "R2_domains:['governance']->['RECORDED']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 82,
+      "old_files": [
+        "docs/governance/fm026_session_log-2026-07-13.json",
+        "docs/PROJECT_HISTORY.md"
+      ],
+      "new_files": [
+        "docs/governance/fm026_session_log-2026-07-13.json",
+        "docs/PROJECT_HISTORY.md"
+      ],
+      "rules": [
+        "R2_domains:['governance']->['RECORDED']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 83,
+      "old_files": [
+        "CLAUDE.md",
+        "docs/governance/EPISTEMIC_INTEGRITY.md"
+      ],
+      "new_files": [
+        "CLAUDE.md",
+        "docs/governance/EPISTEMIC_INTEGRITY.md"
+      ],
+      "rules": [
+        "R2_domains:['governance']->['RECORDED']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 84,
+      "old_files": [
+        "docs/governance/fm026_certification-2026-07-13.json",
+        "docs/governance/phase1_run1_feature_producer_consumer_graph-2026-07-10.json"
+      ],
+      "new_files": [
+        "docs/governance/fm026_certification-2026-07-13.json",
+        "docs/governance/phase1_run1_feature_producer_consumer_graph-2026-07-10.json"
+      ],
+      "rules": [
+        "R2_domains:['governance']->['RECORDED']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 85,
+      "old_files": [
+        "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md",
+        "docs/architecture/opportunity-episode-platform-design.md"
+      ],
+      "new_files": [
+        "docs/architecture/TRADING_SYSTEM_FRAMEWORK.md",
+        "docs/architecture/opportunity-episode-platform-design.md"
+      ],
+      "rules": [
+        "R2_domains:['architecture']->['INTENDED']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 86,
+      "old_files": [
+        "configs/formulas/market_crt_states.yaml",
+        "src/features/registry/__init__.py",
+        "src/engines/crt_engine.py",
+        "active_models.yaml",
+        "src/core/fusion_engine.py"
+      ],
+      "new_files": [
+        "configs/formulas/market_crt_states.yaml",
+        "src/features/registry/__init__.py",
+        "src/engines/crt_engine.py",
+        "active_models.yaml",
+        "src/core/fusion_engine.py"
+      ],
+      "rules": [
+        "R2_domains:['config', 'source_code']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 87,
+      "old_files": [
+        "configs/formulas/market_crt_states.yaml",
+        "src/features/registry/__init__.py",
+        "active_models.yaml"
+      ],
+      "new_files": [
+        "configs/formulas/market_crt_states.yaml",
+        "src/features/registry/__init__.py",
+        "active_models.yaml"
+      ],
+      "rules": [
+        "R2_domains:['config', 'source_code']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 88,
+      "old_files": [
+        "configs/formulas/market_crt_states.yaml",
+        "src/features/registry/__init__.py",
+        "src/engines/crt_engine.py",
+        "active_models.yaml"
+      ],
+      "new_files": [
+        "configs/formulas/market_crt_states.yaml",
+        "src/features/registry/__init__.py",
+        "src/engines/crt_engine.py",
+        "active_models.yaml"
+      ],
+      "rules": [
+        "R2_domains:['config', 'source_code']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 89,
+      "old_files": [
+        "src/features/registry/__init__.py",
+        "active_models.yaml",
+        "src/core/fusion_engine.py"
+      ],
+      "new_files": [
+        "src/features/registry/__init__.py",
+        "active_models.yaml",
+        "src/core/fusion_engine.py"
+      ],
+      "rules": [
+        "R2_domains:['source_code', 'config']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 90,
+      "old_files": [
+        "configs/formulas/market_crt_states.yaml",
+        "src/features/registry/__init__.py",
+        "src/control_plane/registry.py"
+      ],
+      "new_files": [
+        "configs/formulas/market_crt_states.yaml",
+        "src/features/registry/__init__.py",
+        "src/control_plane/registry.py"
+      ],
+      "rules": [
+        "R2_domains:['config', 'source_code']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 91,
+      "old_files": [
+        "active_models.yaml",
+        "src/control_plane/registry.py",
+        "src/core/fusion_engine.py"
+      ],
+      "new_files": [
+        "active_models.yaml",
+        "src/control_plane/registry.py",
+        "src/core/fusion_engine.py"
+      ],
+      "rules": [
+        "R2_domains:['config', 'source_code']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 92,
+      "old_files": [
+        "configs/formulas/market_crt_states.yaml",
+        "src/engines/crt_engine.py",
+        "src/strategies/s01_crt_wrapper.py",
+        "src/core/fusion_engine.py"
+      ],
+      "new_files": [
+        "configs/formulas/market_crt_states.yaml",
+        "src/engines/crt_engine.py",
+        "src/strategies/s01_crt_wrapper.py",
+        "src/core/fusion_engine.py"
+      ],
+      "rules": [
+        "R2_domains:['config', 'source_code']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 93,
+      "old_files": [
+        "docs/governance/EPISTEMIC_INTEGRITY.md",
+        "docs/governance/fm026_certification-2026-07-13.json",
+        "scripts/governance/construction_protocol.py"
+      ],
+      "new_files": [
+        "docs/governance/EPISTEMIC_INTEGRITY.md",
+        "docs/governance/fm026_certification-2026-07-13.json",
+        "scripts/governance/construction_protocol.py"
+      ],
+      "rules": [
+        "R2_domains:['governance']->['RECORDED']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 94,
+      "old_files": [
+        "docs/PROJECT_HISTORY.md",
+        "docs/governance/fm026_session_log-2026-07-13.json",
+        "docs/analysis/CRT_AUDIT_REPORT.md",
+        "active_models.yaml"
+      ],
+      "new_files": [
+        "docs/PROJECT_HISTORY.md",
+        "docs/governance/fm026_session_log-2026-07-13.json",
+        "docs/analysis/CRT_AUDIT_REPORT.md",
+        "active_models.yaml"
+      ],
+      "rules": [
+        "R2_domains:['governance', 'analysis', 'config']->['RECORDED', 'HISTORICAL', 'CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 95,
+      "old_files": [
+        "configs/formulas/market_crt_states.yaml",
+        "src/features/registry/__init__.py",
+        "src/engines/crt_engine.py",
+        "active_models.yaml",
+        "src/core/fusion_engine.py",
+        "src/strategies/s01_crt_wrapper.py"
+      ],
+      "new_files": [
+        "configs/formulas/market_crt_states.yaml",
+        "src/features/registry/__init__.py",
+        "src/engines/crt_engine.py",
+        "active_models.yaml",
+        "src/core/fusion_engine.py",
+        "src/strategies/s01_crt_wrapper.py"
+      ],
+      "rules": [
+        "R2_domains:['config', 'source_code']->['CURRENT']"
+      ],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 96,
+      "old_files": [],
+      "new_files": [],
+      "rules": [],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 97,
+      "old_files": [],
+      "new_files": [],
+      "rules": [],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 98,
+      "old_files": [],
+      "new_files": [],
+      "rules": [],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 99,
+      "old_files": [],
+      "new_files": [],
+      "rules": [],
+      "unmatched": [],
+      "changed": false
+    },
+    {
+      "id": 100,
+      "old_files": [],
+      "new_files": [],
+      "rules": [],
+      "unmatched": [],
+      "changed": false
+    }
+  ]
+}

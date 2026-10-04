@@ -1,0 +1,40 @@
+{
+  "probe_id": "BC2-OPEN-CLOSE-XAUUSD-MT5-V1",
+  "dataset_id": "XAUUSD_MT5_PHASE1_20260521",
+  "admitted_sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+  "admitted_path": "data/mt5/XAUUSD_M15.csv",
+  "admitted_artifact_present": true,
+  "admitted_sha256_match": true,
+  "prereg": "docs/research/preregistration-bc2-open-close-label.md",
+  "verdict": "OPEN",
+  "reason": "open_candidate_and_mutation",
+  "candidate": "open",
+  "delta_seconds_a": 133.0,
+  "clock_a": "mt5_tick",
+  "clock_b": "mt5_tick",
+  "clock_basis": "broker_local",
+  "source_a": "live_mt5",
+  "source_b": "live_mt5",
+  "wall_clock_skew_seconds_a": -10799.484298,
+  "wall_clock_skew_seconds_b": -10799.845625,
+  "stale_threshold_seconds": 21600,
+  "terminal_a": {
+    "company": "MetaQuotes Ltd.",
+    "name": "MetaTrader 5",
+    "build": 6140,
+    "connected": true,
+    "server": "ICMarketsSC-Demo"
+  },
+  "terminal_b": {
+    "company": "MetaQuotes Ltd.",
+    "name": "MetaTrader 5",
+    "build": 6140,
+    "connected": true,
+    "server": "ICMarketsSC-Demo"
+  },
+  "producer_family_match": "UNVERIFIED_NO_RECORDED_TERMINAL",
+  "g06_mt5": "PROVEN",
+  "grants_g06_mt5": true,
+  "executable_open_vs_close_label_proof": true,
+  "ohlcv_closure": "UNCHANGED"
+}

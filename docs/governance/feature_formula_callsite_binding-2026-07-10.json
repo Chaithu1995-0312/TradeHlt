@@ -1,0 +1,55 @@
+{
+  "disp_strength": [
+    {
+      "consumer": "FeaturePipeline / BacktestRunner features",
+      "name": "disp_strength",
+      "formula": "FM-020 body/(atr*close)"
+    },
+    {
+      "consumer": "FeaturePipeline / BacktestRunner features",
+      "name": "retest_depth",
+      "formula": "FM-021 |close-ema|/(atr*close) gated"
+    },
+    {
+      "consumer": "CRTEngine.cached_features",
+      "name": "displacement_atr_ratio / displacement_retrace",
+      "formula": "FM-028 / FM-027"
+    },
+    {
+      "consumer": "BitNet input map at CRT execute",
+      "name": "disp_strength / retest_depth keys",
+      "formula": "aliases of FM-028 / FM-027 \u2014 NOT pipeline FM-020/021"
+    }
+  ],
+  "retest_depth_and_aliases": [
+    {
+      "consumer": "FeaturePipeline / BacktestRunner features",
+      "name": "disp_strength",
+      "formula": "FM-020 body/(atr*close)"
+    },
+    {
+      "consumer": "FeaturePipeline / BacktestRunner features",
+      "name": "retest_depth",
+      "formula": "FM-021 |close-ema|/(atr*close) gated"
+    },
+    {
+      "consumer": "CRTEngine.cached_features",
+      "name": "displacement_atr_ratio / displacement_retrace",
+      "formula": "FM-028 / FM-027"
+    },
+    {
+      "consumer": "BitNet input map at CRT execute",
+      "name": "disp_strength / retest_depth keys",
+      "formula": "aliases of FM-028 / FM-027 \u2014 NOT pipeline FM-020/021"
+    }
+  ],
+  "volume": {
+    "pipeline": "TICK_VOLUME on XAU; T-003 proxy under same name if all-zero",
+    "mt5": "tick_volume"
+  },
+  "volatility_regime": {
+    "default": "global ATR percentile rank",
+    "env_expanding": "TRUST_VOLREGIME_CAUSAL=expanding",
+    "env_rolling": "TRUST_VOLREGIME_CAUSAL=rolling"
+  }
+}

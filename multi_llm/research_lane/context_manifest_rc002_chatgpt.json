@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0",
+  "description": "RC-002 composition context (ChatGPT DECISION turn) - dossier PLUS the three upstream packages, so the composing turn cannot be run without them",
+  "max_chars_per_file_default": 120000,
+  "docs": [
+    {
+      "path": "multi_llm/research_lane/cycles/RC-002/EVIDENCE_DOSSIER.md",
+      "role": "the_evidence_read_this_first",
+      "priority": 1
+    },
+    {
+      "path": "multi_llm/research_lane/proposals/deepseek/RC-002/CRITIQUE.md",
+      "role": "upstream_package_1_of_3_deepseek_critique",
+      "priority": 2
+    },
+    {
+      "path": "multi_llm/research_lane/proposals/grok/RC-002/PROPOSAL.md",
+      "role": "upstream_package_2_of_3_grok_proposal_identity_candidates",
+      "priority": 3
+    },
+    {
+      "path": "multi_llm/research_lane/proposals/gemini/RC-002/CRITIQUE.md",
+      "role": "upstream_package_3_of_3_gemini_critique_test_design",
+      "priority": 4
+    },
+    {
+      "path": "docs/governance/SEMANTIC_REVIEW_PROTOCOL.md",
+      "role": "the_ten_verdicts_and_never_conclude_defect_from_difference",
+      "priority": 5
+    },
+    {
+      "path": "configs/formulas/market_shapes.yaml",
+      "role": "blocked_shapes_incl_sweepreversal_entry",
+      "priority": 6
+    },
+    {
+      "path": "docs/governance/MARKET_ONTOLOGY_EVOLUTION_CONTRACT.md",
+      "role": "identity_first_refinement_ladder_unknown_nodes",
+      "priority": 7
+    },
+    {
+      "path": "docs/governance/EPISTEMIC_INTEGRITY.md",
+      "role": "e001_preregistration_ritual_and_authority_ladder",
+      "priority": 8
+    },
+    {
+      "path": "multi_llm/research_lane/RESEARCH_ROLES.md",
+      "role": "your_role_and_the_no_voting_rule",
+      "priority": 9
+    },
+    {
+      "path": "multi_llm/research_lane/package_schema.json",
+      "role": "package_contract_your_output_must_validate",
+      "priority": 10
+    }
+  ]
+}

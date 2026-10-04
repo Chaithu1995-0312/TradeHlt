@@ -1,0 +1,41 @@
+{
+  "authority": "Detection only. The alert count is an observation, not a result. No entry, no outcome, no expectancy, no G001, no production authority.",
+  "bulk_candle_selector": {
+    "evidence": [
+      "visually dominant",
+      "often large-bodied",
+      "may also be wick-dominant",
+      "no approved percentage threshold exists"
+    ],
+    "note": "No selector ships in this package. Parent bulk candles are supplied externally by the human bridge. Resolving this requires a recorded freeze.",
+    "status": "UNRESOLVED"
+  },
+  "corpus": {
+    "first_timestamp": "2026-07-07 01:00:00",
+    "last_timestamp": "2026-08-06 23:45:00",
+    "n_bars": 2116,
+    "path": "D:/Tradelatest/data/XAUUSD_M15.csv",
+    "sha256": "478b075150935c950ccc749925709db783e337c55c886d6dda1e3ee8b9692c5b"
+  },
+  "economic_claims_allowed": false,
+  "n_alerts": 53,
+  "object": "SUJAN_MANIPULATION_RESEARCH_PHASE_1",
+  "parents": {
+    "n_supplied": 1,
+    "path": "D:/Tradelatest/docs/research-readiness/sujan_manipulation/parents_tv_screenshot.json",
+    "sha256": "5a7ebd0a03463d09b51808deaca66e416dcaf40c6af9e837040cc22e3e2a66d5",
+    "source": "externally supplied: D:/Tradelatest/docs/research-readiness/sujan_manipulation/parents_tv_screenshot.json",
+    "timestamps": [
+      "2026-07-28 03:45:00"
+    ]
+  },
+  "phase": 1,
+  "predicate": {
+    "alternative_reading_preserved": "SP-001-only (closed back past the purged side) is re-derivable from every alert's bar_close / range_high / range_low fields without a re-run.",
+    "closes_back_inside": "range_low < close < range_high (literal reading, bridge Record 5)",
+    "purge": "SP-001 structure.predicates.swept_high / swept_low (strict both sides)",
+    "same_candle": "purge and close-back-inside are properties of ONE later candle"
+  },
+  "run_utc": "2026-08-28T18:28:41+00:00",
+  "sem_id": "SEM-033"
+}

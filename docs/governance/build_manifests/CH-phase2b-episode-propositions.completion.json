@@ -1,0 +1,30 @@
+{
+  "change_id": "CH-phase2b-episode-propositions",
+  "status": "COMPLETE",
+  "completed_utc": "2026-08-09T11:50:00Z",
+  "production_behavior_changed": false,
+  "checks_run": [
+    "tests/test_episode_propositions.py (14 passed)",
+    "construction_protocol validate-impact → IMPACT: APPROVED",
+    "xauusd_episode_coverage_census.py (propositions attached to 10 episodes)"
+  ],
+  "certification": {
+    "episodes": 10,
+    "exit_claims_per_episode": 2,
+    "O11_DIRECTION_ALIGNMENT": "emitted 10/10 (relation mix includes CONFLICT)",
+    "O12_CHAPTER_VS_STRUCTURE_SCORE": "ORTHOGONAL under POL-O12-SCORE-NOT-CHAPTER when testimony present",
+    "O14_AGREEMENT": "UNREPRESENTED / BREAK 10/10 by design",
+    "STATE": "OK 10/10 (from 2A)",
+    "full_coherent": 0,
+    "layerwise_describable": 0
+  },
+  "policy_freeze": {
+    "POL-O12-SCORE-NOT-CHAPTER": "structure_rule_score is quality testimony, not CRT chapter membership"
+  },
+  "artifacts": [
+    "src/research/episode_propositions.py",
+    "results/research/xauusd_episode_semantic_reconstruction/episodes.json",
+    "results/research/xauusd_episode_semantic_reconstruction/coverage_census.json",
+    "results/research/xauusd_episode_semantic_reconstruction/phase2_chain_coherence.json"
+  ]
+}

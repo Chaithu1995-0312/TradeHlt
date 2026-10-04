@@ -1,0 +1,15 @@
+# Canonical fallback — deliberately unmeasured.
+id: ODP-FALLBACK
+finding_id: null
+contract_ref: null
+condition: null
+lookahead_bars: 5
+outcome_metric: forward_return_atr
+quantiles: null
+n: 0
+confidence: none
+measurement_period: null
+corpus_pin: null
+mechanism: null
+mechanism_confidence: none
+notes: Downstream must decide behaviour; this row is not evidence.

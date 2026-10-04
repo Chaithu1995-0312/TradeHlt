@@ -1,0 +1,67 @@
+{
+  "change_id": "CH-intent-schema-alignment",
+  "date_utc": "2026-09-16",
+  "objective": "Align the two trade-intent schemas without canonicalizing the wrong episode definition. PART 1 (identity): make the EPISODE scope of FM-027 displacement_retrace and FM-028 displacement_atr_ratio an explicit, machine-readable ontology contract, record their distinctness from FM-021 retest_depth / FM-020 disp_strength on both nodes, and correct their stale source_of_truth citations. Additive lineage/semantics blocks only (unread by any runtime path per spec_schema.additive_spec_blocks); no FM id minted, no formula identity changed, no CANONICAL_FEATURES change. PART 2 (classifier): split ExecutionPlannerV1_2._derive_intent's EMA test into its two halves, adding CONTINUATION for with-trend entries so they stop falling through to UNKNOWN (measured 40.70% LONG / 31.97% SHORT of the XAUUSD M15 corpus) and being rejected by reject_unknown_intent. reject_unknown_intent stays True.",
+  "change_classes": [
+    "FEATURE_IDENTITY_CHANGE",
+    "RUNTIME_DECISION_PATH_CHANGE",
+    "PRODUCTION_CONFIG_CHANGE"
+  ],
+  "change_class_rationale": "FEATURE_IDENTITY_CHANGE: FM-027/FM-028 refine IN PLACE (ids kept, version bumped) with an explicit scope contract -- a refinement of a governed identity's declared contract, not a rename or retirement. RUNTIME_DECISION_PATH_CHANGE: the planner's intent classification changes on the live rail (with-trend entries relabelled UNKNOWN -> CONTINUATION, so they are no longer rejected). PRODUCTION_CONFIG_CHANGE: execution_planner.ttl_continuation_sec is added to configs/production/v2_htfcrt_2026_08.json, strictly required. DATASET_SCHEMA_CHANGE was considered and deliberately NOT declared: CANONICAL_FEATURES, SCHEMA_HASH and FEATURE_ORDER_HASH are untouched. MODEL_INPUT_CHANGE was NOT declared: no model reads planner intent.",
+  "affected_files": [
+    "configs/formulas/market_ontology.yaml",
+    "src/config_layer/execution_planner.py",
+    "configs/production/v2_htfcrt_2026_08.json",
+    "docs/governance/feature-layer-freeze-pin-2026-07-20.json",
+    "docs/governance/build_manifests/CH-intent-schema-alignment.impact.json",
+    "docs/governance/build_manifests/CH-intent-schema-alignment.completion.json",
+    "docs/analysis/trade-intent-caller-census-2026-09-16.md",
+    "docs/analysis/readme.md",
+    "assistant_project.md"
+  ],
+  "affected_files_note": "PRE-DECLARATION -- edits not yet made. Test files touched by the planner split (fixtures asserting UNKNOWN on with-trend inputs, if any) are identified by grep during implementation and recorded in the completion manifest.",
+  "affected_feature_ids": ["FM-027", "FM-028"],
+  "affected_feature_ids_note": "Refine IN PLACE per MARKET_ONTOLOGY_EVOLUTION_CONTRACT. FM-021 and FM-020 are referenced (distinctness notes on FM-027/FM-028) but not edited.",
+  "affected_models": "none -- no model artifact reads planner intent or the FM-027/FM-028 lineage block.",
+  "affected_production_config": "configs/production/v2_htfcrt_2026_08.json: add execution_planner.ttl_continuation_sec. execution_planner is a top-level section outside params, so the promotion-log config_hash (params hash) must NOT move -- verified, not assumed. ACTIVE_VERSION unchanged.",
+  "ontology_nodes_added": [],
+  "freeze_pin_mechanism": "waiver_log SHA refresh for market_ontology.yaml with MEASURED attribution, following the CH-visual-crt-lane2-seal (2026-08-17) precedent: frozen surface #4 covers 'new FM ids, formula identity changes'; this edit adds neither. No accepted_future_programs entry is required. execution_planner.py and v2_htfcrt_2026_08.json are not freeze-pinned.",
+  "required_checks_ack": [
+    "tests/test_formula_registry.py",
+    "tests/test_feature_lineage.py",
+    "tests/test_geometry_census.py",
+    "tests/test_gate2b_closure.py",
+    "tests/test_feature_math_lint.py",
+    "tests/test_current_findings.py",
+    "tests/test_config_reachability.py",
+    "tests/test_reachability_golden.py",
+    "tests/test_active_models_registry.py",
+    "tests/test_feature_spec_schema.py",
+    "tests/test_feature_layer_freeze.py",
+    "tests/test_semantic_registry.py"
+  ],
+  "required_checks_note": "First four: FEATURE_IDENTITY_CHANGE. test_feature_math_lint/test_geometry_census/test_current_findings: RUNTIME_DECISION_PATH_CHANGE. test_config_reachability/test_reachability_golden/test_active_models_registry: PRODUCTION_CONFIG_CHANGE. test_feature_spec_schema, test_feature_layer_freeze and test_semantic_registry are added because the ontology spec_schema, the freeze pin and the semantic registry are touched. BASELINE: check_governance_invariants.py --all = 12 failed / 567 passed before this change (same twelve names recorded in CH-schema-v6-normalization-identity.impact.json). test_geometry_census x2 and test_current_findings::test_nonterminal_findings_are_fresh are in that pre-existing set.",
+  "unknowns": [],
+  "known_blocker_not_caused_by_this_change": {
+    "_doc": "Declared up front, not discovered at completion.",
+    "file": "src/runtime/backtest_v2.py",
+    "symptom": "ImportError at module load: dataclass BacktestConfig raises 'non-default argument initial_capital follows default argument' (backtest_v2.py:190).",
+    "cause": "Another session's in-progress CH-cost-model-identity-stamp change (+76 lines, mtime 2026-09-16 14:50; its untracked impact manifest sits beside this one) inserted defaulted cost_model_id/cost_model_params_hash fields ahead of non-default fields. No edits to src/ in the 2 hours since.",
+    "impact_on_this_change": "Blocks the empirical XAUUSD ledger diff and the shadow probe re-run (both import runtime.backtest_v2). NOT fixed here -- it belongs to another change set. The live-rail-only claim is instead proved STRUCTURALLY (backtest_v2 has no import of execution_planner) and the ledger diff is recorded as BLOCKED, not PASS."
+  },
+  "problem_addressed": {
+    "schema_mismatch": "Arm A (CRT cache, episode-scoped) and Arm C (canonical row, bar-scoped) share no quantity -- only names. FM-027 is retrace into the displacement body; FM-021 is |close-ema_fast|/atr_abs masked to 0.0 unless retest_flag==1. FM-028 is candle_range/atr_abs of the displacement candle; FM-020 is body_size/atr_abs of the current bar.",
+    "why_not_a_vector_slot": "feature_pipeline.py contains zero occurrences of disp_open/disp_close/displacement_candle. FM-027 needs a pairing of one displacement candle with one retest candle, which exists only in the CRT state machine. A vector slot would need either a second state machine in the pipeline (whose retest definition already disagrees with the engine: retest_flag==1 on 58.07% of bars yet 0 on 4 of 6 engine RETEST bars) or a sentinel on the ~99% of bars with no episode.",
+    "unknown_hole": "_derive_intent's REVERSAL is strictly counter-trend, so a with-trend entry that is not a sweep/pullback/breakout falls to UNKNOWN and is rejected. Traced instance: 2024-08-21 22:15 LONG, ema_fast 2512.907 > ema_slow 2510.742."
+  },
+  "residual_not_fixed": [
+    "retest_flag (58.07% of bars) vs the CRT engine's RETEST disagreement -- recorded, its own adjudication.",
+    "retest_depth's 0.0 'no retest' sentinel inside a numeric band predicate -- benign for the current predicate, latent hazard for any future lower-bounded one; recorded, not changed.",
+    "The CRT-rail seam (option C's process_candle wiring) -- unchanged and unauthorized.",
+    "fusion_engine.py:234 atr_vol docstring claim -- recorded in the census, not changed."
+  ],
+  "rollback_boundary": "Single change set: ontology + planner + config + pin refresh revert together. Part 1 and Part 2 are independent and may be reverted separately.",
+  "authority_granted": "User 2026-09-16 AskUserQuestion: alignment='Align by IDENTITY -- promote the episode quantities to canonical'; UNKNOWN hole='Fix the classifier too'; ExitPlanMode approval of the written plan, which explicitly substituted identity-without-vector-membership for the non-constructible 48->50 dim form and stated why.",
+  "authority_NOT_granted": "No CANONICAL_FEATURES change, no schema v7.0, no retrain, no promotion, no ACTIVE_VERSION change, no relaxation of reject_unknown_intent, no G001, no economic claim.",
+  "production_behavior_changed": "LIVE RAIL ONLY -- planner intent labels change for with-trend entries (UNKNOWN->CONTINUATION, no longer rejected). The backtest rail never imports ExecutionPlannerV1_2 (backtest_v2.py:2581, F-103), so the backtest ledger is unaffected by construction. F-073: no production live rail exists, so this cannot be validated against realized PnL."
+}

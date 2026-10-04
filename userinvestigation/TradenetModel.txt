@@ -1,0 +1,111 @@
+Based on my thorough investigation of the codebase and implementation plan documents, here's what I found:
+
+## Feature Schema → Models: Current State
+
+### What exists in code (designed and implemented)
+
+**1. `src/features/feature_schema.py`** — The canonical schema definition:
+- **48-dimensional schema** (v6.0) generated from `configs/formulas/market_ontology.yaml`
+- `CANONICAL_FEATURES` — tuple of 48 feature names
+- `CANONICAL_FEATURE_DIM = 48`
+- `FEATURE_ORDER_HASH` (SHA-256) and `SCHEMA_HASH` (MD5) for drift detection
+- `SchemaObject` wrapper for `tradenet` and `gaussian` schemas
+- `_SCHEMA_REGISTRY` — maps model types (`"tradenet"`, `"gaussian"`) to their `SchemaObject`
+- `schema_for_model(model_type)` — function to look up schema for a model type
+- `FeatureSchemaRegistry` — class-level registry mapping **model version strings → feature_order_hash** for runtime compatibility checking (truncation when schema migrates)
+
+**2. `src/core/model_registry.py`** — Model registration with schema:
+- Each model entry stores: `version`, `model_file`, **`feature_schema`**, `metrics`
+- Schema enforcement on model load (`schema_for_model`, `SCHEMA_VERSION` imported at line 31)
+
+**3. `CH-active-models-identity` change** (2026-07-22):
+- WHO identity version-binding (`active_models.yaml` schema 2.2) for gaussian, zone_gate, rr_model, bitnet, tradenet
+- CI tests in `test_active_models_registry.py` (22 tests passing)
+
+### What's NOT in `docs/implementation_plan/`
+
+There is **no single implementation plan document** that explicitly designs "feature schema → models" as a standalone mapping artifact. The design is distributed across:
+
+| Location | What it covers |
+|---|---|
+| `feature_schema.py` | Schema definition, versioning, registry, compatibility checking |
+| `model_registry.py` | Model entries with embedded `feature_schema` field |
+| `docs/governance/feature_38_lineage_census-2026-09-09.json` | Feature lineage — which features exist, their formulas, consumers (not model-specific) |
+| `docs/governance/feature_pipeline_change_contracts/` | Feature pipeline change contracts |
+| `docs/implementation_plan/v3-unified-market-structure-migration-2026-09.md` | v3 config registration (not feature-to-model mapping) |
+| `CH-active-models-identity` | Model identity version-binding (WHO, not feature schema → model) |
+
+### Key gap
+
+The **feature-to-model consumption mapping** — i.e., a design document that explicitly says "Model X uses features [a, b, c] at indices [0, 1, 2]" — is **not present as a dedicated implementation plan artifact**. The information exists implicitly in:
+- The `FeatureSchemaRegistry.register()` calls in `trainer.py` (associates a model version with a hash)
+- The model JSON files themselves (which contain `feature_schema` arrays)
+- The lineage census (which lists consumers per feature, but not per-model granularity)
+
+**Bottom line:** The runtime mechanism for schema-to-model binding is well-designed in code (hash-based compatibility, versioned schemas, registry), but there is no implementation plan document that explicitly lays out the design of "which feature schema maps to which models" as a architectural decision record.
+
+Here's what I found about **TradeNet** from the codebase:
+
+---
+
+## TradeNet — PyTorch Binary Classifier for CRT Signal Quality
+
+### What it is
+From `src/training/trainer.py` (line 4-8):
+
+> *"Two model families: 1. **TradeNet (PyTorch)** — binary classifier for CRT signal quality. Architecture: 6 → 32 → 16 → 1 (sigmoid)"*
+
+### Architecture (`_build_model()` in trainer.py:654-674)
+
+```python
+class TradeNet(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(N_FEATURES, 32),   # input → 32
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            nn.Linear(32, 16),           # 32 → 16
+            nn.ReLU(),
+            nn.Linear(16, 1),            # 16 → 1
+            nn.Sigmoid(),                # output in [0,1]
+        )
+```
+
+| Layer | Details |
+|---|---|
+| **Input** | `N_FEATURES` (from `TRADENET_SCHEMA.n_features` — currently **48** in schema v6.0, was 35 in earlier versions) |
+| **Hidden 1** | 32 neurons + ReLU + Dropout(0.2) |
+| **Hidden 2** | 16 neurons + ReLU |
+| **Output** | 1 neuron + Sigmoid → probability score |
+
+### Training (`train()` in trainer.py:681-)
+- **Loss**: `BCELoss` (binary cross-entropy) with **per-sample class weighting** (auto-computes `pos_weight = n_neg / n_pos` to handle imbalanced data — typical forex/crypto win rates ~30-40%)
+- **Optimizer**: Adam, default lr=0.001
+- **Labels**: binary — `1 = win`, `0 = loss`
+- **Input**: should be pre-scaled via `StandardScaler`
+
+### Model file format
+- Saved as `.pth` files (PyTorch), e.g. `tradenet_{timestamp}.pth`
+- The model bundle also stores: `feature_schema`, `schema_version`, `schema_checksum`, `feature_order_hash` (lines 400-408)
+
+### Role in the system
+- **Fusion engine layer stack** (`fusion_engine.py`): Position 2 — "Neural model — adaptive layer (stubbed; plug TradeNet GGUF here)"
+- **Auto-loaded** in `backtest_v2.py` if `train_pipeline` has run (line 1965-1966: "Auto-load TradeNet if train_pipeline has run (None = stub until trained)")
+- **Evaluated** by `evaluator.py`: "Evaluate a trained TradeNet on held-out validation data" (line 267)
+
+### Schema contract
+- `TRADENET_SCHEMA` in `feature_schema.py` (line 320-325) wraps the feature schema for TradeNet:
+  - `name="tradenet"`, `version="3.0"`, `n_features=len(CANONICAL_FEATURES)`
+- Schema version enforcement and drift detection via `FeatureSchemaRegistry` (same mechanism as Gaussian)
+
+### Key distinction from Gaussian
+| | **TradeNet** | **GaussianNBModel** |
+|---|---|---|
+| Framework | PyTorch (`nn.Module`) | Pure Python (no deps) |
+| Output | Binary probability (sigmoid) | 4-class expected RR |
+| File format | `.pth` | JSON |
+| Input dim | `N_FEATURES` (48 in v6.0) | `GAUSSIAN_N_FEATURES` (48 in v6.0) |
+
+### Note on the "6 → 32 → 16 → 1" comment
+The docstring at line 7 says "Architecture: 6 → 32 → 16 → 1" but the actual code uses `N_FEATURES` (not 6) as the input dimension. The "6" appears to be a historical reference — earlier versions (seen in `feature_builder.py` in another worktree) had a 6-feature schema. The current canonical schema is **48 features**.

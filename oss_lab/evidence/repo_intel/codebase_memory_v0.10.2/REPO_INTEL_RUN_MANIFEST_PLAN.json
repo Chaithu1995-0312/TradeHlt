@@ -1,0 +1,55 @@
+{
+  "plan_id": "REPO-INTEL-RUN-MANIFEST-V1",
+  "engine": "OSS-CODEBASE-MEMORY",
+  "engine_version": "v0.10.2",
+  "pin_commit": "b377c62a4e8b7ad64ccd295e4aa88abc8d275180",
+  "pin_sha256_windows_amd64": "8f08e5c5b480e625adf9d4560765a860d493a690df6ded5b94127283ec5b660a",
+  "corpus_id": "REPO-INTEL-QA-V1",
+  "scenario_id": "BM-SCENARIO-REPO-INTEL-H2H",
+  "authority": "RESEARCH_LAB_ONLY",
+  "trust_status": "UNSEALED",
+  "required_fields_per_run": {
+    "run_id": "RI-RUN-<YYYYMMDDTHHMMSSZ>",
+    "experiment_id": "BM-SCENARIO-REPO-INTEL-H2H",
+    "engine": "codebase_memory",
+    "engine_version": "v0.10.2",
+    "git_commit": "tradelatest HEAD at run time",
+    "dataset_id": "LOCAL_REPO_TREE",
+    "data_hash": "optional recursive content hash of indexed subset — UNKNOWN if not computed",
+    "config_hash": "hash of CBM env + lab.cbmignore + install flags",
+    "schema_hash": "StructuralFactRecord schema version or UNKNOWN",
+    "dependency_lock_hash": "pin zip sha256 8f08e5c5…",
+    "random_seed": null,
+    "command": ["list of argv used"],
+    "timestamp_utc": "ISO-8601",
+    "environment": ["os_name", "python_version", "cpu_arch"],
+    "hypothesis": "Codebase-Memory structural facts useful vs pyan/graph.dot on REPO-INTEL-QA-V1",
+    "notes": [
+      "no_semantic_os_yaml_writes",
+      "isolation_path=tools/oss_lab/codebase-memory/v0.10.2"
+    ]
+  },
+  "output_layout": {
+    "run_dir": "results/oss_lab/repo_intel/runs/<run_id>/",
+    "files": [
+      "run_manifest.json",
+      "qa_answers.jsonl",
+      "structural_facts.jsonl",
+      "latency.json",
+      "baseline_comparison.json",
+      "report.md"
+    ]
+  },
+  "env_required": {
+    "CBM_CACHE_DIR": "results/oss_lab/repo_intel/cbm_cache",
+    "CBM_ALLOWED_ROOT": "<absolute repo root>",
+    "CBM_LOG_LEVEL": "info"
+  },
+  "preflight": [
+    "SHA-256 of pin zip still matches",
+    "Optional: gh attestation + cosign if tools available",
+    "lab.cbmignore applied / .env excluded",
+    "install used --skip-config or no agent config mutation",
+    "no writes under docs/governance/semantic_os"
+  ]
+}

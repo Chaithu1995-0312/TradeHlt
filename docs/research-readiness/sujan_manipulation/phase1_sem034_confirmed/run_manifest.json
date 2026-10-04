@@ -1,0 +1,52 @@
+{
+  "authority": "Detection only. The alert count is an observation, not a result. No entry, no outcome, no expectancy, no G001, no production authority.",
+  "bulk_candle_selector": {
+    "evidence": [
+      "visually dominant",
+      "often large-bodied",
+      "may also be wick-dominant",
+      "no approved percentage threshold exists"
+    ],
+    "note": "No selector ships in this package. Parent bulk candles are supplied externally by the human bridge. Resolving this requires a recorded freeze.",
+    "status": "APPROVED_PROXY_UNVALIDATED"
+  },
+  "corpus": {
+    "first_timestamp": "2024-05-22 01:00:00",
+    "last_timestamp": "2026-05-21 23:45:00",
+    "n_bars": 47275,
+    "path": "D:/Tradelatest/data/mt5/XAUUSD_M15.csv",
+    "sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56"
+  },
+  "economic_claims_allowed": false,
+  "n_alerts": 704,
+  "object": "SUJAN_MANIPULATION_RESEARCH_PHASE_1",
+  "parents": {
+    "n_supplied": 12,
+    "path": "D:/Tradelatest/docs/research-readiness/sujan_manipulation/parents_sem034_confirmed.json",
+    "sha256": "6efa4804ab422a3291a4f3f1a342afaca963b1389afe0b346ca599627ed10663",
+    "source": "externally supplied: D:/Tradelatest/docs/research-readiness/sujan_manipulation/parents_sem034_confirmed.json",
+    "timestamps": [
+      "2025-10-14 08:30:00",
+      "2025-10-21 11:00:00",
+      "2025-10-22 03:00:00",
+      "2026-01-29 01:30:00",
+      "2026-01-29 17:15:00",
+      "2026-02-02 03:00:00",
+      "2026-02-05 04:45:00",
+      "2026-02-10 01:00:00",
+      "2026-02-12 18:00:00",
+      "2026-03-03 16:30:00",
+      "2026-03-23 14:00:00",
+      "2026-03-24 23:15:00"
+    ]
+  },
+  "phase": 1,
+  "predicate": {
+    "alternative_reading_preserved": "SP-001-only (closed back past the purged side) is re-derivable from every alert's bar_close / range_high / range_low fields without a re-run.",
+    "closes_back_inside": "range_low < close < range_high (literal reading, bridge Record 5)",
+    "purge": "SP-001 structure.predicates.swept_high / swept_low (strict both sides)",
+    "same_candle": "purge and close-back-inside are properties of ONE later candle"
+  },
+  "run_utc": "2026-08-28T19:17:32+00:00",
+  "sem_id": "SEM-033"
+}

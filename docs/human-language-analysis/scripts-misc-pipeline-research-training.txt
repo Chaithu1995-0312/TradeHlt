@@ -1,0 +1,770 @@
+🧠 **COGNITION ANALYSIS COMPLETE**
+
+I have read all 14 source files across `scripts/misc/`, `scripts/pipeline/` (empty), `scripts/research/`, and `scripts/training/`. Below is the full human-readable execution cognition.
+
+---
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# DIRECTORY: scripts/misc/
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## 1. `bitnet_ternary_inference.py` — Legacy Python inference (CANONICAL | 40 lines)
+
+**File Purpose**
+Pure-Python implementation of BitNet 3-layer binary neural network inference. Exists to produce `python_outputs.json` that a C++ binary (`cpp_runner.exe`) is compared against for parity validation. It is NOT called by any runtime pipeline — it's a test tool.
+
+**Runtime Role**
+Standalone CLI. Runs `main()` when invoked directly. Reads `test_vectors.json` + `model.json` from CWD, writes `python_outputs.json`. Called by `run_parity.py` as Step 3/4.
+
+**Functions (no classes):**
+
+| Function | Detail |
+|---|---|
+| `clean(x)` | Replaces None/NaN/Inf with 0.0. Swallows math domain errors silently. |
+| `normalize(r)` | Converts dict → 35-dim float32 numpy array using `CANONICAL_FEATURE_ORDER`. Missing keys → 0.0. |
+| `binarize(x)` | Threshold at 0: positive → 1.0, else → -1.0. This is the "ternary" binarization. |
+| `forward(x, model)` | 3-layer dot product with scale+bias: `x = dot(W, x) * s + b`. Returns `{layer1, layer2, final}`. |
+
+**Runtime flow of `main()`:**
+```
+test_vectors.json → normalize → binarize → forward → python_outputs.json
+```
+
+**Trust:** CANONICAL — single-source-of-truth reference for C++ parity. But it's a legacy 6-input model schema.
+
+**Hidden defaults:** `model.json` must exist in CWD. No path parameterization. Hard-coded `test_vectors.json` and `python_outputs.json`.
+
+**Fallback:** `clean()` converts NaN/Inf to 0.0 — silent data corruption if model produces NaNs.
+
+---
+
+## 2. `build_zone_registry_from_trades.py` — Zone registry builder (LIVE | 89 lines)
+
+**File Purpose**
+Regenerates BitNet zone registries from trade CSV files. Entry point for "retrain zones from backtest results". Bridges CSV schemas to what `rr_dataset_builder` expects via `_adapt_trades_df()`.
+
+**Runtime Role**
+CLI tool with `--csv`, `--dir`, `--glob`, `--output-root`, `--global-registry` flags. Called manually by user. Delegates actual zone computation to `run_bitnet_search()` imported from `train_pipeline` (module path is just `from train_pipeline import run_bitnet_search` — fragile import from sibling `scripts/training/`).
+
+**Runtime flow of `main()`:**
+```
+CSV file → _adapt_trades_df() → run_bitnet_search(trades, output_dir)
+```
+
+**Critical side effect:** `_adapt_trades_df()` silently maps missing columns:
+- Missing `rr_achieved` → uses `pnl_rr_net` → `pnl_rr_raw` → **0.0** (silent fallback)
+- Missing `outcome` → derives from `rr_achieved` sign (win/loss binary)
+- Missing `entry_time` → uses `opened_at`
+
+**Hidden default (line 51-54):** If no `--csv/--dir/--glob` provided, falls back to globbing `results/**/*trades*.csv` sorted by mtime, newest first. This silently picks random backtest results if the user forgot to specify input.
+
+**Risk:** If `run_bitnet_search()` is not importable (module path issue), this script crashes at import time. The import is at module level on line 36, not inside `main()`.
+
+**Trust:** LIVE — actively used for zone regeneration.
+
+---
+
+## 3. `resample_m1_to_m15.py` — Data resampler (LEGACY | 60 lines)
+
+**File Purpose**
+Takes M1 (1-minute) tick data and resamples to M15 (15-minute) OHLCV. Simple ETL utility.
+
+**Runtime Role**
+Standalone: `python scripts/misc/resample_m1_to_m15.py EURCAD`. Reads from `data/DAT_ASCII_{INSTRUMENT}_M1_*.csv`, writes to `data/{INSTRUMENT}_M15.csv`.
+
+**Runtime flow:**
+```
+Glob for M1 files → concat → resample('15min', agg={'open':'first','high':'max','low':'min','close':'last','volume':'sum'}) → dropna → CSV
+```
+
+**Failure mode:** If `DATA_PATH` glob finds no files, raises `ValueError("No M1 files found")`. No graceful handling.
+
+**Trust:** LEGACY. Only useful for initial data ingestion. No network, no subprocess, no side effects beyond writing one CSV.
+
+---
+
+## 4. `run_parity.py` — C++/Python parity runner (CANONICAL | 110 lines)
+
+**File Purpose**
+Orchestrates the 5-step C++/Python BitNet parity verification pipeline. Exits non-zero if outputs differ. This is the GATE that ensures Python and C++ produce identical inference results.
+
+**Runtime Role**
+Standalone CLI (`--work-dir`, `--n-vectors`). Executes 4 Python scripts and 1 C++ binary via `subprocess.run()`.
+
+**Runtime flow of `main()`:**
+```
+1. generate_vectors.py → test_vectors.json
+2. export_model.py     → model.json
+3. python_runner.py    → python_outputs.json  [same as bitnet_ternary_inference.py]
+4. cpp_runner.exe      → cpp_outputs.json
+5. compare.py          → prints delta; exit 1 on mismatch
+```
+
+**Hard-coded paths:**
+```python
+_CPP_RUNNER   = _REPO / "tools" / "cpp" / "cpp_runner.exe"
+_GEN_VECTORS  = _REPO / "scripts" / "data" / "generate_vectors.py"
+_EXPORT_MODEL = _REPO / "scripts" / "export" / "export_model.py"
+_PY_RUNNER    = _REPO / "scripts" / "misc" / "python_runner.py"
+_COMPARE      = _REPO / "scripts" / "analysis" / "compare.py"
+```
+
+**Critical fallback (line 74-76):** If `cpp_runner.exe` does not exist, the script prints `[SKIP]` and exits with code 0. This means **C++ parity verification is silently skipped** on machines without the compiled binary.
+
+**Failure mode:** `pip install` style — if any of the 4 referenced scripts don't exist at the hard-coded path, `subprocess.run()` will fail with a file-not-found error.
+
+**Trust:** CANONICAL for the parity check. But the `[SKIP]` fallback is DANGEROUS — it silently passes when the binary is missing.
+
+---
+
+## 5. `trade_replay_validator.py` — Trade validation connector (PARTIAL | 139 lines)
+
+**File Purpose**
+Validates replayed trades by recomputing RR from candle data and constructing a flat ML-ready DataFrame compatible with `dataset_builder.py` and `fusion_engine.py`.
+
+**Runtime Role**
+Imported module (no `__main__` block). Called by external validation scripts. The docstring says "Connector Upgrade" suggesting it bridges replay validation → training pipeline.
+
+**Functions:**
+
+| Function | Purpose | Runtime Flow |
+|---|---|---|
+| `classify_outcome(exit_reason)` | Maps engine exit reasons to ML labels: TP2→TP2, SL-BE/TP1_BE→TP1_BE, SL/STOPPED→SL, else→OTHER | String mapping only, no state |
+| `replay_single_trade(trade, candles)` | Core validation: recomputes RR vs original, extracts features | Missing candle data → error dict with warning log. **Actual replay logic is commented out (lines 47-53)** — uses `trade.get("pnl_rr_net", 0.0)` directly, no candle replay. |
+| `validate_all(trades, all_candles)` | Batch: maps all trades through single validator, flattens nested features/outcome dicts, writes `logs/validator_dataset.csv` | Takes List[Dict] trades + Dict[trade_id → candles]. Flattens via `pd.json_normalize`. |
+
+**Critical BUG (lines 47-53):** The replay logic is explicitly disabled:
+```python
+# TEMP: Use backtest truth directly (no replay yet)
+recomputed_rr = trade.get("pnl_rr_net", 0.0)
+exit_reason = trade.get("exit_reason", "UNKNOWN")
+```
+This means `replay_single_trade()` **never actually replays candles**. It just copies the original backtest values. The `candles` parameter is ignored.
+
+**Side effect:** `validate_all()` writes `logs/validator_dataset.csv` every call, creating the directory if missing.
+
+**Hidden default:** `all_candles.get(trade_id, [])` — trades without candle data get empty list → `replay_single_trade` returns error dict → filtered out in `valid_results`.
+
+**Trust:** PARTIAL. The replay logic is stubbed out with a TEMP comment. This produces a dataset but does NOT actually validate trade execution.
+
+---
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# DIRECTORY: scripts/pipeline/
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## Empty directory
+
+The `scripts/pipeline/` directory exists but contains zero files. No `__init__.py`, no scripts, nothing. This appears to be either:
+- A placeholder directory for future pipeline scripts
+- A directory whose contents were accidentally deleted
+- A migration artifact
+
+**Trust:** DEAD — no code present.
+
+---
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# DIRECTORY: scripts/research/
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## 1. `discover_zones.py` — Zone discovery from opportunity logs (LIVE | 322 lines)
+
+**File Purpose**
+Pipeline B (Research) — clusters opportunity records into "zones" of similar market context. Produces a zone registry consumable by the runtime zone-gate engine. Uses a **pure-Python KMeans** implementation (no sklearn dependency).
+
+**Runtime Role**
+CLI tool (`main()`) or imported module (`discover()` function). Reads `logs/opportunities_*.jsonl`, writes versioned zone registry JSON + canonical output, registers in `zone_gate_registry.json`, optionally promotes.
+
+**CLI parameters:** `--opportunities`, `--output`, `--n-clusters` (default 8), `--min-samples` (default 15), `--feature-weights` (default uniform 1.0), `--subsample` (default 1 = all records), `--no-promote`, `--instrument`, `--run-id/--run`, `--version`.
+
+**Runtime flow of `main()`:**
+```
+CLI args → resolve run_id from arg or JSONL header → auto-resolve opportunities path from instrument+run_id
+→ load JSONL records → vectorize via CANONICAL_FEATURE_ORDER with weights
+→ pure-Python KMeans (random seed 1337, max 30 iterations)
+→ build zone summaries (mean_rr, tp_hit_rate, sl_hit_rate)
+→ save versioned file: models/{instrument}/{run_id}/zone_registry_{instrument}_{version}.json
+→ register in zone_gate_registry.json via core.model_registry.register_zone_gate()
+→ if --promote: promote via promote_zone_gate() + write canonical output
+```
+
+**`discover()` function (line 103-166):**
+- **Inputs:** list of JSONL paths, n_clusters, min_samples, feature_weights, subsample ratio
+- **Runtime flow:**
+  1. Load records with deterministic subsampling (index % subsample == 0)
+  2. Vectorize each record: `[float(features[f]) * weight[f] for f in CANONICAL_FEATURE_ORDER]`
+  3. KMeans with random seed 1337 (deterministic within same dataset)
+  4. Filter clusters with < min_samples
+  5. Build zone stats: mean_rr, tp_hit_rate, sl_hit_rate
+- **Outputs:** dict with `schema_version`, `feature_order`, `feature_weights`, `zones[]`
+- **Returns:** complete zone registry dict
+
+**Critical behavior:**
+- Every record with missing or non-numeric features is silently skipped
+- KMeans uses nested Python loops (no numpy) — O(n*k*dim) per iteration
+- Seed is fixed (1337) — deterministic across runs on same data
+- Subsampling is deterministic (index % subsample == 0), not random
+
+**Failure mode:** If `from core.model_registry import register_zone_gate` fails, registration is skipped with a warning. The zone file is still written.
+
+**Hidden defaults:**
+```python
+weights = [1.0] * len(CANONICAL_FEATURE_ORDER)  # uniform when --feature-weights not given
+KMeans max_iter = 30, seed = 1337
+min_samples = 15
+subsample = 1  # all records
+```
+
+**Side effects:**
+- Writes versioned zone_registry JSON to `models/{instrument}/{run_id}/`
+- Writes canonical zone_registry JSON to `--output` path (default `models/{instrument}/zone_registry.json`)
+- Modifies `models/zone_gate_registry.json` via `register_zone_gate()`
+- If promote: modifies active version pointer in zone_gate_registry
+
+**Trust:** LIVE — actively used in Pipeline B research workflow.
+
+---
+
+## 2. `opportunity_scanner.py` — Ground-truth opportunity generation (LIVE | 283 lines)
+
+**File Purpose**
+Pipeline B (Research) — generates **unbiased ground-truth** opportunity logs. For every candle past warmup, simulates BOTH long and short trades with fixed SL/TP (ATR-based). CRT is intentionally NOT consulted. This is the data source that breaks the recursive training loop.
+
+**Runtime Role**
+CLI tool (`main()`) or imported module (`scan()` function). Reads M15 OHLCV CSV, writes run-scoped opportunities JSONL to `logs/{instrument}/{run_id}/opportunities.jsonl`.
+
+**Runtime flow of `main() → scan()`:**
+```
+CSV → _load_csv() → FeaturePipeline.run() → enriched_df
+→ for each candle (past warmup):
+    → compute SL = entry - sl_atr_mult * ATR
+    → compute TP = entry + tp_atr_mult * ATR
+    → forward-simulate (max_forward_candles bars) with trailing stop
+    → record TP_HIT / SL_HIT / TIMEOUT
+    → write JSONL: {timestamp, instrument, direction, entry, sl, tp, outcome, rr_achieved, duration_candles, mfe, mae, features: {...}}
+```
+
+**`_simulate()` function (line 53-149):**
+What ACTUALLY happens:
+1. Start with trail_stop = entry SL price
+2. Walk forward bar by bar
+3. Once price moves favorably by `trail_mult * risk_distance`: trail activates
+4. Trail follows peak at distance `trail_dist` behind
+5. Conservative tie-break: if bar touches both TP and trail simultaneously, trail (SL) wins
+6. Returns: outcome (TP_HIT/SL_HIT/TIMEOUT), rr_achieved, duration, mfe, mae
+
+The trailing stop design populates all 4 Gaussian classes:
+- class 0 (rr < 0): trail/SL hit before activation
+- class 1 (0 <= rr < 1): trail triggered after partial favorable run
+- class 2 (1 <= rr < 2): trail triggered after deeper favorable run
+- class 3 (rr >= 2): TP hit
+
+**`scan()` function (line 152-238):**
+- **Inputs:** csv_path, instrument, tp_atr_mult (2.0), sl_atr_mult (1.0), max_forward_candles (40), warmup_candles (30), output_dir (logs), trail_mult (0.5), run_id
+- **Runtime flow:**
+  1. Load CSV, run FeaturePipeline
+  2. Require `atr_14_raw` column (hard crash if missing)
+  3. For each candle post-warmup: compute SL/TP, simulate both long and short
+  4. Write header record + data records as JSONL
+- **Outputs:** `Path` to the written opportunities JSONL
+- **Counts tracked:** long, short, TP_HIT, SL_HIT, TIMEOUT
+
+**Hidden defaults:**
+```python
+tp_atr_mult = 2.0       # 2R reward
+sl_atr_mult = 1.0       # 1R risk
+max_forward_candles = 40  # max bars to simulate
+warmup_candles = 30     # candles to skip for indicator warmup
+trail_mult = 0.5        # 0.5R trailing stop
+```
+
+**Determinism:** NOT deterministic. Uses `time.strftime` for run_id. FeaturePipeline results depend on `CANONICAL_FEATURES` order. RNG not used.
+
+**Failure modes:**
+- Missing `atr_14_raw` → `RuntimeError` (hard crash)
+- `atr_raw <= 0 or NaN` → silently skipped (continues to next candle)
+- Forward bars empty → silently skipped (continues to next candle)
+- `max_forward_candles` reaching end of data → `TIMEOUT` outcome with realized return
+
+**Side effects:** Creates directory `logs/{instrument}/{run_id}/` and writes JSONL file.
+
+**Trust:** LIVE — critical data source for unbiased training.
+
+---
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# DIRECTORY: scripts/training/
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## 1. `auto_tuner.py` — Single-instrument CRT auto-tuner (LIVE | 903 lines)
+
+**File Purpose**
+Replaces manual parameter tweaking with a self-calibrating search loop. 3-phase optimizer:
+- Phase 1: Random Search (exploration)
+- Phase 2: Focused Search (neighbourhood exploitation)
+- Phase 3: Cross-Instrument validation
+
+Tunes only 5 funnel-gate parameters from a discrete space of 5,400 combinations.
+
+**Runtime Role**
+CLI tool or imported `AutoTuner` class. Orchestrates: Parameter Sampler → Backtest Runner → Metric Extractor → Fitness Scorer → Result Store → Best Selection.
+
+**Runtime flow of `AutoTuner.run()`:**
+```
+1. Phase 1 — Random Search: sample_random() → run_backtest() → fitness() → store
+2. Phase 2 — Focused Search: sample_neighbourhood(top_20pct_configs) → run_backtest() → fitness() → store
+3. Phase 3 — Cross-Instrument: validate top-5 on all held-out instruments
+4. save final report to results/tuner/tuner_report.json
+```
+
+**`run_backtest()` function (line 217-290):**
+What ACTUALLY happens:
+1. `ConfigBuilder.build(instrument, overrides=params)` — SINGLE valid config source
+2. Deep-copies base BacktestConfig or creates new one
+3. `BacktestRunner(bt_cfg, csv_path=csv_path, skip_features=True)` — skips FeaturePipeline
+4. `runner.run(stream, candle_cnt, output_dir)` — runs backtest
+5. Extracts metrics: approved_trades, win_rate, expectancy_rr, max_drawdown_pct, funnel_counts
+6. On exception: returns error dict with score=-999 silently
+
+**`fitness()` function (line 169-200):**
+Composite score [0, ~1.5]:
+- Funnel guard: if exp>20 and ret/exp<0.05 → -999.0 (broken pipeline)
+- Trade floor: if trades < TRADE_COUNT_FLOOR (3) → -999.0
+- Score = 0.50 * exp_rr + 0.20 * wr + 0.20 * tc_norm + 0.10 * (1.0 - dd)
+
+**`AutoTuner` class details:**
+- **Constructor:** csv_paths dict, output_dir, n_iter_phase1 (100), n_iter_phase2 (50), seed (42), checkpoint_every (20)
+- **`_run_phase()`:** Samples params → dedupes → runs backtest → logs progress → early stopping after 25 no-improvement iterations
+- **Early stopping:** Each iteration checks `self.best_score`. If score fails to improve for 25 consecutive iterations, phase terminates early (line 585-590)
+- **Checkpointing:** Every `checkpoint_every` iterations saves to `checkpoint.json`
+- **Live log:** Every iteration writes to `results/tuner/live_log.jsonl`
+
+**Hidden defaults (line 167-168):**
+```python
+TRADE_COUNT_FLOOR = 3    # below: fitness → 0
+TRADE_COUNT_TARGET = 50  # above: full trade_count bonus
+```
+A config producing only 3 trades won't crash — it silently gets -999 and is excluded from rankings.
+
+**Parameter space (5 params × discrete values):**
+```
+retest_depth_max:           [0.20, 0.25, 0.30, 0.40, 0.50, 0.60]  (6)
+retest_atr_depth_fraction:  [0.30, 0.40, 0.50, 0.70, 1.00]        (5)
+body_ratio_min:             [0.50, 0.60, 0.65, 0.70, 0.75, 0.80]  (6)
+atr_multiplier_min:         [1.00, 1.20, 1.50, 1.75, 2.00]        (5)
+expansion_atr_min_distance: [0.10, 0.15, 0.20, 0.25, 0.30]        (5)
+Total: 6*5*6*5*5 = 4,500 combinations (docstring says 5,400 — minor discrepancy)
+```
+
+**Failure modes:**
+- < 50 trades: penalised by trade_count term (not fatal, just low score)
+- Backtest exception: logged as score=-999, excluded from rankings
+- All runs below threshold: returns best available with warning
+- ImportError for backtest_v2: hard `sys.exit(1)`
+
+**Side effects:**
+- Writes `results/tuner/tuner_report.json` (final report)
+- Writes `results/tuner/checkpoint.json` (intermediate checkpoints)
+- Writes `results/tuner/live_log.jsonl` (every iteration)
+- Creates `results/tuner/runs/` directory for individual backtest outputs
+
+**Trust:** LIVE — actively used for parameter optimization.
+
+---
+
+## 2. `auto_tuner_multi.py` — Multi-instrument optimizer v3 (LIVE | 901 lines)
+
+**File Purpose**
+Multi-instrument deterministic optimizer (Ultron Phase-7). True multi-instrument optimization: every param set scored across ALL instruments simultaneously. Consistency penalty penalises configs that only work on one market. Replay-safe with full config_snapshot per instrument.
+
+**Runtime Role**
+CLI tool. Uses `ProcessPoolExecutor` for parallel execution. Orchestrates per-instrument scoring + cross-instrument consistency.
+
+**Key differences from `auto_tuner.py`:**
+1. **`evaluate_params_multi()`** — scores one param set across ALL instruments in a single worker process
+2. **`fitness_multi()`** — combines per-instrument scores with consistency penalty: `final = weighted_mean - 0.1 * std_dev`
+3. **LLM gate integration** — optional `llm_score()` call that blends base_score with LLM evaluation
+4. **Train/OOS split** — `--train-split` flag for 80/20 data split validation
+5. **7 parameters** (vs 5 in auto_tuner.py): adds `tp2_atr_multiplier` and `sl_atr_buffer`
+
+**Runtime flow of `AutoTuner.run()`:**
+```
+→ _run_phase("random", n_iter_phase1)          # parallel across workers
+→ _run_phase("focused", n_iter_phase2)         # neighbourhood perturbation
+→ _run_oos_validation()                        # top-10 configs on held-out data
+```
+
+**`_run_single_instrument()` function (line 279-399):**
+What ACTUALLY happens:
+1. `ConfigBuilder.build(instrument)` — get base config to learn valid keys
+2. Filter params to only valid keys: `{k:v for k,v in params.items() if hasattr(base_cfg, k)}`
+3. Invalid params are silently dropped with a warning log
+4. ConfigBuilder.build(instrument, overrides=valid_params) — applies filtered params
+5. Serialises full CRTConfig as dict via `dataclasses.asdict(cfg)` — this is the config_snapshot
+6. Optionally slices data (train/OOS split) via start_idx/end_idx
+7. `runner.run()` with `skip_features=True`
+8. Falls back to alternative attribute names if primary missing (e.g., `expectancy_rr` → `avg_rr_net`)
+9. On exception: returns empty metrics dict with error string
+
+**`evaluate_params_multi()` function (line 406-460):**
+Top-level worker executed in child process:
+```
+for instrument in csv_paths:
+    metrics, snapshot = _run_single_instrument(params, csv_path, instrument, ...)
+    score = fitness_single(metrics)
+final_score, consistency = fitness_multi(scores)
+return {params, instrument_results, final_score, consistency_penalty, config_snapshot}
+```
+
+**`fitness_multi()` function (line 233-272):**
+```
+valid scores → weighted_mean - CONSISTENCY_ALPHA * std_dev
+CONSISTENCY_ALPHA = 0.1 (from production config, fallback 0.1)
+Single instrument → no penalty (std_dev = 0)
+```
+
+**`fitness_single()` function (line 194-230):**
+- Base score computed first
+- If base_score > LLM trigger (default 0.1): calls `llm_score(metrics)` via external API
+- If LLM weight < hard_reject_threshold (0.2): returns -999.0 (config discarded)
+- If LLM fails (Exception): falls back to weight=1.0 (fail-open — does not discard good config)
+- Blended = base * (0.7 + 0.3 * llm_weight)
+
+**Critical JSON serialization fix (line 495-504):**
+`_TunerJSONEncoder` handles datetime.time/datetime.datetime objects in config_snapshot — prevents JSON serialization crash when CRTConfig contains time fields.
+
+**Hidden defaults:**
+```python
+TRADE_COUNT_FLOOR = 3    # from production config, fallback 3
+TRADE_COUNT_TARGET = 50  # from production config, fallback 50
+CONSISTENCY_ALPHA = 0.1  # from production config, fallback 0.1
+INSTRUMENT_WEIGHT_DEFAULT = 1.0  # equal weight; normalised at runtime
+max_workers = os.cpu_count() or 4
+```
+
+**Side effects:**
+- Writes `results/tuner/checkpoint_multi.json` (checkpoints)
+- Writes `results/tuner/live_log_multi.jsonl` (every iteration)
+- Creates `results/tuner/runs/` and `results/tuner/runs_oos/` directories
+
+**Trust:** LIVE — currently the most advanced tuner.
+
+---
+
+## 3. `auto_tuner_gemini_gate.py` — Auto-tuner with Gemini LLM gate v2 (LIVE | 552 lines)
+
+**File Purpose**
+Auto-tuner variant that integrates a Gemini LLM gate. Robustness upgrades: multiprocessing, train/test split, fault tolerance with graceful Ctrl+C handling.
+
+**Runtime Role**
+CLI tool. Shares 90% of code structure with `auto_tuner.py` but adds:
+- `ProcessPoolExecutor` for parallel backtests
+- OOS validation phase
+- LLM scoring gate via `config_layer.llm_scorer.llm_score()`
+
+**Key architectural note:** This is an **intermediate version** between `auto_tuner.py` (single-threaded, no LLM) and `auto_tuner_multi.py` (fully parallel multi-instrument). It has:
+- Parallel execution ✓
+- OOS validation ✓
+- LLM gate ✓
+- BUT only 5 parameters (not 7 like multi)
+- BUT single-instrument only (no multi-instrument consistency)
+
+**Runtime flow:**
+```
+Phase 1: Random Search (parallel via ProcessPoolExecutor)
+Phase 2: Focused Search (if Phase 1 produced valid configs)
+Phase 3: OOS Validation (if train_split < 1.0)
+Phase 4: Cross-Instrument Validation (if multiple CSVs) — NOTE: _run_cross_validation is a pass (line 493-494)
+```
+
+**Critical BUG (line 493-494):**
+```python
+def _run_cross_validation(self) -> None:
+    pass  # Simplified parallel cross-validation logic can go here
+```
+Cross-validation is **stubbed out as a no-op**. The feature is declared but not implemented.
+
+**`fitness()` function (line 153-171):**
+Same as `auto_tuner.py` but with LLM gate:
+```python
+base_score = _compute_base_score(metrics)
+if base_score <= _llm_trigger: return base_score  # skip LLM for low scores
+llm_weight = llm_score(metrics)  # external API call
+if llm_weight < _llm_reject: return -999.0  # hard reject
+final = base_score * (0.7 + 0.3 * llm_weight)
+```
+
+**Hidden defaults:**
+```python
+llm_trigger = 0.1     # base score must exceed this to trigger LLM
+hard_reject = 0.2     # LLM weight below this → config discarded
+blend_weights = [0.7, 0.3]  # 70% base score, 30% LLM
+```
+
+**Side effects:**
+- Writes `results/tuner/live_log_gemini_pro.jsonl`
+- Writes `results/tuner/checkpoint_gemini_pro.json`
+
+**Trust:** LIVE but with a known stubbed feature.
+
+---
+
+## 4. `phase5_calibration.py` — Gaussian + TradeNet recalibration (LIVE | 1672 lines)
+
+**File Purpose**
+Unified training and validation script for both Gaussian NB model and TradeNet binary classifier. This is the **Gaussian recalibration pipeline** and **TradeNet training pipeline** combined. Supports CSV backtest results, synthetic data (CI/smoke tests), and Pipeline-B opportunity logs.
+
+**Runtime Role**
+CLI tool with extensive argument set. Either imports data from backtest CSVs, cached JSON, synthetic generation, or opportunity JSONL. Runs calibration → evaluates → saves model → registers in registry → optionally promotes.
+
+**Core dataclass `TradeDataset` (line 298-549):**
+5 class methods for data loading:
+| Method | Source | Description |
+|---|---|---|
+| `from_backtest_results()` | `*_trades.csv` files | Scans results dirs, deduplicates by (csv_path, trade_id), skips zero-feature rows |
+| `from_opportunities()` | opportunity JSONL | Reads signal logs, mirrors short features to long perspective |
+| `from_trade_records()` | In-memory TradeRecord objects | Builds directly from dataclass objects |
+| `load_cached()` | Cached JSON | Loads previously exported dataset |
+| `_build()` | Internal | Delegates to `build_gaussian_dataset()` → schema validation |
+
+**Critical dedup logic (line 331-333 in `from_backtest_results()`):**
+```python
+seen_keys: set[str] = set()
+dedup_key = f"{csv_path}|{tid}"  # compound key prevents cross-file dedup
+```
+This means the same trade_id from different parameter-sweep runs IS kept (one per source file). The comment explains: CRT-0001, CRT-0002 are reused across every sweep run of the same dataset.
+
+**Zero-feature detection (line 350-357):**
+Rows where both `open==0.0` and `atr==0.0` are skipped — these come from `skip_features=True` tuner runs that have no indicator data. Count is logged.
+
+**`run_calibration()` function (line 600-679):**
+What ACTUALLY happens:
+1. `train_gaussian(X, y_rr)` → model + scaler + train_metrics
+2. `cross_val_gaussian(X, y_rr, n_folds=3)` → stability metrics (fail-open: catch ValueError, return zero metrics)
+3. `evaluate_gaussian(model, scaler, X, y_rr)` → correlation, calibration error, class distribution
+4. LOO-CV if `run_loo=True` or `n < 500` — re-trains model for each held-out sample
+5. Verdict decision:
+   - corr >= 0.10 AND CV stable → APPROVED
+   - corr >= 0.10 but NOT stable → UNSTABLE
+   - corr > 0 → MARGINAL
+   - corr <= 0 → REJECTED
+   - LOO corr < 0 overrides APPROVED → REJECTED
+
+**`_leave_one_out_cv()` function (line 682-718):**
+Trains N separate models (one per held-out sample). Only uses samples with >=2 classes in training set. Returns correlation between predicted and actual RR.
+
+**`_mirror_short_vec()` function (line 187-199):**
+Normalizes short records to "long perspective":
+- Negates: ema_spread, trend_bias, trend_strength, momentum_score, rsi_14, macd_line, macd_signal, macd_hist, break_of_structure, liquidity_sweep
+- Swaps pairs: (higher_high ↔ lower_low), (swing_high ↔ swing_low)
+
+**`integrate_scorer()` function (line 1130-1264):**
+Injects `CRTCalibratedScorer` class directly into `backtest_v2.py` source file. Replaces old CRTGaussianScorer. Only runs if integration_approved=True or force=True.
+
+**`main()` argument resolution (line 1267-1334):**
+Extensive argument set:
+- Mutually exclusive source: `--csv`, `--cached`, `--synthetic`, `--opportunities`
+- Model flags: `--gaussian`, `--tradenet` (mutually exclusive with --train)
+- Training: `--train`, `--audit-only`, `--promote`, `--export`, `--loo`, `--force`
+- LLM hypertuning: `--feature-subset`, `--class-weights`, `--rr-buckets`
+- Scoping: `--instrument`, `--run-id/--run`
+
+**Auto-promotion logic (line 1595-1598):**
+If no active Gaussian model exists when a new one is registered, automatically promotes the new one:
+```python
+if get_active_gaussian() is None:
+    promoted, reason = promote_gaussian(version)
+```
+
+**Side effects:**
+- Writes model file: `models/gaussian_{version}.json` or instrument-scoped
+- Writes report: `results/p5_calibration_{version}.json` or instrument-scoped
+- Registers in `models/gaussian_registry.json` via `register_gaussian()`
+- If promote: activates entry in registry
+- If `--integrate`: injects scorer into `backtest_v2.py` source
+
+**Failure modes:**
+- < 20 trades → `build_gaussian_dataset` raises ValueError
+- Schema version mismatch in cached dataset → hard crash with instructions
+- TradeNet without torch → hard crash directing user to `py -3.12`
+- CSV with only zero-feature rows → ValueError with instructions to run backtest_v2.py directly
+
+**Trust:** LIVE — the primary Gaussian calibration pipeline.
+
+---
+
+## 5. `train_bitnet.py` — Legacy 6-input BitNet training (LEGACY | 330 lines)
+
+**File Purpose**
+Trains the legacy 6-input BitNet model from historical CSV data. Uses pure Python + numpy — no ML library. The 6 features are: body_ratio, retest_depth, disp_strength, atr, candles_since_retest, double_sweep.
+
+**Runtime Role**
+CLI tool. Runs gradient descent with MSE loss and sigmoid output. Labels are derived from forward-simulating 40 bars after each CRT signal.
+
+**Runtime flow of `main()`:**
+```
+CSV → FeaturePipeline → for each candle post-warmup:
+    if retest_depth > 0.05:
+        extract 6 features
+        simulate: if price hits TP (close+2*ATR) in next 40 bars → label=1.0
+                  if price hits SL (close-1*ATR) first → label=0.0
+                  timeout → skip
+→ balance classes (oversample minority to match)
+→ normalize features (z-score)
+→ train with Xavier init, Adam-like gradient descent
+→ save model JSON + update bitnet_registry.json
+```
+
+**`build_dataset()` function (line 87-147):**
+- Requires `retest_depth > 0.05` — only trains on candles with sweep+retest pattern
+- Timeouts are excluded (no clear win/loss gradient)
+- Labels derived from candle forward-simulation, NOT from actual trade outcomes
+
+**Critical class balancing (line 296-310):**
+Uses random oversampling with seed=42 to balance wins and losses. This means the same training data always produces the same balanced dataset.
+
+**`_update_registry()` function (line 244-263):**
+Marks ALL existing entries as inactive, then adds new entry as active. This means each training run replaces the previous active model.
+
+**Trust:** LEGACY — superseded by Gaussian NB and TradeNet. Marked as "legacy_6input" in its own schema.
+
+---
+
+## 6. `train_pipeline.py` — CLI entry point (LIVE | 145 lines)
+
+**File Purpose**
+Thin CLI wrapper. All business logic lives in `src/training/train_pipeline.py`. Provides `tradenet` and `gaussian` subcommands.
+
+**Runtime Role**
+CLI entry point with subcommands. Re-exports public API from `training.train_pipeline` for backwards compatibility.
+
+**`_real_tradenet_fn()` (line 99-141):**
+Wires real TradeNet training via `training.trainer.train()`. Fails hard if torch is not found (directs to `py -3.12`). Saves model via `trainer.save_model()` with auto-generated version.
+
+**Trust:** LIVE — thin wrapper, all logic delegated.
+
+---
+
+## 7. `train_rr_model.py` — RR Pattern Miner training (LIVE | 186 lines)
+
+**File Purpose**
+Trains the RR Pattern Miner (Ridge regression model) from an RR dataset. Saves versioned model + registers in `rr_registry.json`. Optionally promotes.
+
+**Runtime Role**
+CLI tool. Loads dataset (from active registry entry or explicit path), trains via `RRPatternTrainer`, saves model JSON, registers in registry.
+
+**Runtime flow of `main()`:**
+```
+Resolve dataset path (arg → active_registry → default)
+→ load_dataset(path) → X, y_rr, y_win
+→ optionally zero price-level features (open, high, low, close, volume, ema_fast, ema_slow, macd_line, macd_signal, body_size, wick_size)
+→ RRPatternTrainer.train(X, y_rr, y_win)
+→ save model JSON
+→ register_rr_model(version, path, metrics)
+→ optionally promote + copy to canonical models/rr_model.json
+```
+
+**Price-feature zeroing (line 130-136):**
+When `--zero-price-features` is used, 11 price-level feature indices are zeroed before training to prevent Ridge regression from anchoring on instrument price level.
+
+**State persistence (line 143-144):**
+```python
+state["zero_indices"] = zero_indices  # saved in model for inference-time matching
+```
+
+**If promote (line 178):**
+```python
+shutil.copy2(output, "models/rr_model.json")  # also writes canonical path
+```
+
+**Trust:** LIVE — actively used for R:R regression model training.
+
+---
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# CROSS-CUTTING DEPENDENCY MAP
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+```
+opportunity_scanner.py (research)
+  → writes logs/{instrument}/{run_id}/opportunities.jsonl
+  → consumed by:
+      → discover_zones.py (research) — clusters into zones
+      → phase5_calibration.py (training) — Gaussian + TradeNet training from unbiased data
+
+auto_tuner_multi.py (training)
+  → runs backtest_v2.py via subprocess (parallel)
+  → writes results/tuner/* (checkpoints, reports, trades CSV)
+  → consumed by:
+      → phase5_calibration.py — loads *_trades.csv for Gaussian training
+
+train_bitnet.py (training)
+  → trains legacy 6-input model
+  → DEPRECATED — replaced by GaussianNBModel
+
+train_rr_model.py (training)
+  → trains Ridge regression from rr_dataset.json
+  → downstream: NanoInferenceEngine in runtime
+
+phase5_calibration.py (training)
+  → gaussian_registry.json (core.model_registry)
+  → can inject CRTCalibratedScorer into backtest_v2.py
+  → trade register in tradenet_registry.json
+
+build_zone_registry_from_trades.py (misc)
+  → calls run_bitnet_search() from train_pipeline
+  → writes per-instrument zone_registry.json
+```
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# TRUST CLASSIFICATION SUMMARY
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+| File | Trust | Proof |
+|---|---|---|
+| `misc/bitnet_ternary_inference.py` | LEGACY | 6-input ternary model, superseded by Gaussian NB |
+| `misc/build_zone_registry_from_trades.py` | LIVE | Active zone regeneration tool |
+| `misc/resample_m1_to_m15.py` | LEGACY | Simple ETL, one-time use |
+| `misc/run_parity.py` | CANONICAL | Reference C++/Python parity verification |
+| `misc/trade_replay_validator.py` | PARTIAL | Replay logic stubbed out (TEMP) |
+| `pipeline/` | DEAD | Empty directory |
+| `research/discover_zones.py` | LIVE | Active zone discovery pipeline |
+| `research/opportunity_scanner.py` | LIVE | Active ground-truth generation |
+| `training/auto_tuner.py` | LIVE | Active single-instrument tuner |
+| `training/auto_tuner_multi.py` | LIVE | Active multi-instrument tuner (latest) |
+| `training/auto_tuner_gemini_gate.py` | LIVE | Active + LLM gate, but cross-val stubbed |
+| `training/phase5_calibration.py` | LIVE | Active Gaussian/TradeNet training |
+| `training/train_bitnet.py` | LEGACY | Superseded by Gaussian NB |
+| `training/train_pipeline.py` | LIVE | Thin CLI wrapper |
+| `training/train_rr_model.py` | LIVE | Active RR model training |
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# FAIL-FAST / FALLBACK / CORRUPTION AUDIT
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Silent fallbacks:**
+1. `build_zone_registry_from_trades.py` line 24: missing `rr_achieved` → silently falls back to `pnl_rr_net` → `pnl_rr_raw` → **0.0**. This silently produces zero-feature zone registries when input columns are missing.
+2. `trade_replay_validator.py` line 51: replay logic disabled — silently copies original values. The `candles` parameter is ignored. Produces a dataset that APPEARS validated but is NOT.
+3. `auto_tuner_multi.py` line 301-308: invalid params silently filtered with warning log. Config corruption is caught but the warning is DEBUG-level.
+4. `phase5_calibration.py` line 350-357: zero-feature rows silently skipped from tuning dataset. Count logged but no hard error.
+5. `run_parity.py` line 74-76: missing `cpp_runner.exe` silently skips C++ parity check and exits 0.
+
+**Swallowed exceptions:**
+- `discover_zones.py` line 298-299: `register_zone_gate()` failure caught and logged as warning. Zone file still written, but registry entry lost.
+- `phase5_calibration.py` line 628-630: `cross_val_gaussian()` failure caught, returns zero metrics (no warning label in stable field).
+- `auto_tuner_multi.py` line 219: `llm_score()` exception caught → falls back to weight=1.0. Config not discarded but LLM gate is bypassed.
+
+**Governance contamination risks:**
+- `phase5_calibration.py` line 1593-1600: auto-promotion when no active Gaussian exists. This is fine for first-run, but if a stale model is accidentally registered and no active exists, it auto-promotes silently.
+- `train_bitnet.py` line 244-263: `_update_registry()` marks ALL entries inactive then adds new one. No quality gate on the new model.
+- `discover_zones.py` line 288-299: registration fail-open means zone_registry can miss entries without the user knowing.
+
+**Replay/live drift risks:**
+- `trade_replay_validator.py` replay stub means validation produces identical output to input. This creates a false sense of security — the "validated" dataset is just a copy of the original.
+
+**Determinism:**
+- Random search tuners: deterministic (fixed seed RNG per run)
+- `opportunity_scanner.py`: NOT deterministic (time-based run_id, but FeaturePipeline output should be deterministic)
+- `discover_zones.py`: deterministic (fixed KMeans seed 1337, deterministic subsampling)
+- `phase5_calibration.py`: synthetic data is seed-based deterministic; real data depends on CSV content

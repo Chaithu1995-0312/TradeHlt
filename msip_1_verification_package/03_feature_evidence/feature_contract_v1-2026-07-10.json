@@ -1,0 +1,2543 @@
+{
+  "contract_id": "FEATURE-CONTRACT-V1",
+  "schema_version": "1.0.0",
+  "created_utc": "2026-07-10T15:37:36Z",
+  "production_remediation_started": false,
+  "economic_claims_allowed": false,
+  "legacy_freeze_ref": "docs/governance/legacy_feature_semantics_v1-2026-07-10.json",
+  "fingerprint_ref": "docs/governance/legacy_feature_output_fingerprint_xauusd-2026-07-10.json",
+  "corpus_binding": {
+    "physical_path": "data/mt5/XAUUSD_M15.csv",
+    "sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+    "rows": 47275,
+    "status": "FROZEN_CANDIDATE_PENDING_PHASE1_VALIDATION",
+    "allowed_time_range": {
+      "start": "2024-05-22T01:00:00",
+      "end": "2026-05-21T23:45:00"
+    }
+  },
+  "vector_members": [
+    "FEAT-OPEN",
+    "FEAT-HIGH",
+    "FEAT-LOW",
+    "FEAT-CLOSE",
+    "FEAT-VOLUME",
+    "FEAT-VOLUME_RATIO",
+    "FEAT-DOUBLE_SWEEP",
+    "FEAT-EMA_FAST",
+    "FEAT-EMA_SLOW",
+    "FEAT-EMA_SPREAD",
+    "FEAT-TREND_BIAS",
+    "FEAT-TREND_STRENGTH",
+    "FEAT-MOMENTUM_SCORE",
+    "FEAT-ATR",
+    "FEAT-VOLATILITY_RATIO",
+    "FEAT-RSI_14",
+    "FEAT-MACD_LINE",
+    "FEAT-MACD_SIGNAL",
+    "FEAT-MACD_HIST",
+    "FEAT-SWEEP_DETECTED",
+    "FEAT-LIQUIDITY_SWEEP",
+    "FEAT-BREAK_OF_STRUCTURE",
+    "FEAT-SWING_HIGH",
+    "FEAT-SWING_LOW",
+    "FEAT-HIGHER_HIGH",
+    "FEAT-LOWER_LOW",
+    "FEAT-BODY_SIZE",
+    "FEAT-WICK_SIZE",
+    "FEAT-BODY_RATIO",
+    "FEAT-VOLATILITY_REGIME",
+    "FEAT-SESSION",
+    "FEAT-HOUR_OF_DAY",
+    "FEAT-DISP_STRENGTH",
+    "FEAT-RETEST_DEPTH",
+    "FEAT-CANDLES_SINCE_RETEST",
+    "FEAT-LIQUIDITY_DISTANCE",
+    "FEAT-LIQUIDITY_PRESSURE_SCORE",
+    "FEAT-VOLUME_SPIKE"
+  ],
+  "explicit_separations": [
+    {
+      "id": "SEP-A-SWING-CAUSAL",
+      "legacy": "center=True publish at t",
+      "canonical_intent": "delayed available_at=t+k; no env flag authority"
+    },
+    {
+      "id": "SEP-B-VOLUME",
+      "legacy": "T-003 same column name volume",
+      "canonical_intent": "volume=TICK_VOLUME; proxy=FEAT-VOLUME_RANGE_PROXY"
+    },
+    {
+      "id": "SEP-C-FM",
+      "legacy": "name collisions FM-020/028 and FM-021/027",
+      "canonical_intent": "distinct feature_ids FEAT-DISP_STRENGTH/RETEST_DEPTH vs FEAT-DISPLACEMENT_*"
+    },
+    {
+      "id": "SEP-D-VOLREGIME",
+      "legacy": "global atr rank",
+      "canonical_intent": "causal regime; expanding vs rolling adjudicated in FC-1"
+    }
+  ],
+  "features": [
+    {
+      "feature_name": "open",
+      "feature_id": "FEAT-OPEN",
+      "formula_id": "FORMULA-LEGACY-OPEN",
+      "formula_version": "legacy-v1",
+      "formula_definition": "Legacy pipeline semantics for open",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 0,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "UNADJUDICATED",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain; FC-2 full adjudication"
+    },
+    {
+      "feature_name": "high",
+      "feature_id": "FEAT-HIGH",
+      "formula_id": "FORMULA-LEGACY-HIGH",
+      "formula_version": "legacy-v1",
+      "formula_definition": "Legacy pipeline semantics for high",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 1,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "UNADJUDICATED",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain; FC-2 full adjudication"
+    },
+    {
+      "feature_name": "low",
+      "feature_id": "FEAT-LOW",
+      "formula_id": "FORMULA-LEGACY-LOW",
+      "formula_version": "legacy-v1",
+      "formula_definition": "Legacy pipeline semantics for low",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 2,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "UNADJUDICATED",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain; FC-2 full adjudication"
+    },
+    {
+      "feature_name": "close",
+      "feature_id": "FEAT-CLOSE",
+      "formula_id": "FORMULA-LEGACY-CLOSE",
+      "formula_version": "legacy-v1",
+      "formula_definition": "Legacy pipeline semantics for close",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 3,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "UNADJUDICATED",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain; FC-2 full adjudication"
+    },
+    {
+      "feature_name": "volume",
+      "feature_id": "FEAT-VOLUME",
+      "formula_id": "FORMULA-SOURCE-TICK-VOLUME",
+      "formula_version": "legacy-v1",
+      "formula_definition": "TICK_VOLUME on XAU; T-003 same-name proxy if all-zero",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "TICK_VOLUME on frozen XAUUSD (MT5 tick_volume)",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 4,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "SEMANTICALLY_DIVERGENT",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "TICK_VOLUME on XAU; T-003 same-name proxy if all-zero",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "bind TICK_VOLUME; proxy becomes FEAT-VOLUME_RANGE_PROXY"
+    },
+    {
+      "feature_name": "volume_ratio",
+      "feature_id": "FEAT-VOLUME_RATIO",
+      "formula_id": "FORMULA-LEGACY-VOLUME_RATIO",
+      "formula_version": "legacy-v1",
+      "formula_definition": "inherits volume semantic",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 5,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "SEMANTICALLY_DIVERGENT",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "inherits volume semantic",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain with FC-1/FC-2 remediation"
+    },
+    {
+      "feature_name": "double_sweep",
+      "feature_id": "FEAT-DOUBLE_SWEEP",
+      "formula_id": "FORMULA-LEGACY-DOUBLE_SWEEP",
+      "formula_version": "legacy-v1",
+      "formula_definition": "from liquidity_sweep",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 2,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": "see notes",
+      "PIT_semantic": "LEAKING",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 6,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "LEAKING",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "from liquidity_sweep",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain with FC-1/FC-2 remediation"
+    },
+    {
+      "feature_name": "ema_fast",
+      "feature_id": "FEAT-EMA_FAST",
+      "formula_id": "FORMULA-LEGACY-EMA_FAST",
+      "formula_version": "legacy-v1",
+      "formula_definition": "Legacy pipeline semantics for ema_fast",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 7,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "UNADJUDICATED",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain; FC-2 full adjudication"
+    },
+    {
+      "feature_name": "ema_slow",
+      "feature_id": "FEAT-EMA_SLOW",
+      "formula_id": "FORMULA-LEGACY-EMA_SLOW",
+      "formula_version": "legacy-v1",
+      "formula_definition": "Legacy pipeline semantics for ema_slow",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 8,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "UNADJUDICATED",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain; FC-2 full adjudication"
+    },
+    {
+      "feature_name": "ema_spread",
+      "feature_id": "FEAT-EMA_SPREAD",
+      "formula_id": "FORMULA-LEGACY-EMA_SPREAD",
+      "formula_version": "legacy-v1",
+      "formula_definition": "Legacy pipeline semantics for ema_spread",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 9,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "UNADJUDICATED",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain; FC-2 full adjudication"
+    },
+    {
+      "feature_name": "trend_bias",
+      "feature_id": "FEAT-TREND_BIAS",
+      "formula_id": "FORMULA-LEGACY-TREND_BIAS",
+      "formula_version": "legacy-v1",
+      "formula_definition": "Legacy pipeline semantics for trend_bias",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 10,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "UNADJUDICATED",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain; FC-2 full adjudication"
+    },
+    {
+      "feature_name": "trend_strength",
+      "feature_id": "FEAT-TREND_STRENGTH",
+      "formula_id": "FORMULA-LEGACY-TREND_STRENGTH",
+      "formula_version": "legacy-v1",
+      "formula_definition": "Legacy pipeline semantics for trend_strength",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 11,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "UNADJUDICATED",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain; FC-2 full adjudication"
+    },
+    {
+      "feature_name": "momentum_score",
+      "feature_id": "FEAT-MOMENTUM_SCORE",
+      "formula_id": "FORMULA-LEGACY-MOMENTUM_SCORE",
+      "formula_version": "legacy-v1",
+      "formula_definition": "Legacy pipeline semantics for momentum_score",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 12,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "UNADJUDICATED",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain; FC-2 full adjudication"
+    },
+    {
+      "feature_name": "atr",
+      "feature_id": "FEAT-ATR",
+      "formula_id": "FORMULA-LEGACY-ATR",
+      "formula_version": "legacy-v1",
+      "formula_definition": "Legacy pipeline semantics for atr",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 13,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "UNADJUDICATED",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain; FC-2 full adjudication"
+    },
+    {
+      "feature_name": "volatility_ratio",
+      "feature_id": "FEAT-VOLATILITY_RATIO",
+      "formula_id": "FORMULA-LEGACY-VOLATILITY_RATIO",
+      "formula_version": "legacy-v1",
+      "formula_definition": "Legacy pipeline semantics for volatility_ratio",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 14,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "UNADJUDICATED",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain; FC-2 full adjudication"
+    },
+    {
+      "feature_name": "rsi_14",
+      "feature_id": "FEAT-RSI_14",
+      "formula_id": "FORMULA-LEGACY-RSI_14",
+      "formula_version": "legacy-v1",
+      "formula_definition": "Legacy pipeline semantics for rsi_14",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 15,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "UNADJUDICATED",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain; FC-2 full adjudication"
+    },
+    {
+      "feature_name": "macd_line",
+      "feature_id": "FEAT-MACD_LINE",
+      "formula_id": "FORMULA-LEGACY-MACD_LINE",
+      "formula_version": "legacy-v1",
+      "formula_definition": "Legacy pipeline semantics for macd_line",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 16,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "UNADJUDICATED",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain; FC-2 full adjudication"
+    },
+    {
+      "feature_name": "macd_signal",
+      "feature_id": "FEAT-MACD_SIGNAL",
+      "formula_id": "FORMULA-LEGACY-MACD_SIGNAL",
+      "formula_version": "legacy-v1",
+      "formula_definition": "Legacy pipeline semantics for macd_signal",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 17,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "UNADJUDICATED",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain; FC-2 full adjudication"
+    },
+    {
+      "feature_name": "macd_hist",
+      "feature_id": "FEAT-MACD_HIST",
+      "formula_id": "FORMULA-LEGACY-MACD_HIST",
+      "formula_version": "legacy-v1",
+      "formula_definition": "Legacy pipeline semantics for macd_hist",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 18,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "UNADJUDICATED",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain; FC-2 full adjudication"
+    },
+    {
+      "feature_name": "sweep_detected",
+      "feature_id": "FEAT-SWEEP_DETECTED",
+      "formula_id": "FORMULA-LEGACY-SWEEP_DETECTED",
+      "formula_version": "legacy-v1",
+      "formula_definition": "from liquidity_sweep",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 2,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": "see notes",
+      "PIT_semantic": "LEAKING",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 19,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "LEAKING",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "from liquidity_sweep",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain with FC-1/FC-2 remediation"
+    },
+    {
+      "feature_name": "liquidity_sweep",
+      "feature_id": "FEAT-LIQUIDITY_SWEEP",
+      "formula_id": "FORMULA-LEGACY-LIQUIDITY_SWEEP",
+      "formula_version": "legacy-v1",
+      "formula_definition": "depends on last_swing refs",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 2,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": "see notes",
+      "PIT_semantic": "LEAKING",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 20,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "LEAKING",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "depends on last_swing refs",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain with FC-1/FC-2 remediation"
+    },
+    {
+      "feature_name": "break_of_structure",
+      "feature_id": "FEAT-BREAK_OF_STRUCTURE",
+      "formula_id": "FORMULA-LEGACY-BREAK_OF_STRUCTURE",
+      "formula_version": "legacy-v1",
+      "formula_definition": "depends on last_swing refs",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 2,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": "see notes",
+      "PIT_semantic": "LEAKING",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 21,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "LEAKING",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "depends on last_swing refs",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain with FC-1/FC-2 remediation"
+    },
+    {
+      "feature_name": "swing_high",
+      "feature_id": "FEAT-SWING_HIGH",
+      "formula_id": "FORMULA-LEGACY-SWING_HIGH",
+      "formula_version": "legacy-v1",
+      "formula_definition": "center=True publish at t; k=2 future bars",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 2,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": "see notes",
+      "PIT_semantic": "LEAKING",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 22,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "LEAKING",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "center=True publish at t; k=2 future bars",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "causal delayed publish available_at=t+k in FC-1"
+    },
+    {
+      "feature_name": "swing_low",
+      "feature_id": "FEAT-SWING_LOW",
+      "formula_id": "FORMULA-LEGACY-SWING_LOW",
+      "formula_version": "legacy-v1",
+      "formula_definition": "center=True publish at t; k=2 future bars",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 2,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": "see notes",
+      "PIT_semantic": "LEAKING",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 23,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "LEAKING",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "center=True publish at t; k=2 future bars",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "causal delayed publish available_at=t+k in FC-1"
+    },
+    {
+      "feature_name": "higher_high",
+      "feature_id": "FEAT-HIGHER_HIGH",
+      "formula_id": "FORMULA-LEGACY-HIGHER_HIGH",
+      "formula_version": "legacy-v1",
+      "formula_definition": "depends on last_swing from centered swings",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 2,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": "see notes",
+      "PIT_semantic": "LEAKING",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 24,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "LEAKING",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "depends on last_swing from centered swings",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain with FC-1/FC-2 remediation"
+    },
+    {
+      "feature_name": "lower_low",
+      "feature_id": "FEAT-LOWER_LOW",
+      "formula_id": "FORMULA-LEGACY-LOWER_LOW",
+      "formula_version": "legacy-v1",
+      "formula_definition": "depends on last_swing from centered swings",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 2,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": "see notes",
+      "PIT_semantic": "LEAKING",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 25,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "LEAKING",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "depends on last_swing from centered swings",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain with FC-1/FC-2 remediation"
+    },
+    {
+      "feature_name": "body_size",
+      "feature_id": "FEAT-BODY_SIZE",
+      "formula_id": "FORMULA-LEGACY-BODY_SIZE",
+      "formula_version": "legacy-v1",
+      "formula_definition": "Legacy pipeline semantics for body_size",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 26,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "UNADJUDICATED",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain; FC-2 full adjudication"
+    },
+    {
+      "feature_name": "wick_size",
+      "feature_id": "FEAT-WICK_SIZE",
+      "formula_id": "FORMULA-LEGACY-WICK_SIZE",
+      "formula_version": "legacy-v1",
+      "formula_definition": "Legacy pipeline semantics for wick_size",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 27,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "UNADJUDICATED",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain; FC-2 full adjudication"
+    },
+    {
+      "feature_name": "body_ratio",
+      "feature_id": "FEAT-BODY_RATIO",
+      "formula_id": "FORMULA-LEGACY-BODY_RATIO",
+      "formula_version": "legacy-v1",
+      "formula_definition": "Legacy pipeline semantics for body_ratio",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 28,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "UNADJUDICATED",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain; FC-2 full adjudication"
+    },
+    {
+      "feature_name": "volatility_regime",
+      "feature_id": "FEAT-VOLATILITY_REGIME",
+      "formula_id": "FORMULA-LEGACY-VOLATILITY_REGIME",
+      "formula_version": "legacy-v1",
+      "formula_definition": "global atr rank uses full batch",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "LEAKING",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 29,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "LEAKING",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "global atr rank uses full batch",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "causal regime in FC-1; global rank is LEGACY only"
+    },
+    {
+      "feature_name": "session",
+      "feature_id": "FEAT-SESSION",
+      "formula_id": "FORMULA-LEGACY-SESSION",
+      "formula_version": "legacy-v1",
+      "formula_definition": "Legacy pipeline semantics for session",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 30,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "UNADJUDICATED",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain; FC-2 full adjudication"
+    },
+    {
+      "feature_name": "hour_of_day",
+      "feature_id": "FEAT-HOUR_OF_DAY",
+      "formula_id": "FORMULA-LEGACY-HOUR_OF_DAY",
+      "formula_version": "legacy-v1",
+      "formula_definition": "Legacy pipeline semantics for hour_of_day",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 31,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "UNADJUDICATED",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain; FC-2 full adjudication"
+    },
+    {
+      "feature_name": "disp_strength",
+      "feature_id": "FEAT-DISP_STRENGTH",
+      "formula_id": "FM-020",
+      "formula_version": "legacy-v1",
+      "formula_definition": "FM-020 pipeline; CRT/BitNet may use FM-028 under alias",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 32,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "FORMULA_AUTHORITY_AMBIGUOUS",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "FM-020 pipeline; CRT/BitNet may use FM-028 under alias",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "canonical FM-020; CRT uses FEAT-DISPLACEMENT_ATR_RATIO"
+    },
+    {
+      "feature_name": "retest_depth",
+      "feature_id": "FEAT-RETEST_DEPTH",
+      "formula_id": "FM-021",
+      "formula_version": "legacy-v1",
+      "formula_definition": "FM-021 pipeline; BitNet may alias FM-027",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 33,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "FORMULA_AUTHORITY_AMBIGUOUS",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "FM-021 pipeline; BitNet may alias FM-027",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "canonical FM-021; CRT uses FEAT-DISPLACEMENT_RETRACE"
+    },
+    {
+      "feature_name": "candles_since_retest",
+      "feature_id": "FEAT-CANDLES_SINCE_RETEST",
+      "formula_id": "FORMULA-LEGACY-CANDLES_SINCE_RETEST",
+      "formula_version": "legacy-v1",
+      "formula_definition": "depends on liquidity_sweep groups",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 2,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": "see notes",
+      "PIT_semantic": "LEAKING",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 34,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "LEAKING",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "depends on liquidity_sweep groups",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain with FC-1/FC-2 remediation"
+    },
+    {
+      "feature_name": "liquidity_distance",
+      "feature_id": "FEAT-LIQUIDITY_DISTANCE",
+      "formula_id": "FORMULA-LEGACY-LIQUIDITY_DISTANCE",
+      "formula_version": "legacy-v1",
+      "formula_definition": "uses last_swing prices",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 2,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": "see notes",
+      "PIT_semantic": "LEAKING",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 35,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "LEAKING",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "uses last_swing prices",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain with FC-1/FC-2 remediation"
+    },
+    {
+      "feature_name": "liquidity_pressure_score",
+      "feature_id": "FEAT-LIQUIDITY_PRESSURE_SCORE",
+      "formula_id": "FORMULA-LEGACY-LIQUIDITY_PRESSURE_SCORE",
+      "formula_version": "legacy-v1",
+      "formula_definition": "from liquidity_distance",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 2,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": "see notes",
+      "PIT_semantic": "LEAKING",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 36,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "LEAKING",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "from liquidity_distance",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain with FC-1/FC-2 remediation"
+    },
+    {
+      "feature_name": "volume_spike",
+      "feature_id": "FEAT-VOLUME_SPIKE",
+      "formula_id": "FORMULA-LEGACY-VOLUME_SPIKE",
+      "formula_version": "legacy-v1",
+      "formula_definition": "inherits volume semantic",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": 37,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "SEMANTICALLY_DIVERGENT",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "inherits volume semantic",
+      "is_vector_member": true,
+      "is_synthetic": false,
+      "planned_canonical_intent": "retain with FC-1/FC-2 remediation"
+    },
+    {
+      "feature_name": "volume_range_proxy",
+      "feature_id": "FEAT-VOLUME_RANGE_PROXY",
+      "formula_id": "FORMULA-T003-RANGE-PROXY",
+      "formula_version": "legacy-v1",
+      "formula_definition": "T-003 high-low proxy under NEW identity only (FC-1)",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/feature_pipeline.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "SYNTHETIC_PRICE_RANGE_PROXY",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "explicit synthetic feature",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": null,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "UNADJUDICATED",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "T-003 high-low proxy under NEW identity only (FC-1)",
+      "is_vector_member": false,
+      "is_synthetic": true,
+      "planned_canonical_intent": "optional derived; never alias as volume"
+    },
+    {
+      "feature_name": "displacement_retrace",
+      "feature_id": "FEAT-DISPLACEMENT_RETRACE",
+      "formula_id": "FM-027",
+      "formula_version": "legacy-v1",
+      "formula_definition": "FM-027 CRT cross-candle retrace; distinct from retest_depth FM-021",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/derived_math.py + src/config_layer/crt_engine_v2.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": null,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "FORMULA_AUTHORITY_AMBIGUOUS",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "FM-027 CRT cross-candle retrace; distinct from retest_depth FM-021",
+      "is_vector_member": false,
+      "is_synthetic": false,
+      "planned_canonical_intent": "CRT/BitNet must bind this ID not retest_depth alias"
+    },
+    {
+      "feature_name": "displacement_atr_ratio",
+      "feature_id": "FEAT-DISPLACEMENT_ATR_RATIO",
+      "formula_id": "FM-028",
+      "formula_version": "legacy-v1",
+      "formula_definition": "FM-028 CRT range/ATR; distinct from disp_strength FM-020",
+      "formula_authority": "LEGACY_FEATURE_SEMANTICS_V1 / FeaturePipeline default",
+      "implementation_authority": "src/features/derived_math.py + src/config_layer/crt_engine_v2.py",
+      "source_fields": [
+        "ohlcv"
+      ],
+      "source_field_semantics": "see census / OHLCV",
+      "intermediate_dependencies": [],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "lookback": "see docs/governance/feature_38_lineage_census-2026-07-10.json",
+      "lookahead": 0,
+      "warmup": "FeaturePipeline finalize / ATR 14 / MA 200 as applicable",
+      "statefulness": "batch DataFrame",
+      "value_timestamp": "bar t",
+      "available_at_timestamp": "bar t (legacy default; may be incorrect for swings)",
+      "publication_delay": 0,
+      "PIT_semantic": "UNADJUDICATED",
+      "batch_semantic": "FeaturePipeline.run full frame",
+      "runtime_semantic": "backtest dual-load FeaturePipeline; live path TBD FC-3",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "synthetic_input_policy": "none",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "dtype": "float32 in vector",
+      "bounds": null,
+      "units": null,
+      "output_order": null,
+      "active_consumers": [
+        "FeaturePipeline vector"
+      ],
+      "training_consumers": [
+        "BitNet / gaussian / stage1 paths \u2014 FC-5 audit"
+      ],
+      "backtest_consumers": [
+        "BacktestRunner feature index"
+      ],
+      "live_consumers": [
+        "live_engine_hook \u2014 FC-3"
+      ],
+      "model_artifact_requirements": [
+        "feature_id + formula_id at FC-7"
+      ],
+      "tests": [],
+      "adversarial_probes": [],
+      "status": "FORMULA_AUTHORITY_AMBIGUOUS",
+      "evidence": [
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+        "docs/governance/feature_38_lineage_census-2026-07-10.json"
+      ],
+      "notes": "FM-028 CRT range/ATR; distinct from disp_strength FM-020",
+      "is_vector_member": false,
+      "is_synthetic": false,
+      "planned_canonical_intent": "CRT/BitNet must bind this ID not disp_strength alias"
+    }
+  ]
+}

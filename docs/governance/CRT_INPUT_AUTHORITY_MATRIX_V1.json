@@ -1,0 +1,1161 @@
+{
+  "_doc": "CRT_INPUT_AUTHORITY_MATRIX_V1 (adjudication package copy, enriched schema)",
+  "generated_at_utc": "2026-07-14T08:12:37.280834+00:00",
+  "package": "crt_architecture_adjudication_v1",
+  "architectural_finding": "CRT process_candle transition logic is NOT downstream of the 38-dim FeaturePipeline vector. The vector is produced in parallel and attached at TRADE_OPENED journaling.",
+  "inputs": [
+    {
+      "input_id": "CRT-IN-001",
+      "runtime_name": "open",
+      "description": "Candle.open / process_candle",
+      "read_locations": [
+        "Candle.open / process_candle"
+      ],
+      "write_production_locations": [],
+      "source_class": "RAW_OHLC",
+      "formula_or_semantic": "Candle.open / process_candle",
+      "formula_id": null,
+      "fm_id": null,
+      "canonical_feature_equivalent": "open",
+      "identity_relationship": "APPROXIMATE",
+      "authority_owner": "FEATURE_PIPELINE",
+      "temporal_semantics": "same_bar_or_stateless",
+      "stateful_or_stateless": "STATELESS",
+      "instrument_specific": false,
+      "configurable": false,
+      "current_consumer": "CRTEngine.process_candle / StateMachine.try_*",
+      "required_future_owner": "MARKET_ONTOLOGY_OR_MSIP",
+      "migration_recommendation": "BIND_TO_CANONICAL_FEATURE",
+      "evidence": [
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (prior)",
+        "baseline/transition traces",
+        "crt_engine_v2.py"
+      ],
+      "confidence": "PROVEN",
+      "prior_fields": {
+        "name": "open",
+        "runtime_source_class": "RAW_OHLC",
+        "source_location": "Candle.open / process_candle",
+        "formula_id": null,
+        "canonical_equivalent": "open",
+        "in_canonical_38": true,
+        "stateful": false,
+        "config_dependency": null,
+        "authority_owner_today": "RAW_OHLC_STREAM",
+        "duplication_status": "NAME_SHARED_WITH_CANONICAL_BUT_NOT_VIA_FEATUREPIPELINE",
+        "migration_recommendation": "KEEP_RAW_OR_BIND_MSIP_RAW_LAYER \u2014 not FeaturePipeline-mediated today",
+        "observed_in_transition_window": false,
+        "observed_in_baseline_v1": true
+      }
+    },
+    {
+      "input_id": "CRT-IN-002",
+      "runtime_name": "high",
+      "description": "Candle.high; detect_sweep",
+      "read_locations": [
+        "Candle.high; detect_sweep"
+      ],
+      "write_production_locations": [],
+      "source_class": "RAW_OHLC",
+      "formula_or_semantic": "Candle.high; detect_sweep",
+      "formula_id": null,
+      "fm_id": null,
+      "canonical_feature_equivalent": "high",
+      "identity_relationship": "APPROXIMATE",
+      "authority_owner": "FEATURE_PIPELINE",
+      "temporal_semantics": "same_bar_or_stateless",
+      "stateful_or_stateless": "STATELESS",
+      "instrument_specific": false,
+      "configurable": false,
+      "current_consumer": "CRTEngine.process_candle / StateMachine.try_*",
+      "required_future_owner": "MARKET_ONTOLOGY_OR_MSIP",
+      "migration_recommendation": "MOVE_TO_INTERPRETATION_LAYER",
+      "evidence": [
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (prior)",
+        "baseline/transition traces",
+        "crt_engine_v2.py"
+      ],
+      "confidence": "PROVEN",
+      "prior_fields": {
+        "name": "high",
+        "runtime_source_class": "RAW_OHLC",
+        "source_location": "Candle.high; detect_sweep",
+        "formula_id": null,
+        "canonical_equivalent": "high",
+        "in_canonical_38": true,
+        "stateful": false,
+        "config_dependency": null,
+        "authority_owner_today": "RAW_OHLC_STREAM",
+        "duplication_status": "NAME_SHARED_WITH_CANONICAL_BUT_NOT_VIA_FEATUREPIPELINE",
+        "migration_recommendation": "KEEP_RAW; MSIP may re-export as market fact",
+        "observed_in_transition_window": true,
+        "observed_in_baseline_v1": true
+      }
+    },
+    {
+      "input_id": "CRT-IN-003",
+      "runtime_name": "low",
+      "description": "Candle.low; detect_sweep",
+      "read_locations": [
+        "Candle.low; detect_sweep"
+      ],
+      "write_production_locations": [],
+      "source_class": "RAW_OHLC",
+      "formula_or_semantic": "Candle.low; detect_sweep",
+      "formula_id": null,
+      "fm_id": null,
+      "canonical_feature_equivalent": "low",
+      "identity_relationship": "APPROXIMATE",
+      "authority_owner": "FEATURE_PIPELINE",
+      "temporal_semantics": "same_bar_or_stateless",
+      "stateful_or_stateless": "STATELESS",
+      "instrument_specific": false,
+      "configurable": false,
+      "current_consumer": "CRTEngine.process_candle / StateMachine.try_*",
+      "required_future_owner": "MARKET_ONTOLOGY_OR_MSIP",
+      "migration_recommendation": "MOVE_TO_INTERPRETATION_LAYER",
+      "evidence": [
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (prior)",
+        "baseline/transition traces",
+        "crt_engine_v2.py"
+      ],
+      "confidence": "PROVEN",
+      "prior_fields": {
+        "name": "low",
+        "runtime_source_class": "RAW_OHLC",
+        "source_location": "Candle.low; detect_sweep",
+        "formula_id": null,
+        "canonical_equivalent": "low",
+        "in_canonical_38": true,
+        "stateful": false,
+        "config_dependency": null,
+        "authority_owner_today": "RAW_OHLC_STREAM",
+        "duplication_status": "NAME_SHARED_WITH_CANONICAL_BUT_NOT_VIA_FEATUREPIPELINE",
+        "migration_recommendation": "KEEP_RAW; MSIP may re-export as market fact",
+        "observed_in_transition_window": true,
+        "observed_in_baseline_v1": true
+      }
+    },
+    {
+      "input_id": "CRT-IN-004",
+      "runtime_name": "close",
+      "description": "Candle.close; body_ratio/move/EMA update",
+      "read_locations": [
+        "Candle.close; body_ratio/move/EMA update"
+      ],
+      "write_production_locations": [],
+      "source_class": "RAW_OHLC",
+      "formula_or_semantic": "Candle.close; body_ratio/move/EMA update",
+      "formula_id": null,
+      "fm_id": null,
+      "canonical_feature_equivalent": "close",
+      "identity_relationship": "APPROXIMATE",
+      "authority_owner": "FEATURE_PIPELINE",
+      "temporal_semantics": "same_bar_or_stateless",
+      "stateful_or_stateless": "STATELESS",
+      "instrument_specific": false,
+      "configurable": false,
+      "current_consumer": "CRTEngine.process_candle / StateMachine.try_*",
+      "required_future_owner": "MARKET_ONTOLOGY_OR_MSIP",
+      "migration_recommendation": "MOVE_TO_INTERPRETATION_LAYER",
+      "evidence": [
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (prior)",
+        "baseline/transition traces",
+        "crt_engine_v2.py"
+      ],
+      "confidence": "PROVEN",
+      "prior_fields": {
+        "name": "close",
+        "runtime_source_class": "RAW_OHLC",
+        "source_location": "Candle.close; body_ratio/move/EMA update",
+        "formula_id": null,
+        "canonical_equivalent": "close",
+        "in_canonical_38": true,
+        "stateful": false,
+        "config_dependency": null,
+        "authority_owner_today": "RAW_OHLC_STREAM",
+        "duplication_status": "NAME_SHARED_WITH_CANONICAL_BUT_NOT_VIA_FEATUREPIPELINE",
+        "migration_recommendation": "KEEP_RAW; MSIP may re-export as market fact",
+        "observed_in_transition_window": true,
+        "observed_in_baseline_v1": true
+      }
+    },
+    {
+      "input_id": "CRT-IN-005",
+      "runtime_name": "body_ratio",
+      "description": "Candle.body_ratio property \u2192 FM-010 path / candle_math",
+      "read_locations": [
+        "Candle.body_ratio property \u2192 FM-010 path / candle_math"
+      ],
+      "write_production_locations": [],
+      "source_class": "CRT_LOCAL_DERIVED",
+      "formula_or_semantic": "Candle.body_ratio property \u2192 FM-010 path / candle_math",
+      "formula_id": "FM-010",
+      "fm_id": "FM-010",
+      "canonical_feature_equivalent": "body_ratio",
+      "identity_relationship": "DUPLICATE_LOCAL_IMPLEMENTATION",
+      "authority_owner": "OTHER",
+      "temporal_semantics": "same_bar_or_stateless",
+      "stateful_or_stateless": "STATELESS",
+      "instrument_specific": false,
+      "configurable": true,
+      "current_consumer": "CRTEngine.process_candle / StateMachine.try_*",
+      "required_future_owner": "MARKET_ONTOLOGY_OR_MSIP",
+      "migration_recommendation": "BIND_TO_CANONICAL_FEATURE",
+      "evidence": [
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (prior)",
+        "baseline/transition traces",
+        "crt_engine_v2.py"
+      ],
+      "confidence": "STRONG",
+      "prior_fields": {
+        "name": "body_ratio",
+        "runtime_source_class": "CRT_LOCAL_DERIVED",
+        "source_location": "Candle.body_ratio property \u2192 FM-010 path / candle_math",
+        "formula_id": "FM-010",
+        "canonical_equivalent": "body_ratio",
+        "in_canonical_38": true,
+        "stateful": false,
+        "config_dependency": "body_ratio_min (threshold only)",
+        "authority_owner_today": "CRT_CANDLE_PROPERTY + FORMULA_REGISTRY",
+        "duplication_status": "PARALLEL_TO_PIPELINE_SAME_FM \u2014 CRT does not read pipeline column",
+        "migration_recommendation": "CANDIDATE_FOR_MSIP_CERTIFIED_FEATURE_BINDING (shadow first); prove byte-parity with pipeline body_ratio before cutover",
+        "observed_in_transition_window": false,
+        "observed_in_baseline_v1": false
+      }
+    },
+    {
+      "input_id": "CRT-IN-006",
+      "runtime_name": "wick_size",
+      "description": "Candle.wick_size (candle_range / FM-002)",
+      "read_locations": [
+        "Candle.wick_size (candle_range / FM-002)"
+      ],
+      "write_production_locations": [],
+      "source_class": "CRT_LOCAL_DERIVED",
+      "formula_or_semantic": "Candle.wick_size (candle_range / FM-002)",
+      "formula_id": "FM-002",
+      "fm_id": "FM-002",
+      "canonical_feature_equivalent": "wick_size",
+      "identity_relationship": "DUPLICATE_LOCAL_IMPLEMENTATION",
+      "authority_owner": "CRT_ENGINE",
+      "temporal_semantics": "same_bar_or_stateless",
+      "stateful_or_stateless": "STATELESS",
+      "instrument_specific": false,
+      "configurable": true,
+      "current_consumer": "CRTEngine.process_candle / StateMachine.try_*",
+      "required_future_owner": "MARKET_ONTOLOGY_OR_MSIP",
+      "migration_recommendation": "BIND_TO_CANONICAL_FEATURE",
+      "evidence": [
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (prior)",
+        "baseline/transition traces",
+        "crt_engine_v2.py"
+      ],
+      "confidence": "STRONG",
+      "prior_fields": {
+        "name": "wick_size",
+        "runtime_source_class": "CRT_LOCAL_DERIVED",
+        "source_location": "Candle.wick_size (candle_range / FM-002)",
+        "formula_id": "FM-002",
+        "canonical_equivalent": "wick_size",
+        "in_canonical_38": true,
+        "stateful": false,
+        "config_dependency": "atr_multiplier_min",
+        "authority_owner_today": "CRT_CANDLE_PROPERTY",
+        "duplication_status": "PARALLEL_TO_PIPELINE_SAME_FM",
+        "migration_recommendation": "CANDIDATE_FOR_MSIP_CERTIFIED_FEATURE_BINDING (shadow parity first)",
+        "observed_in_transition_window": false,
+        "observed_in_baseline_v1": false
+      }
+    },
+    {
+      "input_id": "CRT-IN-007",
+      "runtime_name": "atr",
+      "description": "RangeDetector.compute_atr(candle_buffer, atr_period)",
+      "read_locations": [
+        "RangeDetector.compute_atr(candle_buffer, atr_period)"
+      ],
+      "write_production_locations": [],
+      "source_class": "CRT_LOCAL_DERIVED",
+      "formula_or_semantic": "RangeDetector.compute_atr(candle_buffer, atr_period)",
+      "formula_id": "FM-041",
+      "fm_id": "FM-041",
+      "canonical_feature_equivalent": "atr",
+      "identity_relationship": "DUPLICATE_LOCAL_IMPLEMENTATION",
+      "authority_owner": "CRT_ENGINE",
+      "temporal_semantics": "stateful",
+      "stateful_or_stateless": "STATEFUL",
+      "instrument_specific": false,
+      "configurable": true,
+      "current_consumer": "CRTEngine.process_candle / StateMachine.try_*",
+      "required_future_owner": "MARKET_ONTOLOGY_OR_MSIP",
+      "migration_recommendation": "OWNER_DECISION_REQUIRED",
+      "evidence": [
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (prior)",
+        "baseline/transition traces",
+        "crt_engine_v2.py"
+      ],
+      "confidence": "PROVEN",
+      "prior_fields": {
+        "name": "atr",
+        "runtime_source_class": "CRT_LOCAL_DERIVED",
+        "source_location": "RangeDetector.compute_atr(candle_buffer, atr_period)",
+        "formula_id": "FM-041",
+        "canonical_equivalent": "atr",
+        "in_canonical_38": true,
+        "stateful": true,
+        "config_dependency": "atr_period, atr_buffer_multiplier",
+        "authority_owner_today": "CRT_LOCAL_ROLLING",
+        "duplication_status": "PARALLEL_TO_PIPELINE_ATR \u2014 may not be byte-identical (relative vs absolute; windowing)",
+        "migration_recommendation": "AUTHORITY_AUDIT_REQUIRED before binding; do not assume pipeline atr == CRT atr",
+        "observed_in_transition_window": true,
+        "observed_in_baseline_v1": false
+      }
+    },
+    {
+      "input_id": "CRT-IN-008",
+      "runtime_name": "move",
+      "description": "abs(close-open) in try_sweep_to_displacement",
+      "read_locations": [
+        "abs(close-open) in try_sweep_to_displacement"
+      ],
+      "write_production_locations": [],
+      "source_class": "CRT_LOCAL_DERIVED",
+      "formula_or_semantic": "abs(close-open) in try_sweep_to_displacement",
+      "formula_id": null,
+      "fm_id": null,
+      "canonical_feature_equivalent": null,
+      "identity_relationship": "NO_CANONICAL_EQUIVALENT",
+      "authority_owner": "CRT_ENGINE",
+      "temporal_semantics": "same_bar_or_stateless",
+      "stateful_or_stateless": "STATELESS",
+      "instrument_specific": false,
+      "configurable": true,
+      "current_consumer": "CRTEngine.process_candle / StateMachine.try_*",
+      "required_future_owner": "CRT_ENGINE",
+      "migration_recommendation": "KEEP_CRT_PRIVATE_STATE",
+      "evidence": [
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (prior)",
+        "baseline/transition traces",
+        "crt_engine_v2.py"
+      ],
+      "confidence": "PROVEN",
+      "prior_fields": {
+        "name": "move",
+        "runtime_source_class": "CRT_LOCAL_DERIVED",
+        "source_location": "abs(close-open) in try_sweep_to_displacement",
+        "formula_id": null,
+        "canonical_equivalent": null,
+        "in_canonical_38": false,
+        "stateful": false,
+        "config_dependency": "atr_min_displacement",
+        "authority_owner_today": "CRT_LOCAL_DERIVED",
+        "duplication_status": "CRT_PRIVATE_QUANTITY",
+        "migration_recommendation": "REGISTER_AS_MSIP_OR_CRT_PRIVATE \u2014 not currently a canonical feature",
+        "observed_in_transition_window": true,
+        "observed_in_baseline_v1": false
+      }
+    },
+    {
+      "input_id": "CRT-IN-009",
+      "runtime_name": "h_ref / l_ref / active_range",
+      "description": "state.active_range (HTF range detector)",
+      "read_locations": [
+        "state.active_range (HTF range detector)"
+      ],
+      "write_production_locations": [],
+      "source_class": "STATE_MEMORY",
+      "formula_or_semantic": "state.active_range (HTF range detector)",
+      "formula_id": null,
+      "fm_id": null,
+      "canonical_feature_equivalent": null,
+      "identity_relationship": "NO_CANONICAL_EQUIVALENT",
+      "authority_owner": "CRT_STATE_MEMORY",
+      "temporal_semantics": "stateful",
+      "stateful_or_stateless": "STATEFUL",
+      "instrument_specific": false,
+      "configurable": true,
+      "current_consumer": "CRTEngine.process_candle / StateMachine.try_*",
+      "required_future_owner": "CRT_STATE_MEMORY",
+      "migration_recommendation": "KEEP_CRT_PRIVATE_STATE",
+      "evidence": [
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (prior)",
+        "baseline/transition traces",
+        "crt_engine_v2.py"
+      ],
+      "confidence": "PROVEN",
+      "prior_fields": {
+        "name": "h_ref / l_ref / active_range",
+        "runtime_source_class": "STATE_MEMORY",
+        "source_location": "state.active_range (HTF range detector)",
+        "formula_id": null,
+        "canonical_equivalent": null,
+        "in_canonical_38": false,
+        "stateful": true,
+        "config_dependency": "htf_candles_per_range (backtest HTF builder)",
+        "authority_owner_today": "CRT_STATE_MACHINE_MEMORY",
+        "duplication_status": "LEGITIMATE_CRT_PRIVATE_STATE",
+        "migration_recommendation": "KEEP_IN_CRT \u2014 not a feature; MSIP may observe as state dimension only",
+        "observed_in_transition_window": true,
+        "observed_in_baseline_v1": true
+      }
+    },
+    {
+      "input_id": "CRT-IN-010",
+      "runtime_name": "sweep_event",
+      "description": "state.sweep_event after detect_sweep",
+      "read_locations": [
+        "state.sweep_event after detect_sweep"
+      ],
+      "write_production_locations": [],
+      "source_class": "STATE_MEMORY",
+      "formula_or_semantic": "state.sweep_event after detect_sweep",
+      "formula_id": null,
+      "fm_id": null,
+      "canonical_feature_equivalent": "liquidity_sweep / sweep_detected (pipeline) \u2014 DIFFERENT geometry",
+      "identity_relationship": "UNKNOWN",
+      "authority_owner": "CRT_STATE_MEMORY",
+      "temporal_semantics": "stateful",
+      "stateful_or_stateless": "STATEFUL",
+      "instrument_specific": false,
+      "configurable": true,
+      "current_consumer": "CRTEngine.process_candle / StateMachine.try_*",
+      "required_future_owner": "CRT_STATE_MEMORY",
+      "migration_recommendation": "KEEP_CRT_PRIVATE_STATE",
+      "evidence": [
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (prior)",
+        "baseline/transition traces",
+        "crt_engine_v2.py"
+      ],
+      "confidence": "PARTIAL",
+      "prior_fields": {
+        "name": "sweep_event",
+        "runtime_source_class": "STATE_MEMORY",
+        "source_location": "state.sweep_event after detect_sweep",
+        "formula_id": null,
+        "canonical_equivalent": "liquidity_sweep / sweep_detected (pipeline) \u2014 DIFFERENT geometry",
+        "in_canonical_38": false,
+        "stateful": true,
+        "config_dependency": "max_sweep_age_candles",
+        "authority_owner_today": "CRT_STATE_MACHINE_MEMORY",
+        "duplication_status": "SEMANTIC_NEAR_MISS_VS_PIPELINE_SWEEP \u2014 do not alias by name",
+        "migration_recommendation": "KEEP_CRT_PRIVATE until ontology maps CRT sweep vs pipeline liquidity_sweep",
+        "observed_in_transition_window": false,
+        "observed_in_baseline_v1": false
+      }
+    },
+    {
+      "input_id": "CRT-IN-011",
+      "runtime_name": "displacement_candle",
+      "description": "state.displacement_candle",
+      "read_locations": [
+        "state.displacement_candle"
+      ],
+      "write_production_locations": [],
+      "source_class": "STATE_MEMORY",
+      "formula_or_semantic": "state.displacement_candle",
+      "formula_id": null,
+      "fm_id": null,
+      "canonical_feature_equivalent": null,
+      "identity_relationship": "NO_CANONICAL_EQUIVALENT",
+      "authority_owner": "CRT_STATE_MEMORY",
+      "temporal_semantics": "stateful",
+      "stateful_or_stateless": "STATEFUL",
+      "instrument_specific": false,
+      "configurable": false,
+      "current_consumer": "CRTEngine.process_candle / StateMachine.try_*",
+      "required_future_owner": "CRT_STATE_MEMORY",
+      "migration_recommendation": "KEEP_CRT_PRIVATE_STATE",
+      "evidence": [
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (prior)",
+        "baseline/transition traces",
+        "crt_engine_v2.py"
+      ],
+      "confidence": "STRONG",
+      "prior_fields": {
+        "name": "displacement_candle",
+        "runtime_source_class": "STATE_MEMORY",
+        "source_location": "state.displacement_candle",
+        "formula_id": null,
+        "canonical_equivalent": null,
+        "in_canonical_38": false,
+        "stateful": true,
+        "config_dependency": null,
+        "authority_owner_today": "CRT_STATE_MACHINE_MEMORY",
+        "duplication_status": "LEGITIMATE_CRT_PRIVATE_STATE",
+        "migration_recommendation": "KEEP_IN_CRT",
+        "observed_in_transition_window": false,
+        "observed_in_baseline_v1": false
+      }
+    },
+    {
+      "input_id": "CRT-IN-012",
+      "runtime_name": "displacement_retrace",
+      "description": "cached_features at RETEST (FM-027 via FORMULA_REGISTRY)",
+      "read_locations": [
+        "cached_features at RETEST (FM-027 via FORMULA_REGISTRY)"
+      ],
+      "write_production_locations": [],
+      "source_class": "CACHED_FEATURE",
+      "formula_or_semantic": "cached_features at RETEST (FM-027 via FORMULA_REGISTRY)",
+      "formula_id": "FM-027",
+      "fm_id": "FM-027",
+      "canonical_feature_equivalent": null,
+      "identity_relationship": "UNKNOWN",
+      "authority_owner": "CRT_ENGINE",
+      "temporal_semantics": "stateful",
+      "stateful_or_stateless": "STATEFUL",
+      "instrument_specific": false,
+      "configurable": false,
+      "current_consumer": "CRTEngine.process_candle / StateMachine.try_*",
+      "required_future_owner": "MARKET_ONTOLOGY_OR_MSIP",
+      "migration_recommendation": "MOVE_TO_INTERPRETATION_LAYER",
+      "evidence": [
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (prior)",
+        "baseline/transition traces",
+        "crt_engine_v2.py"
+      ],
+      "confidence": "PARTIAL",
+      "prior_fields": {
+        "name": "displacement_retrace",
+        "runtime_source_class": "CACHED_FEATURE",
+        "source_location": "cached_features at RETEST (FM-027 via FORMULA_REGISTRY)",
+        "formula_id": "FM-027",
+        "canonical_equivalent": null,
+        "in_canonical_38": false,
+        "stateful": true,
+        "config_dependency": null,
+        "authority_owner_today": "CRT_CACHE + FORMULA_REGISTRY",
+        "duplication_status": "CRT_EMISSION_NOT_IN_38",
+        "migration_recommendation": "MSIP may surface as non-vector dimension; do not confuse with FM-021 retest_depth",
+        "observed_in_transition_window": false,
+        "observed_in_baseline_v1": false
+      }
+    },
+    {
+      "input_id": "CRT-IN-013",
+      "runtime_name": "displacement_atr_ratio",
+      "description": "cached_features / try_expansion_to_retest PATCH7 (FM-028)",
+      "read_locations": [
+        "cached_features / try_expansion_to_retest PATCH7 (FM-028)"
+      ],
+      "write_production_locations": [],
+      "source_class": "CACHED_FEATURE",
+      "formula_or_semantic": "cached_features / try_expansion_to_retest PATCH7 (FM-028)",
+      "formula_id": "FM-028",
+      "fm_id": "FM-028",
+      "canonical_feature_equivalent": null,
+      "identity_relationship": "UNKNOWN",
+      "authority_owner": "CRT_ENGINE",
+      "temporal_semantics": "same_bar_or_stateless",
+      "stateful_or_stateless": "STATELESS",
+      "instrument_specific": false,
+      "configurable": true,
+      "current_consumer": "CRTEngine.process_candle / StateMachine.try_*",
+      "required_future_owner": "MARKET_ONTOLOGY_OR_MSIP",
+      "migration_recommendation": "MOVE_TO_INTERPRETATION_LAYER",
+      "evidence": [
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (prior)",
+        "baseline/transition traces",
+        "crt_engine_v2.py"
+      ],
+      "confidence": "PARTIAL",
+      "prior_fields": {
+        "name": "displacement_atr_ratio",
+        "runtime_source_class": "CACHED_FEATURE",
+        "source_location": "cached_features / try_expansion_to_retest PATCH7 (FM-028)",
+        "formula_id": "FM-028",
+        "canonical_equivalent": null,
+        "in_canonical_38": false,
+        "stateful": false,
+        "config_dependency": "max_displacement_strength",
+        "authority_owner_today": "CRT_LOCAL + FORMULA_REGISTRY",
+        "duplication_status": "CRT_EMISSION_NOT_IN_38; parallel naming risk vs disp_strength",
+        "migration_recommendation": "MSIP shadow surface; CH-002 identity preserved",
+        "observed_in_transition_window": false,
+        "observed_in_baseline_v1": false
+      }
+    },
+    {
+      "input_id": "CRT-IN-014",
+      "runtime_name": "ema_fast / ema_slow",
+      "description": "state.update_emas each process_candle; soft-conf",
+      "read_locations": [
+        "state.update_emas each process_candle; soft-conf"
+      ],
+      "write_production_locations": [],
+      "source_class": "CRT_LOCAL_DERIVED",
+      "formula_or_semantic": "state.update_emas each process_candle; soft-conf",
+      "formula_id": "FM-043 / FM-044",
+      "fm_id": "FM-043 / FM-044",
+      "canonical_feature_equivalent": "ema_fast / ema_slow",
+      "identity_relationship": "DUPLICATE_LOCAL_IMPLEMENTATION",
+      "authority_owner": "CRT_ENGINE",
+      "temporal_semantics": "stateful",
+      "stateful_or_stateless": "STATEFUL",
+      "instrument_specific": false,
+      "configurable": true,
+      "current_consumer": "CRTEngine.process_candle / StateMachine.try_*",
+      "required_future_owner": "MARKET_ONTOLOGY_OR_MSIP",
+      "migration_recommendation": "BIND_TO_CANONICAL_FEATURE",
+      "evidence": [
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (prior)",
+        "baseline/transition traces",
+        "crt_engine_v2.py"
+      ],
+      "confidence": "STRONG",
+      "prior_fields": {
+        "name": "ema_fast / ema_slow",
+        "runtime_source_class": "CRT_LOCAL_DERIVED",
+        "source_location": "state.update_emas each process_candle; soft-conf",
+        "formula_id": "FM-043 / FM-044",
+        "canonical_equivalent": "ema_fast / ema_slow",
+        "in_canonical_38": true,
+        "stateful": true,
+        "config_dependency": "ema_fast, ema_slow spans",
+        "authority_owner_today": "CRT_LOCAL_EWM",
+        "duplication_status": "PARALLEL_TO_PIPELINE \u2014 parity unproven in this program",
+        "migration_recommendation": "PARITY_AUDIT before any binding",
+        "observed_in_transition_window": false,
+        "observed_in_baseline_v1": false
+      }
+    },
+    {
+      "input_id": "CRT-IN-015",
+      "runtime_name": "depth_abs / adaptive_ceiling",
+      "description": "try_expansion_to_retest",
+      "read_locations": [
+        "try_expansion_to_retest"
+      ],
+      "write_production_locations": [],
+      "source_class": "CRT_LOCAL_DERIVED",
+      "formula_or_semantic": "try_expansion_to_retest",
+      "formula_id": null,
+      "fm_id": null,
+      "canonical_feature_equivalent": null,
+      "identity_relationship": "NO_CANONICAL_EQUIVALENT",
+      "authority_owner": "OTHER",
+      "temporal_semantics": "stateful",
+      "stateful_or_stateless": "STATEFUL",
+      "instrument_specific": false,
+      "configurable": true,
+      "current_consumer": "CRTEngine.process_candle / StateMachine.try_*",
+      "required_future_owner": "OTHER",
+      "migration_recommendation": "KEEP_CRT_PRIVATE_STATE",
+      "evidence": [
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (prior)",
+        "baseline/transition traces",
+        "crt_engine_v2.py"
+      ],
+      "confidence": "STRONG",
+      "prior_fields": {
+        "name": "depth_abs / adaptive_ceiling",
+        "runtime_source_class": "CRT_LOCAL_DERIVED",
+        "source_location": "try_expansion_to_retest",
+        "formula_id": null,
+        "canonical_equivalent": null,
+        "in_canonical_38": false,
+        "stateful": true,
+        "config_dependency": "retest_depth_max, retest_atr_depth_fraction, retest_min_depth_atr_fraction",
+        "authority_owner_today": "CRT_LOCAL_DERIVED + CONFIG",
+        "duplication_status": "CRT_PRIVATE_COMPOSITION (not FM-021 gated retest_depth)",
+        "migration_recommendation": "REGISTER if MSIP owns retest geometry; else KEEP_CRT_PRIVATE",
+        "observed_in_transition_window": false,
+        "observed_in_baseline_v1": false
+      }
+    },
+    {
+      "input_id": "CRT-IN-016",
+      "runtime_name": "38-dim FeaturePipeline vector",
+      "description": "BacktestRunner TRADE_OPENED journal attach only",
+      "read_locations": [
+        "BacktestRunner TRADE_OPENED journal attach only"
+      ],
+      "write_production_locations": [],
+      "source_class": "CANONICAL_FEATURE_VECTOR",
+      "formula_or_semantic": "BacktestRunner TRADE_OPENED journal attach only",
+      "formula_id": "schema bulk",
+      "fm_id": "schema bulk",
+      "canonical_feature_equivalent": "CANONICAL_FEATURES",
+      "identity_relationship": "TRANSFORM",
+      "authority_owner": "BACKTEST_HARNESS",
+      "temporal_semantics": "stateful",
+      "stateful_or_stateless": "STATEFUL",
+      "instrument_specific": false,
+      "configurable": false,
+      "current_consumer": "CRTEngine.process_candle / StateMachine.try_*",
+      "required_future_owner": "MARKET_ONTOLOGY_OR_MSIP",
+      "migration_recommendation": "MOVE_TO_INTERPRETATION_LAYER",
+      "evidence": [
+        "docs/governance/CRT_INPUT_AUTHORITY_MATRIX_V1.json (prior)",
+        "baseline/transition traces",
+        "crt_engine_v2.py"
+      ],
+      "confidence": "PROVEN",
+      "prior_fields": {
+        "name": "38-dim FeaturePipeline vector",
+        "runtime_source_class": "CANONICAL_FEATURE_VECTOR",
+        "source_location": "BacktestRunner TRADE_OPENED journal attach only",
+        "formula_id": "schema bulk",
+        "canonical_equivalent": "CANONICAL_FEATURES",
+        "in_canonical_38": true,
+        "stateful": true,
+        "config_dependency": null,
+        "authority_owner_today": "FEATUREPIPELINE + BACKTEST_JOURNAL",
+        "duplication_status": "NOT_CONSUMED_BY_CRT_GUARDS",
+        "migration_recommendation": "DO_NOT_CLAIM_CRT_CONSUMER; MSIP shadow may join CRT decisions bar-by-bar without CRT reading the vector",
+        "observed_in_transition_window": true,
+        "observed_in_baseline_v1": true,
+        "note": "Captured in traces as market representation; process_candle does not index it"
+      }
+    },
+    {
+      "input_id": "CRT-CFG-001",
+      "runtime_name": "body_ratio_min",
+      "description": "CRTConfig HOW: threshold",
+      "read_locations": [
+        "G_SWEEP_DISP_BODY"
+      ],
+      "write_production_locations": [
+        "configs/production/v2_multi_2026_04.json"
+      ],
+      "source_class": "CONFIG_VALUE",
+      "formula_or_semantic": "threshold",
+      "formula_id": null,
+      "fm_id": null,
+      "canonical_feature_equivalent": null,
+      "identity_relationship": "NO_CANONICAL_EQUIVALENT",
+      "authority_owner": "CRT_CONFIG",
+      "temporal_semantics": "static_per_run",
+      "stateful_or_stateless": "STATELESS",
+      "instrument_specific": true,
+      "configurable": true,
+      "current_consumer": "CRTEngine",
+      "required_future_owner": "CRT_CONFIG",
+      "migration_recommendation": "KEEP_POLICY_CONFIG",
+      "evidence": [
+        "CRTConfig",
+        "active prod config",
+        "fail-reason diagnostic"
+      ],
+      "confidence": "PROVEN"
+    },
+    {
+      "input_id": "CRT-CFG-002",
+      "runtime_name": "atr_min_displacement",
+      "description": "CRTConfig HOW: threshold",
+      "read_locations": [
+        "G_SWEEP_DISP_MOVE"
+      ],
+      "write_production_locations": [
+        "configs/production/v2_multi_2026_04.json"
+      ],
+      "source_class": "CONFIG_VALUE",
+      "formula_or_semantic": "threshold",
+      "formula_id": null,
+      "fm_id": null,
+      "canonical_feature_equivalent": null,
+      "identity_relationship": "NO_CANONICAL_EQUIVALENT",
+      "authority_owner": "CRT_CONFIG",
+      "temporal_semantics": "static_per_run",
+      "stateful_or_stateless": "STATELESS",
+      "instrument_specific": true,
+      "configurable": true,
+      "current_consumer": "CRTEngine",
+      "required_future_owner": "CRT_CONFIG",
+      "migration_recommendation": "KEEP_POLICY_CONFIG",
+      "evidence": [
+        "CRTConfig",
+        "active prod config",
+        "fail-reason diagnostic"
+      ],
+      "confidence": "PROVEN"
+    },
+    {
+      "input_id": "CRT-CFG-003",
+      "runtime_name": "atr_multiplier_min",
+      "description": "CRTConfig HOW: threshold",
+      "read_locations": [
+        "G_SWEEP_DISP_WICK"
+      ],
+      "write_production_locations": [
+        "configs/production/v2_multi_2026_04.json"
+      ],
+      "source_class": "CONFIG_VALUE",
+      "formula_or_semantic": "threshold",
+      "formula_id": null,
+      "fm_id": null,
+      "canonical_feature_equivalent": null,
+      "identity_relationship": "NO_CANONICAL_EQUIVALENT",
+      "authority_owner": "CRT_CONFIG",
+      "temporal_semantics": "static_per_run",
+      "stateful_or_stateless": "STATELESS",
+      "instrument_specific": true,
+      "configurable": true,
+      "current_consumer": "CRTEngine",
+      "required_future_owner": "CRT_CONFIG",
+      "migration_recommendation": "KEEP_POLICY_CONFIG",
+      "evidence": [
+        "CRTConfig",
+        "active prod config",
+        "fail-reason diagnostic"
+      ],
+      "confidence": "PROVEN"
+    },
+    {
+      "input_id": "CRT-CFG-004",
+      "runtime_name": "max_sweep_age_candles",
+      "description": "CRTConfig HOW: threshold",
+      "read_locations": [
+        "G_SWEEP_DISP_AGE",
+        "SWEEP_EXPIRED"
+      ],
+      "write_production_locations": [
+        "configs/production/v2_multi_2026_04.json"
+      ],
+      "source_class": "CONFIG_VALUE",
+      "formula_or_semantic": "threshold",
+      "formula_id": null,
+      "fm_id": null,
+      "canonical_feature_equivalent": null,
+      "identity_relationship": "NO_CANONICAL_EQUIVALENT",
+      "authority_owner": "CRT_CONFIG",
+      "temporal_semantics": "static_per_run",
+      "stateful_or_stateless": "STATELESS",
+      "instrument_specific": true,
+      "configurable": true,
+      "current_consumer": "CRTEngine",
+      "required_future_owner": "CRT_CONFIG",
+      "migration_recommendation": "KEEP_POLICY_CONFIG",
+      "evidence": [
+        "CRTConfig",
+        "active prod config",
+        "fail-reason diagnostic"
+      ],
+      "confidence": "PROVEN"
+    },
+    {
+      "input_id": "CRT-CFG-005",
+      "runtime_name": "expansion_atr_min_distance",
+      "description": "CRTConfig HOW: threshold",
+      "read_locations": [
+        "G_DISP_EXP_ATR_DIST"
+      ],
+      "write_production_locations": [
+        "configs/production/v2_multi_2026_04.json"
+      ],
+      "source_class": "CONFIG_VALUE",
+      "formula_or_semantic": "threshold",
+      "formula_id": null,
+      "fm_id": null,
+      "canonical_feature_equivalent": null,
+      "identity_relationship": "NO_CANONICAL_EQUIVALENT",
+      "authority_owner": "CRT_CONFIG",
+      "temporal_semantics": "static_per_run",
+      "stateful_or_stateless": "STATELESS",
+      "instrument_specific": true,
+      "configurable": true,
+      "current_consumer": "CRTEngine",
+      "required_future_owner": "CRT_CONFIG",
+      "migration_recommendation": "KEEP_POLICY_CONFIG",
+      "evidence": [
+        "CRTConfig",
+        "active prod config",
+        "fail-reason diagnostic"
+      ],
+      "confidence": "PROVEN"
+    },
+    {
+      "input_id": "CRT-CFG-006",
+      "runtime_name": "retest_depth_max",
+      "description": "CRTConfig HOW: threshold",
+      "read_locations": [
+        "G_EXP_RET_CEILING"
+      ],
+      "write_production_locations": [
+        "configs/production/v2_multi_2026_04.json"
+      ],
+      "source_class": "CONFIG_VALUE",
+      "formula_or_semantic": "threshold",
+      "formula_id": null,
+      "fm_id": null,
+      "canonical_feature_equivalent": null,
+      "identity_relationship": "NO_CANONICAL_EQUIVALENT",
+      "authority_owner": "CRT_CONFIG",
+      "temporal_semantics": "static_per_run",
+      "stateful_or_stateless": "STATELESS",
+      "instrument_specific": true,
+      "configurable": true,
+      "current_consumer": "CRTEngine",
+      "required_future_owner": "CRT_CONFIG",
+      "migration_recommendation": "KEEP_POLICY_CONFIG",
+      "evidence": [
+        "CRTConfig",
+        "active prod config",
+        "fail-reason diagnostic"
+      ],
+      "confidence": "PROVEN"
+    },
+    {
+      "input_id": "CRT-CFG-007",
+      "runtime_name": "retest_atr_depth_fraction",
+      "description": "CRTConfig HOW: threshold",
+      "read_locations": [
+        "G_EXP_RET_CEILING"
+      ],
+      "write_production_locations": [
+        "configs/production/v2_multi_2026_04.json"
+      ],
+      "source_class": "CONFIG_VALUE",
+      "formula_or_semantic": "threshold",
+      "formula_id": null,
+      "fm_id": null,
+      "canonical_feature_equivalent": null,
+      "identity_relationship": "NO_CANONICAL_EQUIVALENT",
+      "authority_owner": "CRT_CONFIG",
+      "temporal_semantics": "static_per_run",
+      "stateful_or_stateless": "STATELESS",
+      "instrument_specific": true,
+      "configurable": true,
+      "current_consumer": "CRTEngine",
+      "required_future_owner": "CRT_CONFIG",
+      "migration_recommendation": "KEEP_POLICY_CONFIG",
+      "evidence": [
+        "CRTConfig",
+        "active prod config",
+        "fail-reason diagnostic"
+      ],
+      "confidence": "PROVEN"
+    },
+    {
+      "input_id": "CRT-CFG-008",
+      "runtime_name": "retest_min_depth_atr_fraction",
+      "description": "CRTConfig HOW: threshold",
+      "read_locations": [
+        "G_EXP_RET_MIN_DEPTH"
+      ],
+      "write_production_locations": [
+        "configs/production/v2_multi_2026_04.json"
+      ],
+      "source_class": "CONFIG_VALUE",
+      "formula_or_semantic": "threshold",
+      "formula_id": null,
+      "fm_id": null,
+      "canonical_feature_equivalent": null,
+      "identity_relationship": "NO_CANONICAL_EQUIVALENT",
+      "authority_owner": "CRT_CONFIG",
+      "temporal_semantics": "static_per_run",
+      "stateful_or_stateless": "STATELESS",
+      "instrument_specific": true,
+      "configurable": true,
+      "current_consumer": "CRTEngine",
+      "required_future_owner": "CRT_CONFIG",
+      "migration_recommendation": "KEEP_POLICY_CONFIG",
+      "evidence": [
+        "CRTConfig",
+        "active prod config",
+        "fail-reason diagnostic"
+      ],
+      "confidence": "PROVEN"
+    },
+    {
+      "input_id": "CRT-CFG-009",
+      "runtime_name": "max_displacement_strength",
+      "description": "CRTConfig HOW: threshold",
+      "read_locations": [
+        "G_EXP_RET_DISP_STRENGTH"
+      ],
+      "write_production_locations": [
+        "configs/production/v2_multi_2026_04.json"
+      ],
+      "source_class": "CONFIG_VALUE",
+      "formula_or_semantic": "threshold",
+      "formula_id": null,
+      "fm_id": null,
+      "canonical_feature_equivalent": null,
+      "identity_relationship": "NO_CANONICAL_EQUIVALENT",
+      "authority_owner": "CRT_CONFIG",
+      "temporal_semantics": "static_per_run",
+      "stateful_or_stateless": "STATELESS",
+      "instrument_specific": true,
+      "configurable": true,
+      "current_consumer": "CRTEngine",
+      "required_future_owner": "CRT_CONFIG",
+      "migration_recommendation": "KEEP_POLICY_CONFIG",
+      "evidence": [
+        "CRTConfig",
+        "active prod config",
+        "fail-reason diagnostic"
+      ],
+      "confidence": "PROVEN"
+    },
+    {
+      "input_id": "CRT-CFG-010",
+      "runtime_name": "atr_period",
+      "description": "CRTConfig HOW: structural_window",
+      "read_locations": [
+        "ATR compute"
+      ],
+      "write_production_locations": [
+        "configs/production/v2_multi_2026_04.json"
+      ],
+      "source_class": "CONFIG_VALUE",
+      "formula_or_semantic": "structural_window",
+      "formula_id": null,
+      "fm_id": null,
+      "canonical_feature_equivalent": null,
+      "identity_relationship": "NO_CANONICAL_EQUIVALENT",
+      "authority_owner": "CRT_CONFIG",
+      "temporal_semantics": "static_per_run",
+      "stateful_or_stateless": "STATELESS",
+      "instrument_specific": true,
+      "configurable": true,
+      "current_consumer": "CRTEngine",
+      "required_future_owner": "CRT_CONFIG",
+      "migration_recommendation": "KEEP_POLICY_CONFIG",
+      "evidence": [
+        "CRTConfig",
+        "active prod config",
+        "fail-reason diagnostic"
+      ],
+      "confidence": "PROVEN"
+    },
+    {
+      "input_id": "CRT-CFG-011",
+      "runtime_name": "ema_fast / ema_slow",
+      "description": "CRTConfig HOW: structural_window",
+      "read_locations": [
+        "soft-conf / EMA"
+      ],
+      "write_production_locations": [
+        "configs/production/v2_multi_2026_04.json"
+      ],
+      "source_class": "CONFIG_VALUE",
+      "formula_or_semantic": "structural_window",
+      "formula_id": null,
+      "fm_id": null,
+      "canonical_feature_equivalent": null,
+      "identity_relationship": "NO_CANONICAL_EQUIVALENT",
+      "authority_owner": "CRT_CONFIG",
+      "temporal_semantics": "static_per_run",
+      "stateful_or_stateless": "STATELESS",
+      "instrument_specific": true,
+      "configurable": true,
+      "current_consumer": "CRTEngine",
+      "required_future_owner": "CRT_CONFIG",
+      "migration_recommendation": "KEEP_POLICY_CONFIG",
+      "evidence": [
+        "CRTConfig",
+        "active prod config",
+        "fail-reason diagnostic"
+      ],
+      "confidence": "PROVEN"
+    },
+    {
+      "input_id": "CRT-CFG-012",
+      "runtime_name": "max_expansion_age_candles/hours",
+      "description": "CRTConfig HOW: TTL policy",
+      "read_locations": [
+        "EXPANSION_EXPIRED"
+      ],
+      "write_production_locations": [
+        "configs/production/v2_multi_2026_04.json"
+      ],
+      "source_class": "CONFIG_VALUE",
+      "formula_or_semantic": "TTL policy",
+      "formula_id": null,
+      "fm_id": null,
+      "canonical_feature_equivalent": null,
+      "identity_relationship": "NO_CANONICAL_EQUIVALENT",
+      "authority_owner": "CRT_CONFIG",
+      "temporal_semantics": "static_per_run",
+      "stateful_or_stateless": "STATELESS",
+      "instrument_specific": true,
+      "configurable": true,
+      "current_consumer": "CRTEngine",
+      "required_future_owner": "CRT_CONFIG",
+      "migration_recommendation": "KEEP_POLICY_CONFIG",
+      "evidence": [
+        "CRTConfig",
+        "active prod config",
+        "fail-reason diagnostic"
+      ],
+      "confidence": "PROVEN"
+    },
+    {
+      "input_id": "CRT-CFG-013",
+      "runtime_name": "allowed_sessions / session_windows",
+      "description": "CRTConfig HOW: policy filter",
+      "read_locations": [
+        "FILTER_REJECTED off_session"
+      ],
+      "write_production_locations": [
+        "configs/production/v2_multi_2026_04.json"
+      ],
+      "source_class": "CONFIG_VALUE",
+      "formula_or_semantic": "policy filter",
+      "formula_id": null,
+      "fm_id": null,
+      "canonical_feature_equivalent": null,
+      "identity_relationship": "NO_CANONICAL_EQUIVALENT",
+      "authority_owner": "CRT_CONFIG",
+      "temporal_semantics": "static_per_run",
+      "stateful_or_stateless": "STATELESS",
+      "instrument_specific": true,
+      "configurable": true,
+      "current_consumer": "CRTEngine",
+      "required_future_owner": "CRT_CONFIG",
+      "migration_recommendation": "KEEP_POLICY_CONFIG",
+      "evidence": [
+        "CRTConfig",
+        "active prod config",
+        "fail-reason diagnostic"
+      ],
+      "confidence": "PROVEN"
+    },
+    {
+      "input_id": "CRT-CFG-014",
+      "runtime_name": "tier_2_threshold / conf_*",
+      "description": "CRTConfig HOW: soft-conf policy",
+      "read_locations": [
+        "soft-conf approve"
+      ],
+      "write_production_locations": [
+        "configs/production/v2_multi_2026_04.json"
+      ],
+      "source_class": "CONFIG_VALUE",
+      "formula_or_semantic": "soft-conf policy",
+      "formula_id": null,
+      "fm_id": null,
+      "canonical_feature_equivalent": null,
+      "identity_relationship": "NO_CANONICAL_EQUIVALENT",
+      "authority_owner": "CRT_CONFIG",
+      "temporal_semantics": "static_per_run",
+      "stateful_or_stateless": "STATELESS",
+      "instrument_specific": true,
+      "configurable": true,
+      "current_consumer": "CRTEngine",
+      "required_future_owner": "CRT_CONFIG",
+      "migration_recommendation": "KEEP_POLICY_CONFIG",
+      "evidence": [
+        "CRTConfig",
+        "active prod config",
+        "fail-reason diagnostic"
+      ],
+      "confidence": "PROVEN"
+    }
+  ],
+  "summary_counts": {
+    "n_inputs": 30,
+    "keep_private": 5,
+    "keep_policy": 14,
+    "bind_canonical": 4,
+    "move_interpretation": 6
+  },
+  "msip_implications": [
+    "Do not implement MarketStateVector and immediately bind CRT to it.",
+    "Shadow-compute MSIP alongside current CRT; compare bar-by-bar.",
+    "Migrate only CRT-local market math that has proven parity with certified features.",
+    "Keep state-machine memory and policy/config outside the feature layer."
+  ]
+}

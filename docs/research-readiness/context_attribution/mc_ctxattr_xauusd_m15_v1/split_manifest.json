@@ -1,0 +1,15 @@
+{
+  "contract_id": "MC-CTXATTR-XAUUSD-M15-V1",
+  "scheme": "single_holdout_chronologic",
+  "holdout_start": "2025-12-24 19:15:00",
+  "train_last_allowed": "2025-12-23 19:15:00",
+  "embargo_bars": 96,
+  "purge_horizon_bars": 40,
+  "n_train": 75302,
+  "n_holdout": 18830,
+  "n_embargo_dropped": 182,
+  "first_holdout_bar_index": 37820,
+  "last_train_bar_index": 37728,
+  "calendar_source": "research.evidence.asymmetry_contract (frozen, shared with MC-ASYM/MAGPRIOR/MRPRIOR/VCRTPRIOR)",
+  "f086_stride_spent": false
+}

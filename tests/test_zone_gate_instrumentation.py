@@ -1,7 +1,7 @@
 """
 tests/test_zone_gate_instrumentation.py
 
-Tests for zone_gate_engine.py instrumentation:
+Tests for feature_cluster_similarity.py instrumentation:
   - execution_mode force_pass
   - empty zones / no crash
   - counters
@@ -13,8 +13,8 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from engines.zone_gate_engine import (
-    run_zone_gate_engine,
+from engines.feature_cluster_similarity import (
+    run_feature_cluster_similarity,
     get_zone_gate_counters,
     reset_zone_gate_counters,
     _compute_soft_zone_score,
@@ -53,7 +53,7 @@ def test_force_pass_overrides_block_but_logs_real():
     raw = dict(_RAW)
     raw["close"] = 1.2345
 
-    result = run_zone_gate_engine(
+    result = run_feature_cluster_similarity(
         raw_features=raw,
         model_fn=_low_model,
         threshold=0.5,
@@ -71,7 +71,7 @@ def test_force_pass_overrides_block_but_logs_real():
 # ──────────────────────────────────────────────────────────────────────────────
 
 def test_force_pass_high_score_real_passed_is_true():
-    result = run_zone_gate_engine(
+    result = run_feature_cluster_similarity(
         raw_features=dict(_RAW),
         model_fn=_high_model,
         threshold=0.5,
@@ -88,14 +88,14 @@ def test_force_pass_high_score_real_passed_is_true():
 # ──────────────────────────────────────────────────────────────────────────────
 
 def test_normal_mode_pass_counter_increments():
-    run_zone_gate_engine(raw_features=dict(_RAW), model_fn=_high_model, threshold=0.5)
+    run_feature_cluster_similarity(raw_features=dict(_RAW), model_fn=_high_model, threshold=0.5)
     counters = get_zone_gate_counters()
     assert counters["total_pass"] == 1
     assert counters["total_block"] == 0
 
 
 def test_normal_mode_block_counter_increments():
-    run_zone_gate_engine(raw_features=dict(_RAW), model_fn=_low_model, threshold=0.5)
+    run_feature_cluster_similarity(raw_features=dict(_RAW), model_fn=_low_model, threshold=0.5)
     counters = get_zone_gate_counters()
     assert counters["total_block"] == 1
     assert counters["total_pass"] == 0
@@ -117,7 +117,7 @@ def test_debug_config_does_not_crash():
         "distance_to_nearest": 0.002,
     }
 
-    result = run_zone_gate_engine(
+    result = run_feature_cluster_similarity(
         raw_features=raw,
         model_fn=_high_model,
         threshold=0.5,

@@ -1,0 +1,29 @@
+{
+  "change_id": "CH-live-rail-pr4c",
+  "declared_files": [
+    "src/core/ultron_risk_gate.py",
+    "src/core/ultron_live_adapter.py",
+    "src/live/order_manager.py",
+    "src/inout/live_rail/factory.py",
+    "src/runtime/live_rail_orchestrator.py",
+    "src/runtime/live_rail_feeder.py",
+    "tests/test_live_rail_orchestrator.py",
+    "tests/test_live_rail_ultron_adapter.py",
+    "tests/test_live_rail_order_manager.py",
+    "docs/governance/build_manifests/CH-live-rail-pr4c.impact.json",
+    "docs/governance/build_manifests/CH-live-rail-pr4c.completion.json",
+    "assistant_project.md"
+  ],
+  "checks_executed": [
+    "tests/test_live_rail_orchestrator.py",
+    "tests/test_live_rail_ultron_adapter.py",
+    "tests/test_live_rail_order_manager.py",
+    "tests/test_live_rail_feeder.py"
+  ],
+  "checks_result": {
+    "pr4c_bundle": "23 passed"
+  },
+  "repo_state_hash": "PENDING",
+  "completion_status": "INCOMPLETE",
+  "completion_notes": "PR-4c implementation on disk; 23 tests green. COMPLETE denied: dirty tree + pre-existing census. F-073 still OPEN (caller exists, not on ACTIVE_VERSION). CLI/SITS deferred. PR-2/PR-3 paper slices landed here as 4c dependencies."
+}

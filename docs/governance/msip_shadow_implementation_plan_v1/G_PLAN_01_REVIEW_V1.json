@@ -1,0 +1,132 @@
+{
+  "schema_id": "G_PLAN_01_REVIEW_V1",
+  "generated_at_utc": "2026-07-14T12:00:00Z",
+  "confirmed_prerequisites_at_utc": "2026-07-14T12:30:00Z",
+  "task_class": "OBSERVATION_ONLY",
+  "plan_ref": "docs/governance/msip_shadow_implementation_plan_v1/MSIP_SHADOW_IMPLEMENTATION_PLAN_V1.json",
+  "plan_version_reviewed": "1.1.0",
+  "design_contract_ref": "docs/governance/msip_shadow_design_v1/MSIP_SHADOW_DESIGN_CONTRACT_V1.md",
+  "prerequisite_owner_stamps": {
+    "DECISION_C": "ACCEPTED",
+    "MSIP_SHADOW_DESIGN_CONTRACT_V1": "ACCEPTED",
+    "AUTHORIZED_NEXT_BOUNDARY": "MSIP_SHADOW_IMPLEMENTATION_PLAN_V1",
+    "NEXT_TASK_CLASS": "OBSERVATION_ONLY",
+    "IMPLEMENTATION_AUTHORIZED": "NO",
+    "OWNER_STAMP_STATUS": "CONFIRMED",
+    "G-DESIGN-01": "PASSED",
+    "G-IMPL-01": "NOT_PASSED",
+    "G-MIG-01": "CLOSED"
+  },
+  "review_status": "PASS",
+  "G-PLAN-01": "PASSED",
+  "implementation_authorized": false,
+  "G-IMPL-01": "READY_FOR_EXPLICIT_OWNER_AUTHORIZATION",
+  "note": "Plan acceptance recommended; G-IMPL-01 still requires a separate explicit owner decision. IMPLEMENTATION_AUTHORIZED remains NO.",
+  "checklist": [
+    {
+      "id": "P-01",
+      "item": "exact module boundaries",
+      "result": "PASS",
+      "evidence": "modules_proposed + package layout; no production modules created"
+    },
+    {
+      "id": "P-02",
+      "item": "interfaces",
+      "result": "PASS",
+      "evidence": "build_market_state / emit_jsonl / observe_crt_state signatures in plan"
+    },
+    {
+      "id": "P-03",
+      "item": "runtime insertion point",
+      "result": "PASS_AFTER_PLAN_AMENDMENT",
+      "evidence": "runtime_insertion_point section: post-FeaturePipeline, parallel to CRT; no CRT write path"
+    },
+    {
+      "id": "P-04",
+      "item": "authoritative input sourcing",
+      "result": "PASS_AFTER_PLAN_AMENDMENT",
+      "evidence": "FeaturePipeline / CANONICAL_FEATURES / formula_registry; CRT-local forbidden until parity"
+    },
+    {
+      "id": "P-05",
+      "item": "schema/version ownership",
+      "result": "PASS_AFTER_PLAN_AMENDMENT",
+      "evidence": "MARKET_STATE_VECTOR_SCHEMA_V1 + msip_shadow config ownership"
+    },
+    {
+      "id": "P-06",
+      "item": "provenance emission",
+      "result": "PASS",
+      "evidence": "SHADOW_PROVENANCE_CONTRACT_V1 + HOW label provenance rules"
+    },
+    {
+      "id": "P-07",
+      "item": "shadow isolation",
+      "result": "PASS",
+      "evidence": "hard_invariants affects_crt/execution/events MUST_BE_false; no try_* mutation"
+    },
+    {
+      "id": "P-08",
+      "item": "deterministic execution",
+      "result": "PASS",
+      "evidence": "DET-01 two-run equality; frozen corpus+config+commit in manifest"
+    },
+    {
+      "id": "P-09",
+      "item": "test strategy",
+      "result": "PASS_AFTER_PLAN_AMENDMENT",
+      "evidence": "schema, what/how, CRT neutrality, determinism, crt_phase non-identity, isolation import lint"
+    },
+    {
+      "id": "P-10",
+      "item": "telemetry",
+      "result": "PASS",
+      "evidence": "shadow JSONL + run manifest + optional disagreement JSONL"
+    },
+    {
+      "id": "P-11",
+      "item": "failure handling",
+      "result": "PASS_AFTER_PLAN_AMENDMENT",
+      "evidence": "fail-closed config; PARTIAL provenance; never mute CRT; no raise into CRT path"
+    },
+    {
+      "id": "P-12",
+      "item": "rollout sequence",
+      "result": "PASS",
+      "evidence": "G-PLAN-01 → separate G-IMPL-01 → implement → shadow run → parity → G-SHADOW-01"
+    },
+    {
+      "id": "P-13",
+      "item": "rollback/removal path",
+      "result": "PASS_AFTER_PLAN_AMENDMENT",
+      "evidence": "disable msip_shadow.enabled; remove co-run; CRT path unchanged"
+    },
+    {
+      "id": "P-14",
+      "item": "objective criteria for opening G-IMPL-01",
+      "result": "PASS_AFTER_PLAN_AMENDMENT",
+      "evidence": "g_impl_01_open_criteria list in plan; separate from plan acceptance"
+    }
+  ],
+  "gaps_found_and_closed": [
+    "runtime insertion point underspecified → amended",
+    "failure handling underspecified → amended",
+    "rollback/removal underspecified → amended",
+    "G-IMPL-01 open criteria not explicit → amended"
+  ],
+  "residual_non_blockers": [
+    "Exact live incremental FeaturePipeline path vs batch lookup deferred to implementation detail under PIT constraint",
+    "Package name src/msip/ may be adjusted at G-IMPL-01 if conventions require different placement"
+  ],
+  "recommended_owner_stamp_after_this_review": {
+    "MSIP_SHADOW_IMPLEMENTATION_PLAN_V1": "ACCEPTED",
+    "G-PLAN-01": "PASSED",
+    "G-IMPL-01": "READY_FOR_EXPLICIT_OWNER_AUTHORIZATION",
+    "IMPLEMENTATION_AUTHORIZED": "NO"
+  },
+  "explicitly_not_decided_here": [
+    "Opening G-IMPL-01",
+    "IMPLEMENTATION_AUTHORIZED=YES",
+    "any production code write"
+  ]
+}

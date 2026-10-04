@@ -1,0 +1,49 @@
+{
+  "change_id": "CH-phase2a-magnitude-states",
+  "objective": "Phase 2A episode semantic integration: promote existing continuous measurements body_ratio / atr / momentum_score into shadow magnitude STATE bands (O6/O7/O18) via ontology-declared identities + pre-discretize encoder. No new OHLC formulas, no spine consumption, no production config hash change.",
+  "change_classes": [
+    "FEATURE_IDENTITY_CHANGE",
+    "DOCUMENTATION_ONLY"
+  ],
+  "affected_files": [
+    "configs/formulas/market_ontology.yaml",
+    "src/features/magnitude_states.py",
+    "src/features/feature_states.py",
+    "scripts/research/xauusd_episode_semantic_reconstruction.py",
+    "scripts/research/xauusd_episode_coverage_census.py",
+    "tests/test_magnitude_states.py",
+    "tests/test_feature_states.py",
+    "docs/governance/EPISODE_SEMANTIC_INTEGRATION_PHASE2.md",
+    "docs/governance/build_manifests/CH-phase2a-magnitude-states.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [
+    "FM-010",
+    "FM-041",
+    "FM-023",
+    "FM-071",
+    "FM-072",
+    "FM-073"
+  ],
+  "affected_models": "none (shadow interpretation only; no engine/fusion/risk wiring)",
+  "affected_production_config": "none (hash-neutral; band_edges live in ontology research defaults)",
+  "required_checks_ack": [
+    "tests/test_magnitude_states.py",
+    "tests/test_feature_states.py",
+    "tests/test_formula_registry.py",
+    "tests/test_feature_lineage.py",
+    "tests/test_geometry_census.py",
+    "tests/test_gate2b_closure.py",
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "remove FM-071/072/073 ontology blocks + magnitude_states.py + reconstruction/census hooks + tests; restore continuous-only O6/O7/O18 census classes",
+  "production_behavior_changed": false,
+  "notes": [
+    "F-061: momentum_magnitude uses abs series-percentile, never fixed absolute edges on legacy momentum_score",
+    "body_ratio / atr / momentum_score remain continuous vector slots; new identities are non-vector structural_states",
+    "Agreement object (O14) is Phase 2C — out of scope"
+  ]
+}

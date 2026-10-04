@@ -1,0 +1,971 @@
+# Human-Readable Execution Cognition
+
+## Directory: `scripts/analysis/` (8 files)
+
+---
+
+### 1. `compare_bitnet_cpp_python.py`
+
+**File Purpose:** A one-shot validation script that checks whether C++ and Python implementations of the BitNet neural network produce identical outputs. Exists to catch implementation divergence between the two codebases.
+
+**Runtime Role:** Standalone CLI tool. Not imported anywhere. Runs once during integration testing.
+
+**Trust Classification:** LEGACY — hardcoded file paths (`python_outputs.json`, `cpp_outputs.json`) make it non-portable. No main() function guard — it executes on import.
+
+**Methods/Functions:**
+- `close(a, b)` — checks if two floats match within 1e-5 relative/absolute tolerance.
+  - **Purpose:** Avoid floating-point comparison pitfalls.
+  - **Downstream:** Called on every layer output.
+  - **Failure mode:** Relation tolerance compares against value b, not the larger magnitude — could pass for zero-divergence near-zero values.
+  - **Determinism:** Pure function. Deterministic.
+
+**Fail-Fast / Fallback Audit:**
+- **Silent failure:** If `python_outputs.json` or `cpp_outputs.json` don't exist, the script crashes with `FileNotFoundError` at module import time. No graceful fallback. No argparse.
+- **No error handling:** `json.load(open(...))` — file handles never closed explicitly (reference count cleanup only).
+
+---
+
+### 2. `compress_logs_for_llm.py`
+
+**File Purpose:** Streaming log compressor that reads one or more JSONL opportunity/fusion logs and produces a token-efficient statistical summary for LLM consumption (governance orchestrator, hypertuning prompts). Never loads full logs into memory.
+
+**Runtime Role:** Called by governance orchestrator as a pre-processing step before LLM inference. Also usable as standalone CLI. The output schema (`{summary, data, anomalies}`) matches `reflection_buffer_advanced.py --compressed-summary`.
+
+**Trust Classification:** LIVE — actively wired into governance pipeline per docstring reference.
+
+**Classes:** None.
+
+**Methods/Functions:**
+
+- `_iter_records(paths: Iterable[Path])` — generator that walks a list of file paths, yielding JSON-decoded dicts line-by-line.
+  - **Purpose:** Stream from multiple log files, skipping unreadable or malformed lines.
+  - **Invocation:** Called once by `compress()`.
+  - **Fallbacks:** `OSError` → `logger.warning` + `continue` to next file. `json.JSONDecodeError` → `continue` to next line. **Silently skips bad lines — no count logged.**
+  - **Side effects:** Opens file handles.
+  - **Failure modes:** If all paths fail `OSError`, generator yields zero records → outer `compress()` raises `ValueError("No records found")`.
+
+- `_quantile(sorted_xs: list[float], q: float) -> float` — approximate quantile via index rounding.
+  - **Purpose:** Compute p10/p50/p90 for RR distribution.
+  - **Risk:** Round-to-nearest index can bias quantiles, especially on small samples. Returns `0.0` for empty lists — silent default.
+
+- `compress(paths: list[Path], top_n_features: int = 8) -> dict`
+  - **Purpose:** The core aggregator. Streams all records, computes aggregate stats, per-feature correlations with RR, TP_HIT vs SL_HIT feature deltas, and anomaly detection.
+  - **Inputs:** List of JSONL paths, top N features for correlation/delta output.
+  - **Outputs:** Dict with keys `summary`, `data`, `anomalies`.
+  - **What actually happens at runtime:**
+    1. Iterates every record across all files.
+    2. Extracts `outcome`, `direction`, `instrument`, `rr_achieved`, `mae`, `duration_candles` with `str()`/`float()`/`int()` coercion (defaults: "UNKNOWN"/0.0/0).
+    3. If `features` is a dict, accumulates streaming sums for Pearson correlation: sum_x, sum_x2, sum_xy per feature.
+    4. Separately accumulates feature sums for TP_HIT and SL_HIT buckets to compute deltas.
+    5. Captures first 32 severe MAE (≤ -0.005) outliers.
+    6. After streaming: computes RR mean/std/quantiles, Pearson correlations (minimum 30 samples per feature), TP-minus-SL deltas, anomaly clusters (>70% outcome share).
+    7. Returns summary dict.
+  - **State mutations:** None globally. Returns new dict.
+  - **Side effects:** Reads files only.
+  - **Hidden defaults:** `top_n_features=8`, `mae <= -0.005` threshold for severe MAE, `count < 30` correlation filter, `share > 0.7` anomaly threshold.
+  - **Failure modes:** ValueError if no records. Division by zero guarded (denom ≤ 1e-12 check). Correlation denom at line 149: `math.sqrt(var_x * rr_var)` — if `rr_var` is 0 (all RR identical), correlation loop silently skips. No warning logged.
+
+- `_read_run_id_from_jsonl(path: Path) -> str`
+  - **Purpose:** Reads first line of a JSONL, checks if it's a run_header record, extracts run_id.
+  - **Runtime:** Only called when --instrument is given and --output is not, to construct run-scoped output path.
+  - **Fallback:** Returns empty string on any exception.
+
+- `_expand_globs(patterns: list[str]) -> list[Path]`
+  - **Purpose:** Resolves glob patterns to sorted file paths. If a pattern matches nothing, treats it as a literal path.
+  - **Runtime:** Called at start of main().
+  - **Failure mode:** If a non-matching glob is actually a missing file, caught later by existence check.
+
+- `main(argv=None) -> int`
+  - **What actually happens at runtime:**
+    1. Parses `--logs` (required), `--output`, `--instrument`, `--run-id`, `--top-n-features`.
+    2. Expands globs, checks all files exist (prints errors to stderr, return 1).
+    3. Resolves output path: if `--output` not given but `--instrument` is, constructs `logs/{instrument}/{run_id}/compressed.json` (reads run_id from first file header if not provided explicitly).
+    4. If neither `--output` nor `--instrument` provided: prints ERROR, return 1.
+    5. Calls `compress()`, writes result to output file (creates parent dirs).
+    6. Logs count and prints `OUTPUT:compressed:{path}`.
+  - **Side effects:** Writes JSON file to disk. Creates directories.
+  - **File writes:** `args.output` (JSON).
+  - **Failure modes:** Missing files → error exit. No records → ValueError propagates up.
+
+**Fail-Fast / Fallback Audit:**
+- **Swallowed exceptions (continue silently):** Bad JSON lines, unreadable files, non-dict features, non-float feature values.
+- **Silent correlation skip:** If `rr_var == 0`, all correlations silently omitted from output.
+- **No warning on empty anomaly sections:** `severe_mae` capped at 32 entries silently. `sl_clusters` may be empty with no indication.
+- **Numeric coercion hardening:** All `rec.get()` values wrapped with `float()`/`int()` with `or 0.0` fallback — could mask missing data.
+- **Determinism:** Deterministic given same input files and feature ordering.
+
+---
+
+### 3. `daily_crypto_structure.py`
+
+**File Purpose:** Aggregates daily market structure metrics from opportunity JSONL logs. Produces a CSV with per-day win rates, sweep counts, displacement counts, retest depth averages, regime/volatility averages.
+
+**Runtime Role:** Standalone analysis tool. Post-hoc analytics. Not in live execution path.
+
+**Trust Classification:** EXPERIMENTAL — no test coverage visible. Hardcoded feature key names.
+
+**Methods/Functions:**
+
+- `load_opportunities(path)` — generator that yields JSON lines.
+  - **Failure mode:** No error handling. Any malformed line crashes.
+
+- `analyse_daily(log_path: Path, output_csv: Path = None) -> DataFrame`
+  - **What actually happens at runtime:**
+    1. Initializes a `defaultdict` with zero-initialized daily buckets for 15 metrics.
+    2. Iterates all records via `load_opportunities()`.
+    3. Parses timestamp via `datetime.fromisoformat()`. **If timestamp malformed, crashes.**
+    4. Accumulates direction counts, outcome counts, sum_rr, and feature metrics: `sweep_detected`, `double_sweep`, `disp_strength`, `retest_depth`, `volatility_regime`, `volatility_ratio`, `trend_bias`.
+    5. After iteration, computes per-day derived metrics: win rate, avg RR, retest_avg, regime_avg, vol_avg, trend_avg.
+    6. Writes to CSV if output path provided. Returns DataFrame.
+  - **Hidden defaults:** `disp_strength` threshold > 0.8 for displacement count. `retest_depth > 0` to count retests.
+  - **Failure modes:** Missing feature keys silently contribute 0 via `.get(field, 0)`. Missing `timestamp` key crashes.
+  - **Determinism:** Deterministic per input order (dict sorted by date).
+  - **Corruption risk:** None per-se, but stale logs with missing feature fields produce all-zero averages without warning.
+
+---
+
+### 4. `gen_dummy_trades.py`
+
+**File Purpose:** Generates a dummy trade CSV for testing by running OHLCV data through the canonical FeaturePipeline and applying a naive "buy at close, sell next close" rule.
+
+**Runtime Role:** Test data generation. Not in execution path.
+
+**Trust Classification:** LEGACY — unused import of `SchemaContract` not visible here. Hardcoded directory. Only 32-feature column selection.
+
+**Methods/Functions:**
+
+- `main(ohlcv_path, output_dir="results/dummy")`
+  - **What actually happens at runtime:**
+    1. Reads OHLCV CSV into DataFrame.
+    2. Runs `FeaturePipeline(df).run()` — produces enriched features.
+    3. Applies naive rule: `close.pct_change().shift(-1) * 100` as RR. PnL positive is "win."
+    4. Selects all CANONICAL_FEATURES + `entry_time`, `pnl_rr_net`, `win`.
+    5. Writes to `{output_dir}/dummy_trades.csv`.
+  - **Downstream calls:** `FeaturePipeline.__init__().run()` (src/features/).
+  - **File writes:** `results/dummy/dummy_trades.csv`.
+  - **Failure modes:** If FeaturePipeline raises (missing columns, bad data), crashes. No error handling.
+  - **Corruption risk:** Low — generates test data only.
+
+---
+
+### 5. `gen_pyan.py`
+
+**File Purpose:** Generates a pyan call graph DOT file for the entire codebase for dependency visualization.
+
+**Runtime Role:** Developer tool. Not in execution path.
+
+**Trust Classification:** DEAD/LEGACY — runs against hardcoded exclusion list, 120-second timeout, writes to fixed paths.
+
+**Methods/Functions:**
+
+No functions. Script-level logic:
+1. Glob `**/*.py`, filter out excluded paths.
+2. Try importing pyan (debug info).
+3. Run `subprocess.run(['pyan3'] + files + ['--dot', '--file', 'pyan_call_flow.dot'], timeout=120)`.
+4. Write stderr+stdout to `pyan_err.txt`.
+
+**Side effects:** Subprocess execution. File writes to `pyan_call_flow.dot` and `pyan_err.txt`.
+**Failure modes:** If `pyan3` not installed, subprocess fails. 120s timeout. No error handling for `FileNotFoundError` on pyan3.
+**Determinism:** Non-deterministic — file glob order depends on filesystem iteration.
+
+---
+
+### 6. `generate_cli_matrix.py`
+
+**File Purpose:** Generates CLI_MATRIX.md documentation from the control_plane registry.
+
+**Runtime Role:** Documentation generation. Run periodically to keep docs in sync.
+
+**Trust Classification:** LIVE — references live `control_plane.registry.generate_cli_matrix_markdown`.
+
+**Methods/Functions:**
+
+- `main()`
+  - **What actually happens at runtime:**
+    1. Adds `src/` to sys.path via relative path resolution.
+    2. Imports `generate_cli_matrix_markdown` from `control_plane.registry`.
+    3. Writes its output to `docs/CLI_MATRIX.md`.
+  - **Downstream calls:** `control_plane.registry.generate_cli_matrix_markdown()`.
+  - **File writes:** `docs/CLI_MATRIX.md` (overwrites).
+  - **Failure modes:** If module not importable (missing deps, path issues), crashes.
+
+---
+
+### 7. `schema_audit.py`
+
+**File Purpose:** Validation tool that scans result directories for `*_trades.csv` files and checks if they have the expected `schema_name=trade_record` and `schema_version` matching the current `SCHEMA_VERSION`.
+
+**Runtime Role:** Post-hoc consistency check. Not in execution path.
+
+**Trust Classification:** EXPERIMENTAL — only checks CSV header rows, not actual column content.
+
+**Methods/Functions:**
+
+- `_read_csv_schema(csv_path) -> tuple[Optional[str], Optional[str]]`
+  - Reads first row of CSV with `csv.DictReader`, extracts `schema_name` and `schema_version`.
+  - **Failure modes:** Any exception returns `(None, None)`. Silent swallowing.
+
+- `_audit_csvs(root)`
+  - Walks directory tree looking for `*_trades.csv` files. Checks each against expected schema.
+  - Prints FAIL for mismatches, PASS if all match.
+  - **Hidden behavior:** Only checks the first data row of each CSV. If CSV has header but no data rows, returns `(None, None)` → FAIL.
+
+- `main()`
+  - Parses `--root` and `--csv` flags. Runs audit for each.
+
+**Failure modes:** No input validation on paths.
+
+---
+
+### 8. `zone_registry_builder.py`
+
+**File Purpose:** Clusters profitable trades into feature-space zones using KMeans, then saves the clusters as a zone registry JSON for use by the BitNet inference engine (zone-based scoring).
+
+**Runtime Role:** Offline model-building pipeline. Runs after a backtest batch produces trade CSVs. Output consumed by BitNet engine for zone-matching.
+
+**Trust Classification:** EXPERIMENTAL — KMeans with hardcoded n_clusters=5, random_state=42, min cluster size 10.
+
+**Methods/Functions:**
+
+- `load_trades(path)` — `pd.read_csv(path)`. No validation.
+
+- `_build_canonical_features_df(df: pd.DataFrame) -> pd.DataFrame`
+  - Runs `FeaturePipeline(df).run()` to get enriched features.
+  - **Failure modes:** If pipeline fails or returns empty, raises ValueError.
+
+- `build_feature_matrix(df)` 
+  - Builds canonical feature matrix via pipeline, validates each row's features against schema, converts to numpy float64 array.
+  - **Downstream calls:** `FeaturePipeline`, `validate_features`, `validate_feature_values`.
+  - **Failure modes:** Feature validation on empty/null values would raise. If CANONICAL_FEATURES extracted from enriched df fail indexing, crashes.
+
+- `filter_profitable(df)` — Filters to rows where `pnl_rr_net > 0`. Only clusters winning trades.
+
+- `cluster_zones(X, n_clusters=5)` — KMeans with fixed random_state=42. **Deterministic for given input.**
+
+- `build_zones(kmeans, X)` — Extracts cluster centers as zone centers, std deviation per dimension as zone radius. Min 10 points per cluster. Fixed `min_score=0.5`.
+  - **Hidden defaults:** `min_score=0.5` hardcoded, `weight` is cluster point count.
+  - **Corruption risk:** Zone centers are raw feature vectors — if features change meaning (schema version bump), pre-computed zones are silently invalid but still loaded.
+
+- `save_zones(zones, path="models/zone_registry_kmeans.json")` — Writes JSON with `{"zones": [...]}`.
+
+- `validate_columns(df)` — Checks for `timestamp, open, high, low, close, pnl_rr_net`. Raises ValueError with diagnostic message.
+
+- `run(trade_csv)`
+  - **What actually happens at runtime:**
+    1. Loads trades CSV.
+    2. Validates required columns.
+    3. Filters to profitable trades only (pnl_rr_net > 0).
+    4. Builds feature matrix via FeaturePipeline.
+    5. Runs KMeans clustering (5 clusters).
+    6. Builds zone definitions from clusters (min 10 points).
+    7. Saves to `models/zone_registry_kmeans.json`.
+  - **Hardcoded default input:** `"results/test_run/EURUSD_trades.csv"` — will crash if not found.
+  - **Side effects:** Overwrites `models/zone_registry_kmeans.json`.
+
+**Fail-Fast Audit:**
+- **Hardcoded paths:** Default trade CSV path. No CLI argument in `__main__`.
+- **Silent if unprofitable trades exist:** `filter_profitable` silently drops all unprofitable trades. If all trades are unprofitable, `X` is empty → `cluster_zones` crashes.
+- **No schema version embedded in output JSON.**
+
+---
+
+## Directory: `scripts/backtest/` (2 files)
+
+---
+
+### 1. `backtest_debug_harness.py`
+
+**File Purpose:** Script-level orchestrator that runs a CRT backtest across multiple instruments (EURCAD, GBPUSD, BTCUSDT) using the production `BacktestRunner` from `src/runtime/backtest_v2.py` with debug overrides.
+
+**Runtime Role:** Developer debug tool. Mirrors production backtest flow but with fixed instrument list and hardcoded overrides. Can be run to verify backtest behavior before full-scale batch runs.
+
+**Trust Classification:** EXPERIMENTAL/PARTIAL — imports `backtest_v2` but the import is from root-level (`sys.path.insert(0, '.')`), not from `src/runtime/`. This is fragile path resolution.
+
+**Classes:** None.
+
+**Methods/Functions:**
+
+Script-level logic:
+1. Defines `wide_sessions` dict with LONDON/NEWYORK/ASIA trading session time windows.
+2. Defines `INSTRUMENTS` list with name, CSV path, pip size, spread.
+3. For each instrument:
+   a. Calls `ConfigBuilder.build(name, overrides=...)` to get CRT config with debug overrides (score_threshold=0.70, max_sweep_age=30, etc.).
+   b. Constructs `BacktestConfig` with simulation parameters (compounding, slippage, gap reset).
+   c. Creates `CandleLoader(csv_path, name)`.
+   d. Creates `BacktestRunner(config)`.
+   e. Calls `runner.run(loader.stream(), loader.count(), output_path)`.
+
+**Downstream calls:**
+- `config_layer.config_builder.ConfigBuilder.build()`
+- `runtime/backtest_v2.BacktestConfig.__init__()`
+- `runtime/backtest_v2.CandleLoader.__init__()`
+- `runtime/backtest_v2.BacktestRunner.__init__()`
+- `runtime/backtest_v2.BacktestRunner.run()`
+
+**Failure modes:**
+- If CSV files don't exist at hardcoded paths → crashes.
+- ConfigBuilder.build() may fail if overrides conflict.
+- No try/except — any per-instrument crash terminates the whole script (not skips to next).
+
+**Determinism:** Deterministic given fixed seed=42 for slippage.
+
+**Corruption risk:** Low — reads CSV, writes to `results/{name}_debug` directory. But overwrites previous debug runs silently.
+
+---
+
+### 2. `manual_backtest.py`
+
+**File Purpose:** Standalone, self-contained CRT backtest engine implementing the complete CRT pipeline from scratch: ATR, sweep detection, displacement, expansion, retest, Gaussian scoring, soft confirmation, fusion scoring, regime detection, dynamic thresholds, tiered position sizing, trade management. This is the reference implementation of the CRT strategy logic, independent of the `src/runtime/` codebase.
+
+**Runtime Role:** Manual backtesting tool. Used for quick strategy evaluation on a single CSV. Also serves as the canonical CRT logic reference (the constants at the top are described as "real EURCAD calibrated parameters"). Runs validator connector at end as optional hook.
+
+**Trust Classification:** LIVE (as reference implementation). The docstring says "Runs the full CRT pipeline on any M15 CSV exactly per the spec."
+
+**Classes:**
+
+- `DynamicThreshold`
+  - **Purpose:** Adaptive score threshold based on recent win/loss history. Tightens threshold when losing streak, loosens when winning streak.
+  - **Ownership:** Per-backtest-run state.
+  - **Runtime responsibility:** Called before each trade entry decision. Updates after each trade closes.
+  - **Methods:**
+    - `update(win: bool)` — appends win/loss to rolling window (max 20), pops oldest if over limit.
+    - `threshold() -> float` — returns `DYN_TIGHT(0.70)` if win rate < 0.45, `DYN_LOOSE(0.58)` if > 0.60, else `DYN_MID(0.65)`.
+    - **Hidden defaults:** `DYN_WARMUP=10` trades before threshold kicks in (returns 0.65 during warmup). `DYN_WINDOW=20`.
+
+**Key Functions:**
+
+- `find_csv() -> str`
+  - **Runtime:** Searches `/mnt/user-data/uploads/` for CSVs. Hardcoded paths for XAUUSD and BTCUSDT. Falls back to first `.csv` in directory.
+  - **Failure:** `FileNotFoundError` if no CSV found.
+  - **Trust:** This is a container/Colab-specific path. Will not work on standard desktop.
+
+- `adverse_slip(atr: float) -> float`
+  - Uses dedicated `rng_slip = random.Random(42)` — deterministic per-seed.
+
+- `gaussian(x, mu, s2) -> float`
+  - Pure Gaussian PDF (unnormalized). `exp(-(x-mu)^2 / s2)`.
+
+- `atr(candles: list) -> float`
+  - Standard ATR with period=14. Computes TR from (o,h,l,c) tuples. Falls back to candle range if <2 candles available.
+
+- `body_ratio(o, h, l, c) -> float`
+  - Returns `abs(c-o) / (h-l)`. Returns 0.0 if range is 0.
+
+- `wick_size(o, h, l, c) -> float`
+  - Returns `h - l`. Named confusingly — returns total range, not wick. But used as "strength" metric.
+
+- `gaussian_score(retest_depth, body_rat, disp_str, candles_since) -> dict`
+  - **What actually happens at runtime:**
+    1. Hard range-checks: reject if retest_depth outside [0.025, 0.469] or disp_str > 3.670.
+    2. Computes 4 sub-scores: retest Gaussian, body Gaussian, displacement Gaussian, time decay (exp(-0.05 * age)).
+    3. Weighted product: score = s_r^0.40 * s_b^0.35 * s_d^0.25 * s_t^0.15.
+    4. Logistic sigmoid: p_win = 1/(1+exp(-4.5*(score-0.50))).
+    5. Returns `{score, p_win, reject}`.
+  - **Hardcoded constants:** `G_RETEST_MU=0.237, G_RETEST_S2=0.040, G_BODY_MU=0.847, G_BODY_S2=0.021, G_DISP_MU=2.177, G_DISP_S2=1.196, G_DECAY_LAM=0.05, G_SIG_K=4.5, G_SIG_X0=0.50, G_RETEST_MIN=0.025, G_RETEST_MAX=0.469, G_DISP_MAX=3.670`.
+  - **Failure mode:** If retest_depth is out-of-bounds, returns score=0, reject reason string. Caller must check `gs["reject"]`.
+
+- `soft_conf_score(candle_ohlcv, direction, ema_fast, ema_slow, atr_val, h_ref, l_ref, range_size, disp_body) -> float`
+  - **What actually happens at runtime:**
+    1. Computes 4 sub-scores: body ratio (capped at body_min=0.60), EMA momentum (normalized by ATR), non-linear distance from retest boundary (Gaussian falloff via `exp(-(depth/ceiling)^2)`), displacement inheritance.
+    2. Linear combination with weights (0.35, 0.35, 0.15, 0.15).
+    3. Weakest-link penalty: `C = 0.7*C_lin + 0.3*min(f_body, f_mom)`.
+    4. Returns `max(0.20, C)`.
+  - **Hidden defaults:** `CONF_BODY_MIN=0.60`, `CONF_FLOOR=0.20`, `WEAK_LINK_WT=0.30`.
+
+- `fusion_score(G, C) -> float`
+  - Returns `G^0.70 * C^0.30`. Weighted product of Gaussian and soft confirmation scores.
+
+- `detect_regime(atr_val, price, prev_close, close) -> str`
+  - Returns "EXPANSION" if vol > 0.15% and trend > 1.2×ATR, "DEAD" if vol < 0.04%, else "NEUTRAL".
+  - **Hidden defaults:** `VOL_HIGH=0.0015`, `VOL_LOW=0.0004`, `TREND_STR_HIGH=1.2`. These are raw ratios, not percentages.
+
+- `risk_multiplier_for(regime) -> float`
+  - EXPANSION→1.2x, DEAD→0.5x, NEUTRAL→1.0x.
+
+- `load_csv(path) -> list`
+  - **What actually happens at runtime:**
+    1. Tries multiple date formats: `%Y-%m-%d %H:%M:%S`, `%Y-%m-%d %H:%M`, `%Y.%m.%d %H:%M:%S`, `%Y.%m.%d %H:%M`.
+    2. Auto-detects column indices by header name (case-insensitive, lowercased).
+    3. Handles `utf-8-sig` BOM. Handles `adj close` alt name for close column.
+    4. Skips unparseable rows silently.
+    5. Sorts by timestamp ascending.
+  - **Failure modes:** If no column matches close/open/high/low, indices fall through to positional defaults (1,2,3,4) — may pick wrong columns silently. If `ti` not found, defaults to index 0.
+  - **Side effects:** None.
+
+- `run(csv_path) -> list[dict]`
+  - **What actually happens at runtime:** This is the full backtest loop. 600+ lines of sequential state machine.
+  
+  **High-level runtime flow:**
+  1. Loads CSV → list of candles.
+  2. Extracts instrument name from filename.
+  3. Initializes capital, tracking stats, engine state variables.
+  4. Rolling candle buffer for ATR (max 3×ATR_PERIOD=42). HTF buffer grows unbounded.
+  5. EMAs updated every candle.
+  6. Warmup = ATR_PERIOD*3 + HTF_CANDLES = 42+16 = 58 candles.
+  7. **State machine loop** (per candle):
+     - **RANGE:** Detects sweep when price breaks HTF range high/low and closes back inside.
+     - **SWEEP:** Up to 30 candles. Looks for displacement candle (1.2×ATR move, 0.70 body, 1.5×ATR wick).
+     - **DISPLACEMENT:** Checks expansion guard (price continues 0.2×ATR beyond displacement close).
+     - **EXPANSION:** Checks retest depth ≤ min(0.25×range, 0.5×ATR) from boundary. On retest, transitions to soft confirmation.
+     - **SOFT_CONF:** Up to 3 candles. Computes Gaussian score + soft confirmation + fusion score. Compares against dynamic threshold. If S >= TIER2(0.55) AND threshold, and position is inside range mid-line, enters trade.
+     - **Trade management:** Monitors SL, TP1 (trail conceptually), TP2. SL exits at exact SL price (gap-through protection). Spread and slippage applied on both entry and exit.
+  8. Gap reset (>120 min gap) when no active trade — resets all state.
+  9. Force-close at end of data.
+  
+  **Key runtime details:**
+  - Entry fill includes spread and slippage. Exit fill also includes spread and slippage.
+  - Position sizing: tiered (full risk if S ≥ 0.75, half risk otherwise) × regime multiplier.
+  - SL anchored to displacement candle extreme ± 0.2×ATR buffer.
+  - TP1 = 1×ATR, TP2 = 2×ATR from entry.
+  - Inverted SL guard prevents SL on wrong side of entry.
+  - Range position filter: entry must be on opposite side of range mid-line from the direction.
+  
+  **State mutations:**
+  - Mutates closure variables: `capital, peak_capital, cum_r, peak_cum_r, max_dd_r`.
+  - Appends trade dicts to `trades` list.
+  - Resets engine state variables via `reset()` function.
+  
+  **Failure modes:**
+  - If CSV has 0 candles: `candles[0][0]` IndexError.
+  - `range_size==0` causes `ceiling == 0`, leading to division by zero guard at `ceiling > 0` check in soft_conf_score.
+  - ATR with insufficient data: falls back to candle range.
+  - Infinite loop not possible — fixed candle iteration.
+
+- `analyse(trades) -> dict`
+  - Computes win rate, avg RR, profit factor, Sharpe, max drawdown (R-curve), Gaussian-RR correlation.
+  - **Hidden defaults:** Correlation requires ≥3 scored trades, else returns NaN.
+
+- `log_run(stats, instrument)`
+  - Appends run stats to `results/tracking/runs.csv`. Creates file with header if not exists.
+  - **Side effects:** File append. Creates directories.
+
+- **CLI entry point:**
+  - Parses `--csv` optional argument. Falls back to `find_csv()`.
+  - Writes trades CSV to `results/manual/{instrument}_{timestamp}.csv`.
+  - Runs `analyse()`, prints summary to stdout.
+  - **Validator connector hook:** Attempts to run `trade_replay_validator.validate_all()` against a hardcoded `results/manual/manual_trades.csv` path — this will likely fail since trades are written to a timestamped path, not `manual_trades.csv`. This is a bug.
+  - **Failure modes for validator hook:** Exception caught and printed, does not crash main execution.
+
+**Fail-Fast / Fallback Audit (critical):**
+- **Column auto-detection with silent positional fallback:** If CSV header has non-standard names, column indices default to 1,2,3,4 (open, high, low, close) which would produce garbage data with no warning.
+- **Unbounded HTF buffer:** `htf_buf` grows without bound (only trimmed when > HTF_CANDLES+1 for range computation, but entries are never removed from the list). Memory leak over long backtests.
+- **Gap reset only when NOT in trade:** If a trade is open during a gap/weekend, the engine state is NOT reset. The trade continues, but after the gap, the range/retest references may be stale. However, this only happens mid-trade, so the trade has already set its SL/TP — no corruption.
+- **Validator connector uses wrong file path:** Hardcoded `results/manual/manual_trades.csv` instead of the timestamped output file. This is a bug that silently fails inside try/except.
+- **No minimum trade length check:** Trade can trigger and close in same candle if TP is immediately hit.
+- **Hidden state leakage:** `concat` as local closure variable is used but not reset — when multiple trades are within a single HTF window, stale references persist.
+- **Numeric stability:** `risk_dist == 0` check at entry — correct guard against division by zero.
+- **Unbounded HTF buffer** (`htf_buf`): Not a leak if backtest completes, but could slow down extremely long runs.
+- **`cached_feat` stale reference:** If `cached_feat` is set during EXPANSION but `eval_soft_conf` evaluates to false and resets, `cached_feat` is not cleared until next `reset()` call or next retest. Low risk but not clean.
+
+**Determinism:** Pseudo-deterministic given seed=42 for slippage RNG. Gaussian scoring is deterministic. File iteration order is deterministic (sorted CSV). All random state is isolated in `rng_slip`.
+
+---
+
+## Directory: `scripts/control_plane/` (1 file)
+
+---
+
+### 1. `run_server.py`
+
+**File Purpose:** Thin CLI entry point that starts the CRT Web Control Plane server.
+
+**Runtime Role:** Single entry point for launching the control plane web UI. Not imported elsewhere.
+
+**Trust Classification:** CANONICAL — production launcher.
+
+**Methods/Functions:**
+
+- `main()` 
+  - Parses `--host` (default 127.0.0.1) and `--port` (default 8787).
+  - Adds `src/` to sys.path via relative path from script location (`parents[2]`).
+  - Calls `src.control_plane.server.run_server(host, port)`.
+
+**Downstream calls:** `src.control_plane.server.run_server()`.
+
+**Failure modes:** If `src.control_plane.server` module not importable, crashes. Server start failure propagates up.
+
+**Determinism:** Deterministic configuration.
+
+---
+
+## Directory: `scripts/data/` (8 files)
+
+---
+
+### 1. `build_m15_unified.py`
+
+**File Purpose:** Data preprocessing pipeline that loads 1-minute OHLCV CSV files (both Forex from TrueFX/HistData format and Crypto from Binance format), normalizes timezones, resamples to 15-minute candles, validates alignment, and saves as standardized `{INSTRUMENT}_M15.csv`.
+
+**Runtime Role:** One-time data preparation. Run before any backtests to create the standardized M15 dataset from raw M1 data.
+
+**Trust Classification:** CANONICAL — hardcoded instrument list but handles both Forex and Crypto formats properly.
+
+**Classes:** None.
+
+**Global constants:**
+- `INSTRUMENTS`: list of 7 instruments (EURUSD, GBPUSD, USDJPY, AUDUSD, XAUUSD, BTCUSDT, ETHUSDT) with file patterns, types, and timezone labels.
+  - Forex pattern: `DAT_ASCII_*_M1_*.csv` (TrueFX format).
+  - Crypto pattern: `*-1m-*.csv` (Binance format).
+- `OUTPUT_DIR = "data"`.
+
+**Methods/Functions:**
+
+- `load_files(pattern, instrument_type) -> DataFrame`
+  - **What actually happens at runtime:**
+    1. Globs for files matching pattern. Raises ValueError if none found.
+    2. For Forex: reads with `sep=";"`, header=None, parses timestamp `%Y%m%d %H%M%S`.
+    3. For Crypto: reads CSV, detects "open_time" column for millisecond timestamps (Binance API format), or falls back to first column as timestamp. Renames columns to lowercase.
+    4. Concatenates all files, sorts by timestamp, drops duplicates.
+  - **Failure modes:** If `open_time` column present but format unexpected, `pd.to_datetime(..., unit="ms")` may produce NaT. Globs with no files → ValueError.
+
+- `normalize_timezone(df, tz) -> DataFrame`
+  - Localizes timestamps to given timezone, then converts to UTC.
+  - **Failure modes:** If timestamps already have tz info, `tz_localize` fails. If tz string is invalid, fails.
+
+- `resample_m15(df) -> DataFrame`
+  - Resamples to 15-minute: open=first, high=max, low=min, close=last, volume=sum. Drops NaN rows.
+  - **Hidden behavior:** `dropna()` drops any interval where ANY OHLCV column is NaN — this includes gaps in market data (weekends, holidays for Forex). Creates contiguous candle sequence with no gap markers.
+
+- `validate(df, name)`
+  - Asserts: tz-aware, minute alignment {0,15,30,45}, monotonic increasing, no duplicate timestamps.
+  - **Failure modes:** AssertionError on any check. Volumes not checked.
+
+- `build_instrument(cfg)`
+  - Orchestrates load → normalize → resample → validate → save.
+  - Saves to `data/{NAME}_M15.csv`.
+
+- `main()`
+  - Iterates INSTRUMENTS, calls `build_instrument()` with try/except per instrument (continues on failure).
+
+**Fail-Fast Audit:**
+- **Timezone change required:** `tz` field says `"Etc/GMT-2"` with comment "🔥 adjust once after detection" — indicates timezone detection was not automated. If wrong tz, data will be shifted by hours after UTC conversion, causing incorrect candle alignment.
+- **No volume validation:** Volume column preserved but never checked for consistency.
+- **No schema version embedded** in output CSV.
+- **Determinism:** Deterministic for same files.
+- **Side effects:** Creates/overwrites `data/*_M15.csv` files.
+
+---
+
+### 2. `build_rr_dataset.py`
+
+(Using read_file for remaining data files)
+
+Continuing the Human-Readable Execution Cognition analysis for `scripts/data/`.
+
+---
+
+## Directory: `scripts/data/` (8 files, continued)
+
+---
+
+### 2. `build_rr_dataset.py`
+
+**File Purpose:** Converts either opportunity-scanner JSONL files (recommended, unbiased) or backtest trade CSVs (legacy, biased) into an RR (Risk-Reward) dataset JSON file for training the RR model. The opportunity-scanner path reads pre-computed features directly from JSONL records — no FeaturePipeline needed.
+
+**Runtime Role:** Data preparation step for RR model training. Runs as CLI after opportunity scanning or after batch backtests. Output consumed by `src/config_layer/rr/rr_dataset_builder.py`.
+
+**Trust Classification:** LIVE — actively used for RR model training. Clean architecture with two distinct input paths.
+
+**Classes:** None.
+
+**Methods/Functions:**
+
+- `_read_run_id_from_jsonl(path) -> str`
+  - Reads JSONL first line, checks for `type=run_header`, extracts `run_id`.
+  - **Fallback:** Returns "" on any exception (explicit try/except).
+
+- `_load_jsonl(paths) -> list[dict]`
+  - **What actually happens at runtime:**
+    1. Opens each file, reads line-by-line.
+    2. Skips `run_header` sentinel records automatically.
+    3. Skips malformed JSON lines silently (try/except continue — no counter).
+    4. If a file can't be opened, prints warning and continues to next.
+  - **Behavior:** Corrupted lines are silently dropped. No count of skipped lines is tracked.
+
+- `_build_from_opportunities(records, output, version, register, instrument, run_id)`
+  - **What actually happens at runtime:**
+    1. Iterates records, extracts `features` dict and `rr_achieved`/`outcome`.
+    2. Calls `extract_features(feats_dict)` → 35-float vector, and `extract_target(rec, feats_dict)` → (rr, win).
+    3. Records with missing/bad features are skipped (tracked count printed).
+    4. If total valid < `MIN_SAMPLES`, raises SystemExit with guidance message.
+    5. Validates dataset integrity, saves canonical output.
+    6. If `register=True`, calls `_register_dataset()` to save versioned copy + update `rr_registry.json`.
+  - **Downstream calls:** `extract_features`, `extract_target`, `validate_dataset_integrity`, `save_dataset` (from `src/config_layer/rr/`).
+  - **Side effects:** File writes. Registry registration.
+  - **Failure modes:** Insufficient samples → SystemExit (can be caught by caller, but in CLI context terminates). `save_dataset` exceptions propagate.
+
+- `_register_dataset(X, y_rr, y_win, canonical_output, version, instrument, run_id)`
+  - **What actually happens at runtime:**
+    1. Generates version string (default: `YYYYMM_v1` from current time).
+    2. Saves versioned copy alongside canonical output.
+    3. Calls `register_rr_dataset(ver, path, count, N_FEATURES, instrument, run_id)`.
+    4. If no active RR version exists, auto-promotes the new one.
+  - **Side effects:** File writes. Registry file mutation.
+  - **Fail-Fast:** Entire `_register_dataset` wrapped in try/except — prints warning, continues. Registry failure is non-fatal.
+  - **Hidden default:** Version auto-generates from `_time.strftime("%Y%m_v1")` — if called multiple times same month, produces same version string. Overwrites previous versioned file silently.
+
+- `_collect_csv_paths(args) -> list[str]`
+  - Resolves CSV paths from `--csv`, `--dir`, `--glob`, or fallback to newest `results/**/*_trades.csv` by mtime.
+  - **Fallback:** Returns only the single most recent trades CSV.
+
+- `_load_csv(path) -> list[dict]`
+  - Reads CSV and returns list of rows as dicts.
+
+- `main()`
+  - **CLI flow:**
+    1. If `--opportunities` not given but `--instrument` + `--run-id` are, auto-resolves path `logs/{instrument}/{run_id}/opportunities.jsonl`.
+    2. **Opportunities path:** Resolves run_id (from file or timestamp fallback), resolves output path (run-scoped with instrument), loads JSONL, builds dataset.
+    3. **CSV path (legacy):** Collects CSV paths, loads them, calls `build_dataset(trades)` from the rr module.
+    4. If `--register` is True, saves versioned copy.
+  - **Failure modes:** If auto-resolved path doesn't exist, raises SystemExit. If no input sources found, raises SystemExit.
+
+**Fail-Fast / Fallback Audit:**
+- **Silent skip of bad JSONL lines:** No warning count for malformed lines.
+- **Non-fatal registry failure:** If rr_registry.json is corrupted or unwritable, the error is printed but dataset is still saved to canonical location.
+- **Missing output path:** When neither `--output` nor `--instrument` provided, defaults to `models/rr_dataset.json` — could collide with other runs.
+- **Version string collision:** Same-month runs produce identical version string `YYYYMM_v1`. Second run silently overwrites first.
+
+---
+
+### 3. `build_tradenet_dataset.py`
+
+**File Purpose:** Converts `*_fusion.jsonl` trade logs (paired ENTRY+EXIT records from backtest_v2 or live engine) into `data/training.json` with binary labels for TradeNet training.
+
+**Runtime Role:** Data preparation step for TradeNet model training. Runs as CLI. Output consumed by `scripts/training/train_pipeline.py tradenet`.
+
+**Trust Classification:** LIVE — actively used for TradeNet training pipeline.
+
+**Classes:** None.
+
+**Methods/Functions:**
+
+- `main()`
+  - **What actually happens at runtime:**
+    1. Parses `logs` (1+ `*_fusion.jsonl` paths) and `--output` (default `data/training.json`).
+    2. Calls `validate_logs(*args.logs)` from `features.dataset_validator` → returns `(records, report)`.
+    3. If `report.is_trainable` is False (valid records < MIN_RECORDS_TO_TRAIN), exits with error.
+    4. Transforms records: `{"features": record["features"], "label": int(record["outcome"]["win"])}`.
+    5. Writes JSON array to output path.
+    6. Prints count of win/loss records.
+  - **Downstream calls:** `features.dataset_validator.validate_logs()`.
+  - **Side effects:** Writes JSON file.
+  - **Failure modes:** If `validate_logs` fails or returns insufficient records, sys.exit(1). If output path unwritable, exception propagates.
+
+---
+
+### 4. `convert_binance_m1_to_m15.py`
+
+**File Purpose:** One-off script that reads Binance 1-minute CSVs from the `scripts/data/` directory and resamples to 15-minute. Purely local-path-based.
+
+**Runtime Role:** Disposable data conversion tool. Explicitly marked as replaced by `unified_data_builder.py`.
+
+**Trust Classification:** DEAD — replaced/deprecated by `unified_data_builder.py`. Only handles BTCUSDT. Hardcoded `os.path.dirname(__file__)` paths.
+
+**Methods/Functions:**
+
+No functions. Script-level logic:
+1. Globs `data/BTCUSDT-1m-*.csv` relative to script directory.
+2. Reads each file, parses `open_time` as ms timestamp, selects standard columns.
+3. Concatenates, sorts, resamples to 15min, writes `data/BTCUSDT_M15.csv`.
+4. No validation. No error handling beyond pandas default exceptions.
+
+**Failure modes:** If no files match the pattern, pandas `concat` on empty list crashes.
+
+---
+
+### 5. `fetch_candles_alphavantage.py`
+
+**File Purpose:** CLI tool to fetch FX OHLCV data from Alpha Vantage API and save as Tradelatest CSV. Reads defaults from production config JSON's `alphavantage_data` section; CLI flags override config.
+
+**Runtime Role:** Data acquisition script. Used to download historical forex data when no raw M1 files are available. Free tier limited to 25 requests/day.
+
+**Trust Classification:** LIVE — actively used for data acquisition.
+
+**Classes:** None.
+
+**Methods/Functions:**
+
+- `_parse_args(argv) -> argparse.Namespace`
+  - `--pair`: 6-char forex pair (e.g. AUDUSD → split at pos 3: AUD/USD).
+  - `--interval`: candle interval (default from config, otherwise 15min).
+  - `--start`, `--end`: required date range (UTC).
+  - `--api-key`: overrides config, falls back to `AV_API_KEY` env var.
+  - `--out`: output directory (default: `data/alphavantage`).
+  - `--config`: production config path (default: `configs/production/v1_multi_2026_03.json`).
+
+- `main(argv) -> int`
+  - **What actually happens at runtime:**
+    1. Loads production config JSON.
+    2. Extracts `alphavantage_data` section as base configuration.
+    3. Resolves API key: CLI > env var `AV_API_KEY` > config. If none, prints ERROR return 1.
+    4. Overrides with CLI values for output dir, interval.
+    5. Parses `--pair` into `from_symbol` (first 3 chars) and `to_symbol` (last 3). Validates length == 6.
+    6. Constructs `AlphaVantageFetcherConfig.from_section(av_section)`.
+    7. Creates `AlphaVantageCandleFetcher(cfg)`.
+    8. Calls `fetcher.fetch()` which downloads data and writes CSV.
+    9. Prints output path, returns 0.
+  - **Downstream calls:** `inout.alphavantage_candle_fetcher.AlphaVantageCandleFetcher`, `.AlphaVantageFetcherConfig`.
+  - **Side effects:** Network requests to Alpha Vantage API. File writes to output directory.
+  - **Failure modes:** Config not found → return 1. Config section missing keys → `KeyError` caught via `(KeyError, ValueError, RuntimeError)`. Fetch failure → caught by broad `Exception`, return 1.
+  - **Rate limit awareness:** Free tier 25 req/day. Each call fetches an entire month. Docstring describes "monthly batch = 1 request".
+  - **Determinism:** Deterministic per API response.
+
+---
+
+### 6. `fetch_candles_hummingbot.py`
+
+**File Purpose:** CLI tool to fetch OHLCV data via Hummingbot from any supported exchange (Binance, Bybit, OKX, etc.) and write Tradelatest CSVs. Reads defaults from production config's `hummingbot_data` section.
+
+**Runtime Role:** Data acquisition script for crypto data. More flexible than Alpha Vantage — supports multiple exchanges and all instruments listed in config.
+
+**Trust Classification:** LIVE — actively used.
+
+**Classes:** None.
+
+**Methods/Functions:**
+
+- `_parse_args(argv)`
+  - `--exchange`, `--pair`, `--interval`, `--start`, `--end`, `--out`, `--all-instruments`, `--config`.
+  - Default config: `configs/production/v1_multi_2026_03.json`.
+
+- `main(argv) -> int`
+  - **What actually happens at runtime:**
+    1. Loads production config, extracts `hummingbot_data` section.
+    2. Applies CLI overrides for exchange, pair, interval, output_dir.
+    3. Constructs `HummingbotFetcherConfig.from_section(hb_section)`.
+    4. Creates `HummingbotCandleFetcher(cfg)`.
+    5. If `--all-instruments`: calls `fetcher.fetch_all_instruments()` → returns list of paths. Prints each.
+    6. Otherwise: calls `fetcher.fetch()` → returns single path.
+  - **Downstream calls:** `inout.hummingbot_candle_fetcher.*`.
+  - **Side effects:** Network requests via Hummingbot. File writes.
+  - **Failure modes:** Config file missing → return 1. Config section bad → caught by `(KeyError, ValueError, RuntimeError)`. Fetch failure → broad Exception catch, return 1.
+
+---
+
+### 7. `generate_vectors.py`
+
+**File Purpose:** Generates 200 random feature vector test fixtures as JSON, using `CANONICAL_FEATURE_ORDER` from `src/features/feature_schema.py`. Used for testing bitnet C++/Python parity or other feature-pipeline tests.
+
+**Runtime Role:** Test data generation. Standalone CLI.
+
+**Trust Classification:** EXPERIMENTAL — test infrastructure.
+
+**Methods/Functions:**
+
+- `random_record() -> dict`
+  - Generates dict with all canonical features. 10% chance of zero (to test clean/null paths). Otherwise uniform random in [-5.0, 5.0].
+
+- `main(n=200)`
+  - Seeds `random.seed(42)` for reproducibility.
+  - Generates `n` records, writes to `tests/fixtures/test_vectors.json`.
+  - **Side effects:** Overwrites test fixture file. Creates parent dirs.
+
+**Failure modes:** If `CANONICAL_FEATURE_ORDER` import fails, crashes. If output path not writable, crashes.
+
+---
+
+### 8. `prepare_data.py`
+
+**File Purpose:** Comprehensive data preparation pipeline that loads raw M1 OHLCV data from multiple formats (histdata.com, Binance klines, standard CSV), resamples to M15, validates integrity, and writes clean M15 CSVs. Also includes a validation-only mode to scan and report on existing data files.
+
+**Runtime Role:** Core data preprocessing. Used both standalone and imported by `unified_data_builder.py`. All sub-parsers are imported by the unified builder.
+
+**Trust Classification:** CANONICAL — core data pipeline. Both standalone and importable.
+
+**Classes:** None.
+
+**Methods/Functions:**
+
+- `parse_histdata(filepath) -> list[tuple]`
+  - **What actually happens at runtime:**
+    1. Opens file (utf-8-sig BOM handling).
+    2. Skips lines starting with "Date" or "date".
+    3. Auto-detects comma or semicolon delimiter.
+    4. Parses `%Y%m%d %H%M%S` timestamp format.
+    5. Handles missing volume (defaults to 0.0).
+    6. Skips unparseable lines silently.
+  - **Failure modes:** If first field has unexpected format, `strptime` raises ValueError → line skipped. No line counter on skips.
+
+- `parse_binance(filepath) -> list[tuple]`
+  - **What actually happens at runtime:**
+    1. Reads CSV with `csv.reader`.
+    2. Detects header row (checking if first field is all-digits).
+    3. If first row is actually data (not header), processes it.
+    4. Parses `open_time` as Unix milliseconds → Python datetime via `utcfromtimestamp(ms/1000)`.
+    5. Handles missing volume (defaults 0.0).
+    6. Skips malformed lines.
+  - **Risk:** `datetime.utcfromtimestamp()` is deprecated in Python 3.12+ (uses `aware` utc but returns naive datetime). Timestamps are technically UTC but has no tzinfo.
+
+- `parse_standard(filepath) -> list[tuple]`
+  - **What actually happens at runtime:**
+    1. Reads first line as headers. Lowercases all headers.
+    2. Auto-detects column indices: timestamp/datetime/date/time, open/o, high/h, low/l, close/c/adj close, volume/vol.
+    3. If any of ts, o, h, l, c not found, raises ValueError.
+    4. Tries multiple date formats: `%Y-%m-%d %H:%M:%S`, `%Y-%m-%d %H:%M`, `%Y/%m/%d %H:%M:%S`, `%d/%m/%Y %H:%M:%S`, `%Y-%m-%dT%H:%M:%S`.
+    5. Skips unparseable rows.
+  - **Failure modes:** If column detection fails, raises ValueError (clear error with headers listed).
+
+- `resample_m15(m1_rows) -> list[tuple]`
+  - **What actually happens at runtime:**
+    1. Buckets M1 rows by 15-minute boundary (floor minute/15 * 15).
+    2. Sorts bars within each bucket by time.
+    3. Computes OHLCV: open=first, high=max, low=min, close=last, volume=sum.
+    4. **Integrity filter:** Drops any M15 candle where `high < max(open, close)` OR `low > min(open, close)` OR `high == low`. These indicate bad data or no-trade intervals (zero-range candles filtered).
+    5. Includes partial buckets (1-14 M1 bars) — doesn't require all 15 bars.
+  - **Hidden behavior:** Partial buckets at session open/close are included. This means the first/last M15 candles of a trading session may have fewer than 15 M1 sub-bars.
+
+- `validate(rows, instrument) -> dict`
+  - **What actually happens at runtime:**
+    1. Checks time ordering (stops after 3 issues).
+    2. Counts OHLC integrity violations (`h < max(o,c)` or `l > min(o,c)`).
+    3. Counts zero-range candles (`h == l`).
+    4. Detects intra-week gaps > 2 hours (skips Friday→Monday and weekend days).
+    5. Computes calendar days and approximate trading days (×5/7).
+  - **Hidden behavior:** Does NOT count duplicate timestamps (no key in stats dict). The `duplicates` key referenced in `validate_existing` is never set by this function.
+
+- `write_csv(rows, filepath)`
+  - Writes standard header and rounded values (OHLC to 5 decimal places, volume to 2).
+
+- `process(source, files, instrument, output_dir, already_m15) -> str`
+  - **What actually happens at runtime (the pipeline):**
+    1. Selects parser by source.
+    2. Loads each file, extends `all_rows`.
+    3. Sorts chronologically, deduplicates by timestamp (set-based).
+    4. Converts all timestamps to UTC-aware (via `replace(tzinfo=timezone.utc)`).
+    5. If `--already-m15`, skips resampling. Otherwise resamples M1→M15.
+    6. Validates output.
+    7. Writes to `{output_dir}/{instrument}_M15_real.csv`.
+    8. Returns output path.
+  - **Hidden behavior:** UTC assignment is via `replace()` not `tz_localize()` — this blindly stamps UTC on timestamps without converting. If timestamps were in another timezone, they become incorrectly labeled as UTC.
+
+- `validate_existing(data_dir)`
+  - Scans for `*_M15.csv` files (not `*_real`), validates each, does gap distribution analysis.
+  - Classifies gaps: 30/45/60/75 min = expected session breaks, <4320 min = unexpected, ≥4320 min = weekend/holiday.
+  - Reports pass/fail per instrument and overall.
+  - **Hidden behavior:** Looks for `*_M15.csv` (not `_M15_real.csv`). References `stats.get("duplicates", 0)` but `validate()` doesn't return a "duplicates" key → always 0.
+
+- `main()`
+  - CLI entry point. Supports `--validate-only` mode and full pipeline mode.
+
+**Fail-Fast / Fallback Audit:**
+- **`process()` UTC handling:** Line 335: `dt.replace(tzinfo=timezone.utc)` — this is a blind timezone label assignment, not a conversion. If the original timestamps were in a local timezone (e.g., histdata.com uses UTC but some sources use local), this creates incorrect UTC-labeled timestamps that are off by the zone offset. This is a corruption risk.
+- **`validate()` missing "duplicates" key:** `validate_existing()` references `stats["duplicates"]` but `validate()` never sets it. This silently evaluates to 0 in the `all_ok` check on line 413 via `dict.get("duplicates", 0)`, so it's not a crash but is misleading.
+- **Silent row skipping:** All parsers skip malformed lines without counting or warning. A corrupted file could lose 50% of data without the user noticing.
+- **Zero-range candle filter in resample_m15:** Drops candles where `h == l` — this is a silent data loss. In crypto markets, zero-range candles can occur during low volatility periods. These are legitimate data points.
+- **Determinism:** Purely deterministic.
+
+---
+
+### Dependency Boundaries
+
+- `prepare_data.py` is imported by `unified_data_builder.py`. Immediate dependency only: the parser functions `parse_histdata`, `parse_binance`, `parse_standard`, `resample_m15`, `validate`, and `write_csv`.
+- `fetch_candles_*.py` both depend on `src/inout/` classes. Further tracing exceeds immediate runtime relevance boundary — those live in `src/` and the fetch logic is encapsulated in the fetcher classes.
+- `build_rr_dataset.py` depends on `src/config_layer/rr/rr_dataset_builder.py` and `src/core/model_registry.py`. Further tracing into the RR builder and model registry exceeds immediate boundary.
+
+---
+
+## GLOBAL SUMMARY: Across All 4 Directories
+
+### Trust Classification Summary
+
+| File | Classification | Reason |
+|------|---------------|--------|
+| `analysis/compare_bitnet_cpp_python.py` | LEGACY | Hardcoded paths, no main guard, no error handling |
+| `analysis/compress_logs_for_llm.py` | LIVE | Wired into governance pipeline |
+| `analysis/daily_crypto_structure.py` | EXPERIMENTAL | No tests, hardcoded feature keys, post-hoc analysis |
+| `analysis/gen_dummy_trades.py` | LEGACY | Unused imports, hardcoded paths |
+| `analysis/gen_pyan.py` | DEAD | Developer tool, exclusion list stale |
+| `analysis/generate_cli_matrix.py` | LIVE | References live registry |
+| `analysis/schema_audit.py` | EXPERIMENTAL | Only checks CSV headers, not content |
+| `analysis/zone_registry_builder.py` | EXPERIMENTAL | KMeans hardcoded params, no schema versioning |
+| `backtest/backtest_debug_harness.py` | EXPERIMENTAL/PARTIAL | Fragile sys.path import |
+| `backtest/manual_backtest.py` | LIVE | Reference CRT implementation |
+| `control_plane/run_server.py` | CANONICAL | Production launcher |
+| `data/build_m15_unified.py` | CANONICAL | Multi-format, validated pipeline |
+| `data/build_rr_dataset.py` | LIVE | Active ML training data pipeline |
+| `data/build_tradenet_dataset.py` | LIVE | Active TradeNet training pipeline |
+| `data/convert_binance_m1_to_m15.py` | DEAD | Replaced by unified_data_builder |
+| `data/fetch_candles_alphavantage.py` | LIVE | Active data acquisition |
+| `data/fetch_candles_hummingbot.py` | LIVE | Active data acquisition |
+| `data/generate_vectors.py` | EXPERIMENTAL | Test fixtures only |
+| `data/prepare_data.py` | CANONICAL | Core data pipeline |
+| `data/unified_data_builder.py` | LIVE | Replaces multiple legacy scripts |
+
+### Critical Fail-Fast / Corruption Risks
+
+1. **`prepare_data.py` UTC timezone corruption (DANGEROUS):** Line 335 uses `dt.replace(tzinfo=timezone.utc)` instead of `tz_localize()` — timestamps are blindly labeled UTC without conversion. If any data source provides non-UTC timestamps (which histdata.com does NOT — they are UTC), this silently corrupts all downstream backtest timing.
+
+2. **`manual_backtest.py` unbounded HTF buffer:** The `htf_buf` list grows without bound. Not a leak for single backtests but indicates missing cleanup logic.
+
+3. **`manual_backtest.py` validator connector uses wrong file path:** Hardcoded `results/manual/manual_trades.csv` instead of the timestamped output. This is a bug that always fails silently.
+
+4. **`unified_data_builder.py` output suffix:** `OUTPUT_SUFFIX = "_M15.csv"` while docstring mentions `_M15_real.csv` as default. If backtest_v2 expects `_real` suffix, files won't be found.
+
+5. **`build_m15_unified.py` incomplete timezone handling:** `"Etc/GMT-2"` with comment "🔥 adjust once after detection" — timezone detection was never automated. Wrong tz shifts all data.
+
+6. **Silent row dropping across all parsers:** Malformed CSV lines are silently skipped across `parse_histdata`, `parse_binance`, `parse_standard`, `_load_jsonl`. No counters, no warnings.
+
+### Governance Contamination Risks
+
+- **`build_rr_dataset.py` version string collision:** Auto-generated `YYYYMM_v1` can collide within same month, silently overwriting previous versioned dataset.
+- **`compress_logs_for_llm.py`:** If governance pipe consumes corrupted summary (correlations from <30 samples skipped silently), LLM decisions are based on incomplete data with no warning.
+- **Auto-promotion in `build_rr_dataset.py`:** `_register_dataset` auto-promotes if no active RR version exists. If a bad dataset is built first (e.g., from incomplete opportunity scan), it becomes the active version before a good one is registered.
+
+### Replay / Live Drift Risks
+
+- **Schema drift between zone_registry_builder and FeaturePipeline:** Zone centers are raw feature vectors. If `CANONICAL_FEATURES` order changes (feature addition/removal), pre-computed zones become silently invalid. No schema version embedded in zone JSON.
+- **`manual_backtest.py` calibrated constants:** The Gaussian parameters are labeled "real EURCAD 2024-2025, 200 retest observations." If market regimes shift, these static parameters become stale. No recalibration trigger.
+
+### Component Dependency Graph (Immediate Boundaries)
+
+```
+analysis/compress_logs_for_llm.py
+  → reads JSONL files (no src/ imports)
+
+analysis/generate_cli_matrix.py
+  → src/control_plane.registry.generate_cli_matrix_markdown
+
+analysis/gen_dummy_trades.py
+  → src/features.feature_pipeline.FeaturePipeline
+  → src/features.feature_schema.CANONICAL_FEATURES
+
+analysis/zone_registry_builder.py
+  → src/features.feature_pipeline.FeaturePipeline
+  → src/features.feature_schema.CANONICAL_FEATURES
+  → src/features.schema_validator.validate_features, validate_feature_values
+
+analysis/schema_audit.py
+  → src/features.feature_schema.SCHEMA_VERSION
+
+backtest/backtest_debug_harness.py
+  → backtest_v2 (root-level import — fragile)
+  → src/config_layer.config_builder.ConfigBuilder
+
+data/build_rr_dataset.py
+  → src/config_layer.rr.rr_dataset_builder (build_dataset, save_dataset, extract_features, extract_target, validate_dataset_integrity, MIN_SAMPLES, N_FEATURES)
+  → src.core.model_registry (register_rr_dataset, promote_rr, get_active_rr)
+
+data/build_tradenet_dataset.py
+  → src.features.dataset_validator (validate_logs, MIN_RECORDS_TO_TRAIN)
+
+data/fetch_candles_alphavantage.py
+  → src.inout.alphavantage_candle_fetcher (AlphaVantageCandleFetcher, AlphaVantageFetcherConfig)
+
+data/fetch_candles_hummingbot.py
+  → src.inout.hummingbot_candle_fetcher (HummingbotCandleFetcher, HummingbotFetcherConfig)
+
+data/generate_vectors.py
+  → src.features.feature_schema.CANONICAL_FEATURE_ORDER
+
+data/prepare_data.py
+  → No src/ imports — fully self-contained
+
+data/unified_data_builder.py
+  → prepare_data.py (same directory — imports parser functions)
+  → No src/ imports
+
+control_plane/run_server.py
+  → src.control_plane.server.run_server
+```
+
+All immediate runtime dependencies are listed above. Further tracing into any of the `src/` modules would enter the broader codebase and exceed the immediate execution relevance boundary of these scripts.

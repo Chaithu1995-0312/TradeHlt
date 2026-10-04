@@ -1,0 +1,51 @@
+{
+  "objects": [
+    "Y_scanner",
+    "Y_oracle",
+    "Y_joint"
+  ],
+  "joint_states": [
+    "BOTH_SL",
+    "BOTH_TP",
+    "BOTH_TIMEOUT",
+    "JOINT_STATE_SL_TP",
+    "JOINT_STATE_TP_SL",
+    "JOINT_STATE_SL_TIMEOUT"
+  ],
+  "id": "MC-JOINT-01",
+  "n": 94332,
+  "evidence_artifact": "multi_llm/parameter_usage_audit/JOINT_STATE_CENSUS_01.json",
+  "mismatch_means": "state membership \u2014 not error",
+  "frozen_at_ist": "2026-09-20",
+  "engine_v0": {
+    "status": "shipped",
+    "module": "src/research/measurement/trade_lifecycle_engine.py",
+    "api": "measure()",
+    "emits": [
+      "Y_scanner",
+      "Y_oracle",
+      "Y_joint",
+      "authority_outcome"
+    ],
+    "wrappers": {
+      "Y_scanner": "opportunity_scanner._simulate trail_mult=0.5",
+      "Y_oracle": "forward_walk exit_model=intrabar_fixed"
+    },
+    "specimen": {
+      "unit_id": "ac95cf287cbdfa3b",
+      "expected_Y_joint": "JOINT_STATE_SL_TP",
+      "certified": true
+    },
+    "shipped_at": "2026-09-19T21:55:07Z"
+  },
+  "status": "FROZEN",
+  "authority_outcome": {
+    "rule": "F-022 stream never primary",
+    "source": "path",
+    "fields": [
+      "path_outcome",
+      "y_R_net"
+    ]
+  },
+  "layer": "Measurement Authority"
+}

@@ -1,0 +1,35 @@
+{
+  "change_id": "CH-k23-f4-sweep-htf-exempt",
+  "date_utc": "2026-09-24",
+  "objective": "K23 fix F4 (fix-first): add an opt-in gate so an HTF-window flip does not reset the SWEEP state (EXPANSION/RETEST are already exempt). Default is the legacy rule, so every existing config is byte-identical. Motivation (measured on the recorded 2026-09-23 XAUUSD v2_htfcrt run, config hash 7de09f62): 1,372 of 1,792 SWEEPs (76.6%) die at the 16-bar HTF flip; only 399 (22.3%) reach DISPLACEMENT.",
+  "change_classes": [
+    "RUNTIME_DECISION_PATH_CHANGE"
+  ],
+  "change_class_rationale": "Changes a reset gate in ResetLogic.should_reset (CRT state machine) when the flag is true. The flag defaults to false, is read from backtest.htf_reset_exempt_sweep (same optional-with-legacy-default pattern as backtest.htf_clock_basis) and passed CRTEngine -> ResetLogic as a constructor argument. It is deliberately NOT a CRTConfig field: the CRTConfig completeness/authority census pins every field (adding one tripped 7 pinned tests, verified against a 5-red baseline) and F4 belongs next to the HTF clock key it modifies. No feature math, no model, no ontology formula, no production config edit in this change.",
+  "affected_files": [
+    "src/config_layer/crt_engine_v2.py",
+    "src/runtime/backtest_v2.py",
+    "tests/test_htf_reset_sweep_exempt.py",
+    "docs/implementation_plan/k23-block-heuristic-table-design.md",
+    "docs/governance/build_manifests/CH-k23-f4-sweep-htf-exempt.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_htf_reset_sweep_exempt.py",
+    "tests/test_retrace_reset_direction.py",
+    "tests/test_shadow_ttl_lifecycle.py",
+    "tests/test_crt_object_relations.py",
+    "tests/test_feature_math_lint.py",
+    "tests/test_geometry_census.py",
+    "tests/test_current_findings.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Remove the htf_reset_exempt_sweep constructor argument from ResetLogic and CRTEngine, the BacktestConfig field/parse/stamp/plumbing in backtest_v2.py, the test file, and this manifest. With the flag false the behaviour is the pre-change behaviour, so rollback is also a no-op for any run that never set it.",
+  "authority_granted": "User 2026-09-24: K23 fix-first; F4 = exempt SWEEP from the HTF reset; wire it as a backtest-section key + engine kwarg (not a CRTConfig field).",
+  "authority_NOT_granted": "No shadow config is created or activated, no ACTIVE_VERSION change, no promotion, no F1/F2/F3 change, no G001, no claim that exempting SWEEP improves anything (F-081/F-086 nulls stand), no resolver mirror (deferred), CRT closure stays OPEN.",
+  "production_behavior_changed": "NO"
+}

@@ -1,0 +1,555 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# MARKET CRT STATES — Config-driven CRT state machine (Layer 5, 2026-07-24)
+# ═══════════════════════════════════════════════════════════════════════════
+# WHAT layer, declarative only (CLAUDE.md §6.5: authority user_approved).
+#
+# PURPOSE: Define the 9 CRT state machine states as PREDICATES over declared
+# feature states from market_ontology.yaml. The resolver evaluates these
+# predicates per-bar and emits the matching CRT state.
+#
+# DESIGN PRINCIPLES:
+#   1. Every predicate references ONLY declared states of vector-bound features
+#      from market_ontology.yaml structural_states / rolling_indicators sections.
+#   2. Predicates are AND across features, OR within a state list.
+#   3. Transition validity is enforced separately (valid_transitions below).
+#   4. The resolver is a PURE FUNCTION of the current feature vector + state
+#      memory — no hidden state, no side effects.
+#   5. Counts are tunable via predicate thresholds to match real market data.
+#
+# RELATIONSHIP TO CRT ENGINE:
+#   This config describes WHAT each CRT state means in terms of feature states.
+#   The CRT engine (crt_engine_v2.py) remains the EXECUTION authority for live
+#   trading. This resolver is a MARKET REALITY layer that can:
+#     - Validate CRT engine decisions against feature state predicates
+#     - Drive research/backtest state classification without engine dependency
+#     - Enable configurable state ontologies (e.g., simplified 5-state model)
+#
+# REFERENCE COUNTS — PROVISIONAL, run-pinned snapshot (NOT a golden acceptance criterion).
+#   Corpus:  data/mt5/XAUUSD_M15.csv  (XAUUSD M15, 47,275 bars)
+#   Source:  state_distribution in results/run_20260724_104845_XAUUSD/XAUUSD_summary.json
+#            (gate-ON CRT-engine backtest, captured 2026-07-24)
+#   These are the ENGINE's per-bar state occupancy — the comparison TARGET the shadow resolver is
+#   measured against, not a target the resolver must reproduce. Two caveats make them provisional:
+#     (a) The shadow resolver does NOT reproduce EXECUTION/RESOLUTION: its EXECUTION gate
+#         fail-closes without a risk-score feature (the pipeline vector carries none), so a fresh
+#         resolver run on this same corpus yields EXECUTION=RESOLUTION=0. That divergence is
+#         expected (the shadow lacks the engine's scoring), not a resolver defect.
+#     (b) state_distribution is the AUTHORITATIVE surface (per-bar occupancy of
+#         engine.state.current_state, backtest_v2.py:2106-2109). The earlier apparent gap vs the
+#         event-reconstructed counts (EXPANSION 4,605 vs 3,060) was a RECONSTRUCTION bug — the
+#         replay ignored the engine's authoritative RESET state_from; fixed 2026-07-25 (state_from
+#         guard in crt_state_confusion_matrix.py, reconciled to 4,604). The "RESOLUTION 5" that
+#         appeared in older reports was a script fabrication (reference=EXECUTION); the raw summary
+#         has NO RESOLUTION key ⇒ occupancy 0. expansion_dwell_stats (~6,105) is a SEPARATE metric
+#         (candidate-lifetime index span), not per-bar occupancy — do not equate the two.
+#         Still run-pinned: re-derive from a named run before using any figure as a tuning target.
+#   RANGE:          35,159  (default — no structural event active)
+#   SWEEP:           6,995  (liquidity taken, not yet confirmed as displacement)
+#   EXPANSION:       4,605  (breakout/expansion after displacement)
+#   DISPLACEMENT:      373  (strong body candle after sweep)
+#   SHADOW_PENDING:     43  (cross-window displacement memory)
+#   RETEST:             17  (price returned to EMA after sweep)
+#   EXECUTION:           5  (trade actually opened; ENGINE only — resolver yields 0, caveat a)
+#   RESOLUTION:          5  (trade resolved; ENGINE only — resolver yields 0, caveat a)
+#   EXPIRED:             0  (TTL exceeded in expansion)
+# ═══════════════════════════════════════════════════════════════════════════
+
+version: 1
+authority: user_approved
+
+# ───────────────────────────────────────────────────────────────────────────
+# FEATURE STATE REFERENCES
+# ───────────────────────────────────────────────────────────────────────────
+# These are the feature states from market_ontology.yaml that CRT states
+# reference. The resolver loads them at init and validates all predicates.
+# Format: feature_name: [state_name, ...]
+feature_states:
+  liquidity_sweep: [NoSweep, SellSideSweep, BuySideSweep]
+  sweep_detected: [NoSweep, SweepDetected]
+  double_sweep: [NoDoubleSweep, DoubleSweep]
+  break_of_structure: [NoBreak, BearishBreak, BullishBreak]
+  higher_high: [NoHigherHigh, HigherHigh]
+  lower_low: [NoLowerLow, LowerLow]
+  retest_flag: [NoRetest, RetestActive]
+  displacement_flag: [NoDisplacement, Displacement]
+  volatility_regime: [LowVolatility, NormalVolatility, HighVolatility]
+  trend_bias: [Bearish, Neutral, Bullish]
+  rsi_state: [Oversold, NeutralMomentum, Overbought]
+  swing_high: [NoSwingHigh, SwingHighConfirmed]
+  swing_low: [NoSwingLow, SwingLowConfirmed]
+  session: [ASIA, LONDON, NEWYORK, OVERLAP, CLOSED]
+  # H8 (2026-07-31, semantic layer audit): declared here but NOT referenced by any CRT state's
+  # `when:` block below (grep-verified — this is the ONLY occurrence of `volume_spike` in this
+  # file). Participation is not part of the CRT state resolver's predicate set; it enters the
+  # live decision path only through gate_intelligence's liquidity score, which has its own
+  # reachability defect (H7 — see market_ontology.yaml's execution_behaviours SEM-004). Declared
+  # here per §6.6 (undefined-but-referenced semantics become an explicit node, never a silent
+  # gap) rather than removed, since a future CRT state MAY legitimately gate on it.
+  # CH-PSTRUCT-04 / SEM-013 (2026-08-18): FM-063 is authorized as a RESEARCH
+  # volume_participation qualifier on CRT DISPLACEMENT events (identity of
+  # NoSpike/VolumeSpike). CH-PSTRUCT-06 CLOSED: CRT_WIRE is
+  # DISPLACEMENT:VolumeSpike:ANNOTATION_ONLY, gate UNUSED. Still NOT a when:
+  # predicate, hard gate, or soft gate.
+  volume_spike: [NoSpike, VolumeSpike]
+  # LINK-001 (crt_resolver_links.yaml, 2026-09-11): FM-083 change_of_character is
+  # vector-bound (idx 47) and the only feature separating a reversal (break AGAINST
+  # the prevailing trend) from ordinary continuation BOS. Declared here so the
+  # DISPLACEMENT `when:` clause below can name it; predicate validation runs on the
+  # UNFILTERED config, so this declaration is checked regardless of link state.
+  change_of_character: [NoCHoCH, BullishCHoCH, BearishCHoCH]
+
+# ───────────────────────────────────────────────────────────────────────────
+# CRT STATE DEFINITIONS
+# ───────────────────────────────────────────────────────────────────────────
+# Each CRT state is defined by a set of predicates. A bar matches a state if
+# ALL predicates in the `when` block are satisfied (AND across features,
+# OR within a state list).
+#
+# Evaluation order: first-match wins (most specific first).
+# The resolver evaluates in the order listed here.
+#
+# States that require MEMORY (e.g., SHADOW_PENDING, EXPIRED) carry a
+# `requires_memory` flag — they cannot be resolved from a single bar's
+# feature vector alone.
+
+states:
+
+  - name: EXECUTION
+    description: "Trade opened — retest confirmed + score threshold met + soft confirmation passed"
+    requires_memory: true
+    when:
+      retest_flag: [RetestActive]
+      trend_bias: [Bullish, Bearish]  # aligned with direction
+      rsi_state: [NeutralMomentum]     # not stretched
+      session: [LONDON, NEWYORK, OVERLAP]  # only active sessions
+    notes: >
+      The rarest state. Requires retest active, directional alignment,
+      and momentum not overextended. In the CRT engine, this also requires
+      the risk score >= score_threshold (0.45) and soft confirmation.
+      Limited to high-liquidity sessions (LONDON, NEWYORK, OVERLAP).
+
+  - name: RETEST
+    description: "Price pulled back toward the swept range edge after EXPANSION, within the engine's depth band — the CRT engine's EXPANSION→RETEST transition"
+    requires_memory: true
+    when:
+      retest_flag: [RetestActive]
+      sweep_detected: [SweepDetected]
+      break_of_structure: [NoBreak]
+    notes: >
+      This is the CRT engine's EXPANSION→RETEST transition point. ENTRY (STORY-83.11a,
+      2026-09-28) is owned by the EXPANSION funnel hold, which calls the engine's own rule
+      (config_layer.retest_geometry.evaluate_retest_geometry — the function
+      StateMachine.try_expansion_to_retest calls): from EXPANSION, depth from the swept edge
+      (LONG close−l_ref / SHORT h_ref−close) within [retest_min_depth_atr_fraction·atr,
+      max(retest_depth_max·range_size, retest_atr_depth_fraction·atr)] and displacement
+      range/atr ≤ max_displacement_strength. The `when:` block above is therefore NOT the entry
+      rule; it is only the dwell-bar predicate affinity. CORRECTED: the old description ("Price
+      returned to fast EMA after a sweep") was the pipeline retest_flag (FM-061, EMA-band)
+      reading, a different quantity (market_ontology.yaml FM-027 note); with it, the resolver
+      reached RETEST on 0 of 47,197 XAUUSD bars without engine injection.
+
+  - name: EXPANSION
+    description: "Post-displacement extension — engine DISPLACEMENT→EXPANSION (or shadow resume)"
+    requires_memory: true
+    # Feature when-block is intentionally light: entry is owned by funnel +
+    # continuous gates in the resolver (engine try_displacement_to_expansion).
+    # Engine XAUUSD entries: 17 from DISPLACEMENT + 43 shadow SWEEP→EXPANSION = 60.
+    # NEVER entered from RANGE. Prior BoS+vol+disp_flag when over-fired massively.
+    when:
+      # Soft structural corroboration only — funnel gate is the hard authority
+      displacement_flag: [Displacement]
+    notes: >
+      ENGINE ENTRY SEMANTICS (crt_engine_v2.try_displacement_to_expansion):
+        1. Only from DISPLACEMENT (or shadow resume: SHADOW/SWEEP + pending_disp)
+        2. Directional bar (bullish if LONG / bearish if SHORT)
+        3. close extends beyond displacement_close
+        4. abs(close - disp_close) >= expansion_atr_min_distance * atr_abs
+      Resolver enforces (1)+(3)+(4) in continuous gates; (2) via candle body sign.
+      Shadow resume skips strength check (engine: "strength check skipped").
+
+  - name: DISPLACEMENT
+    description: "SWEEP→DISPLACEMENT only — engine try_sweep_to_displacement gates"
+    requires_memory: true
+    # Soft feature corroboration; hard authority = funnel + continuous gates.
+    # NOTE: this block is continuous-gate-owned on FOUNDING entry (funnel_displacement,
+    # crt_state_resolver.py:1493-1496, cur=="SWEEP" -> "DISPLACEMENT") -- under
+    # thresholds.sweep_geometry=htf_range this when: block is only actually evaluated
+    # while DWELLING (cur=="DISPLACEMENT" already), per the states-loop Skip-2 rule.
+    # Unlike EXPANSION's B1f dwell-hold, DISPLACEMENT has no unconditional early-return
+    # before the states loop -- verified 2026-09-11 (retest_divergence_probe session)
+    # before adding LINK-001 here, specifically to avoid repeating that blind spot.
+    when:
+      displacement_flag: [Displacement]
+      # LINK-001 (crt_resolver_links.yaml): tests whether requiring an actual
+      # reversal-type structural break (vs ordinary continuation, vs no break at
+      # all) during DISPLACEMENT dwell changes resolver/engine agreement. AND'd
+      # with displacement_flag above -- a dwell bar must show BOTH.
+      change_of_character: {states: [BullishCHoCH, BearishCHoCH], link: LINK-001}
+    notes: >
+      ENGINE ENTRY (try_sweep_to_displacement): ONLY from SWEEP.
+        1. abs(close-open) >= atr_min_displacement * atr_abs
+        2. sweep age <= max_sweep_age_candles (else expire → RANGE)
+        3. body_ratio >= body_ratio_min (0.65 authority)
+        4. candle_range (v4.0 rename of wick_size; high-low) >= atr_multiplier_min * atr_abs (1.5)
+      Depends on faithful SWEEP dwell (implement SWEEP before tuning this).
+
+  - name: SHADOW_PENDING
+    description: "Cross-window displacement memory active — awaiting confirming sweep in new HTF window"
+    requires_memory: true
+    when: {}  # Memory-only state: entered when RANGE has pending_displacement_active=True
+    notes: >
+      SHADOW_PENDING is a stateful memory from a prior HTF window's
+      displacement that survived an HTF reset. It cannot be detected from
+      a single bar's features alone — it requires the resolver to carry
+      pending_displacement state across resets. The resolver must detect this
+      from its own state memory, not from bar features.
+
+  - name: SWEEP
+    description: "RANGE→SWEEP founding event — liquidity taken, closed back inside"
+    requires_memory: false
+    when:
+      liquidity_sweep: [SellSideSweep, BuySideSweep]
+      break_of_structure: [NoBreak]
+      displacement_flag: [NoDisplacement]
+    notes: >
+      ENGINE ENTRY: only from RANGE (try_range_to_sweep) or via SHADOW_PENDING
+      collapse. B1 (2026-08-05): when thresholds.sweep_geometry=htf_range (default),
+      the resolver founds SWEEP from engine HTF active-range geometry
+      (high>h_ref & close<h_ref / low<l_ref & close>l_ref) and IGNORES this
+      when-block for founding entry (when-block retained for pipeline_swing A/B
+      and documentation). Funnel still enforces state legality.
+      EXIT: HTF/gap RESET, max_sweep_age_candles expiry → RANGE, or forward
+      to DISPLACEMENT / shadow EXPANSION. Mean engine SWEEP dwell ~2 bars
+      (HTF window = 4 dominates age=20).
+
+  - name: EXPIRED
+    description: "TTL exceeded while in EXPANSION — soft archive before returning to RANGE"
+    requires_memory: true
+    when: {}  # Cannot be detected from features alone — requires temporal TTL tracking
+    notes: >
+      EXPIRED is a temporal state: the engine was in EXPANSION for too many
+      candles (max_expansion_age_candles=495) or hours (max_expansion_age_hours=124).
+      It is a soft archive state that lasts one candle before returning to RANGE.
+
+  - name: RESOLUTION
+    description: "Trade resolved — TP or SL hit"
+    requires_memory: true
+    when: {}  # Cannot be detected from features alone — requires trade state
+    notes: >
+      RESOLUTION is the terminal state after a trade closes. It lasts one
+      candle before the engine resets to RANGE. Cannot be detected from
+      features alone.
+
+  - name: RANGE
+    description: "Default state — no structural event active, market is range-bound"
+    requires_memory: false
+    when:
+      liquidity_sweep: [NoSweep]
+      break_of_structure: [NoBreak]
+      sweep_detected: [NoSweep]
+      displacement_flag: [NoDisplacement]
+      double_sweep: [NoDoubleSweep]
+      higher_high: [NoHigherHigh]
+      lower_low: [NoLowerLow]
+      retest_flag: [NoRetest]
+      # Swing confirmations are structural events; a pure RANGE bar has none.
+      # (higher_high/lower_low already encode structure vs last swing reference;
+      #  these flags add the confirmation-event itself for precision.)
+      swing_high: [NoSwingHigh]
+      swing_low: [NoSwingLow]
+    notes: >
+      RANGE is the default/ground state. It requires the absence of all
+      structural events. Most bars (~75%) are in RANGE. Bars that fail this
+      predicate set still fall through to RANGE as the resolver default
+      (first-match exhaust → ground state).
+
+# ───────────────────────────────────────────────────────────────────────────
+# VALID TRANSITIONS
+# ───────────────────────────────────────────────────────────────────────────
+# Enforced by the resolver when state memory is active. A transition is valid
+# iff the target state is in the current state's allowed list.
+valid_transitions:
+  # RANGE -> RETEST: the ENGINE's mode-C resolver-founding edge (STORY-83.11b), mirrored here
+  # only to keep the two records of one edge set in sync (§6.2 rule 6). The resolver never
+  # emits it: its RETEST entry comes from EXPANSION (`_retest_entry_allowed`).
+  RANGE: [SWEEP, SHADOW_PENDING, RETEST]
+  # B1d: engine try_shadow_pending_to_expansion does SWEEP→EXPANSION in one
+  # process_candle; exit state is EXPANSION (two internal transitions).
+  SHADOW_PENDING: [SWEEP, EXPANSION, RANGE]
+  SWEEP: [DISPLACEMENT, EXPANSION, RANGE]
+  DISPLACEMENT: [EXPANSION, RANGE]
+  EXPANSION: [RETEST, EXPIRED, RANGE]
+  EXPIRED: [RANGE]
+  RETEST: [EXECUTION, RANGE]
+  EXECUTION: [RESOLUTION]
+  RESOLUTION: [RANGE]
+  # ── Parent-timeframe 3-candle CRT sub-graph (CH-htfcrt-parent-candle-smc-v1, 2026-08-15) ──
+  # Mirrors src/config_layer/state_identity.py:VALID_TRANSITIONS exactly (documentation
+  # only here — this resolver's `.get(current, [])` lookup at crt_state_resolver.py:1300
+  # never actually produces these labels; the resolver operates purely on the M15
+  # execution-timeframe track). Kept in sync per CLAUDE.md §6.2 rule 6 (two records of
+  # one edge set must not silently diverge), not because it is runtime-enforced here.
+  RANGE_C1: [MANIPULATION_C2, RANGE_C1]
+  MANIPULATION_C2: [DISTRIBUTION_C3, RANGE_C1]
+  DISTRIBUTION_C3: [RANGE_C1]
+
+# ───────────────────────────────────────────────────────────────────────────
+# PREDICATE THRESHOLDS
+# ───────────────────────────────────────────────────────────────────────────
+# Tunable thresholds that affect predicate evaluation. These mirror the
+# CRTConfig values but are declared here for config-driven state resolution.
+# Changing these changes which bars match which CRT state.
+thresholds:
+  # ── B1 SWEEP geometry (BEHAVIOR_CHANGE_AUTHORIZED 2026-08-05) ────────────
+  # Research-shadow CRTStateResolver only — production crt_engine_v2 unchanged.
+  # htf_range  = engine RangeDetector.detect_sweep (frozen HTF active_range)
+  # pipeline_swing = legacy FeaturePipeline last-swing liquidity_sweep
+  sweep_geometry: htf_range
+
+  # atr in the 39-dim (schema v4.0) vector is relative (atr/close). Multiply by close for abs.
+  expansion_atr_is_relative: true
+  # B1h (2026-08-05): continuous DISPLACEMENT→EXPANSION OFF by default.
+  # All residual eng-RANGE/res-EXP FPs entered on short DISP dwells that met
+  # ATR extension but the engine RESET→RANGE without EXP. Research parity uses
+  # engine_state_to inject (DISPLACEMENT>EXPANSION / SWEEP>EXPANSION) + SHADOW
+  # collapse; set true only for A/B of pre-inject continuous entry.
+  continuous_disp_to_expansion: false
+
+  # Displacement dwell (short — engine advances or resets quickly)
+  max_displacement_age_candles: 3
+
+  # ── Lifecycle: HTF / session-gap RESET → RANGE (2026-07-24) ───────────
+  # Mirrors backtest_v2 GapDetector + crt_engine ResetLogic.should_reset.
+  # Without these, sticky SWEEP/DISPLACEMENT never terminate mid-narrative
+  # and RANGE occupancy collapses (confusion: eng RANGE → res SWEEP/EXPANSION).
+  lifecycle:
+    htf_reset_enabled: true
+    # backtest.htf_candles_per_range (active prod) — HTFBuilder window size
+    htf_candles_per_range: 4
+    # Engine: HTF change does NOT interrupt EXPANSION / RETEST active setups
+    htf_protect_states: [EXPANSION, RETEST]
+    # Also protect EXECUTION (trade open) — engine protects active trades separately
+    htf_protect_execution: true
+    gap_reset_enabled: true
+    # backtest.gap_reset_minutes
+    gap_reset_minutes: 120
+    # On HTF reset from DISPLACEMENT → set pending shadow (engine Phase 1)
+    shadow_on_htf_displacement_reset: true
+
+# ───────────────────────────────────────────────────────────────────────────
+# THRESHOLD REFS (Phase D, CH-crt-sot-2026-08-31, added 2026-08-31)
+# ───────────────────────────────────────────────────────────────────────────
+# `thresholds:` above still holds every LITERAL VALUE the resolver actually reads today --
+# UNCHANGED by this section, byte-for-byte, so resolver behavior is untouched. This block adds
+# the NAMES those values should be understood against, following the doctrine
+# structure_profiles.yaml already states: "THRESHOLDS ARE NAMES, NEVER VALUES... copying a
+# number into this file would create a second source of truth for it." `thresholds:`'s own
+# header comment already half-admits this ("These mirror the CRTConfig values") -- this section
+# makes that admission precise and machine-checkable, key by key, rather than one paragraph.
+#
+# Each entry classifies one `thresholds:` key (or `lifecycle.<key>` for the nested block):
+#   kind:
+#     crtconfig_duplicate       -- an exact-name CRTConfig field, ACTIVELY read by the resolver
+#                                   today via thr.get(<key>, ...). The real "second value-copy."
+#     crtconfig_duplicate_dead  -- an exact-name CRTConfig field, declared here, but the
+#                                   resolver never reads this key by name (0 occurrences) --
+#                                   same defect class as crt_resolver_links.yaml LINK-002/003
+#                                   (declared permission nothing exercises), on the threshold
+#                                   axis rather than the feature_states axis.
+#     name_alias_documented     -- NOT an exact CRTConfig field name, but this file's OWN prior
+#                                   comment already asserts the underlying quantity is the same
+#                                   one, under a different name. `ref` names what the comment
+#                                   cites. NOT verified byte-identical in behavior by this
+#                                   program -- an assertion inherited from existing prose, not a
+#                                   fresh proof; still a discovered relationship, not a fact.
+#     resolver_only             -- genuinely has no production counterpart. Deliberately NOT
+#                                   given a fabricated `ref` -- these are resolver-construction
+#                                   knobs (research-shadow behavior, HTF/gap reset policy,
+#                                   schema-handling switches), several explicitly documented in
+#                                   this file's own header as intentional resolver/engine
+#                                   construction differences (F-069).
+#     dead_unconsumed           -- neither a CRTConfig field NOR read anywhere in
+#                                   crt_state_resolver.py by this name. Likely vestigial.
+#     crtconfig_read            -- no literal in `thresholds:`. The resolver copies
+#                                   CRTConfig.<ref> into its threshold dict at construction.
+#
+# `consumed` (bool) is independently verified against crt_state_resolver.py source -- NOT
+# inferred from `kind` -- so a future edit that starts/stops reading a key is a real, checkable
+# fact, not an assumption carried by this table.
+#
+# VALIDATOR: features.registry.validate_crt_threshold_refs (closed contract: every remaining
+# `thresholds:` key appears here exactly once; a `crtconfig_read` row names a shared key that
+# is absent from `thresholds:` and whose `ref` is a real CRTConfig field).
+# AUTHORITY: none. Wiring is DONE for the 15 shared keys (`kind: crtconfig_read`; 12 from
+# STORY-83.10, +3 retest-geometry keys from STORY-83.11a): the literals
+# are not in `thresholds:`, and CRTStateResolver copies CRTConfig.<ref> in at construction.
+# A YAML that still carries one of those keys is rejected. The other rows stay declaration-only.
+#
+# `schema`/`version` are nested UNDER threshold_refs, not siblings of it -- this file already
+# has a top-level `version: 1` (state-machine schema version); a second top-level `version:`
+# key would silently collide with it under YAML's last-key-wins parsing. Caught before writing.
+threshold_refs:
+  schema: threshold_refs/v1
+  version: 1
+
+  refs:
+
+    sweep_geometry:
+      kind: resolver_only
+      ref: null
+      consumed: true
+      note: >
+        Selects the RANGE→SWEEP founding detector (htf_range vs pipeline_swing). Resolver
+        construction mode; crt_engine_v2 has no equivalent switch.
+
+    range_atr_period:
+      kind: crtconfig_read
+      ref: atr_period
+      consumed: true
+      note: >
+        This file's own comment at the `range_atr_period` declaration already reads "Engine
+        CRTConfig.atr_period — M15 structural liquidity range (SEM-011)". Both default to 14.
+        Elevated here from prose to a machine-checkable ref, not independently re-derived.
+
+    body_ratio_min:
+      kind: crtconfig_read
+      ref: body_ratio_min
+      consumed: true
+
+    atr_multiplier_min:
+      kind: crtconfig_read
+      ref: atr_multiplier_min
+      consumed: true
+
+    atr_min_displacement:
+      kind: crtconfig_read
+      ref: atr_min_displacement
+      consumed: true
+
+    expansion_atr_min_distance:
+      kind: crtconfig_read
+      ref: expansion_atr_min_distance
+      consumed: true
+
+    expansion_atr_is_relative:
+      kind: resolver_only
+      ref: null
+      consumed: true
+      note: >
+        Controls whether the resolver's own atr_abs computation treats the vector's `atr` as
+        relative or absolute. crt_engine_v2 has no such toggle -- resolver-specific
+        schema-handling knob (see FM-030/031, F-061 dimensional-mix history for why this axis
+        exists at all).
+
+    continuous_disp_to_expansion:
+      kind: resolver_only
+      ref: null
+      consumed: true
+      note: >
+        B1h research-shadow switch. This file's own header already documents it as OFF by
+        default and names the reason (residual FPs on short DISP dwells) -- a deliberate
+        resolver/engine construction difference (F-069), not a value the engine could share.
+
+    retest_depth_max:
+      kind: crtconfig_read
+      ref: retest_depth_max
+      consumed: true
+
+    # STORY-83.11a: the rest of the engine's EXPANSION->RETEST geometry, read by the resolver
+    # through config_layer.retest_geometry (the same function the engine calls).
+    retest_atr_depth_fraction:
+      kind: crtconfig_read
+      ref: retest_atr_depth_fraction
+      consumed: true
+
+    retest_min_depth_atr_fraction:
+      kind: crtconfig_read
+      ref: retest_min_depth_atr_fraction
+      consumed: true
+
+    max_displacement_strength:
+      kind: crtconfig_read
+      ref: max_displacement_strength
+      consumed: true
+
+    max_sweep_age_candles:
+      kind: crtconfig_read
+      ref: max_sweep_age_candles
+      consumed: true
+
+    max_displacement_age_candles:
+      kind: dead_unconsumed
+      ref: null
+      consumed: false
+      note: >
+        Not a CRTConfig field and not read anywhere in crt_state_resolver.py by this name.
+        Likely vestigial -- the resolver's actual displacement-age gate is
+        lifecycle.pending_displacement_ttl_candles.
+
+    max_expansion_age_candles:
+      kind: crtconfig_read
+      ref: max_expansion_age_candles
+      consumed: true
+
+    max_expansion_age_hours:
+      kind: crtconfig_read
+      ref: max_expansion_age_hours
+      consumed: true
+
+    score_threshold:
+      kind: crtconfig_read
+      ref: score_threshold
+      consumed: true
+
+    soft_conf_max_candles:
+      kind: crtconfig_read
+      ref: soft_conf_max_candles
+      consumed: true
+
+    lifecycle.htf_reset_enabled:
+      kind: resolver_only
+      ref: null
+      consumed: true
+
+    lifecycle.htf_candles_per_range:
+      kind: name_alias_documented
+      ref: "backtest.htf_candles_per_range"
+      consumed: true
+      note: >
+        This file's own comment at the declaration already reads "backtest.htf_candles_per_range
+        (active prod) — HTFBuilder window size". `backtest` is a top-level production-JSON
+        section, not a CRTConfig field -- the same cross-section pattern
+        structure_profiles.yaml's SPP-001 entry already uses for the identical live founding
+        (threshold_refs.clock: backtest.htf_candles_per_range).
+
+    lifecycle.htf_protect_states:
+      kind: resolver_only
+      ref: null
+      consumed: true
+
+    lifecycle.htf_protect_execution:
+      kind: resolver_only
+      ref: null
+      consumed: true
+
+    lifecycle.gap_reset_enabled:
+      kind: resolver_only
+      ref: null
+      consumed: true
+
+    lifecycle.gap_reset_minutes:
+      kind: name_alias_documented
+      ref: "backtest.gap_reset_minutes"
+      consumed: true
+      note: >
+        This file's own comment at the declaration already reads "backtest.gap_reset_minutes".
+
+    lifecycle.shadow_on_htf_displacement_reset:
+      kind: resolver_only
+      ref: null
+      consumed: true
+
+    lifecycle.pending_displacement_ttl_candles:
+      kind: crtconfig_read
+      ref: pending_displacement_ttl_candles
+      consumed: true

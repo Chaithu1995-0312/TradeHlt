@@ -1,0 +1,104 @@
+{
+  "schema_version": "1.0.0",
+  "nodes": [
+    {
+      "id": "bars",
+      "kind": "source"
+    },
+    {
+      "id": "centered_swing_compute",
+      "kind": "compute",
+      "future_bars": 2,
+      "window": 5
+    },
+    {
+      "id": "math_id_time",
+      "kind": "time",
+      "at": "t+SWING_WINDOW"
+    },
+    {
+      "id": "publish_default",
+      "kind": "publish",
+      "at": "row t (retrospective)",
+      "delay_enforced": false
+    },
+    {
+      "id": "publish_causal_env",
+      "kind": "publish",
+      "at": "row t after shift(+SWING_WINDOW)",
+      "delay_enforced": true,
+      "env": "TRUST_SWING_CAUSAL=1"
+    },
+    {
+      "id": "last_swing_prices",
+      "kind": "state"
+    },
+    {
+      "id": "hh_ll_bos_sweep",
+      "kind": "derived"
+    },
+    {
+      "id": "liquidity_distance",
+      "kind": "derived"
+    },
+    {
+      "id": "retest_chain",
+      "kind": "derived"
+    },
+    {
+      "id": "feature_vector",
+      "kind": "consumer"
+    },
+    {
+      "id": "backtest_models",
+      "kind": "terminal"
+    }
+  ],
+  "edges": [
+    [
+      "bars",
+      "centered_swing_compute"
+    ],
+    [
+      "centered_swing_compute",
+      "math_id_time"
+    ],
+    [
+      "math_id_time",
+      "publish_default"
+    ],
+    [
+      "math_id_time",
+      "publish_causal_env"
+    ],
+    [
+      "publish_default",
+      "last_swing_prices"
+    ],
+    [
+      "last_swing_prices",
+      "hh_ll_bos_sweep"
+    ],
+    [
+      "last_swing_prices",
+      "liquidity_distance"
+    ],
+    [
+      "hh_ll_bos_sweep",
+      "retest_chain"
+    ],
+    [
+      "retest_chain",
+      "feature_vector"
+    ],
+    [
+      "liquidity_distance",
+      "feature_vector"
+    ],
+    [
+      "feature_vector",
+      "backtest_models"
+    ]
+  ],
+  "verdict_echo": "MIXED_BY_CALL_SITE"
+}

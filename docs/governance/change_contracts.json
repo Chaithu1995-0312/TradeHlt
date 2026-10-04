@@ -1,0 +1,259 @@
+{
+  "_doc": "Gate-6 Repository Construction Contract — machine-readable change-class registry. Every repository change declares its classes in a BUILD_IMPACT_MANIFEST; scripts/governance/construction_protocol.py validates manifests and RUNS the required checks (results are never log-trusted). Checks are pytest node paths or scripts. Extend classes here + tests/test_construction_protocol.py together.",
+  "version": 1,
+  "manifest_dir": "docs/governance/build_manifests",
+  "change_classes": {
+    "FEATURE_IDENTITY_CHANGE": {
+      "description": "Add/rename/retire a governed feature identity (FM-id, lifecycle, name).",
+      "authorities_to_inspect": ["configs/formulas/market_ontology.yaml", "src/features/registry/", "docs/governance/geometry_census.jsonl", "active_models.yaml"],
+      "artifacts_to_update": ["configs/formulas/market_ontology.yaml", "docs/governance/geometry_census.jsonl", "docs/governance/geometry_semantic_adjudication.jsonl"],
+      "required_checks": ["tests/test_formula_registry.py", "tests/test_feature_lineage.py", "tests/test_geometry_census.py", "tests/test_gate2b_closure.py"],
+      "rollback_boundary": "revert ontology + registry + regenerated artifacts in one commit",
+      "completion_criteria": "all required checks green; census fresh; lineage exhaustive"
+    },
+    "FORMULA_CHANGE": {
+      "description": "Change the mathematics of a registered formula or add a new one.",
+      "authorities_to_inspect": ["configs/formulas/market_ontology.yaml", "src/features/candle_math.py", "src/features/derived_math.py", "docs/governance/geometry_census.jsonl"],
+      "artifacts_to_update": ["configs/formulas/market_ontology.yaml", "docs/governance/geometry_census.jsonl", "docs/governance/geometry_semantic_adjudication.jsonl"],
+      "required_checks": ["tests/test_candle_math.py", "tests/test_derived_math.py", "tests/test_formula_registry.py", "tests/test_feature_math_lint.py", "tests/test_geometry_census.py", "tests/test_gate2b_closure.py"],
+      "rollback_boundary": "single commit; parity floors define byte-equivalence evidence",
+      "completion_criteria": "parity + lint + census-fresh green; threshold recalibration flagged if active denominator changed"
+    },
+    "DERIVED_METRIC_CHANGE": {
+      "description": "Add/change a deterministic derived metric (ATR/price-relative).",
+      "authorities_to_inspect": ["configs/formulas/market_ontology.yaml", "src/features/derived_math.py", "src/features/feature_pipeline.py"],
+      "artifacts_to_update": ["configs/formulas/market_ontology.yaml", "docs/governance/geometry_census.jsonl"],
+      "required_checks": ["tests/test_derived_math.py", "tests/test_formula_registry.py", "tests/test_feature_lineage.py", "tests/test_geometry_census.py"],
+      "rollback_boundary": "single commit",
+      "completion_criteria": "pipeline<->scalar parity green; lifecycle set; census fresh"
+    },
+    "DATASET_SCHEMA_CHANGE": {
+      "description": "Change CANONICAL_FEATURES / feature vector schema / dataset builders.",
+      "authorities_to_inspect": ["src/features/feature_schema.py", "src/training/stage1_dataset_builder.py", "docs/reference/schemas.md"],
+      "artifacts_to_update": ["docs/reference/schemas.md", "results/baseline (baseline_capture rerun)"],
+      "required_checks": ["tests/test_feature_pipeline.py", "tests/test_feature_lineage.py", "tests/test_active_models_registry.py"],
+      "rollback_boundary": "schema hash is load-bearing — baseline_capture required before training",
+      "completion_criteria": "schema hash re-baselined; lineage green"
+    },
+    "MODEL_INPUT_CHANGE": {
+      "description": "Change which features/values feed a model at train or serve time.",
+      "authorities_to_inspect": ["active_models.yaml", "docs/governance/geometry_semantic_adjudication.jsonl", "src/features/feature_schema.py"],
+      "artifacts_to_update": ["active_models.yaml"],
+      "required_checks": ["tests/test_active_models_registry.py", "tests/test_feature_lineage.py", "tests/test_geometry_census.py"],
+      "rollback_boundary": "single commit; train/serve-skew check mandatory (F-050 lesson)",
+      "completion_criteria": "lineage updated; train-time and serve-time sources named + identical or skew documented"
+    },
+    "MODEL_TRAINING_CHANGE": {
+      "description": "Change training pipelines/datasets/labels.",
+      "authorities_to_inspect": ["src/training/", "docs/reference/schemas.md", "docs/current-findings.md (F-022 label contamination)"],
+      "artifacts_to_update": ["active_models.yaml (evidence block)"],
+      "required_checks": ["tests/test_active_models_registry.py", "tests/test_current_findings.py"],
+      "rollback_boundary": "training artifacts versioned via model_registry GOV-3 atomic promotion",
+      "completion_criteria": "label provenance documented (forward_walk vs F-022 stream); no silent label reuse"
+    },
+    "MODEL_ARTIFACT_CHANGE": {
+      "description": "Add/replace a serialized model artifact.",
+      "authorities_to_inspect": ["active_models.yaml", "models/", "src/models/model_registry.py"],
+      "artifacts_to_update": ["active_models.yaml", "models/ registry manifests"],
+      "required_checks": ["tests/test_active_models_registry.py", "tests/test_zone_manifest_runtime_parity.py"],
+      "rollback_boundary": "model_registry atomic promotion + archived predecessor",
+      "completion_criteria": "manifest<->runtime parity green (F-041 invariant)"
+    },
+    "ACTIVE_MODEL_CHANGE": {
+      "description": "Activate/deactivate/rewire a model in the live/backtest spine.",
+      "authorities_to_inspect": ["active_models.yaml", "configs/production/ACTIVE_VERSION + active config", "docs/current-findings.md"],
+      "artifacts_to_update": ["active_models.yaml", "docs/current-findings.md if a finding changes"],
+      "required_checks": ["tests/test_active_models_registry.py", "tests/test_current_findings.py", "tests/test_config_reachability.py"],
+      "rollback_boundary": "config-first: activation via config keys, never code branches (§6.5)",
+      "completion_criteria": "registry + config + findings consistent; §6.5 authority ladder respected"
+    },
+    "PRODUCTION_CONFIG_CHANGE": {
+      "description": "Change configs/production/* or ACTIVE_VERSION.",
+      "authorities_to_inspect": ["configs/production/ACTIVE_VERSION", "src/config_layer/config_builder.py schema", "docs/reference/config-reference.md"],
+      "artifacts_to_update": ["config hash via scripts/maintenance/_compute_hash.py (params changes)", "docs/reference/config-reference.md"],
+      "required_checks": ["tests/test_config_reachability.py", "tests/test_reachability_golden.py", "tests/test_active_models_registry.py"],
+      "rollback_boundary": "archived {version}_archived_{ts}.json + promotion_log.jsonl",
+      "completion_criteria": "USER APPROVAL required (active-config edits are always user-gated); reachability green; hash valid"
+    },
+    "TRACE_OBSERVATION_JOIN": {
+      "description": "Extend an OBSERVATION-ONLY runtime trace stream with new joined or derived metadata fields (e.g. the CRTConstructionTrace resolver envelope). Strictly no decision path, no canonical quantity, no CANONICAL_FEATURES change, no claim-catalog change. Deliberately NOT RUNTIME_DECISION_PATH_CHANGE: classifying an observation-only join as a decision-path change would be a false claim, and the two carry different completion criteria (parity-of-ledger vs proof-of-non-participation).",
+      "authorities_to_inspect": [
+        "src/runtime/crt_construction_trace.py",
+        "src/runtime/bar_structure_snapshot.py",
+        "src/features/crt_state_resolver.py",
+        "docs/reference/schemas.md"
+      ],
+      "artifacts_to_update": [
+        "docs/reference/schemas.md (the JSONL line schema)",
+        "docs/memory/runtime-memory.md",
+        "the emitting module's own schema_version + config section"
+      ],
+      "required_checks": [
+        "tests/test_crt_construction_trace.py",
+        "tests/test_crt_construction_trace_envelope.py",
+        "tests/test_resolver_metadata.py",
+        "tests/test_construction_protocol.py"
+      ],
+      "rollback_boundary": "single commit; the trace schema bump, the emitter fields and the producing read-only accessor revert together",
+      "completion_criteria": "the emitting section stays OBSERVATION_ONLY and default-off; every new field present on BOTH warmup and live rows (uniform shape); any newly-called producer proven not to mutate its own subject (a behaviour-neutrality test, not an assertion in prose); and no new field carries a rival authority label for a quantity another module already owns"
+    },
+    "RUNTIME_DECISION_PATH_CHANGE": {
+      "description": "Change gates/engines/fusion/decision/planner/risk behavior.",
+      "authorities_to_inspect": ["docs/architecture/signal-flow.md", "docs/current-findings.md (F-036/F-037/F-048)", "docs/governance/geometry_semantic_adjudication.jsonl"],
+      "artifacts_to_update": ["docs/architecture/signal-flow.md if flow changes", "docs/current-findings.md"],
+      "required_checks": ["tests/test_feature_math_lint.py", "tests/test_geometry_census.py", "tests/test_current_findings.py"],
+      "rollback_boundary": "determinism gate: 2-instrument byte-identical ledger unless behavior change is the declared intent",
+      "completion_criteria": "behavior-change declared + finding filed OR parity proof (byte-identical)"
+    },
+    "DEAD_CODE_REMOVAL": {
+      "description": "Delete code proven unreachable.",
+      "authorities_to_inspect": ["docs/governance/geometry_semantic_adjudication.jsonl (reachability)", "grep call sites"],
+      "artifacts_to_update": ["docs/governance/geometry_census.jsonl (regenerate)", "grandfather retirement manifest if a GD site"],
+      "required_checks": ["tests/test_geometry_census.py", "tests/test_feature_math_lint.py"],
+      "rollback_boundary": "single commit; §6.2 rule 4 (preserve history in git, mark superseded in docs)",
+      "completion_criteria": "0-caller evidence cited; census fresh after removal"
+    },
+    "DOCUMENTATION_ONLY": {
+      "description": "Docs/comments/findings text only — no behavior surface.",
+      "authorities_to_inspect": ["docs/knowledge-map.md (owning doc first, §6.2 rule 1)"],
+      "artifacts_to_update": ["the owning doc; citations"],
+      "required_checks": ["tests/test_current_findings.py", "tests/test_doc_citations.py", "tests/test_topic_docs.py"],
+      "rollback_boundary": "single commit",
+      "completion_criteria": "doc floors green; no src/config diff (validator enforces)"
+    },
+    "SCRIPT_LIFECYCLE_CHANGE": {
+      "description": "Add/move/classify/retire a script registry record or related SITS artifacts; register new scripts under scripts/** or repo-root *.py.",
+      "authorities_to_inspect": [
+        "src/governance/script_registry.py",
+        "scripts/governance/seed_script_registry.py",
+        "docs/governance/script_registry_stubs.jsonl",
+        "docs/governance/script_registry_grandfather.json",
+        "docs/reference/conventions.md",
+        "src/control_plane/registry.py"
+      ],
+      "artifacts_to_update": [
+        "docs/governance/script_registry_stubs.jsonl and/or seed overlays",
+        "docs/reference/script-matrix.md (regenerate)",
+        "docs/reference/schemas.md §9.8 if schema changes"
+      ],
+      "required_checks": [
+        "tests/test_script_registry.py",
+        "tests/test_script_matrix_sync.py",
+        "tests/test_construction_protocol.py"
+      ],
+      "rollback_boundary": "single commit; stubs + overlays + grandfather pin are PRIMARY",
+      "completion_criteria": "tests/test_script_registry.py green (coverage + grandfather ratchet); seed dump deterministic; every declared new scripts/**/*.py or root *.py path present in registry non-terminal records with purpose != GRANDFATHER_UNCLASSIFIED"
+    },
+    "IDENTITY_STORE_CHANGE": {
+      "description": "Add or change the identity-store substrate (Class A declaration snapshots, Class B identity records, Class C tracked bindings, Identity Check, writers/readers). Not the live decision path. Load must not import feature_pipeline / feature_states / feature_schema / crt_engine / crt_state_resolver as a substitute for stored identity.",
+      "authorities_to_inspect": [
+        "docs/governance/CANONICAL_LAYER_IDENTITY_CONTRACT.md",
+        "docs/governance/STORAGE_PRESERVATION_CONTRACT.md",
+        "docs/governance/PHYSICAL_STORAGE_ARCHITECTURE.md"
+      ],
+      "artifacts_to_update": [
+        "docs/governance/PHYSICAL_STORAGE_ARCHITECTURE.md"
+      ],
+      "required_checks": [
+        "tests/test_identity_store.py",
+        "tests/test_construction_protocol.py"
+      ],
+      "rollback_boundary": "single commit; revert src/identity/ + tests/test_identity_store.py + this class if added in the same change",
+      "completion_criteria": "Identity Check round-trip PRESERVED for L0–L5; missing PK / hash mismatch / dropped RESET fail closed; AST isolation: check/reader do not import recompute producers"
+    },
+    "CORPUS_AUTHORITY_CHANGE": {
+      "description": "Add or change Dataset Identity records, the dataset-identity schema/registry, or the load-time corpus admission gate (R3). Owns which physical OHLCV artifact a governed load may stream. Not L0-L5 identity store, not live decision scoring, not G001, not OHLCV CLOSED.",
+      "authorities_to_inspect": [
+        "docs/governance/CORPUS_AUTHORITY.md",
+        "docs/governance/xauusd_m15_phase1_frozen_candidate.json",
+        "src/data_ingestion/xauusd_phase1_candidate.py",
+        "src/runtime/backtest_v2.py CandleLoader"
+      ],
+      "artifacts_to_update": [
+        "docs/governance/CORPUS_AUTHORITY.md",
+        "docs/governance/dataset_identity.schema.json",
+        "docs/governance/dataset_identity_registry.json"
+      ],
+      "required_checks": [
+        "tests/test_dataset_registry.py",
+        "tests/test_corpus_authority_decisions.py",
+        "tests/test_xauusd_phase1_frozen_candidate.py",
+        "tests/test_construction_protocol.py"
+      ],
+      "rollback_boundary": "single commit; revert dataset records + dataset_registry.py + CandleLoader admit wire + this class if added in the same change. Phase-1 XAUUSD guard must remain fail-closed.",
+      "completion_criteria": "Bound XAUUSD M15 loads still rewrite to data/mt5/XAUUSD_M15.csv @ 4d73f5ce and fail closed on hash/range drift; unbound instruments path-passthrough; native XAUUSD HTF CSVs rejected as FORENSIC; projections have no file path; decision_status is not APPROVED; OHLCV_CLOSURE_STATUS unchanged."
+    },
+    "SEMANTIC_REGISTRY_CHANGE": {
+      "description": "Add or refine a node in a NON-frozen semantic section of the market ontology (structural_predicates / structural_walks / canonical_unknowns / htf_states / objectives / execution_behaviours / invariants / regimes / ...), or the sibling data that declares how those nodes are policed or founded. Declaration-only: these sections are never read on the runtime binding path (market_ontology.yaml spec_schema.semantic_registry), so this class asserts NO production behaviour change. Meaning-origin edits per CLAUDE.md 6.6; grants no production, promotion or G001 authority per 6.5.",
+      "authorities_to_inspect": [
+        "configs/formulas/market_ontology.yaml (spec_schema.semantic_registry)",
+        "src/features/registry/__init__.py (validate_semantic_registry, _ITERATED_SECTIONS)",
+        "docs/governance/MARKET_ONTOLOGY_EVOLUTION_CONTRACT.md",
+        "src/governance/semantic_grounding.py (id recognizer)",
+        "scripts/analysis/feature_math_lint.py (lint_policed_sections)"
+      ],
+      "artifacts_to_update": [
+        "configs/formulas/market_ontology.yaml (the node, refined IN PLACE - never a duplicate id)",
+        "tests/test_semantic_registry.py (pin new/changed node ids + knowledge_status)",
+        "docs/current-findings.md when the node records or overturns a conclusion"
+      ],
+      "required_checks": [
+        "tests/test_semantic_registry.py",
+        "tests/test_feature_lineage.py",
+        "tests/test_semantic_grounding.py",
+        "tests/test_construction_protocol.py"
+      ],
+      "completion_criteria": "validate_semantic_registry() == [] and validate_registry() == []; every new id GROUNDED via query_semantic_os.py --ground --kind NOUN; frozen runtime sections (primitives/feature_compositions/derived_metrics) byte-unchanged; production config hash unchanged; nodes refined IN PLACE with version bumped, never duplicated. If the node names an impl, that impl must be reachable and policed - registration WITHOUT enforcement is an incomplete change (the failure mode that produced this class).",
+      "rollback_boundary": "single commit; the ontology node is PRIMARY. Reverting must not orphan a test pin or leave a policed-section name pointing at a deleted section."
+    },
+    "JSONL_CLAIM_SURFACE_CHANGE": {
+      "description": "Add or refine the JSONL claim catalog (CC-* claim classes / STR-* streams / forbidden_joins), the SemanticGrounder JSONL claim kind and REFUSED status, the CT-008 refine-in-place, or the measurement result log. Advisory anti-hallucination surface: it decides whether a JSONL stream may CLOSE an LLM claim, nothing else. NOT identity persistence (no Class A/B/C record, no identity_check on run-level lines), NOT the live spine, NOT G001 or promotion, and NOT SEMANTIC_REGISTRY_CHANGE (that class is the non-frozen market-ontology sections in market_ontology.yaml; CT-008 lives in docs/governance/semantic_os/contracts.yaml).",
+      "authorities_to_inspect": [
+        "docs/governance/JSONL_CLAIM_SURFACE.md (the approved spec)",
+        "docs/governance/jsonl_claim_catalog.yaml (PRIMARY catalog)",
+        "src/governance/jsonl_claim_catalog.py (loader + admissibility)",
+        "src/governance/semantic_grounding.py (the grounder this extends)",
+        "docs/governance/semantic_os/contracts.yaml (CT-008)",
+        "docs/governance/CANONICAL_LAYER_IDENTITY_CONTRACT.md (S11 census labels, S12.3 no-PK-stamping)",
+        "docs/governance/MEASUREMENT_CONTRACT.md (F-083 declared-vs-executed)"
+      ],
+      "artifacts_to_update": [
+        "docs/governance/jsonl_claim_catalog.yaml (the PRIMARY; never hand-edit the data/ projection)",
+        "docs/reference/schemas.md (S9.15 catalog line, S9.16 result line, S9.14 Grounding)",
+        "docs/governance/SEMANTIC_OS_CONTRACT.md (S10) and CT-008 refined IN PLACE - never a new CT-id",
+        "CLAUDE.md S6.7 + the machine-readable truth-sources table",
+        "docs/topics/ (the one topic doc the change touches, per S6.4)"
+      ],
+      "required_checks": [
+        "tests/test_jsonl_claim_catalog.py",
+        "tests/test_jsonl_claim_grounding.py",
+        "tests/test_measurement_result_log.py",
+        "tests/test_semantic_grounding.py",
+        "tests/test_semantic_os.py",
+        "tests/test_construction_protocol.py"
+      ],
+      "completion_criteria": "load_catalog() validates and every CC-*/STR-* id is unique; no CANNOT class appears in any stream allowed_cc and every forbidden_cc is a subset of the CANNOT ids; the GENERATED data/jsonl_claim_catalog.jsonl equals a fresh deterministic render; every meaning_authority entry is the INVENTORY_NOT_MARKET sentinel or GROUNDs as a NOUN (no invented SEM/CN/FM ids); catalog authority stays 'advisory'; frozen ontology runtime sections (primitives/feature_compositions/derived_metrics) byte-unchanged; production config hash unchanged; no G001, promotion, ACTIVE_VERSION or live-rail key introduced. PR-2 adds: every CANNOT class returns REFUSED; a missing or non-CC-* relation is UNANSWERABLE; a forbidden join refuses BEFORE any CAN can ground; a CAN outside the stream's allowed_cc is UNANSWERABLE (never a silent GROUND); path-escape tokens are UNKNOWN and never opened; the agent envelope carries grounding_status before status is set to 'ok'; CT-008 is refined IN PLACE with its id and all 18 required keys intact; and the four original claim kinds still ground unchanged. PR-3 adds: every git-tracked instances/MC-*.json with mt00 != UNRUN has a result line whose artifact hashes match; classify_l5_basis checks FIVE keys against five frozensets and never iterates identity.tokens.L5_BASIS (3 keys, no geometry); identity_check is never called on a run-level line and basis_status is never PRESERVED; economic_claims_allowed is const false; and the result log file is NOT a GOVERNED_FILE so appends do not re-run the floor.",
+      "rollback_boundary": "Single commit. The catalog YAML is PRIMARY: revert the YAML, the loader, the grounder change and the tests together. Reverting must not leave a GREEN_FLOOR or required_checks entry pointing at a deleted test."
+    },
+    "RUN_IDENTITY_CHANGE": {
+      "description": "Add or refine the Run-Identity Governance surface (EFAP): the canonical run_identity.json record minted per run dir, the 6-field identity record (run_id, config_version, config_hash, dataset_hash, artifact_timestamp, identity_status), the always-on identity stamping on backtest artifacts (summary/trades/events/report header), or the can_join() join-gate + validate_join CLI. Governance-only: it declares HOW artifacts identify and may join, never the trading math. VERIFIED requires all five data fields self-consistent; any missing/unprovable field is UNVERIFIED (RECOMPUTE != RECOVER — historic pre-2026-09-16 runs stay UNVERIFIED, never fabricated). can_join() denies if either operand is UNVERIFIED, on run_id mismatch, or on config_hash mismatch. NOT the L0-L5 identity-store substrate (IDENTITY_STORE_CHANGE), NOT the dataset-identity admission registry (CORPUS_AUTHORITY_CHANGE) — run identity rides ABOVE the admitted dataset's dataset_id.",
+      "authorities_to_inspect": [
+        "src/governance/run_identity.py",
+        "src/runtime/backtest_v2.py (ReportWriter identity stamping)",
+        "docs/governance/REPOSITORY_CONSTRUCTION_PROTOCOL.md (BUILD_IMPACT_MANIFEST lifecycle)"
+      ],
+      "artifacts_to_update": [
+        "src/governance/run_identity.py",
+        "src/runtime/backtest_v2.py",
+        "tests/test_run_identity.py",
+        "docs/architecture/run-identity-governance.md"
+      ],
+      "required_checks": [
+        "tests/test_run_identity.py",
+        "tests/test_construction_protocol.py"
+      ],
+      "rollback_boundary": "Single commit; revert run_identity.py + ReportWriter identity wiring + tests + this class if added in the same change. Reverting must not orphan tests/test_run_identity.py or leave can_join() referenced without the module.",
+      "completion_criteria": "can_join() allows same verified run and denies cross-run, config-drift, and any UNVERIFIED operand; a run with any missing identity field stamps UNVERIFIED; derived reports inherit the source artifact identity_status; run_identity.json is written into every run dir that records a run_id; artifact hashing and status computation live ONLY in run_identity.py (never inlined)."
+    }
+  }
+}

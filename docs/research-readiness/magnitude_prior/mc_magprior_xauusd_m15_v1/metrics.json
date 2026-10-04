@@ -1,0 +1,128 @@
+{
+  "contract_id": "MC-MAGPRIOR-XAUUSD-M15-V1",
+  "sem_id": "SEM-028",
+  "authority": "RESEARCH_ONLY",
+  "economic_claims_allowed": false,
+  "p_goal_04_opened": false,
+  "side_picker": false,
+  "sem027_primary_retuned": false,
+  "arm_s": {
+    "y": "y_mfe_r",
+    "train": {
+      "agree": {
+        "n": 37619,
+        "mean": 4.066506879502379,
+        "p_gt_0": 0.9964911347989048,
+        "e_given_gt_0": 4.0808259476618565
+      },
+      "disagree": {
+        "n": 37619,
+        "mean": 3.8019466200590126,
+        "p_gt_0": 0.9965974640474229,
+        "e_given_gt_0": 3.814927046491158
+      },
+      "contrast": 0.26456025944336625,
+      "n_trend_zero_or_unknown": 4,
+      "n_null_y": 0
+    },
+    "holdout": {
+      "agree": {
+        "n": 9453,
+        "mean": 3.9455481963397863,
+        "p_gt_0": 0.9959801121337142,
+        "e_given_gt_0": 3.9614728730748805
+      },
+      "disagree": {
+        "n": 9453,
+        "mean": 3.7366056384216653,
+        "p_gt_0": 0.9969321908388872,
+        "e_given_gt_0": 3.7481041065365024
+      },
+      "contrast": 0.208942557918121,
+      "n_trend_zero_or_unknown": 2,
+      "n_null_y": 0
+    },
+    "sign_match": true,
+    "verdict": "DIAGNOSTIC_PASS"
+  },
+  "arm_t": {
+    "y": "y_time_to_mfe",
+    "train": {
+      "agree": {
+        "n": 36988,
+        "mean": 4.928355142208284,
+        "p_gt_0": 1.0,
+        "e_given_gt_0": 4.928355142208284
+      },
+      "disagree": {
+        "n": 36984,
+        "mean": 5.137491888384166,
+        "p_gt_0": 1.0,
+        "e_given_gt_0": 5.137491888384166
+      },
+      "contrast": -0.20913674617588196,
+      "n_trend_zero_or_unknown": 4,
+      "n_null_y": 1266
+    },
+    "holdout": {
+      "agree": {
+        "n": 9350,
+        "mean": 4.626844919786096,
+        "p_gt_0": 1.0,
+        "e_given_gt_0": 4.626844919786096
+      },
+      "disagree": {
+        "n": 9337,
+        "mean": 4.847274285102281,
+        "p_gt_0": 1.0,
+        "e_given_gt_0": 4.847274285102281
+      },
+      "contrast": -0.22042936531618462,
+      "n_trend_zero_or_unknown": 2,
+      "n_null_y": 219
+    },
+    "sign_match": true,
+    "verdict": "DIAGNOSTIC_PASS"
+  },
+  "overlay_diagnostic": {
+    "train": {
+      "k": 0.5,
+      "n": 75238,
+      "e_y": 3.934226749780696,
+      "e_w_y": 4.000366814641538,
+      "delta": 0.0661400648608419
+    },
+    "holdout": {
+      "k": 0.5,
+      "n": 18906,
+      "e_y": 3.8410769173807258,
+      "e_w_y": 3.893312556860256,
+      "delta": 0.05223563947953025
+    },
+    "not_primary": true
+  },
+  "n_units": 94332,
+  "split": {
+    "holdout_start": "2025-12-24 19:15:00",
+    "train_last_allowed": "2025-12-23 19:15:00",
+    "embargo_bars": 96,
+    "purge_horizon_bars": 40,
+    "n_train": 75242,
+    "n_holdout": 18908,
+    "n_embargo_dropped": 182,
+    "f086_stride_spent": false,
+    "sem027_primary_not_retuned": true,
+    "overlay_k_not_primary": 0.5
+  },
+  "not": [
+    "side picker",
+    "SEM-027 \u0394MFE PRIMARY",
+    "trade PnL",
+    "G001",
+    "P-GOAL-04",
+    "y_R_net size overlay",
+    "F-086 stride holdout",
+    "session/hour PRIMARY",
+    "overlay k as PRIMARY"
+  ]
+}

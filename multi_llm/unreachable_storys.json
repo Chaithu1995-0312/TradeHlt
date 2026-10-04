@@ -1,0 +1,578 @@
+[
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-2.6",
+    "in_degree": 20,
+    "layer": "config_layer",
+    "out_degree": 32,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-7.3",
+    "in_degree": 31,
+    "layer": "governance",
+    "out_degree": 1,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-13.4",
+    "in_degree": 4,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-14.1",
+    "in_degree": 110,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-20.2",
+    "in_degree": 2,
+    "layer": "config_layer",
+    "out_degree": 22,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-41.1",
+    "in_degree": 1,
+    "layer": "sidecar",
+    "out_degree": 21,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-20.4",
+    "in_degree": 147,
+    "layer": "sidecar",
+    "out_degree": 76,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-20.7",
+    "in_degree": 194,
+    "layer": "sidecar",
+    "out_degree": 7,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-20.17",
+    "in_degree": 135,
+    "layer": "sidecar",
+    "out_degree": 60,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-20.18",
+    "in_degree": 50,
+    "layer": "sidecar",
+    "out_degree": 14,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-25.19",
+    "in_degree": 132,
+    "layer": "config_layer",
+    "out_degree": 60,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-36.10",
+    "in_degree": 33,
+    "layer": "research",
+    "out_degree": 6,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-36.18",
+    "in_degree": 2,
+    "layer": "sidecar",
+    "out_degree": 17,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-41.36",
+    "in_degree": 9,
+    "layer": "governance",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-41.39",
+    "in_degree": 6,
+    "layer": "governance",
+    "out_degree": 49,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-31.21",
+    "in_degree": 222,
+    "layer": "config_layer",
+    "out_degree": 64,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-31.24",
+    "in_degree": 3,
+    "layer": "governance",
+    "out_degree": 2,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-42.2",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 1,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-43.4",
+    "in_degree": 2,
+    "layer": "sidecar",
+    "out_degree": 3,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-44.4",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 19,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-46.1",
+    "in_degree": 55,
+    "layer": "sidecar",
+    "out_degree": 4,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-47.1",
+    "in_degree": 194,
+    "layer": "sidecar",
+    "out_degree": 7,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-47.3",
+    "in_degree": 5,
+    "layer": "sidecar",
+    "out_degree": 34,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-48.2",
+    "in_degree": 194,
+    "layer": "features",
+    "out_degree": 7,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-48.3",
+    "in_degree": 194,
+    "layer": "features",
+    "out_degree": 7,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-25.34",
+    "in_degree": 6,
+    "layer": "sidecar",
+    "out_degree": 8,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-25.35",
+    "in_degree": 3,
+    "layer": "sidecar",
+    "out_degree": 5,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-19.8",
+    "in_degree": 13,
+    "layer": "operator",
+    "out_degree": 4,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-19.9",
+    "in_degree": 2,
+    "layer": "sidecar",
+    "out_degree": 3,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-42.8",
+    "in_degree": 3,
+    "layer": "sidecar",
+    "out_degree": 53,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-20.33",
+    "in_degree": 6,
+    "layer": "config_layer",
+    "out_degree": 15,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-20.34",
+    "in_degree": 3,
+    "layer": "config_layer",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-49.2",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 6,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-50.2",
+    "in_degree": 3,
+    "layer": "sidecar",
+    "out_degree": 2,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-36.27",
+    "in_degree": 18,
+    "layer": "research",
+    "out_degree": 7,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-41.61",
+    "in_degree": 1,
+    "layer": "research",
+    "out_degree": 1,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-41.63",
+    "in_degree": 11,
+    "layer": "research",
+    "out_degree": 18,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-41.64",
+    "in_degree": 0,
+    "layer": "research",
+    "out_degree": 7,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-60.11",
+    "in_degree": 49,
+    "layer": "engines",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-60.13",
+    "in_degree": 2,
+    "layer": "runtime",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-60.14",
+    "in_degree": 88,
+    "layer": "features",
+    "out_degree": 2,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-60.15",
+    "in_degree": 36,
+    "layer": "features",
+    "out_degree": 1,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-60.18",
+    "in_degree": 10,
+    "layer": "governance",
+    "out_degree": 3,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-60.19",
+    "in_degree": 2,
+    "layer": "sidecar",
+    "out_degree": 3,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-60.2",
+    "in_degree": 3,
+    "layer": "operator",
+    "out_degree": 13,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-60.20",
+    "in_degree": 1,
+    "layer": "sidecar",
+    "out_degree": 53,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-60.25",
+    "in_degree": 2,
+    "layer": "sidecar",
+    "out_degree": 32,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-60.26",
+    "in_degree": 0,
+    "layer": "research",
+    "out_degree": 2,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-60.28",
+    "in_degree": 1,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-60.29",
+    "in_degree": 1,
+    "layer": "runtime",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-60.3",
+    "in_degree": 7,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-60.30",
+    "in_degree": 6,
+    "layer": "sidecar",
+    "out_degree": 4,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-60.31",
+    "in_degree": 2,
+    "layer": "runtime",
+    "out_degree": 1,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-60.4",
+    "in_degree": 2,
+    "layer": "sidecar",
+    "out_degree": 4,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-60.40",
+    "in_degree": 11,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-60.41",
+    "in_degree": 1,
+    "layer": "core",
+    "out_degree": 1,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-60.5",
+    "in_degree": 3,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-60.6",
+    "in_degree": 4,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-62.12",
+    "in_degree": 1,
+    "layer": "sidecar",
+    "out_degree": 2,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-62.2",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 4,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-62.3",
+    "in_degree": 1,
+    "layer": "sidecar",
+    "out_degree": 3,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-62.4",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 3,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-62.5",
+    "in_degree": 7,
+    "layer": "sidecar",
+    "out_degree": 1,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-62.6",
+    "in_degree": 6,
+    "layer": "sidecar",
+    "out_degree": 1,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-63.1",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 6,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-63.10",
+    "in_degree": 3,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-63.11",
+    "in_degree": 2,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-63.12",
+    "in_degree": 2,
+    "layer": "sidecar",
+    "out_degree": 2,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-63.2",
+    "in_degree": 5,
+    "layer": "sidecar",
+    "out_degree": 0,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-63.6",
+    "in_degree": 3,
+    "layer": "sidecar",
+    "out_degree": 5,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-63.7",
+    "in_degree": 3,
+    "layer": "sidecar",
+    "out_degree": 18,
+    "runtime_reachable": false
+  },
+  {
+    "class": "UnreachableStory",
+    "id": "STORY-63.9",
+    "in_degree": 1,
+    "layer": "sidecar",
+    "out_degree": 1,
+    "runtime_reachable": false
+  }
+]

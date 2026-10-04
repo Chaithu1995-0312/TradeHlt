@@ -1,0 +1,103 @@
+{
+  "kind": "fm030_031_dimensional_mix_shadow_diagnostic",
+  "program": "FM-030-031-DIMENSIONAL-MIX-MIGRATION",
+  "legacy_config": "configs/research/research_config_spine_majors.json",
+  "corrected_config": "configs/research/research_config_spine_dimfix_shadow.json",
+  "engine_gate": "BACKTEST_ENGINE_GATE=1 (forced) \u2014 detect_regime/breakout_engine only run inside EngineRunner.run(); gate-OFF would make this A/B vacuous (F-037/F-058)",
+  "thresholds_recalibrated": false,
+  "scope": "research-authority-only; no promotion; ACTIVE_VERSION unchanged; FM-030/031 stay active:false in the ontology",
+  "note": "Entry sets ARE nested for this change (corrected is a strict SUBSET of legacy) \u2014 CRT never consumes FM-022/023, so its trajectory is invariant and the regime layer acts as a pure downstream veto. This SUPERSEDES the inherited BitNet-shaped caveat ('NOT nested, removed != added'), which is true for a veto INSIDE the CRT state machine but false here; see the module docstring for the kept original. Check the per-instrument `nested` flag \u2014 False would mean that structural assumption broke. Per-instrument n < 30 => INSUFFICIENT, no economic claim (\u00a76.5 / E-001).",
+  "per_instrument": [
+    {
+      "instrument": "BNBUSDT",
+      "n_legacy": 13,
+      "n_corrected": 8,
+      "n_removed": 5,
+      "n_added": 0,
+      "kept": 8,
+      "removed_research_indices": [
+        22717,
+        26071,
+        28545,
+        54366,
+        63895
+      ],
+      "added_research_indices": [],
+      "legacy_book": {
+        "n": 13,
+        "expectancy_rr": -0.3574,
+        "win_rate": 0.3077,
+        "profit_factor": 0.5233,
+        "sum_rr": -4.6461
+      },
+      "corrected_book": {
+        "n": 8,
+        "expectancy_rr": -0.2968,
+        "win_rate": 0.375,
+        "profit_factor": 0.5649,
+        "sum_rr": -2.3746
+      },
+      "removed": {
+        "n": 5,
+        "expectancy_rr": -0.4584,
+        "win_rate": 0.2,
+        "profit_factor": 0.4501,
+        "sum_rr": -2.2922
+      },
+      "added": {
+        "n": 0,
+        "expectancy_rr": null,
+        "win_rate": null,
+        "profit_factor": null,
+        "sum_rr": 0.0
+      },
+      "book_delta_expectancy": 0.0606,
+      "power": "INSUFFICIENT",
+      "verdict": "INSUFFICIENT",
+      "nested": true,
+      "dropped_research_indices": [
+        22717,
+        26071,
+        28545,
+        54366,
+        63895
+      ],
+      "surviving_trades_geometry_identical": true,
+      "regime_change_events": {
+        "legacy": {
+          "total": 0,
+          "by_regime": {}
+        },
+        "corrected": {
+          "total": 0,
+          "by_regime": {}
+        },
+        "_doc": "REGIME_CLASSIFICATION is emitted ON CHANGE ONLY, so total==1 means the regime label never changed for the whole backtest (a literal constant)."
+      }
+    }
+  ],
+  "pooled": {
+    "legacy_book": {
+      "n": 13,
+      "expectancy_rr": -0.3574,
+      "win_rate": 0.3077,
+      "profit_factor": 0.5233,
+      "sum_rr": -4.6461
+    },
+    "corrected_book": {
+      "n": 8,
+      "expectancy_rr": -0.2968,
+      "win_rate": 0.375,
+      "profit_factor": 0.5649,
+      "sum_rr": -2.3746
+    },
+    "book_delta_expectancy": 0.0606,
+    "power": "INSUFFICIENT"
+  },
+  "totals": {
+    "n_legacy": 13,
+    "n_corrected": 8,
+    "n_removed": 5,
+    "n_added": 0
+  }
+}

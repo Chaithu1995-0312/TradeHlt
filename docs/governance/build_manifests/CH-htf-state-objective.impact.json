@@ -1,0 +1,57 @@
+{
+  "change_id": "CH-htf-state-objective",
+  "objective": "Stage 3 of the Sujan study plan: add a second parent-CRT dimension HTFState (EXPANSION/ACCUMULATION/DISTRIBUTION/REVERSAL — NOT an extension of CRTState) plus Objective/ObjectiveStatus (NONE/EXISTS/ACHIEVED/INVALIDATED) derived from C3 bias + C1 range vs last closed parent close. Objective-status may gate M15 EXECUTION activation. Gate default OFF on every production config (byte-identical). Parent-bias veto unchanged. Classifier is local parent-range ratio (reimplemented; does not import research CandleStateEncoder/RegimeLabeler and is not a 4th ATR-expansion implementation). Ontology-first in non-frozen semantic sections. User authorized 2026-08-16. Grants no G001. Flipping objective_gate.enabled is a separate authorized step.",
+  "change_classes": [
+    "RUNTIME_DECISION_PATH_CHANGE",
+    "PRODUCTION_CONFIG_CHANGE",
+    "DOCUMENTATION_ONLY"
+  ],
+  "affected_files": [
+    "src/config_layer/htf_state.py",
+    "src/config_layer/parent_crt.py",
+    "src/config_layer/crt_engine_v2.py",
+    "src/runtime/parent_crt_feed.py",
+    "src/runtime/backtest_v2.py",
+    "configs/formulas/market_ontology.yaml",
+    "configs/production/v2_htfcrt_2026_08.json",
+    "configs/production/v2_multi_2026_04.json",
+    "tests/test_htf_state.py",
+    "tests/test_htf_objective.py",
+    "tests/test_htf_objective_gate.py",
+    "tests/test_parent_crt_feed.py",
+    "docs/current-findings.md",
+    "CLAUDE.md",
+    "docs/topics/crt-spine.md",
+    "docs/governance/research_family_registry.json",
+    "docs/governance/build_manifests/CH-htf-state-objective.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none — no vector slot, no model I/O",
+  "affected_production_config": "parent_crt.htf_state + parent_crt.objective_gate added to v2_htfcrt_2026_08 and v2_multi_2026_04; objective_gate.enabled=false both; params untouched (hash-neutral)",
+  "required_checks_ack": [
+    "tests/test_feature_math_lint.py",
+    "tests/test_geometry_census.py",
+    "tests/test_current_findings.py",
+    "tests/test_config_reachability.py",
+    "tests/test_reachability_golden.py",
+    "tests/test_active_models_registry.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/test_semantic_registry.py",
+    "tests/test_htf_state.py",
+    "tests/test_htf_objective.py",
+    "tests/test_htf_objective_gate.py",
+    "tests/test_parent_crt_feed.py"
+  ],
+  "unknowns": [
+    {
+      "question": "Whether Sujan Accumulation-only activation is the intended ON rule vs allow_exists_only.",
+      "blocking": false,
+      "resolution": "Plan text: Objective-status gates activation (not HTFState). v1 ON rule is allow_exists_only (NONE/ACHIEVED/INVALIDATED deny). HTFState is computed and tested but does not flip the gate. Changing the ON rule is a separate authorized step.",
+      "followup": "User may later authorize an Accumulation-only activation mode as a second objective_gate.mode."
+    }
+  ],
+  "rollback_boundary": "Delete htf_state.py, revert feed/engine/backtest/config/ontology/tests/findings. objective_gate.enabled stays false so a revert of the unused elif is ledger-neutral on current configs.",
+  "authority_granted": "User authorized Stage 3 2026-08-16. Does not flip objective_gate.enabled. Does not extend CRTState. Grants no G001, no Romeo 1-3-5-9, no OB-as-gate."
+}

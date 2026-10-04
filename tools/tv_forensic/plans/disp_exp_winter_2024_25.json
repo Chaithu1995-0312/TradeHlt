@@ -1,0 +1,488 @@
+{
+  "_clock": "Single US-DST season winter_2024_25. calibrate_clock runs once. Do not merge with another season (F-066).",
+  "engine_csv": "data/mt5/XAUUSD_M15.csv",
+  "presets": {
+    "winter_2024_25": {
+      "description": "P-VSTATE-02 Option A winter_2024_25",
+      "shots": [
+        "d2_winter_2024_25_000",
+        "d2_winter_2024_25_001",
+        "d2_winter_2024_25_002",
+        "d2_winter_2024_25_003",
+        "d2_winter_2024_25_004",
+        "d2_winter_2024_25_005",
+        "d2_winter_2024_25_006",
+        "d2_winter_2024_25_007",
+        "d2_winter_2024_25_008",
+        "d2_winter_2024_25_009",
+        "d2_winter_2024_25_010",
+        "d2_winter_2024_25_011",
+        "d2_winter_2024_25_012",
+        "d2_winter_2024_25_013",
+        "d2_winter_2024_25_014",
+        "d2_winter_2024_25_015",
+        "d2_winter_2024_25_016",
+        "d2_winter_2024_25_017",
+        "d2_winter_2024_25_018",
+        "d2_winter_2024_25_019",
+        "d2_winter_2024_25_020",
+        "d2_winter_2024_25_021",
+        "d2_winter_2024_25_022",
+        "d2_winter_2024_25_023",
+        "d2_winter_2024_25_024",
+        "d2_winter_2024_25_025",
+        "d2_winter_2024_25_026",
+        "d2_winter_2024_25_027",
+        "d2_winter_2024_25_028",
+        "d2_winter_2024_25_029",
+        "d2_winter_2024_25_030",
+        "d2_winter_2024_25_031",
+        "d2_winter_2024_25_032",
+        "d2_winter_2024_25_033",
+        "d2_winter_2024_25_034",
+        "d2_winter_2024_25_035",
+        "d2_winter_2024_25_036",
+        "d2_winter_2024_25_037",
+        "d2_winter_2024_25_038",
+        "d2_winter_2024_25_039",
+        "d2_winter_2024_25_040",
+        "d2_winter_2024_25_041"
+      ]
+    }
+  },
+  "shots": {
+    "d2_winter_2024_25_000": {
+      "name": "d2_winter_2024_25_000",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2024-11-01 19:15",
+      "end": "2024-11-05 13:00",
+      "note": "P-VSTATE-02 winter_2024_25 tile 1/42. 160 bars. DISP=2 EXP=1. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_001": {
+      "name": "d2_winter_2024_25_001",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2024-11-05 05:15",
+      "end": "2024-11-06 22:00",
+      "note": "P-VSTATE-02 winter_2024_25 tile 2/42. 160 bars. DISP=1 EXP=1. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_002": {
+      "name": "d2_winter_2024_25_002",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2024-11-11 08:45",
+      "end": "2024-11-13 02:30",
+      "note": "P-VSTATE-02 winter_2024_25 tile 3/42. 160 bars. DISP=1 EXP=1. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_003": {
+      "name": "d2_winter_2024_25_003",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2024-11-12 21:45",
+      "end": "2024-11-14 15:30",
+      "note": "P-VSTATE-02 winter_2024_25 tile 4/42. 160 bars. DISP=2 EXP=0. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_004": {
+      "name": "d2_winter_2024_25_004",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2024-11-14 10:30",
+      "end": "2024-11-18 04:15",
+      "note": "P-VSTATE-02 winter_2024_25 tile 5/42. 160 bars. DISP=2 EXP=1. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_005": {
+      "name": "d2_winter_2024_25_005",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2024-11-18 20:15",
+      "end": "2024-11-20 14:00",
+      "note": "P-VSTATE-02 winter_2024_25 tile 6/42. 160 bars. DISP=2 EXP=0. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_006": {
+      "name": "d2_winter_2024_25_006",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2024-11-26 03:30",
+      "end": "2024-11-27 20:15",
+      "note": "P-VSTATE-02 winter_2024_25 tile 7/42. 160 bars. DISP=2 EXP=0. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_007": {
+      "name": "d2_winter_2024_25_007",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2024-11-28 12:00",
+      "end": "2024-12-02 10:30",
+      "note": "P-VSTATE-02 winter_2024_25 tile 8/42. 160 bars. DISP=1 EXP=1. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_008": {
+      "name": "d2_winter_2024_25_008",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2024-12-02 14:30",
+      "end": "2024-12-04 08:15",
+      "note": "P-VSTATE-02 winter_2024_25 tile 9/42. 160 bars. DISP=3 EXP=1. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_009": {
+      "name": "d2_winter_2024_25_009",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2024-12-03 20:45",
+      "end": "2024-12-05 14:30",
+      "note": "P-VSTATE-02 winter_2024_25 tile 10/42. 160 bars. DISP=2 EXP=1. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_010": {
+      "name": "d2_winter_2024_25_010",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2024-12-05 03:30",
+      "end": "2024-12-06 20:15",
+      "note": "P-VSTATE-02 winter_2024_25 tile 11/42. 160 bars. DISP=2 EXP=0. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_011": {
+      "name": "d2_winter_2024_25_011",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2024-12-06 13:30",
+      "end": "2024-12-10 07:15",
+      "note": "P-VSTATE-02 winter_2024_25 tile 12/42. 160 bars. DISP=1 EXP=0. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_012": {
+      "name": "d2_winter_2024_25_012",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2024-12-11 14:15",
+      "end": "2024-12-13 08:00",
+      "note": "P-VSTATE-02 winter_2024_25 tile 13/42. 160 bars. DISP=1 EXP=0. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_013": {
+      "name": "d2_winter_2024_25_013",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2024-12-13 05:45",
+      "end": "2024-12-16 22:30",
+      "note": "P-VSTATE-02 winter_2024_25 tile 14/42. 160 bars. DISP=1 EXP=0. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_014": {
+      "name": "d2_winter_2024_25_014",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2024-12-16 14:00",
+      "end": "2024-12-18 07:45",
+      "note": "P-VSTATE-02 winter_2024_25 tile 15/42. 160 bars. DISP=3 EXP=2. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_015": {
+      "name": "d2_winter_2024_25_015",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2024-12-17 21:45",
+      "end": "2024-12-19 15:30",
+      "note": "P-VSTATE-02 winter_2024_25 tile 16/42. 160 bars. DISP=1 EXP=1. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_016": {
+      "name": "d2_winter_2024_25_016",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2024-12-20 15:15",
+      "end": "2024-12-24 09:00",
+      "note": "P-VSTATE-02 winter_2024_25 tile 17/42. 160 bars. DISP=1 EXP=0. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_017": {
+      "name": "d2_winter_2024_25_017",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2024-12-24 17:15",
+      "end": "2024-12-27 14:15",
+      "note": "P-VSTATE-02 winter_2024_25 tile 18/42. 160 bars. DISP=4 EXP=1. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_018": {
+      "name": "d2_winter_2024_25_018",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2024-12-27 17:15",
+      "end": "2024-12-31 11:00",
+      "note": "P-VSTATE-02 winter_2024_25 tile 19/42. 160 bars. DISP=1 EXP=1. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_019": {
+      "name": "d2_winter_2024_25_019",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2025-01-02 03:15",
+      "end": "2025-01-03 20:00",
+      "note": "P-VSTATE-02 winter_2024_25 tile 20/42. 160 bars. DISP=1 EXP=0. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_020": {
+      "name": "d2_winter_2024_25_020",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2025-01-06 14:00",
+      "end": "2025-01-08 07:45",
+      "note": "P-VSTATE-02 winter_2024_25 tile 21/42. 160 bars. DISP=1 EXP=0. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_021": {
+      "name": "d2_winter_2024_25_021",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2025-01-08 02:45",
+      "end": "2025-01-09 19:30",
+      "note": "P-VSTATE-02 winter_2024_25 tile 22/42. 160 bars. DISP=3 EXP=1. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_022": {
+      "name": "d2_winter_2024_25_022",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2025-01-10 14:15",
+      "end": "2025-01-14 08:00",
+      "note": "P-VSTATE-02 winter_2024_25 tile 23/42. 160 bars. DISP=1 EXP=0. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_023": {
+      "name": "d2_winter_2024_25_023",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2025-01-14 15:15",
+      "end": "2025-01-16 09:00",
+      "note": "P-VSTATE-02 winter_2024_25 tile 24/42. 160 bars. DISP=3 EXP=1. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_024": {
+      "name": "d2_winter_2024_25_024",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2025-01-15 21:15",
+      "end": "2025-01-17 15:00",
+      "note": "P-VSTATE-02 winter_2024_25 tile 25/42. 160 bars. DISP=1 EXP=1. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_025": {
+      "name": "d2_winter_2024_25_025",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2025-01-17 08:30",
+      "end": "2025-01-21 04:45",
+      "note": "P-VSTATE-02 winter_2024_25 tile 26/42. 160 bars. DISP=2 EXP=0. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_026": {
+      "name": "d2_winter_2024_25_026",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2025-01-20 19:45",
+      "end": "2025-01-22 16:00",
+      "note": "P-VSTATE-02 winter_2024_25 tile 27/42. 160 bars. DISP=2 EXP=0. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_027": {
+      "name": "d2_winter_2024_25_027",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2025-01-22 17:15",
+      "end": "2025-01-24 11:00",
+      "note": "P-VSTATE-02 winter_2024_25 tile 28/42. 160 bars. DISP=1 EXP=0. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_028": {
+      "name": "d2_winter_2024_25_028",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2025-01-24 05:15",
+      "end": "2025-01-27 22:00",
+      "note": "P-VSTATE-02 winter_2024_25 tile 29/42. 160 bars. DISP=3 EXP=2. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_029": {
+      "name": "d2_winter_2024_25_029",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2025-01-30 20:15",
+      "end": "2025-02-03 14:00",
+      "note": "P-VSTATE-02 winter_2024_25 tile 30/42. 160 bars. DISP=3 EXP=1. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_030": {
+      "name": "d2_winter_2024_25_030",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2025-02-03 16:45",
+      "end": "2025-02-05 10:30",
+      "note": "P-VSTATE-02 winter_2024_25 tile 31/42. 160 bars. DISP=4 EXP=0. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_031": {
+      "name": "d2_winter_2024_25_031",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2025-02-05 06:15",
+      "end": "2025-02-06 23:00",
+      "note": "P-VSTATE-02 winter_2024_25 tile 32/42. 160 bars. DISP=2 EXP=0. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_032": {
+      "name": "d2_winter_2024_25_032",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2025-02-07 04:30",
+      "end": "2025-02-10 21:15",
+      "note": "P-VSTATE-02 winter_2024_25 tile 33/42. 160 bars. DISP=2 EXP=1. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_033": {
+      "name": "d2_winter_2024_25_033",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2025-02-12 04:00",
+      "end": "2025-02-13 20:45",
+      "note": "P-VSTATE-02 winter_2024_25 tile 34/42. 160 bars. DISP=1 EXP=0. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_034": {
+      "name": "d2_winter_2024_25_034",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2025-02-13 13:15",
+      "end": "2025-02-17 07:00",
+      "note": "P-VSTATE-02 winter_2024_25 tile 35/42. 160 bars. DISP=1 EXP=0. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_035": {
+      "name": "d2_winter_2024_25_035",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2025-02-18 14:45",
+      "end": "2025-02-20 08:30",
+      "note": "P-VSTATE-02 winter_2024_25 tile 36/42. 160 bars. DISP=2 EXP=1. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_036": {
+      "name": "d2_winter_2024_25_036",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2025-02-20 15:00",
+      "end": "2025-02-24 08:45",
+      "note": "P-VSTATE-02 winter_2024_25 tile 37/42. 160 bars. DISP=3 EXP=1. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_037": {
+      "name": "d2_winter_2024_25_037",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2025-02-24 03:15",
+      "end": "2025-02-25 20:00",
+      "note": "P-VSTATE-02 winter_2024_25 tile 38/42. 160 bars. DISP=2 EXP=2. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_038": {
+      "name": "d2_winter_2024_25_038",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2025-02-27 13:30",
+      "end": "2025-03-03 07:15",
+      "note": "P-VSTATE-02 winter_2024_25 tile 39/42. 160 bars. DISP=1 EXP=0. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_039": {
+      "name": "d2_winter_2024_25_039",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2025-02-28 21:45",
+      "end": "2025-03-04 15:30",
+      "note": "P-VSTATE-02 winter_2024_25 tile 40/42. 160 bars. DISP=2 EXP=1. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_040": {
+      "name": "d2_winter_2024_25_040",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2025-03-04 05:00",
+      "end": "2025-03-05 21:45",
+      "note": "P-VSTATE-02 winter_2024_25 tile 41/42. 160 bars. DISP=1 EXP=0. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    },
+    "d2_winter_2024_25_041": {
+      "name": "d2_winter_2024_25_041",
+      "symbol": "OANDA:XAUUSD",
+      "interval": "15",
+      "clock": "broker",
+      "start": "2025-03-07 03:45",
+      "end": "2025-03-10 20:30",
+      "note": "P-VSTATE-02 winter_2024_25 tile 42/42. 160 bars. DISP=3 EXP=2. Live-market edges from data/mt5/XAUUSD_M15.csv. Do not loosen frame_shot."
+    }
+  },
+  "engine_events": [
+    {
+      "event": "DISPLACEMENT",
+      "time": "2024-11-04 08:00",
+      "status": "CURRENT",
+      "detail": "clock-anchor winter_2024_25"
+    },
+    {
+      "event": "DISPLACEMENT",
+      "time": "2024-11-19 15:15",
+      "status": "CURRENT",
+      "detail": "clock-anchor winter_2024_25"
+    },
+    {
+      "event": "DISPLACEMENT",
+      "time": "2024-12-06 02:45",
+      "status": "CURRENT",
+      "detail": "clock-anchor winter_2024_25"
+    },
+    {
+      "event": "DISPLACEMENT",
+      "time": "2024-12-26 15:00",
+      "status": "CURRENT",
+      "detail": "clock-anchor winter_2024_25"
+    },
+    {
+      "event": "DISPLACEMENT",
+      "time": "2025-01-15 04:00",
+      "status": "CURRENT",
+      "detail": "clock-anchor winter_2024_25"
+    },
+    {
+      "event": "DISPLACEMENT",
+      "time": "2025-01-27 10:00",
+      "status": "CURRENT",
+      "detail": "clock-anchor winter_2024_25"
+    },
+    {
+      "event": "DISPLACEMENT",
+      "time": "2025-02-07 16:15",
+      "status": "CURRENT",
+      "detail": "clock-anchor winter_2024_25"
+    },
+    {
+      "event": "EXPANSION",
+      "time": "2025-02-24 15:30",
+      "status": "CURRENT",
+      "detail": "clock-anchor winter_2024_25"
+    }
+  ],
+  "engine_events_provenance": {
+    "source_run": "results/htf_objective_shadow/two_year/off/run_20260816_074305_XAUUSD/XAUUSD_events.jsonl",
+    "status": "CURRENT",
+    "note": "Clock anchors only. Item ground truth is the events JSONL."
+  }
+}

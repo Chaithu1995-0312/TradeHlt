@@ -1,0 +1,146 @@
+{
+  "research_id": "H-G001-001",
+  "generated_at_utc": "2026-07-25T20:53:57Z",
+  "instrument": "XAUUSD",
+  "prod_version": "v2_multi_2026_04",
+  "spine_config": "configs/research/research_config_spine_xauusd.json",
+  "corpus_path": "D:/Tradelatest/data/mt5/XAUUSD_M15.csv",
+  "corpus_status": "FROZEN_CANDIDATE_PENDING_PHASE1_VALIDATION",
+  "authority_note": "status=FROZEN_CANDIDATE_PENDING_PHASE1_VALIDATION; NOT AUTHORITATIVE / NOT VALIDATED / NOT APPROVED / NOT ECONOMICALLY_ADMISSIBLE; path=data/mt5/XAUUSD_M15.csv; sha256=4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56; range=2024-05-22T01:00:00..2026-05-21T23:45:00",
+  "validation_lens": "fusion_gate_on",
+  "backtest_engine_gate": "1",
+  "corpus_span_months": 23.9823,
+  "qualification_version": "1.0",
+  "permutation_method_version": "1.0",
+  "bh_method_version": "1.0",
+  "n_permutations": 300,
+  "truth_standard": {
+    "version": "2.0",
+    "exit_geometry": "intrabar_fixed",
+    "slippage_model": "flat_12bps",
+    "tie_break": "SL_before_TP"
+  },
+  "research_cost_model_version": "1.0",
+  "spine_cost_model_version": "1.0",
+  "non_promotable": true,
+  "ontology_edits": false,
+  "fm_math_edits": false,
+  "arm": "treatment",
+  "description": "Production CRT spine + liquidity_sweep veto (FM-058 != 0 discarded)",
+  "n_entries_harvested": 1,
+  "n_entries_after_veto": 1,
+  "n_vetoed": 0,
+  "veto_rate": 0.0,
+  "sweep_bars_in_corpus": 7567,
+  "metrics": {
+    "n": 1,
+    "wins": 0,
+    "losses": 1,
+    "win_rate": 0.0,
+    "profit_factor": 0.0,
+    "expectancy_rr": -1.6923,
+    "max_drawdown_rr": 1.6923,
+    "trades_per_month": 0.0417,
+    "continuation_prob": 1.0
+  },
+  "qualification": {
+    "hypothesis": "h_g001_001_treatment",
+    "instruments": [
+      "XAUUSD"
+    ],
+    "n": 1,
+    "wins": 0,
+    "losses": 1,
+    "win_rate": 0.0,
+    "profit_factor": 0.0,
+    "expectancy_rr": -1.6923,
+    "mfe_p50": 2.18,
+    "mfe_p90": 2.18,
+    "mae_p50": -0.69,
+    "mae_p90": -0.69,
+    "median_time_to_failure": 0.0,
+    "continuation_prob": 1.0,
+    "max_drawdown_rr": 1.6923,
+    "round_trip_bps": 12.0,
+    "is_metrics": {
+      "n": 1,
+      "profit_factor": 0.0,
+      "expectancy_rr": -1.6923,
+      "win_rate": 0.0
+    },
+    "oos_metrics": {
+      "n": 0,
+      "profit_factor": 0.0,
+      "expectancy_rr": 0.0,
+      "win_rate": 0.0
+    },
+    "oos_retention": 0.0,
+    "baseline_delta": -0.8226,
+    "baseline_name": "always_long",
+    "p_value": 0.607973,
+    "economic_rationale": "",
+    "meta": null,
+    "verdict": "INSUFFICIENT",
+    "reject_reasons": [
+      "FAILED_gate1_sample: n=1 < min_samples=30"
+    ]
+  },
+  "winning_control": "always_long",
+  "goal_report": {
+    "enabled": true,
+    "enforced": false,
+    "goal_id": "G001",
+    "decision": "FAIL",
+    "criteria": [
+      {
+        "name": "trades_per_month_min",
+        "comparator": ">=",
+        "target": 20.0,
+        "actual": 0.0417,
+        "gap": -19.9583,
+        "status": "FAIL"
+      },
+      {
+        "name": "trades_per_month_max",
+        "comparator": "<=",
+        "target": 80.0,
+        "actual": 0.0417,
+        "gap": 79.9583,
+        "status": "PASS"
+      },
+      {
+        "name": "avg_rr_min",
+        "comparator": ">=",
+        "target": 2.0,
+        "actual": -1.6923,
+        "gap": -3.6923,
+        "status": "FAIL"
+      },
+      {
+        "name": "win_rate_min",
+        "comparator": ">=",
+        "target": 0.35,
+        "actual": 0.0,
+        "gap": -0.35,
+        "status": "FAIL"
+      },
+      {
+        "name": "max_drawdown_pct_max",
+        "comparator": "<=",
+        "target": 0.1,
+        "actual": null,
+        "gap": null,
+        "status": "SKIP"
+      },
+      {
+        "name": "expectancy_r_min",
+        "comparator": ">=",
+        "target": 0.2,
+        "actual": -1.6923,
+        "gap": -1.8923,
+        "status": "FAIL"
+      }
+    ]
+  },
+  "vetoed_sample": []
+}

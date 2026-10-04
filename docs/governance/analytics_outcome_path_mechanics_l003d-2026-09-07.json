@@ -1,0 +1,5121 @@
+{
+  "finding_id": "L-003D",
+  "parent": "L-003C",
+  "prior_run_id": "l003c_disagreement_population_20260907_175248",
+  "run_id": "l003d_path_mechanics_20260907_180219",
+  "generated_at_utc": "2026-09-07T18:02:19.282Z",
+  "git_commit_sha": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+  "version": "L-003D.v1",
+  "status": "MEASURED (observation)",
+  "hypothesis": "disagreement is trailing-stop / exit-process divergence on favorable paths, NOT market-structure/regime (candidate; not proven)",
+  "primary_metric": "DISAGREE_SL_TP = (art_outcome==SL_HIT AND outcome==TP_HIT)",
+  "population": "full anatomy rows (all art_outcome x outcome)",
+  "sources": {
+    "BNBUSDT": {
+      "path": "D:/Tradelatest/results/research/bnbusdt_trade_anatomy/trade_dataset_BNBUSDT.csv",
+      "sha256": "f8bdabbe683fe43f54f3853dcce809f113fe22e9385828210d48c6cc2aa34934",
+      "n_rows": 139942
+    },
+    "BTCUSDT": {
+      "path": "D:/Tradelatest/results/research/btcusdt_trade_anatomy/trade_dataset_BTCUSDT.csv",
+      "sha256": "09baca48253a50011a8869c991d6618bef79b99cc51764cb0ee71db2a2de0233",
+      "n_rows": 139942
+    },
+    "ETHUSDT": {
+      "path": "D:/Tradelatest/results/research/ethusdt_trade_anatomy/trade_dataset_ETHUSDT.csv",
+      "sha256": "530c9a35f0db2c120cb9d3bcdbba7013ec4176c44109ae2d318a23556a39e1a0",
+      "n_rows": 139942
+    },
+    "SOLUSDT": {
+      "path": "D:/Tradelatest/results/research/solusdt_trade_anatomy/trade_dataset_SOLUSDT.csv",
+      "sha256": "69cdc70ea422b19937c9d50d4762e4fbbd0050a7f495707f548ad9b9238f5bbc",
+      "n_rows": 139942
+    }
+  },
+  "sanity": {
+    "BNB_DISAGREE_SL_TP_n": 44791,
+    "BNB_expected": 44791,
+    "match": true,
+    "aggregate_n": 559768,
+    "aggregate_expected_approx": 559768
+  },
+  "aggregate": {
+    "n_all": 559768,
+    "n_DISAGREE_SL_TP": 176471,
+    "rate_DISAGREE_SL_TP": 0.31525739234825856,
+    "n_AGREE": 375705,
+    "rate_AGREE": 0.6711798459361735,
+    "n_DISAGREE": 184063,
+    "rate_DISAGREE": 0.3288201540638264,
+    "peak_marginal": [
+      {
+        "bucket": "peak_le_2",
+        "label": "Peak <= 2 bars",
+        "n": 281644,
+        "n_DISAGREE_SL_TP": 24704,
+        "rate_DISAGREE_SL_TP": 0.08771356748235361,
+        "n_AGREE": 256414,
+        "rate_AGREE": 0.9104188266037977,
+        "n_DISAGREE": 25230,
+        "rate_DISAGREE": 0.0895811733962023,
+        "reached_2r_rate": 0.5200536847935692
+      },
+      {
+        "bucket": "peak_3_5",
+        "label": "Peak 3-5",
+        "n": 120859,
+        "n_DISAGREE_SL_TP": 55246,
+        "rate_DISAGREE_SL_TP": 0.45711117914263727,
+        "n_AGREE": 64828,
+        "rate_AGREE": 0.536393648797359,
+        "n_DISAGREE": 56031,
+        "rate_DISAGREE": 0.4636063512026411,
+        "reached_2r_rate": 0.6862542301359436
+      },
+      {
+        "bucket": "peak_6_10",
+        "label": "Peak 6-10",
+        "n": 79108,
+        "n_DISAGREE_SL_TP": 50892,
+        "rate_DISAGREE_SL_TP": 0.6433230520301361,
+        "n_AGREE": 26967,
+        "rate_AGREE": 0.3408884057238206,
+        "n_DISAGREE": 52141,
+        "rate_DISAGREE": 0.6591115942761794,
+        "reached_2r_rate": 0.7649542397734742
+      },
+      {
+        "bucket": "peak_gt_10",
+        "label": "Peak >10",
+        "n": 61962,
+        "n_DISAGREE_SL_TP": 45629,
+        "rate_DISAGREE_SL_TP": 0.7364029566508505,
+        "n_AGREE": 11301,
+        "rate_AGREE": 0.18238597850295343,
+        "n_DISAGREE": 50661,
+        "rate_DISAGREE": 0.8176140214970465,
+        "reached_2r_rate": 0.7803653852361124
+      },
+      {
+        "bucket": "peak_missing",
+        "label": "Peak missing/non-finite",
+        "n": 16195,
+        "n_DISAGREE_SL_TP": 0,
+        "rate_DISAGREE_SL_TP": 0.0,
+        "n_AGREE": 16195,
+        "rate_AGREE": 1.0,
+        "n_DISAGREE": 0,
+        "rate_DISAGREE": 0.0,
+        "reached_2r_rate": 0.46606977462179683
+      }
+    ],
+    "mfe_marginal": [
+      {
+        "bucket": "mfe_lt_2R",
+        "label": "MFE < 2R",
+        "n": 213919,
+        "n_DISAGREE_SL_TP": 0,
+        "rate_DISAGREE_SL_TP": 0.0,
+        "n_AGREE": 206608,
+        "rate_AGREE": 0.9658235126379611,
+        "n_DISAGREE": 7311,
+        "rate_DISAGREE": 0.034176487362038904,
+        "reached_2r_rate": 0.0
+      },
+      {
+        "bucket": "mfe_2R_4R",
+        "label": "MFE 2R-4R",
+        "n": 148563,
+        "n_DISAGREE_SL_TP": 73456,
+        "rate_DISAGREE_SL_TP": 0.4944434347717803,
+        "n_AGREE": 75037,
+        "rate_AGREE": 0.5050853846516292,
+        "n_DISAGREE": 73526,
+        "rate_DISAGREE": 0.4949146153483707,
+        "reached_2r_rate": 0.9998384523737405
+      },
+      {
+        "bucket": "mfe_4R_6R",
+        "label": "MFE 4R-6R",
+        "n": 84957,
+        "n_DISAGREE_SL_TP": 44008,
+        "rate_DISAGREE_SL_TP": 0.5180032251609638,
+        "n_AGREE": 40885,
+        "rate_AGREE": 0.4812434525701237,
+        "n_DISAGREE": 44072,
+        "rate_DISAGREE": 0.5187565474298763,
+        "reached_2r_rate": 1.0
+      },
+      {
+        "bucket": "mfe_6R_plus",
+        "label": "MFE 6R+",
+        "n": 112329,
+        "n_DISAGREE_SL_TP": 59007,
+        "rate_DISAGREE_SL_TP": 0.5253051304649734,
+        "n_AGREE": 53175,
+        "rate_AGREE": 0.4733862137115082,
+        "n_DISAGREE": 59154,
+        "rate_DISAGREE": 0.5266137862884919,
+        "reached_2r_rate": 1.0
+      },
+      {
+        "bucket": "mfe_missing",
+        "label": "MFE missing/non-finite",
+        "n": 0,
+        "n_DISAGREE_SL_TP": 0,
+        "rate_DISAGREE_SL_TP": null,
+        "n_AGREE": 0,
+        "rate_AGREE": null,
+        "n_DISAGREE": 0,
+        "rate_DISAGREE": null,
+        "reached_2r_rate": null
+      }
+    ],
+    "cross": [
+      {
+        "peak_bucket": "peak_le_2",
+        "mfe_bucket": "mfe_lt_2R",
+        "peak_label": "Peak <= 2 bars",
+        "mfe_label": "MFE < 2R",
+        "n": 135163,
+        "n_DISAGREE_SL_TP": 0,
+        "rate_DISAGREE_SL_TP": 0.0,
+        "n_AGREE": 134884,
+        "rate_AGREE": 0.9979358256327545,
+        "reached_2r_rate": 0.0
+      },
+      {
+        "peak_bucket": "peak_le_2",
+        "mfe_bucket": "mfe_2R_4R",
+        "peak_label": "Peak <= 2 bars",
+        "mfe_label": "MFE 2R-4R",
+        "n": 60851,
+        "n_DISAGREE_SL_TP": 8305,
+        "rate_DISAGREE_SL_TP": 0.13648091239256543,
+        "n_AGREE": 52487,
+        "rate_AGREE": 0.8625495061708107,
+        "reached_2r_rate": 0.9998192305796125
+      },
+      {
+        "peak_bucket": "peak_le_2",
+        "mfe_bucket": "mfe_4R_6R",
+        "peak_label": "Peak <= 2 bars",
+        "mfe_label": "MFE 4R-6R",
+        "n": 35460,
+        "n_DISAGREE_SL_TP": 6028,
+        "rate_DISAGREE_SL_TP": 0.1699943598420756,
+        "n_AGREE": 29374,
+        "rate_AGREE": 0.828369994359842,
+        "reached_2r_rate": 1.0
+      },
+      {
+        "peak_bucket": "peak_le_2",
+        "mfe_bucket": "mfe_6R_plus",
+        "peak_label": "Peak <= 2 bars",
+        "mfe_label": "MFE 6R+",
+        "n": 50170,
+        "n_DISAGREE_SL_TP": 10371,
+        "rate_DISAGREE_SL_TP": 0.20671716165038867,
+        "n_AGREE": 39669,
+        "rate_AGREE": 0.7906916483954555,
+        "reached_2r_rate": 1.0
+      },
+      {
+        "peak_bucket": "peak_le_2",
+        "mfe_bucket": "mfe_missing",
+        "peak_label": "Peak <= 2 bars",
+        "mfe_label": "MFE missing/non-finite",
+        "n": 0,
+        "n_DISAGREE_SL_TP": 0,
+        "rate_DISAGREE_SL_TP": null,
+        "n_AGREE": 0,
+        "rate_AGREE": null,
+        "reached_2r_rate": null
+      },
+      {
+        "peak_bucket": "peak_3_5",
+        "mfe_bucket": "mfe_lt_2R",
+        "peak_label": "Peak 3-5",
+        "mfe_label": "MFE < 2R",
+        "n": 37915,
+        "n_DISAGREE_SL_TP": 0,
+        "rate_DISAGREE_SL_TP": 0.0,
+        "n_AGREE": 37154,
+        "rate_AGREE": 0.9799287880785968,
+        "reached_2r_rate": 0.0
+      },
+      {
+        "peak_bucket": "peak_3_5",
+        "mfe_bucket": "mfe_2R_4R",
+        "peak_label": "Peak 3-5",
+        "mfe_label": "MFE 2R-4R",
+        "n": 32292,
+        "n_DISAGREE_SL_TP": 19413,
+        "rate_DISAGREE_SL_TP": 0.6011705685618729,
+        "n_AGREE": 12871,
+        "rate_AGREE": 0.3985816920599529,
+        "reached_2r_rate": 0.9998761303109129
+      },
+      {
+        "peak_bucket": "peak_3_5",
+        "mfe_bucket": "mfe_4R_6R",
+        "peak_label": "Peak 3-5",
+        "mfe_label": "MFE 4R-6R",
+        "n": 20660,
+        "n_DISAGREE_SL_TP": 13922,
+        "rate_DISAGREE_SL_TP": 0.673862536302033,
+        "n_AGREE": 6734,
+        "rate_AGREE": 0.32594385285575994,
+        "reached_2r_rate": 1.0
+      },
+      {
+        "peak_bucket": "peak_3_5",
+        "mfe_bucket": "mfe_6R_plus",
+        "peak_label": "Peak 3-5",
+        "mfe_label": "MFE 6R+",
+        "n": 29992,
+        "n_DISAGREE_SL_TP": 21911,
+        "rate_DISAGREE_SL_TP": 0.7305614830621499,
+        "n_AGREE": 8069,
+        "rate_AGREE": 0.2690384102427314,
+        "reached_2r_rate": 1.0
+      },
+      {
+        "peak_bucket": "peak_3_5",
+        "mfe_bucket": "mfe_missing",
+        "peak_label": "Peak 3-5",
+        "mfe_label": "MFE missing/non-finite",
+        "n": 0,
+        "n_DISAGREE_SL_TP": 0,
+        "rate_DISAGREE_SL_TP": null,
+        "n_AGREE": 0,
+        "rate_AGREE": null,
+        "reached_2r_rate": null
+      },
+      {
+        "peak_bucket": "peak_6_10",
+        "mfe_bucket": "mfe_lt_2R",
+        "peak_label": "Peak 6-10",
+        "mfe_label": "MFE < 2R",
+        "n": 18589,
+        "n_DISAGREE_SL_TP": 0,
+        "rate_DISAGREE_SL_TP": 0.0,
+        "n_AGREE": 17346,
+        "rate_AGREE": 0.9331324977137017,
+        "reached_2r_rate": 0.0
+      },
+      {
+        "peak_bucket": "peak_6_10",
+        "mfe_bucket": "mfe_2R_4R",
+        "peak_label": "Peak 6-10",
+        "mfe_label": "MFE 2R-4R",
+        "n": 25554,
+        "n_DISAGREE_SL_TP": 20604,
+        "rate_DISAGREE_SL_TP": 0.8062925569382484,
+        "n_AGREE": 4949,
+        "rate_AGREE": 0.19366831024497144,
+        "reached_2r_rate": 0.9998043359160993
+      },
+      {
+        "peak_bucket": "peak_6_10",
+        "mfe_bucket": "mfe_4R_6R",
+        "peak_label": "Peak 6-10",
+        "mfe_label": "MFE 4R-6R",
+        "n": 15333,
+        "n_DISAGREE_SL_TP": 13033,
+        "rate_DISAGREE_SL_TP": 0.8499967390595448,
+        "n_AGREE": 2300,
+        "rate_AGREE": 0.15000326094045524,
+        "reached_2r_rate": 1.0
+      },
+      {
+        "peak_bucket": "peak_6_10",
+        "mfe_bucket": "mfe_6R_plus",
+        "peak_label": "Peak 6-10",
+        "mfe_label": "MFE 6R+",
+        "n": 19632,
+        "n_DISAGREE_SL_TP": 17255,
+        "rate_DISAGREE_SL_TP": 0.8789221678891606,
+        "n_AGREE": 2372,
+        "rate_AGREE": 0.12082314588427058,
+        "reached_2r_rate": 1.0
+      },
+      {
+        "peak_bucket": "peak_6_10",
+        "mfe_bucket": "mfe_missing",
+        "peak_label": "Peak 6-10",
+        "mfe_label": "MFE missing/non-finite",
+        "n": 0,
+        "n_DISAGREE_SL_TP": 0,
+        "rate_DISAGREE_SL_TP": null,
+        "n_AGREE": 0,
+        "rate_AGREE": null,
+        "reached_2r_rate": null
+      },
+      {
+        "peak_bucket": "peak_gt_10",
+        "mfe_bucket": "mfe_lt_2R",
+        "peak_label": "Peak >10",
+        "mfe_label": "MFE < 2R",
+        "n": 13606,
+        "n_DISAGREE_SL_TP": 0,
+        "rate_DISAGREE_SL_TP": 0.0,
+        "n_AGREE": 8578,
+        "rate_AGREE": 0.6304571512567985,
+        "reached_2r_rate": 0.0
+      },
+      {
+        "peak_bucket": "peak_gt_10",
+        "mfe_bucket": "mfe_2R_4R",
+        "peak_label": "Peak >10",
+        "mfe_label": "MFE 2R-4R",
+        "n": 26688,
+        "n_DISAGREE_SL_TP": 25134,
+        "rate_DISAGREE_SL_TP": 0.9417715827338129,
+        "n_AGREE": 1552,
+        "rate_AGREE": 0.05815347721822542,
+        "reached_2r_rate": 0.9998875899280576
+      },
+      {
+        "peak_bucket": "peak_gt_10",
+        "mfe_bucket": "mfe_4R_6R",
+        "peak_label": "Peak >10",
+        "mfe_label": "MFE 4R-6R",
+        "n": 11699,
+        "n_DISAGREE_SL_TP": 11025,
+        "rate_DISAGREE_SL_TP": 0.9423882383109667,
+        "n_AGREE": 672,
+        "rate_AGREE": 0.05744080690657321,
+        "reached_2r_rate": 1.0
+      },
+      {
+        "peak_bucket": "peak_gt_10",
+        "mfe_bucket": "mfe_6R_plus",
+        "peak_label": "Peak >10",
+        "mfe_label": "MFE 6R+",
+        "n": 9969,
+        "n_DISAGREE_SL_TP": 9470,
+        "rate_DISAGREE_SL_TP": 0.9499448289698064,
+        "n_AGREE": 499,
+        "rate_AGREE": 0.0500551710301936,
+        "reached_2r_rate": 1.0
+      },
+      {
+        "peak_bucket": "peak_gt_10",
+        "mfe_bucket": "mfe_missing",
+        "peak_label": "Peak >10",
+        "mfe_label": "MFE missing/non-finite",
+        "n": 0,
+        "n_DISAGREE_SL_TP": 0,
+        "rate_DISAGREE_SL_TP": null,
+        "n_AGREE": 0,
+        "rate_AGREE": null,
+        "reached_2r_rate": null
+      },
+      {
+        "peak_bucket": "peak_missing",
+        "mfe_bucket": "mfe_lt_2R",
+        "peak_label": "Peak missing/non-finite",
+        "mfe_label": "MFE < 2R",
+        "n": 8646,
+        "n_DISAGREE_SL_TP": 0,
+        "rate_DISAGREE_SL_TP": 0.0,
+        "n_AGREE": 8646,
+        "rate_AGREE": 1.0,
+        "reached_2r_rate": 0.0
+      },
+      {
+        "peak_bucket": "peak_missing",
+        "mfe_bucket": "mfe_2R_4R",
+        "peak_label": "Peak missing/non-finite",
+        "mfe_label": "MFE 2R-4R",
+        "n": 3178,
+        "n_DISAGREE_SL_TP": 0,
+        "rate_DISAGREE_SL_TP": 0.0,
+        "n_AGREE": 3178,
+        "rate_AGREE": 1.0,
+        "reached_2r_rate": 0.999685336689742
+      },
+      {
+        "peak_bucket": "peak_missing",
+        "mfe_bucket": "mfe_4R_6R",
+        "peak_label": "Peak missing/non-finite",
+        "mfe_label": "MFE 4R-6R",
+        "n": 1805,
+        "n_DISAGREE_SL_TP": 0,
+        "rate_DISAGREE_SL_TP": 0.0,
+        "n_AGREE": 1805,
+        "rate_AGREE": 1.0,
+        "reached_2r_rate": 1.0
+      },
+      {
+        "peak_bucket": "peak_missing",
+        "mfe_bucket": "mfe_6R_plus",
+        "peak_label": "Peak missing/non-finite",
+        "mfe_label": "MFE 6R+",
+        "n": 2566,
+        "n_DISAGREE_SL_TP": 0,
+        "rate_DISAGREE_SL_TP": 0.0,
+        "n_AGREE": 2566,
+        "rate_AGREE": 1.0,
+        "reached_2r_rate": 1.0
+      },
+      {
+        "peak_bucket": "peak_missing",
+        "mfe_bucket": "mfe_missing",
+        "peak_label": "Peak missing/non-finite",
+        "mfe_label": "MFE missing/non-finite",
+        "n": 0,
+        "n_DISAGREE_SL_TP": 0,
+        "rate_DISAGREE_SL_TP": null,
+        "n_AGREE": 0,
+        "rate_AGREE": null,
+        "reached_2r_rate": null
+      }
+    ],
+    "composition_DISAGREE_SL_TP": {
+      "n": 176471,
+      "peak": {
+        "peak_le_2": {
+          "n": 24704,
+          "share": 0.13998900669231773
+        },
+        "peak_3_5": {
+          "n": 55246,
+          "share": 0.3130599361934822
+        },
+        "peak_6_10": {
+          "n": 50892,
+          "share": 0.28838732709623677
+        },
+        "peak_gt_10": {
+          "n": 45629,
+          "share": 0.2585637300179633
+        },
+        "peak_missing": {
+          "n": 0,
+          "share": 0.0
+        }
+      },
+      "mfe": {
+        "mfe_lt_2R": {
+          "n": 0,
+          "share": 0.0
+        },
+        "mfe_2R_4R": {
+          "n": 73456,
+          "share": 0.4162496954173774
+        },
+        "mfe_4R_6R": {
+          "n": 44008,
+          "share": 0.24937808478446882
+        },
+        "mfe_6R_plus": {
+          "n": 59007,
+          "share": 0.3343722197981538
+        },
+        "mfe_missing": {
+          "n": 0,
+          "share": 0.0
+        }
+      },
+      "cross": {
+        "peak_le_2__mfe_lt_2R": {
+          "n": 0,
+          "share": 0.0
+        },
+        "peak_le_2__mfe_2R_4R": {
+          "n": 8305,
+          "share": 0.047061556856367336
+        },
+        "peak_le_2__mfe_4R_6R": {
+          "n": 6028,
+          "share": 0.034158586963297086
+        },
+        "peak_le_2__mfe_6R_plus": {
+          "n": 10371,
+          "share": 0.058768862872653295
+        },
+        "peak_le_2__mfe_missing": {
+          "n": 0,
+          "share": 0.0
+        },
+        "peak_3_5__mfe_lt_2R": {
+          "n": 0,
+          "share": 0.0
+        },
+        "peak_3_5__mfe_2R_4R": {
+          "n": 19413,
+          "share": 0.11000674331759892
+        },
+        "peak_3_5__mfe_4R_6R": {
+          "n": 13922,
+          "share": 0.07889114925398508
+        },
+        "peak_3_5__mfe_6R_plus": {
+          "n": 21911,
+          "share": 0.12416204362189821
+        },
+        "peak_3_5__mfe_missing": {
+          "n": 0,
+          "share": 0.0
+        },
+        "peak_6_10__mfe_lt_2R": {
+          "n": 0,
+          "share": 0.0
+        },
+        "peak_6_10__mfe_2R_4R": {
+          "n": 20604,
+          "share": 0.116755727569969
+        },
+        "peak_6_10__mfe_4R_6R": {
+          "n": 13033,
+          "share": 0.07385349434184653
+        },
+        "peak_6_10__mfe_6R_plus": {
+          "n": 17255,
+          "share": 0.09777810518442123
+        },
+        "peak_6_10__mfe_missing": {
+          "n": 0,
+          "share": 0.0
+        },
+        "peak_gt_10__mfe_lt_2R": {
+          "n": 0,
+          "share": 0.0
+        },
+        "peak_gt_10__mfe_2R_4R": {
+          "n": 25134,
+          "share": 0.14242566767344209
+        },
+        "peak_gt_10__mfe_4R_6R": {
+          "n": 11025,
+          "share": 0.06247485422534014
+        },
+        "peak_gt_10__mfe_6R_plus": {
+          "n": 9470,
+          "share": 0.05366320811918106
+        },
+        "peak_gt_10__mfe_missing": {
+          "n": 0,
+          "share": 0.0
+        },
+        "peak_missing__mfe_lt_2R": {
+          "n": 0,
+          "share": 0.0
+        },
+        "peak_missing__mfe_2R_4R": {
+          "n": 0,
+          "share": 0.0
+        },
+        "peak_missing__mfe_4R_6R": {
+          "n": 0,
+          "share": 0.0
+        },
+        "peak_missing__mfe_6R_plus": {
+          "n": 0,
+          "share": 0.0
+        },
+        "peak_missing__mfe_missing": {
+          "n": 0,
+          "share": 0.0
+        }
+      }
+    },
+    "composition_AGREE": {
+      "n": 375705,
+      "peak": {
+        "peak_le_2": {
+          "n": 256414,
+          "share": 0.6824875899974714
+        },
+        "peak_3_5": {
+          "n": 64828,
+          "share": 0.17255027215501523
+        },
+        "peak_6_10": {
+          "n": 26967,
+          "share": 0.07177705912883779
+        },
+        "peak_gt_10": {
+          "n": 11301,
+          "share": 0.030079450632810315
+        },
+        "peak_missing": {
+          "n": 16195,
+          "share": 0.04310562808586524
+        }
+      },
+      "mfe": {
+        "mfe_lt_2R": {
+          "n": 206608,
+          "share": 0.5499208155334637
+        },
+        "mfe_2R_4R": {
+          "n": 75037,
+          "share": 0.19972318707496572
+        },
+        "mfe_4R_6R": {
+          "n": 40885,
+          "share": 0.10882208115409696
+        },
+        "mfe_6R_plus": {
+          "n": 53175,
+          "share": 0.14153391623747355
+        },
+        "mfe_missing": {
+          "n": 0,
+          "share": 0.0
+        }
+      },
+      "cross": {
+        "peak_le_2__mfe_lt_2R": {
+          "n": 134884,
+          "share": 0.3590157171184839
+        },
+        "peak_le_2__mfe_2R_4R": {
+          "n": 52487,
+          "share": 0.13970269227186224
+        },
+        "peak_le_2__mfe_4R_6R": {
+          "n": 29374,
+          "share": 0.07818368134573668
+        },
+        "peak_le_2__mfe_6R_plus": {
+          "n": 39669,
+          "share": 0.10558549926138859
+        },
+        "peak_le_2__mfe_missing": {
+          "n": 0,
+          "share": 0.0
+        },
+        "peak_3_5__mfe_lt_2R": {
+          "n": 37154,
+          "share": 0.09889141746849257
+        },
+        "peak_3_5__mfe_2R_4R": {
+          "n": 12871,
+          "share": 0.034258261135731494
+        },
+        "peak_3_5__mfe_4R_6R": {
+          "n": 6734,
+          "share": 0.017923636895968913
+        },
+        "peak_3_5__mfe_6R_plus": {
+          "n": 8069,
+          "share": 0.021476956654822268
+        },
+        "peak_3_5__mfe_missing": {
+          "n": 0,
+          "share": 0.0
+        },
+        "peak_6_10__mfe_lt_2R": {
+          "n": 17346,
+          "share": 0.0461692019004272
+        },
+        "peak_6_10__mfe_2R_4R": {
+          "n": 4949,
+          "share": 0.0131725689037942
+        },
+        "peak_6_10__mfe_4R_6R": {
+          "n": 2300,
+          "share": 0.006121824303642486
+        },
+        "peak_6_10__mfe_6R_plus": {
+          "n": 2372,
+          "share": 0.006313464020973903
+        },
+        "peak_6_10__mfe_missing": {
+          "n": 0,
+          "share": 0.0
+        },
+        "peak_gt_10__mfe_lt_2R": {
+          "n": 8578,
+          "share": 0.022831742989845756
+        },
+        "peak_gt_10__mfe_2R_4R": {
+          "n": 1552,
+          "share": 0.004130900573588321
+        },
+        "peak_gt_10__mfe_4R_6R": {
+          "n": 672,
+          "share": 0.0017886373617598914
+        },
+        "peak_gt_10__mfe_6R_plus": {
+          "n": 499,
+          "share": 0.001328169707616348
+        },
+        "peak_gt_10__mfe_missing": {
+          "n": 0,
+          "share": 0.0
+        },
+        "peak_missing__mfe_lt_2R": {
+          "n": 8646,
+          "share": 0.023012736056214317
+        },
+        "peak_missing__mfe_2R_4R": {
+          "n": 3178,
+          "share": 0.008458764189989487
+        },
+        "peak_missing__mfe_4R_6R": {
+          "n": 1805,
+          "share": 0.004804301246988994
+        },
+        "peak_missing__mfe_6R_plus": {
+          "n": 2566,
+          "share": 0.006829826592672442
+        },
+        "peak_missing__mfe_missing": {
+          "n": 0,
+          "share": 0.0
+        }
+      }
+    },
+    "peak_rank": [
+      {
+        "bucket": "peak_gt_10",
+        "rate": 0.7364029566508505,
+        "n": 61962,
+        "rank": 1
+      },
+      {
+        "bucket": "peak_6_10",
+        "rate": 0.6433230520301361,
+        "n": 79108,
+        "rank": 2
+      },
+      {
+        "bucket": "peak_3_5",
+        "rate": 0.45711117914263727,
+        "n": 120859,
+        "rank": 3
+      },
+      {
+        "bucket": "peak_le_2",
+        "rate": 0.08771356748235361,
+        "n": 281644,
+        "rank": 4
+      }
+    ],
+    "mfe_rank": [
+      {
+        "bucket": "mfe_6R_plus",
+        "rate": 0.5253051304649734,
+        "n": 112329,
+        "rank": 1
+      },
+      {
+        "bucket": "mfe_4R_6R",
+        "rate": 0.5180032251609638,
+        "n": 84957,
+        "rank": 2
+      },
+      {
+        "bucket": "mfe_2R_4R",
+        "rate": 0.4944434347717803,
+        "n": 148563,
+        "rank": 3
+      },
+      {
+        "bucket": "mfe_lt_2R",
+        "rate": 0.0,
+        "n": 213919,
+        "rank": 4
+      }
+    ]
+  },
+  "per_instrument": {
+    "BNBUSDT": {
+      "n_all": 139942,
+      "n_DISAGREE_SL_TP": 44791,
+      "rate_DISAGREE_SL_TP": 0.32006831401580654,
+      "n_AGREE": 93683,
+      "rate_AGREE": 0.6694416258164096,
+      "n_DISAGREE": 46259,
+      "rate_DISAGREE": 0.33055837418359035,
+      "peak_marginal": [
+        {
+          "bucket": "peak_le_2",
+          "label": "Peak <= 2 bars",
+          "n": 70151,
+          "n_DISAGREE_SL_TP": 6373,
+          "rate_DISAGREE_SL_TP": 0.09084688742854699,
+          "n_AGREE": 63694,
+          "rate_AGREE": 0.9079556955709825,
+          "n_DISAGREE": 6457,
+          "rate_DISAGREE": 0.0920443044290174,
+          "reached_2r_rate": 0.5193511140254594
+        },
+        {
+          "bucket": "peak_3_5",
+          "label": "Peak 3-5",
+          "n": 30584,
+          "n_DISAGREE_SL_TP": 14497,
+          "rate_DISAGREE_SL_TP": 0.4740060162176301,
+          "n_AGREE": 15931,
+          "rate_AGREE": 0.520893277530735,
+          "n_DISAGREE": 14653,
+          "rate_DISAGREE": 0.479106722469265,
+          "reached_2r_rate": 0.693401778707821
+        },
+        {
+          "bucket": "peak_6_10",
+          "label": "Peak 6-10",
+          "n": 19394,
+          "n_DISAGREE_SL_TP": 12697,
+          "rate_DISAGREE_SL_TP": 0.6546870166030732,
+          "n_AGREE": 6458,
+          "rate_AGREE": 0.3329895844075487,
+          "n_DISAGREE": 12936,
+          "rate_DISAGREE": 0.6670104155924512,
+          "reached_2r_rate": 0.7715788388161287
+        },
+        {
+          "bucket": "peak_gt_10",
+          "label": "Peak >10",
+          "n": 15050,
+          "n_DISAGREE_SL_TP": 11224,
+          "rate_DISAGREE_SL_TP": 0.7457807308970099,
+          "n_AGREE": 2837,
+          "rate_AGREE": 0.1885049833887043,
+          "n_DISAGREE": 12213,
+          "rate_DISAGREE": 0.8114950166112956,
+          "reached_2r_rate": 0.7902325581395349
+        },
+        {
+          "bucket": "peak_missing",
+          "label": "Peak missing/non-finite",
+          "n": 4763,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 4763,
+          "rate_AGREE": 1.0,
+          "n_DISAGREE": 0,
+          "rate_DISAGREE": 0.0,
+          "reached_2r_rate": 0.45727482678983833
+        }
+      ],
+      "mfe_marginal": [
+        {
+          "bucket": "mfe_lt_2R",
+          "label": "MFE < 2R",
+          "n": 53256,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 51830,
+          "rate_AGREE": 0.9732236743277752,
+          "n_DISAGREE": 1426,
+          "rate_DISAGREE": 0.026776325672224727,
+          "reached_2r_rate": 0.0
+        },
+        {
+          "bucket": "mfe_2R_4R",
+          "label": "MFE 2R-4R",
+          "n": 37493,
+          "n_DISAGREE_SL_TP": 18509,
+          "rate_DISAGREE_SL_TP": 0.49366548422372175,
+          "n_AGREE": 18968,
+          "rate_AGREE": 0.5059077694502974,
+          "n_DISAGREE": 18525,
+          "rate_DISAGREE": 0.49409223054970264,
+          "reached_2r_rate": 0.9997066119008882
+        },
+        {
+          "bucket": "mfe_4R_6R",
+          "label": "MFE 4R-6R",
+          "n": 21503,
+          "n_DISAGREE_SL_TP": 11378,
+          "rate_DISAGREE_SL_TP": 0.5291354694693764,
+          "n_AGREE": 10114,
+          "rate_AGREE": 0.4703529740036274,
+          "n_DISAGREE": 11389,
+          "rate_DISAGREE": 0.5296470259963726,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "bucket": "mfe_6R_plus",
+          "label": "MFE 6R+",
+          "n": 27690,
+          "n_DISAGREE_SL_TP": 14904,
+          "rate_DISAGREE_SL_TP": 0.5382448537378115,
+          "n_AGREE": 12771,
+          "rate_AGREE": 0.46121343445287105,
+          "n_DISAGREE": 14919,
+          "rate_DISAGREE": 0.5387865655471289,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "bucket": "mfe_missing",
+          "label": "MFE missing/non-finite",
+          "n": 0,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": null,
+          "n_AGREE": 0,
+          "rate_AGREE": null,
+          "n_DISAGREE": 0,
+          "rate_DISAGREE": null,
+          "reached_2r_rate": null
+        }
+      ],
+      "cross": [
+        {
+          "peak_bucket": "peak_le_2",
+          "mfe_bucket": "mfe_lt_2R",
+          "peak_label": "Peak <= 2 bars",
+          "mfe_label": "MFE < 2R",
+          "n": 33712,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 33663,
+          "rate_AGREE": 0.998546511627907,
+          "reached_2r_rate": 0.0
+        },
+        {
+          "peak_bucket": "peak_le_2",
+          "mfe_bucket": "mfe_2R_4R",
+          "peak_label": "Peak <= 2 bars",
+          "mfe_label": "MFE 2R-4R",
+          "n": 15367,
+          "n_DISAGREE_SL_TP": 2118,
+          "rate_DISAGREE_SL_TP": 0.13782781284570833,
+          "n_AGREE": 13236,
+          "rate_AGREE": 0.8613262185202056,
+          "reached_2r_rate": 0.9996095529381142
+        },
+        {
+          "peak_bucket": "peak_le_2",
+          "mfe_bucket": "mfe_4R_6R",
+          "peak_label": "Peak <= 2 bars",
+          "mfe_label": "MFE 4R-6R",
+          "n": 8856,
+          "n_DISAGREE_SL_TP": 1591,
+          "rate_DISAGREE_SL_TP": 0.17965221318879857,
+          "n_AGREE": 7255,
+          "rate_AGREE": 0.8192186088527552,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_le_2",
+          "mfe_bucket": "mfe_6R_plus",
+          "peak_label": "Peak <= 2 bars",
+          "mfe_label": "MFE 6R+",
+          "n": 12216,
+          "n_DISAGREE_SL_TP": 2664,
+          "rate_DISAGREE_SL_TP": 0.2180746561886051,
+          "n_AGREE": 9540,
+          "rate_AGREE": 0.7809430255402751,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_le_2",
+          "mfe_bucket": "mfe_missing",
+          "peak_label": "Peak <= 2 bars",
+          "mfe_label": "MFE missing/non-finite",
+          "n": 0,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": null,
+          "n_AGREE": 0,
+          "rate_AGREE": null,
+          "reached_2r_rate": null
+        },
+        {
+          "peak_bucket": "peak_3_5",
+          "mfe_bucket": "mfe_lt_2R",
+          "peak_label": "Peak 3-5",
+          "mfe_label": "MFE < 2R",
+          "n": 9375,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 9223,
+          "rate_AGREE": 0.9837866666666667,
+          "reached_2r_rate": 0.0
+        },
+        {
+          "peak_bucket": "peak_3_5",
+          "mfe_bucket": "mfe_2R_4R",
+          "peak_label": "Peak 3-5",
+          "mfe_label": "MFE 2R-4R",
+          "n": 8313,
+          "n_DISAGREE_SL_TP": 5130,
+          "rate_DISAGREE_SL_TP": 0.6171057380007218,
+          "n_AGREE": 3182,
+          "rate_AGREE": 0.38277396848309875,
+          "reached_2r_rate": 0.999759412967641
+        },
+        {
+          "peak_bucket": "peak_3_5",
+          "mfe_bucket": "mfe_4R_6R",
+          "peak_label": "Peak 3-5",
+          "mfe_label": "MFE 4R-6R",
+          "n": 5300,
+          "n_DISAGREE_SL_TP": 3645,
+          "rate_DISAGREE_SL_TP": 0.6877358490566038,
+          "n_AGREE": 1654,
+          "rate_AGREE": 0.3120754716981132,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_3_5",
+          "mfe_bucket": "mfe_6R_plus",
+          "peak_label": "Peak 3-5",
+          "mfe_label": "MFE 6R+",
+          "n": 7596,
+          "n_DISAGREE_SL_TP": 5722,
+          "rate_DISAGREE_SL_TP": 0.7532912058978409,
+          "n_AGREE": 1872,
+          "rate_AGREE": 0.24644549763033174,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_3_5",
+          "mfe_bucket": "mfe_missing",
+          "peak_label": "Peak 3-5",
+          "mfe_label": "MFE missing/non-finite",
+          "n": 0,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": null,
+          "n_AGREE": 0,
+          "rate_AGREE": null,
+          "reached_2r_rate": null
+        },
+        {
+          "peak_bucket": "peak_6_10",
+          "mfe_bucket": "mfe_lt_2R",
+          "peak_label": "Peak 6-10",
+          "mfe_label": "MFE < 2R",
+          "n": 4429,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 4192,
+          "rate_AGREE": 0.9464890494468278,
+          "reached_2r_rate": 0.0
+        },
+        {
+          "peak_bucket": "peak_6_10",
+          "mfe_bucket": "mfe_2R_4R",
+          "peak_label": "Peak 6-10",
+          "mfe_label": "MFE 2R-4R",
+          "n": 6321,
+          "n_DISAGREE_SL_TP": 5122,
+          "rate_DISAGREE_SL_TP": 0.8103148236038602,
+          "n_AGREE": 1198,
+          "rate_AGREE": 0.18952697358012974,
+          "reached_2r_rate": 0.9998417971839899
+        },
+        {
+          "peak_bucket": "peak_6_10",
+          "mfe_bucket": "mfe_4R_6R",
+          "peak_label": "Peak 6-10",
+          "mfe_label": "MFE 4R-6R",
+          "n": 3834,
+          "n_DISAGREE_SL_TP": 3316,
+          "rate_DISAGREE_SL_TP": 0.8648930620761607,
+          "n_AGREE": 518,
+          "rate_AGREE": 0.13510693792383932,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_6_10",
+          "mfe_bucket": "mfe_6R_plus",
+          "peak_label": "Peak 6-10",
+          "mfe_label": "MFE 6R+",
+          "n": 4810,
+          "n_DISAGREE_SL_TP": 4259,
+          "rate_DISAGREE_SL_TP": 0.8854469854469854,
+          "n_AGREE": 550,
+          "rate_AGREE": 0.11434511434511435,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_6_10",
+          "mfe_bucket": "mfe_missing",
+          "peak_label": "Peak 6-10",
+          "mfe_label": "MFE missing/non-finite",
+          "n": 0,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": null,
+          "n_AGREE": 0,
+          "rate_AGREE": null,
+          "reached_2r_rate": null
+        },
+        {
+          "peak_bucket": "peak_gt_10",
+          "mfe_bucket": "mfe_lt_2R",
+          "peak_label": "Peak >10",
+          "mfe_label": "MFE < 2R",
+          "n": 3155,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 2167,
+          "rate_AGREE": 0.6868462757527733,
+          "reached_2r_rate": 0.0
+        },
+        {
+          "peak_bucket": "peak_gt_10",
+          "mfe_bucket": "mfe_2R_4R",
+          "peak_label": "Peak >10",
+          "mfe_label": "MFE 2R-4R",
+          "n": 6547,
+          "n_DISAGREE_SL_TP": 6139,
+          "rate_DISAGREE_SL_TP": 0.9376813807850924,
+          "n_AGREE": 407,
+          "rate_AGREE": 0.062165877501145564,
+          "reached_2r_rate": 0.999694516572476
+        },
+        {
+          "peak_bucket": "peak_gt_10",
+          "mfe_bucket": "mfe_4R_6R",
+          "peak_label": "Peak >10",
+          "mfe_label": "MFE 4R-6R",
+          "n": 2990,
+          "n_DISAGREE_SL_TP": 2826,
+          "rate_DISAGREE_SL_TP": 0.9451505016722408,
+          "n_AGREE": 164,
+          "rate_AGREE": 0.0548494983277592,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_gt_10",
+          "mfe_bucket": "mfe_6R_plus",
+          "peak_label": "Peak >10",
+          "mfe_label": "MFE 6R+",
+          "n": 2358,
+          "n_DISAGREE_SL_TP": 2259,
+          "rate_DISAGREE_SL_TP": 0.9580152671755725,
+          "n_AGREE": 99,
+          "rate_AGREE": 0.04198473282442748,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_gt_10",
+          "mfe_bucket": "mfe_missing",
+          "peak_label": "Peak >10",
+          "mfe_label": "MFE missing/non-finite",
+          "n": 0,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": null,
+          "n_AGREE": 0,
+          "rate_AGREE": null,
+          "reached_2r_rate": null
+        },
+        {
+          "peak_bucket": "peak_missing",
+          "mfe_bucket": "mfe_lt_2R",
+          "peak_label": "Peak missing/non-finite",
+          "mfe_label": "MFE < 2R",
+          "n": 2585,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 2585,
+          "rate_AGREE": 1.0,
+          "reached_2r_rate": 0.0
+        },
+        {
+          "peak_bucket": "peak_missing",
+          "mfe_bucket": "mfe_2R_4R",
+          "peak_label": "Peak missing/non-finite",
+          "mfe_label": "MFE 2R-4R",
+          "n": 945,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 945,
+          "rate_AGREE": 1.0,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_missing",
+          "mfe_bucket": "mfe_4R_6R",
+          "peak_label": "Peak missing/non-finite",
+          "mfe_label": "MFE 4R-6R",
+          "n": 523,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 523,
+          "rate_AGREE": 1.0,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_missing",
+          "mfe_bucket": "mfe_6R_plus",
+          "peak_label": "Peak missing/non-finite",
+          "mfe_label": "MFE 6R+",
+          "n": 710,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 710,
+          "rate_AGREE": 1.0,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_missing",
+          "mfe_bucket": "mfe_missing",
+          "peak_label": "Peak missing/non-finite",
+          "mfe_label": "MFE missing/non-finite",
+          "n": 0,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": null,
+          "n_AGREE": 0,
+          "rate_AGREE": null,
+          "reached_2r_rate": null
+        }
+      ],
+      "composition_DISAGREE_SL_TP": {
+        "n": 44791,
+        "peak": {
+          "peak_le_2": {
+            "n": 6373,
+            "share": 0.1422830479337367
+          },
+          "peak_3_5": {
+            "n": 14497,
+            "share": 0.32365877073519234
+          },
+          "peak_6_10": {
+            "n": 12697,
+            "share": 0.28347212609676053
+          },
+          "peak_gt_10": {
+            "n": 11224,
+            "share": 0.2505860552343105
+          },
+          "peak_missing": {
+            "n": 0,
+            "share": 0.0
+          }
+        },
+        "mfe": {
+          "mfe_lt_2R": {
+            "n": 0,
+            "share": 0.0
+          },
+          "mfe_2R_4R": {
+            "n": 18509,
+            "share": 0.4132303364515193
+          },
+          "mfe_4R_6R": {
+            "n": 11378,
+            "share": 0.2540242459422652
+          },
+          "mfe_6R_plus": {
+            "n": 14904,
+            "share": 0.3327454176062155
+          },
+          "mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          }
+        },
+        "cross": {
+          "peak_le_2__mfe_lt_2R": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_le_2__mfe_2R_4R": {
+            "n": 2118,
+            "share": 0.04728628519122145
+          },
+          "peak_le_2__mfe_4R_6R": {
+            "n": 1591,
+            "share": 0.03552052867763613
+          },
+          "peak_le_2__mfe_6R_plus": {
+            "n": 2664,
+            "share": 0.059476234064879105
+          },
+          "peak_le_2__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_3_5__mfe_lt_2R": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_3_5__mfe_2R_4R": {
+            "n": 5130,
+            "share": 0.11453193721953071
+          },
+          "peak_3_5__mfe_4R_6R": {
+            "n": 3645,
+            "share": 0.08137795539282446
+          },
+          "peak_3_5__mfe_6R_plus": {
+            "n": 5722,
+            "share": 0.12774887812283717
+          },
+          "peak_3_5__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_6_10__mfe_lt_2R": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_6_10__mfe_2R_4R": {
+            "n": 5122,
+            "share": 0.11435332991002657
+          },
+          "peak_6_10__mfe_4R_6R": {
+            "n": 3316,
+            "share": 0.07403272978946664
+          },
+          "peak_6_10__mfe_6R_plus": {
+            "n": 4259,
+            "share": 0.09508606639726731
+          },
+          "peak_6_10__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_gt_10__mfe_lt_2R": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_gt_10__mfe_2R_4R": {
+            "n": 6139,
+            "share": 0.13705878413074055
+          },
+          "peak_gt_10__mfe_4R_6R": {
+            "n": 2826,
+            "share": 0.06309303208233796
+          },
+          "peak_gt_10__mfe_6R_plus": {
+            "n": 2259,
+            "share": 0.050434239021231946
+          },
+          "peak_gt_10__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_missing__mfe_lt_2R": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_missing__mfe_2R_4R": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_missing__mfe_4R_6R": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_missing__mfe_6R_plus": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_missing__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          }
+        }
+      },
+      "composition_AGREE": {
+        "n": 93683,
+        "peak": {
+          "peak_le_2": {
+            "n": 63694,
+            "share": 0.6798885603578024
+          },
+          "peak_3_5": {
+            "n": 15931,
+            "share": 0.17005219730367302
+          },
+          "peak_6_10": {
+            "n": 6458,
+            "share": 0.0689345985931279
+          },
+          "peak_gt_10": {
+            "n": 2837,
+            "share": 0.03028297556653822
+          },
+          "peak_missing": {
+            "n": 4763,
+            "share": 0.05084166817885849
+          }
+        },
+        "mfe": {
+          "mfe_lt_2R": {
+            "n": 51830,
+            "share": 0.5532487217531462
+          },
+          "mfe_2R_4R": {
+            "n": 18968,
+            "share": 0.20247003191614274
+          },
+          "mfe_4R_6R": {
+            "n": 10114,
+            "share": 0.10795982195275557
+          },
+          "mfe_6R_plus": {
+            "n": 12771,
+            "share": 0.13632142437795544
+          },
+          "mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          }
+        },
+        "cross": {
+          "peak_le_2__mfe_lt_2R": {
+            "n": 33663,
+            "share": 0.35932880031595915
+          },
+          "peak_le_2__mfe_2R_4R": {
+            "n": 13236,
+            "share": 0.14128497165974616
+          },
+          "peak_le_2__mfe_4R_6R": {
+            "n": 7255,
+            "share": 0.07744201189116488
+          },
+          "peak_le_2__mfe_6R_plus": {
+            "n": 9540,
+            "share": 0.10183277649093218
+          },
+          "peak_le_2__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_3_5__mfe_lt_2R": {
+            "n": 9223,
+            "share": 0.09844902490313077
+          },
+          "peak_3_5__mfe_2R_4R": {
+            "n": 3182,
+            "share": 0.033965607420770046
+          },
+          "peak_3_5__mfe_4R_6R": {
+            "n": 1654,
+            "share": 0.017655284309853442
+          },
+          "peak_3_5__mfe_6R_plus": {
+            "n": 1872,
+            "share": 0.019982280669918768
+          },
+          "peak_3_5__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_6_10__mfe_lt_2R": {
+            "n": 4192,
+            "share": 0.04474664560272408
+          },
+          "peak_6_10__mfe_2R_4R": {
+            "n": 1198,
+            "share": 0.01278780568512964
+          },
+          "peak_6_10__mfe_4R_6R": {
+            "n": 518,
+            "share": 0.0055292849289625655
+          },
+          "peak_6_10__mfe_6R_plus": {
+            "n": 550,
+            "share": 0.005870862376311604
+          },
+          "peak_6_10__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_gt_10__mfe_lt_2R": {
+            "n": 2167,
+            "share": 0.02313119776266772
+          },
+          "peak_gt_10__mfe_2R_4R": {
+            "n": 407,
+            "share": 0.004344438158470587
+          },
+          "peak_gt_10__mfe_4R_6R": {
+            "n": 164,
+            "share": 0.0017505844176638238
+          },
+          "peak_gt_10__mfe_6R_plus": {
+            "n": 99,
+            "share": 0.0010567552277360888
+          },
+          "peak_gt_10__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_missing__mfe_lt_2R": {
+            "n": 2585,
+            "share": 0.02759305316866454
+          },
+          "peak_missing__mfe_2R_4R": {
+            "n": 945,
+            "share": 0.010087208992026302
+          },
+          "peak_missing__mfe_4R_6R": {
+            "n": 523,
+            "share": 0.005582656405110853
+          },
+          "peak_missing__mfe_6R_plus": {
+            "n": 710,
+            "share": 0.007578749613056798
+          },
+          "peak_missing__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          }
+        }
+      },
+      "peak_rank": [
+        {
+          "bucket": "peak_gt_10",
+          "rate": 0.7457807308970099,
+          "n": 15050,
+          "rank": 1
+        },
+        {
+          "bucket": "peak_6_10",
+          "rate": 0.6546870166030732,
+          "n": 19394,
+          "rank": 2
+        },
+        {
+          "bucket": "peak_3_5",
+          "rate": 0.4740060162176301,
+          "n": 30584,
+          "rank": 3
+        },
+        {
+          "bucket": "peak_le_2",
+          "rate": 0.09084688742854699,
+          "n": 70151,
+          "rank": 4
+        }
+      ],
+      "mfe_rank": [
+        {
+          "bucket": "mfe_6R_plus",
+          "rate": 0.5382448537378115,
+          "n": 27690,
+          "rank": 1
+        },
+        {
+          "bucket": "mfe_4R_6R",
+          "rate": 0.5291354694693764,
+          "n": 21503,
+          "rank": 2
+        },
+        {
+          "bucket": "mfe_2R_4R",
+          "rate": 0.49366548422372175,
+          "n": 37493,
+          "rank": 3
+        },
+        {
+          "bucket": "mfe_lt_2R",
+          "rate": 0.0,
+          "n": 53256,
+          "rank": 4
+        }
+      ]
+    },
+    "BTCUSDT": {
+      "n_all": 139942,
+      "n_DISAGREE_SL_TP": 43392,
+      "rate_DISAGREE_SL_TP": 0.3100713152591788,
+      "n_AGREE": 94068,
+      "rate_AGREE": 0.6721927655743094,
+      "n_DISAGREE": 45874,
+      "rate_DISAGREE": 0.32780723442569065,
+      "peak_marginal": [
+        {
+          "bucket": "peak_le_2",
+          "label": "Peak <= 2 bars",
+          "n": 70397,
+          "n_DISAGREE_SL_TP": 6317,
+          "rate_DISAGREE_SL_TP": 0.08973393752574683,
+          "n_AGREE": 63901,
+          "rate_AGREE": 0.9077233404832592,
+          "n_DISAGREE": 6496,
+          "rate_DISAGREE": 0.09227665951674077,
+          "reached_2r_rate": 0.5299373552850264
+        },
+        {
+          "bucket": "peak_3_5",
+          "label": "Peak 3-5",
+          "n": 30029,
+          "n_DISAGREE_SL_TP": 13515,
+          "rate_DISAGREE_SL_TP": 0.4500649372273469,
+          "n_AGREE": 16262,
+          "rate_AGREE": 0.5415431749309001,
+          "n_DISAGREE": 13767,
+          "rate_DISAGREE": 0.45845682506909985,
+          "reached_2r_rate": 0.6849045922275134
+        },
+        {
+          "bucket": "peak_6_10",
+          "label": "Peak 6-10",
+          "n": 19575,
+          "n_DISAGREE_SL_TP": 12340,
+          "rate_DISAGREE_SL_TP": 0.6303959131545338,
+          "n_AGREE": 6776,
+          "rate_AGREE": 0.3461558109833972,
+          "n_DISAGREE": 12799,
+          "rate_DISAGREE": 0.6538441890166028,
+          "reached_2r_rate": 0.7565261813537676
+        },
+        {
+          "bucket": "peak_gt_10",
+          "label": "Peak >10",
+          "n": 15593,
+          "n_DISAGREE_SL_TP": 11220,
+          "rate_DISAGREE_SL_TP": 0.7195536458667351,
+          "n_AGREE": 2781,
+          "rate_AGREE": 0.1783492592830116,
+          "n_DISAGREE": 12812,
+          "rate_DISAGREE": 0.8216507407169884,
+          "reached_2r_rate": 0.7635477457833644
+        },
+        {
+          "bucket": "peak_missing",
+          "label": "Peak missing/non-finite",
+          "n": 4348,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 4348,
+          "rate_AGREE": 1.0,
+          "n_DISAGREE": 0,
+          "rate_DISAGREE": 0.0,
+          "reached_2r_rate": 0.4765409383624655
+        }
+      ],
+      "mfe_marginal": [
+        {
+          "bucket": "mfe_lt_2R",
+          "label": "MFE < 2R",
+          "n": 53280,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 50888,
+          "rate_AGREE": 0.9551051051051052,
+          "n_DISAGREE": 2392,
+          "rate_DISAGREE": 0.04489489489489489,
+          "reached_2r_rate": 0.0
+        },
+        {
+          "bucket": "mfe_2R_4R",
+          "label": "MFE 2R-4R",
+          "n": 36361,
+          "n_DISAGREE_SL_TP": 18166,
+          "rate_DISAGREE_SL_TP": 0.4996012210885289,
+          "n_AGREE": 18169,
+          "rate_AGREE": 0.4996837270702126,
+          "n_DISAGREE": 18192,
+          "rate_DISAGREE": 0.5003162729297874,
+          "reached_2r_rate": 0.9999449960122109
+        },
+        {
+          "bucket": "mfe_4R_6R",
+          "label": "MFE 4R-6R",
+          "n": 20464,
+          "n_DISAGREE_SL_TP": 10340,
+          "rate_DISAGREE_SL_TP": 0.5052775605942142,
+          "n_AGREE": 10110,
+          "rate_AGREE": 0.49403831118060987,
+          "n_DISAGREE": 10354,
+          "rate_DISAGREE": 0.5059616888193902,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "bucket": "mfe_6R_plus",
+          "label": "MFE 6R+",
+          "n": 29837,
+          "n_DISAGREE_SL_TP": 14886,
+          "rate_DISAGREE_SL_TP": 0.49891074839963806,
+          "n_AGREE": 14901,
+          "rate_AGREE": 0.4994134799074974,
+          "n_DISAGREE": 14936,
+          "rate_DISAGREE": 0.5005865200925026,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "bucket": "mfe_missing",
+          "label": "MFE missing/non-finite",
+          "n": 0,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": null,
+          "n_AGREE": 0,
+          "rate_AGREE": null,
+          "n_DISAGREE": 0,
+          "rate_DISAGREE": null,
+          "reached_2r_rate": null
+        }
+      ],
+      "cross": [
+        {
+          "peak_bucket": "peak_le_2",
+          "mfe_bucket": "mfe_lt_2R",
+          "peak_label": "Peak <= 2 bars",
+          "mfe_label": "MFE < 2R",
+          "n": 33090,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 32995,
+          "rate_AGREE": 0.9971290420066485,
+          "reached_2r_rate": 0.0
+        },
+        {
+          "peak_bucket": "peak_le_2",
+          "mfe_bucket": "mfe_2R_4R",
+          "peak_label": "Peak <= 2 bars",
+          "mfe_label": "MFE 2R-4R",
+          "n": 14776,
+          "n_DISAGREE_SL_TP": 2104,
+          "rate_DISAGREE_SL_TP": 0.14239306984298863,
+          "n_AGREE": 12648,
+          "rate_AGREE": 0.8559826746074716,
+          "reached_2r_rate": 0.9999323226854359
+        },
+        {
+          "peak_bucket": "peak_le_2",
+          "mfe_bucket": "mfe_4R_6R",
+          "peak_label": "Peak <= 2 bars",
+          "mfe_label": "MFE 4R-6R",
+          "n": 8741,
+          "n_DISAGREE_SL_TP": 1487,
+          "rate_DISAGREE_SL_TP": 0.17011783548793044,
+          "n_AGREE": 7241,
+          "rate_AGREE": 0.8283949204896465,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_le_2",
+          "mfe_bucket": "mfe_6R_plus",
+          "peak_label": "Peak <= 2 bars",
+          "mfe_label": "MFE 6R+",
+          "n": 13790,
+          "n_DISAGREE_SL_TP": 2726,
+          "rate_DISAGREE_SL_TP": 0.19767947788252357,
+          "n_AGREE": 11017,
+          "rate_AGREE": 0.7989122552574329,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_le_2",
+          "mfe_bucket": "mfe_missing",
+          "peak_label": "Peak <= 2 bars",
+          "mfe_label": "MFE missing/non-finite",
+          "n": 0,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": null,
+          "n_AGREE": 0,
+          "rate_AGREE": null,
+          "reached_2r_rate": null
+        },
+        {
+          "peak_bucket": "peak_3_5",
+          "mfe_bucket": "mfe_lt_2R",
+          "peak_label": "Peak 3-5",
+          "mfe_label": "MFE < 2R",
+          "n": 9462,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 9215,
+          "rate_AGREE": 0.9738955823293173,
+          "reached_2r_rate": 0.0
+        },
+        {
+          "peak_bucket": "peak_3_5",
+          "mfe_bucket": "mfe_2R_4R",
+          "peak_label": "Peak 3-5",
+          "mfe_label": "MFE 2R-4R",
+          "n": 7859,
+          "n_DISAGREE_SL_TP": 4754,
+          "rate_DISAGREE_SL_TP": 0.6049115663570429,
+          "n_AGREE": 3103,
+          "rate_AGREE": 0.3948339483394834,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_3_5",
+          "mfe_bucket": "mfe_4R_6R",
+          "peak_label": "Peak 3-5",
+          "mfe_label": "MFE 4R-6R",
+          "n": 4899,
+          "n_DISAGREE_SL_TP": 3251,
+          "rate_DISAGREE_SL_TP": 0.663604817309655,
+          "n_AGREE": 1647,
+          "rate_AGREE": 0.33619105939987753,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_3_5",
+          "mfe_bucket": "mfe_6R_plus",
+          "peak_label": "Peak 3-5",
+          "mfe_label": "MFE 6R+",
+          "n": 7809,
+          "n_DISAGREE_SL_TP": 5510,
+          "rate_DISAGREE_SL_TP": 0.7055961070559611,
+          "n_AGREE": 2297,
+          "rate_AGREE": 0.29414777820463567,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_3_5",
+          "mfe_bucket": "mfe_missing",
+          "peak_label": "Peak 3-5",
+          "mfe_label": "MFE missing/non-finite",
+          "n": 0,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": null,
+          "n_AGREE": 0,
+          "rate_AGREE": null,
+          "reached_2r_rate": null
+        },
+        {
+          "peak_bucket": "peak_6_10",
+          "mfe_bucket": "mfe_lt_2R",
+          "peak_label": "Peak 6-10",
+          "mfe_label": "MFE < 2R",
+          "n": 4765,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 4307,
+          "rate_AGREE": 0.9038824763903462,
+          "reached_2r_rate": 0.0
+        },
+        {
+          "peak_bucket": "peak_6_10",
+          "mfe_bucket": "mfe_2R_4R",
+          "peak_label": "Peak 6-10",
+          "mfe_label": "MFE 2R-4R",
+          "n": 6259,
+          "n_DISAGREE_SL_TP": 5046,
+          "rate_DISAGREE_SL_TP": 0.8061990733343984,
+          "n_AGREE": 1213,
+          "rate_AGREE": 0.19380092666560153,
+          "reached_2r_rate": 0.999840230068701
+        },
+        {
+          "peak_bucket": "peak_6_10",
+          "mfe_bucket": "mfe_4R_6R",
+          "peak_label": "Peak 6-10",
+          "mfe_label": "MFE 4R-6R",
+          "n": 3588,
+          "n_DISAGREE_SL_TP": 3021,
+          "rate_DISAGREE_SL_TP": 0.8419732441471572,
+          "n_AGREE": 567,
+          "rate_AGREE": 0.15802675585284282,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_6_10",
+          "mfe_bucket": "mfe_6R_plus",
+          "peak_label": "Peak 6-10",
+          "mfe_label": "MFE 6R+",
+          "n": 4963,
+          "n_DISAGREE_SL_TP": 4273,
+          "rate_DISAGREE_SL_TP": 0.8609711867821882,
+          "n_AGREE": 689,
+          "rate_AGREE": 0.1388273221841628,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_6_10",
+          "mfe_bucket": "mfe_missing",
+          "peak_label": "Peak 6-10",
+          "mfe_label": "MFE missing/non-finite",
+          "n": 0,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": null,
+          "n_AGREE": 0,
+          "rate_AGREE": null,
+          "reached_2r_rate": null
+        },
+        {
+          "peak_bucket": "peak_gt_10",
+          "mfe_bucket": "mfe_lt_2R",
+          "peak_label": "Peak >10",
+          "mfe_label": "MFE < 2R",
+          "n": 3687,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 2095,
+          "rate_AGREE": 0.5682126390018986,
+          "reached_2r_rate": 0.0
+        },
+        {
+          "peak_bucket": "peak_gt_10",
+          "mfe_bucket": "mfe_2R_4R",
+          "peak_label": "Peak >10",
+          "mfe_label": "MFE 2R-4R",
+          "n": 6622,
+          "n_DISAGREE_SL_TP": 6262,
+          "rate_DISAGREE_SL_TP": 0.945635759589248,
+          "n_AGREE": 360,
+          "rate_AGREE": 0.05436424041075204,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_gt_10",
+          "mfe_bucket": "mfe_4R_6R",
+          "peak_label": "Peak >10",
+          "mfe_label": "MFE 4R-6R",
+          "n": 2765,
+          "n_DISAGREE_SL_TP": 2581,
+          "rate_DISAGREE_SL_TP": 0.9334538878842676,
+          "n_AGREE": 184,
+          "rate_AGREE": 0.06654611211573237,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_gt_10",
+          "mfe_bucket": "mfe_6R_plus",
+          "peak_label": "Peak >10",
+          "mfe_label": "MFE 6R+",
+          "n": 2519,
+          "n_DISAGREE_SL_TP": 2377,
+          "rate_DISAGREE_SL_TP": 0.9436284239777689,
+          "n_AGREE": 142,
+          "rate_AGREE": 0.05637157602223104,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_gt_10",
+          "mfe_bucket": "mfe_missing",
+          "peak_label": "Peak >10",
+          "mfe_label": "MFE missing/non-finite",
+          "n": 0,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": null,
+          "n_AGREE": 0,
+          "rate_AGREE": null,
+          "reached_2r_rate": null
+        },
+        {
+          "peak_bucket": "peak_missing",
+          "mfe_bucket": "mfe_lt_2R",
+          "peak_label": "Peak missing/non-finite",
+          "mfe_label": "MFE < 2R",
+          "n": 2276,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 2276,
+          "rate_AGREE": 1.0,
+          "reached_2r_rate": 0.0
+        },
+        {
+          "peak_bucket": "peak_missing",
+          "mfe_bucket": "mfe_2R_4R",
+          "peak_label": "Peak missing/non-finite",
+          "mfe_label": "MFE 2R-4R",
+          "n": 845,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 845,
+          "rate_AGREE": 1.0,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_missing",
+          "mfe_bucket": "mfe_4R_6R",
+          "peak_label": "Peak missing/non-finite",
+          "mfe_label": "MFE 4R-6R",
+          "n": 471,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 471,
+          "rate_AGREE": 1.0,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_missing",
+          "mfe_bucket": "mfe_6R_plus",
+          "peak_label": "Peak missing/non-finite",
+          "mfe_label": "MFE 6R+",
+          "n": 756,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 756,
+          "rate_AGREE": 1.0,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_missing",
+          "mfe_bucket": "mfe_missing",
+          "peak_label": "Peak missing/non-finite",
+          "mfe_label": "MFE missing/non-finite",
+          "n": 0,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": null,
+          "n_AGREE": 0,
+          "rate_AGREE": null,
+          "reached_2r_rate": null
+        }
+      ],
+      "composition_DISAGREE_SL_TP": {
+        "n": 43392,
+        "peak": {
+          "peak_le_2": {
+            "n": 6317,
+            "share": 0.14557983038348082
+          },
+          "peak_3_5": {
+            "n": 13515,
+            "share": 0.3114629424778761
+          },
+          "peak_6_10": {
+            "n": 12340,
+            "share": 0.28438421828908556
+          },
+          "peak_gt_10": {
+            "n": 11220,
+            "share": 0.25857300884955753
+          },
+          "peak_missing": {
+            "n": 0,
+            "share": 0.0
+          }
+        },
+        "mfe": {
+          "mfe_lt_2R": {
+            "n": 0,
+            "share": 0.0
+          },
+          "mfe_2R_4R": {
+            "n": 18166,
+            "share": 0.418648598820059
+          },
+          "mfe_4R_6R": {
+            "n": 10340,
+            "share": 0.23829277286135694
+          },
+          "mfe_6R_plus": {
+            "n": 14886,
+            "share": 0.3430586283185841
+          },
+          "mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          }
+        },
+        "cross": {
+          "peak_le_2__mfe_lt_2R": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_le_2__mfe_2R_4R": {
+            "n": 2104,
+            "share": 0.0484882005899705
+          },
+          "peak_le_2__mfe_4R_6R": {
+            "n": 1487,
+            "share": 0.034268989675516226
+          },
+          "peak_le_2__mfe_6R_plus": {
+            "n": 2726,
+            "share": 0.0628226401179941
+          },
+          "peak_le_2__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_3_5__mfe_lt_2R": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_3_5__mfe_2R_4R": {
+            "n": 4754,
+            "share": 0.10955936578171091
+          },
+          "peak_3_5__mfe_4R_6R": {
+            "n": 3251,
+            "share": 0.07492164454277286
+          },
+          "peak_3_5__mfe_6R_plus": {
+            "n": 5510,
+            "share": 0.12698193215339232
+          },
+          "peak_3_5__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_6_10__mfe_lt_2R": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_6_10__mfe_2R_4R": {
+            "n": 5046,
+            "share": 0.1162887168141593
+          },
+          "peak_6_10__mfe_4R_6R": {
+            "n": 3021,
+            "share": 0.06962112831858407
+          },
+          "peak_6_10__mfe_6R_plus": {
+            "n": 4273,
+            "share": 0.09847437315634218
+          },
+          "peak_6_10__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_gt_10__mfe_lt_2R": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_gt_10__mfe_2R_4R": {
+            "n": 6262,
+            "share": 0.14431231563421829
+          },
+          "peak_gt_10__mfe_4R_6R": {
+            "n": 2581,
+            "share": 0.059481010324483774
+          },
+          "peak_gt_10__mfe_6R_plus": {
+            "n": 2377,
+            "share": 0.054779682890855455
+          },
+          "peak_gt_10__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_missing__mfe_lt_2R": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_missing__mfe_2R_4R": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_missing__mfe_4R_6R": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_missing__mfe_6R_plus": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_missing__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          }
+        }
+      },
+      "composition_AGREE": {
+        "n": 94068,
+        "peak": {
+          "peak_le_2": {
+            "n": 63901,
+            "share": 0.6793064591572054
+          },
+          "peak_3_5": {
+            "n": 16262,
+            "share": 0.17287494153165794
+          },
+          "peak_6_10": {
+            "n": 6776,
+            "share": 0.07203299740613174
+          },
+          "peak_gt_10": {
+            "n": 2781,
+            "share": 0.029563719862227326
+          },
+          "peak_missing": {
+            "n": 4348,
+            "share": 0.046221882042777565
+          }
+        },
+        "mfe": {
+          "mfe_lt_2R": {
+            "n": 50888,
+            "share": 0.5409703618658842
+          },
+          "mfe_2R_4R": {
+            "n": 18169,
+            "share": 0.19314751031168942
+          },
+          "mfe_4R_6R": {
+            "n": 10110,
+            "share": 0.10747544329633882
+          },
+          "mfe_6R_plus": {
+            "n": 14901,
+            "share": 0.1584066845260875
+          },
+          "mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          }
+        },
+        "cross": {
+          "peak_le_2__mfe_lt_2R": {
+            "n": 32995,
+            "share": 0.35075689926436193
+          },
+          "peak_le_2__mfe_2R_4R": {
+            "n": 12648,
+            "share": 0.13445592550070162
+          },
+          "peak_le_2__mfe_4R_6R": {
+            "n": 7241,
+            "share": 0.07697622996130458
+          },
+          "peak_le_2__mfe_6R_plus": {
+            "n": 11017,
+            "share": 0.11711740443083726
+          },
+          "peak_le_2__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_3_5__mfe_lt_2R": {
+            "n": 9215,
+            "share": 0.09796104945358677
+          },
+          "peak_3_5__mfe_2R_4R": {
+            "n": 3103,
+            "share": 0.032986775524088956
+          },
+          "peak_3_5__mfe_4R_6R": {
+            "n": 1647,
+            "share": 0.01750861079219288
+          },
+          "peak_3_5__mfe_6R_plus": {
+            "n": 2297,
+            "share": 0.024418505761789343
+          },
+          "peak_3_5__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_6_10__mfe_lt_2R": {
+            "n": 4307,
+            "share": 0.04578602712931071
+          },
+          "peak_6_10__mfe_2R_4R": {
+            "n": 1213,
+            "share": 0.012894927074031552
+          },
+          "peak_6_10__mfe_4R_6R": {
+            "n": 567,
+            "share": 0.006027554535017222
+          },
+          "peak_6_10__mfe_6R_plus": {
+            "n": 689,
+            "share": 0.0073244886677722495
+          },
+          "peak_6_10__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_gt_10__mfe_lt_2R": {
+            "n": 2095,
+            "share": 0.022271123017391675
+          },
+          "peak_gt_10__mfe_2R_4R": {
+            "n": 360,
+            "share": 0.003827018752391887
+          },
+          "peak_gt_10__mfe_4R_6R": {
+            "n": 184,
+            "share": 0.0019560318067780753
+          },
+          "peak_gt_10__mfe_6R_plus": {
+            "n": 142,
+            "share": 0.0015095462856656887
+          },
+          "peak_gt_10__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_missing__mfe_lt_2R": {
+            "n": 2276,
+            "share": 0.02419526300123315
+          },
+          "peak_missing__mfe_2R_4R": {
+            "n": 845,
+            "share": 0.008982863460475402
+          },
+          "peak_missing__mfe_4R_6R": {
+            "n": 471,
+            "share": 0.005007016201046052
+          },
+          "peak_missing__mfe_6R_plus": {
+            "n": 756,
+            "share": 0.008036739380022962
+          },
+          "peak_missing__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          }
+        }
+      },
+      "peak_rank": [
+        {
+          "bucket": "peak_gt_10",
+          "rate": 0.7195536458667351,
+          "n": 15593,
+          "rank": 1
+        },
+        {
+          "bucket": "peak_6_10",
+          "rate": 0.6303959131545338,
+          "n": 19575,
+          "rank": 2
+        },
+        {
+          "bucket": "peak_3_5",
+          "rate": 0.4500649372273469,
+          "n": 30029,
+          "rank": 3
+        },
+        {
+          "bucket": "peak_le_2",
+          "rate": 0.08973393752574683,
+          "n": 70397,
+          "rank": 4
+        }
+      ],
+      "mfe_rank": [
+        {
+          "bucket": "mfe_4R_6R",
+          "rate": 0.5052775605942142,
+          "n": 20464,
+          "rank": 1
+        },
+        {
+          "bucket": "mfe_2R_4R",
+          "rate": 0.4996012210885289,
+          "n": 36361,
+          "rank": 2
+        },
+        {
+          "bucket": "mfe_6R_plus",
+          "rate": 0.49891074839963806,
+          "n": 29837,
+          "rank": 3
+        },
+        {
+          "bucket": "mfe_lt_2R",
+          "rate": 0.0,
+          "n": 53280,
+          "rank": 4
+        }
+      ]
+    },
+    "ETHUSDT": {
+      "n_all": 139942,
+      "n_DISAGREE_SL_TP": 43725,
+      "rate_DISAGREE_SL_TP": 0.31245087250432324,
+      "n_AGREE": 94175,
+      "rate_AGREE": 0.6729573680524789,
+      "n_DISAGREE": 45767,
+      "rate_DISAGREE": 0.3270426319475211,
+      "peak_marginal": [
+        {
+          "bucket": "peak_le_2",
+          "label": "Peak <= 2 bars",
+          "n": 70968,
+          "n_DISAGREE_SL_TP": 6160,
+          "rate_DISAGREE_SL_TP": 0.08679968436478412,
+          "n_AGREE": 64641,
+          "rate_AGREE": 0.9108471423740278,
+          "n_DISAGREE": 6327,
+          "rate_DISAGREE": 0.08915285762597228,
+          "reached_2r_rate": 0.5179799346184196
+        },
+        {
+          "bucket": "peak_3_5",
+          "label": "Peak 3-5",
+          "n": 29821,
+          "n_DISAGREE_SL_TP": 13247,
+          "rate_DISAGREE_SL_TP": 0.44421716240233394,
+          "n_AGREE": 16352,
+          "rate_AGREE": 0.5483384192347674,
+          "n_DISAGREE": 13469,
+          "rate_DISAGREE": 0.45166158076523255,
+          "reached_2r_rate": 0.678112739344757
+        },
+        {
+          "bucket": "peak_6_10",
+          "label": "Peak 6-10",
+          "n": 19950,
+          "n_DISAGREE_SL_TP": 12663,
+          "rate_DISAGREE_SL_TP": 0.6347368421052632,
+          "n_AGREE": 6938,
+          "rate_AGREE": 0.34776942355889723,
+          "n_DISAGREE": 13012,
+          "rate_DISAGREE": 0.6522305764411027,
+          "reached_2r_rate": 0.7595989974937344
+        },
+        {
+          "bucket": "peak_gt_10",
+          "label": "Peak >10",
+          "n": 15798,
+          "n_DISAGREE_SL_TP": 11655,
+          "rate_DISAGREE_SL_TP": 0.7377516141283706,
+          "n_AGREE": 2839,
+          "rate_AGREE": 0.17970629193568807,
+          "n_DISAGREE": 12959,
+          "rate_DISAGREE": 0.8202937080643119,
+          "reached_2r_rate": 0.78035194328396
+        },
+        {
+          "bucket": "peak_missing",
+          "label": "Peak missing/non-finite",
+          "n": 3405,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 3405,
+          "rate_AGREE": 1.0,
+          "n_DISAGREE": 0,
+          "rate_DISAGREE": 0.0,
+          "reached_2r_rate": 0.476064610866373
+        }
+      ],
+      "mfe_marginal": [
+        {
+          "bucket": "mfe_lt_2R",
+          "label": "MFE < 2R",
+          "n": 53857,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 51916,
+          "rate_AGREE": 0.9639601166050838,
+          "n_DISAGREE": 1941,
+          "rate_DISAGREE": 0.036039883394916164,
+          "reached_2r_rate": 0.0
+        },
+        {
+          "bucket": "mfe_2R_4R",
+          "label": "MFE 2R-4R",
+          "n": 36647,
+          "n_DISAGREE_SL_TP": 18066,
+          "rate_DISAGREE_SL_TP": 0.49297350397031137,
+          "n_AGREE": 18557,
+          "rate_AGREE": 0.5063715993123584,
+          "n_DISAGREE": 18090,
+          "rate_DISAGREE": 0.4936284006876416,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "bucket": "mfe_4R_6R",
+          "label": "MFE 4R-6R",
+          "n": 20848,
+          "n_DISAGREE_SL_TP": 10670,
+          "rate_DISAGREE_SL_TP": 0.5117996930161166,
+          "n_AGREE": 10151,
+          "rate_AGREE": 0.4869052187260169,
+          "n_DISAGREE": 10697,
+          "rate_DISAGREE": 0.5130947812739831,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "bucket": "mfe_6R_plus",
+          "label": "MFE 6R+",
+          "n": 28590,
+          "n_DISAGREE_SL_TP": 14989,
+          "rate_DISAGREE_SL_TP": 0.5242742217558587,
+          "n_AGREE": 13551,
+          "rate_AGREE": 0.4739769150052466,
+          "n_DISAGREE": 15039,
+          "rate_DISAGREE": 0.5260230849947534,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "bucket": "mfe_missing",
+          "label": "MFE missing/non-finite",
+          "n": 0,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": null,
+          "n_AGREE": 0,
+          "rate_AGREE": null,
+          "n_DISAGREE": 0,
+          "rate_DISAGREE": null,
+          "reached_2r_rate": null
+        }
+      ],
+      "cross": [
+        {
+          "peak_bucket": "peak_le_2",
+          "mfe_bucket": "mfe_lt_2R",
+          "peak_label": "Peak <= 2 bars",
+          "mfe_label": "MFE < 2R",
+          "n": 34208,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 34126,
+          "rate_AGREE": 0.9976028999064547,
+          "reached_2r_rate": 0.0
+        },
+        {
+          "peak_bucket": "peak_le_2",
+          "mfe_bucket": "mfe_2R_4R",
+          "peak_label": "Peak <= 2 bars",
+          "mfe_label": "MFE 2R-4R",
+          "n": 15173,
+          "n_DISAGREE_SL_TP": 2111,
+          "rate_DISAGREE_SL_TP": 0.1391287154814473,
+          "n_AGREE": 13044,
+          "rate_AGREE": 0.859684966717195,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_le_2",
+          "mfe_bucket": "mfe_4R_6R",
+          "peak_label": "Peak <= 2 bars",
+          "mfe_label": "MFE 4R-6R",
+          "n": 8764,
+          "n_DISAGREE_SL_TP": 1426,
+          "rate_DISAGREE_SL_TP": 0.1627110908261068,
+          "n_AGREE": 7315,
+          "rate_AGREE": 0.8346645367412141,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_le_2",
+          "mfe_bucket": "mfe_6R_plus",
+          "peak_label": "Peak <= 2 bars",
+          "mfe_label": "MFE 6R+",
+          "n": 12823,
+          "n_DISAGREE_SL_TP": 2623,
+          "rate_DISAGREE_SL_TP": 0.20455431646260624,
+          "n_AGREE": 10156,
+          "rate_AGREE": 0.792014349216252,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_le_2",
+          "mfe_bucket": "mfe_missing",
+          "peak_label": "Peak <= 2 bars",
+          "mfe_label": "MFE missing/non-finite",
+          "n": 0,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": null,
+          "n_AGREE": 0,
+          "rate_AGREE": null,
+          "reached_2r_rate": null
+        },
+        {
+          "peak_bucket": "peak_3_5",
+          "mfe_bucket": "mfe_lt_2R",
+          "peak_label": "Peak 3-5",
+          "mfe_label": "MFE < 2R",
+          "n": 9599,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 9388,
+          "rate_AGREE": 0.9780185435982914,
+          "reached_2r_rate": 0.0
+        },
+        {
+          "peak_bucket": "peak_3_5",
+          "mfe_bucket": "mfe_2R_4R",
+          "peak_label": "Peak 3-5",
+          "mfe_label": "MFE 2R-4R",
+          "n": 7698,
+          "n_DISAGREE_SL_TP": 4541,
+          "rate_DISAGREE_SL_TP": 0.589893478825669,
+          "n_AGREE": 3152,
+          "rate_AGREE": 0.4094570018186542,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_3_5",
+          "mfe_bucket": "mfe_4R_6R",
+          "peak_label": "Peak 3-5",
+          "mfe_label": "MFE 4R-6R",
+          "n": 5031,
+          "n_DISAGREE_SL_TP": 3320,
+          "rate_DISAGREE_SL_TP": 0.6599085668853111,
+          "n_AGREE": 1709,
+          "rate_AGREE": 0.33969389783343273,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_3_5",
+          "mfe_bucket": "mfe_6R_plus",
+          "peak_label": "Peak 3-5",
+          "mfe_label": "MFE 6R+",
+          "n": 7493,
+          "n_DISAGREE_SL_TP": 5386,
+          "rate_DISAGREE_SL_TP": 0.7188042172694515,
+          "n_AGREE": 2103,
+          "rate_AGREE": 0.2806619511544108,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_3_5",
+          "mfe_bucket": "mfe_missing",
+          "peak_label": "Peak 3-5",
+          "mfe_label": "MFE missing/non-finite",
+          "n": 0,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": null,
+          "n_AGREE": 0,
+          "rate_AGREE": null,
+          "reached_2r_rate": null
+        },
+        {
+          "peak_bucket": "peak_6_10",
+          "mfe_bucket": "mfe_lt_2R",
+          "peak_label": "Peak 6-10",
+          "mfe_label": "MFE < 2R",
+          "n": 4796,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 4449,
+          "rate_AGREE": 0.9276480400333611,
+          "reached_2r_rate": 0.0
+        },
+        {
+          "peak_bucket": "peak_6_10",
+          "mfe_bucket": "mfe_2R_4R",
+          "peak_label": "Peak 6-10",
+          "mfe_label": "MFE 2R-4R",
+          "n": 6381,
+          "n_DISAGREE_SL_TP": 5081,
+          "rate_DISAGREE_SL_TP": 0.7962701770882307,
+          "n_AGREE": 1300,
+          "rate_AGREE": 0.2037298229117693,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_6_10",
+          "mfe_bucket": "mfe_4R_6R",
+          "peak_label": "Peak 6-10",
+          "mfe_label": "MFE 4R-6R",
+          "n": 3749,
+          "n_DISAGREE_SL_TP": 3149,
+          "rate_DISAGREE_SL_TP": 0.8399573219525207,
+          "n_AGREE": 600,
+          "rate_AGREE": 0.16004267804747932,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_6_10",
+          "mfe_bucket": "mfe_6R_plus",
+          "peak_label": "Peak 6-10",
+          "mfe_label": "MFE 6R+",
+          "n": 5024,
+          "n_DISAGREE_SL_TP": 4433,
+          "rate_DISAGREE_SL_TP": 0.8823646496815286,
+          "n_AGREE": 589,
+          "rate_AGREE": 0.11723726114649681,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_6_10",
+          "mfe_bucket": "mfe_missing",
+          "peak_label": "Peak 6-10",
+          "mfe_label": "MFE missing/non-finite",
+          "n": 0,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": null,
+          "n_AGREE": 0,
+          "rate_AGREE": null,
+          "reached_2r_rate": null
+        },
+        {
+          "peak_bucket": "peak_gt_10",
+          "mfe_bucket": "mfe_lt_2R",
+          "peak_label": "Peak >10",
+          "mfe_label": "MFE < 2R",
+          "n": 3470,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 2169,
+          "rate_AGREE": 0.6250720461095101,
+          "reached_2r_rate": 0.0
+        },
+        {
+          "peak_bucket": "peak_gt_10",
+          "mfe_bucket": "mfe_2R_4R",
+          "peak_label": "Peak >10",
+          "mfe_label": "MFE 2R-4R",
+          "n": 6745,
+          "n_DISAGREE_SL_TP": 6333,
+          "rate_DISAGREE_SL_TP": 0.9389177168272794,
+          "n_AGREE": 411,
+          "rate_AGREE": 0.06093402520385471,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_gt_10",
+          "mfe_bucket": "mfe_4R_6R",
+          "peak_label": "Peak >10",
+          "mfe_label": "MFE 4R-6R",
+          "n": 2927,
+          "n_DISAGREE_SL_TP": 2775,
+          "rate_DISAGREE_SL_TP": 0.9480696959344038,
+          "n_AGREE": 150,
+          "rate_AGREE": 0.05124701059104886,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_gt_10",
+          "mfe_bucket": "mfe_6R_plus",
+          "peak_label": "Peak >10",
+          "mfe_label": "MFE 6R+",
+          "n": 2656,
+          "n_DISAGREE_SL_TP": 2547,
+          "rate_DISAGREE_SL_TP": 0.958960843373494,
+          "n_AGREE": 109,
+          "rate_AGREE": 0.04103915662650602,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_gt_10",
+          "mfe_bucket": "mfe_missing",
+          "peak_label": "Peak >10",
+          "mfe_label": "MFE missing/non-finite",
+          "n": 0,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": null,
+          "n_AGREE": 0,
+          "rate_AGREE": null,
+          "reached_2r_rate": null
+        },
+        {
+          "peak_bucket": "peak_missing",
+          "mfe_bucket": "mfe_lt_2R",
+          "peak_label": "Peak missing/non-finite",
+          "mfe_label": "MFE < 2R",
+          "n": 1784,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 1784,
+          "rate_AGREE": 1.0,
+          "reached_2r_rate": 0.0
+        },
+        {
+          "peak_bucket": "peak_missing",
+          "mfe_bucket": "mfe_2R_4R",
+          "peak_label": "Peak missing/non-finite",
+          "mfe_label": "MFE 2R-4R",
+          "n": 650,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 650,
+          "rate_AGREE": 1.0,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_missing",
+          "mfe_bucket": "mfe_4R_6R",
+          "peak_label": "Peak missing/non-finite",
+          "mfe_label": "MFE 4R-6R",
+          "n": 377,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 377,
+          "rate_AGREE": 1.0,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_missing",
+          "mfe_bucket": "mfe_6R_plus",
+          "peak_label": "Peak missing/non-finite",
+          "mfe_label": "MFE 6R+",
+          "n": 594,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 594,
+          "rate_AGREE": 1.0,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_missing",
+          "mfe_bucket": "mfe_missing",
+          "peak_label": "Peak missing/non-finite",
+          "mfe_label": "MFE missing/non-finite",
+          "n": 0,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": null,
+          "n_AGREE": 0,
+          "rate_AGREE": null,
+          "reached_2r_rate": null
+        }
+      ],
+      "composition_DISAGREE_SL_TP": {
+        "n": 43725,
+        "peak": {
+          "peak_le_2": {
+            "n": 6160,
+            "share": 0.14088050314465408
+          },
+          "peak_3_5": {
+            "n": 13247,
+            "share": 0.3029616923956547
+          },
+          "peak_6_10": {
+            "n": 12663,
+            "share": 0.28960548885077186
+          },
+          "peak_gt_10": {
+            "n": 11655,
+            "share": 0.2665523156089194
+          },
+          "peak_missing": {
+            "n": 0,
+            "share": 0.0
+          }
+        },
+        "mfe": {
+          "mfe_lt_2R": {
+            "n": 0,
+            "share": 0.0
+          },
+          "mfe_2R_4R": {
+            "n": 18066,
+            "share": 0.41317324185248716
+          },
+          "mfe_4R_6R": {
+            "n": 10670,
+            "share": 0.2440251572327044
+          },
+          "mfe_6R_plus": {
+            "n": 14989,
+            "share": 0.34280160091480844
+          },
+          "mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          }
+        },
+        "cross": {
+          "peak_le_2__mfe_lt_2R": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_le_2__mfe_2R_4R": {
+            "n": 2111,
+            "share": 0.048279016580903375
+          },
+          "peak_le_2__mfe_4R_6R": {
+            "n": 1426,
+            "share": 0.032612921669525445
+          },
+          "peak_le_2__mfe_6R_plus": {
+            "n": 2623,
+            "share": 0.05998856489422527
+          },
+          "peak_le_2__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_3_5__mfe_lt_2R": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_3_5__mfe_2R_4R": {
+            "n": 4541,
+            "share": 0.10385363064608348
+          },
+          "peak_3_5__mfe_4R_6R": {
+            "n": 3320,
+            "share": 0.07592910234419668
+          },
+          "peak_3_5__mfe_6R_plus": {
+            "n": 5386,
+            "share": 0.1231789594053745
+          },
+          "peak_3_5__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_6_10__mfe_lt_2R": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_6_10__mfe_2R_4R": {
+            "n": 5081,
+            "share": 0.11620354488279017
+          },
+          "peak_6_10__mfe_4R_6R": {
+            "n": 3149,
+            "share": 0.07201829616923956
+          },
+          "peak_6_10__mfe_6R_plus": {
+            "n": 4433,
+            "share": 0.10138364779874214
+          },
+          "peak_6_10__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_gt_10__mfe_lt_2R": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_gt_10__mfe_2R_4R": {
+            "n": 6333,
+            "share": 0.1448370497427101
+          },
+          "peak_gt_10__mfe_4R_6R": {
+            "n": 2775,
+            "share": 0.0634648370497427
+          },
+          "peak_gt_10__mfe_6R_plus": {
+            "n": 2547,
+            "share": 0.058250428816466554
+          },
+          "peak_gt_10__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_missing__mfe_lt_2R": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_missing__mfe_2R_4R": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_missing__mfe_4R_6R": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_missing__mfe_6R_plus": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_missing__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          }
+        }
+      },
+      "composition_AGREE": {
+        "n": 94175,
+        "peak": {
+          "peak_le_2": {
+            "n": 64641,
+            "share": 0.6863923546588797
+          },
+          "peak_3_5": {
+            "n": 16352,
+            "share": 0.17363419166445448
+          },
+          "peak_6_10": {
+            "n": 6938,
+            "share": 0.07367135651712238
+          },
+          "peak_gt_10": {
+            "n": 2839,
+            "share": 0.0301460047783382
+          },
+          "peak_missing": {
+            "n": 3405,
+            "share": 0.0361560923812052
+          }
+        },
+        "mfe": {
+          "mfe_lt_2R": {
+            "n": 51916,
+            "share": 0.551271568887709
+          },
+          "mfe_2R_4R": {
+            "n": 18557,
+            "share": 0.19704804884523494
+          },
+          "mfe_4R_6R": {
+            "n": 10151,
+            "share": 0.10778869126625962
+          },
+          "mfe_6R_plus": {
+            "n": 13551,
+            "share": 0.14389169100079638
+          },
+          "mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          }
+        },
+        "cross": {
+          "peak_le_2__mfe_lt_2R": {
+            "n": 34126,
+            "share": 0.36236793204141227
+          },
+          "peak_le_2__mfe_2R_4R": {
+            "n": 13044,
+            "share": 0.13850809662861693
+          },
+          "peak_le_2__mfe_4R_6R": {
+            "n": 7315,
+            "share": 0.07767454207592249
+          },
+          "peak_le_2__mfe_6R_plus": {
+            "n": 10156,
+            "share": 0.10784178391292806
+          },
+          "peak_le_2__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_3_5__mfe_lt_2R": {
+            "n": 9388,
+            "share": 0.09968675338465623
+          },
+          "peak_3_5__mfe_2R_4R": {
+            "n": 3152,
+            "share": 0.03346960445978232
+          },
+          "peak_3_5__mfe_4R_6R": {
+            "n": 1709,
+            "share": 0.01814706663127157
+          },
+          "peak_3_5__mfe_6R_plus": {
+            "n": 2103,
+            "share": 0.02233076718874436
+          },
+          "peak_3_5__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_6_10__mfe_lt_2R": {
+            "n": 4449,
+            "share": 0.04724183700557473
+          },
+          "peak_6_10__mfe_2R_4R": {
+            "n": 1300,
+            "share": 0.01380408813379347
+          },
+          "peak_6_10__mfe_4R_6R": {
+            "n": 600,
+            "share": 0.00637111760021237
+          },
+          "peak_6_10__mfe_6R_plus": {
+            "n": 589,
+            "share": 0.0062543137775418105
+          },
+          "peak_6_10__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_gt_10__mfe_lt_2R": {
+            "n": 2169,
+            "share": 0.023031590124767718
+          },
+          "peak_gt_10__mfe_2R_4R": {
+            "n": 411,
+            "share": 0.004364215556145474
+          },
+          "peak_gt_10__mfe_4R_6R": {
+            "n": 150,
+            "share": 0.0015927794000530925
+          },
+          "peak_gt_10__mfe_6R_plus": {
+            "n": 109,
+            "share": 0.001157419697371914
+          },
+          "peak_gt_10__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_missing__mfe_lt_2R": {
+            "n": 1784,
+            "share": 0.018943456331298115
+          },
+          "peak_missing__mfe_2R_4R": {
+            "n": 650,
+            "share": 0.006902044066896735
+          },
+          "peak_missing__mfe_4R_6R": {
+            "n": 377,
+            "share": 0.004003185558800106
+          },
+          "peak_missing__mfe_6R_plus": {
+            "n": 594,
+            "share": 0.006307406424210247
+          },
+          "peak_missing__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          }
+        }
+      },
+      "peak_rank": [
+        {
+          "bucket": "peak_gt_10",
+          "rate": 0.7377516141283706,
+          "n": 15798,
+          "rank": 1
+        },
+        {
+          "bucket": "peak_6_10",
+          "rate": 0.6347368421052632,
+          "n": 19950,
+          "rank": 2
+        },
+        {
+          "bucket": "peak_3_5",
+          "rate": 0.44421716240233394,
+          "n": 29821,
+          "rank": 3
+        },
+        {
+          "bucket": "peak_le_2",
+          "rate": 0.08679968436478412,
+          "n": 70968,
+          "rank": 4
+        }
+      ],
+      "mfe_rank": [
+        {
+          "bucket": "mfe_6R_plus",
+          "rate": 0.5242742217558587,
+          "n": 28590,
+          "rank": 1
+        },
+        {
+          "bucket": "mfe_4R_6R",
+          "rate": 0.5117996930161166,
+          "n": 20848,
+          "rank": 2
+        },
+        {
+          "bucket": "mfe_2R_4R",
+          "rate": 0.49297350397031137,
+          "n": 36647,
+          "rank": 3
+        },
+        {
+          "bucket": "mfe_lt_2R",
+          "rate": 0.0,
+          "n": 53857,
+          "rank": 4
+        }
+      ]
+    },
+    "SOLUSDT": {
+      "n_all": 139942,
+      "n_DISAGREE_SL_TP": 44563,
+      "rate_DISAGREE_SL_TP": 0.3184390676137257,
+      "n_AGREE": 93779,
+      "rate_AGREE": 0.6701276243014963,
+      "n_DISAGREE": 46163,
+      "rate_DISAGREE": 0.32987237569850364,
+      "peak_marginal": [
+        {
+          "bucket": "peak_le_2",
+          "label": "Peak <= 2 bars",
+          "n": 70128,
+          "n_DISAGREE_SL_TP": 5854,
+          "rate_DISAGREE_SL_TP": 0.08347592972849646,
+          "n_AGREE": 64178,
+          "rate_AGREE": 0.9151551448779375,
+          "n_DISAGREE": 5950,
+          "rate_DISAGREE": 0.08484485512206251,
+          "reached_2r_rate": 0.5129334930412959
+        },
+        {
+          "bucket": "peak_3_5",
+          "label": "Peak 3-5",
+          "n": 30425,
+          "n_DISAGREE_SL_TP": 13987,
+          "rate_DISAGREE_SL_TP": 0.4597206244864421,
+          "n_AGREE": 16283,
+          "rate_AGREE": 0.5351848808545604,
+          "n_DISAGREE": 14142,
+          "rate_DISAGREE": 0.4648151191454396,
+          "reached_2r_rate": 0.6883812654067378
+        },
+        {
+          "bucket": "peak_6_10",
+          "label": "Peak 6-10",
+          "n": 20189,
+          "n_DISAGREE_SL_TP": 13192,
+          "rate_DISAGREE_SL_TP": 0.6534251324978949,
+          "n_AGREE": 6795,
+          "rate_AGREE": 0.3365694189905394,
+          "n_DISAGREE": 13394,
+          "rate_DISAGREE": 0.6634305810094606,
+          "reached_2r_rate": 0.7720540888602705
+        },
+        {
+          "bucket": "peak_gt_10",
+          "label": "Peak >10",
+          "n": 15521,
+          "n_DISAGREE_SL_TP": 11530,
+          "rate_DISAGREE_SL_TP": 0.7428645061529541,
+          "n_AGREE": 2844,
+          "rate_AGREE": 0.1832356162618388,
+          "n_DISAGREE": 12677,
+          "rate_DISAGREE": 0.8167643837381612,
+          "reached_2r_rate": 0.7877069776431931
+        },
+        {
+          "bucket": "peak_missing",
+          "label": "Peak missing/non-finite",
+          "n": 3679,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 3679,
+          "rate_AGREE": 1.0,
+          "n_DISAGREE": 0,
+          "rate_DISAGREE": 0.0,
+          "reached_2r_rate": 0.4558303886925795
+        }
+      ],
+      "mfe_marginal": [
+        {
+          "bucket": "mfe_lt_2R",
+          "label": "MFE < 2R",
+          "n": 53526,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 51974,
+          "rate_AGREE": 0.9710047453573964,
+          "n_DISAGREE": 1552,
+          "rate_DISAGREE": 0.028995254642603593,
+          "reached_2r_rate": 0.0
+        },
+        {
+          "bucket": "mfe_2R_4R",
+          "label": "MFE 2R-4R",
+          "n": 38062,
+          "n_DISAGREE_SL_TP": 18715,
+          "rate_DISAGREE_SL_TP": 0.49169775629236506,
+          "n_AGREE": 19343,
+          "rate_AGREE": 0.5081971520151332,
+          "n_DISAGREE": 18719,
+          "rate_DISAGREE": 0.4918028479848668,
+          "reached_2r_rate": 0.9997109978456203
+        },
+        {
+          "bucket": "mfe_4R_6R",
+          "label": "MFE 4R-6R",
+          "n": 22142,
+          "n_DISAGREE_SL_TP": 11620,
+          "rate_DISAGREE_SL_TP": 0.52479450817451,
+          "n_AGREE": 10510,
+          "rate_AGREE": 0.4746635353626592,
+          "n_DISAGREE": 11632,
+          "rate_DISAGREE": 0.5253364646373408,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "bucket": "mfe_6R_plus",
+          "label": "MFE 6R+",
+          "n": 26212,
+          "n_DISAGREE_SL_TP": 14228,
+          "rate_DISAGREE_SL_TP": 0.5428048222188311,
+          "n_AGREE": 11952,
+          "rate_AGREE": 0.4559743628872272,
+          "n_DISAGREE": 14260,
+          "rate_DISAGREE": 0.5440256371127727,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "bucket": "mfe_missing",
+          "label": "MFE missing/non-finite",
+          "n": 0,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": null,
+          "n_AGREE": 0,
+          "rate_AGREE": null,
+          "n_DISAGREE": 0,
+          "rate_DISAGREE": null,
+          "reached_2r_rate": null
+        }
+      ],
+      "cross": [
+        {
+          "peak_bucket": "peak_le_2",
+          "mfe_bucket": "mfe_lt_2R",
+          "peak_label": "Peak <= 2 bars",
+          "mfe_label": "MFE < 2R",
+          "n": 34153,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 34100,
+          "rate_AGREE": 0.9984481597517055,
+          "reached_2r_rate": 0.0
+        },
+        {
+          "peak_bucket": "peak_le_2",
+          "mfe_bucket": "mfe_2R_4R",
+          "peak_label": "Peak <= 2 bars",
+          "mfe_label": "MFE 2R-4R",
+          "n": 15535,
+          "n_DISAGREE_SL_TP": 1972,
+          "rate_DISAGREE_SL_TP": 0.1269391696169939,
+          "n_AGREE": 13559,
+          "rate_AGREE": 0.8728033472803347,
+          "reached_2r_rate": 0.9997425168973286
+        },
+        {
+          "peak_bucket": "peak_le_2",
+          "mfe_bucket": "mfe_4R_6R",
+          "peak_label": "Peak <= 2 bars",
+          "mfe_label": "MFE 4R-6R",
+          "n": 9099,
+          "n_DISAGREE_SL_TP": 1524,
+          "rate_DISAGREE_SL_TP": 0.16749093306956808,
+          "n_AGREE": 7563,
+          "rate_AGREE": 0.8311902406857896,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_le_2",
+          "mfe_bucket": "mfe_6R_plus",
+          "peak_label": "Peak <= 2 bars",
+          "mfe_label": "MFE 6R+",
+          "n": 11341,
+          "n_DISAGREE_SL_TP": 2358,
+          "rate_DISAGREE_SL_TP": 0.20791817300061724,
+          "n_AGREE": 8956,
+          "rate_AGREE": 0.7897010845604444,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_le_2",
+          "mfe_bucket": "mfe_missing",
+          "peak_label": "Peak <= 2 bars",
+          "mfe_label": "MFE missing/non-finite",
+          "n": 0,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": null,
+          "n_AGREE": 0,
+          "rate_AGREE": null,
+          "reached_2r_rate": null
+        },
+        {
+          "peak_bucket": "peak_3_5",
+          "mfe_bucket": "mfe_lt_2R",
+          "peak_label": "Peak 3-5",
+          "mfe_label": "MFE < 2R",
+          "n": 9479,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 9328,
+          "rate_AGREE": 0.9840700495832894,
+          "reached_2r_rate": 0.0
+        },
+        {
+          "peak_bucket": "peak_3_5",
+          "mfe_bucket": "mfe_2R_4R",
+          "peak_label": "Peak 3-5",
+          "mfe_label": "MFE 2R-4R",
+          "n": 8422,
+          "n_DISAGREE_SL_TP": 4988,
+          "rate_DISAGREE_SL_TP": 0.59225837093327,
+          "n_AGREE": 3434,
+          "rate_AGREE": 0.40774162906673,
+          "reached_2r_rate": 0.9997625267157445
+        },
+        {
+          "peak_bucket": "peak_3_5",
+          "mfe_bucket": "mfe_4R_6R",
+          "peak_label": "Peak 3-5",
+          "mfe_label": "MFE 4R-6R",
+          "n": 5430,
+          "n_DISAGREE_SL_TP": 3706,
+          "rate_DISAGREE_SL_TP": 0.6825046040515653,
+          "n_AGREE": 1724,
+          "rate_AGREE": 0.3174953959484346,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_3_5",
+          "mfe_bucket": "mfe_6R_plus",
+          "peak_label": "Peak 3-5",
+          "mfe_label": "MFE 6R+",
+          "n": 7094,
+          "n_DISAGREE_SL_TP": 5293,
+          "rate_DISAGREE_SL_TP": 0.7461234846349027,
+          "n_AGREE": 1797,
+          "rate_AGREE": 0.25331265858471946,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_3_5",
+          "mfe_bucket": "mfe_missing",
+          "peak_label": "Peak 3-5",
+          "mfe_label": "MFE missing/non-finite",
+          "n": 0,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": null,
+          "n_AGREE": 0,
+          "rate_AGREE": null,
+          "reached_2r_rate": null
+        },
+        {
+          "peak_bucket": "peak_6_10",
+          "mfe_bucket": "mfe_lt_2R",
+          "peak_label": "Peak 6-10",
+          "mfe_label": "MFE < 2R",
+          "n": 4599,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 4398,
+          "rate_AGREE": 0.9562948467058056,
+          "reached_2r_rate": 0.0
+        },
+        {
+          "peak_bucket": "peak_6_10",
+          "mfe_bucket": "mfe_2R_4R",
+          "peak_label": "Peak 6-10",
+          "mfe_label": "MFE 2R-4R",
+          "n": 6593,
+          "n_DISAGREE_SL_TP": 5355,
+          "rate_DISAGREE_SL_TP": 0.8122250872137116,
+          "n_AGREE": 1238,
+          "rate_AGREE": 0.1877749127862885,
+          "reached_2r_rate": 0.9995449719399363
+        },
+        {
+          "peak_bucket": "peak_6_10",
+          "mfe_bucket": "mfe_4R_6R",
+          "peak_label": "Peak 6-10",
+          "mfe_label": "MFE 4R-6R",
+          "n": 4162,
+          "n_DISAGREE_SL_TP": 3547,
+          "rate_DISAGREE_SL_TP": 0.8522345026429601,
+          "n_AGREE": 615,
+          "rate_AGREE": 0.1477654973570399,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_6_10",
+          "mfe_bucket": "mfe_6R_plus",
+          "peak_label": "Peak 6-10",
+          "mfe_label": "MFE 6R+",
+          "n": 4835,
+          "n_DISAGREE_SL_TP": 4290,
+          "rate_DISAGREE_SL_TP": 0.8872802481902792,
+          "n_AGREE": 544,
+          "rate_AGREE": 0.1125129265770424,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_6_10",
+          "mfe_bucket": "mfe_missing",
+          "peak_label": "Peak 6-10",
+          "mfe_label": "MFE missing/non-finite",
+          "n": 0,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": null,
+          "n_AGREE": 0,
+          "rate_AGREE": null,
+          "reached_2r_rate": null
+        },
+        {
+          "peak_bucket": "peak_gt_10",
+          "mfe_bucket": "mfe_lt_2R",
+          "peak_label": "Peak >10",
+          "mfe_label": "MFE < 2R",
+          "n": 3294,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 2147,
+          "rate_AGREE": 0.6517911353976927,
+          "reached_2r_rate": 0.0
+        },
+        {
+          "peak_bucket": "peak_gt_10",
+          "mfe_bucket": "mfe_2R_4R",
+          "peak_label": "Peak >10",
+          "mfe_label": "MFE 2R-4R",
+          "n": 6774,
+          "n_DISAGREE_SL_TP": 6400,
+          "rate_DISAGREE_SL_TP": 0.9447888987304399,
+          "n_AGREE": 374,
+          "rate_AGREE": 0.05521110126956008,
+          "reached_2r_rate": 0.9998523767345734
+        },
+        {
+          "peak_bucket": "peak_gt_10",
+          "mfe_bucket": "mfe_4R_6R",
+          "peak_label": "Peak >10",
+          "mfe_label": "MFE 4R-6R",
+          "n": 3017,
+          "n_DISAGREE_SL_TP": 2843,
+          "rate_DISAGREE_SL_TP": 0.942326814716606,
+          "n_AGREE": 174,
+          "rate_AGREE": 0.0576731852833941,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_gt_10",
+          "mfe_bucket": "mfe_6R_plus",
+          "peak_label": "Peak >10",
+          "mfe_label": "MFE 6R+",
+          "n": 2436,
+          "n_DISAGREE_SL_TP": 2287,
+          "rate_DISAGREE_SL_TP": 0.9388341543513957,
+          "n_AGREE": 149,
+          "rate_AGREE": 0.06116584564860427,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_gt_10",
+          "mfe_bucket": "mfe_missing",
+          "peak_label": "Peak >10",
+          "mfe_label": "MFE missing/non-finite",
+          "n": 0,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": null,
+          "n_AGREE": 0,
+          "rate_AGREE": null,
+          "reached_2r_rate": null
+        },
+        {
+          "peak_bucket": "peak_missing",
+          "mfe_bucket": "mfe_lt_2R",
+          "peak_label": "Peak missing/non-finite",
+          "mfe_label": "MFE < 2R",
+          "n": 2001,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 2001,
+          "rate_AGREE": 1.0,
+          "reached_2r_rate": 0.0
+        },
+        {
+          "peak_bucket": "peak_missing",
+          "mfe_bucket": "mfe_2R_4R",
+          "peak_label": "Peak missing/non-finite",
+          "mfe_label": "MFE 2R-4R",
+          "n": 738,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 738,
+          "rate_AGREE": 1.0,
+          "reached_2r_rate": 0.9986449864498645
+        },
+        {
+          "peak_bucket": "peak_missing",
+          "mfe_bucket": "mfe_4R_6R",
+          "peak_label": "Peak missing/non-finite",
+          "mfe_label": "MFE 4R-6R",
+          "n": 434,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 434,
+          "rate_AGREE": 1.0,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_missing",
+          "mfe_bucket": "mfe_6R_plus",
+          "peak_label": "Peak missing/non-finite",
+          "mfe_label": "MFE 6R+",
+          "n": 506,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": 0.0,
+          "n_AGREE": 506,
+          "rate_AGREE": 1.0,
+          "reached_2r_rate": 1.0
+        },
+        {
+          "peak_bucket": "peak_missing",
+          "mfe_bucket": "mfe_missing",
+          "peak_label": "Peak missing/non-finite",
+          "mfe_label": "MFE missing/non-finite",
+          "n": 0,
+          "n_DISAGREE_SL_TP": 0,
+          "rate_DISAGREE_SL_TP": null,
+          "n_AGREE": 0,
+          "rate_AGREE": null,
+          "reached_2r_rate": null
+        }
+      ],
+      "composition_DISAGREE_SL_TP": {
+        "n": 44563,
+        "peak": {
+          "peak_le_2": {
+            "n": 5854,
+            "share": 0.1313645849695936
+          },
+          "peak_3_5": {
+            "n": 13987,
+            "share": 0.31387025110517697
+          },
+          "peak_6_10": {
+            "n": 13192,
+            "share": 0.29603033907052934
+          },
+          "peak_gt_10": {
+            "n": 11530,
+            "share": 0.25873482485470006
+          },
+          "peak_missing": {
+            "n": 0,
+            "share": 0.0
+          }
+        },
+        "mfe": {
+          "mfe_lt_2R": {
+            "n": 0,
+            "share": 0.0
+          },
+          "mfe_2R_4R": {
+            "n": 18715,
+            "share": 0.41996723739425085
+          },
+          "mfe_4R_6R": {
+            "n": 11620,
+            "share": 0.26075443753786776
+          },
+          "mfe_6R_plus": {
+            "n": 14228,
+            "share": 0.31927832506788145
+          },
+          "mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          }
+        },
+        "cross": {
+          "peak_le_2__mfe_lt_2R": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_le_2__mfe_2R_4R": {
+            "n": 1972,
+            "share": 0.04425195790229563
+          },
+          "peak_le_2__mfe_4R_6R": {
+            "n": 1524,
+            "share": 0.034198774768305545
+          },
+          "peak_le_2__mfe_6R_plus": {
+            "n": 2358,
+            "share": 0.05291385229899244
+          },
+          "peak_le_2__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_3_5__mfe_lt_2R": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_3_5__mfe_2R_4R": {
+            "n": 4988,
+            "share": 0.111931422929336
+          },
+          "peak_3_5__mfe_4R_6R": {
+            "n": 3706,
+            "share": 0.08316316226465902
+          },
+          "peak_3_5__mfe_6R_plus": {
+            "n": 5293,
+            "share": 0.11877566591118192
+          },
+          "peak_3_5__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_6_10__mfe_lt_2R": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_6_10__mfe_2R_4R": {
+            "n": 5355,
+            "share": 0.1201669546484752
+          },
+          "peak_6_10__mfe_4R_6R": {
+            "n": 3547,
+            "share": 0.0795951798577295
+          },
+          "peak_6_10__mfe_6R_plus": {
+            "n": 4290,
+            "share": 0.09626820456432467
+          },
+          "peak_6_10__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_gt_10__mfe_lt_2R": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_gt_10__mfe_2R_4R": {
+            "n": 6400,
+            "share": 0.14361690191414403
+          },
+          "peak_gt_10__mfe_4R_6R": {
+            "n": 2843,
+            "share": 0.06379732064717367
+          },
+          "peak_gt_10__mfe_6R_plus": {
+            "n": 2287,
+            "share": 0.0513206022933824
+          },
+          "peak_gt_10__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_missing__mfe_lt_2R": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_missing__mfe_2R_4R": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_missing__mfe_4R_6R": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_missing__mfe_6R_plus": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_missing__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          }
+        }
+      },
+      "composition_AGREE": {
+        "n": 93779,
+        "peak": {
+          "peak_le_2": {
+            "n": 64178,
+            "share": 0.6843536399407116
+          },
+          "peak_3_5": {
+            "n": 16283,
+            "share": 0.17363162328453066
+          },
+          "peak_6_10": {
+            "n": 6795,
+            "share": 0.07245758645325713
+          },
+          "peak_gt_10": {
+            "n": 2844,
+            "share": 0.03032661896586656
+          },
+          "peak_missing": {
+            "n": 3679,
+            "share": 0.039230531355633994
+          }
+        },
+        "mfe": {
+          "mfe_lt_2R": {
+            "n": 51974,
+            "share": 0.5542178952643982
+          },
+          "mfe_2R_4R": {
+            "n": 19343,
+            "share": 0.20626152976679213
+          },
+          "mfe_4R_6R": {
+            "n": 10510,
+            "share": 0.1120719990616236
+          },
+          "mfe_6R_plus": {
+            "n": 11952,
+            "share": 0.12744857590718606
+          },
+          "mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          }
+        },
+        "cross": {
+          "peak_le_2__mfe_lt_2R": {
+            "n": 34100,
+            "share": 0.36362085328271787
+          },
+          "peak_le_2__mfe_2R_4R": {
+            "n": 13559,
+            "share": 0.14458460849443905
+          },
+          "peak_le_2__mfe_4R_6R": {
+            "n": 7563,
+            "share": 0.08064705317821687
+          },
+          "peak_le_2__mfe_6R_plus": {
+            "n": 8956,
+            "share": 0.09550112498533787
+          },
+          "peak_le_2__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_3_5__mfe_lt_2R": {
+            "n": 9328,
+            "share": 0.09946789793024025
+          },
+          "peak_3_5__mfe_2R_4R": {
+            "n": 3434,
+            "share": 0.03661800616342678
+          },
+          "peak_3_5__mfe_4R_6R": {
+            "n": 1724,
+            "share": 0.018383646658633596
+          },
+          "peak_3_5__mfe_6R_plus": {
+            "n": 1797,
+            "share": 0.01916207253223003
+          },
+          "peak_3_5__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_6_10__mfe_lt_2R": {
+            "n": 4398,
+            "share": 0.046897493042152294
+          },
+          "peak_6_10__mfe_2R_4R": {
+            "n": 1238,
+            "share": 0.013201249746745006
+          },
+          "peak_6_10__mfe_4R_6R": {
+            "n": 615,
+            "share": 0.006557971400846671
+          },
+          "peak_6_10__mfe_6R_plus": {
+            "n": 544,
+            "share": 0.0058008722635131535
+          },
+          "peak_6_10__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_gt_10__mfe_lt_2R": {
+            "n": 2147,
+            "share": 0.022894251378240332
+          },
+          "peak_gt_10__mfe_2R_4R": {
+            "n": 374,
+            "share": 0.003988099681165293
+          },
+          "peak_gt_10__mfe_4R_6R": {
+            "n": 174,
+            "share": 0.0018554260548736925
+          },
+          "peak_gt_10__mfe_6R_plus": {
+            "n": 149,
+            "share": 0.0015888418515872423
+          },
+          "peak_gt_10__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          },
+          "peak_missing__mfe_lt_2R": {
+            "n": 2001,
+            "share": 0.021337399631047464
+          },
+          "peak_missing__mfe_2R_4R": {
+            "n": 738,
+            "share": 0.007869565681016006
+          },
+          "peak_missing__mfe_4R_6R": {
+            "n": 434,
+            "share": 0.004627901769052773
+          },
+          "peak_missing__mfe_6R_plus": {
+            "n": 506,
+            "share": 0.005395664274517749
+          },
+          "peak_missing__mfe_missing": {
+            "n": 0,
+            "share": 0.0
+          }
+        }
+      },
+      "peak_rank": [
+        {
+          "bucket": "peak_gt_10",
+          "rate": 0.7428645061529541,
+          "n": 15521,
+          "rank": 1
+        },
+        {
+          "bucket": "peak_6_10",
+          "rate": 0.6534251324978949,
+          "n": 20189,
+          "rank": 2
+        },
+        {
+          "bucket": "peak_3_5",
+          "rate": 0.4597206244864421,
+          "n": 30425,
+          "rank": 3
+        },
+        {
+          "bucket": "peak_le_2",
+          "rate": 0.08347592972849646,
+          "n": 70128,
+          "rank": 4
+        }
+      ],
+      "mfe_rank": [
+        {
+          "bucket": "mfe_6R_plus",
+          "rate": 0.5428048222188311,
+          "n": 26212,
+          "rank": 1
+        },
+        {
+          "bucket": "mfe_4R_6R",
+          "rate": 0.52479450817451,
+          "n": 22142,
+          "rank": 2
+        },
+        {
+          "bucket": "mfe_2R_4R",
+          "rate": 0.49169775629236506,
+          "n": 38062,
+          "rank": 3
+        },
+        {
+          "bucket": "mfe_lt_2R",
+          "rate": 0.0,
+          "n": 53526,
+          "rank": 4
+        }
+      ]
+    }
+  },
+  "hottest_cross_cells": [
+    {
+      "peak_bucket": "peak_gt_10",
+      "mfe_bucket": "mfe_6R_plus",
+      "peak_label": "Peak >10",
+      "mfe_label": "MFE 6R+",
+      "n": 9969,
+      "n_DISAGREE_SL_TP": 9470,
+      "rate_DISAGREE_SL_TP": 0.9499448289698064,
+      "n_AGREE": 499,
+      "rate_AGREE": 0.0500551710301936,
+      "reached_2r_rate": 1.0
+    },
+    {
+      "peak_bucket": "peak_gt_10",
+      "mfe_bucket": "mfe_4R_6R",
+      "peak_label": "Peak >10",
+      "mfe_label": "MFE 4R-6R",
+      "n": 11699,
+      "n_DISAGREE_SL_TP": 11025,
+      "rate_DISAGREE_SL_TP": 0.9423882383109667,
+      "n_AGREE": 672,
+      "rate_AGREE": 0.05744080690657321,
+      "reached_2r_rate": 1.0
+    },
+    {
+      "peak_bucket": "peak_gt_10",
+      "mfe_bucket": "mfe_2R_4R",
+      "peak_label": "Peak >10",
+      "mfe_label": "MFE 2R-4R",
+      "n": 26688,
+      "n_DISAGREE_SL_TP": 25134,
+      "rate_DISAGREE_SL_TP": 0.9417715827338129,
+      "n_AGREE": 1552,
+      "rate_AGREE": 0.05815347721822542,
+      "reached_2r_rate": 0.9998875899280576
+    },
+    {
+      "peak_bucket": "peak_6_10",
+      "mfe_bucket": "mfe_6R_plus",
+      "peak_label": "Peak 6-10",
+      "mfe_label": "MFE 6R+",
+      "n": 19632,
+      "n_DISAGREE_SL_TP": 17255,
+      "rate_DISAGREE_SL_TP": 0.8789221678891606,
+      "n_AGREE": 2372,
+      "rate_AGREE": 0.12082314588427058,
+      "reached_2r_rate": 1.0
+    },
+    {
+      "peak_bucket": "peak_6_10",
+      "mfe_bucket": "mfe_4R_6R",
+      "peak_label": "Peak 6-10",
+      "mfe_label": "MFE 4R-6R",
+      "n": 15333,
+      "n_DISAGREE_SL_TP": 13033,
+      "rate_DISAGREE_SL_TP": 0.8499967390595448,
+      "n_AGREE": 2300,
+      "rate_AGREE": 0.15000326094045524,
+      "reached_2r_rate": 1.0
+    },
+    {
+      "peak_bucket": "peak_6_10",
+      "mfe_bucket": "mfe_2R_4R",
+      "peak_label": "Peak 6-10",
+      "mfe_label": "MFE 2R-4R",
+      "n": 25554,
+      "n_DISAGREE_SL_TP": 20604,
+      "rate_DISAGREE_SL_TP": 0.8062925569382484,
+      "n_AGREE": 4949,
+      "rate_AGREE": 0.19366831024497144,
+      "reached_2r_rate": 0.9998043359160993
+    },
+    {
+      "peak_bucket": "peak_3_5",
+      "mfe_bucket": "mfe_6R_plus",
+      "peak_label": "Peak 3-5",
+      "mfe_label": "MFE 6R+",
+      "n": 29992,
+      "n_DISAGREE_SL_TP": 21911,
+      "rate_DISAGREE_SL_TP": 0.7305614830621499,
+      "n_AGREE": 8069,
+      "rate_AGREE": 0.2690384102427314,
+      "reached_2r_rate": 1.0
+    },
+    {
+      "peak_bucket": "peak_3_5",
+      "mfe_bucket": "mfe_4R_6R",
+      "peak_label": "Peak 3-5",
+      "mfe_label": "MFE 4R-6R",
+      "n": 20660,
+      "n_DISAGREE_SL_TP": 13922,
+      "rate_DISAGREE_SL_TP": 0.673862536302033,
+      "n_AGREE": 6734,
+      "rate_AGREE": 0.32594385285575994,
+      "reached_2r_rate": 1.0
+    },
+    {
+      "peak_bucket": "peak_3_5",
+      "mfe_bucket": "mfe_2R_4R",
+      "peak_label": "Peak 3-5",
+      "mfe_label": "MFE 2R-4R",
+      "n": 32292,
+      "n_DISAGREE_SL_TP": 19413,
+      "rate_DISAGREE_SL_TP": 0.6011705685618729,
+      "n_AGREE": 12871,
+      "rate_AGREE": 0.3985816920599529,
+      "reached_2r_rate": 0.9998761303109129
+    },
+    {
+      "peak_bucket": "peak_le_2",
+      "mfe_bucket": "mfe_6R_plus",
+      "peak_label": "Peak <= 2 bars",
+      "mfe_label": "MFE 6R+",
+      "n": 50170,
+      "n_DISAGREE_SL_TP": 10371,
+      "rate_DISAGREE_SL_TP": 0.20671716165038867,
+      "n_AGREE": 39669,
+      "rate_AGREE": 0.7906916483954555,
+      "reached_2r_rate": 1.0
+    }
+  ],
+  "coldest_cross_cells": [
+    {
+      "peak_bucket": "peak_le_2",
+      "mfe_bucket": "mfe_lt_2R",
+      "peak_label": "Peak <= 2 bars",
+      "mfe_label": "MFE < 2R",
+      "n": 135163,
+      "n_DISAGREE_SL_TP": 0,
+      "rate_DISAGREE_SL_TP": 0.0,
+      "n_AGREE": 134884,
+      "rate_AGREE": 0.9979358256327545,
+      "reached_2r_rate": 0.0
+    },
+    {
+      "peak_bucket": "peak_3_5",
+      "mfe_bucket": "mfe_lt_2R",
+      "peak_label": "Peak 3-5",
+      "mfe_label": "MFE < 2R",
+      "n": 37915,
+      "n_DISAGREE_SL_TP": 0,
+      "rate_DISAGREE_SL_TP": 0.0,
+      "n_AGREE": 37154,
+      "rate_AGREE": 0.9799287880785968,
+      "reached_2r_rate": 0.0
+    },
+    {
+      "peak_bucket": "peak_6_10",
+      "mfe_bucket": "mfe_lt_2R",
+      "peak_label": "Peak 6-10",
+      "mfe_label": "MFE < 2R",
+      "n": 18589,
+      "n_DISAGREE_SL_TP": 0,
+      "rate_DISAGREE_SL_TP": 0.0,
+      "n_AGREE": 17346,
+      "rate_AGREE": 0.9331324977137017,
+      "reached_2r_rate": 0.0
+    },
+    {
+      "peak_bucket": "peak_gt_10",
+      "mfe_bucket": "mfe_lt_2R",
+      "peak_label": "Peak >10",
+      "mfe_label": "MFE < 2R",
+      "n": 13606,
+      "n_DISAGREE_SL_TP": 0,
+      "rate_DISAGREE_SL_TP": 0.0,
+      "n_AGREE": 8578,
+      "rate_AGREE": 0.6304571512567985,
+      "reached_2r_rate": 0.0
+    },
+    {
+      "peak_bucket": "peak_le_2",
+      "mfe_bucket": "mfe_2R_4R",
+      "peak_label": "Peak <= 2 bars",
+      "mfe_label": "MFE 2R-4R",
+      "n": 60851,
+      "n_DISAGREE_SL_TP": 8305,
+      "rate_DISAGREE_SL_TP": 0.13648091239256543,
+      "n_AGREE": 52487,
+      "rate_AGREE": 0.8625495061708107,
+      "reached_2r_rate": 0.9998192305796125
+    },
+    {
+      "peak_bucket": "peak_le_2",
+      "mfe_bucket": "mfe_4R_6R",
+      "peak_label": "Peak <= 2 bars",
+      "mfe_label": "MFE 4R-6R",
+      "n": 35460,
+      "n_DISAGREE_SL_TP": 6028,
+      "rate_DISAGREE_SL_TP": 0.1699943598420756,
+      "n_AGREE": 29374,
+      "rate_AGREE": 0.828369994359842,
+      "reached_2r_rate": 1.0
+    },
+    {
+      "peak_bucket": "peak_le_2",
+      "mfe_bucket": "mfe_6R_plus",
+      "peak_label": "Peak <= 2 bars",
+      "mfe_label": "MFE 6R+",
+      "n": 50170,
+      "n_DISAGREE_SL_TP": 10371,
+      "rate_DISAGREE_SL_TP": 0.20671716165038867,
+      "n_AGREE": 39669,
+      "rate_AGREE": 0.7906916483954555,
+      "reached_2r_rate": 1.0
+    },
+    {
+      "peak_bucket": "peak_3_5",
+      "mfe_bucket": "mfe_2R_4R",
+      "peak_label": "Peak 3-5",
+      "mfe_label": "MFE 2R-4R",
+      "n": 32292,
+      "n_DISAGREE_SL_TP": 19413,
+      "rate_DISAGREE_SL_TP": 0.6011705685618729,
+      "n_AGREE": 12871,
+      "rate_AGREE": 0.3985816920599529,
+      "reached_2r_rate": 0.9998761303109129
+    },
+    {
+      "peak_bucket": "peak_3_5",
+      "mfe_bucket": "mfe_4R_6R",
+      "peak_label": "Peak 3-5",
+      "mfe_label": "MFE 4R-6R",
+      "n": 20660,
+      "n_DISAGREE_SL_TP": 13922,
+      "rate_DISAGREE_SL_TP": 0.673862536302033,
+      "n_AGREE": 6734,
+      "rate_AGREE": 0.32594385285575994,
+      "reached_2r_rate": 1.0
+    },
+    {
+      "peak_bucket": "peak_3_5",
+      "mfe_bucket": "mfe_6R_plus",
+      "peak_label": "Peak 3-5",
+      "mfe_label": "MFE 6R+",
+      "n": 29992,
+      "n_DISAGREE_SL_TP": 21911,
+      "rate_DISAGREE_SL_TP": 0.7305614830621499,
+      "n_AGREE": 8069,
+      "rate_AGREE": 0.2690384102427314,
+      "reached_2r_rate": 1.0
+    }
+  ],
+  "holdout_survival": {
+    "chronological_holdout_used": false,
+    "reason": "anatomy_summary.json has by_year/by_month/by_session splits but no chronological IS/OOS or train/holdout partition usable for this analysis",
+    "instrument_holdout": [
+      {
+        "held_out": "BNBUSDT",
+        "train_instruments": [
+          "BTCUSDT",
+          "ETHUSDT",
+          "SOLUSDT"
+        ],
+        "peak_spearman_rho": 1.0,
+        "peak_spearman_p": 0.0,
+        "mfe_spearman_rho": 1.0,
+        "mfe_spearman_p": 0.0,
+        "train_peak_rank": [
+          {
+            "bucket": "peak_gt_10",
+            "rate": 0.7333944406548432,
+            "n": 46912,
+            "rank": 1
+          },
+          {
+            "bucket": "peak_6_10",
+            "rate": 0.6396322470442443,
+            "n": 59714,
+            "rank": 2
+          },
+          {
+            "bucket": "peak_3_5",
+            "rate": 0.45138742730545556,
+            "n": 90275,
+            "rank": 3
+          },
+          {
+            "bucket": "peak_le_2",
+            "rate": 0.08667426345079979,
+            "n": 211493,
+            "rank": 4
+          }
+        ],
+        "holdout_peak_rank": [
+          {
+            "bucket": "peak_gt_10",
+            "rate": 0.7457807308970099,
+            "n": 15050,
+            "rank": 1
+          },
+          {
+            "bucket": "peak_6_10",
+            "rate": 0.6546870166030732,
+            "n": 19394,
+            "rank": 2
+          },
+          {
+            "bucket": "peak_3_5",
+            "rate": 0.4740060162176301,
+            "n": 30584,
+            "rank": 3
+          },
+          {
+            "bucket": "peak_le_2",
+            "rate": 0.09084688742854699,
+            "n": 70151,
+            "rank": 4
+          }
+        ],
+        "train_mfe_rank": [
+          {
+            "bucket": "mfe_6R_plus",
+            "rate": 0.5210718463119839,
+            "n": 84639,
+            "rank": 1
+          },
+          {
+            "bucket": "mfe_4R_6R",
+            "rate": 0.5142307813534214,
+            "n": 63454,
+            "rank": 2
+          },
+          {
+            "bucket": "mfe_2R_4R",
+            "rate": 0.494706041235257,
+            "n": 111070,
+            "rank": 3
+          },
+          {
+            "bucket": "mfe_lt_2R",
+            "rate": 0.0,
+            "n": 160663,
+            "rank": 4
+          }
+        ],
+        "holdout_mfe_rank": [
+          {
+            "bucket": "mfe_6R_plus",
+            "rate": 0.5382448537378115,
+            "n": 27690,
+            "rank": 1
+          },
+          {
+            "bucket": "mfe_4R_6R",
+            "rate": 0.5291354694693764,
+            "n": 21503,
+            "rank": 2
+          },
+          {
+            "bucket": "mfe_2R_4R",
+            "rate": 0.49366548422372175,
+            "n": 37493,
+            "rank": 3
+          },
+          {
+            "bucket": "mfe_lt_2R",
+            "rate": 0.0,
+            "n": 53256,
+            "rank": 4
+          }
+        ]
+      },
+      {
+        "held_out": "BTCUSDT",
+        "train_instruments": [
+          "BNBUSDT",
+          "ETHUSDT",
+          "SOLUSDT"
+        ],
+        "peak_spearman_rho": 1.0,
+        "peak_spearman_p": 0.0,
+        "mfe_spearman_rho": 0.39999999999999997,
+        "mfe_spearman_p": 0.6000000000000001,
+        "train_peak_rank": [
+          {
+            "bucket": "peak_gt_10",
+            "rate": 0.7420690547564105,
+            "n": 46369,
+            "rank": 1
+          },
+          {
+            "bucket": "peak_6_10",
+            "rate": 0.6475736146339005,
+            "n": 59533,
+            "rank": 2
+          },
+          {
+            "bucket": "peak_3_5",
+            "rate": 0.459440713420676,
+            "n": 90830,
+            "rank": 3
+          },
+          {
+            "bucket": "peak_le_2",
+            "rate": 0.08704028932955261,
+            "n": 211247,
+            "rank": 4
+          }
+        ],
+        "holdout_peak_rank": [
+          {
+            "bucket": "peak_gt_10",
+            "rate": 0.7195536458667351,
+            "n": 15593,
+            "rank": 1
+          },
+          {
+            "bucket": "peak_6_10",
+            "rate": 0.6303959131545338,
+            "n": 19575,
+            "rank": 2
+          },
+          {
+            "bucket": "peak_3_5",
+            "rate": 0.4500649372273469,
+            "n": 30029,
+            "rank": 3
+          },
+          {
+            "bucket": "peak_le_2",
+            "rate": 0.08973393752574683,
+            "n": 70397,
+            "rank": 4
+          }
+        ],
+        "train_mfe_rank": [
+          {
+            "bucket": "mfe_6R_plus",
+            "rate": 0.5348518644232167,
+            "n": 82492,
+            "rank": 1
+          },
+          {
+            "bucket": "mfe_4R_6R",
+            "rate": 0.5220411517529034,
+            "n": 64493,
+            "rank": 2
+          },
+          {
+            "bucket": "mfe_2R_4R",
+            "rate": 0.4927719648491114,
+            "n": 112202,
+            "rank": 3
+          },
+          {
+            "bucket": "mfe_lt_2R",
+            "rate": 0.0,
+            "n": 160639,
+            "rank": 4
+          }
+        ],
+        "holdout_mfe_rank": [
+          {
+            "bucket": "mfe_4R_6R",
+            "rate": 0.5052775605942142,
+            "n": 20464,
+            "rank": 1
+          },
+          {
+            "bucket": "mfe_2R_4R",
+            "rate": 0.4996012210885289,
+            "n": 36361,
+            "rank": 2
+          },
+          {
+            "bucket": "mfe_6R_plus",
+            "rate": 0.49891074839963806,
+            "n": 29837,
+            "rank": 3
+          },
+          {
+            "bucket": "mfe_lt_2R",
+            "rate": 0.0,
+            "n": 53280,
+            "rank": 4
+          }
+        ]
+      },
+      {
+        "held_out": "ETHUSDT",
+        "train_instruments": [
+          "BNBUSDT",
+          "BTCUSDT",
+          "SOLUSDT"
+        ],
+        "peak_spearman_rho": 1.0,
+        "peak_spearman_p": 0.0,
+        "mfe_spearman_rho": 1.0,
+        "mfe_spearman_p": 0.0,
+        "train_peak_rank": [
+          {
+            "bucket": "peak_gt_10",
+            "rate": 0.735941426219565,
+            "n": 46164,
+            "rank": 1
+          },
+          {
+            "bucket": "peak_6_10",
+            "rate": 0.6462186010345178,
+            "n": 59158,
+            "rank": 2
+          },
+          {
+            "bucket": "peak_3_5",
+            "rate": 0.4613348272150091,
+            "n": 91038,
+            "rank": 3
+          },
+          {
+            "bucket": "peak_le_2",
+            "rate": 0.08802141677267462,
+            "n": 210676,
+            "rank": 4
+          }
+        ],
+        "holdout_peak_rank": [
+          {
+            "bucket": "peak_gt_10",
+            "rate": 0.7377516141283706,
+            "n": 15798,
+            "rank": 1
+          },
+          {
+            "bucket": "peak_6_10",
+            "rate": 0.6347368421052632,
+            "n": 19950,
+            "rank": 2
+          },
+          {
+            "bucket": "peak_3_5",
+            "rate": 0.44421716240233394,
+            "n": 29821,
+            "rank": 3
+          },
+          {
+            "bucket": "peak_le_2",
+            "rate": 0.08679968436478412,
+            "n": 70968,
+            "rank": 4
+          }
+        ],
+        "train_mfe_rank": [
+          {
+            "bucket": "mfe_6R_plus",
+            "rate": 0.5256571012312065,
+            "n": 83739,
+            "rank": 1
+          },
+          {
+            "bucket": "mfe_4R_6R",
+            "rate": 0.5200205899327708,
+            "n": 64109,
+            "rank": 2
+          },
+          {
+            "bucket": "mfe_2R_4R",
+            "rate": 0.4949247650023232,
+            "n": 111916,
+            "rank": 3
+          },
+          {
+            "bucket": "mfe_lt_2R",
+            "rate": 0.0,
+            "n": 160062,
+            "rank": 4
+          }
+        ],
+        "holdout_mfe_rank": [
+          {
+            "bucket": "mfe_6R_plus",
+            "rate": 0.5242742217558587,
+            "n": 28590,
+            "rank": 1
+          },
+          {
+            "bucket": "mfe_4R_6R",
+            "rate": 0.5117996930161166,
+            "n": 20848,
+            "rank": 2
+          },
+          {
+            "bucket": "mfe_2R_4R",
+            "rate": 0.49297350397031137,
+            "n": 36647,
+            "rank": 3
+          },
+          {
+            "bucket": "mfe_lt_2R",
+            "rate": 0.0,
+            "n": 53857,
+            "rank": 4
+          }
+        ]
+      },
+      {
+        "held_out": "SOLUSDT",
+        "train_instruments": [
+          "BNBUSDT",
+          "BTCUSDT",
+          "ETHUSDT"
+        ],
+        "peak_spearman_rho": 1.0,
+        "peak_spearman_p": 0.0,
+        "mfe_spearman_rho": 1.0,
+        "mfe_spearman_p": 0.0,
+        "train_peak_rank": [
+          {
+            "bucket": "peak_gt_10",
+            "rate": 0.7342434486768158,
+            "n": 46441,
+            "rank": 1
+          },
+          {
+            "bucket": "peak_6_10",
+            "rate": 0.6398615047777457,
+            "n": 58919,
+            "rank": 2
+          },
+          {
+            "bucket": "peak_3_5",
+            "rate": 0.45623327509564987,
+            "n": 90434,
+            "rank": 3
+          },
+          {
+            "bucket": "peak_le_2",
+            "rate": 0.08911855367915429,
+            "n": 211516,
+            "rank": 4
+          }
+        ],
+        "holdout_peak_rank": [
+          {
+            "bucket": "peak_gt_10",
+            "rate": 0.7428645061529541,
+            "n": 15521,
+            "rank": 1
+          },
+          {
+            "bucket": "peak_6_10",
+            "rate": 0.6534251324978949,
+            "n": 20189,
+            "rank": 2
+          },
+          {
+            "bucket": "peak_3_5",
+            "rate": 0.4597206244864421,
+            "n": 30425,
+            "rank": 3
+          },
+          {
+            "bucket": "peak_le_2",
+            "rate": 0.08347592972849646,
+            "n": 70128,
+            "rank": 4
+          }
+        ],
+        "train_mfe_rank": [
+          {
+            "bucket": "mfe_6R_plus",
+            "rate": 0.5199786337192425,
+            "n": 86117,
+            "rank": 1
+          },
+          {
+            "bucket": "mfe_4R_6R",
+            "rate": 0.515609328981931,
+            "n": 62815,
+            "rank": 2
+          },
+          {
+            "bucket": "mfe_2R_4R",
+            "rate": 0.49538918199835297,
+            "n": 110501,
+            "rank": 3
+          },
+          {
+            "bucket": "mfe_lt_2R",
+            "rate": 0.0,
+            "n": 160393,
+            "rank": 4
+          }
+        ],
+        "holdout_mfe_rank": [
+          {
+            "bucket": "mfe_6R_plus",
+            "rate": 0.5428048222188311,
+            "n": 26212,
+            "rank": 1
+          },
+          {
+            "bucket": "mfe_4R_6R",
+            "rate": 0.52479450817451,
+            "n": 22142,
+            "rank": 2
+          },
+          {
+            "bucket": "mfe_2R_4R",
+            "rate": 0.49169775629236506,
+            "n": 38062,
+            "rank": 3
+          },
+          {
+            "bucket": "mfe_lt_2R",
+            "rate": 0.0,
+            "n": 53526,
+            "rank": 4
+          }
+        ]
+      }
+    ],
+    "pairwise_peak_rate_spearman": [
+      {
+        "a": "BNBUSDT",
+        "b": "BTCUSDT",
+        "spearman_rho": 1.0,
+        "p_value": 0.0
+      },
+      {
+        "a": "BNBUSDT",
+        "b": "ETHUSDT",
+        "spearman_rho": 1.0,
+        "p_value": 0.0
+      },
+      {
+        "a": "BNBUSDT",
+        "b": "SOLUSDT",
+        "spearman_rho": 1.0,
+        "p_value": 0.0
+      },
+      {
+        "a": "BTCUSDT",
+        "b": "ETHUSDT",
+        "spearman_rho": 1.0,
+        "p_value": 0.0
+      },
+      {
+        "a": "BTCUSDT",
+        "b": "SOLUSDT",
+        "spearman_rho": 1.0,
+        "p_value": 0.0
+      },
+      {
+        "a": "ETHUSDT",
+        "b": "SOLUSDT",
+        "spearman_rho": 1.0,
+        "p_value": 0.0
+      }
+    ],
+    "pairwise_mfe_rate_spearman": [
+      {
+        "a": "BNBUSDT",
+        "b": "BTCUSDT",
+        "spearman_rho": 0.39999999999999997,
+        "p_value": 0.6000000000000001
+      },
+      {
+        "a": "BNBUSDT",
+        "b": "ETHUSDT",
+        "spearman_rho": 1.0,
+        "p_value": 0.0
+      },
+      {
+        "a": "BNBUSDT",
+        "b": "SOLUSDT",
+        "spearman_rho": 1.0,
+        "p_value": 0.0
+      },
+      {
+        "a": "BTCUSDT",
+        "b": "ETHUSDT",
+        "spearman_rho": 0.39999999999999997,
+        "p_value": 0.6000000000000001
+      },
+      {
+        "a": "BTCUSDT",
+        "b": "SOLUSDT",
+        "spearman_rho": 0.39999999999999997,
+        "p_value": 0.6000000000000001
+      },
+      {
+        "a": "ETHUSDT",
+        "b": "SOLUSDT",
+        "spearman_rho": 1.0,
+        "p_value": 0.0
+      }
+    ],
+    "peak_rank_by_instrument": {
+      "BNBUSDT": [
+        {
+          "bucket": "peak_gt_10",
+          "rate": 0.7457807308970099,
+          "n": 15050,
+          "rank": 1
+        },
+        {
+          "bucket": "peak_6_10",
+          "rate": 0.6546870166030732,
+          "n": 19394,
+          "rank": 2
+        },
+        {
+          "bucket": "peak_3_5",
+          "rate": 0.4740060162176301,
+          "n": 30584,
+          "rank": 3
+        },
+        {
+          "bucket": "peak_le_2",
+          "rate": 0.09084688742854699,
+          "n": 70151,
+          "rank": 4
+        }
+      ],
+      "BTCUSDT": [
+        {
+          "bucket": "peak_gt_10",
+          "rate": 0.7195536458667351,
+          "n": 15593,
+          "rank": 1
+        },
+        {
+          "bucket": "peak_6_10",
+          "rate": 0.6303959131545338,
+          "n": 19575,
+          "rank": 2
+        },
+        {
+          "bucket": "peak_3_5",
+          "rate": 0.4500649372273469,
+          "n": 30029,
+          "rank": 3
+        },
+        {
+          "bucket": "peak_le_2",
+          "rate": 0.08973393752574683,
+          "n": 70397,
+          "rank": 4
+        }
+      ],
+      "ETHUSDT": [
+        {
+          "bucket": "peak_gt_10",
+          "rate": 0.7377516141283706,
+          "n": 15798,
+          "rank": 1
+        },
+        {
+          "bucket": "peak_6_10",
+          "rate": 0.6347368421052632,
+          "n": 19950,
+          "rank": 2
+        },
+        {
+          "bucket": "peak_3_5",
+          "rate": 0.44421716240233394,
+          "n": 29821,
+          "rank": 3
+        },
+        {
+          "bucket": "peak_le_2",
+          "rate": 0.08679968436478412,
+          "n": 70968,
+          "rank": 4
+        }
+      ],
+      "SOLUSDT": [
+        {
+          "bucket": "peak_gt_10",
+          "rate": 0.7428645061529541,
+          "n": 15521,
+          "rank": 1
+        },
+        {
+          "bucket": "peak_6_10",
+          "rate": 0.6534251324978949,
+          "n": 20189,
+          "rank": 2
+        },
+        {
+          "bucket": "peak_3_5",
+          "rate": 0.4597206244864421,
+          "n": 30425,
+          "rank": 3
+        },
+        {
+          "bucket": "peak_le_2",
+          "rate": 0.08347592972849646,
+          "n": 70128,
+          "rank": 4
+        }
+      ]
+    },
+    "mfe_rank_by_instrument": {
+      "BNBUSDT": [
+        {
+          "bucket": "mfe_6R_plus",
+          "rate": 0.5382448537378115,
+          "n": 27690,
+          "rank": 1
+        },
+        {
+          "bucket": "mfe_4R_6R",
+          "rate": 0.5291354694693764,
+          "n": 21503,
+          "rank": 2
+        },
+        {
+          "bucket": "mfe_2R_4R",
+          "rate": 0.49366548422372175,
+          "n": 37493,
+          "rank": 3
+        },
+        {
+          "bucket": "mfe_lt_2R",
+          "rate": 0.0,
+          "n": 53256,
+          "rank": 4
+        }
+      ],
+      "BTCUSDT": [
+        {
+          "bucket": "mfe_4R_6R",
+          "rate": 0.5052775605942142,
+          "n": 20464,
+          "rank": 1
+        },
+        {
+          "bucket": "mfe_2R_4R",
+          "rate": 0.4996012210885289,
+          "n": 36361,
+          "rank": 2
+        },
+        {
+          "bucket": "mfe_6R_plus",
+          "rate": 0.49891074839963806,
+          "n": 29837,
+          "rank": 3
+        },
+        {
+          "bucket": "mfe_lt_2R",
+          "rate": 0.0,
+          "n": 53280,
+          "rank": 4
+        }
+      ],
+      "ETHUSDT": [
+        {
+          "bucket": "mfe_6R_plus",
+          "rate": 0.5242742217558587,
+          "n": 28590,
+          "rank": 1
+        },
+        {
+          "bucket": "mfe_4R_6R",
+          "rate": 0.5117996930161166,
+          "n": 20848,
+          "rank": 2
+        },
+        {
+          "bucket": "mfe_2R_4R",
+          "rate": 0.49297350397031137,
+          "n": 36647,
+          "rank": 3
+        },
+        {
+          "bucket": "mfe_lt_2R",
+          "rate": 0.0,
+          "n": 53857,
+          "rank": 4
+        }
+      ],
+      "SOLUSDT": [
+        {
+          "bucket": "mfe_6R_plus",
+          "rate": 0.5428048222188311,
+          "n": 26212,
+          "rank": 1
+        },
+        {
+          "bucket": "mfe_4R_6R",
+          "rate": 0.52479450817451,
+          "n": 22142,
+          "rank": 2
+        },
+        {
+          "bucket": "mfe_2R_4R",
+          "rate": 0.49169775629236506,
+          "n": 38062,
+          "rank": 3
+        },
+        {
+          "bucket": "mfe_lt_2R",
+          "rate": 0.0,
+          "n": 53526,
+          "rank": 4
+        }
+      ]
+    },
+    "summary": {
+      "peak_loo_spearman_min": 1.0,
+      "peak_loo_spearman_mean": 1.0,
+      "mfe_loo_spearman_min": 0.39999999999999997,
+      "mfe_loo_spearman_mean": 0.85,
+      "ranking_stable_peak": true,
+      "ranking_stable_mfe": false
+    }
+  },
+  "promotion_flags": {
+    "economic_claims_allowed": false,
+    "attribution_unblocked": false,
+    "l003_frozen": false,
+    "registry_column_added": false,
+    "chronological_holdout_used": false
+  },
+  "explicit_non_claims": [
+    "No causal proof of trailing-stop (hypothesis remains candidate)",
+    "No CRT/HTF",
+    "No edge / attribution unlock",
+    "No registry promotion"
+  ],
+  "terminology_parity": {
+    "version": "L-003-TERM.v1",
+    "run_id": "l003_terminology_parity_20260907_182845",
+    "generated_at_utc": "2026-09-07T18:28:45.866Z",
+    "git_commit_sha": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+    "pass_type": "documentation_terminology_parity_only",
+    "no_new_measurements": true,
+    "canonical_terms": {
+      "scanner_outcome": {
+        "emitter": "opportunity_scanner._simulate",
+        "labels": [
+          "SL_HIT",
+          "TP_HIT",
+          "TIMEOUT"
+        ],
+        "csv_column": "art_outcome",
+        "former_aliases": [
+          "art_outcome",
+          "detection outcome",
+          "DETECTION_STREAM.outcome"
+        ]
+      },
+      "oracle_outcome": {
+        "emitter": "forward_walk(intrabar_fixed)",
+        "labels": [
+          "SL_HIT",
+          "TP_HIT",
+          "TIMEOUT"
+        ],
+        "csv_column": "outcome",
+        "former_aliases": [
+          "outcome",
+          "governing outcome",
+          "GOVERNING_ORACLE.outcome"
+        ]
+      },
+      "live_outcome": {
+        "emitter": "ingest_live_outcomes",
+        "labels": [
+          "WIN",
+          "LOSS",
+          "BREAKEVEN"
+        ],
+        "former_aliases": [
+          "LIVE_INGEST_TWIN outcome"
+        ]
+      },
+      "attribution_target": {
+        "meaning": "trade edge realization (implicit eligibility target; not a scanner/oracle terminal label)"
+      },
+      "LABEL_MATCH": {
+        "formula": "scanner_outcome == oracle_outcome",
+        "meaning": "terminal label equality only; NOT semantic/process agreement",
+        "historical_synonym": "AGREE"
+      },
+      "LABEL_MISMATCH": {
+        "formula": "scanner_outcome != oracle_outcome",
+        "historical_synonym": "DISAGREE"
+      },
+      "LABEL_MISMATCH_SL_TP": {
+        "formula": "scanner_outcome==SL_HIT AND oracle_outcome==TP_HIT",
+        "historical_synonym": "DISAGREE_SL_TP",
+        "primary_mismatch_class": true
+      },
+      "path_geometry_or_path_shape_metrics": {
+        "measured_set": [
+          "time_to_peak / bars_to_peak_within_trade",
+          "MFE / mfe_r",
+          "T_MAE / time_to_bottom_path"
+        ],
+        "note": "Prefer 'path geometry' / 'path-shape metrics' for the measured set; 'path mechanics' retained as finding-id narrative only"
+      },
+      "T_MAE": {
+        "formula": "time_to_bottom_path = timing of deepest adverse on PEAK_HORIZON path",
+        "not": [
+          "magnitude+timing composite",
+          "first stop-threat",
+          "true FAE-to-stop"
+        ],
+        "preferred_prose": "early MAE timing / early-path minimum"
+      },
+      "trailing_stop_hypothesis": {
+        "claim_class": "hypothesis_only_unmeasured",
+        "labels": [
+          "path-mechanics hypothesis",
+          "trailing-stop hypothesis (unmeasured)"
+        ],
+        "unmeasured": [
+          "trail activation",
+          "trail move",
+          "trail exit",
+          "trail touch"
+        ]
+      },
+      "early_stop_inference": {
+        "claim_class": "INFERENCE_not_observation",
+        "observation_is_only": "terminal label pair (scanner_outcome, oracle_outcome)",
+        "would_require": "detector_exit_ts < oracle_tp_ts (unmeasured)"
+      }
+    },
+    "attribution_blockers": {
+      "ATTRIBUTION_BLOCKER_IDENTITY": "12 opportunities.produced_by UNKNOWN (L-001)",
+      "ATTRIBUTION_BLOCKER_OUTCOME_SEMANTICS": "scanner_outcome ≠ oracle_outcome as RVs (L-003B HOMONYM)"
+    },
+    "machine_key_policy": "Existing JSON keys AGREE / DISAGREE / DISAGREE_SL_TP / art_outcome / outcome retained for prior run_id reproducibility; see label_vocabulary aliases."
+  },
+  "label_vocabulary": {
+    "canonical": {
+      "LABEL_MATCH": "scanner_outcome == oracle_outcome (terminal equality only)",
+      "LABEL_MISMATCH": "scanner_outcome != oracle_outcome",
+      "LABEL_MISMATCH_SL_TP": "scanner SL_HIT × oracle TP_HIT",
+      "scanner_outcome": "art_outcome / opportunities outcome field",
+      "oracle_outcome": "anatomy column outcome (forward_walk)",
+      "live_outcome": "WIN/LOSS/BREAKEVEN"
+    },
+    "historical_machine_keys_retained": true,
+    "historical_synonyms": {
+      "AGREE": "LABEL_MATCH",
+      "DISAGREE": "LABEL_MISMATCH",
+      "DISAGREE_SL_TP": "LABEL_MISMATCH_SL_TP",
+      "DISAGREE_OTHER": "LABEL_MISMATCH_OTHER",
+      "art_outcome": "scanner_outcome",
+      "outcome (anatomy)": "oracle_outcome"
+    },
+    "note": "Machine keys AGREE/DISAGREE/... kept for prior run_id reproducibility; prose uses canonical terms."
+  },
+  "hypothesis_claim_class": "path-mechanics hypothesis / trailing-stop hypothesis (unmeasured)",
+  "hypothesis_note": "Measured path-shape metrics / path geometry only: time_to_peak, MFE, (L-003E) T_MAE. Trail activation/move/exit/touch NOT measured. Primary metric prose name: LABEL_MISMATCH_SL_TP (machine fields may still say DISAGREE_SL_TP).",
+  "primary_metric_canonical": "LABEL_MISMATCH_SL_TP"
+}

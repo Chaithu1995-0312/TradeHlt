@@ -1,0 +1,2078 @@
+{
+  "authority": "research_only",
+  "observation_only": true,
+  "total": 47197,
+  "agreement": 29367,
+  "agreement_rate": 0.6222217513825031,
+  "class_counts": {
+    "AGREE_OTHER": 28330,
+    "E_SWEEP_R_RANGE__range_ref_diverge": 3916,
+    "E_SWEEP_R_RANGE__sticky_or_lifecycle": 1782,
+    "AGREE_SWEEP": 1037,
+    "E_RANGE_R_SWEEP__range_ref_diverge": 5312,
+    "SWEEP_MIXED__eng_DISPLACEMENT__res_SWEEP": 69,
+    "NON_SWEEP_MISMATCH": 5291,
+    "SWEEP_MIXED__eng_SWEEP__res_DISPLACEMENT": 29,
+    "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep": 411,
+    "SWEEP_MIXED__eng_SWEEP__res_EXPANSION": 224,
+    "SWEEP_MIXED__eng_EXPANSION__res_SWEEP": 730,
+    "SWEEP_MIXED__eng_SWEEP__res_SHADOW_PENDING": 48,
+    "SWEEP_MIXED__eng_SWEEP__res_RETEST": 10,
+    "SWEEP_MIXED__eng_SHADOW_PENDING__res_SWEEP": 3,
+    "SWEEP_MIXED__eng_RETEST__res_SWEEP": 3,
+    "SWEEP_MIXED__eng_EXECUTION__res_SWEEP": 1,
+    "E_RANGE_R_SWEEP__sticky_resolver": 1
+  },
+  "ref_stats": {
+    "n_both_ready": 47197,
+    "frac_exact_match": 0.24808780219081722,
+    "mean_abs_dh": 5.408201580608938,
+    "mean_abs_dl": 5.574267856007799,
+    "median_abs_dh": 0.07000000000016371,
+    "median_abs_dl": 0.0500000000001819,
+    "p90_abs_dh": 13.079999999999927,
+    "p90_abs_dl": 14.719999999999345
+  },
+  "e_sweep_r_range": 5698,
+  "e_range_r_sweep": 5724,
+  "eng_meta": {
+    "n_bars": 47275,
+    "warmup": 78,
+    "atr_period": 14,
+    "htf_candles": 4,
+    "n_seed": 1,
+    "n_rebuild_reset": 10683,
+    "n_ready": 47197,
+    "timeline_notes": [
+      "Skipped 163 RESET event(s) whose state_from disagreed with the reconstructed state (engine state_from is authoritative; these resets applied to a state the engine was not in at that bar). This is what reconciles reconstructed EXPANSION dwell with state_distribution.",
+      "RESOLUTION appeared in events but not in exit timeline (check ordering)."
+    ]
+  },
+  "res_meta": {
+    "n_raw": 47275,
+    "n_resolved": 47197,
+    "first_src": 78,
+    "sweep_geometry": "htf_range",
+    "range_atr_period": 14,
+    "resolver_counts": {
+      "RANGE": 36959,
+      "SWEEP": 7567,
+      "DISPLACEMENT": 353,
+      "SHADOW_PENDING": 335,
+      "EXPANSION": 1890,
+      "RETEST": 93
+    },
+    "lifecycle_stats": {
+      "htf_reset_count": 11284,
+      "gap_reset_count": 121,
+      "forced_reset_count": 0,
+      "last_reset_reason": "HTF changed: XAUUSD-HTF-011817 \u2192 XAUUSD-HTF-011818"
+    }
+  },
+  "samples": {
+    "e_sweep_r_range": [
+      {
+        "idx": 79,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2395.09,
+        "res_h": 2395.18,
+        "eng_l": 2386.79,
+        "res_l": 2382.27,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 80,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2395.09,
+        "res_h": 2395.18,
+        "eng_l": 2386.79,
+        "res_l": 2382.27,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 81,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2395.18,
+        "res_h": 2395.18,
+        "eng_l": 2378.62,
+        "res_l": 2382.27,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 88,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2395.09,
+        "res_h": 2395.09,
+        "eng_l": 2374.98,
+        "res_l": 2374.98,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 89,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2394.39,
+        "res_h": 2395.09,
+        "eng_l": 2374.98,
+        "res_l": 2374.98,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 95,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2390.76,
+        "res_h": 2381.35,
+        "eng_l": 2374.98,
+        "res_l": 2374.98,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 99,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2382.22,
+        "res_h": 2382.79,
+        "eng_l": 2376.87,
+        "res_l": 2376.87,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 100,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2382.22,
+        "res_h": 2382.79,
+        "eng_l": 2376.87,
+        "res_l": 2376.87,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 101,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2383.74,
+        "res_h": 2382.79,
+        "eng_l": 2377.53,
+        "res_l": 2376.87,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 107,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2383.74,
+        "res_h": 2383.74,
+        "eng_l": 2369.11,
+        "res_l": 2366.77,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 108,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2383.74,
+        "res_h": 2383.74,
+        "eng_l": 2369.11,
+        "res_l": 2366.77,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 109,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2383.74,
+        "res_h": 2383.74,
+        "eng_l": 2366.77,
+        "res_l": 2366.77,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 123,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2375.74,
+        "res_h": 2373.99,
+        "eng_l": 2367.94,
+        "res_l": 2358.34,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 143,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2367.55,
+        "res_h": 2367.79,
+        "eng_l": 2355.18,
+        "res_l": 2355.18,
+        "eng_sig": 1,
+        "res_sig": 0
+      },
+      {
+        "idx": 144,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2367.55,
+        "res_h": 2367.79,
+        "eng_l": 2355.18,
+        "res_l": 2355.18,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 145,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2369.08,
+        "res_h": 2367.79,
+        "eng_l": 2355.19,
+        "res_l": 2355.18,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 148,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2369.08,
+        "res_h": 2369.45,
+        "eng_l": 2355.19,
+        "res_l": 2356.28,
+        "eng_sig": 1,
+        "res_sig": 0
+      },
+      {
+        "idx": 149,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2369.45,
+        "res_h": 2369.45,
+        "eng_l": 2358.88,
+        "res_l": 2356.28,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 156,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2369.9,
+        "res_h": 2369.9,
+        "eng_l": 2360.56,
+        "res_l": 2350.7,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 157,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2369.9,
+        "res_h": 2369.9,
+        "eng_l": 2346.67,
+        "res_l": 2350.7,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 171,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2363.95,
+        "res_h": 2351.0,
+        "eng_l": 2334.72,
+        "res_l": 2332.02,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 176,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2350.13,
+        "res_h": 2350.13,
+        "eng_l": 2331.86,
+        "res_l": 2331.86,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 177,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2350.13,
+        "res_h": 2350.13,
+        "eng_l": 2331.86,
+        "res_l": 2331.86,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 204,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2335.24,
+        "res_h": 2335.24,
+        "eng_l": 2325.64,
+        "res_l": 2325.43,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 205,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2335.24,
+        "res_h": 2335.24,
+        "eng_l": 2325.43,
+        "res_l": 2325.43,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 208,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2335.24,
+        "res_h": 2335.24,
+        "eng_l": 2325.43,
+        "res_l": 2325.43,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 209,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2335.24,
+        "res_h": 2335.24,
+        "eng_l": 2325.43,
+        "res_l": 2325.43,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 220,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2339.59,
+        "res_h": 2339.59,
+        "eng_l": 2328.52,
+        "res_l": 2329.43,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 223,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2340.65,
+        "res_h": 2340.65,
+        "eng_l": 2330.56,
+        "res_l": 2332.12,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 224,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2340.65,
+        "res_h": 2340.65,
+        "eng_l": 2330.56,
+        "res_l": 2332.12,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 225,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2340.65,
+        "res_h": 2340.65,
+        "eng_l": 2333.24,
+        "res_l": 2332.12,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 239,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2343.92,
+        "res_h": 2343.92,
+        "eng_l": 2336.14,
+        "res_l": 2336.68,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 240,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2343.92,
+        "res_h": 2343.92,
+        "eng_l": 2336.14,
+        "res_l": 2336.68,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 241,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2343.92,
+        "res_h": 2343.92,
+        "eng_l": 2337.02,
+        "res_l": 2336.68,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 267,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2340.26,
+        "res_h": 2336.98,
+        "eng_l": 2332.0,
+        "res_l": 2332.0,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 268,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2340.26,
+        "res_h": 2336.98,
+        "eng_l": 2332.0,
+        "res_l": 2332.0,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 285,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2340.75,
+        "res_h": 2340.75,
+        "eng_l": 2332.32,
+        "res_l": 2331.91,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 301,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2347.63,
+        "res_h": 2347.63,
+        "eng_l": 2334.65,
+        "res_l": 2334.51,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 316,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2346.15,
+        "res_h": 2344.66,
+        "eng_l": 2339.56,
+        "res_l": 2338.17,
+        "eng_sig": -1,
+        "res_sig": 0
+      },
+      {
+        "idx": 335,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2349.93,
+        "res_h": 2349.93,
+        "eng_l": 2342.47,
+        "res_l": 2342.47,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 336,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2349.93,
+        "res_h": 2349.93,
+        "eng_l": 2342.47,
+        "res_l": 2342.47,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 337,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2351.73,
+        "res_h": 2349.93,
+        "eng_l": 2342.47,
+        "res_l": 2342.47,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 343,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2358.56,
+        "res_h": 2358.56,
+        "eng_l": 2343.25,
+        "res_l": 2343.25,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 344,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2358.56,
+        "res_h": 2358.56,
+        "eng_l": 2343.25,
+        "res_l": 2343.25,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 367,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2355.2,
+        "res_h": 2355.2,
+        "eng_l": 2350.88,
+        "res_l": 2350.88,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 368,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2355.2,
+        "res_h": 2355.2,
+        "eng_l": 2350.88,
+        "res_l": 2350.88,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 369,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2355.2,
+        "res_h": 2355.2,
+        "eng_l": 2350.88,
+        "res_l": 2350.88,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 407,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2345.18,
+        "res_h": 2345.51,
+        "eng_l": 2340.33,
+        "res_l": 2340.33,
+        "eng_sig": 1,
+        "res_sig": 0
+      },
+      {
+        "idx": 411,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2346.32,
+        "res_h": 2346.32,
+        "eng_l": 2340.33,
+        "res_l": 2340.33,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 412,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2346.32,
+        "res_h": 2346.32,
+        "eng_l": 2340.33,
+        "res_l": 2340.33,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 413,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2348.47,
+        "res_h": 2346.32,
+        "eng_l": 2341.01,
+        "res_l": 2340.33,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 432,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2364.07,
+        "res_h": 2364.07,
+        "eng_l": 2347.98,
+        "res_l": 2347.98,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 433,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2362.74,
+        "res_h": 2364.07,
+        "eng_l": 2347.98,
+        "res_l": 2347.98,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 437,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2362.25,
+        "res_h": 2362.25,
+        "eng_l": 2351.98,
+        "res_l": 2347.98,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 513,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2347.33,
+        "res_h": 2347.33,
+        "eng_l": 2334.54,
+        "res_l": 2334.54,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 528,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2347.27,
+        "res_h": 2346.49,
+        "eng_l": 2336.09,
+        "res_l": 2336.09,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 529,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2346.49,
+        "res_h": 2346.49,
+        "eng_l": 2336.09,
+        "res_l": 2336.09,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 555,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2339.25,
+        "res_h": 2339.9,
+        "eng_l": 2334.06,
+        "res_l": 2334.06,
+        "eng_sig": 1,
+        "res_sig": 0
+      },
+      {
+        "idx": 556,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2339.25,
+        "res_h": 2339.9,
+        "eng_l": 2334.06,
+        "res_l": 2334.06,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 572,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2338.33,
+        "res_h": 2337.19,
+        "eng_l": 2328.09,
+        "res_l": 2328.09,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 573,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2337.19,
+        "res_h": 2337.19,
+        "eng_l": 2322.65,
+        "res_l": 2328.09,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 577,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2337.19,
+        "res_h": 2337.19,
+        "eng_l": 2322.65,
+        "res_l": 2322.65,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 580,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2337.19,
+        "res_h": 2337.75,
+        "eng_l": 2322.65,
+        "res_l": 2322.65,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 597,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2340.92,
+        "res_h": 2340.92,
+        "eng_l": 2330.64,
+        "res_l": 2330.64,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 639,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2345.13,
+        "res_h": 2346.44,
+        "eng_l": 2339.94,
+        "res_l": 2339.94,
+        "eng_sig": 1,
+        "res_sig": 0
+      },
+      {
+        "idx": 640,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2345.13,
+        "res_h": 2346.44,
+        "eng_l": 2339.94,
+        "res_l": 2339.94,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 641,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2346.44,
+        "res_h": 2346.44,
+        "eng_l": 2339.94,
+        "res_l": 2339.94,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 680,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2347.13,
+        "res_h": 2347.13,
+        "eng_l": 2339.73,
+        "res_l": 2339.73,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 681,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2347.13,
+        "res_h": 2347.13,
+        "eng_l": 2339.73,
+        "res_l": 2339.73,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 684,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2347.13,
+        "res_h": 2345.88,
+        "eng_l": 2339.73,
+        "res_l": 2339.73,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 685,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2344.58,
+        "res_h": 2345.88,
+        "eng_l": 2339.73,
+        "res_l": 2339.73,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 687,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2344.58,
+        "res_h": 2344.98,
+        "eng_l": 2339.73,
+        "res_l": 2339.73,
+        "eng_sig": 1,
+        "res_sig": 0
+      },
+      {
+        "idx": 688,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2344.58,
+        "res_h": 2344.98,
+        "eng_l": 2339.73,
+        "res_l": 2339.73,
+        "eng_sig": 1,
+        "res_sig": 0
+      },
+      {
+        "idx": 689,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2344.98,
+        "res_h": 2344.98,
+        "eng_l": 2341.05,
+        "res_l": 2339.73,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 711,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2356.13,
+        "res_h": 2349.09,
+        "eng_l": 2327.76,
+        "res_l": 2324.11,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 715,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2341.93,
+        "res_h": 2336.75,
+        "eng_l": 2324.01,
+        "res_l": 2324.01,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 716,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2341.93,
+        "res_h": 2336.75,
+        "eng_l": 2324.01,
+        "res_l": 2324.01,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1092,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2375.85,
+        "res_h": 2375.42,
+        "eng_l": 2369.0,
+        "res_l": 2369.0,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1093,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2376.05,
+        "res_h": 2375.42,
+        "eng_l": 2369.0,
+        "res_l": 2369.0,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1129,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2387.72,
+        "res_h": 2387.72,
+        "eng_l": 2372.97,
+        "res_l": 2372.97,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1137,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2383.51,
+        "res_h": 2387.72,
+        "eng_l": 2342.86,
+        "res_l": 2350.93,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1148,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2375.51,
+        "res_h": 2373.98,
+        "eng_l": 2332.09,
+        "res_l": 2330.99,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1149,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2352.57,
+        "res_h": 2373.98,
+        "eng_l": 2330.99,
+        "res_l": 2330.99,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1153,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2341.8,
+        "res_h": 2348.04,
+        "eng_l": 2313.54,
+        "res_l": 2330.37,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1167,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2333.67,
+        "res_h": 2328.13,
+        "eng_l": 2304.55,
+        "res_l": 2303.08,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1187,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2308.35,
+        "res_h": 2307.19,
+        "eng_l": 2286.82,
+        "res_l": 2286.82,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1188,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2308.35,
+        "res_h": 2307.19,
+        "eng_l": 2286.82,
+        "res_l": 2286.82,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1189,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2305.09,
+        "res_h": 2307.19,
+        "eng_l": 2286.82,
+        "res_l": 2286.82,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1235,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2297.62,
+        "res_h": 2297.62,
+        "eng_l": 2287.79,
+        "res_l": 2290.51,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1236,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2297.62,
+        "res_h": 2297.62,
+        "eng_l": 2287.79,
+        "res_l": 2290.51,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1237,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2298.86,
+        "res_h": 2297.62,
+        "eng_l": 2291.93,
+        "res_l": 2290.51,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1239,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2298.86,
+        "res_h": 2301.26,
+        "eng_l": 2291.93,
+        "res_l": 2291.93,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1244,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2305.36,
+        "res_h": 2308.7,
+        "eng_l": 2291.93,
+        "res_l": 2291.93,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1245,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2308.7,
+        "res_h": 2308.7,
+        "eng_l": 2294.67,
+        "res_l": 2291.93,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1255,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2308.7,
+        "res_h": 2308.7,
+        "eng_l": 2298.74,
+        "res_l": 2300.44,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1256,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2308.7,
+        "res_h": 2308.7,
+        "eng_l": 2298.74,
+        "res_l": 2300.44,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1257,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2308.68,
+        "res_h": 2308.7,
+        "eng_l": 2300.44,
+        "res_l": 2300.44,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1265,
+        "class": "E_SWEEP_R_RANGE__sticky_or_lifecycle",
+        "eng_h": 2313.8,
+        "res_h": 2313.8,
+        "eng_l": 2301.4,
+        "res_l": 2301.4,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1279,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2313.42,
+        "res_h": 2312.44,
+        "eng_l": 2308.55,
+        "res_l": 2308.55,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1280,
+        "class": "E_SWEEP_R_RANGE__range_ref_diverge",
+        "eng_h": 2313.42,
+        "res_h": 2312.44,
+        "eng_l": 2308.55,
+        "res_l": 2308.55,
+        "eng_sig": 0,
+        "res_sig": 0
+      }
+    ],
+    "e_range_r_sweep": [
+      {
+        "idx": 98,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2382.22,
+        "res_h": 2381.35,
+        "eng_l": 2376.87,
+        "res_l": 2374.98,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 102,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2383.74,
+        "res_h": 2382.79,
+        "eng_l": 2377.53,
+        "res_l": 2376.87,
+        "eng_sig": 0,
+        "res_sig": 1
+      },
+      {
+        "idx": 140,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2367.19,
+        "res_h": 2367.19,
+        "eng_l": 2355.0,
+        "res_l": 2355.18,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 141,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2367.55,
+        "res_h": 2367.19,
+        "eng_l": 2355.18,
+        "res_l": 2355.18,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 142,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2367.55,
+        "res_h": 2367.19,
+        "eng_l": 2355.18,
+        "res_l": 2355.18,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 146,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2369.08,
+        "res_h": 2367.79,
+        "eng_l": 2355.19,
+        "res_l": 2355.18,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 152,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2369.45,
+        "res_h": 2369.45,
+        "eng_l": 2358.88,
+        "res_l": 2360.78,
+        "eng_sig": 0,
+        "res_sig": -1
+      },
+      {
+        "idx": 154,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2369.9,
+        "res_h": 2369.45,
+        "eng_l": 2360.56,
+        "res_l": 2360.78,
+        "eng_sig": 0,
+        "res_sig": 1
+      },
+      {
+        "idx": 162,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2369.9,
+        "res_h": 2369.9,
+        "eng_l": 2340.43,
+        "res_l": 2341.59,
+        "eng_sig": 0,
+        "res_sig": -1
+      },
+      {
+        "idx": 168,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2369.9,
+        "res_h": 2369.53,
+        "eng_l": 2340.43,
+        "res_l": 2340.05,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 170,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2363.95,
+        "res_h": 2369.53,
+        "eng_l": 2334.72,
+        "res_l": 2340.05,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 174,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2350.13,
+        "res_h": 2351.0,
+        "eng_l": 2331.86,
+        "res_l": 2332.02,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 180,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2350.13,
+        "res_h": 2345.36,
+        "eng_l": 2331.86,
+        "res_l": 2331.01,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 181,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2342.99,
+        "res_h": 2345.36,
+        "eng_l": 2330.62,
+        "res_l": 2331.01,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 182,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2342.99,
+        "res_h": 2345.36,
+        "eng_l": 2330.62,
+        "res_l": 2331.01,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 202,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2335.24,
+        "res_h": 2335.24,
+        "eng_l": 2325.64,
+        "res_l": 2326.82,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 216,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2335.18,
+        "res_h": 2339.36,
+        "eng_l": 2325.43,
+        "res_l": 2325.43,
+        "eng_sig": 0,
+        "res_sig": 1
+      },
+      {
+        "idx": 217,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2339.59,
+        "res_h": 2339.36,
+        "eng_l": 2328.52,
+        "res_l": 2325.43,
+        "eng_sig": 0,
+        "res_sig": 1
+      },
+      {
+        "idx": 218,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2339.59,
+        "res_h": 2339.36,
+        "eng_l": 2328.52,
+        "res_l": 2325.43,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 222,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2340.65,
+        "res_h": 2339.59,
+        "eng_l": 2330.56,
+        "res_l": 2329.43,
+        "eng_sig": 0,
+        "res_sig": 1
+      },
+      {
+        "idx": 226,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2340.65,
+        "res_h": 2340.65,
+        "eng_l": 2333.24,
+        "res_l": 2332.12,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 229,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2343.27,
+        "res_h": 2341.04,
+        "eng_l": 2335.25,
+        "res_l": 2334.2,
+        "eng_sig": 0,
+        "res_sig": 1
+      },
+      {
+        "idx": 230,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2343.27,
+        "res_h": 2341.04,
+        "eng_l": 2335.25,
+        "res_l": 2334.2,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 234,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2343.92,
+        "res_h": 2343.27,
+        "eng_l": 2336.14,
+        "res_l": 2335.25,
+        "eng_sig": 0,
+        "res_sig": 1
+      },
+      {
+        "idx": 242,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2343.92,
+        "res_h": 2343.92,
+        "eng_l": 2337.02,
+        "res_l": 2336.68,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 244,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2343.92,
+        "res_h": 2343.92,
+        "eng_l": 2337.02,
+        "res_l": 2335.62,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 246,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2344.94,
+        "res_h": 2343.92,
+        "eng_l": 2335.62,
+        "res_l": 2335.62,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 249,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2347.42,
+        "res_h": 2347.42,
+        "eng_l": 2335.56,
+        "res_l": 2335.62,
+        "eng_sig": 0,
+        "res_sig": -1
+      },
+      {
+        "idx": 250,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2347.42,
+        "res_h": 2347.42,
+        "eng_l": 2335.56,
+        "res_l": 2335.62,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 270,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2336.98,
+        "res_h": 2336.98,
+        "eng_l": 2331.99,
+        "res_l": 2332.0,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 281,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2340.75,
+        "res_h": 2340.7,
+        "eng_l": 2331.91,
+        "res_l": 2331.91,
+        "eng_sig": 0,
+        "res_sig": 1
+      },
+      {
+        "idx": 282,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2340.75,
+        "res_h": 2340.7,
+        "eng_l": 2331.91,
+        "res_l": 2331.91,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 293,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2341.19,
+        "res_h": 2340.75,
+        "eng_l": 2334.51,
+        "res_l": 2334.51,
+        "eng_sig": 0,
+        "res_sig": 1
+      },
+      {
+        "idx": 294,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2341.19,
+        "res_h": 2340.75,
+        "eng_l": 2334.51,
+        "res_l": 2334.51,
+        "eng_sig": 1,
+        "res_sig": 0
+      },
+      {
+        "idx": 296,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2341.19,
+        "res_h": 2346.48,
+        "eng_l": 2334.51,
+        "res_l": 2334.51,
+        "eng_sig": 0,
+        "res_sig": 1
+      },
+      {
+        "idx": 297,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2347.63,
+        "res_h": 2346.48,
+        "eng_l": 2334.51,
+        "res_l": 2334.51,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 298,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2347.63,
+        "res_h": 2346.48,
+        "eng_l": 2334.51,
+        "res_l": 2334.51,
+        "eng_sig": 0,
+        "res_sig": 1
+      },
+      {
+        "idx": 312,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2347.63,
+        "res_h": 2347.59,
+        "eng_l": 2340.34,
+        "res_l": 2340.34,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 313,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2346.15,
+        "res_h": 2347.59,
+        "eng_l": 2339.56,
+        "res_l": 2340.34,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 314,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2346.15,
+        "res_h": 2347.59,
+        "eng_l": 2339.56,
+        "res_l": 2340.34,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 318,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2344.66,
+        "res_h": 2344.66,
+        "eng_l": 2338.17,
+        "res_l": 2338.17,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 340,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2351.73,
+        "res_h": 2357.03,
+        "eng_l": 2342.47,
+        "res_l": 2343.25,
+        "eng_sig": 0,
+        "res_sig": 1
+      },
+      {
+        "idx": 341,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2358.56,
+        "res_h": 2357.03,
+        "eng_l": 2343.25,
+        "res_l": 2343.25,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 342,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2358.56,
+        "res_h": 2357.03,
+        "eng_l": 2343.25,
+        "res_l": 2343.25,
+        "eng_sig": 0,
+        "res_sig": 1
+      },
+      {
+        "idx": 374,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2356.41,
+        "res_h": 2353.91,
+        "eng_l": 2349.23,
+        "res_l": 2349.23,
+        "eng_sig": 0,
+        "res_sig": 1
+      },
+      {
+        "idx": 389,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2355.28,
+        "res_h": 2355.96,
+        "eng_l": 2349.67,
+        "res_l": 2350.34,
+        "eng_sig": 0,
+        "res_sig": -1
+      },
+      {
+        "idx": 410,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2346.32,
+        "res_h": 2345.51,
+        "eng_l": 2340.33,
+        "res_l": 2340.33,
+        "eng_sig": 0,
+        "res_sig": 1
+      },
+      {
+        "idx": 416,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2348.47,
+        "res_h": 2356.39,
+        "eng_l": 2341.01,
+        "res_l": 2342.35,
+        "eng_sig": 0,
+        "res_sig": 1
+      },
+      {
+        "idx": 440,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2362.25,
+        "res_h": 2362.25,
+        "eng_l": 2351.98,
+        "res_l": 2353.03,
+        "eng_sig": 0,
+        "res_sig": -1
+      },
+      {
+        "idx": 441,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2362.25,
+        "res_h": 2362.25,
+        "eng_l": 2352.82,
+        "res_l": 2353.03,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 442,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2362.25,
+        "res_h": 2362.25,
+        "eng_l": 2352.82,
+        "res_l": 2353.03,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 466,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2361.06,
+        "res_h": 2362.66,
+        "eng_l": 2355.7,
+        "res_l": 2356.43,
+        "eng_sig": 0,
+        "res_sig": -1
+      },
+      {
+        "idx": 470,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2361.06,
+        "res_h": 2361.06,
+        "eng_l": 2354.48,
+        "res_l": 2355.7,
+        "eng_sig": 0,
+        "res_sig": -1
+      },
+      {
+        "idx": 482,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2361.37,
+        "res_h": 2360.93,
+        "eng_l": 2354.48,
+        "res_l": 2354.48,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 486,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2361.37,
+        "res_h": 2361.37,
+        "eng_l": 2351.14,
+        "res_l": 2351.81,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 490,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2361.37,
+        "res_h": 2361.37,
+        "eng_l": 2350.11,
+        "res_l": 2351.14,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 505,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2349.15,
+        "res_h": 2351.86,
+        "eng_l": 2338.63,
+        "res_l": 2340.9,
+        "eng_sig": 0,
+        "res_sig": -1
+      },
+      {
+        "idx": 506,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2349.15,
+        "res_h": 2351.86,
+        "eng_l": 2338.63,
+        "res_l": 2340.9,
+        "eng_sig": 0,
+        "res_sig": -1
+      },
+      {
+        "idx": 510,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2347.33,
+        "res_h": 2347.33,
+        "eng_l": 2334.54,
+        "res_l": 2338.63,
+        "eng_sig": 0,
+        "res_sig": -1
+      },
+      {
+        "idx": 538,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2344.33,
+        "res_h": 2344.33,
+        "eng_l": 2336.43,
+        "res_l": 2336.09,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 553,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2339.25,
+        "res_h": 2339.25,
+        "eng_l": 2334.06,
+        "res_l": 2335.7,
+        "eng_sig": 0,
+        "res_sig": -1
+      },
+      {
+        "idx": 554,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2339.25,
+        "res_h": 2339.25,
+        "eng_l": 2334.06,
+        "res_l": 2335.7,
+        "eng_sig": 0,
+        "res_sig": -1
+      },
+      {
+        "idx": 558,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2339.9,
+        "res_h": 2339.9,
+        "eng_l": 2332.89,
+        "res_l": 2334.06,
+        "eng_sig": 0,
+        "res_sig": -1
+      },
+      {
+        "idx": 586,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2337.75,
+        "res_h": 2337.75,
+        "eng_l": 2322.65,
+        "res_l": 2322.65,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 602,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2345.29,
+        "res_h": 2341.64,
+        "eng_l": 2330.64,
+        "res_l": 2330.64,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 628,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2348.89,
+        "res_h": 2348.89,
+        "eng_l": 2340.91,
+        "res_l": 2340.88,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 629,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2348.89,
+        "res_h": 2348.89,
+        "eng_l": 2339.94,
+        "res_l": 2340.88,
+        "eng_sig": 0,
+        "res_sig": -1
+      },
+      {
+        "idx": 630,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2348.89,
+        "res_h": 2348.89,
+        "eng_l": 2339.94,
+        "res_l": 2340.88,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 645,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2347.6,
+        "res_h": 2346.44,
+        "eng_l": 2341.99,
+        "res_l": 2341.57,
+        "eng_sig": 0,
+        "res_sig": 1
+      },
+      {
+        "idx": 646,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2347.6,
+        "res_h": 2346.44,
+        "eng_l": 2341.99,
+        "res_l": 2341.57,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 650,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2347.75,
+        "res_h": 2347.75,
+        "eng_l": 2342.61,
+        "res_l": 2342.12,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 653,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2347.77,
+        "res_h": 2347.77,
+        "eng_l": 2342.36,
+        "res_l": 2342.61,
+        "eng_sig": 0,
+        "res_sig": -1
+      },
+      {
+        "idx": 670,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2347.13,
+        "res_h": 2345.62,
+        "eng_l": 2338.44,
+        "res_l": 2337.07,
+        "eng_sig": 0,
+        "res_sig": 1
+      },
+      {
+        "idx": 674,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2347.13,
+        "res_h": 2347.13,
+        "eng_l": 2339.95,
+        "res_l": 2341.07,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 714,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2341.93,
+        "res_h": 2349.09,
+        "eng_l": 2324.01,
+        "res_l": 2324.11,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1073,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2378.52,
+        "res_h": 2374.99,
+        "eng_l": 2353.5,
+        "res_l": 2353.5,
+        "eng_sig": 0,
+        "res_sig": 1
+      },
+      {
+        "idx": 1074,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2378.52,
+        "res_h": 2374.99,
+        "eng_l": 2353.5,
+        "res_l": 2353.5,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1098,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2377.2,
+        "res_h": 2376.94,
+        "eng_l": 2370.98,
+        "res_l": 2369.0,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 1106,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2379.26,
+        "res_h": 2378.31,
+        "eng_l": 2372.82,
+        "res_l": 2372.33,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 1110,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2380.06,
+        "res_h": 2380.06,
+        "eng_l": 2370.24,
+        "res_l": 2371.76,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 1116,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2380.06,
+        "res_h": 2380.06,
+        "eng_l": 2369.46,
+        "res_l": 2369.46,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 1117,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2381.97,
+        "res_h": 2380.06,
+        "eng_l": 2369.46,
+        "res_l": 2369.46,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1118,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2381.97,
+        "res_h": 2380.06,
+        "eng_l": 2369.46,
+        "res_l": 2369.46,
+        "eng_sig": 1,
+        "res_sig": 0
+      },
+      {
+        "idx": 1122,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2387.51,
+        "res_h": 2384.48,
+        "eng_l": 2369.46,
+        "res_l": 2369.46,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 1133,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2387.72,
+        "res_h": 2387.72,
+        "eng_l": 2372.87,
+        "res_l": 2372.97,
+        "eng_sig": 0,
+        "res_sig": -1
+      },
+      {
+        "idx": 1140,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2383.51,
+        "res_h": 2379.42,
+        "eng_l": 2342.86,
+        "res_l": 2337.5,
+        "eng_sig": 0,
+        "res_sig": -1
+      },
+      {
+        "idx": 1141,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2379.42,
+        "res_h": 2379.42,
+        "eng_l": 2337.48,
+        "res_l": 2337.5,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1142,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2379.42,
+        "res_h": 2379.42,
+        "eng_l": 2337.48,
+        "res_l": 2337.5,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1165,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2333.67,
+        "res_h": 2339.43,
+        "eng_l": 2304.55,
+        "res_l": 2305.03,
+        "eng_sig": 0,
+        "res_sig": -1
+      },
+      {
+        "idx": 1166,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2333.67,
+        "res_h": 2339.43,
+        "eng_l": 2304.55,
+        "res_l": 2305.03,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 1202,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2300.12,
+        "res_h": 2300.12,
+        "eng_l": 2293.49,
+        "res_l": 2289.4,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 1210,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2301.39,
+        "res_h": 2301.39,
+        "eng_l": 2293.97,
+        "res_l": 2293.97,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 1221,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2297.35,
+        "res_h": 2297.79,
+        "eng_l": 2287.79,
+        "res_l": 2290.5,
+        "eng_sig": 0,
+        "res_sig": -1
+      },
+      {
+        "idx": 1222,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2297.35,
+        "res_h": 2297.79,
+        "eng_l": 2287.79,
+        "res_l": 2290.5,
+        "eng_sig": 0,
+        "res_sig": 0
+      },
+      {
+        "idx": 1226,
+        "class": "E_RANGE_R_SWEEP__both_signal_engine_not_in_sweep",
+        "eng_h": 2297.35,
+        "res_h": 2297.35,
+        "eng_l": 2287.79,
+        "res_l": 2287.79,
+        "eng_sig": 1,
+        "res_sig": 1
+      },
+      {
+        "idx": 1260,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2308.68,
+        "res_h": 2313.02,
+        "eng_l": 2300.44,
+        "res_l": 2300.44,
+        "eng_sig": 0,
+        "res_sig": 1
+      },
+      {
+        "idx": 1261,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2313.8,
+        "res_h": 2313.02,
+        "eng_l": 2300.44,
+        "res_l": 2300.44,
+        "eng_sig": 0,
+        "res_sig": 1
+      },
+      {
+        "idx": 1262,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2313.8,
+        "res_h": 2313.02,
+        "eng_l": 2300.44,
+        "res_l": 2300.44,
+        "eng_sig": 0,
+        "res_sig": 1
+      },
+      {
+        "idx": 1308,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2309.62,
+        "res_h": 2304.48,
+        "eng_l": 2298.82,
+        "res_l": 2298.82,
+        "eng_sig": -1,
+        "res_sig": -1
+      },
+      {
+        "idx": 1309,
+        "class": "E_RANGE_R_SWEEP__range_ref_diverge",
+        "eng_h": 2304.48,
+        "res_h": 2304.48,
+        "eng_l": 2297.77,
+        "res_l": 2298.82,
+        "eng_sig": 0,
+        "res_sig": 0
+      }
+    ]
+  }
+}

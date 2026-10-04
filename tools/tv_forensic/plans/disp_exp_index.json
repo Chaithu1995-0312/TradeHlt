@@ -1,0 +1,40 @@
+{
+  "engine_csv": "data/mt5/XAUUSD_M15.csv",
+  "seasons": {
+    "summer_2024": {
+      "plan": "tools/tv_forensic/plans/disp_exp_summer_2024.json",
+      "preset": "summer_2024",
+      "n_shots": 46,
+      "n_disp": 89,
+      "n_exp": 42
+    },
+    "winter_2024_25": {
+      "plan": "tools/tv_forensic/plans/disp_exp_winter_2024_25.json",
+      "preset": "winter_2024_25",
+      "n_shots": 42,
+      "n_disp": 78,
+      "n_exp": 26
+    },
+    "summer_2025": {
+      "plan": "tools/tv_forensic/plans/disp_exp_summer_2025.json",
+      "preset": "summer_2025",
+      "n_shots": 66,
+      "n_disp": 126,
+      "n_exp": 46
+    },
+    "winter_2025_26": {
+      "plan": "tools/tv_forensic/plans/disp_exp_winter_2025_26.json",
+      "preset": "winter_2025_26",
+      "n_shots": 38,
+      "n_disp": 74,
+      "n_exp": 24
+    },
+    "summer_2026": {
+      "plan": "tools/tv_forensic/plans/disp_exp_summer_2026.json",
+      "preset": "summer_2026",
+      "n_shots": 21,
+      "n_disp": 32,
+      "n_exp": 10
+    }
+  }
+}

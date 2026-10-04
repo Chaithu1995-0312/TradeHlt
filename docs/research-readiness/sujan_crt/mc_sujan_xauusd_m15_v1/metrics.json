@@ -1,0 +1,144 @@
+{
+  "contract_id": "MC-SUJAN-XAUUSD-M15-V1",
+  "sem_id": "SEM-031",
+  "corpus": "data/mt5/XAUUSD_M15.csv",
+  "corpus_sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+  "n_bars": 47275,
+  "boundary_index": 35456,
+  "boundary_timestamp": "2025-11-18 21:30:00",
+  "embargo_bars": 96,
+  "purged_cross_boundary": 12,
+  "detected_funnel": 6256,
+  "ledger_n": 6221,
+  "params": {
+    "expansion_min_range_ratio": 1.2,
+    "accumulation_max_range_ratio": 0.7,
+    "distribution_min_range_ratio": 1.0,
+    "location_tolerance_atr": 2.0,
+    "rr_floor": 5.0,
+    "max_sweep_age_bars": 20,
+    "max_return_age_bars": 20,
+    "atr_period": 14,
+    "horizon_bars": 96
+  },
+  "funnel": {
+    "R0": {
+      "train": {
+        "n": 4638,
+        "gross_mean": -0.06375405347132385,
+        "net_mean": -0.31836798552682904,
+        "win_rate": 0.23048727899956878,
+        "pf": 0.9233388104788897
+      },
+      "holdout": {
+        "n": 1583,
+        "gross_mean": 0.0653516740366393,
+        "net_mean": -0.02944993319250229,
+        "win_rate": 0.23499684144030322,
+        "pf": 1.0814121265953898
+      }
+    },
+    "R1": {
+      "train": {
+        "n": 4624,
+        "gross_mean": -0.06277413494809687,
+        "net_mean": -0.318071144045843,
+        "win_rate": 0.2301038062283737,
+        "pf": 0.9245672847997443
+      },
+      "holdout": {
+        "n": 1579,
+        "gross_mean": 0.06692811906269791,
+        "net_mean": -0.027977710576604125,
+        "win_rate": 0.23495883470550982,
+        "pf": 1.0833656829159257
+      }
+    },
+    "R2": {
+      "train": {
+        "n": 1822,
+        "gross_mean": -0.17064720087815588,
+        "net_mean": -0.4193879729683843,
+        "win_rate": 0.2327113062568606,
+        "pf": 0.7943519530000537
+      },
+      "holdout": {
+        "n": 653,
+        "gross_mean": -0.1770572741194487,
+        "net_mean": -0.2819335300757956,
+        "win_rate": 0.21745788667687596,
+        "pf": 0.7835584516333869
+      }
+    },
+    "R3": {
+      "train": {
+        "n": 571,
+        "gross_mean": -0.18074991243432575,
+        "net_mean": -0.4145389190865778,
+        "win_rate": 0.2329246935201401,
+        "pf": 0.7830617020610234
+      },
+      "holdout": {
+        "n": 197,
+        "gross_mean": -0.12786852791878173,
+        "net_mean": -0.18927619428682863,
+        "win_rate": 0.2436548223350254,
+        "pf": 0.8340823419918866
+      }
+    },
+    "R4": {
+      "train": {
+        "n": 255,
+        "gross_mean": -0.38013568627450983,
+        "net_mean": -0.8314595100989906,
+        "win_rate": 0.07058823529411765,
+        "pf": 0.6418457168361843
+      },
+      "holdout": {
+        "n": 80,
+        "gross_mean": -0.02102250000000002,
+        "net_mean": -0.13997510642421873,
+        "win_rate": 0.1125,
+        "pf": 0.9770601594522154
+      }
+    }
+  },
+  "primary": "R4",
+  "holdout": {
+    "n": 80,
+    "gross_mean": -0.02102250000000002,
+    "net_mean": -0.13997510642421873,
+    "win_rate": 0.1125,
+    "pf": 0.9770601594522154
+  },
+  "train": {
+    "n": 255,
+    "gross_mean": -0.38013568627450983,
+    "net_mean": -0.8314595100989906,
+    "win_rate": 0.07058823529411765,
+    "pf": 0.6418457168361843
+  },
+  "holdout_net_lag1_rho": 0.25215690734508667,
+  "holdout_effective_n": 47.779513143639115,
+  "controls": {
+    "random_entry_seeds": 100,
+    "random_entry_r4_beats": 50,
+    "random_entry_mean_of_means": -0.03213283614339864,
+    "long_only_n": 80,
+    "long_only_net_mean": -0.21730622530533764,
+    "funnel_matched_n": 80,
+    "funnel_matched_net_mean": -0.6813726948400156
+  },
+  "gate": {
+    "n_ge_30": true,
+    "net_mean_gt_0": false,
+    "pf_gt_1": false,
+    "beats_long_only": true,
+    "beats_random_majority": false,
+    "beats_funnel_matched": true
+  },
+  "verdict": "REJECT",
+  "economic_claims_allowed": false,
+  "mt00": "UNRUN",
+  "mt01_matrix_coverage": "UNRUN"
+}

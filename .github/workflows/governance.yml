@@ -1,0 +1,28 @@
+name: governance
+
+# Program E-001 — continuous enforcement of the behavioral epistemic invariants.
+# This calls the SAME script the pre-commit hook calls (with --all), so the hook and CI
+# run an identical code path and the GREEN_FLOOR target list cannot drift between them.
+#
+# DESIGN CONSTRAINT — do NOT replace the script call with `pytest` (whole suite). The full
+# suite carries ~66 known reds (config split-brain / branch-TP3 / LLM-env, F-018); a gate
+# that is permanently red enforces nothing and is itself decorative wiring (E-001F). The
+# curated GREEN_FLOOR lives in scripts/maintenance/check_governance_invariants.py and grows
+# monotonically as F-018 reds are resolved. Rationale: docs/governance/EPISTEMIC_INTEGRITY.md.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  green-floor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install
+        run: pip install -e .
+      - name: Governance green floor (E-001)
+        run: python scripts/maintenance/check_governance_invariants.py --all

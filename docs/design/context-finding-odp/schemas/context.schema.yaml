@@ -1,0 +1,292 @@
+# DESIGN ONLY — not wired to runtime.
+# Change class (proposed): ONTOLOGY_DEFINITION / FINDING_REGISTRY
+# Authority: Context is a join key for measured findings, NOT a signal and NOT S_t.
+# S_t remains owned by CRTEngine (src/config_layer/crt_engine_v2.py).
+# Hierarchy: see observation_hierarchy.schema.yaml (L1→L5 acyclic rule).
+
+schema_version: "0.5.0"
+artifact: Context
+status: design_draft
+defect_status:
+  resolves: [D2_population_key, D3_identity_vs_measurement, L4_polarity_doctrine]
+  open: [D1_belief_vs_preference_boundary]
+authority:
+  produces: identity_key_for_findings_and_odp
+  does_not_own:
+    - authoritative_state_S_t
+    - feature_interpretation_F_t
+    - trade_decisions
+    - execution_policy
+    - measurement_contract_seal
+
+description: |
+  First-class composite context spanning the observation hierarchy.
+  Findings and ODPs attach to Context, not to state alone and not to structure alone.
+  State (L3) changes the meaning of structure (L4).
+
+fields:
+  # --- L1 Parent CRT (identity; disjoint from L3) ---
+  parent_crt:
+    type: string | null
+    level: L1_parent_crt
+    enum: [RANGE_C1, MANIPULATION_C2, DISTRIBUTION_C3]
+    source_of_truth: config_layer.parent_crt.ParentCRTTrack
+    notes: |
+      null = not conditioned on parent identity.
+      NEVER store RANGE_C1 in execution state field.
+
+  # --- L2 Objective (intermediate state; not CRTState) ---
+  objective:
+    type: object | null
+    level: L2_objective_status
+    source_of_truth: config_layer.htf_state.Objective / resolve_objective
+    fields:
+      status:
+        type: string
+        enum: [NONE, EXISTS, ACHIEVED, INVALIDATED]
+      direction:
+        type: string
+        enum: [LONG, SHORT, NONE]
+      htf_state:
+        type: string | null
+        enum: [UNKNOWN, EXPANSION, ACCUMULATION, DISTRIBUTION, REVERSAL]
+        notes: HTFState.DISTRIBUTION ≠ DISTRIBUTION_C3 (F-077).
+    notes: |
+      Intermediate layer between Parent CRT and Execution CRT.
+      Example: MANIPULATION_C2 + EXISTS/LONG raises P(SWEEP) — does not redefine parent from CHoCH.
+
+  # --- L3 Execution CRT / label (producer REQUIRED — D2) ---
+  state_producer:
+    type: string
+    required: true
+    enum: [engine, resolver]
+    description: |
+      IDENTITY field. Which producer minted `state`.
+      engine   = CRTEngine S_t (authoritative execution state)
+      resolver = CRTStateResolver ontology/R_t label (observation / diagnostic)
+      Engine State ≠ Resolver State is measured at 88.16% agreement
+      (F-069, injection=none, 41,607/47,197 XAUUSD M15 bars; the 64–99% range
+      seen in earlier session estimates was produced under unconditional
+      engine-oracle injection and was retracted by F-069 itself as not having
+      measured configuration alone — do not cite it).
+      Omitting producer is an IDENTITY DEFECT: ODP populations become ambiguous.
+      No default is provided (D2): a required identity field must fail closed,
+      not silently resolve to "engine" when omitted.
+
+  variant_id:
+    type: string | null
+    required_when: "state_producer == resolver"
+    description: |
+      IDENTITY when producer is resolver. Distinguishes resolver variants /
+      enabled_links / ontology revisions that can mint the same label on
+      different populations (same label, different population defect class).
+      null only when state_producer=engine (engine has no resolver variant_id).
+      Examples: "market_crt_states@<hash>", "links:<enabled_set_id>", research arm id.
+    forbid:
+      - Bare resolver state without variant_id
+      - Pooling across variant_id under one contract_ref
+
+  population_key_doctrine:  # D2 strengthened
+    rule: |
+      Admissible ODP population key =
+        contract_ref + identity_selectors
+      NOT merely (state) or even (state_producer, variant_id, state) alone.
+      Those are necessary selectors inside the key; the contract binds the
+      measurement surfaces (lookahead, metric, inclusion/exclusion, corpus).
+      Next resolver sweep / ontology revision / context revision must change
+      variant_id or contract_ref — never silently reuse the old population.
+    forbid:
+      - Using bare `state: SWEEP` without state_producer (+ variant_id if resolver)
+      - Pooling ODPs across different identity_selectors under one contract_ref
+      - Treating contract_ref as optional once ODP claims comparability
+
+  state:
+    type: string
+    required: true
+    level: L3_execution_crt
+    source_of_truth_when_producer_engine: config_layer.state_identity.CRTState / CRTEngine
+    source_of_truth_when_producer_resolver: CRTStateResolver ontology label (R_t)
+    graph: execution_timeframe
+    enum_execution_timeframe:
+      - RANGE
+      - SWEEP
+      - DISPLACEMENT
+      - EXPANSION
+      - RETEST
+      - EXECUTION
+      - RESOLUTION
+      - SHADOW_PENDING
+      - EXPIRED
+    forbidden_in_this_field:
+      - RANGE_C1
+      - MANIPULATION_C2
+      - DISTRIBUTION_C3
+
+  # --- L4 Structure atoms ---
+  structure:
+    type: object
+    required: true
+    level: L4_structure_atoms
+    fields:
+      breaker_present:
+        type: boolean
+        ontology_refs: [breaker_distance, breaker_zone_edge]
+      order_block_present:
+        type: boolean
+        ontology_refs: [order_block_distance, order_block_zone_edge]
+      double_sweep:
+        type: boolean
+      liquidity_sweep_direction:
+        type: integer
+        enum: [-1, 0, 1]
+      break_of_structure_present:
+        type: boolean
+      choch_present:
+        type: boolean | null
+        notes: Observation only; must never rewrite L1 parent identity.
+    forbidden_keys: [TT, twin_towers, setup_name, story_label]
+
+  # --- Optional transition detail (still L3/L4 adjacent; not L1) ---
+  transition:
+    type: object | null
+    fields:
+      from_state: { type: string | null }
+      to_state: { type: string | null }
+      edge_id: { type: string | null }
+
+  # --- Location / run geography ---
+  location:
+    type: object
+    required: true
+    fields:
+      instrument: { type: string, examples: [XAUUSD] }
+      timeframe: { type: string, examples: [M15] }
+      htf_percentile: { type: float | null, range: [0.0, 1.0] }
+      htf_bucket:
+        type: string | null
+        enum: [lower_third, middle_third, upper_third]
+      distance_to_boundary_atr: { type: float | null }
+      session_id: { type: string | null }
+
+  mechanism:
+    type: string | null
+    default: null
+    identity: false  # D3 annotation only
+
+  mechanism_confidence:
+    type: string
+    enum: [none, provisional, confirmed]
+    default: none
+    identity: false  # D3 — never identity-bearing even when always serialized
+
+  # Optional explicit R_t when measuring engine Context but recording resolver label beside it
+  resolver_state:
+    type: string | null
+    level: observation_sidecar
+    description: |
+      Resolver label R_t when state_producer=engine and a join recorded disagreement.
+      NEVER used as Context.state without flipping state_producer to resolver.
+      Not required for identity when null.
+
+identity_rules:
+  - Context equality is exact-match on identity selectors only (see identity_selector_fields).
+  - state_producer is ALWAYS an identity selector when state is set (D2).
+  - parent_crt and state are different identity graphs — never collapse names.
+  - Lower-layer fields must not be used as definitions of higher-layer identity.
+  - Do not encode policy, size, or targets inside Context.
+
+identity_selector_fields:
+  # Discrete identity only — Identity ≠ Measurement (D3 strengthened).
+  # Explicit enumeration on purpose (C: identity hygiene) — no wildcards. A new
+  # structure.* / transition.* field added to the `structure:` or `transition:`
+  # block above is NOT automatically an identity selector: it must be added to
+  # this list explicitly, or it silently re-keys nothing (safe by default) but
+  # also cannot be selected on (fails loud when a contract references it, per
+  # the exact-match rule below — never fails silent).
+  - state_producer
+  - variant_id          # required when producer=resolver; null when engine
+  - state
+  - parent_crt
+  - objective.status
+  - objective.direction
+  - objective.htf_state
+  - structure.breaker_present
+  - structure.order_block_present
+  - structure.double_sweep
+  - structure.liquidity_sweep_direction
+  - structure.break_of_structure_present
+  - structure.choch_present
+  - transition.from_state
+  - transition.to_state
+  - transition.edge_id
+  - location.instrument
+  - location.timeframe
+  - location.htf_bucket           # discrete bucket ONLY
+  - location.session_id
+
+measurement_fields_excluded_from_identity:  # D3 — continuous observations
+  fields:
+    - location.htf_percentile
+    - location.distance_to_boundary_atr
+  rationale: |
+    Identity ≠ Measurement. Continuous floats create near-infinite cardinality
+    and recreate "same label, different population" via accidental exact-match.
+    Attach these on observation/evidence rows or ODP side evidence — not as
+    Context identity selectors. Use htf_bucket (or other discrete bins) for identity.
+
+annotation_fields_excluded_from_identity:  # D3
+  fields:
+    - mechanism
+    - mechanism_confidence
+    - resolver_state   # sidecar; identity is state_producer + variant_id + state
+  rationale: |
+    Explanatory annotations must not participate in exact-match identity,
+    even when always serialized (e.g. mechanism_confidence: none).
+
+structure_polarity_doctrine:  # L4
+  status: intentional_cardinality_reduction_for_v1_odp
+  signed_today:
+    - liquidity_sweep_direction  # -1/0/+1 retained
+  boolean_presence_today:
+    - breaker_present
+    - order_block_present
+    - choch_present
+    - break_of_structure_present
+    - double_sweep
+  meaning: |
+    Booleans compress polarity for first ODP populations (cardinality control;
+    admissible-not-mandatory doctrine). This is INTENTIONAL for v1, not "polarity
+    does not matter." Bullish vs bearish CHoCH/breaker/OB are different observations;
+    they may be added later as optional fields without breaking booleans:
+      breaker_polarity: -1 | 0 | 1 | null
+      order_block_polarity: -1 | 0 | 1 | null
+      choch_direction: -1 | 0 | 1 | null
+    MeasurementContracts that need polarity MUST declare these selectors (or
+    exclude them explicitly). Silent assumption that polarity-free booleans
+    equal signed populations is forbidden.
+
+selector_doctrine:
+  rule: |
+    Context fields are admissible selectors.
+    Context fields are not mandatory selectors.
+  meaning: |
+    null on a selector means "not conditioned" and is a normal, expected
+    Context definition — not a missing value and not a defect.
+  rationale: |
+    Exact-match identity is logically clean but operationally explodes
+    cardinality. Narrow buckets (n = 2 / 4 / 7) dominate if every admissible
+    field is treated as mandatory. Observation before prediction: a field
+    may be useful and still fail to survive measurement.
+  operational_guidance:
+    - Prefer sparse Contexts for first ODPs (e.g. L3 state + 1–2 L4 atoms).
+    - Add L1/L2/location selectors only after a MeasurementContract shows
+      the conditioned population still meets n_declared_min / holdout rules.
+    - location.htf_percentile, distance_to_boundary_atr, session_id default to null.
+    - Never invent synthetic averages to "fill" a sparse Context.
+  cardinality_warning: |
+    Each additional non-null selector multiplies fragmentation risk.
+    If most matching ODPs fall below n_declared_min, drop selectors —
+    do not invent FALLBACK quantiles.
+
+deprecated_from_v0_1:
+  - location.parent_state  # moved to top-level parent_crt (L1)

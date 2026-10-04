@@ -1,0 +1,29 @@
+{
+  "change_id": "CH-pit-phasec-certification",
+  "objective": "PIT Phase C: empirical certification of all 38 canonical features. Adds the read-only probe scripts/analysis/pit_phaseC_feature_certification.py (prefix-invariance harness with ZERO tail exclusion over real + synthetic corpora; warmup/missing-value census; global-fit AST localization), the permanent floor tests/test_pit_prefix_invariance.py (synthetic prefix-vs-full equality for all 38 production columns + full-frame rank tripwire), evidence artifacts, and the certification gate note declaring the canonical FeaturePipeline PIT-clean at the prefix-invariance level. NO src/, config, or model changes; no economic claims; PIT_UNCLEAN artifact status unchanged.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY"
+  ],
+  "affected_files": [
+    "scripts/analysis/pit_phaseC_feature_certification.py",
+    "tests/test_pit_prefix_invariance.py",
+    "docs/governance/pit_phaseC_feature_certification-2026-07-11.json",
+    "docs/governance/pit_phaseC_feature_certification-2026-07-11.md",
+    "docs/governance/pit_phaseC_certification-2026-07-11.md",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none (rr/zone PIT_UNCLEAN status unchanged)",
+  "affected_production_config": "none (hash-neutral)",
+  "required_checks_ack": [
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/test_pit_prefix_invariance.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "single commit: probe + floor test + evidence artifacts + gate note together",
+  "class_note": "change_contracts.json has no GOVERNANCE_TOOLING class (known gap); DOCUMENTATION_ONLY is the closest fit \u2014 the probe/test additions touch no behavior surface (src/, configs/, models/), which the validator's DOCUMENTATION_ONLY guard enforces mechanically.",
+  "superseded_by": "CH-pit-phaseC-feature-certification",
+  "superseded_note": "2026-07-11 audit B6: this draft impact manifest (written during a tool outage, never completed) is superseded by the validated CH-pit-phaseC-feature-certification pair covering the same Phase-C change. Kept for append-discipline."
+}

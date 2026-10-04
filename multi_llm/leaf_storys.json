@@ -1,0 +1,602 @@
+[
+  {
+    "class": "LeafStory",
+    "id": "STORY-3.3",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 15,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-3.4",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 15,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-11.8",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 1,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-12.5",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 54,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-12.7",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 4,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-13.17",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 1,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-25.2",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 3,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-33.2",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 71,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-41.6",
+    "in_degree": 0,
+    "layer": "research",
+    "out_degree": 12,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-41.8",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 5,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-41.10",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 65,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-41.16",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 53,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-41.17",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 53,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-31.8",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 19,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-33.6",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 25,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-20.12",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 146,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-31.9",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 65,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-25.11",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 1,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-37.5",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 22,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-41.24",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 14,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-41.26",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 34,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-29.3",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 25,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-20.19",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 146,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-31.14",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 36,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-14.6",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 1,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-36.15",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 2,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-31.18",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 35,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-36.16",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 51,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-14.7",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 31,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-36.20",
+    "in_degree": 0,
+    "layer": "research",
+    "out_degree": 27,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-19.4",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 22,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-23.7",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 83,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-38.4",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 64,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-37.11",
+    "in_degree": 0,
+    "layer": "config_layer",
+    "out_degree": 25,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-19.7",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 64,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-43.3",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 21,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-45.1",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 2,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-45.2",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 19,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-44.5",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 4,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-54.1",
+    "in_degree": 0,
+    "layer": "research",
+    "out_degree": 37,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-51.3",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 124,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-11.16",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 1,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-41.60",
+    "in_degree": 0,
+    "layer": "research",
+    "out_degree": 71,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-41.62",
+    "in_degree": 0,
+    "layer": "research",
+    "out_degree": 78,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-41.65",
+    "in_degree": 0,
+    "layer": "research",
+    "out_degree": 43,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-36.28",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 17,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-25.37",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 99,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-41.66",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 87,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-41.67",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 39,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-41.68",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 58,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-51.5",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 124,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-59.10",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 55,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-59.12",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 108,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-59.13",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 130,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-59.14",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 128,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-59.16",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 37,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-59.24",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 48,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-59.26",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 4,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-59.27",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 108,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-59.29",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 1,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-59.4",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 109,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-59.6",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 111,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-59.7",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 107,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-59.8",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 59,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-59.9",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 5,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-60.34",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 11,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-60.38",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 30,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-62.16",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 7,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-63.13",
+    "in_degree": 0,
+    "layer": "sidecar",
+    "out_degree": 8,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-58.46",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 25,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-61.15",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 69,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-61.4",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 5,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-61.6",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 5,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-61.8",
+    "in_degree": 0,
+    "layer": "operator",
+    "out_degree": 32,
+    "runtime_reachable": true
+  },
+  {
+    "class": "LeafStory",
+    "id": "STORY-67.17",
+    "in_degree": 0,
+    "layer": "governance",
+    "out_degree": 144,
+    "runtime_reachable": true
+  }
+]

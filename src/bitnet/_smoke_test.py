@@ -18,7 +18,7 @@ def test_zone_validator():
 
 
 def test_gaussian_scoring():
-    from bitnet.search_engine import ZoneCandidate, compute_gaussian_score, compute_gaussian_score_from_candidate
+    from bitnet.zone_cosine_searcher import ZoneCandidate, compute_gaussian_score, compute_gaussian_score_from_candidate
 
     # Peak score at exact mu values
     cand = ZoneCandidate(
@@ -45,7 +45,7 @@ def test_gaussian_scoring():
 
 def test_evaluate_subset():
     import random
-    from bitnet.search_engine import ZoneCandidate, _evaluate_subset
+    from bitnet.zone_cosine_searcher import ZoneCandidate, _evaluate_subset
 
     rng = random.Random(99)
     N = 200
@@ -68,7 +68,7 @@ def test_evaluate_subset():
 
 def test_stability_checker():
     import random
-    from bitnet.search_engine import ZoneCandidate
+    from bitnet.zone_cosine_searcher import ZoneCandidate
     from bitnet.stability_checker import StabilityChecker
 
     rng = random.Random(7)
@@ -97,8 +97,13 @@ def test_zone_gate():
 
     g2 = BitNetZoneGate(zone_path='models/zone_registry_nonexistent.json')
     r2 = g2.check([0.5]*11)
-    assert r2['allowed'] == True, "Missing registry must fail-open"
-    print(f"  PASS BitNetZoneGate missing registry: allowed={r2['allowed']}")
+    # Fail-CLOSED: an unloadable registry blocks. This assertion previously read
+    # "Missing registry must fail-open" — that was never the behaviour (score 0.0
+    # fails the cluster threshold downstream); the name and the assertion had drifted
+    # from the code together.
+    assert r2['allowed'] == False, "Missing registry must fail-closed (blocks)"
+    assert r2['score'] == 0.0, "Missing registry must score 0.0"
+    print(f"  PASS BitNetZoneGate missing registry: allowed={r2['allowed']} reason={r2['reason']}")
 
 
 def test_scoring_engine_api():

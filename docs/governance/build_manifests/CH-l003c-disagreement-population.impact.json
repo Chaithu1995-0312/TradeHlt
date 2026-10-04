@@ -1,0 +1,110 @@
+{
+  "change_id": "CH-l003c-disagreement-population",
+  "date_utc": "2026-09-07",
+  "objective": "L-003C: measure Det=SL_HIT x Ora=TP_HIT disagreement population vs AGREE/ALL on anatomy covariates; no doctrine/registry redesign.",
+  "change_classes": [
+    "GOVERNANCE_OBSERVATION"
+  ],
+  "change_class_rationale": "Measurement/governance artifacts only. No analytics registry edits, no attribution unlock, no runtime path change, no CRT joins.",
+  "affected_files": [
+    "docs/governance/ANALYTICS_OUTCOME_DISAGREEMENT_POPULATION_L003C.md",
+    "docs/governance/analytics_outcome_disagreement_population_l003c-2026-09-07.json",
+    "docs/governance/build_manifests/CH-l003c-disagreement-population.impact.json",
+    "docs/governance/ANALYTICS_OUTCOME_POPULATION_COMPARISON_L003B.md",
+    "docs/governance/ANALYTICS_OUTCOME_SEMANTICS_L003.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [],
+  "unknowns": [
+    "CRT/HTF/manipulation not on anatomy join surface \u2014 not measured.",
+    "No chronological holdout; in-sample descriptive only."
+  ],
+  "rollback_boundary": "Delete L-003C MD/JSON/impact; remove one-line pointers from L-003B/L-003 MD. Registries never edited.",
+  "authority_granted": "User directed L-003C disagreement population measurement after L-003B HOMONYM; pointers only; no registry promotion.",
+  "authority_NOT_granted": "No registry columns; no CRT/HTF joins; no src/; no commits; no doctrine redesign; no attribution unlock.",
+  "production_behavior_changed": "NO",
+  "run_id": "l003c_disagreement_population_20260907_175248",
+  "git_commit_sha": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+  "doctrine_version": "L-003C.v1",
+  "promotion": {
+    "registry_column_added": false,
+    "l003_frozen": false,
+    "attribution_unblocked": false,
+    "economic_claims_allowed": false,
+    "ANALYTICS_SCHEMA_REGISTRY_edited": false,
+    "ANALYTICS_LINEAGE_REGISTRY_edited": false
+  },
+  "headline_numbers": {
+    "aggregate_n": 559768,
+    "aggregate_n_DISAGREE_SL_TP": 176471,
+    "aggregate_rate_DISAGREE_SL_TP": 0.31525739234825856,
+    "per_instrument_n_DISAGREE_SL_TP": {
+      "BNBUSDT": 44791,
+      "BTCUSDT": 43392,
+      "ETHUSDT": 43725,
+      "SOLUSDT": 44563
+    },
+    "top5_separators": [
+      {
+        "feature": "rr_achieved",
+        "kind": "continuous_median_delta",
+        "disagree_median": 2.0,
+        "agree_median": -1.0,
+        "disagree_mean": 2.0,
+        "agree_mean": -0.9386914161376612,
+        "delta": 3.0,
+        "relative_abs_delta": 0.75,
+        "mean_delta_note": 2.938691416137661,
+        "abs_score": 0.75
+      },
+      {
+        "feature": "capture_ratio",
+        "kind": "continuous_median_delta",
+        "disagree_median": 0.8577218069381731,
+        "agree_median": -1.8386147439099072,
+        "disagree_mean": 0.8191080890913848,
+        "agree_mean": -189.34445770596503,
+        "delta": 2.6963365508480805,
+        "relative_abs_delta": 0.7294618641339459,
+        "mean_delta_note": 190.1635657950564,
+        "abs_score": 0.7294618641339459
+      },
+      {
+        "feature": "giveback",
+        "kind": "continuous_median_delta",
+        "disagree_median": 0.1422781930618268,
+        "agree_median": 2.838614743909907,
+        "disagree_mean": 0.18089191090861517,
+        "agree_mean": 190.344457705965,
+        "delta": -2.6963365508480805,
+        "relative_abs_delta": 0.6773195344708729,
+        "mean_delta_note": -190.16356579505637,
+        "abs_score": 0.6773195344708729
+      },
+      {
+        "feature": "bars_to_peak_within_trade",
+        "kind": "continuous_median_delta",
+        "disagree_median": 6.0,
+        "agree_median": 1.0,
+        "disagree_mean": 8.30428229000799,
+        "agree_mean": 2.578823954827404,
+        "delta": 5.0,
+        "relative_abs_delta": 0.625,
+        "mean_delta_note": 5.725458335180585,
+        "abs_score": 0.625
+      },
+      {
+        "feature": "reached_2r_rate",
+        "kind": "rate_delta",
+        "disagree_rate": 0.9999660000793331,
+        "agree_rate": 0.4500312745372034,
+        "delta": 0.5499347255421297,
+        "lift_vs_agree": 2.221992240667415,
+        "abs_score": 0.5499347255421297
+      }
+    ]
+  }
+}

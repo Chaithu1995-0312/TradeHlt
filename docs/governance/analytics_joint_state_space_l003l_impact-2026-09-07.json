@@ -1,0 +1,47 @@
+{
+  "finding_id": "L-003L",
+  "version": "L-003L.v1",
+  "run_id": "l003l_joint_state_space_measurement_objects_20260907_200006",
+  "generated_at_utc": "2026-09-07T20:00:06Z",
+  "git_commit_sha": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+  "title": "JOINT_STATE_SPACE_FROZEN_AND_MEASUREMENT_OBJECTS_REGISTERED",
+  "summary": {
+    "omega_joint_cardinality": 9,
+    "zero_mass_retained": [
+      "LATE_REALIZATION",
+      "LATE_FAILURE",
+      "SCANNER_TP_ORACLE_TIMEOUT"
+    ],
+    "four_layers": [
+      "ExitProcess",
+      "MeasurementProcess",
+      "ObservedVariable",
+      "Population"
+    ],
+    "measurement_objects": [
+      "Y_scanner",
+      "Y_oracle",
+      "Y_joint"
+    ],
+    "locked": "Omega_joint + StateID map + four-layer freeze + MeasurementObject identity registry",
+    "not_locked": "edge claims / attribution / analytics schema columns / EARLY_STOP-as-fact / L-003 freeze"
+  },
+  "flags": {
+    "state_space_frozen": true,
+    "measurement_objects_registered": true,
+    "edge_claims": false,
+    "attribution_unblocked": false,
+    "registry_column_edits": false,
+    "l003_frozen": false,
+    "src_edits": false,
+    "new_measurements": false
+  },
+  "artifacts": [
+    "docs/governance/ANALYTICS_JOINT_STATE_SPACE_L003L.md",
+    "docs/governance/analytics_joint_state_space_l003l-2026-09-07.json",
+    "docs/governance/analytics_joint_state_space_l003l_impact-2026-09-07.json",
+    "docs/governance/MEASUREMENT_OBJECT_REGISTRY.md",
+    "docs/governance/measurement_object_registry.json",
+    "docs/governance/measurement_object_registry_impact-2026-09-07.json"
+  ]
+}

@@ -1,7 +1,7 @@
 """
 tests/test_ultron_gate.py
 ==========================
-Unit + integration tests for RegimeGovernor / UltronGovernor (src/core/ultron_gate.py).
+Unit + integration tests for RegimeGovernor / UltronGovernor (src/core/regime_governor.py).
 Canonical name: RegimeGovernor. UltronGovernor is the backward-compat class name.
 
 Run:
@@ -28,7 +28,7 @@ import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from core.ultron_gate import UltronGovernor
+from core.regime_governor import UltronGovernor
 
 
 # ─────────────────────────────────────────────────────────────────────────────

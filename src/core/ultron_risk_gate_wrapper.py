@@ -10,7 +10,7 @@ CANONICAL NAMING CONTEXT:
                     Multiplies trade.risk_percent by a regime-specific factor
                     before delegating unconditionally to UltronRiskGate.evaluate().
   UltronRiskGate  (ultron_risk_gate.py) = CAPITAL PROTECTION LAYER (never bypassed).
-  RegimeGovernor  (ultron_gate.py)      = SIGNAL-QUALITY FILTER inside EngineRunner Step 6.
+  RegimeGovernor  (regime_governor.py)  = SIGNAL-QUALITY FILTER inside EngineRunner Step 6.
 
 SR-1 COMPLIANCE: UltronRiskGate is NEVER bypassed or modified.
 This wrapper only pre-scales risk_percent; the gate's evaluate() is ALWAYS called.
@@ -20,13 +20,15 @@ Usage (at caller level — NOT inside EngineRunner):
     from core.ultron_risk_gate_wrapper import UltronRiskGateWrapper
 
     gate    = UltronRiskGate(config)
-    wrapper = UltronRiskGateWrapper(gate, debug_mode=config.get("debug_mode"))
+    wrapper = UltronRiskGateWrapper(gate, regime_factors=config["regime_factors"],
+                                    debug_mode=debug_mode)
 
     # In the decision loop (regime comes from EngineRunner.run() return value):
     result  = wrapper.evaluate(trade, portfolio_state, regime="range")
     # result schema is IDENTICAL to UltronRiskGate.evaluate() output
 
-Default regime factors:
+Regime factors come from the declared ultron_risk_gate.regime_factors mapping (required;
+EPIC-84 STORY-84.2 removed the in-code default table). Active-config values:
     "trend":     1.0   (no change — full risk)
     "range":     0.8   (slight reduction in ranging markets)
     "neutral":   0.6   (moderate reduction in uncertain markets)
@@ -43,14 +45,12 @@ import json
 import logging
 from typing import Any
 
+from config_layer.strict_config import ConfigKeyMissingError
+
 _LOG = logging.getLogger("ULTRON_WRAPPER")
 
-_DEFAULT_REGIME_FACTORS: dict[str, float] = {
-    "trend":     1.0,
-    "range":     0.8,
-    "neutral":   0.6,
-    "uncertain": 0.5,
-}
+# EPIC-84 STORY-84.2: the module-level _DEFAULT_REGIME_FACTORS merge is gone. The factors
+# are the declared ``ultron_risk_gate.regime_factors`` mapping; absent -> ConfigKeyMissingError.
 
 _DEFAULT_REGIME = "neutral"
 
@@ -66,11 +66,21 @@ class UltronRiskGateWrapper:
     def __init__(
         self,
         gate: Any,
-        regime_factors: dict[str, float] | None = None,
+        regime_factors: dict[str, float] | None,
         debug_mode: bool = False,
     ) -> None:
+        if regime_factors is None:
+            raise ConfigKeyMissingError(
+                ["regime_factors"], section="ultron_risk_gate",
+                consumer="UltronRiskGateWrapper",
+            )
+        if not isinstance(regime_factors, dict):
+            raise TypeError(
+                "ultron_risk_gate.regime_factors must be a mapping, got "
+                f"{type(regime_factors).__name__}"
+            )
         self._gate           = gate
-        self._factors        = {**_DEFAULT_REGIME_FACTORS, **(regime_factors or {})}
+        self._factors        = dict(regime_factors)
         self.debug_mode      = debug_mode
         # One-time warning flag: alert if regime defaults are used without explicit setting
         self._warned_default = False
@@ -109,9 +119,16 @@ class UltronRiskGateWrapper:
         # --- Regime pre-scaling (never mutates caller's dict) ---
         factor       = self._factors.get(regime, 1.0)
         trade_copy   = copy.deepcopy(trade)
-        original_risk = float(trade_copy.get("risk_percent", 0.0))
-        scaled_risk   = original_risk * factor
-        trade_copy["risk_percent"] = scaled_risk
+        # risk_percent is a per-trade value: when absent it is NOT invented (was 0.0) — the copy
+        # is forwarded unchanged and UltronRiskGate REJECTs it with
+        # config_key_missing:trade.risk_percent (SR-1: the wrapper has no reject path).
+        if "risk_percent" in trade_copy:
+            original_risk = float(trade_copy["risk_percent"])
+            scaled_risk   = original_risk * factor
+            trade_copy["risk_percent"] = scaled_risk
+        else:
+            original_risk = None
+            scaled_risk   = None
 
         # --- Debug logging ---
         if self.debug_mode:

@@ -1,0 +1,160 @@
+{
+  "_doc": "M12B canonical FeaturePipeline session certification ONLY.",
+  "schema_version": "2.0",
+  "generated_at": "2026-07-31T18:34:11.784691+00:00",
+  "session_program": "M12B",
+  "TARGET_FEATURE": "session",
+  "checkpoint": {
+    "PROMOTED_PRODUCTION": 47,
+    "SUPERSEDED": 4
+  },
+  "intended_quantity": "int8 canonical FM-052 v4.0 session code: a window model over feature_pipeline.session_windows_utc (defaults ASIA=[0,9) LONDON=[7,16) NEWYORK=[12,21), half-open, precedence OVERLAP(London&NY) > NEWYORK > LONDON > ASIA > CLOSED) applied to hour_of_day, NOT the v3.0 3-value hour partition; invalid/NaT timestamps fail upstream during hour_of_day int8 cast; no session-specific fallback",
+  "dependency_classification": "EXECUTABLE_REUSE_HOUR_OF_DAY_IDENTITY",
+  "CURRENT_DAG_DEPS": [
+    "hour_of_day"
+  ],
+  "IMPLEMENTATION_REUSE": "hour_of_day column",
+  "EXECUTABLE_DATAFLOW_DEPENDENCY": "hour_of_day column",
+  "GOVERNED_SEMANTIC_ROOT": "hour_of_day (itself timestamp wall-clock hour)",
+  "CERTIFICATION_AUTHORITY_DEPENDENCY": "hour_of_day (CORRECTED 2026-07-31: was 'timestamp only', which contradicted the DAG's own declared session.depends_on=[hour_of_day] -- both the ontology (FM-052) and feature_dag_layers.py already agreed on hour_of_day before this probe was rewritten to match)",
+  "exact_piecewise_function": {
+    "0": "0<=h<9 and not (7<=h<16 and 12<=h<21)",
+    "1": "7<=h<16 and not (12<=h<21)",
+    "2": "12<=h<21 and not (7<=h<16)",
+    "3": "7<=h<16 and 12<=h<21",
+    "4": "not (0<=h<9) and not (7<=h<16) and not (12<=h<21)",
+    "labels": {
+      "0": "ASIA",
+      "1": "LONDON",
+      "2": "NEWYORK",
+      "3": "OVERLAP",
+      "4": "CLOSED"
+    }
+  },
+  "boundary_table": {
+    "0": 0,
+    "1": 0,
+    "2": 0,
+    "3": 0,
+    "4": 0,
+    "5": 0,
+    "6": 0,
+    "7": 1,
+    "8": 1,
+    "9": 1,
+    "10": 1,
+    "11": 1,
+    "12": 3,
+    "13": 3,
+    "14": 3,
+    "15": 3,
+    "16": 2,
+    "17": 2,
+    "18": 2,
+    "19": 2,
+    "20": 2,
+    "21": 4,
+    "22": 4,
+    "23": 4
+  },
+  "dtype": "int8",
+  "domain": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "timezone_semantics": "NO timezone conversion; wall-clock hour of stored datetime",
+  "invalid_timestamp_policy": "NaT/invalid fails at hour extraction/int8 cast; no session soft path",
+  "oracle_implementation_identity_hash": "4d9469951fa976fdbc6606a6a8154ab17d2246a06ce0b7fd8feae9a701f505de",
+  "oracle_independence_statement": "oracle_session uses per-element Timestamp\u2192pydatetime.hour and explicit if/elif branches over hardcoded window bounds only; no FeaturePipeline, np.where, SESSION_MAP, SESSION_ORDINAL, CRT/live/backtest session helpers, pipeline columns, or the live feature_pipeline.session_windows_utc config",
+  "probes": {
+    "boundary": {
+      "24h_exact_vector": "PASS",
+      "dtype_int8": "PASS",
+      "domain_subset": "PASS",
+      "all_codes_reachable": "PASS",
+      "no_gap_overlap_count": "PASS",
+      "transitions": "PASS",
+      "transition_detail": {
+        "07": 1,
+        "08": 1,
+        "09": 1,
+        "15": 3,
+        "16": 2,
+        "17": 2,
+        "23": 4,
+        "00": 0
+      }
+    },
+    "timestamp_forms": {
+      "parity": "PASS",
+      "nat_oracle_raises": "PASS",
+      "nat_pipeline_raises": "PASS",
+      "oracle_values": [
+        0,
+        1,
+        2,
+        1,
+        1
+      ],
+      "pipeline_values": [
+        0,
+        1,
+        2,
+        1,
+        1
+      ]
+    },
+    "timezone": {
+      "naive_15_session3_overlap": "PASS",
+      "utc_aware_15_session3_overlap": "PASS",
+      "no_force_utc_shift_claim": "PASS",
+      "observed": {
+        "naive_hour_wall": 15,
+        "utc_aware_hour_wall": 15,
+        "session_code": 3,
+        "policy": "NO timezone conversion; wall-clock hour of stored datetime"
+      },
+      "offset_plus0_15": "PASS"
+    },
+    "pipeline_parity": {
+      "exhaustive_24h": "PASS",
+      "boundary_heavy": "PASS",
+      "representative_72h": "PASS",
+      "max_abs_err_72h": 0
+    },
+    "pit": {
+      "prefix_invariance": "PASS",
+      "future_mutation": "PASS",
+      "same_bar_sensitivity": "PASS",
+      "determinism": "PASS"
+    },
+    "encoding_isolation": {
+      "oracle_source_forbidden_clean": "PASS",
+      "forbidden_hits": [],
+      "asia_hour3_canonical_0": "PASS",
+      "SESSION_MAP_asian_is_0": "PASS",
+      "canonical_eq_SESSION_MAP_asian": "PASS",
+      "parity": {
+        "hour": 3,
+        "canonical_pipeline_code": 0,
+        "SESSION_MAP_asian": 0.0
+      }
+    },
+    "overall_verdict": "CERTIFIED",
+    "all_probes_pass": true,
+    "oracle_source_sha256": "4d9469951fa976fdbc6606a6a8154ab17d2246a06ce0b7fd8feae9a701f505de"
+  },
+  "deferred_encoding_debts": [
+    "RESOLVED 2026-07-22 (v4.0 migration): SESSION_MAP london=0/newyork=1/asian=2 no longer permutes the pipeline's Asia=0/London=1/NY=2 -- SESSION_MAP is now derived from the single-owner session_classifier.SESSION_NAME_TO_ORDINAL, so it and the pipeline necessarily agree (see the encoding_isolation/parity probe above, which asserts parity rather than the old divergence).",
+    "dashboard SESSION_LABELS 1.0/2.0/3.0 vs pipeline 0/1/2/3/4 -- STILL OPEN, not re-audited by this rewrite.",
+    "CRT/live/backtest string or config-window session paths not certified here -- STILL OPEN; this probe certifies only the canonical FeaturePipeline column."
+  ],
+  "PER_NODE_VERDICT": "CERTIFIED",
+  "PRODUCTION_BEHAVIOR_CHANGED": "NO",
+  "CANONICAL_VECTOR_DIMENSION": 39,
+  "authority": "research/governance only \u2014 descriptive certification; grants no runtime authority (\u00a76.5)",
+  "scope_boundary": "canonical FeaturePipeline session only; trend_strength/volatility_regime untouched"
+}

@@ -40,7 +40,7 @@ def extract_feature_vector(features: dict) -> list:
     Extract and order features into a canonical float vector for BitNet input.
 
     This is the SINGLE canonical implementation used across dataset_builder,
-    zone_gate, zone_gate_engine, train_pipeline, and bitnet/search_engine.
+    feature_cluster_similarity, feature_cluster_similarity, train_pipeline, and bitnet/zone_cosine_searcher.
 
     Rules:
     - ALL keys from features.feature_schema must be present — no silent defaults.
@@ -128,7 +128,12 @@ def build_dataset_entry(features: dict, label: int, meta: dict = None) -> dict:
 
 
 def build_dataset(records: list, output_path: str = None) -> list:
-    """Build full dataset from list of (features, label) tuples."""
+    """Build full dataset from list of (features, label) tuples.
+
+    EPIC-84 KEPT: grep-confirmed zero real callers repo-wide (the live
+    dataset-building path is config_layer.rr.rr_dataset_builder.build_dataset,
+    a different module) — these defaults are inert, not a live fallback.
+    """
     dataset = []
     for i, record in enumerate(records):
         if isinstance(record, dict):

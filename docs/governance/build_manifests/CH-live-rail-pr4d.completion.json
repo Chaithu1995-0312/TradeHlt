@@ -1,0 +1,28 @@
+{
+  "change_id": "CH-live-rail-pr4d",
+  "declared_files": [
+    "src/agent/modes/pipeline_mode.py",
+    "tests/test_live_rail_dry_run_tool.py",
+    "tests/Claude/test_M_reachability_vs_certification.py",
+    "docs/current-findings.md",
+    "CLAUDE.md",
+    "docs/reference/agent-reference.md",
+    "docs/topics/ai-automation-agent.md",
+    "docs/governance/build_manifests/CH-live-rail-pr4d.impact.json",
+    "docs/governance/build_manifests/CH-live-rail-pr4d.completion.json",
+    "assistant_project.md"
+  ],
+  "checks_executed": [
+    "tests/test_live_rail_dry_run_tool.py",
+    "tests/Claude/test_M_reachability_vs_certification.py",
+    "tests/test_current_findings.py",
+    "tests/test_topic_docs.py",
+    "tests/test_doc_citations.py"
+  ],
+  "checks_result": {
+    "pr4d_and_docs": "27 passed (dry-run + F-073 census + findings + topics); citations run separately"
+  },
+  "repo_state_hash": "PENDING",
+  "completion_status": "INCOMPLETE",
+  "completion_notes": "PR-4d on disk. F-073 remains OPEN (paper callers exist, production loop does not). COMPLETE denied: dirty tree + pre-existing census."
+}

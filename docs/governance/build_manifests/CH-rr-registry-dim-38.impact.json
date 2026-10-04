@@ -1,0 +1,49 @@
+{
+  "change_id": "CH-rr-registry-dim-38",
+  "date_utc": "2026-07-23",
+  "objective": "Align the RR registry's active entry metadata with its own trained artifact. models/rr_registry.json entry 202605_bnb_v2_bnbusdt declared n_features:35 while the artifact it points at (models/rr_model_202605_bnb_v2.json) declares n_features:38. active_models.yaml faithfully mirrored the incorrect registry value (authority: mirror_of_registry), so the defect had to be corrected UPSTREAM in the registry, with the YAML mirror following only because the registry changed. Metadata-only: no artifact is rewritten, no loader, config, or runtime wiring is touched.",
+  "change_classes": [
+    "MODEL_ARTIFACT_CHANGE"
+  ],
+  "change_class_rationale": "MODEL_ARTIFACT_CHANGE is the class whose declared surface includes 'models/ registry manifests'. No other class claims models/*_registry.json. The change edits a registry manifest field only; it adds/replaces no serialized model.",
+  "affected_files": [
+    "models/rr_registry.json",
+    "active_models.yaml",
+    "docs/governance/model_lineage_rollup.md",
+    "assistant_project.md"
+  ],
+  "evidence": {
+    "artifact_declares": {
+      "n_features": 38,
+      "feature_schema": "canonical_38",
+      "scale_mu_len": 38,
+      "ridge_w_len": 38,
+      "zero_indices_len": 11,
+      "effective_rank": 27,
+      "note": "38 - 11 zero_indices = 27, matching F-044's rank-27 Mahalanobis dof"
+    },
+    "trainer_constant": "src/config_layer/rr/rr_pattern_miner.py:22 -> N_FEATURES = CANONICAL_FEATURE_DIM = 38; a re-run today would write 38",
+    "pipeline_dim": 38,
+    "sibling_precedent": "registry entry 202605_v1 already declares n_features:38",
+    "audit_reference": "docs/governance/model_lineage_rollup.md sec 4.3a"
+  },
+  "behaviour_impact": {
+    "decision_path": "NONE",
+    "reason": "engine_runner.rr_fusion.enabled=false, so no inference path reads this registry. The only runtime reader of the field is src/control_plane/dashboard_api.py:492 (entry.get('n_features', 35)), a display consumer; the edit corrects what the dashboard shows.",
+    "artifact_bytes_changed": false,
+    "artifact_sha256_before": "6ed92d26ff612538",
+    "artifact_sha256_after": "6ed92d26ff612538",
+    "config_hash_changed": false,
+    "PRODUCTION_BEHAVIOR_CHANGED": "NO"
+  },
+  "deliberately_out_of_scope": [
+    "Six other rr_registry entries also declare n_features:35; four of them are dangling (model_file missing under all three path resolutions) and cannot be verified against any artifact. Changing unverifiable metadata would be inventing data.",
+    "The same entry's n_samples:0 alongside metrics.n_train:49000. Zero is certainly wrong, but the true total sample count is unknown (train split != total) and will not be guessed. Recorded as an open item.",
+    "tradenet identity feature_schema_dim:35 - the artifact is a binary .pth and the registry carries no dim field, so the declaration is UNVERIFIABLE without torch."
+  ],
+  "guards": [
+    "tests/test_active_models_registry.py",
+    "tests/test_state_contracts.py"
+  ],
+  "authority": "Corrects metadata to match a verified artifact. Grants no promote, enable, retrain, or wiring right (CLAUDE.md 6.5). rr_fusion remains enabled:false."
+}

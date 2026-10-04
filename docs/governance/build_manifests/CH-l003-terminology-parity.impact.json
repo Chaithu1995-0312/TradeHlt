@@ -1,0 +1,62 @@
+{
+  "change_id": "CH-l003-terminology-parity",
+  "date_utc": "2026-09-07",
+  "objective": "L-003-TERM.v1: ontology↔implementation terminology parity on L-001→L-003E docs (scanner/oracle/live outcomes; LABEL_MATCH/MISMATCH; hypothesis/inference discipline). Docs only.",
+  "change_classes": [
+    "GOVERNANCE_DOCUMENTATION"
+  ],
+  "change_class_rationale": "Prose/JSON annotation corrections only. No new measurements, no registry schema edits, no src/, no attribution unlock.",
+  "affected_files": [
+    "docs/design/context-finding-odp/ANALYTICS_LINEAGE_SEMANTICS_DECISION.md",
+    "docs/governance/ANALYTICS_OUTCOME_SEMANTICS_L003.md",
+    "docs/governance/ANALYTICS_OUTCOME_POPULATION_COMPARISON_L003B.md",
+    "docs/governance/ANALYTICS_OUTCOME_DISAGREEMENT_POPULATION_L003C.md",
+    "docs/governance/ANALYTICS_OUTCOME_PATH_MECHANICS_L003D.md",
+    "docs/governance/ANALYTICS_OUTCOME_ADVERSE_TIMING_L003E.md",
+    "docs/governance/analytics_outcome_semantics_l003-2026-09-07.json",
+    "docs/governance/analytics_outcome_population_comparison_l003b-2026-09-07.json",
+    "docs/governance/analytics_outcome_disagreement_population_l003c-2026-09-07.json",
+    "docs/governance/analytics_outcome_path_mechanics_l003d-2026-09-07.json",
+    "docs/governance/analytics_outcome_adverse_timing_l003e-2026-09-07.json",
+    "docs/governance/ANALYTICS_L003_TERMINOLOGY_PARITY_AUDIT.md",
+    "docs/governance/analytics_l003_terminology_parity_audit-2026-09-07.json",
+    "docs/governance/build_manifests/CH-l003-terminology-parity.impact.json"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [],
+  "unknowns": [
+    "Trail activation/move/exit/touch remain unmeasured.",
+    "detector_exit_ts / oracle_tp_ts early-stop inference remains unmeasured."
+  ],
+  "rollback_boundary": "Revert the listed MD/JSON edits and delete L-003-TERM audit + this impact. Prior l003* run_ids and machine keys untouched in spirit (keys were annotated, not renamed).",
+  "authority_granted": "User directed terminology parity / ontology↔implementation docs corrections on L-001→L-003E; no new science.",
+  "authority_NOT_granted": "No src/; no registry schema; no new measurements; no commits; no attribution unlock; no freeze.",
+  "production_behavior_changed": "NO",
+  "run_id": "l003_terminology_parity_20260907_182845",
+  "git_commit_sha": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+  "doctrine_version": "L-003-TERM.v1",
+  "promotion": {
+    "registry_column_added": false,
+    "l003_frozen": false,
+    "attribution_unblocked": false,
+    "economic_claims_allowed": false,
+    "ANALYTICS_SCHEMA_REGISTRY_edited": false,
+    "ANALYTICS_LINEAGE_REGISTRY_edited": false,
+    "new_measurements": false
+  },
+  "key_renames_applied_in_prose": {
+    "AGREE": "LABEL_MATCH",
+    "DISAGREE": "LABEL_MISMATCH",
+    "DISAGREE_SL_TP": "LABEL_MISMATCH_SL_TP",
+    "art_outcome (as RV)": "scanner_outcome (column art_outcome)",
+    "outcome / governing (as RV)": "oracle_outcome (column outcome)",
+    "live WIN/LOSS/BREAKEVEN RV": "live_outcome",
+    "path mechanics (measured set)": "path geometry / path-shape metrics",
+    "early adverse movement": "early MAE timing / early-path minimum",
+    "attribution blocked (unspecified)": "ATTRIBUTION_BLOCKER_IDENTITY | ATTRIBUTION_BLOCKER_OUTCOME_SEMANTICS"
+  },
+  "historical_synonyms_retained_in_json_keys": true
+}

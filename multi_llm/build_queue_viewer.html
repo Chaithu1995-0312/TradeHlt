@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>build_queue.jsonl — Story Viewer</title>
+<!--
+  build_queue_viewer.html — read-only browser for multi_llm/build_queue.jsonl
+
+  Self-contained: no build step, no CDN, no network. Open by double-click, drop the .jsonl on it.
+  Reads nothing from disk on its own (FileReader only) and WRITES NOTHING, ever — the mojibake
+  repair below is display-only.
+
+  Palette + single-file convention deliberately mirror multi_llm/console.html so the two surfaces
+  look like one tool. console.html's queue panel renders 6 of the 35 fields; this renders all of
+  them, including analysis / evidence / lifecycle / linkage / risks.
+-->
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg2: #161b22;
+    --bg3: #21262d;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text2: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --orange: #d29922;
+    --red: #f85149;
+    --purple: #bc8cff;
+    --mono: 'Cascadia Code','JetBrains Mono','Fira Code',monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--bg); color: var(--text);
+               font: 14px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
+
+  #app { display: grid; height: 100vh; grid-template-rows: auto auto 1fr; }
+
+  /* ── header ───────────────────────────────────────────────────────── */
+  header { background: var(--bg2); border-bottom: 1px solid var(--border);
+           padding: 8px 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  header h1 { font-size: 15px; font-weight: 600; letter-spacing: -0.3px; white-space: nowrap; }
+  header h1 span { color: var(--accent); font-family: var(--mono); }
+  .tag { font-size: 11px; color: var(--text2); background: var(--bg3);
+         padding: 2px 8px; border-radius: 10px; border: 1px solid var(--border);
+         white-space: nowrap; }
+  .tag.warn { color: var(--orange); border-color: var(--orange); }
+  .tag.bad  { color: var(--red); border-color: var(--red); }
+  header .actions { margin-left: auto; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .btn { padding: 4px 12px; border-radius: 6px; border: 1px solid var(--border);
+         background: var(--bg3); color: var(--text); font-size: 12px; cursor: pointer;
+         white-space: nowrap; }
+  .btn:hover { background: var(--border); }
+  .btn.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* ── filters ──────────────────────────────────────────────────────── */
+  #filters { background: var(--bg2); border-bottom: 1px solid var(--border);
+             padding: 6px 16px; display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap; }
+  .fgroup { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+  .fgroup > .flabel { font-size: 10px; text-transform: uppercase; letter-spacing: .06em;
+                      color: var(--text2); margin-right: 2px; }
+  .chip { font-size: 11px; padding: 2px 8px; border-radius: 10px; cursor: pointer;
+          border: 1px solid var(--border); background: var(--bg3); color: var(--text2);
+          user-select: none; white-space: nowrap; }
+  .chip:hover { border-color: var(--text2); }
+  .chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .chip .n { opacity: .65; margin-left: 4px; }
+  #search { background: var(--bg); color: var(--text); border: 1px solid var(--border);
+            border-radius: 4px; padding: 4px 8px; font: 12px var(--mono); min-width: 260px; }
+  #epicSel { background: var(--bg3); color: var(--text); border: 1px solid var(--border);
+             border-radius: 4px; padding: 3px 6px; font-size: 12px; }
+
+  /* ── main split ───────────────────────────────────────────────────── */
+  .main { display: grid; grid-template-columns: minmax(420px, 1.05fr) minmax(360px, 1fr);
+          overflow: hidden; }
+  #tableWrap { overflow: auto; border-right: 1px solid var(--border); }
+  /* fixed layout: without it one long title sizes the whole column and the table
+     overflows its pane (measured 1364px inside a 585px wrap) */
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; table-layout: fixed; }
+  thead th:nth-child(1) { width: 104px; }  /* id      */
+  thead th:nth-child(2) { width: 52px;  }  /* epic    */
+  thead th:nth-child(3) { width: 116px; }  /* status  */
+  thead th:nth-child(4) { width: 118px; }  /* layer   */
+  thead th:nth-child(5) { width: 92px;  }  /* creator */
+  thead th:nth-child(6) { width: 118px; }  /* kind    */
+  thead th:nth-child(7) { width: 56px;  }  /* conf    */
+  /* title takes the remainder */
+  td.title, td.muted { word-break: break-word; }
+  thead th { position: sticky; top: 0; z-index: 2; background: var(--bg3);
+             border-bottom: 1px solid var(--border); text-align: left;
+             padding: 6px 8px; font-size: 11px; text-transform: uppercase;
+             letter-spacing: .05em; color: var(--text2); cursor: pointer; white-space: nowrap; }
+  thead th:hover { color: var(--text); }
+  thead th .arr { color: var(--accent); }
+  tbody tr { border-bottom: 1px solid var(--bg3); cursor: pointer; }
+  tbody tr:hover { background: var(--bg2); }
+  tbody tr.sel { background: #1f2d3d; }
+  tbody tr.sel td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+  td { padding: 5px 8px; vertical-align: top; }
+  td.id { font-family: var(--mono); color: var(--accent); white-space: nowrap; }
+  td.title { color: var(--text); }
+  td.num { text-align: right; font-family: var(--mono); color: var(--text2); }
+  .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px;
+         vertical-align: 1px; }
+  .s-done .dot { background: var(--green); }
+  .s-pending .dot { background: var(--text2); }
+  .s-in_progress .dot { background: var(--orange); }
+  .s-testing .dot { background: var(--purple); }
+  .s-unknown .dot { background: var(--red); }
+  .st { white-space: nowrap; font-size: 11.5px; }
+  .lock { color: var(--orange); font-size: 11px; margin-left: 4px; }
+  .muted { color: var(--text2); }
+  .anomflag { color: var(--red); font-size: 11px; margin-left: 4px; cursor: help; }
+
+  /* ── detail ───────────────────────────────────────────────────────── */
+  #detail { overflow: auto; padding: 0 0 40px; }
+  .empty { color: var(--text2); padding: 40px 24px; text-align: center; font-size: 13px; }
+  .dhead { position: sticky; top: 0; background: var(--bg2); z-index: 2;
+           border-bottom: 1px solid var(--border); padding: 10px 16px; }
+  .dhead .dclose { display: none; position: absolute; top: 8px; right: 12px;
+                   font-size: 20px; line-height: 1; color: var(--text2); cursor: pointer;
+                   background: none; border: 0; padding: 2px 6px; }
+  .dhead .dclose:hover { color: var(--text); }
+  .dhead .did { font-family: var(--mono); color: var(--accent); font-size: 13px; }
+  .dhead .dtitle { font-size: 15px; font-weight: 600; margin-top: 2px; }
+  .dhead .dsub { font-size: 11.5px; color: var(--text2); margin-top: 4px; }
+  .grp { border-bottom: 1px solid var(--bg3); padding: 10px 16px; }
+  .grp > h3 { font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em;
+              color: var(--text2); margin-bottom: 8px; }
+  .kv { display: grid; grid-template-columns: 148px 1fr; gap: 4px 10px; font-size: 12.5px; }
+  .kv > dt { color: var(--text2); font-family: var(--mono); font-size: 11.5px; padding-top: 1px; }
+  .kv > dd { word-break: break-word; }
+  .prose { margin-bottom: 10px; }
+  .prose .pk { color: var(--text2); font-family: var(--mono); font-size: 11px; display: block;
+               margin-bottom: 2px; }
+  .prose .pv { font-size: 12.5px; white-space: pre-wrap; }
+  ul.list { list-style: none; font-size: 12.5px; }
+  ul.list li { padding: 2px 0 2px 14px; position: relative; word-break: break-word; }
+  ul.list li:before { content: '▸'; position: absolute; left: 0; color: var(--text2); }
+  ul.list.mono li { font-family: var(--mono); font-size: 11.5px; }
+  .pill { display: inline-block; font-family: var(--mono); font-size: 11px; padding: 1px 7px;
+          border-radius: 9px; border: 1px solid var(--border); background: var(--bg3);
+          margin: 2px 4px 2px 0; }
+  .pill.dep { color: var(--accent); border-color: #1f4b7a; }
+  .pill.st-VERIFIED, .pill.st-DONE { color: var(--green); border-color: #1d4429; }
+  .pill.st-PENDING { color: var(--text2); }
+  .pill.st-OBSERVED, .pill.st-PARTIAL, .pill.st-IN_PROGRESS,
+  .pill.st-IN_PROGRESS_VERIFIED { color: var(--orange); border-color: #5a4415; }
+  .none { color: var(--text2); font-style: italic; font-size: 12px; }
+  .tl { border-left: 2px solid var(--border); margin-left: 5px; padding-left: 14px; }
+  .tl .ev { position: relative; padding-bottom: 10px; }
+  .tl .ev:last-child { padding-bottom: 0; }
+  .tl .ev:before { content: ''; position: absolute; left: -20px; top: 5px; width: 9px; height: 9px;
+                   border-radius: 50%; background: var(--bg3); border: 2px solid var(--border); }
+  .tl .ev.Done:before, .tl .ev.Verified:before { background: var(--green); border-color: var(--green); }
+  .tl .ev.Implemented:before, .tl .ev.Testing:before,
+  .tl .ev.InProgress:before, .tl .ev.Diagnosed:before { background: var(--orange); border-color: var(--orange); }
+  .tl .stg { font-size: 12px; font-weight: 600; }
+  .tl .cm { font-size: 12px; color: var(--text2); white-space: pre-wrap; }
+  .tl .at { font-size: 10.5px; color: var(--text2); font-family: var(--mono); }
+  .risk { border-left: 2px solid var(--orange); padding-left: 10px; margin-bottom: 8px; }
+  .risk .rl { font-size: 10.5px; color: var(--orange); text-transform: uppercase;
+              letter-spacing: .06em; }
+  .risk .rv { font-size: 12.5px; white-space: pre-wrap; }
+  .anombox { margin: 10px 16px 0; border: 1px solid var(--red); border-radius: 6px;
+             background: #2a1416; padding: 8px 10px; font-size: 11.5px; color: #ffb3ae; }
+  .anombox b { color: var(--red); }
+  pre.raw { background: var(--bg2); border: 1px solid var(--border); border-radius: 6px;
+            padding: 10px; font: 11px/1.5 var(--mono); white-space: pre-wrap;
+            word-break: break-word; max-height: 460px; overflow: auto; }
+
+  /* ── narrow layout: detail becomes a slide-over drawer ─────────────── */
+  @media (max-width: 900px) {
+    .main { grid-template-columns: 1fr; }
+    #tableWrap { border-right: 0; }
+    #detail { position: fixed; top: 0; right: 0; bottom: 0; width: min(560px, 94vw);
+              background: var(--bg); border-left: 1px solid var(--border); z-index: 40;
+              box-shadow: -14px 0 36px rgba(0,0,0,.55);
+              transform: translateX(101%); transition: transform .16s ease; }
+    #detail.open { transform: none; }
+    .dhead .dclose { display: block; }
+    .dhead { padding-right: 44px; }
+    #filters { max-height: 34vh; overflow-y: auto; }
+  }
+  /* below this the low-signal columns cost more than they show */
+  @media (max-width: 760px) {
+    thead th:nth-child(4), tbody td:nth-child(4),
+    thead th:nth-child(5), tbody td:nth-child(5),
+    thead th:nth-child(6), tbody td:nth-child(6) { display: none; }
+  }
+
+  /* ── drop zone ────────────────────────────────────────────────────── */
+  #drop { position: fixed; inset: 0; background: rgba(13,17,23,.94); z-index: 50;
+          display: flex; align-items: center; justify-content: center; }
+  #drop.hide { display: none; }
+  #drop.drag .dbox { border-color: var(--accent); background: var(--bg2); }
+  .dbox { border: 2px dashed var(--border); border-radius: 12px; padding: 44px 60px;
+          text-align: center; max-width: 620px; }
+  .dbox h2 { font-size: 19px; font-weight: 600; margin-bottom: 6px; }
+  .dbox .mono { font-family: var(--mono); color: var(--accent); }
+  .dbox p { color: var(--text2); font-size: 13px; margin-bottom: 18px; }
+  .dbox .note { font-size: 11.5px; color: var(--text2); margin-top: 18px; line-height: 1.7; }
+  .dbox .err { color: var(--red); font-size: 12px; margin-top: 12px; }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header>
+    <h1>Story Viewer <span id="srcName">— no file</span></h1>
+    <span class="tag" id="statRecords">0 records</span>
+    <span class="tag" id="statBad" style="display:none"></span>
+    <span class="tag" id="statAnom" style="display:none"></span>
+    <span class="tag" id="statShown">showing 0</span>
+    <div class="actions">
+      <button class="btn on" id="btnMoji" title="Repair 'â€”'-style mojibake for display only. Never writes to disk.">✓ Fix mojibake</button>
+      <button class="btn" id="btnRaw" title="Show the raw JSON record in the detail panel">Raw JSON</button>
+      <button class="btn" id="btnReset">Clear filters</button>
+      <button class="btn" id="btnLoad">Load file…</button>
+    </div>
+  </header>
+
+  <div id="filters">
+    <div class="fgroup">
+      <input id="search" type="text" placeholder="search id · title · description…" spellcheck="false">
+    </div>
+    <div class="fgroup" id="fStatus"></div>
+    <div class="fgroup" id="fKind"></div>
+    <div class="fgroup" id="fCreator"></div>
+    <div class="fgroup" id="fLayer"></div>
+    <div class="fgroup">
+      <span class="flabel">epic</span>
+      <select id="epicSel"><option value="">all</option></select>
+      <span class="chip" id="chipWork" title="Records where analysis or evidence has actually been written up (not a PENDING stub)">has write-up</span>
+      <span class="chip" id="chipAnom" title="Records whose field types deviate from the dominant schema">anomalies</span>
+    </div>
+  </div>
+
+  <div class="main">
+    <div id="tableWrap">
+      <table>
+        <thead><tr id="thead"></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <aside id="detail"><div class="empty">Select a story to see every field on the record.</div></aside>
+  </div>
+</div>
+
+<div id="drop">
+  <div class="dbox">
+    <h2>Drop <span class="mono">build_queue.jsonl</span> here</h2>
+    <p>…or click below. Nothing is uploaded — the file is read in this browser tab only.</p>
+    <button class="btn" id="btnPick">Choose file…</button>
+    <input type="file" id="fileInput" accept=".jsonl,.json,.txt" style="display:none">
+    <div class="note">
+      Expected: <span class="mono">multi_llm/build_queue.jsonl</span> — one JSON object per line.<br>
+      This viewer is read-only. It never writes to the file.
+    </div>
+    <div class="err" id="dropErr"></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ════════════════════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════════════════════
+const S = {
+  raw: [],            // records exactly as parsed (untouched)
+  recs: [],           // normalized view models
+  bad: [],            // {line, error}
+  sel: null,          // selected id
+  sort: { key: 'id', dir: 1 },
+  showRaw: false,
+  moji: true,
+  filters: { q: '', status: new Set(), kind: new Set(), creator: new Set(),
+             layer: new Set(), epic: '', work: false, anom: false },
+};
+
+const $  = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+
+// ════════════════════════════════════════════════════════════════════════
+// MOJIBAKE REPAIR (display only — never written back)
+//
+// 569 of 585 records carry UTF-8 bytes that were decoded as cp1252 on the way
+// in ("â€”" where an em-dash belongs). Repair = map each char back to the
+// cp1252 byte it came from, then decode that byte string as UTF-8. If the
+// round-trip is not clean, the original string is returned untouched.
+// ════════════════════════════════════════════════════════════════════════
+const CP1252 = { 0x20AC:0x80, 0x201A:0x82, 0x0192:0x83, 0x201E:0x84, 0x2026:0x85,
+  0x2020:0x86, 0x2021:0x87, 0x02C6:0x88, 0x2030:0x89, 0x0160:0x8A, 0x2039:0x8B,
+  0x0152:0x8C, 0x017D:0x8E, 0x2018:0x91, 0x2019:0x92, 0x201C:0x93, 0x201D:0x94,
+  0x2022:0x95, 0x2013:0x96, 0x2014:0x97, 0x02DC:0x98, 0x2122:0x99, 0x0161:0x9A,
+  0x203A:0x9B, 0x0153:0x9C, 0x017E:0x9E, 0x0178:0x9F };
+const _dec = new TextDecoder('utf-8', { fatal: true });
+
+function demojibake(s) {
+  if (typeof s !== 'string' || !/[ÂÃâà-ÿ]/.test(s)) return s;
+  const bytes = [];
+  for (const ch of s) {
+    const cp = ch.codePointAt(0);
+    if (cp <= 0xFF) bytes.push(cp);
+    else if (CP1252[cp] !== undefined) bytes.push(CP1252[cp]);
+    else return s;                       // not round-trippable → leave alone
+  }
+  try { return _dec.decode(new Uint8Array(bytes)); }
+  catch (e) { return s; }                // not valid UTF-8 → it wasn't mojibake
+}
+const T = v => (S.moji && typeof v === 'string') ? demojibake(v) : v;
+
+// ════════════════════════════════════════════════════════════════════════
+// PARSE + NORMALIZE
+//
+// The queue is hand-enriched, so field TYPES vary across records. Each
+// deviation is normalized for rendering AND recorded on __anom so it stays
+// visible instead of being silently smoothed over.
+// ════════════════════════════════════════════════════════════════════════
+function parseJSONL(text) {
+  const raw = [], bad = [];
+  const lines = text.split(/\r?\n/);
+  for (let i = 0; i < lines.length; i++) {
+    const s = lines[i].trim();
+    if (!s) continue;
+    try { raw.push(JSON.parse(s)); }
+    catch (e) { bad.push({ line: i + 1, error: String(e.message || e) }); }
+  }
+  return { raw, bad };
+}
+
+const asList = v => v == null ? [] : (Array.isArray(v) ? v : [v]);
+
+function normalize(rec) {
+  const a = [];
+  const r = Object.assign({}, rec);
+
+  // lifecycle: a bare object on STORY-82.1, a list on every other record.
+  if (r.lifecycle != null && !Array.isArray(r.lifecycle)) {
+    a.push('lifecycle is an object, not an array (dominant shape is a list of stage entries)');
+    r.lifecycle = [r.lifecycle];
+  }
+  // dependencies: a bare string on STORY-81.4/.5/.6/.7/.8.
+  if (typeof r.dependencies === 'string') {
+    a.push('dependencies is a string, not an array');
+    r.dependencies = [r.dependencies];
+  }
+  if (typeof r.depends_on === 'string') {
+    a.push('depends_on is a string, not an array');
+    r.depends_on = [r.depends_on];
+  }
+  for (const k of ['files','affected_files','scope','out_of_scope','assumptions',
+                   'constraints','acceptance_criteria','definition_of_done','risks']) {
+    if (r[k] != null && !Array.isArray(r[k])) {
+      a.push(k + ' is not an array');
+      r[k] = [r[k]];
+    }
+  }
+  r.__anom = a;
+  r.__raw = rec;
+  return r;
+}
+
+const STATUSES = ['pending','in_progress','testing','done'];
+
+function hasWriteup(r) {
+  const an = r.analysis || {}, ev = r.evidence || {};
+  if (an.status && an.status !== 'PENDING') return true;
+  if (ev.status && ev.status !== 'PENDING') return true;
+  if (an.architecture || an.current_state || an.risk) return true;
+  return (asList(ev.observed).length + asList(ev.inferred).length + asList(ev.assumed).length) > 0;
+}
+
+function load(text, name) {
+  const { raw, bad } = parseJSONL(text);
+  S.raw = raw;
+  S.bad = bad;
+  S.recs = raw.map(normalize);
+  S.sel = null;
+
+  $('#srcName').textContent = name ? '— ' + name : '';
+  $('#statRecords').textContent = raw.length + ' record' + (raw.length === 1 ? '' : 's');
+
+  const badEl = $('#statBad');
+  if (bad.length) {
+    badEl.style.display = ''; badEl.className = 'tag bad';
+    badEl.textContent = bad.length + ' unparseable line' + (bad.length === 1 ? '' : 's');
+    badEl.title = bad.slice(0, 10).map(b => 'line ' + b.line + ': ' + b.error).join('\n');
+  } else {
+    badEl.style.display = ''; badEl.className = 'tag';
+    badEl.textContent = '0 bad lines';
+    badEl.title = '';
+  }
+
+  const nAnom = S.recs.filter(r => r.__anom.length).length;
+  const anEl = $('#statAnom');
+  if (nAnom) {
+    anEl.style.display = ''; anEl.className = 'tag warn';
+    anEl.textContent = nAnom + ' type anomal' + (nAnom === 1 ? 'y' : 'ies');
+  } else anEl.style.display = 'none';
+
+  buildFacets();
+  render();
+  $('#drop').classList.add('hide');
+
+  // Deep link: #STORY-41.3
+  const h = decodeURIComponent(location.hash.replace(/^#/, ''));
+  if (h && S.recs.some(r => r.id === h)) select(h);
+}
+
+// Test/automation hook — drives the same path a drop does, without a drag gesture.
+window.__loadJSONL = (text, name) => load(text, name || '(injected)');
+
+// ════════════════════════════════════════════════════════════════════════
+// FACETS — vocabularies come from the FILE, never hardcoded, because the
+// queue is hand-enriched and grows new values.
+// ════════════════════════════════════════════════════════════════════════
+function countBy(key) {
+  const m = new Map();
+  for (const r of S.recs) {
+    const v = r[key] == null ? '(none)' : String(r[key]);
+    m.set(v, (m.get(v) || 0) + 1);
+  }
+  return m;
+}
+
+function facet(containerSel, label, key) {
+  const el = $(containerSel);
+  const counts = countBy(key);
+  const order = Array.from(counts.keys()).sort((a, b) => {
+    if (key === 'status') {
+      const ia = STATUSES.indexOf(a), ib = STATUSES.indexOf(b);
+      if (ia !== ib) return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+    }
+    return counts.get(b) - counts.get(a) || a.localeCompare(b);
+  });
+  el.innerHTML = '<span class="flabel">' + label + '</span>';
+  for (const v of order) {
+    const c = document.createElement('span');
+    c.className = 'chip';
+    c.dataset.key = key; c.dataset.val = v;
+    c.innerHTML = esc(v) + '<span class="n">' + counts.get(v) + '</span>';
+    c.onclick = () => {
+      const set = S.filters[key];
+      set.has(v) ? set.delete(v) : set.add(v);
+      c.classList.toggle('on');
+      render();
+    };
+    el.appendChild(c);
+  }
+}
+
+function buildFacets() {
+  facet('#fStatus',  'status',  'status');
+  facet('#fKind',    'kind',    'kind');
+  facet('#fCreator', 'creator', 'creator');
+  facet('#fLayer',   'layer',   'layer');
+
+  const epics = Array.from(new Set(S.recs.map(r => r.epic)))
+    .filter(e => e != null).sort((a, b) => a - b);
+  const sel = $('#epicSel');
+  sel.innerHTML = '<option value="">all</option>' +
+    epics.map(e => '<option value="' + e + '">Epic ' + e + '</option>').join('');
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// FILTER + SORT
+// ════════════════════════════════════════════════════════════════════════
+function idKey(id) {
+  const m = /^STORY-(\d+)\.(\d+)$/.exec(id || '');
+  return m ? (+m[1]) * 100000 + (+m[2]) : Number.MAX_SAFE_INTEGER;
+}
+
+function visible() {
+  const f = S.filters;
+  const q = f.q.trim().toLowerCase();
+  let out = S.recs.filter(r => {
+    if (f.status.size && !f.status.has(String(r.status ?? '(none)'))) return false;
+    if (f.kind.size    && !f.kind.has(String(r.kind ?? '(none)'))) return false;
+    if (f.creator.size && !f.creator.has(String(r.creator ?? '(none)'))) return false;
+    if (f.layer.size   && !f.layer.has(String(r.layer ?? '(none)'))) return false;
+    if (f.epic !== ''  && String(r.epic) !== f.epic) return false;
+    if (f.work && !hasWriteup(r)) return false;
+    if (f.anom && !r.__anom.length) return false;
+    if (q) {
+      const hay = [r.id, T(r.title), T(r.description), T(r.epic_title)]
+        .filter(Boolean).join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  const { key, dir } = S.sort;
+  out.sort((a, b) => {
+    let va, vb;
+    if (key === 'id') { va = idKey(a.id); vb = idKey(b.id); }
+    else if (key === 'epic' || key === 'confidence') {
+      va = a[key] == null ? -Infinity : a[key];
+      vb = b[key] == null ? -Infinity : b[key];
+    } else if (key === 'status') {
+      va = STATUSES.indexOf(a.status); vb = STATUSES.indexOf(b.status);
+    } else {
+      va = String(T(a[key]) ?? '').toLowerCase();
+      vb = String(T(b[key]) ?? '').toLowerCase();
+    }
+    if (va < vb) return -dir;
+    if (va > vb) return dir;
+    return idKey(a.id) - idKey(b.id);
+  });
+  return out;
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// RENDER — table
+// ════════════════════════════════════════════════════════════════════════
+const COLS = [
+  { key: 'id',         label: 'id',     cls: 'id' },
+  { key: 'epic',       label: 'epic',   cls: 'num' },
+  { key: 'status',     label: 'status', cls: 'st' },
+  { key: 'layer',      label: 'layer',  cls: 'muted' },
+  { key: 'creator',    label: 'creator',cls: 'muted' },
+  { key: 'kind',       label: 'kind',   cls: 'muted' },
+  { key: 'confidence', label: 'conf',   cls: 'num' },
+  { key: 'title',      label: 'title',  cls: 'title' },
+];
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g,
+    c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
+function render() {
+  const rows = visible();
+  $('#statShown').textContent = 'showing ' + rows.length;
+
+  $('#thead').innerHTML = COLS.map(c => {
+    const arr = S.sort.key === c.key ? '<span class="arr">' + (S.sort.dir > 0 ? '▲' : '▼') + '</span>' : '';
+    return '<th data-key="' + c.key + '">' + c.label + ' ' + arr + '</th>';
+  }).join('');
+  $$('#thead th').forEach(th => th.onclick = () => {
+    const k = th.dataset.key;
+    if (S.sort.key === k) S.sort.dir *= -1;
+    else { S.sort.key = k; S.sort.dir = 1; }
+    render();
+  });
+
+  // "blocked" mirrors console.html:403-406 — any dependency not yet done.
+  const doneIds = new Set(S.recs.filter(r => r.status === 'done').map(r => r.id));
+
+  const html = rows.map(r => {
+    const st = String(r.status ?? 'unknown');
+    const blocked = st !== 'done' && asList(r.depends_on).some(d => !doneIds.has(d));
+    const tds = COLS.map(c => {
+      let v = r[c.key];
+      if (c.key === 'status') {
+        return '<td class="st s-' + esc(st) + '"><span class="dot"></span>' + esc(st) +
+               (blocked ? '<span class="lock" title="depends on a story that is not done">🔒</span>' : '') + '</td>';
+      }
+      if (c.key === 'id') {
+        const flag = r.__anom.length
+          ? '<span class="anomflag" title="' + esc(r.__anom.join(' · ')) + '">⚠</span>' : '';
+        return '<td class="id">' + esc(v) + flag + '</td>';
+      }
+      if (c.key === 'confidence') return '<td class="num">' + (v == null ? '—' : esc(v)) + '</td>';
+      if (v == null || v === '') return '<td class="' + c.cls + ' muted">—</td>';
+      return '<td class="' + c.cls + '">' + esc(T(v)) + '</td>';
+    }).join('');
+    return '<tr data-id="' + esc(r.id) + '"' + (r.id === S.sel ? ' class="sel"' : '') + '>' + tds + '</tr>';
+  }).join('');
+
+  $('#tbody').innerHTML = html || '<tr><td colspan="8" class="muted" style="padding:24px;text-align:center">No records match these filters.</td></tr>';
+  $$('#tbody tr[data-id]').forEach(tr => tr.onclick = () => select(tr.dataset.id));
+}
+
+function select(id) {
+  S.sel = id;
+  $$('#tbody tr').forEach(tr => tr.classList.toggle('sel', tr.dataset.id === id));
+  history.replaceState(null, '', '#' + encodeURIComponent(id));
+  renderDetail(S.recs.find(r => r.id === id));
+  $('#detail').classList.add('open');   // no-op on wide layouts; opens the drawer on narrow ones
+  const tr = $('#tbody tr.sel');
+  if (tr) tr.scrollIntoView({ block: 'nearest' });
+}
+
+function closeDetail() { $('#detail').classList.remove('open'); }
+
+// ════════════════════════════════════════════════════════════════════════
+// RENDER — detail panel
+// ════════════════════════════════════════════════════════════════════════
+const G_IDENT  = ['epic','epic_title','status','kind','layer','creator','assignee','confidence',
+                  'story_points','runtime_reachable','module_count','continuation'];
+const G_PROSE  = ['description','business_objective','technical_objective','rollback_strategy',
+                  'test_strategy'];
+const G_LISTS  = [['acceptance_criteria','Acceptance criteria'], ['definition_of_done','Definition of done'],
+                  ['scope','Scope'], ['out_of_scope','Out of scope'],
+                  ['assumptions','Assumptions'], ['constraints','Constraints']];
+const G_FILES  = [['files','files'], ['affected_files','affected_files']];
+const G_DEPS   = [['depends_on','depends_on'], ['dependencies','dependencies']];
+// Everything the panel explicitly places. Anything else falls through to "Other fields",
+// so a new hand-added key is surfaced rather than silently dropped.
+const KNOWN = new Set(['id','title','lifecycle','analysis','evidence','linkage','risks']
+  .concat(G_IDENT, G_PROSE, G_LISTS.map(x => x[0]), G_FILES.map(x => x[0]), G_DEPS.map(x => x[0])));
+
+function fmtScalar(v) {
+  if (v == null || v === '') return '<span class="muted">—</span>';
+  if (typeof v === 'boolean') return v
+    ? '<span style="color:var(--green)">true</span>'
+    : '<span style="color:var(--text2)">false</span>';
+  return esc(T(v));
+}
+
+function listBlock(items, mono) {
+  const a = asList(items);
+  if (!a.length) return '<div class="none">empty</div>';
+  return '<ul class="list' + (mono ? ' mono' : '') + '">' +
+    a.map(x => '<li>' + (typeof x === 'object'
+      ? esc(JSON.stringify(x)) : esc(T(x))) + '</li>').join('') + '</ul>';
+}
+
+function pills(items, cls) {
+  const a = asList(items);
+  if (!a.length) return '<span class="none">none</span>';
+  return a.map(x => '<span class="pill ' + (cls || '') + '">' + esc(T(x)) + '</span>').join('');
+}
+
+function grp(title, body) {
+  return '<div class="grp"><h3>' + esc(title) + '</h3>' + body + '</div>';
+}
+
+function renderDetail(r) {
+  const el = $('#detail');
+  if (!r) { el.innerHTML = '<div class="empty">Select a story to see every field on the record.</div>'; return; }
+
+  if (S.showRaw) {
+    el.innerHTML = headBlock(r) +
+      grp('Raw JSON (exactly as stored — no mojibake repair, no normalization)',
+          '<pre class="raw">' + esc(JSON.stringify(r.__raw, null, 2)) + '</pre>');
+    return;
+  }
+
+  let h = headBlock(r);
+
+  // ── anomaly banner
+  if (r.__anom.length) {
+    h += '<div class="anombox"><b>Field-type anomaly.</b> Normalized for display only; the file is unchanged.<ul class="list">' +
+      r.__anom.map(a => '<li>' + esc(a) + '</li>').join('') + '</ul></div>';
+  }
+
+  // ── identity
+  h += grp('Identity', '<dl class="kv">' + G_IDENT.map(k =>
+    ('<dt>' + k + '</dt><dd>' + fmtScalar(r[k]) + '</dd>')).join('') + '</dl>');
+
+  // ── narrative
+  const prose = G_PROSE.filter(k => r[k] != null && r[k] !== '');
+  if (prose.length) {
+    h += grp('Narrative', prose.map(k =>
+      '<div class="prose"><span class="pk">' + k + '</span><span class="pv">' +
+      esc(T(r[k])) + '</span></div>').join(''));
+  }
+
+  // ── dependencies (two fields that genuinely disagree — never collapsed)
+  h += grp('Dependencies', '<dl class="kv">' + G_DEPS.map(([k, lbl]) =>
+    '<dt>' + lbl + '</dt><dd>' + pills(r[k], 'dep') + '</dd>').join('') + '</dl>');
+
+  // ── files
+  h += grp('Files', G_FILES.map(([k, lbl]) =>
+    '<div class="prose"><span class="pk">' + lbl + ' (' + asList(r[k]).length + ')</span>' +
+    listBlock(r[k], true) + '</div>').join(''));
+
+  // ── criteria / scope lists
+  const ls = G_LISTS.filter(([k]) => asList(r[k]).length);
+  if (ls.length) {
+    h += grp('Criteria & scope', ls.map(([k, lbl]) =>
+      '<div class="prose"><span class="pk">' + lbl + '</span>' + listBlock(r[k]) + '</div>').join(''));
+  }
+
+  // ── analysis
+  if (r.analysis && typeof r.analysis === 'object') {
+    const an = r.analysis;
+    let b = '<div style="margin-bottom:8px">status: <span class="pill st-' +
+            esc(an.status || 'PENDING') + '">' + esc(an.status ?? '—') + '</span></div>';
+    for (const k of ['current_state','architecture','risk']) {
+      b += '<div class="prose"><span class="pk">' + k + '</span><span class="pv">' +
+           (an[k] ? esc(T(an[k])) : '<span class="none">not written up</span>') + '</span></div>';
+    }
+    h += grp('Analysis', b);
+  }
+
+  // ── evidence
+  if (r.evidence && typeof r.evidence === 'object') {
+    const ev = r.evidence;
+    let b = '<div style="margin-bottom:8px">status: <span class="pill st-' +
+            esc(ev.status || 'PENDING') + '">' + esc(ev.status ?? '—') + '</span></div>';
+    for (const k of ['observed','inferred','assumed']) {
+      b += '<div class="prose"><span class="pk">' + k + ' (' + asList(ev[k]).length + ')</span>' +
+           listBlock(ev[k]) + '</div>';
+    }
+    h += grp('Evidence', b);
+  }
+
+  // ── risks
+  if (asList(r.risks).length) {
+    h += grp('Risks', asList(r.risks).map(x => {
+      if (x && typeof x === 'object') {
+        return '<div class="risk">' +
+          (x.impact   ? '<div class="rl">impact</div><div class="rv">'   + esc(T(x.impact))   + '</div>' : '') +
+          (x.analysis ? '<div class="rl">analysis</div><div class="rv">' + esc(T(x.analysis)) + '</div>' : '') +
+          '</div>';
+      }
+      return '<div class="risk"><div class="rv">' + esc(T(x)) + '</div></div>';
+    }).join(''));
+  }
+
+  // ── linkage
+  if (r.linkage && typeof r.linkage === 'object') {
+    const lk = r.linkage;
+    h += grp('Linkage', '<dl class="kv">' +
+      '<dt>imports_n</dt><dd>' + fmtScalar(lk.imports_n) + '</dd>' +
+      '<dt>imported_by_n</dt><dd>' + fmtScalar(lk.imported_by_n) + '</dd>' +
+      '<dt>upstream_layers</dt><dd>' + pills(lk.upstream_layers) + '</dd>' +
+      '<dt>downstream_layers</dt><dd>' + pills(lk.downstream_layers) + '</dd>' +
+      '</dl>');
+  }
+
+  // ── lifecycle timeline
+  const lc = asList(r.lifecycle);
+  if (lc.length) {
+    h += grp('Lifecycle (' + lc.length + ')', '<div class="tl">' + lc.map(e => {
+      if (!e || typeof e !== 'object') return '<div class="ev"><div class="cm">' + esc(T(e)) + '</div></div>';
+      const stage = String(e.stage ?? '');
+      return '<div class="ev ' + esc(stage.replace(/[^A-Za-z]/g, '')) + '">' +
+        '<div class="stg">' + esc(stage || '(no stage)') + '</div>' +
+        (e.comment ? '<div class="cm">' + esc(T(e.comment)) + '</div>' : '') +
+        (e.actor || e.at
+          ? '<div class="at">' + esc([e.actor, e.at].filter(Boolean).join(' · ')) + '</div>' : '') +
+        '</div>';
+    }).join('') + '</div>');
+  }
+
+  // ── anything not explicitly placed above
+  const other = Object.keys(r).filter(k => !KNOWN.has(k) && !k.startsWith('__'));
+  if (other.length) {
+    h += grp('Other fields (not in the known schema)', '<dl class="kv">' + other.map(k =>
+      '<dt>' + esc(k) + '</dt><dd>' + (typeof r[k] === 'object'
+        ? '<pre class="raw">' + esc(JSON.stringify(r[k], null, 2)) + '</pre>'
+        : fmtScalar(r[k])) + '</dd>').join('') + '</dl>');
+  }
+
+  el.innerHTML = h;
+  el.scrollTop = 0;
+}
+
+function headBlock(r) {
+  const bits = [
+    r.epic != null ? 'Epic ' + r.epic : null,
+    T(r.epic_title),
+    r.creator ? 'by ' + esc(r.creator) : null,
+    r.confidence != null ? 'conf ' + r.confidence + '%' : null,
+  ].filter(Boolean).map(esc);
+  return '<div class="dhead">' +
+    '<button class="dclose" title="Close (Esc)">&times;</button>' +
+    '<div class="did">' + esc(r.id) + '</div>' +
+    '<div class="dtitle">' + esc(T(r.title) ?? '') + '</div>' +
+    '<div class="dsub">' + bits.join(' · ') + '</div></div>';
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// WIRING
+// ════════════════════════════════════════════════════════════════════════
+$('#search').oninput = e => { S.filters.q = e.target.value; render(); };
+$('#epicSel').onchange = e => { S.filters.epic = e.target.value; render(); };
+
+$('#chipWork').onclick = function () {
+  S.filters.work = !S.filters.work; this.classList.toggle('on'); render();
+};
+$('#chipAnom').onclick = function () {
+  S.filters.anom = !S.filters.anom; this.classList.toggle('on'); render();
+};
+
+$('#btnMoji').onclick = function () {
+  S.moji = !S.moji;
+  this.classList.toggle('on', S.moji);
+  this.textContent = (S.moji ? '✓ ' : '') + 'Fix mojibake';
+  render();
+  if (S.sel) renderDetail(S.recs.find(r => r.id === S.sel));
+};
+$('#btnRaw').onclick = function () {
+  S.showRaw = !S.showRaw;
+  this.classList.toggle('on', S.showRaw);
+  if (S.sel) renderDetail(S.recs.find(r => r.id === S.sel));
+};
+$('#btnReset').onclick = () => {
+  S.filters = { q: '', status: new Set(), kind: new Set(), creator: new Set(),
+                layer: new Set(), epic: '', work: false, anom: false };
+  $('#search').value = ''; $('#epicSel').value = '';
+  $$('.chip').forEach(c => c.classList.remove('on'));
+  render();
+};
+$('#btnLoad').onclick = () => { $('#dropErr').textContent = ''; $('#drop').classList.remove('hide'); };
+$('#btnPick').onclick = () => $('#fileInput').click();
+
+function readFile(file) {
+  const rd = new FileReader();
+  rd.onload = () => {
+    try { load(String(rd.result), file.name); }
+    catch (e) { $('#dropErr').textContent = 'Could not read that file: ' + (e.message || e); }
+  };
+  rd.onerror = () => { $('#dropErr').textContent = 'Could not read that file.'; };
+  rd.readAsText(file, 'utf-8');
+}
+
+$('#fileInput').onchange = e => { if (e.target.files[0]) readFile(e.target.files[0]); };
+
+const drop = $('#drop');
+['dragenter','dragover'].forEach(ev => window.addEventListener(ev, e => {
+  e.preventDefault(); drop.classList.remove('hide'); drop.classList.add('drag');
+}));
+['dragleave','drop'].forEach(ev => window.addEventListener(ev, e => {
+  e.preventDefault();
+  if (ev === 'dragleave' && e.relatedTarget) return;
+  drop.classList.remove('drag');
+}));
+window.addEventListener('drop', e => {
+  e.preventDefault();
+  const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+  if (f) readFile(f);
+  else if (S.recs.length) drop.classList.add('hide');
+});
+drop.addEventListener('click', e => {
+  if (e.target === drop && S.recs.length) drop.classList.add('hide');
+});
+
+// Delegated: the detail panel is re-rendered on every selection.
+$('#detail').addEventListener('click', e => {
+  if (e.target.classList.contains('dclose')) closeDetail();
+});
+
+window.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (S.recs.length) drop.classList.add('hide');
+    closeDetail();
+  }
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  if (e.key === 'j' || e.key === 'k') {
+    const rows = $$('#tbody tr[data-id]');
+    if (!rows.length) return;
+    let i = rows.findIndex(tr => tr.dataset.id === S.sel);
+    i = e.key === 'j' ? Math.min(i + 1, rows.length - 1) : Math.max(i - 1, 0);
+    if (i < 0) i = 0;
+    select(rows[i].dataset.id);
+  }
+});
+</script>
+</body>
+</html>

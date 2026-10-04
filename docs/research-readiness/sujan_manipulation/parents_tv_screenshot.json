@@ -1,0 +1,68 @@
+{
+  "object": "TV_SCREENSHOT_RANGE_PARENTS",
+  "not": [
+    "SUJAN bulk candle",
+    "body top-N parents.json",
+    "repo ParentCRT identity",
+    "engine L3",
+    "resolver L3",
+    "y_tp1",
+    "G001"
+  ],
+  "freeze": {
+    "status": "SCREENSHOT_DERIVED_RANGE_MARKS",
+    "source": "tools/tv_forensic/shots/*_ANNOTATED.json drawn.event=RANGE",
+    "clock": "broker timestamp as stored in annotated JSON",
+    "F-080": "TV OHLC may diverge from engine; parent high/low will be taken from corpus bar at exact timestamp, not from tv_ohlc",
+    "F-077": "RANGE marks are repo CRT overlay on a screenshot, not Sujan bulk. Different object.",
+    "match": "exact corpus timestamp, no nearest-bar",
+    "corpus": "D:/Tradelatest/data/XAUUSD_M15.csv",
+    "economic_claims_allowed": false,
+    "unused_drawn_events": {
+      "SWEEP": [
+        "2026-07-15 03:30:00",
+        "2026-07-20 10:00:00",
+        "2026-07-28 04:00:00"
+      ],
+      "DISPLACEMENT": [
+        "2026-07-15 04:30:00",
+        "2026-07-20 10:30:00",
+        "2026-07-28 04:15:00"
+      ],
+      "EXPANSION": [
+        "2026-07-15 05:00:00",
+        "2026-07-20 11:00:00",
+        "2026-07-28 06:45:00"
+      ],
+      "RETEST": [
+        "2026-07-15 22:15:00",
+        "2026-07-20 16:45:00",
+        "2026-07-30 06:45:00"
+      ],
+      "ENTRY": [
+        "2026-07-30 07:00:00"
+      ],
+      "SL": [
+        "2026-07-30 08:00:00"
+      ],
+      "H4_C3": [
+        "2026-07-15 08:00:00",
+        "2026-07-20 12:00:00"
+      ],
+      "OFF_SESSION": [
+        "2026-07-15 22:30:00"
+      ],
+      "PARENT_BIAS": [
+        "2026-07-20 17:00:00"
+      ]
+    }
+  },
+  "n_annotated_files": 7,
+  "n_range_unique": 1,
+  "n_matched_corpus": 1,
+  "n_missing_corpus": 0,
+  "missing": [],
+  "timestamps": [
+    "2026-07-28 03:45:00"
+  ]
+}

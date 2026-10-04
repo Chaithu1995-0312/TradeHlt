@@ -1,0 +1,143 @@
+{
+  "_doc": "CRT_ARCHITECTURE_ADJUDICATION_V1 \u2014 frozen decision record",
+  "generated_at_utc": "2026-07-14T08:12:37.280834+00:00",
+  "task_class": "OBSERVATION_ONLY",
+  "ARCHITECTURE_DECISION": "C",
+  "SELECTED_OPTION": "C. SEPARATE_CONTINUOUS_MARKET_STATE_OBSERVATION_FROM_CRT_OPPORTUNITY_LIFECYCLE",
+  "DECISION_STATUS": "DECIDED",
+  "REJECTED_OPTIONS": {
+    "A": "Insufficient as sole next phase \u2014 collapses architectural split to threshold search",
+    "B": "Addresses concurrency only; leaves CRT-local WHAT duplication and continuous-state gap",
+    "D": "Unsupported by current evidence; D requires explicit CRT-boundary reopen authority (CLOSED is non-permanent but non-transitive reopen conditions must fire). Not selected."
+  },
+  "OPTION_E_REQUIRED": false,
+  "OPTION_E_NOTE": "Conditional future work may add concurrent candidates (B) or HOW recalibration (A) AFTER C's shadow continuous-state layer exists; that does not change primary decision C.",
+  "DECISIVE_CRITERIA": [
+    "Executable dual path: governed 38-vector parallel to CRT-local transition inputs (PROVEN)",
+    "CRT is single-candidate opportunity lifecycle, not continuous market-state observer (PROVEN)",
+    "Primary collapse is lifecycle/geometry/HTF ownership, not EngineRunner rejection (PROVEN)",
+    "Threshold tuning alone cannot fix split WHAT authority or single-candidate monopolization (STRONG)",
+    "D requires explicit CRT-boundary reopen authority and is unsupported by current evidence (CLOSED does not make replacement permanently impossible)"
+  ],
+  "THRESHOLD_TUNING_AUTHORIZED": false,
+  "IMPLEMENTATION_AUTHORIZED": false,
+  "NEXT_PHASE_TASK_CLASS": "OBSERVATION_ONLY then EXPLORATORY_RESEARCH (shadow only)",
+  "NEXT_PHASE_NAME": "MSIP_SHADOW_CONTINUOUS_STATE_LAYER_DESIGN",
+  "NEXT_PHASE_SCOPE": "Design + shadow-only continuous MarketState interpretation from governed WHAT; compare bar-by-bar to CRT lifecycle outcomes; no CRT cutover; no threshold optimization program",
+  "BEHAVIOR_CHANGE_AUTHORIZED_FOR_NEXT_PHASE": false,
+  "OWNER_DECISIONS_REQUIRED": [
+    "Which CRT-local math quantities require formal parity audit before any future binding (body_ratio/ATR/EMA)",
+    "Whether concurrent candidates enter roadmap only after shadow MSIP comparison exists"
+  ],
+  "REQUIRED_INVARIANTS": [
+    "CRT CLOSED boundary (OHLCV\u2192TRADE_OPENED) remains unreopened unless formal reopen conditions fire",
+    "Canonical feature code surface CLOSED remains unreopened by this decision",
+    "Non-transitive closure: continuous-state layer does not inherit production authority from feature CLOSED",
+    "OBSERVATION_ONLY work remains behavior-neutral when hooks disabled",
+    "Historical baselines preserved as comparison evidence",
+    "No economic claims from architecture decision",
+    "MarketStateVector must not silently become CRT transition authority without BEHAVIOR_CHANGE_AUTHORIZED plan"
+  ],
+  "GATES": {
+    "GATE_1_EVIDENCE_SUFFICIENCY": "PASS",
+    "GATE_2_EXECUTABLE_REALITY": "PASS",
+    "GATE_3_AUTHORITY_MAP": "PASS",
+    "GATE_4_WHAT_HOW_WHO_BOUNDARIES": "PASS",
+    "GATE_5_ALTERNATIVE_COMPARISON": "PASS",
+    "GATE_6_DECISION_REVERSIBILITY": "PASS",
+    "GATE_7_CLOSED_BOUNDARY_COMPATIBILITY": "PASS",
+    "GATE_8_IMPLEMENTATION_BOUNDARY": "PASS"
+  },
+  "proven_facts": [
+    "CRT is a 9-state opportunity lifecycle with directed VALID_TRANSITIONS + force-reset surface",
+    "CRT transition guards do not use the complete 38-feature vector as primary transition surface",
+    "CRT includes local market math (body_ratio, wick, atr, move, emas) and private state memory",
+    "One active candidate lifecycle is tracked (TelemetryCollector._active_candidate)",
+    "XAUUSD full run: 3390 RANGE\u2192SWEEP, 315 SWEEP\u2192DISP, 60 expansion episodes, 17 retest, 5 exec, 1 trade",
+    "HTF reset dominates candidate deaths (3323/3433)",
+    "Expansion episodes: 17 retest / 43 reset / 0 TTL expired",
+    "Downstream rejected_trades=0 on measured run",
+    "Fail-reason sample shows depth_below_min, depth_above_ceiling, move_below_atr_min active",
+    "Soft-conf score gate approved 17/17; 12 FILTER_REJECTED off_session"
+  ],
+  "strong_inferences": [
+    {
+      "claim": "Single-candidate ownership suppresses overlapping opportunity observation",
+      "support": "singular _active_candidate; long expansion dwell max 346; HTF deaths",
+      "unproven": "how many concurrent opportunities would have been economic"
+    },
+    {
+      "claim": "Current CRT mixes continuous market observation with opportunity lifecycle ownership",
+      "support": "dual OHLCV path; local math in try_*; state memory ownership",
+      "unproven": "optimal split surface for every quantity"
+    },
+    {
+      "claim": "Threshold recalibration alone cannot resolve architectural split authority",
+      "support": "even perfect thresholds leave CRT-local WHAT vs pipeline WHAT dual implementation",
+      "unproven": "instrument-specific retune magnitude of throughput change"
+    },
+    {
+      "claim": "Binding CRT directly to MarketStateVector would be a consumer migration",
+      "support": "CRT currently does not consume 38-vector for guards",
+      "unproven": "future migration cost"
+    }
+  ],
+  "open_questions": [
+    "CRT ATR/EMA/body_ratio parity vs FeaturePipeline (decision-critical only for future BIND, not for choosing C)",
+    "Whether concurrent candidates should be phase-2 under CRT HOW after shadow continuous state exists",
+    "Session policy placement: CRT HOW vs shared policy layer"
+  ],
+  "non_problems": [
+    "One trade / low trade count alone does not prove architecture failure",
+    "Historical output hash changes are not automatic failures under BEHAVIOR_CHANGE_AUTHORIZED",
+    "38 features need not all be consumed by every WHO",
+    "CRT private lifecycle state is not automatically an authority violation",
+    "Downstream fusion rejection is not the measured primary collapse",
+    "TTL non-firing (0 expired) does not alone prove TTL should be shortened without ownership redesign"
+  ],
+  "next_phase": {
+    "name": "MSIP_SHADOW_CONTINUOUS_STATE_LAYER_DESIGN",
+    "task_class": "OBSERVATION_ONLY / EXPLORATORY_RESEARCH",
+    "behavior_change_authorized": false,
+    "entry_criteria": [
+      "This adjudication package frozen and accepted",
+      "CRT CLOSED remains unreopened",
+      "No threshold program as primary workstream"
+    ],
+    "exit_criteria": [
+      "Documented MarketStateVector dimension set bound to governed WHAT where possible",
+      "Shadow comparison protocol vs CRT lifecycle outcomes defined",
+      "CRT private memory explicitly out of scope of vector",
+      "Implementation plan classified BEHAVIOR_CHANGE_AUTHORIZED only if CRT consumer cutover proposed later"
+    ],
+    "non_goals": [
+      "Threshold optimization",
+      "Trade-count maximization",
+      "CRT rewrite",
+      "Concurrent candidates implementation",
+      "Feature certification reopening",
+      "Production cutover"
+    ],
+    "rollback_comparison": "Keep current CRT path as comparison authority; shadow MSIP is additive",
+    "future_conditional": {
+      "after_shadow_msip": [
+        "evaluate concurrent candidates (B)",
+        "evaluate instrument HOW recalibration (A)"
+      ],
+      "never_by_default": [
+        "replace CRT SM (D) without explicit reopen authority and new evidence"
+      ]
+    }
+  },
+  "accepted_risks": [
+    "Short-term no throughput improvement (by design)",
+    "Shadow dual-path cost during design",
+    "Delayed concurrent-candidate exploration"
+  ],
+  "unresolved_risks": [
+    "Parity unknown between CRT-local ATR and pipeline atr",
+    "Fail-reason sample not population rates",
+    "Instrument transfer EURUSD-validated knobs on XAUUSD still open for later HOW work"
+  ],
+  "OPTION_D_CLARIFICATION": "Boundary-scoped closure means D is not currently authorized without valid reopen conditions and new evidence; it is not permanently forbidden."
+}

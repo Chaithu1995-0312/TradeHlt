@@ -1,0 +1,180 @@
+{
+  "authority": "research_only",
+  "engine_mode": "exit",
+  "agreement": 43359,
+  "total": 47197,
+  "agreement_rate": 0.918681272114753,
+  "engine_counts": {
+    "RANGE": 35130,
+    "SWEEP": 6996,
+    "DISPLACEMENT": 373,
+    "SHADOW_PENDING": 51,
+    "EXPANSION": 4625,
+    "RETEST": 17,
+    "EXECUTION": 5
+  },
+  "resolver_counts": {
+    "RANGE": 38062,
+    "SWEEP": 7725,
+    "DISPLACEMENT": 403,
+    "SHADOW_PENDING": 91,
+    "EXPANSION": 886,
+    "RETEST": 30
+  },
+  "reference_counts": {
+    "RANGE": 35159,
+    "SWEEP": 6987,
+    "DISPLACEMENT": 373,
+    "EXPANSION": 4605,
+    "RETEST": 17,
+    "EXECUTION": 5,
+    "RESOLUTION": 0,
+    "SHADOW_PENDING": 51,
+    "EXPIRED": 0
+  },
+  "matrix": {
+    "RANGE|RANGE": 35130,
+    "SWEEP|SWEEP": 6996,
+    "DISPLACEMENT|DISPLACEMENT": 362,
+    "SHADOW_PENDING|SWEEP": 51,
+    "EXPANSION|SWEEP": 675,
+    "EXPANSION|RANGE": 2920,
+    "EXPANSION|DISPLACEMENT": 41,
+    "EXPANSION|SHADOW_PENDING": 88,
+    "RETEST|SWEEP": 3,
+    "RETEST|RANGE": 8,
+    "EXECUTION|RANGE": 4,
+    "DISPLACEMENT|EXPANSION": 11,
+    "EXPANSION|EXPANSION": 871,
+    "RETEST|EXPANSION": 3,
+    "RETEST|SHADOW_PENDING": 3,
+    "EXPANSION|RETEST": 30,
+    "EXECUTION|EXPANSION": 1
+  },
+  "top_confusions": [
+    {
+      "engine": "EXPANSION",
+      "resolver": "RANGE",
+      "n": 2920
+    },
+    {
+      "engine": "EXPANSION",
+      "resolver": "SWEEP",
+      "n": 675
+    },
+    {
+      "engine": "EXPANSION",
+      "resolver": "SHADOW_PENDING",
+      "n": 88
+    },
+    {
+      "engine": "SHADOW_PENDING",
+      "resolver": "SWEEP",
+      "n": 51
+    },
+    {
+      "engine": "EXPANSION",
+      "resolver": "DISPLACEMENT",
+      "n": 41
+    },
+    {
+      "engine": "EXPANSION",
+      "resolver": "RETEST",
+      "n": 30
+    },
+    {
+      "engine": "DISPLACEMENT",
+      "resolver": "EXPANSION",
+      "n": 11
+    },
+    {
+      "engine": "RETEST",
+      "resolver": "RANGE",
+      "n": 8
+    },
+    {
+      "engine": "EXECUTION",
+      "resolver": "RANGE",
+      "n": 4
+    },
+    {
+      "engine": "RETEST",
+      "resolver": "SWEEP",
+      "n": 3
+    },
+    {
+      "engine": "RETEST",
+      "resolver": "EXPANSION",
+      "n": 3
+    },
+    {
+      "engine": "RETEST",
+      "resolver": "SHADOW_PENDING",
+      "n": 3
+    },
+    {
+      "engine": "EXECUTION",
+      "resolver": "EXPANSION",
+      "n": 1
+    }
+  ],
+  "edge_mismatch_n": 126,
+  "timeline": {
+    "n_bars": 47275,
+    "n_transitions": 3869,
+    "n_resets": 10869,
+    "htf_resets": 10666,
+    "gap_resets": 121,
+    "reset_from_counts": {
+      "RANGE": 7441,
+      "SWEEP": 3062,
+      "DISPLACEMENT": 298,
+      "SHADOW_PENDING": 8,
+      "EXPANSION": 43,
+      "RETEST": 12,
+      "RESOLUTION": 1,
+      "EXECUTION": 4
+    }
+  },
+  "resolver_meta": {
+    "n_raw": 47275,
+    "n_resolved": 47197,
+    "n_dropped_warmup": 78,
+    "resolver_counts": {
+      "RANGE": 38062,
+      "SWEEP": 7725,
+      "DISPLACEMENT": 403,
+      "SHADOW_PENDING": 91,
+      "EXPANSION": 886,
+      "RETEST": 30
+    },
+    "config": "configs\\formulas\\market_crt_states.yaml",
+    "lifecycle_stats": {
+      "htf_reset_count": 937,
+      "gap_reset_count": 0,
+      "forced_reset_count": 10840,
+      "last_reset_reason": "HTF changed: XAUUSD-HTF-011817 \u2192 XAUUSD-HTF-011818"
+    },
+    "lifecycle_cfg": {
+      "htf_reset_enabled": true,
+      "htf_candles_per_range": 4,
+      "htf_protect_states": [
+        "EXPANSION",
+        "RETEST"
+      ],
+      "htf_protect_execution": true,
+      "gap_reset_enabled": true,
+      "gap_reset_minutes": 120.0,
+      "shadow_on_htf_displacement_reset": true,
+      "pending_displacement_ttl_candles": 4
+    },
+    "htf_mode": "engine",
+    "htf_instrument": "XAUUSD",
+    "htf_candles_per_range": 4,
+    "htf_unique_ids": 11800,
+    "htf_changes_on_resolved_slice": 11799,
+    "htf_first_id": "XAUUSD-HTF-000019",
+    "htf_last_id": "XAUUSD-HTF-011818",
+    "engine_reset_injection": 10840
+  }
+}

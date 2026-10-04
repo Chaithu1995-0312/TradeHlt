@@ -25,7 +25,7 @@ Entry record:
     },
     "fusion": {
       "final_score": 0.68,
-      "gaussian":    0.62,
+      "ema_momentum_kernel": 0.62,
       "neural":      null,
       "llm":         0.71,
       "llm_fired":   true,
@@ -72,10 +72,22 @@ from typing import Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from fusion_engine import FusionResult
+    from typing import Union
 
 log = logging.getLogger("TradeLogger")
 
 DEFAULT_LOG_PATH = Path("logs/fusion_trades.jsonl")
+
+# M1 telemetry normalization — canonical enveloped dual-write target.
+TRADE_LIFECYCLE_LOG = Path("logs/trade_lifecycle.jsonl")
+
+# Optional event-fabric import. Fail-open: if unavailable, the flat
+# fusion_trades.jsonl write is completely unaffected.
+try:
+    from events.event_fabric import make_event_envelope, EventType
+    _ENVELOPE_OK = True
+except Exception:  # noqa: BLE001
+    _ENVELOPE_OK = False
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -84,7 +96,13 @@ DEFAULT_LOG_PATH = Path("logs/fusion_trades.jsonl")
 
 class TradeLogger:
 
-    def __init__(self, path: Path | str = DEFAULT_LOG_PATH) -> None:
+    def __init__(self, path: Path | str | None = None,
+                 instrument: str = "") -> None:
+        if path is None:
+            if instrument:
+                path = Path(f"logs/fusion_trades_{instrument}.jsonl")
+            else:
+                path = DEFAULT_LOG_PATH
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -98,17 +116,30 @@ class TradeLogger:
         session:       str,
         regime:        str,
         features:      dict,
-        fusion_result: "FusionResult",
+        fusion_result: "Union[FusionResult, dict]",
         risk_pct:      float,
         entry_price:   float,
         sl_price:      float,
         tp1_price:     float,
         tp2_price:     float,
         opened_at:     Optional[datetime] = None,
+        provenance:         Optional[dict] = None,
+        feature_vector_sha: str = "",
+        gates_fired:        Optional[dict] = None,
     ) -> None:
         """
         Called immediately after a trade is opened.
         Write everything needed to later reconstruct the decision.
+
+        provenance / feature_vector_sha / gates_fired (target-strategy-architecture.md
+        §13 item8 / §9 — additive, default-empty so existing readers are unaffected):
+          provenance         — TradeProvenanceV1.to_dict() (config version/hash, model
+                                pins, strategy_id) — WHY this trade was allowed to exist.
+          feature_vector_sha — sha256 fingerprint of the canonical feature vector at
+                                decision time, so the exact market state is joinable
+                                without storing the full vector on every line.
+          gates_fired        — the CRTConfig threshold snapshot active for this trade
+                                (dataclasses.asdict(crt_cfg)) — WHAT let it through.
         """
         record = {
             "event":       "ENTRY",
@@ -119,12 +150,15 @@ class TradeLogger:
             "session":     session,
             "regime":      regime,
             "features":    _safe_features(features),
-            "fusion":      fusion_result.to_dict(),
+            "fusion":      fusion_result.to_dict() if hasattr(fusion_result, "to_dict") else (fusion_result or {}),
             "risk_pct":    round(risk_pct, 6),
             "entry_price": round(entry_price, 6),
             "sl_price":    round(sl_price,    6),
             "tp1_price":   round(tp1_price,   6),
             "tp2_price":   round(tp2_price,   6),
+            "provenance":         provenance or {},
+            "feature_vector_sha": feature_vector_sha,
+            "gates_fired":        gates_fired or {},
         }
         self._write(record)
 
@@ -186,6 +220,27 @@ class TradeLogger:
                 fh.write(json.dumps(record) + "\n")
         except Exception as e:
             log.error(f"TradeLogger write failed: {e}")
+        self._emit_enveloped(record)
+
+    def _emit_enveloped(self, record: dict) -> None:
+        """M1 dual-write: emit the same record as a canonical TRADE_LIFECYCLE envelope
+        to logs/trade_lifecycle.jsonl. Read-only projection of the flat record — the
+        flat write above is the source of truth and is never altered. Fail-open: any
+        error is swallowed so trade logging and replay are never disrupted."""
+        if not _ENVELOPE_OK:
+            return
+        try:
+            env = make_event_envelope(
+                event_type = EventType.TRADE_LIFECYCLE.value,  # plain string, matches existing emitters
+                instrument = str(record.get("instrument", "")),
+                source     = "TradeLogger",
+                payload    = record,
+            )
+            TRADE_LIFECYCLE_LOG.parent.mkdir(parents=True, exist_ok=True)
+            with open(TRADE_LIFECYCLE_LOG, "a", encoding="utf-8") as fh:
+                fh.write(json.dumps(env) + "\n")
+        except Exception as e:  # noqa: BLE001
+            log.debug(f"TradeLogger envelope emit failed: {e}")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -243,3 +298,15 @@ def set_log_path(path: str | Path) -> None:
     """Override default log path (call before first trade)."""
     global _default_logger
     _default_logger = TradeLogger(path)
+
+
+def set_instrument(instrument: str) -> None:
+    """Route the module-level singleton to a per-instrument log file.
+    Call once at startup before any trades are logged.
+
+    Example:
+        set_instrument("BTCUSDT")  →  logs/fusion_trades_BTCUSDT.jsonl
+        set_instrument("EURUSD")   →  logs/fusion_trades_EURUSD.jsonl
+    """
+    global _default_logger
+    _default_logger = TradeLogger(instrument=instrument)

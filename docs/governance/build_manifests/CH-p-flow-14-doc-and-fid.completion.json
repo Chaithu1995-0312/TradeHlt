@@ -1,0 +1,35 @@
+{
+  "change_id": "CH-p-flow-14-doc-and-fid",
+  "date_utc": "2026-09-18",
+  "change_classes": [
+    "DOCUMENTATION_ONLY"
+  ],
+  "declared_files": [
+    "docs/architecture/signal-flow.md",
+    ".grok/PENDING.md",
+    "docs/current-findings.md",
+    "docs/governance/build_manifests/CH-p-flow-14-doc-and-fid.impact.json",
+    "docs/governance/build_manifests/CH-p-flow-14-doc-and-fid.completion.json",
+    "assistant_project.md"
+  ],
+  "checks_executed": [
+    "tests/test_doc_citations.py",
+    "tests/test_current_findings.py",
+    "tests/test_topic_docs.py",
+    "tests/test_session_log.py",
+    "scripts/governance/construction_protocol.py check",
+    "scripts/maintenance/check_governance_invariants.py --all"
+  ],
+  "checks_result": {
+    "focused_required_floors": "3 failed, 19 passed (test_doc_citations + test_current_findings + test_topic_docs + test_session_log combined run) — all 3 failures pre-existing (see notes_pre_existing_red)",
+    "signal_flow_specific": "0 dual-form path.py:LINE-middot-Symbol citations added in signal-flow.md (this doc's citations are bare doc-prose refs to F-103/F-073, out of tests/test_doc_citations.py's matched grammar per its own docstring); grep for the retracted phrase '\"no skipped steps\"' in signal-flow.md returns 0 hits post-edit",
+    "construction_floor_check": "CONSTRUCTION FLOOR: RED — 6 failed / 131 passed (subset run); RED is pre-existing, not introduced by this change (see below)",
+    "full_green_floor": "check_governance_invariants.py --all: 16 failed, 571 passed, 1 skipped — all 16 failures are in files this change never touches (feature_math_lint, geometry_census x2, model_paths_literals x3, script_registry x3, script_matrix_sync x2, findings_export, corpus_read_lint, plus the 3 already-isolated doc/session-log reds) and are consistent with the pre-existing shared-dirty-tree state recorded at this session's WORKTREE PREFLIGHT (36+ modified files across src/ and configs/production/ from concurrent sessions, per CLAUDE.md §1.5)",
+    "diff_scope_verified": "git diff --stat limited to docs/architecture/signal-flow.md, .grok/PENDING.md, docs/current-findings.md (the impact/completion manifests are new/untracked); git status --porcelain -- src/ configs/production/ shows only pre-existing modifications from before this session started — none introduced by this change"
+  },
+  "repo_state_hash": "c27d69e (dirty: 113 pre-existing modified/untracked paths from concurrent sessions per session-start git status)",
+  "completion_status": "WORK_COMPLETE_GATE_PRE_EXISTING_RED",
+  "production_behavior_changed": "NO",
+  "result_summary": "Closed the §6.2 TruthConflict at .grok/PENDING.md row P-FLOW-14 (opened 2026-08-25). docs/architecture/signal-flow.md §1 now opens with an explicit rail-split note (Steps 1-4 both rails; Steps 5-7 live/research-rail-only) citing F-103 and F-073 in place of the retracted unconditional 'no skipped steps' claim; Step 4 gained a rail-boundary callout explaining backtest_v2's own SL/TP geometry vs ExecutionPlan; Steps 5 and 6 headers are annotated '(live/research rail only — not reachable from backtest_v2)'; Step 7 documents the separate backtest-rail producer; the §3 cross-reference matrix gained a Rail column; the §4 mermaid diagram forks after S4. F-103's Note field in docs/current-findings.md now cross-references this closure instead of leaving it undiscoverable from the finding. .grok/PENDING.md's P-FLOW-14 row is marked DONE with an inline E-001 CORRECTED note explaining that no new F-id was registered because F-103 (registered 2026-09-15, independently) already carries Source B's fact with stronger evidence (AST import-graph vs. this row's anticipated grep) — minting a duplicate would have violated §6.2 rule 5. No src/ or configs/ file was edited by this change.",
+  "completion_status_explanation": "The 3 required doc floors (test_doc_citations, test_current_findings, test_topic_docs) and test_session_log all show only pre-existing failures, isolated by an isolated-file baseline run captured BEFORE any edit in this turn: tests/test_doc_citations.py::test_every_code_citation_resolves (entry-exit-map.md:44 -> backtest_v2.py:1708 _write_trades citation drift — unrelated file), tests/test_current_findings.py::test_nonterminal_findings_are_fresh (17 findings past Revalidate-by, F-016..F-035 — unrelated staleness sweep predating this change), and tests/test_session_log.py::test_session_log_entry_count_is_bounded (171 entries vs cap 30, pre-existing well before this turn's single new entry would be appended — the rotator is deliberately NOT run per this repo's own recorded precedent that it fuses bare-marker entries into the doctrine preamble). The broader GREEN_FLOOR (16 failures) and construction_protocol.py check (RED) both fail for reasons entirely outside this change's declared_files — feature-math lint, geometry census, model-path literals, script registry/matrix sync, findings export, corpus-read lint — consistent with the 113-path dirty tree already present across src/ and configs/production/ at session start (concurrent Claude sessions, per this repo's own recorded operating condition). Per CLAUDE.md §1.5 ('the correct move on a pre-existing red is to report it, not to fix unrelated code mid-task') and §1.2 (scope control), none of those 13 additional failures were touched. Mechanical gate reads RED for reasons unrelated to and pre-dating this DOCUMENTATION_ONLY change; the change's own footprint is verified clean by the isolated floor run and the diff-scope check."
+}

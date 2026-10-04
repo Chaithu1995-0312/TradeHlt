@@ -1,0 +1,28 @@
+{
+  "_doc": "Edge Discovery — Phase S1 RETEST selection-effect. Measure-only. Re-measures the spine's selected-vs-rejected RETEST effect (F-002, stale/pre-intrabar) under the GOVERNING intrabar_fixed + 12bps standard, pooled BY EFFECT (not raw entries) across crypto-6, decomposed by reject-reason class. Consumes the RETEST_REPLAY telemetry wired in S0. No magic numbers in Python.",
+  "universe": {
+    "data_dir": "data",
+    "pattern": "*_M15.csv",
+    "instruments": ["BNBUSDT", "ETHUSDT", "BTCUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT"]
+  },
+  "replay": {
+    "sl_atr_mult": 1.0,
+    "tp_atr_mult": 2.0,
+    "max_forward": 40,
+    "exit_model": "intrabar_fixed",
+    "round_trip_bps": 12.0
+  },
+  "significance": {
+    "n_permutations": 2000,
+    "alpha": 0.05
+  },
+  "oos": {
+    "split": 0.3
+  },
+  "_reason_class_note": "Folds RETEST_REPLAY.reject_reason into selection-skill classes. SESSION is the F-017-null / F-006b-dominant lever (rejects are off-session by construction → cannot be session-matched). SCORE/ZONE rejects are IN an allowed session → the genuine selection-skill classes. Anything else → OTHER.",
+  "reason_classes": {
+    "SESSION": ["OFF_SESSION"],
+    "ZONE": ["ZONE"],
+    "SCORE": ["LOW_SCORE"]
+  }
+}

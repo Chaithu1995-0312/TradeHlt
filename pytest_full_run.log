@@ -1,0 +1,90 @@
+........................................................................ [  2%]
+........................................................................ [  4%]
+........................................................................ [  6%]
+........................................................................ [  8%]
+............F.......s.F................................................. [ 10%]
+........................................................................ [ 12%]
+............................................................F..........s [ 15%]
+........................................................................ [ 17%]
+...F.................................................................... [ 19%]
+........................................................................ [ 21%]
+........................................................................ [ 23%]
+........................................................................ [ 25%]
+.............F.......................................................... [ 27%]
+....................................................x................... [ 30%]
+....................................................x................sss [ 32%]
+ssss.......F............F.........F..................................... [ 34%]
+......FF................................................................ [ 36%]
+.................F...................................................... [ 38%]
+................................................F....................... [ 40%]
+........................................................................ [ 42%]
+........................................................................ [ 45%]
+........................FF.F.......F....F.......F....................... [ 47%]
+................................FF.........F............................ [ 49%]
+................................F............................F.F.F...... [ 51%]
+........................................................................ [ 53%]
+..F..............................................................s...... [ 55%]
+........................................................................ [ 57%]
+........................................................................ [ 60%]
+........................................................................ [ 62%]
+........................................................................ [ 64%]
+..................FF..........................F........................F [ 66%]
+........................................................................ [ 68%]
+........................................................................ [ 70%]
+........................................................................ [ 72%]
+........................................................................ [ 75%]
+....................F.............................F..................... [ 77%]
+........ss.ss.FF..................................................ssssss [ 79%]
+ssss.................................................................... [ 81%]
+.................................................................s...... [ 83%]
+........................................................................ [ 85%]
+........................................................................ [ 88%]
+........................................................................ [ 90%]
+...................F.................................................... [ 92%]
+........................................................................ [ 94%]
+........................................................................ [ 96%]
+......................................................................ss [ 98%]
+.ssssss...................................                               [100%]
+============================== warnings summary ===============================
+tests/test_ultron_risk_gate.py::test_naive_datetime_treated_as_utc
+  D:\Tradelatest\tests\test_ultron_risk_gate.py:146: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    future_naive = (datetime.utcnow() + timedelta(hours=1)).isoformat()  # no tz suffix
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/governance/test_epistemic_invariants.py::TestEpistemicInvariantEvidenceLink::test_evidence_paths_are_absolute_or_git_root_relative
+FAILED tests/governance/test_provenance_remediation.py::TestProvenanceRemediation::test_all_empty_hash_events_have_remediation
+FAILED tests/replay/test_replay_memory_engine.py::test_cluster_stats_built - ...
+FAILED tests/research/test_erp_teaching_dual_read.py::test_boundary_json_ic001_complete
+FAILED tests/research/test_xauusd_spine_smoke.py::test_spine_collect_runs_on_frozen_candidate_without_active_version_drift
+FAILED tests/test_cli_matrix_sync.py::test_cli_matrix_covers_every_registry_command
+FAILED tests/test_codebase_structure_doc.py::test_every_src_package_is_documented
+FAILED tests/test_config_reachability.py::test_no_dead_config_keys - Assertio...
+FAILED tests/test_control_plane_doc_alignment.py::test_agents_path_alignment
+FAILED tests/test_control_plane_doc_alignment.py::test_cli_matrix_contains_all_core_command_ids
+FAILED tests/test_crt_config_reachability.py::test_bnb_load_matches_prod_profile_keys
+FAILED tests/test_disp_strength_filter.py::TestCRTConfigDispStrengthField::test_prod_config_loads_field
+FAILED tests/test_feature_certification_ledger.py::test_every_event_has_base_fields
+FAILED tests/test_feature_certification_ledger.py::test_per_event_required_extras
+FAILED tests/test_feature_certification_ledger.py::test_append_only_monotonic_coverage
+FAILED tests/test_feature_contract_v1.py::test_change_contracts_drafted - Ass...
+FAILED tests/test_feature_dag_invalidation.py::test_transitive_downstream_of_atr
+FAILED tests/test_feature_dag_layers.py::test_ontology_crosscheck_only_known_rollups
+FAILED tests/test_feature_math_lint.py::test_floor_is_green - AssertionError:...
+FAILED tests/test_feature_math_lint.py::test_pins_have_no_stale_durable_keys
+FAILED tests/test_feature_math_lint.py::test_universe_reconciliation_with_census
+FAILED tests/test_findings_export.py::test_on_disk_export_is_not_hand_edited
+FAILED tests/test_flow_manifests.py::test_flow_graph_byte_identical[governance]
+FAILED tests/test_flow_manifests.py::test_flow_graph_byte_identical[runtime]
+FAILED tests/test_flow_manifests.py::test_flow_graph_byte_identical[training]
+FAILED tests/test_gate5_lineage_report.py::TestGate5LineageReport::test_session_log_cites_report
+FAILED tests/test_geometry_census.py::test_geometry_census_is_fresh - Asserti...
+FAILED tests/test_geometry_census.py::test_adjudication_closed_against_fresh_census
+FAILED tests/test_handoff_state.py::test_actors_are_real_roles - AssertionErr...
+FAILED tests/test_layer_audit_manifest.py::test_active_artifacts_exist_and_hashes_match
+FAILED tests/test_plan001_retest_min_depth_how.py::test_production_load_exposes_how_key
+FAILED tests/test_plan002_dual_weights_how.py::test_production_load_exposes_both_keys
+FAILED tests/test_reachability_golden.py::test_config_summary_matches_committed_report
+FAILED tests/test_reachability_golden.py::test_registry_summary_matches_golden
+FAILED tests/test_three_authority_surplus_census.py::test_freshness_summary_matches_live_scan
+35 failed, 3284 passed, 33 skipped, 2 xfailed, 1 warning in 3868.81s (1:04:28)

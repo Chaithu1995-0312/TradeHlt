@@ -1,0 +1,112 @@
+{
+  "authority": "Shortlist only. No detection ran. The candidate count is an observation, not a result, and says nothing about the market or about what Sujan means.",
+  "candidate_counts": {
+    "body_size": 50,
+    "candle_range": 50
+  },
+  "corpus": {
+    "first_timestamp": "2024-05-22 01:00:00",
+    "last_timestamp": "2026-05-21 23:45:00",
+    "n_bars": 47275,
+    "path": "data/mt5/XAUUSD_M15.csv",
+    "sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56"
+  },
+  "economic_claims_allowed": false,
+  "mode": "candidates",
+  "object": "SUJAN_MANIPULATION_RESEARCH_PHASE_1",
+  "overlap": {
+    "bar_indices": [
+      33634,
+      39996,
+      39997,
+      39998,
+      39999,
+      40000,
+      40032,
+      40036,
+      40062,
+      40064,
+      40066,
+      40096,
+      40098,
+      40101,
+      40103,
+      40116,
+      40120,
+      40124,
+      40142,
+      40184,
+      40407,
+      40920,
+      40921,
+      42087,
+      42100,
+      43205,
+      43336,
+      43338,
+      43362,
+      43364,
+      43372,
+      43378,
+      43379,
+      43507
+    ],
+    "count": 34,
+    "note": "Reported, never merged. The two rankings measure DIFFERENT quantities (often large-bodied vs may be wick-dominant); where they disagree is information about how under-determined the concept is."
+  },
+  "parquet_cross_check": {
+    "compared": 47166,
+    "csv_bars": 47275,
+    "csv_only": 109,
+    "mismatch_count": 0,
+    "mismatches": [],
+    "note": "Parquet is a CHECK, not the source. csv_only is EXPECTED (~109: 78-bar feature warmup plus edge trim) and is not a failure.",
+    "parquet_only": 0,
+    "parquet_rows_read": 47166,
+    "projection_status": "FRESH",
+    "source_path": "results/clean_labels/XAUUSD/20260723T083443Z/clean_labels.jsonl",
+    "status": "AGREES",
+    "tolerance": 1e-06
+  },
+  "phase": 1,
+  "proxy": {
+    "frozen_top_n": 50,
+    "id": "SEM-034",
+    "magnitude_source": "features.candle_math FM-002 candle_range / FM-001 body_size",
+    "note": "Bridge-approved mechanical proxy for a VISUAL concept (drift log Record 6). UNVALIDATED: never agreement-checked against a hand-labelled set. UNK-007 stays OPEN. A candidate is not a parent until the bridge confirms it.",
+    "rankings": [
+      "candle_range",
+      "body_size"
+    ],
+    "rule": "top-N over the whole corpus, per ranking, ties broken by ascending bar index",
+    "status": "UNVALIDATED",
+    "top_n": 50
+  },
+  "run_utc": "2026-08-28T18:40:47+00:00",
+  "sem_id": "SEM-033",
+  "temporal_coverage": {
+    "body_size": {
+      "by_month": {
+        "2025-10": 4,
+        "2026-01": 15,
+        "2026-02": 13,
+        "2026-03": 17,
+        "2026-04": 1
+      },
+      "months_empty": 20,
+      "months_represented": 5
+    },
+    "candle_range": {
+      "by_month": {
+        "2025-10": 1,
+        "2026-01": 22,
+        "2026-02": 15,
+        "2026-03": 12
+      },
+      "months_empty": 21,
+      "months_represented": 4
+    },
+    "corpus_months": 25,
+    "note": "Top-N over the whole corpus concentrates on high-volatility periods by construction. Months with zero candidates are NOT evidence that they contain no bulk candles."
+  }
+}

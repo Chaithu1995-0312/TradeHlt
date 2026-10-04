@@ -1,0 +1,34 @@
+{
+  "change_id": "CH-p-flow-14-doc-and-fid",
+  "date_utc": "2026-09-18",
+  "objective": "Close the §6.2 TruthConflict recorded at .grok/PENDING.md row P-FLOW-14 (opened 2026-08-25): docs/architecture/signal-flow.md asserted the CRT spine 'runs once per candle, in order, with no skipped steps' with no rail qualifier, while P-FLOW-13's CURRENT pin established that src/runtime/backtest_v2.py terminates at Step 4 (DecisionResult) and never imports config_layer.execution_planner or core.ultron_risk_gate — Steps 5-7 are reachable only on the live/research rail. User ruled 2026-08-25: remediate both the doc scope and register an F-id, code wins. Audit on 2026-09-18 found the F-id half already satisfied: F-103 (registered 2026-09-15, independently, via a static AST import-graph assertion) states the Source-B fact with evidence stronger than this row anticipated. Remediation scope is therefore doc-only: reconcile signal-flow.md's prose/matrix/diagram with the rail split, cross-reference F-103 in its own Note field, and close the ledger row honestly (correcting its stale 'still needs an F-id' text per the E-001 fix-the-source rule) rather than minting a duplicate finding.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY"
+  ],
+  "change_class_rationale": "Per docs/governance/change_contracts.json 'DOCUMENTATION_ONLY': docs/comments/findings text only, no behavior surface. No file under src/ or configs/ is touched. The findings doc (docs/current-findings.md) is edited only to append a Note cross-reference to an already-registered finding (F-103) — no new F-id, no status/confidence change, no Repository Truths Index row change in CLAUDE.md.",
+  "affected_files": [
+    "docs/architecture/signal-flow.md",
+    ".grok/PENDING.md",
+    "docs/current-findings.md",
+    "docs/governance/build_manifests/CH-p-flow-14-doc-and-fid.impact.json",
+    "docs/governance/build_manifests/CH-p-flow-14-doc-and-fid.completion.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_doc_citations.py",
+    "tests/test_current_findings.py",
+    "tests/test_topic_docs.py",
+    "tests/test_construction_protocol.py",
+    "tests/test_session_log.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Single commit; revert the four touched docs and delete this manifest pair. No finding is added/removed/reversed (F-103 is only annotated), no ontology node, no config, no ACTIVE_VERSION, no production surface — pure doc revert per §6.2 rule 4 (history preserved either way since nothing is deleted, only scoped/annotated).",
+  "authority_granted": "User 2026-08-25 (P-FLOW-14 row): 'both (doc-scope + F-id, code wins)' — resolve the TruthConflict by fixing the doc to match the code-verified rail split AND registering the fact as a finding. User 2026-09-18: selected 'Close P-FLOW-14' as the working set after reviewing the pending-work audit and this plan (doc-only scope, reusing F-103 instead of minting a duplicate, was presented and approved before implementation via ExitPlanMode).",
+  "authority_NOT_granted": "No new F-id (F-103 already covers Source B with stronger evidence — minting a second finding would duplicate a registered truth, §6.2 rule 5). No code change to backtest_v2.py, execution_planner.py, or ultron_risk_gate.py — F-073 (no production live rail) and F-010 (live PnL UNVERIFIED) are untouched. No finding is downgraded/reversed (F-088 precedent: prior economic findings stay valid statements about the object they measured). No G001 claim, no ACTIVE_VERSION change, no authority granted to re-wire backtest_v2 to the planner/gate.",
+  "production_behavior_changed": "NO",
+  "notes_pre_existing_red": "Baseline captured before any edit (2026-09-18): tests/test_doc_citations.py::test_every_code_citation_resolves RED pre-existing (entry-exit-map.md:44 -> backtest_v2.py:1708 _write_trades citation drift, unrelated to signal-flow.md, not touched by this change) and tests/test_current_findings.py::test_nonterminal_findings_are_fresh RED pre-existing (17 findings past Revalidate-by, F-016..F-035, unrelated staleness sweep, not this change's scope). Both pre-date this change and are out of scope per CLAUDE.md §1.5 (report, don't fix unrelated red)."
+}

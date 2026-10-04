@@ -1,0 +1,33 @@
+{
+  "change_id": "CH-mfe-rnet-collapse",
+  "date_utc": "2026-08-24",
+  "objective": "Diagnostic decomposition of why SEM-028 +0.21R horizon-MFE contrast becomes SEM-029 +0.025R y_R_net on the same sealed split. No new PRIMARY. No G001.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY"
+  ],
+  "change_class_rationale": "Point-in-time analysis + F-093 Note mechanism sentence. No src/ behavior change. JSON artifact sits next to existing MC-RNET metrics.",
+  "affected_files": [
+    "docs/analysis/mfe-to-rnet-collapse-2026-08-24.md",
+    "docs/analysis/rnet-overlay-holdout-2026-08-24.md",
+    "docs/analysis/readme.md",
+    "docs/current-findings.md",
+    "CLAUDE.md",
+    "docs/research-readiness/rnet_overlay/mc_rnet_overlay_xauusd_m15_v1/collapse.json",
+    "docs/governance/build_manifests/CH-mfe-rnet-collapse.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert the analysis snapshot and F-093 Note sentence. SEM-028/SEM-029 PRIMARYs untouched.",
+  "authority_granted": "User 2026-08-24: why does +0.21R extra path collapse into +0.025R realized R-net?",
+  "authority_NOT_granted": "No new MC-*, no TP-widen, no live overlay, no G001, no P-GOAL-04.",
+  "production_behavior_changed": "NO"
+}

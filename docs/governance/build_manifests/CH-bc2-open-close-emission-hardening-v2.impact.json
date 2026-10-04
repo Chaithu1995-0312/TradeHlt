@@ -1,0 +1,55 @@
+{
+  "change_id": "CH-bc2-open-close-emission-hardening-v2",
+  "date_utc": "2026-09-03",
+  "supersedes": null,
+  "extends": "CH-bc2-open-close-label-probe-v1",
+  "objective": "Harden the BC-2 scorer's EMISSION layer before any live pair is scored, then capture and score one live XAUUSD M15 mid-interval/post-close pair. Emission fixes are verdict-invariant: G-06 tri-state (a CLOSE verdict contradicts G-06, it does not grant it), one report shape on every exit path, a checked (not asserted) admitted-artifact binding, a mechanical synthetic-cannot-prove gate, broker_local clock basis, and a one-directional stale-feed guard. Prereg sections 1-8 stay frozen; changes land as an append-only section 9.",
+  "change_classes": [
+    "CORPUS_AUTHORITY_CHANGE"
+  ],
+  "change_class_rationale": "Evidence probe for OHLCV BC-2 / G-06 on the admitted dataset's producer family, same class as v1. No admission-gate behavior change, no CAD migration, no dataset identity record edit. Scorer is research-only. CORPUS_AUTHORITY.md is updated only if the live pair returns OPEN or CLOSE.",
+  "affected_files": [
+    "src/research/ohlcv_open_close_label.py",
+    "tests/test_ohlcv_open_close_label.py",
+    "docs/research/preregistration-bc2-open-close-label.md",
+    "docs/research-readiness/bc2_open_close/README.md",
+    "docs/research-readiness/bc2_open_close/snapshot_a.json",
+    "docs/research-readiness/bc2_open_close/snapshot_b.json",
+    "docs/research-readiness/bc2_open_close/score.json",
+    "docs/governance/CORPUS_AUTHORITY.md",
+    "docs/governance/build_manifests/CH-bc2-open-close-emission-hardening-v2.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_dataset_registry.py",
+    "tests/test_corpus_authority_decisions.py",
+    "tests/test_xauusd_phase1_frozen_candidate.py",
+    "tests/test_construction_protocol.py",
+    "tests/test_ohlcv_open_close_label.py",
+    "tests/test_ohlcv_clock_provenance.py",
+    "tests/test_ohlcv_corpus_freeze.py"
+  ],
+  "verdict_invariance": "classify_label_pair rules 1-8 of prereg section 5 are unchanged in order and semantics. The single added precondition (stale-feed, section 9.1) is one-directional: it may only downgrade a result to INSUFFICIENT and can never produce OPEN or CLOSE, so it cannot manufacture a hit. Pinned by test_staleness_guard_can_only_downgrade.",
+  "unknowns": [
+    {
+      "question": "Whether the live pair returns OPEN, or a null (no_mutation on a quiet tape, or a session gap).",
+      "blocking": false,
+      "resolution": "Non-blocking. INSUFFICIENT is a real result: BC-2 stays UNPROVEN and CORPUS_AUTHORITY.md is left untouched. Per prereg sections 5 and 6 a null must not be re-timed until it hits or narrated as 'probably OPEN because STATIC'.",
+      "followup": "None. A second attempt would need its own authorization."
+    },
+    {
+      "question": "Whether the capturing terminal is the same one that produced XAUUSD_MT5_PHASE1_20260521.",
+      "blocking": false,
+      "resolution": "UNVERIFIABLE, and reported as such. The frozen dataset record carries no terminal identity, so the report emits producer_family_match: UNVERIFIED_NO_RECORDED_TERMINAL and records the live terminal (company/name/build/connected/server, never the account login) so a future comparison becomes possible. Claiming a match would be fabrication.",
+      "followup": "Consider adding a terminal-provenance field to the dataset identity schema in a separately authorized turn."
+    }
+  ],
+  "rollback_boundary": "Revert the scorer, its tests, the prereg section 9 block, and docs/research-readiness/bc2_open_close/. Dataset Identity / R3 / the Phase-1 pin / prereg sections 1-8 are untouched by this change and stay.",
+  "authority_granted": "User 2026-09-03: emission hardening plus one live capture, on the plan approved this session.",
+  "authority_NOT_granted": "No BC-1/BC-3/BC-4/BC-5/BC-6, no R3b, no OHLCV CLOSED, no APPROVED, no G001, no fetcher rewrite on a CLOSE verdict, no dataset identity record edit. An OPEN verdict flips G-06 for the mt5 acquisition family ONLY.",
+  "production_behavior_changed": "NO"
+}

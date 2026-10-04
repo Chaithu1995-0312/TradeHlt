@@ -1,0 +1,3278 @@
+{
+  "_doc": "Phase 1B formula identity census (extends FC-0.5; does not claim exhaustiveness).",
+  "generated_at_utc": "2026-07-10T16:07:40Z",
+  "quantities": [
+    {
+      "id": "Q-RAW-OPEN",
+      "names": [
+        "open"
+      ],
+      "source_fields": [
+        "open"
+      ],
+      "formula": "passthrough open",
+      "parameters": {},
+      "temporal": "t",
+      "normalization": null,
+      "fallback": null,
+      "units": "price",
+      "impl": [
+        "FeaturePipeline"
+      ],
+      "evidence": [
+        "feature_pipeline.py",
+        "feature_schema CANONICAL"
+      ],
+      "class": "UNIQUE_CANONICAL_CANDIDATE"
+    },
+    {
+      "id": "Q-RAW-HIGH",
+      "names": [
+        "high"
+      ],
+      "source_fields": [
+        "high"
+      ],
+      "formula": "passthrough high",
+      "parameters": {},
+      "temporal": "t",
+      "normalization": null,
+      "fallback": null,
+      "units": "price",
+      "impl": [
+        "FeaturePipeline"
+      ],
+      "evidence": [
+        "feature_pipeline.py",
+        "feature_schema CANONICAL"
+      ],
+      "class": "UNIQUE_CANONICAL_CANDIDATE"
+    },
+    {
+      "id": "Q-RAW-LOW",
+      "names": [
+        "low"
+      ],
+      "source_fields": [
+        "low"
+      ],
+      "formula": "passthrough low",
+      "parameters": {},
+      "temporal": "t",
+      "normalization": null,
+      "fallback": null,
+      "units": "price",
+      "impl": [
+        "FeaturePipeline"
+      ],
+      "evidence": [
+        "feature_pipeline.py",
+        "feature_schema CANONICAL"
+      ],
+      "class": "UNIQUE_CANONICAL_CANDIDATE"
+    },
+    {
+      "id": "Q-RAW-CLOSE",
+      "names": [
+        "close"
+      ],
+      "source_fields": [
+        "close"
+      ],
+      "formula": "passthrough close",
+      "parameters": {},
+      "temporal": "t",
+      "normalization": null,
+      "fallback": null,
+      "units": "price",
+      "impl": [
+        "FeaturePipeline"
+      ],
+      "evidence": [
+        "feature_pipeline.py",
+        "feature_schema CANONICAL"
+      ],
+      "class": "UNIQUE_CANONICAL_CANDIDATE"
+    },
+    {
+      "id": "Q-VOL-TICK",
+      "names": [
+        "volume"
+      ],
+      "source_fields": [
+        "volume"
+      ],
+      "formula": "source tick_volume passthrough when non-all-zero",
+      "parameters": {},
+      "temporal": "t",
+      "normalization": null,
+      "fallback": null,
+      "units": "tick_count",
+      "impl": [
+        "FeaturePipeline.compute_volume_features",
+        "mt5"
+      ],
+      "evidence": [
+        "feature_pipeline T-003 gate"
+      ],
+      "class": "UNIQUE_CANONICAL_CANDIDATE"
+    },
+    {
+      "id": "Q-VOL-PROXY-T003",
+      "names": [
+        "volume"
+      ],
+      "source_fields": [
+        "high",
+        "low"
+      ],
+      "formula": "high-low when volume all-zero (T-003)",
+      "parameters": {},
+      "temporal": "t",
+      "normalization": null,
+      "fallback": "same column name volume",
+      "units": "price_range_proxy",
+      "impl": [
+        "FeaturePipeline.compute_volume_features"
+      ],
+      "evidence": [
+        "PASS-A",
+        "feature_pipeline"
+      ],
+      "class": "FORMULA_COLLISION"
+    },
+    {
+      "id": "Q-VOL-RANGE-PROXY-SEPARATE",
+      "names": [
+        "volume_range_proxy"
+      ],
+      "source_fields": [
+        "high",
+        "low"
+      ],
+      "formula": "high-low explicit proxy identity (contract FEAT-VOLUME_RANGE_PROXY)",
+      "parameters": {},
+      "temporal": "t",
+      "normalization": null,
+      "fallback": null,
+      "units": "price",
+      "impl": [
+        "FeatureContract v1 separation intent"
+      ],
+      "evidence": [
+        "feature_contract_v1",
+        "FC-0 SEP-B"
+      ],
+      "class": "UNIQUE_CANONICAL_CANDIDATE"
+    },
+    {
+      "id": "Q-EMA-FAST",
+      "names": [
+        "ema_fast"
+      ],
+      "source_fields": [
+        "close"
+      ],
+      "formula": "EWM span=9",
+      "parameters": {
+        "span": 9
+      },
+      "temporal": "t",
+      "normalization": null,
+      "fallback": null,
+      "units": "price",
+      "impl": [
+        "FeaturePipeline"
+      ],
+      "evidence": [
+        "feature_pipeline"
+      ],
+      "class": "UNIQUE_CANONICAL_CANDIDATE"
+    },
+    {
+      "id": "Q-EMA-SLOW",
+      "names": [
+        "ema_slow"
+      ],
+      "source_fields": [
+        "close"
+      ],
+      "formula": "EWM span=21",
+      "parameters": {
+        "span": 21
+      },
+      "temporal": "t",
+      "normalization": null,
+      "fallback": null,
+      "units": "price",
+      "impl": [
+        "FeaturePipeline"
+      ],
+      "evidence": [
+        "feature_pipeline"
+      ],
+      "class": "UNIQUE_CANONICAL_CANDIDATE"
+    },
+    {
+      "id": "Q-ATR",
+      "names": [
+        "atr",
+        "atr_14"
+      ],
+      "source_fields": [
+        "high",
+        "low",
+        "close"
+      ],
+      "formula": "rolling mean TR 14",
+      "parameters": {
+        "period": 14
+      },
+      "temporal": "t",
+      "normalization": null,
+      "fallback": "NaN warmup",
+      "units": "price",
+      "impl": [
+        "FeaturePipeline"
+      ],
+      "evidence": [
+        "feature_pipeline"
+      ],
+      "class": "UNIQUE_CANONICAL_CANDIDATE"
+    },
+    {
+      "id": "Q-VOL-RATIO",
+      "names": [
+        "volume_ratio"
+      ],
+      "source_fields": [
+        "volume"
+      ],
+      "formula": "volume / rolling_mean(volume,20)",
+      "parameters": {
+        "window": 20
+      },
+      "temporal": "t",
+      "normalization": null,
+      "fallback": null,
+      "units": "ratio",
+      "impl": [
+        "FeaturePipeline"
+      ],
+      "evidence": [
+        "inherits volume semantic risk"
+      ],
+      "class": "UNIQUE_CANONICAL_CANDIDATE"
+    },
+    {
+      "id": "Q-VOL-SPIKE",
+      "names": [
+        "volume_spike"
+      ],
+      "source_fields": [
+        "volume_ratio"
+      ],
+      "formula": "volume_ratio > threshold binary",
+      "parameters": {},
+      "temporal": "t",
+      "normalization": null,
+      "fallback": null,
+      "units": "binary",
+      "impl": [
+        "FeaturePipeline"
+      ],
+      "evidence": [],
+      "class": "UNIQUE_CANONICAL_CANDIDATE"
+    },
+    {
+      "id": "Q-EMA-SPREAD",
+      "names": [
+        "ema_spread"
+      ],
+      "source_fields": [
+        "close"
+      ],
+      "formula": "(ema_fast-ema_slow)/(atr*close)",
+      "parameters": {},
+      "temporal": "t",
+      "normalization": null,
+      "fallback": "NaN atr warmup",
+      "units": "ratio",
+      "impl": [
+        "FeaturePipeline",
+        "derived_math"
+      ],
+      "evidence": [
+        "FM registry"
+      ],
+      "class": "UNIQUE_CANONICAL_CANDIDATE"
+    },
+    {
+      "id": "Q-MOMENTUM",
+      "names": [
+        "momentum_score"
+      ],
+      "source_fields": [
+        "close"
+      ],
+      "formula": "(close-close.shift(14))/(atr*close)",
+      "parameters": {
+        "lookback": 14
+      },
+      "temporal": "t",
+      "normalization": null,
+      "fallback": "NaN",
+      "units": "ratio",
+      "impl": [
+        "FeaturePipeline",
+        "derived_math"
+      ],
+      "evidence": [],
+      "class": "UNIQUE_CANONICAL_CANDIDATE"
+    },
+    {
+      "id": "Q-RSI",
+      "names": [
+        "rsi_14"
+      ],
+      "source_fields": [
+        "close"
+      ],
+      "formula": "RSI 14",
+      "parameters": {
+        "period": 14
+      },
+      "temporal": "t",
+      "normalization": null,
+      "fallback": null,
+      "units": "index",
+      "impl": [
+        "FeaturePipeline"
+      ],
+      "evidence": [],
+      "class": "UNIQUE_CANONICAL_CANDIDATE"
+    },
+    {
+      "id": "Q-MACD-L",
+      "names": [
+        "macd_line"
+      ],
+      "source_fields": [
+        "close"
+      ],
+      "formula": "EMA12-EMA26",
+      "parameters": {},
+      "temporal": "t",
+      "normalization": null,
+      "fallback": null,
+      "units": "price",
+      "impl": [
+        "FeaturePipeline"
+      ],
+      "evidence": [],
+      "class": "UNIQUE_CANONICAL_CANDIDATE"
+    },
+    {
+      "id": "Q-MACD-S",
+      "names": [
+        "macd_signal"
+      ],
+      "source_fields": [
+        "close"
+      ],
+      "formula": "EMA9 of macd_line",
+      "parameters": {},
+      "temporal": "t",
+      "normalization": null,
+      "fallback": null,
+      "units": "price",
+      "impl": [
+        "FeaturePipeline"
+      ],
+      "evidence": [],
+      "class": "UNIQUE_CANONICAL_CANDIDATE"
+    },
+    {
+      "id": "Q-MACD-H",
+      "names": [
+        "macd_hist"
+      ],
+      "source_fields": [
+        "close"
+      ],
+      "formula": "macd_line-macd_signal",
+      "parameters": {},
+      "temporal": "t",
+      "normalization": null,
+      "fallback": null,
+      "units": "price",
+      "impl": [
+        "FeaturePipeline"
+      ],
+      "evidence": [],
+      "class": "UNIQUE_CANONICAL_CANDIDATE"
+    },
+    {
+      "id": "Q-TREND-BIAS",
+      "names": [
+        "trend_bias"
+      ],
+      "source_fields": [
+        "close"
+      ],
+      "formula": "sign(ema_fast-ema_slow)",
+      "parameters": {},
+      "temporal": "t",
+      "normalization": null,
+      "fallback": null,
+      "units": "sign",
+      "impl": [
+        "FeaturePipeline"
+      ],
+      "evidence": [],
+      "class": "UNIQUE_CANONICAL_CANDIDATE"
+    },
+    {
+      "id": "Q-TREND-STR",
+      "names": [
+        "trend_strength"
+      ],
+      "source_fields": [
+        "close"
+      ],
+      "formula": "ma slope / atr style",
+      "parameters": {
+        "ma": 20
+      },
+      "temporal": "t",
+      "normalization": null,
+      "fallback": null,
+      "units": "ratio",
+      "impl": [
+        "FeaturePipeline"
+      ],
+      "evidence": [],
+      "class": "UNIQUE_CANONICAL_CANDIDATE"
+    },
+    {
+      "id": "Q-VOLATILITY-RATIO",
+      "names": [
+        "volatility_ratio"
+      ],
+      "source_fields": [
+        "high",
+        "low",
+        "close"
+      ],
+      "formula": "atr / close or related",
+      "parameters": {},
+      "temporal": "t",
+      "normalization": null,
+      "fallback": null,
+      "units": "ratio",
+      "impl": [
+        "FeaturePipeline"
+      ],
+      "evidence": [],
+      "class": "UNIQUE_CANONICAL_CANDIDATE"
+    },
+    {
+      "id": "Q-SWING-CENTER",
+      "names": [
+        "swing_high",
+        "swing_low"
+      ],
+      "source_fields": [
+        "high",
+        "low"
+      ],
+      "formula": "rolling(center=True,k=2) extremum equality",
+      "parameters": {
+        "SWING_WINDOW": 2
+      },
+      "temporal": "t with future k (legacy publish)",
+      "normalization": null,
+      "fallback": "0",
+      "units": "binary",
+      "impl": [
+        "FeaturePipeline.compute_structure_liquidity"
+      ],
+      "evidence": [
+        "center=True",
+        "PASS-A"
+      ],
+      "class": "TEMPORAL_SEMANTIC_COLLISION"
+    },
+    {
+      "id": "Q-SWING-CAUSAL-ENV",
+      "names": [
+        "swing_high",
+        "swing_low"
+      ],
+      "source_fields": [
+        "high",
+        "low"
+      ],
+      "formula": "center + shift(k) when TRUST_SWING_CAUSAL=1",
+      "parameters": {
+        "env": "TRUST_SWING_CAUSAL"
+      },
+      "temporal": "delayed causal",
+      "normalization": null,
+      "fallback": "0",
+      "units": "binary",
+      "impl": [
+        "FeaturePipeline env branch"
+      ],
+      "evidence": [
+        "feature_pipeline"
+      ],
+      "class": "CONFIG_DEPENDENT_IDENTITY"
+    },
+    {
+      "id": "Q-STRUCT-HIGHER_HIGH",
+      "names": [
+        "higher_high"
+      ],
+      "source_fields": [
+        "high",
+        "low",
+        "close"
+      ],
+      "formula": "structure derived; inherits swing temporal semantic (higher_high)",
+      "parameters": {
+        "SWING_WINDOW": 2
+      },
+      "temporal": "inherits swing",
+      "normalization": null,
+      "fallback": "0",
+      "units": "mixed",
+      "impl": [
+        "FeaturePipeline.compute_structure_liquidity / retest"
+      ],
+      "evidence": [
+        "FC-0.5 dependency graph"
+      ],
+      "class": "TEMPORAL_SEMANTIC_COLLISION"
+    },
+    {
+      "id": "Q-STRUCT-LOWER_LOW",
+      "names": [
+        "lower_low"
+      ],
+      "source_fields": [
+        "high",
+        "low",
+        "close"
+      ],
+      "formula": "structure derived; inherits swing temporal semantic (lower_low)",
+      "parameters": {
+        "SWING_WINDOW": 2
+      },
+      "temporal": "inherits swing",
+      "normalization": null,
+      "fallback": "0",
+      "units": "mixed",
+      "impl": [
+        "FeaturePipeline.compute_structure_liquidity / retest"
+      ],
+      "evidence": [
+        "FC-0.5 dependency graph"
+      ],
+      "class": "TEMPORAL_SEMANTIC_COLLISION"
+    },
+    {
+      "id": "Q-STRUCT-BREAK_OF_STRUCTURE",
+      "names": [
+        "break_of_structure"
+      ],
+      "source_fields": [
+        "high",
+        "low",
+        "close"
+      ],
+      "formula": "structure derived; inherits swing temporal semantic (break_of_structure)",
+      "parameters": {
+        "SWING_WINDOW": 2
+      },
+      "temporal": "inherits swing",
+      "normalization": null,
+      "fallback": "0",
+      "units": "mixed",
+      "impl": [
+        "FeaturePipeline.compute_structure_liquidity / retest"
+      ],
+      "evidence": [
+        "FC-0.5 dependency graph"
+      ],
+      "class": "TEMPORAL_SEMANTIC_COLLISION"
+    },
+    {
+      "id": "Q-STRUCT-LIQUIDITY_SWEEP",
+      "names": [
+        "liquidity_sweep"
+      ],
+      "source_fields": [
+        "high",
+        "low",
+        "close"
+      ],
+      "formula": "structure derived; inherits swing temporal semantic (liquidity_sweep)",
+      "parameters": {
+        "SWING_WINDOW": 2
+      },
+      "temporal": "inherits swing",
+      "normalization": null,
+      "fallback": "0",
+      "units": "mixed",
+      "impl": [
+        "FeaturePipeline.compute_structure_liquidity / retest"
+      ],
+      "evidence": [
+        "FC-0.5 dependency graph"
+      ],
+      "class": "TEMPORAL_SEMANTIC_COLLISION"
+    },
+    {
+      "id": "Q-STRUCT-SWEEP_DETECTED",
+      "names": [
+        "sweep_detected"
+      ],
+      "source_fields": [
+        "high",
+        "low",
+        "close"
+      ],
+      "formula": "structure derived; inherits swing temporal semantic (sweep_detected)",
+      "parameters": {
+        "SWING_WINDOW": 2
+      },
+      "temporal": "inherits swing",
+      "normalization": null,
+      "fallback": "0",
+      "units": "mixed",
+      "impl": [
+        "FeaturePipeline.compute_structure_liquidity / retest"
+      ],
+      "evidence": [
+        "FC-0.5 dependency graph"
+      ],
+      "class": "TEMPORAL_SEMANTIC_COLLISION"
+    },
+    {
+      "id": "Q-STRUCT-DOUBLE_SWEEP",
+      "names": [
+        "double_sweep"
+      ],
+      "source_fields": [
+        "high",
+        "low",
+        "close"
+      ],
+      "formula": "structure derived; inherits swing temporal semantic (double_sweep)",
+      "parameters": {
+        "SWING_WINDOW": 2
+      },
+      "temporal": "inherits swing",
+      "normalization": null,
+      "fallback": "0",
+      "units": "mixed",
+      "impl": [
+        "FeaturePipeline.compute_structure_liquidity / retest"
+      ],
+      "evidence": [
+        "FC-0.5 dependency graph"
+      ],
+      "class": "TEMPORAL_SEMANTIC_COLLISION"
+    },
+    {
+      "id": "Q-STRUCT-LIQUIDITY_DISTANCE",
+      "names": [
+        "liquidity_distance"
+      ],
+      "source_fields": [
+        "high",
+        "low",
+        "close"
+      ],
+      "formula": "structure derived; inherits swing temporal semantic (liquidity_distance)",
+      "parameters": {
+        "SWING_WINDOW": 2
+      },
+      "temporal": "inherits swing",
+      "normalization": null,
+      "fallback": "0",
+      "units": "mixed",
+      "impl": [
+        "FeaturePipeline.compute_structure_liquidity / retest"
+      ],
+      "evidence": [
+        "FC-0.5 dependency graph"
+      ],
+      "class": "TEMPORAL_SEMANTIC_COLLISION"
+    },
+    {
+      "id": "Q-STRUCT-LIQUIDITY_PRESSURE_SCORE",
+      "names": [
+        "liquidity_pressure_score"
+      ],
+      "source_fields": [
+        "high",
+        "low",
+        "close"
+      ],
+      "formula": "structure derived; inherits swing temporal semantic (liquidity_pressure_score)",
+      "parameters": {
+        "SWING_WINDOW": 2
+      },
+      "temporal": "inherits swing",
+      "normalization": null,
+      "fallback": "0",
+      "units": "mixed",
+      "impl": [
+        "FeaturePipeline.compute_structure_liquidity / retest"
+      ],
+      "evidence": [
+        "FC-0.5 dependency graph"
+      ],
+      "class": "TEMPORAL_SEMANTIC_COLLISION"
+    },
+    {
+      "id": "Q-STRUCT-CANDLES_SINCE_RETEST",
+      "names": [
+        "candles_since_retest"
+      ],
+      "source_fields": [
+        "high",
+        "low",
+        "close"
+      ],
+      "formula": "structure derived; inherits swing temporal semantic (candles_since_retest)",
+      "parameters": {
+        "SWING_WINDOW": 2
+      },
+      "temporal": "inherits swing",
+      "normalization": null,
+      "fallback": "0",
+      "units": "mixed",
+      "impl": [
+        "FeaturePipeline.compute_structure_liquidity / retest"
+      ],
+      "evidence": [
+        "FC-0.5 dependency graph"
+      ],
+      "class": "TEMPORAL_SEMANTIC_COLLISION"
+    },
+    {
+      "id": "Q-INTER-LAST-SWING-H",
+      "names": [
+        "last_swing_high_price",
+        "last_swing_high"
+      ],
+      "source_fields": [
+        "high"
+      ],
+      "formula": "ffill high where swing_high",
+      "parameters": {},
+      "temporal": "inherits swing",
+      "normalization": null,
+      "fallback": null,
+      "units": "price",
+      "impl": [
+        "FeaturePipeline intermediate"
+      ],
+      "evidence": [
+        "not in CANONICAL_FEATURES vector"
+      ],
+      "class": "TEMPORAL_SEMANTIC_COLLISION"
+    },
+    {
+      "id": "Q-INTER-LAST-SWING-L",
+      "names": [
+        "last_swing_low_price",
+        "last_swing_low"
+      ],
+      "source_fields": [
+        "low"
+      ],
+      "formula": "ffill low where swing_low",
+      "parameters": {},
+      "temporal": "inherits swing",
+      "normalization": null,
+      "fallback": null,
+      "units": "price",
+      "impl": [
+        "FeaturePipeline intermediate"
+      ],
+      "evidence": [],
+      "class": "TEMPORAL_SEMANTIC_COLLISION"
+    },
+    {
+      "id": "Q-INTER-RETEST-FLAG",
+      "names": [
+        "retest_flag"
+      ],
+      "source_fields": [
+        "close"
+      ],
+      "formula": "retest condition after sweep",
+      "parameters": {},
+      "temporal": "inherits swing",
+      "normalization": null,
+      "fallback": null,
+      "units": "binary",
+      "impl": [
+        "FeaturePipeline"
+      ],
+      "evidence": [],
+      "class": "TEMPORAL_SEMANTIC_COLLISION"
+    },
+    {
+      "id": "Q-BODY-SIZE",
+      "names": [
+        "body_size"
+      ],
+      "source_fields": [
+        "open",
+        "close"
+      ],
+      "formula": "abs(close-open)",
+      "parameters": {},
+      "temporal": "t",
+      "normalization": null,
+      "fallback": null,
+      "units": "price",
+      "impl": [
+        "FeaturePipeline",
+        "candle_math"
+      ],
+      "evidence": [],
+      "class": "UNIQUE_CANONICAL_CANDIDATE"
+    },
+    {
+      "id": "Q-WICK-SIZE",
+      "names": [
+        "wick_size"
+      ],
+      "source_fields": [
+        "high",
+        "low"
+      ],
+      "formula": "range or wick component (verify)",
+      "parameters": {},
+      "temporal": "t",
+      "normalization": null,
+      "fallback": null,
+      "units": "price",
+      "impl": [
+        "FeaturePipeline",
+        "candle_math"
+      ],
+      "evidence": [
+        "F-046 body_ratio canonical body/range"
+      ],
+      "class": "UNIQUE_CANONICAL_CANDIDATE"
+    },
+    {
+      "id": "Q-BODY-RATIO",
+      "names": [
+        "body_ratio"
+      ],
+      "source_fields": [
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "formula": "body/range [0,1]",
+      "parameters": {},
+      "temporal": "t",
+      "normalization": null,
+      "fallback": "0",
+      "units": "ratio",
+      "impl": [
+        "candle_math",
+        "FeaturePipeline",
+        "CRT"
+      ],
+      "evidence": [
+        "F-046 unified candle_math"
+      ],
+      "class": "INTENTIONAL_ALIAS"
+    },
+    {
+      "id": "Q-BODY-RATIO-NONCANON-LIVE",
+      "names": [
+        "body_ratio"
+      ],
+      "source_fields": [
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "formula": "body/total_wick (GD-001 live_engine_hook path)",
+      "parameters": {},
+      "temporal": "t",
+      "normalization": null,
+      "fallback": null,
+      "units": "ratio",
+      "impl": [
+        "live_engine_hook non-canonical"
+      ],
+      "evidence": [
+        "F-047 GD-001",
+        "live_engine_hook"
+      ],
+      "class": "LIVE_LOCAL_DUPLICATE"
+    },
+    {
+      "id": "Q-FM020",
+      "names": [
+        "disp_strength"
+      ],
+      "source_fields": [
+        "open",
+        "close"
+      ],
+      "formula": "body/(atr*close) clip 0..3",
+      "parameters": {
+        "clip": [
+          0,
+          3
+        ]
+      },
+      "temporal": "t",
+      "normalization": null,
+      "fallback": "NaN atr",
+      "units": "ratio",
+      "impl": [
+        "FeaturePipeline",
+        "derived_math.disp_strength"
+      ],
+      "evidence": [
+        "FM-020"
+      ],
+      "class": "UNIQUE_CANONICAL_CANDIDATE"
+    },
+    {
+      "id": "Q-FM028",
+      "names": [
+        "displacement_atr_ratio",
+        "disp_strength",
+        "disp_str"
+      ],
+      "source_fields": [
+        "high",
+        "low"
+      ],
+      "formula": "candle_range/atr",
+      "parameters": {},
+      "temporal": "CRT retest",
+      "normalization": null,
+      "fallback": "0",
+      "units": "ratio",
+      "impl": [
+        "derived_math.displacement_atr_ratio",
+        "crt_engine_v2"
+      ],
+      "evidence": [
+        "FM-028",
+        "CH-002"
+      ],
+      "class": "FORMULA_COLLISION"
+    },
+    {
+      "id": "Q-FM021",
+      "names": [
+        "retest_depth"
+      ],
+      "source_fields": [
+        "close"
+      ],
+      "formula": "|close-ema|/(atr*close) if retest else 0",
+      "parameters": {},
+      "temporal": "t inherits swing via retest_flag",
+      "normalization": null,
+      "fallback": "0",
+      "units": "ratio",
+      "impl": [
+        "FeaturePipeline",
+        "derived_math.retest_depth"
+      ],
+      "evidence": [
+        "FM-021",
+        "LEAKING transitive"
+      ],
+      "class": "UNIQUE_CANONICAL_CANDIDATE"
+    },
+    {
+      "id": "Q-FM027",
+      "names": [
+        "displacement_retrace",
+        "retest_depth"
+      ],
+      "source_fields": [
+        "open",
+        "close"
+      ],
+      "formula": "cross-candle retrace to disp open",
+      "parameters": {},
+      "temporal": "CRT retest",
+      "normalization": null,
+      "fallback": "0",
+      "units": "ratio",
+      "impl": [
+        "derived_math.displacement_retrace",
+        "crt_engine_v2"
+      ],
+      "evidence": [
+        "FM-027",
+        "CH-002"
+      ],
+      "class": "FORMULA_COLLISION"
+    },
+    {
+      "id": "Q-VR-GLOBAL",
+      "names": [
+        "volatility_regime"
+      ],
+      "source_fields": [
+        "atr"
+      ],
+      "formula": "global atr rank tercile",
+      "parameters": {},
+      "temporal": "full batch",
+      "normalization": null,
+      "fallback": null,
+      "units": "class_0_2",
+      "impl": [
+        "FeaturePipeline default"
+      ],
+      "evidence": [
+        "GLOBAL_FIT",
+        "PASS-A"
+      ],
+      "class": "TEMPORAL_SEMANTIC_COLLISION"
+    },
+    {
+      "id": "Q-VR-EXPAND",
+      "names": [
+        "volatility_regime"
+      ],
+      "source_fields": [
+        "atr"
+      ],
+      "formula": "expanding atr rank",
+      "parameters": {
+        "env": "expanding"
+      },
+      "temporal": "causal expanding",
+      "normalization": null,
+      "fallback": null,
+      "units": "class_0_2",
+      "impl": [
+        "FeaturePipeline TRUST_VOLREGIME_CAUSAL"
+      ],
+      "evidence": [],
+      "class": "CONFIG_DEPENDENT_IDENTITY"
+    },
+    {
+      "id": "Q-VR-ROLL",
+      "names": [
+        "volatility_regime"
+      ],
+      "source_fields": [
+        "atr"
+      ],
+      "formula": "rolling(N) atr rank",
+      "parameters": {
+        "env": "rolling",
+        "N": 200
+      },
+      "temporal": "causal rolling",
+      "normalization": null,
+      "fallback": null,
+      "units": "class_0_2",
+      "impl": [
+        "FeaturePipeline TRUST_VOLREGIME_CAUSAL"
+      ],
+      "evidence": [
+        "FC-0.5 provisional N=200 not frozen canonical"
+      ],
+      "class": "CONFIG_DEPENDENT_IDENTITY"
+    },
+    {
+      "id": "Q-SESSION",
+      "names": [
+        "session"
+      ],
+      "source_fields": [
+        "timestamp"
+      ],
+      "formula": "Asia/London/NY hour buckets",
+      "parameters": {},
+      "temporal": "calendar t",
+      "normalization": null,
+      "fallback": null,
+      "units": "enum",
+      "impl": [
+        "FeaturePipeline"
+      ],
+      "evidence": [],
+      "class": "UNIQUE_CANONICAL_CANDIDATE"
+    },
+    {
+      "id": "Q-HOUR",
+      "names": [
+        "hour_of_day"
+      ],
+      "source_fields": [
+        "timestamp"
+      ],
+      "formula": "hour",
+      "parameters": {},
+      "temporal": "calendar t",
+      "normalization": null,
+      "fallback": null,
+      "units": "hour",
+      "impl": [
+        "FeaturePipeline"
+      ],
+      "evidence": [],
+      "class": "UNIQUE_CANONICAL_CANDIDATE"
+    },
+    {
+      "id": "Q-GAUSS-3",
+      "names": [
+        "ema_fast",
+        "ema_slow",
+        "momentum_score"
+      ],
+      "source_fields": [
+        "close"
+      ],
+      "formula": "live heuristic 3-feature vote",
+      "parameters": {},
+      "temporal": "t",
+      "normalization": null,
+      "fallback": null,
+      "units": "score",
+      "impl": [
+        "heuristic_gaussian_engine"
+      ],
+      "evidence": [
+        "active_models gaussian live"
+      ],
+      "class": "MODEL_LOCAL_DUPLICATE"
+    },
+    {
+      "id": "Q-GAUSS-38",
+      "names": [
+        "CANONICAL_FEATURES"
+      ],
+      "source_fields": [
+        "pipeline vector"
+      ],
+      "formula": "38-dim NB experimental",
+      "parameters": {},
+      "temporal": "unknown train",
+      "normalization": "artifact scaler",
+      "fallback": null,
+      "units": "vector",
+      "impl": [
+        "gaussian registry"
+      ],
+      "evidence": [
+        "train lineage not recovered in RUN1"
+      ],
+      "class": "UNKNOWN"
+    },
+    {
+      "id": "Q-BITNET-6",
+      "names": [
+        "body_ratio",
+        "retest_depth",
+        "disp_strength",
+        "atr",
+        "candles_since_retest",
+        "double_sweep"
+      ],
+      "source_fields": [
+        "mixed"
+      ],
+      "formula": "BitNet hard-reject inputs; CRT may alias FM-027/028 into names",
+      "parameters": {},
+      "temporal": "CRT",
+      "normalization": null,
+      "fallback": null,
+      "units": "mixed",
+      "impl": [
+        "BitNetZoneGate",
+        "crt bitnet map"
+      ],
+      "evidence": [
+        "use_bitnet false",
+        "FC-0.5"
+      ],
+      "class": "UNINTENTIONAL_ALIAS"
+    },
+    {
+      "id": "Q-RR-POLARITY",
+      "names": [
+        "rr_ratio"
+      ],
+      "source_fields": [
+        "OHLC"
+      ],
+      "formula": "candle polarity index misnamed RR",
+      "parameters": {},
+      "temporal": "t",
+      "normalization": null,
+      "fallback": null,
+      "units": "index_0_1",
+      "impl": [
+        "rr_engine"
+      ],
+      "evidence": [
+        "F-048"
+      ],
+      "class": "MODEL_LOCAL_DUPLICATE"
+    },
+    {
+      "id": "Q-RR-FUSION-38",
+      "names": [
+        "CANONICAL_FEATURES"
+      ],
+      "source_fields": [
+        "pipeline"
+      ],
+      "formula": "Mahalanobis 38-dim path historical",
+      "parameters": {},
+      "temporal": "unknown train",
+      "normalization": "model mean/cov",
+      "fallback": "gaussian bypass F-044",
+      "units": "vector",
+      "impl": [
+        "rr_fusion"
+      ],
+      "evidence": [
+        "enabled:false",
+        "F-044/045"
+      ],
+      "class": "UNKNOWN"
+    },
+    {
+      "id": "Q-TRADENET",
+      "names": [
+        "CANONICAL_FEATURES"
+      ],
+      "source_fields": [
+        "pipeline intended"
+      ],
+      "formula": "TradeNet fusion slot",
+      "parameters": {},
+      "temporal": "unknown train",
+      "normalization": null,
+      "fallback": null,
+      "units": "vector",
+      "impl": [
+        "tradenet"
+      ],
+      "evidence": [
+        "F-005 unwired"
+      ],
+      "class": "UNKNOWN"
+    },
+    {
+      "id": "Q-ZONE-MEMBER",
+      "names": [
+        "zone membership"
+      ],
+      "source_fields": [
+        "price geometry"
+      ],
+      "formula": "zone_registry hard membership",
+      "parameters": {},
+      "temporal": "t",
+      "normalization": null,
+      "fallback": null,
+      "units": "score",
+      "impl": [
+        "zone_gate_engine"
+      ],
+      "evidence": [
+        "F-041"
+      ],
+      "class": "MODEL_LOCAL_DUPLICATE"
+    },
+    {
+      "id": "Q-SCORING-DISP",
+      "names": [
+        "disp_strength"
+      ],
+      "source_fields": [
+        "move",
+        "atr"
+      ],
+      "formula": "move/atr local in scoring paths",
+      "parameters": {},
+      "temporal": "unknown",
+      "normalization": null,
+      "fallback": null,
+      "units": "ratio",
+      "impl": [
+        "scoring_engine residual"
+      ],
+      "evidence": [
+        "FC-0.5 residual UNKNOWN"
+      ],
+      "class": "UNKNOWN"
+    },
+    {
+      "id": "Q-CRT-FEATURE-BUILDER",
+      "names": [
+        "body_ratio",
+        "features"
+      ],
+      "source_fields": [
+        "OHLC"
+      ],
+      "formula": "crt_feature_builder may recompute",
+      "parameters": {},
+      "temporal": "unknown",
+      "normalization": null,
+      "fallback": null,
+      "units": "mixed",
+      "impl": [
+        "crt_feature_builder.py"
+      ],
+      "evidence": [
+        "git shows modified; call-site audit RUN1 partial"
+      ],
+      "class": "UNKNOWN"
+    },
+    {
+      "id": "Q-DATASET-BUILDER",
+      "names": [
+        "CANONICAL_FEATURES"
+      ],
+      "source_fields": [
+        "trade_data"
+      ],
+      "formula": "dataset_builder.build_feature_vector",
+      "parameters": {
+        "lambda_decay": 0.05
+      },
+      "temporal": "trade-event",
+      "normalization": null,
+      "fallback": null,
+      "units": "vector",
+      "impl": [
+        "dataset_builder",
+        "LiveEngine.process"
+      ],
+      "evidence": [
+        "live_engine uses dataset_builder"
+      ],
+      "class": "TRAINING_LOCAL_DUPLICATE"
+    },
+    {
+      "id": "Q-RESEARCH-INDICATORS",
+      "names": [
+        "various"
+      ],
+      "source_fields": [
+        "OHLCV"
+      ],
+      "formula": "src/research/indicators and hypotheses recompute",
+      "parameters": {},
+      "temporal": "varies",
+      "normalization": null,
+      "fallback": null,
+      "units": "mixed",
+      "impl": [
+        "src/research/*"
+      ],
+      "evidence": [
+        "research package independent of FeaturePipeline for many paths"
+      ],
+      "class": "RESEARCH_LOCAL_DUPLICATE"
+    },
+    {
+      "id": "Q-SECONDLOW",
+      "names": [
+        "secondlow detector geometry"
+      ],
+      "source_fields": [
+        "OHLCV"
+      ],
+      "formula": "secondlow_v1 detector raw OHLCV",
+      "parameters": {},
+      "temporal": "detector-defined",
+      "normalization": null,
+      "fallback": null,
+      "units": "geometry",
+      "impl": [
+        "src/research/secondlow_v1"
+      ],
+      "evidence": [
+        "FC-0.5 NOT_APPLICABLE FeaturePipeline"
+      ],
+      "class": "RESEARCH_LOCAL_DUPLICATE"
+    },
+    {
+      "id": "Q-REGIME-LABELER",
+      "names": [
+        "RegimeLabeler S_t"
+      ],
+      "source_fields": [
+        "ATR/vol"
+      ],
+      "formula": "macro vol tercile labeling for research",
+      "parameters": {
+        "tercile_window": 2000
+      },
+      "temporal": "research batch",
+      "normalization": null,
+      "fallback": null,
+      "units": "class",
+      "impl": [
+        "interpreters/regime",
+        "regime_conditioning"
+      ],
+      "evidence": [
+        "F-030/F-043 separate from volatility_regime feature"
+      ],
+      "class": "RESEARCH_LOCAL_DUPLICATE"
+    },
+    {
+      "id": "Q-MARKOV-FORECAST",
+      "names": [
+        "MarkovRegimeForecaster"
+      ],
+      "source_fields": [
+        "S_t"
+      ],
+      "formula": "trailing transition matrix P^H",
+      "parameters": {
+        "w_markov": 480,
+        "h": 8
+      },
+      "temporal": "research",
+      "normalization": null,
+      "fallback": null,
+      "units": "prob",
+      "impl": [
+        "regime_observer"
+      ],
+      "evidence": [
+        "F-043"
+      ],
+      "class": "RESEARCH_LOCAL_DUPLICATE"
+    },
+    {
+      "id": "Q-AST-COL---capital",
+      "names": [
+        "--capital"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/runtime/backtest_v2.py:2770"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL---config",
+      "names": [
+        "--config"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/runtime/backtest_v2.py:2791"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL---decay",
+      "names": [
+        "--decay"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/runtime/backtest_v2.py:2750"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL---htf",
+      "names": [
+        "--htf"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/runtime/backtest_v2.py:2764"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL---no-gap-reset",
+      "names": [
+        "--no-gap-reset"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/runtime/backtest_v2.py:2782"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL---no-slip",
+      "names": [
+        "--no-slip"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/runtime/backtest_v2.py:2779"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL---risk-pct",
+      "names": [
+        "--risk-pct"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/runtime/backtest_v2.py:2773"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL---scorer",
+      "names": [
+        "--scorer"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/runtime/backtest_v2.py:2758"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL---spread",
+      "names": [
+        "--spread"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/runtime/backtest_v2.py:2776"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL---sweep-age",
+      "names": [
+        "--sweep-age"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/runtime/backtest_v2.py:2747"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL---threshold",
+      "names": [
+        "--threshold"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/runtime/backtest_v2.py:2753"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL---warmup",
+      "names": [
+        "--warmup"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/runtime/backtest_v2.py:2767"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-ATR14",
+      "names": [
+        "ATR14"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "scripts/analysis/p3b_gate_expired_counterfactual_rr.py:278"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-G0_BINDING",
+      "names": [
+        "G0_BINDING"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "scripts/analysis/xauusd_phase1_finish_validation.py:93",
+        "scripts/analysis/xauusd_phase1_finish_validation.py:102"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-G0b_L1_FULL_STREAM",
+      "names": [
+        "G0b_L1_FULL_STREAM"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "scripts/analysis/xauusd_phase1_finish_validation.py:112"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-G1_SOURCE_PROVENANCE",
+      "names": [
+        "G1_SOURCE_PROVENANCE"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "scripts/analysis/xauusd_phase1_finish_validation.py:128"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-G2_TIMESTAMP_OPEN_TIME",
+      "names": [
+        "G2_TIMESTAMP_OPEN_TIME"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "scripts/analysis/xauusd_phase1_finish_validation.py:161"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-G3_BROKER_SESSION_HOLIDAY",
+      "names": [
+        "G3_BROKER_SESSION_HOLIDAY"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "scripts/analysis/xauusd_phase1_finish_validation.py:196"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-G4_VOLUME_SEMANTICS",
+      "names": [
+        "G4_VOLUME_SEMANTICS"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "scripts/analysis/xauusd_phase1_finish_validation.py:221"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-G5_ADVERSARIAL_APPLICABLE",
+      "names": [
+        "G5_ADVERSARIAL_APPLICABLE"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "scripts/analysis/xauusd_phase1_finish_validation.py:321"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-HH20",
+      "names": [
+        "HH20"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "scripts/analysis/purge_delay_scan.py:105",
+        "scripts/analysis/purge_delay_scan.py:116"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-LL20",
+      "names": [
+        "LL20"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "scripts/analysis/purge_delay_scan.py:106",
+        "scripts/analysis/purge_delay_scan.py:117"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-LL20_2nd",
+      "names": [
+        "LL20_2nd"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "scripts/analysis/purge_delay_scan.py:110",
+        "scripts/analysis/purge_delay_scan.py:118"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-PASS_dims_38",
+      "names": [
+        "PASS_dims_38"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "scripts/analysis/rr_confidence_probe.py:141"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-PASS_zeroed_cols_match",
+      "names": [
+        "PASS_zeroed_cols_match"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "scripts/analysis/rr_confidence_probe.py:143"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-PIT_transitive_status",
+      "names": [
+        "PIT_transitive_status"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "tests/test_feature_dependency_graph_fc05.py:216"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-PROBE_FC23_PIN",
+      "names": [
+        "PROBE_FC23_PIN"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "scripts/analysis/xauusd_phase1_finish_validation.py:312"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-PROBE_IDENTITY_GUARD",
+      "names": [
+        "PROBE_IDENTITY_GUARD"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "scripts/analysis/xauusd_phase1_finish_validation.py:306"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-PROBE_L3_CLEAN",
+      "names": [
+        "PROBE_L3_CLEAN"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "scripts/analysis/xauusd_phase1_finish_validation.py:254"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-PROBE_LOADER_CLEAN",
+      "names": [
+        "PROBE_LOADER_CLEAN"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "scripts/analysis/xauusd_phase1_finish_validation.py:249",
+        "scripts/analysis/xauusd_phase1_finish_validation.py:251"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-PROBE_LOADER_DUP_MUTANT",
+      "names": [
+        "PROBE_LOADER_DUP_MUTANT"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "scripts/analysis/xauusd_phase1_finish_validation.py:272",
+        "scripts/analysis/xauusd_phase1_finish_validation.py:278"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-PROBE_LOADER_GEOM_MUTANT",
+      "names": [
+        "PROBE_LOADER_GEOM_MUTANT"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "scripts/analysis/xauusd_phase1_finish_validation.py:296",
+        "scripts/analysis/xauusd_phase1_finish_validation.py:298"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-RANGE",
+      "names": [
+        "RANGE"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/config_layer/crt_engine_v2.py:719"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-RESEARCH_SPINE_CONFIG",
+      "names": [
+        "RESEARCH_SPINE_CONFIG"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/research/cli.py:74",
+        "src/research/cli.py:115",
+        "scripts/research/bnbusdt_forensics.py:53",
+        "scripts/research/diagnose_zone_inertness.py:236",
+        "scripts/research/phase_d_exit_grid.py:152"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-S_within_tercile",
+      "names": [
+        "S_within_tercile"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/research/regime_conditioning.py:455"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-TRUST_INTRABAR_TOUCH",
+      "names": [
+        "TRUST_INTRABAR_TOUCH"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/runtime/exit_model_band.py:55",
+        "src/runtime/exit_model_band.py:66"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-TRUST_VOLREGIME_CAUSAL",
+      "names": [
+        "TRUST_VOLREGIME_CAUSAL"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "scripts/analysis/feature_pipeline_fc05_closure.py:873"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-action",
+      "names": [
+        "action"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/config_layer/crt_engine_v2.py:2321",
+        "src/config_layer/crt_engine_v2.py:2353",
+        "src/config_layer/crt_engine_v2.py:2380",
+        "src/config_layer/crt_engine_v2.py:2393",
+        "src/config_layer/crt_engine_v2.py:2450"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-active",
+      "names": [
+        "active"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/core/model_registry.py:623",
+        "src/core/model_registry.py:624",
+        "src/core/model_registry.py:927",
+        "src/core/model_registry.py:1049",
+        "src/core/model_registry.py:1255"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-added_sessions",
+      "names": [
+        "added_sessions"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "scripts/analysis/session_sweep.py:391"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-adversarial_clean_path",
+      "names": [
+        "adversarial_clean_path"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "scripts/analysis/xauusd_phase1_finish_validation.py:319"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-alert_id",
+      "names": [
+        "alert_id"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/engines/live_engine.py:797"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-allowed_sessions",
+      "names": [
+        "allowed_sessions"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/config_layer/production_config.py:377",
+        "src/runtime/live_engine_hook.py:217"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-allowed_sessions_overrides",
+      "names": [
+        "allowed_sessions_overrides"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "scripts/analysis/session_override_scoping_proof.py:55"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-artifacts_created",
+      "names": [
+        "artifacts_created"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "scripts/analysis/feature_pipeline_fc05_closure.py:1203"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-atr_100",
+      "names": [
+        "atr_100"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/research/secondlow_v1/depth_metrics.py:50",
+        "src/research/secondlow_v1/regime_metrics.py:38"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-atr_14_raw",
+      "names": [
+        "atr_14_raw"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/features/feature_pipeline.py:267",
+        "tests/test_derived_math.py:45"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-atr_200",
+      "names": [
+        "atr_200"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/research/secondlow_v1/regime_metrics.py:39"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-atr_p70_threshold_200",
+      "names": [
+        "atr_p70_threshold_200"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/research/secondlow_v1/regime_metrics.py:44"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-atr_pct",
+      "names": [
+        "atr_pct"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "scripts/research/momentum_continuation_bnbusdt.py:169"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-atr_pctile",
+      "names": [
+        "atr_pctile"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "scripts/analysis/purge_delay_scan.py:124",
+        "scripts/analysis/purge_delay_scan.py:639"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-atr_percentile_proxy",
+      "names": [
+        "atr_percentile_proxy"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/research/secondlow_v1/regime_metrics.py:45"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-atr_t__sign_next",
+      "names": [
+        "atr_t__sign_next"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/research/process_diagnostics.py:295"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-atr_tercile",
+      "names": [
+        "atr_tercile"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "scripts/analysis/purge_slice.py:66"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-backtest_v2",
+      "names": [
+        "backtest_v2"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "tests/test_auto_tuner_multi.py:93"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-bb_lower",
+      "names": [
+        "bb_lower"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/features/feature_pipeline.py:274"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-bb_position",
+      "names": [
+        "bb_position"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/features/feature_pipeline.py:276"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-bb_upper",
+      "names": [
+        "bb_upper"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/features/feature_pipeline.py:273"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-bb_width",
+      "names": [
+        "bb_width"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/features/feature_pipeline.py:275"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-belief_registry",
+      "names": [
+        "belief_registry"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/runtime/backtest_v2.py:2194"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-bh_q",
+      "names": [
+        "bh_q"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "scripts/research/bnbusdt_conditional_edge.py:137"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-bh_significant",
+      "names": [
+        "bh_significant"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "scripts/research/phase_b_conditional_entropy.py:227"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-bitnet_decision_at_entry",
+      "names": [
+        "bitnet_decision_at_entry"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/runtime/backtest_v2.py:1102",
+        "scripts/research/bnbusdt_enrich_trades.py:150"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-bitnet_score",
+      "names": [
+        "bitnet_score"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "scripts/analysis/bnbusdt_trade_anatomy.py:253"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-bitnet_score_at_entry",
+      "names": [
+        "bitnet_score_at_entry"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/runtime/backtest_v2.py:1101",
+        "scripts/research/bnbusdt_enrich_trades.py:149"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-zone_cluster_threshold",
+      "names": [
+        "zone_cluster_threshold"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "scripts/research/diagnose_zone_inertness.py:108"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-block_reason_dist",
+      "names": [
+        "block_reason_dist"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/engines/zone_gate_engine.py:54"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-body_pct",
+      "names": [
+        "body_pct"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "scripts/research/momentum_continuation_bnbusdt.py:177"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-build_trade_success",
+      "names": [
+        "build_trade_success"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "scripts/analysis/p3c1_build_trade_audit.py:190"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-cached_body_ratio",
+      "names": [
+        "cached_body_ratio"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/runtime/backtest_v2.py:1096"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-cached_disp_strength",
+      "names": [
+        "cached_disp_strength"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/runtime/backtest_v2.py:1097"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-cached_double_sweep",
+      "names": [
+        "cached_double_sweep"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/runtime/backtest_v2.py:1099"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-cached_retest_depth",
+      "names": [
+        "cached_retest_depth"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/runtime/backtest_v2.py:1095"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-cached_session",
+      "names": [
+        "cached_session"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/runtime/backtest_v2.py:1098"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-cancelled",
+      "names": [
+        "cancelled"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "scripts/research/qualify_m5_straddle.py:128"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-candle_body",
+      "names": [
+        "candle_body"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/features/feature_pipeline.py:185"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-candle_idx",
+      "names": [
+        "candle_idx"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "scripts/research/bnbusdt_enrich_trades.py:143"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-candle_ts",
+      "names": [
+        "candle_ts"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "src/engines/live_engine.py:793"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-capital_after",
+      "names": [
+        "capital_after"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "scripts/research/bnbusdt_enrich_trades.py:146"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    },
+    {
+      "id": "Q-AST-COL-capital_before",
+      "names": [
+        "capital_before"
+      ],
+      "source_fields": [
+        "UNKNOWN"
+      ],
+      "formula": "UNKNOWN \u2014 column assignment discovered via AST; not yet formula-bound",
+      "parameters": {},
+      "temporal": "UNKNOWN",
+      "normalization": null,
+      "fallback": null,
+      "units": "UNKNOWN",
+      "impl": [
+        "scripts/research/bnbusdt_enrich_trades.py:145"
+      ],
+      "class": "UNKNOWN",
+      "evidence": [
+        "AST df column write"
+      ]
+    }
+  ],
+  "counts": {
+    "UNIQUE_CANONICAL_CANDIDATE": 26,
+    "FORMULA_COLLISION": 3,
+    "TEMPORAL_SEMANTIC_COLLISION": 14,
+    "CONFIG_DEPENDENT_IDENTITY": 3,
+    "INTENTIONAL_ALIAS": 1,
+    "LIVE_LOCAL_DUPLICATE": 1,
+    "MODEL_LOCAL_DUPLICATE": 3,
+    "UNKNOWN": 85,
+    "UNINTENTIONAL_ALIAS": 1,
+    "TRAINING_LOCAL_DUPLICATE": 1,
+    "RESEARCH_LOCAL_DUPLICATE": 4
+  },
+  "n_quantities": 142,
+  "KNOWN_COLLISIONS_IDENTIFIED": true,
+  "ALL_COLLISIONS_EXHAUSTED": "unproven",
+  "FORMULA_COLLISION_EXHAUSTIVENESS_STATUS": "UNPROVEN"
+}

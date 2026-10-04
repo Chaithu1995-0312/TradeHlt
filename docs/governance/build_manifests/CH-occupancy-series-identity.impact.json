@@ -1,0 +1,39 @@
+{
+  "change_id": "CH-occupancy-series-identity",
+  "date_utc": "2026-09-05",
+  "objective": "Name occupancy_series_identity explicitly as L3 series lineage (producer_id + topology_id + track_id + corpus_sha256 + run_id), with constructor_id and config_hash as additional reproducibility lineage. Do not change the bar occupancy PK (§7.2). Do not reopen LAYER_IDENTITY_STATUS. No writers, no src/, no G001.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY"
+  ],
+  "change_class_rationale": "Additive lineage naming on frozen identity/preservation/physical-storage contracts per CANONICAL_LAYER_IDENTITY_CONTRACT.md §12.2 (refine in place by additive lineage keys). A pin test reads the contract text; no src/, configs/, or models/. No PK change, no new closed-vocabulary member that alters equality, no merge of engine/resolver or execution_tf/parent_tf.",
+  "affected_files": [
+    "docs/governance/CANONICAL_LAYER_IDENTITY_CONTRACT.md",
+    "docs/governance/STORAGE_PRESERVATION_CONTRACT.md",
+    "docs/governance/PHYSICAL_STORAGE_ARCHITECTURE.md",
+    "docs/knowledge-map.md",
+    "docs/governance/build_manifests/CH-occupancy-series-identity.impact.json",
+    "tests/governance/test_occupancy_series_identity.py",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py"
+  ],
+  "unknowns": [
+    {
+      "question": "Whether a later writer phase should stamp constructor_id onto occupancy records as a Class B lineage field.",
+      "blocking": false,
+      "resolution": "Not this turn. Identity contract §7.4.1 records that constructor_id is declared on constructors in crt_state_identity.yaml and is not yet on occupancy records. Stamping is a writer/IDENTITY_STORE_CHANGE, forbidden here.",
+      "followup": "Only with a new change id that cites identity v1.0.0 and does not promote constructor_id into the bar PK."
+    }
+  ],
+  "rollback_boundary": "Revert the three contract files, knowledge-map sentence, pin test, and this manifest. No src/config to revert. FROZEN v1.0.0 marker must remain on rollback.",
+  "authority_granted": "User 2026-09-05: authorizes a contract edit to name occupancy_series_identity explicitly. Additive lineage; bar occupancy PK unchanged.",
+  "authority_NOT_granted": "No PK rewrite, no LAYER_IDENTITY reopen, no src/identity writer, no constructor_id promotion into PK, no G001, no promotion, no ACTIVE_VERSION change, no SEM/FM/F/CT id, no CRT recertification, no BC-1 closure.",
+  "production_behavior_changed": "NO"
+}

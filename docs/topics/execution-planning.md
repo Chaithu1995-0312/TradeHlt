@@ -1,0 +1,103 @@
+# Topic: Execution Planning
+
+> **Topic-visibility unit.** How an accepted decision becomes a concrete trade plan (entry, and
+> the scaffolding for SL/TP/RR/TTL). The step between "yes, trade" and "here's the order."
+>
+> Created: 2026-06-01 · Updated: 2026-10-03 · Status: living
+
+## In plain language
+Once the decision engine says "execute," the **execution planner** turns that decision into a
+deterministic trade plan: validate the inputs, derive the entry, attach a trade intent, TTL, and
+position-size hint, and produce a trace. It is intentionally *not* the scorer — it only consumes
+decision outputs. One important nuance hidden in the name: the planner does **not** itself set
+SL/TP/RR — those are injected downstream by `live_engine_hook` via `compute_crt_levels()`.
+
+**The trade object is two-target with a partial exit — and one config key lies about it.**
+Downstream of the planner, production does not run a single stop and a single target. On the
+TP1 transition, `ExecutionEngine.update_trade` ([`src/config_layer/crt_engine_v2.py`](../../src/config_layer/crt_engine_v2.py))
+closes `partial_tp_fraction` (0.5) of the position and reassigns the stop to the **half-way
+point** between entry and TP1, letting the remainder run to TP2. The governing config key is
+named `partial_tp_breakeven_enabled` — **it does not move the stop to breakeven**; the half-way
+point is already in profit. Key name and behaviour disagree, and the code is what runs. See
+ontology node `SEM-017`, finding **F-088**, and
+[`config-reference.md`](../reference/config-reference.md) for why the key is retained-as-named.
+
+## Code covered
+- [`src/config_layer/execution_planner.py:137`](../../src/config_layer/execution_planner.py) — `ExecutionPlannerV1_2`. Constructor merges caller config over `DEFAULT_CONFIG` ([`:155`](../../src/config_layer/execution_planner.py)). Public entry `plan(engine_result, features, context)` ([`:164`](../../src/config_layer/execution_planner.py)): required `engine_result` keys `decision/direction(1|-1)/confidence/regime`; required `context` keys `symbol/signal/score`; raises `ValueError` on missing feature keys or invalid prices. Returns `{decision, execution_id, trade_intent, entry_price, gate result, trace}`.
+- **Per its own docstring ([`:187`](../../src/config_layer/execution_planner.py)):** "SL/TP/RR are NOT set here — injected by `live_engine_hook` via `compute_crt_levels()`."
+- **Intent vocabulary** — `_derive_intent` ([`:336`](../../src/config_layer/execution_planner.py)), first match wins: `LIQ_SWEEP` → `PULLBACK` → `BREAKOUT` → `REVERSAL` (counter-trend: EMA *against* direction) → `CONTINUATION` (with-trend: EMA *with* direction, added 2026-09-16) → `UNKNOWN`. Since `REVERSAL` and `CONTINUATION` together cover both halves of EMA-vs-direction, `UNKNOWN` is now reached only on an exact `ema_fast == ema_slow` tie. `UNKNOWN` is rejected as `reject_unknown_intent` when that flag is set ([`:238`](../../src/config_layer/execution_planner.py)); every other label proceeds to the gate. **`GateIntelligence._intent_score` has no `CONTINUATION` branch** and scores it `0.0` ([`src/core/gate_intelligence.py:239`](../../src/core/gate_intelligence.py)) — deliberately, pending evidence (see Discussion 2026-09-16).
+- **Mirror:** `derive_intent_from_features` ([`src/analytics/sl_tp_comparator.py:80`](../../src/analytics/sl_tp_comparator.py)) is a second copy of the same classifier used for SL/TP comparison; a test now asserts it agrees with the planner on every EMA-vs-direction case.
+
+- **Spine inventory (2026-09-03 citation pass — path existence on the GCMC spine join; not a behavior claim, not G001, not a file:line citation. Source still wins.:**
+- [`src/execution/__init__.py`](../../src/execution/__init__.py)
+- [`src/execution/execution_intent_v1_0.py`](../../src/execution/execution_intent_v1_0.py)
+
+## Ins / Outs
+- **Ins:** `engine_result` (from `EngineRunner.run()`), canonical `features` dict, `context` (`symbol/signal/score`, optional `account_balance`); config section `execution_planner` (intent-specific TP multipliers, TTLs, `min_rr_ratio`, `default_sl_atr_mult`, `risk_percent`).
+- **Outs:** trade plan dict (`execution_id`, `trade_intent`, `entry_price`, gate result, `trace`). SL/TP/RR populated later by the live hook.
+
+## Entry points & validations
+- **Reached via:** the decision surface downstream of `DecisionEngine`; consumed before `UltronRiskGate`. Profiles (conservative/standard/aggressive) expressed via `min_rr_ratio` / `default_sl_atr_mult` / `risk_percent` in the production config.
+- **Validated by:** input validation (`ValueError` on missing feature keys / invalid prices); the produced plan is then gated by `UltronRiskGate` (see [`ultron-risk-gate.md`](ultron-risk-gate.md)).
+
+## Tests
+- [`tests/test_execution_planner.py`](../../tests/test_execution_planner.py) — planner behavior.
+- [`tests/test_execution_contract_v1.py`](../../tests/test_execution_contract_v1.py) — execution contract.
+- [`tests/test_sl_tp_comparator.py`](../../tests/test_sl_tp_comparator.py) — SL/TP comparison.
+
+## Fits in architecture
+Spine step 4 of 5: `… → DecisionEngine → ExecutionPlannerV1_2 → UltronRiskGate` (`CLAUDE.md §10`). See [`fusion-decision.md`](fusion-decision.md), [`ultron-risk-gate.md`](ultron-risk-gate.md), [`docs/architecture/signal-flow.md`](../architecture/signal-flow.md).
+
+## Discussion (filled in-session)
+- **Risks:** `2026-06-01` the name implies SL/TP/RR are planned here; they are not (injected by `live_engine_hook.compute_crt_levels()`). A reader trusting the class name could mis-trace where stops come from.
+- **Challenges:** `2026-06-01` plan correctness depends on `engine_result` shape contracts that aren't typed (dict keys); a drift in `EngineRunner.run()` output silently breaks the planner via `ValueError`.
+- **Blockers:** `2026-06-01` none.
+- **Ambiguities:** `2026-06-01` **module drift** — [`codebase-analysis.md`](../analysis/codebase-analysis.md) documents `src/execution/execution_planner.py`, but the runtime/`ExecutionPlannerV1_2` lives in `src/config_layer/execution_planner.py` (confirmed: `class ExecutionPlannerV1_2` at `:129`). The `execution/` variant is a dead-code/drift candidate. Not resolved here (code change, out of scope).
+- **Enhancements:** `2026-06-01` consider moving `compute_crt_levels()` SL/TP derivation adjacent to the planner (or documenting the split prominently) so the plan is self-contained.
+- **Need more info:** `2026-06-01` where `compute_crt_levels()` is defined in `live_engine_hook` and its exact SL/TP inputs (read on next touch). → `2026-06-03` **resolved:** `compute_crt_levels()` lives in [`src/core/gate_intelligence.py:24`](../../src/core/gate_intelligence.py) and *mirrors* the backtest authority `build_trade` ([`src/config_layer/crt_engine_v2.py:1840`](../../src/config_layer/crt_engine_v2.py)). Key nuance: the **SL is anchored to the *displacement* candle extreme** (`sl = disp_{low|high} ∓ sl_atr_buffer·atr`), not the retest/entry candle; TP1 uses an **intent-specific** R-multiple, TP2 = `tp2_atr_multiplier`.
+- **Findings:** `2026-08-21` two programs measured this exit object end-to-end for the first time (XAUUSD M15, 47,157 bars). **F-088** — every outcome-bearing result in repo history was measured on a *different* object than this one: `forward_walk` models one TP with no partial and no trail, so `src/research/oracle/multi_tp_walk.py` was built and certified (18-test parity floor + independent twin on 20,000 paths + a real ledger row to 1e-10) to express the production trade. It also corrected the same-bar tie-break: the effective rule is **SL-first** (`_intrabar_trigger_price`), not the `TP2 > SL > TP1` branch order declared at `crt_engine_v2.py:2456`, so the backtest path was already conservative. **F-087** — the half-way trail was audited against 12 alternative stop policies and a do-nothing control: it is the **worst point estimate 8 of 8** on the tight geometries production actually runs, by a stable ≈−0.012R. That is ~15–25% of one confidence interval on a grid whose entire policy spread sits below the noise floor, so it is **not** a licence to disable it (needs measured ΔG001, §6.5) — no config was touched. The binding lever is stop **width**, through `cost_r = cost_price / risk_distance`, not stop policy.
+- **Findings:** `2026-06-03` the execution-planner **replay experiment** ([`execution-planner-replay-bnbusdt-2026-06-03.md`](../analysis/execution-planner-replay-bnbusdt-2026-06-03.md)) split the RETEST→EXECUTION edge: it is **SELECTION** (~+0.145R), not SL/TP structure (~+0.031R). The structure SL/TP is **risk-shaping** (WR 43%→57%, maxDD 6.0R→3.0R on selected) rather than an expectancy source, and does **not** rescue rejected candidates. Reinforces F-002; F-010 stays open (live planner/Ultron layer still unexercised). The experiment is fed by new additive `RETEST_REPLAY` telemetry from `crt_engine_v2.py` (schemas.md §9.4).
+- **2026-09-03 — spine citation pass:** named 2 previously unreferenced spine paths under Code covered (path existence on the GCMC spine join; not a behavior claim, not G001, not a file:line citation. Source still wins.).
+- **2026-09-16 — the planner had no with-trend label (CH-intent-schema-alignment).** `REVERSAL` tested only the counter-trend half of EMA-vs-direction, so every with-trend entry that was not a sweep, pullback or breakout fell through to `UNKNOWN` and was rejected: **40.70% of XAUUSD M15 bars for LONG, 31.97% for SHORT**. Traced instance: 2024-08-21 22:15 LONG, `ema_fast` 2512.907 > `ema_slow` 2510.742. Fixed by adding `CONTINUATION` (`ttl_continuation_sec` = 180, equal to `ttl_unknown_sec` for parity). Re-measured with the real classifier: `UNKNOWN` → **0.004%** (2 bars, exact EMA ties), `CONTINUATION` equals the old `UNKNOWN` minus the new, and no other label moved. **Classifier-only, by user decision:** the gate scores `CONTINUATION` at `0.0`, which measured **0.0%** approval, so on this corpus these entries are still rejected — now as `reject_gate` with an honest label. That is a measurement, not a guarantee: the three non-intent gate weights sum to 0.65 > the 0.55 threshold, and production never emits `volume_ma20` (F-065 H7). Giving `CONTINUATION` a gate score would change decisions (sign-only momentum confirmation ≈37% approval, upper bound ≈66%); copying `REVERSAL`'s `1 − min(1, |momentum_score|)` would inherit F-061 saturation. Pinned by `test_continuation_gate_score_is_deliberately_zero`. **Risk worth knowing:** three test fixtures — two here, one in `test_sl_tp_comparator.py` — had used a with-trend entry as their canonical "no pattern" case, i.e. the tests encoded the hole. Live rail only: a transitive AST import closure shows `runtime.backtest_v2` never reaches the planner, gate or comparator. Full write-up: [`trade-intent-caller-census-2026-09-16.md`](../analysis/trade-intent-caller-census-2026-09-16.md) §10.
+- **2026-10-03 — LIQ_SWEEP was direction-blind (CH-planner-liq-sweep-direction).** The intent fired on the unsigned `sweep_detected`, or on the MKT-C04 condition `double_sweep` with no sweep on the bar, and never compared the swept side's implied bias with `selected_direction`. The entry was still priced "beyond the sweep wick" of the side the direction assumes. New strict key `execution_planner.liq_sweep_semantics`:
+  - `legacy_unsigned` keeps the old rule, byte-identical. It is declared on all 13 live configs, including the active one.
+  - `e01_direction_aligned`: LIQ_SWEEP iff signed `liquidity_sweep` ≠ 0 and its implied bias (UPPER → SHORT, LOWER → LONG) equals the trade direction. It needs the signed slot (`reject_invalid` without it).
+
+  Live-faithful A/B, XAUUSD M15, every bar × both directions:
+  - Approvals go 209 → 185 (active features) and 198 → 185 (e01 features).
+  - Approved LIQ_SWEEP drops to exactly the direction-aligned subset (93 → 44, 81 → 40). The rest re-label to BREAKOUT, PULLBACK, REVERSAL or CONTINUATION.
+
+  What is not touched: the gate's `double_sweep` +0.5 bonus (on the live rail it is still *necessary* for any LIQ_SWEEP approval), gate arithmetic, and PULLBACK/OQ7. Activation is a separate decision. Details: [`e01-lifecycle-downstream-consumers-2026-10-03.md`](../analysis/e01-lifecycle-downstream-consumers-2026-10-03.md) §B1-F.
+- **2026-10-03 — Step C, what the gate's `double_sweep` bonus means (read-only, §B1-C).**
+  - The bonus descends from the engine's never-executed `double_confirmed` (the opposite side was swept,
+    then the current sweep).
+  - Under `e01_direction_aligned`, C04 equals that ordered reading on every bar except bar-local
+    two-sided ones.
+  - No decision-time candidate shows a stable outcome effect on the RESEARCH_PROXY object: every one
+    flips sign from train to holdout.
+  - Removing the bonus leaves 0 live LIQ_SWEEP approvals.
+  - Open decision: MKT-C04 `decide_in: step_D_double_sweep_role`.
+
+  **Observation, not acted on:** `execution_planner.ttl_liq_sweep_sec` = 300 s is shorter than one M15
+  bar. The LIQ_SWEEP LIMIT order therefore expires inside the next bar, and its fill cannot be observed
+  from M15 OHLC; only lower-timeframe data or broker fill telemetry could settle it.
+- **2026-10-03 — Step D, gate scoring/authority census (read-only, §B1-D).** GateIntelligence declares
+  four factors but runs on two on the live rail: `0.35·intent + 0.25·structure`, ceiling 0.60 against a
+  0.55 threshold.
+  - **vol is 0:** close-relative `atr` (F-109).
+  - **liquidity is 0:** the volume half lacks `volume_ma20` (F-065). The sweep-extent half has no
+    producer in any commit, and its nested-window formula is ≤ 0 by construction.
+  - Both have been dead since the first commit and are masked by unit fixtures that supply
+    production-absent inputs.
+  - Supplying every declared input raises approvals 209 → 13,057 (62×) and spreads authority across
+    all four components.
+  - The weights and threshold have no calibration record and no G001 (the backtest never reaches the
+    planner, F-103).
+  - Decision space only; no code or config changed.
+  - **Outcome follow-up, same day (§B1-E), RESEARCH_PROXY:** each dormant component tested
+    separately.
+    - None shows stable information: vol and volume are negative in train and ≈ 0 in holdout; the
+      repair scenarios flip sign.
+    - The full repair approves 62× more calls at about the base rate (−0.096 vs −0.080 R gross).
+    - The live gate's own 209 approvals are −0.130 R.
+    - Registered as F-113.

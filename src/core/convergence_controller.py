@@ -9,7 +9,7 @@ The controller does NOT re-aggregate engine scores.  When FusionEngine passes
 a pre-computed `weighted_score`, that value is used as `base_avg`; the
 controller's job is purely to apply a stability penalty and adaptive threshold:
 
-  1. BitNet dampening      — zone_gate score ** 4  (only if score > 0.5)
+  1. BitNet dampening      — feature_cluster_similarity score ** 4  (only if score > 0.5)
   2. Sigmoid calibration   — 1/(1+exp(-k*(s-t))) on all 4 scores
   3. Disagreement penalty  — variance-based penalty applied to weighted_score
   4. Entropy tracking      — informational; logged per bar
@@ -21,7 +21,7 @@ the flat average of calibrated scores so existing callers are unaffected.
 Usage (injected into FusionEngine):
     ctrl = ConvergenceController(window_size=500)
     result = ctrl.apply(
-        {"crt": 0.7, "gaussian": 0.6, "zone_gate": 0.9, "rr": 0.65},
+        {"crt": 0.7, "ema_momentum_kernel": 0.6, "feature_cluster_similarity": 0.9, "candle_commitment": 0.65},
         weighted_score=0.71,   # pre-computed by FusionEngine
     )
     ctrl.record_outcome(accepted=result["accepted"])
@@ -46,6 +46,12 @@ _THRESH_STEP = 0.02
 # Accept-rate targets for adaptive threshold
 _ACCEPT_RATE_HIGH = 0.30   # if above this → increase threshold
 _ACCEPT_RATE_LOW  = 0.10   # if below this → decrease threshold
+
+# Absolute quality floor — if final_score is below this, reject regardless of
+# how low the adaptive threshold has drifted.  Prevents "forced trades" during
+# low-signal / random-walk regimes where the adaptive threshold self-lowers to
+# meet the _ACCEPT_RATE_LOW target.  Operator can override via constructor.
+_ABS_QUALITY_FLOOR = 0.30
 
 # Sigmoid calibration defaults
 _SIG_K = 8.0
@@ -72,13 +78,69 @@ class ConvergenceController:
     returns raw average with variance=0, entropy=0, threshold=initial_threshold.
     """
 
+    @classmethod
+    def from_prod_config(cls, window_size: int) -> "ConvergenceController":
+        """Production constructor — fail-fast. Strict-reads the ``convergence_controller``
+        section (no silent defaults); a missing section or key raises. The BEHAVIORAL knobs
+        below were formerly module-level constants."""
+        from config_layer.production_config import get_prod_section
+        s = get_prod_section("convergence_controller")
+
+        def _req(key: str):
+            if key not in s:
+                raise KeyError(
+                    f"Required config key '{key}' missing from 'convergence_controller' section. "
+                    f"Add it to the production config (config-first doctrine: no silent defaults)."
+                )
+            return s[key]
+
+        return cls(
+            window_size=window_size,
+            warmup_bars=int(_req("warmup_bars")),
+            thresh_min=float(_req("thresh_min")),
+            thresh_max=float(_req("thresh_max")),
+            thresh_step=float(_req("thresh_step")),
+            accept_rate_high=float(_req("accept_rate_high")),
+            accept_rate_low=float(_req("accept_rate_low")),
+            abs_quality_floor=float(_req("abs_quality_floor")),
+            sig_k=float(_req("sig_k")),
+            sig_t=float(_req("sig_t")),
+            penalty_sig_k=float(_req("penalty_sig_k")),
+            penalty_sig_t=float(_req("penalty_sig_t")),
+        )
+
     def __init__(
         self,
-        window_size:       int   = 500,
-        initial_threshold: float = 0.50,
+        window_size:        int   = 500,
+        initial_threshold:  float = 0.50,
+        abs_quality_floor:  float = _ABS_QUALITY_FLOOR,
+        *,
+        # BEHAVIORAL knobs — canonical defaults (module constants) for unit-test / standalone
+        # construction; the live path always supplies these via from_prod_config (fail-fast).
+        warmup_bars:        int   = _WARMUP_BARS,
+        thresh_min:         float = _THRESH_MIN,
+        thresh_max:         float = _THRESH_MAX,
+        thresh_step:        float = _THRESH_STEP,
+        accept_rate_high:   float = _ACCEPT_RATE_HIGH,
+        accept_rate_low:    float = _ACCEPT_RATE_LOW,
+        sig_k:              float = _SIG_K,
+        sig_t:              float = _SIG_T,
+        penalty_sig_k:      float = 8.0,
+        penalty_sig_t:      float = 0.5,
     ) -> None:
-        self._window_size = window_size
-        self._threshold   = _clamp(initial_threshold, _THRESH_MIN, _THRESH_MAX)
+        self._window_size      = window_size
+        self._warmup_bars      = int(warmup_bars)
+        self._thresh_min       = float(thresh_min)
+        self._thresh_max       = float(thresh_max)
+        self._thresh_step      = float(thresh_step)
+        self._accept_rate_high = float(accept_rate_high)
+        self._accept_rate_low  = float(accept_rate_low)
+        self._sig_k            = float(sig_k)
+        self._sig_t            = float(sig_t)
+        self._penalty_sig_k    = float(penalty_sig_k)
+        self._penalty_sig_t    = float(penalty_sig_t)
+        self._threshold        = _clamp(initial_threshold, self._thresh_min, self._thresh_max)
+        self._abs_quality_floor = _clamp(abs_quality_floor, 0.0, self._thresh_max)
         # Rolling window of bool outcomes for accept_rate computation
         self._outcome_window: deque[bool] = deque(maxlen=window_size)
 
@@ -89,14 +151,17 @@ class ConvergenceController:
     @property
     def is_warm(self) -> bool:
         """True once enough outcomes have been recorded for stable statistics."""
-        return len(self._outcome_window) >= _WARMUP_BARS
+        return len(self._outcome_window) >= self._warmup_bars
 
     @property
     def threshold(self) -> float:
         return self._threshold
 
-    def calibrate_score(self, s: float, k: float = _SIG_K, t: float = _SIG_T) -> float:
-        """Sigmoid calibration: 1/(1+exp(-k*(s-t))). Output clamped to [0,1]."""
+    def calibrate_score(self, s: float, k: Optional[float] = None, t: Optional[float] = None) -> float:
+        """Sigmoid calibration: 1/(1+exp(-k*(s-t))). Output clamped to [0,1].
+        k/t default to the configured score-calibration knobs when omitted."""
+        k = self._sig_k if k is None else k
+        t = self._sig_t if t is None else t
         try:
             return _clamp(1.0 / (1.0 + math.exp(-k * (s - t))))
         except OverflowError:
@@ -111,7 +176,7 @@ class ConvergenceController:
         """
         Parameters
         ----------
-        scores         : dict with keys "crt", "gaussian", "zone_gate", "rr"
+        scores         : dict with keys "crt", "ema_momentum_kernel", "feature_cluster_similarity", "candle_commitment"
                          Missing keys default to 0.5 (neutral).
         debug          : if True, include raw_scores breakdown in result.
         weighted_score : pre-computed weighted fusion score from FusionEngine.
@@ -130,36 +195,39 @@ class ConvergenceController:
         # --- Extract raw scores (default 0.5 for missing engines) ---
         raw = {
             "crt":       float(scores.get("crt",       0.5)),
-            "gaussian":  float(scores.get("gaussian",  0.5)),
-            "zone_gate": float(scores.get("zone_gate", 0.5)),
-            "rr":        float(scores.get("rr",        0.5)),
+            "ema_momentum_kernel":  float(scores.get("ema_momentum_kernel",  0.5)),
+            "feature_cluster_similarity": float(scores.get("feature_cluster_similarity", 0.5)),
+            "candle_commitment":        float(scores.get("candle_commitment",        0.5)),
         }
-        missing = [k for k in ("crt", "gaussian", "zone_gate", "rr") if k not in scores]
+        missing = [k for k in ("crt", "ema_momentum_kernel", "feature_cluster_similarity", "candle_commitment") if k not in scores]
 
         # Cold-start: skip transformations, honour weighted_score if supplied
         if not self.is_warm:
             base = float(weighted_score) if weighted_score is not None else sum(raw.values()) / 4.0
             base = _clamp(base)
+            floor_breached_cs = base < self._abs_quality_floor
             return {
-                "final_score":    round(base, 4),
-                "scores":         raw,
-                "missing_engines": missing,
-                "variance":       0.0,
-                "entropy":        0.0,
-                "threshold":      self._threshold,
-                "accepted":       base > self._threshold,
+                "final_score":       round(base, 4),
+                "scores":            raw,
+                "missing_engines":   missing,
+                "variance":          0.0,
+                "entropy":           0.0,
+                "threshold":         self._threshold,
+                "abs_quality_floor": round(self._abs_quality_floor, 4),
+                "floor_breached":    floor_breached_cs,
+                "accepted":          (base > self._threshold) and not floor_breached_cs,
                 **({"debug": {"cold_start": True, "raw": raw, "weighted_score": weighted_score}} if debug else {}),
             }
 
-        # --- Step 1: BitNet dampening on zone_gate only ---
-        zg = raw["zone_gate"]
+        # --- Step 1: BitNet dampening on feature_cluster_similarity only ---
+        zg = raw["feature_cluster_similarity"]
         dampened_zg = (zg ** 4) if zg > 0.5 else zg
 
         working = {
             "crt":       raw["crt"],
-            "gaussian":  raw["gaussian"],
-            "zone_gate": dampened_zg,
-            "rr":        raw["rr"],
+            "ema_momentum_kernel":  raw["ema_momentum_kernel"],
+            "feature_cluster_similarity": dampened_zg,
+            "candle_commitment":        raw["candle_commitment"],
         }
 
         # --- Step 2: Sigmoid calibration on all 4 scores ---
@@ -169,8 +237,8 @@ class ConvergenceController:
 
         # --- Step 3: Disagreement penalty ---
         variance = float(np.var(cal_values))
-        # Penalty = sigmoid(variance) — reuse calibrate with k=8, t=0.5
-        penalty  = self.calibrate_score(variance, k=8.0, t=0.5)
+        # Penalty = sigmoid(variance) — reuse calibrate with the configured penalty knobs.
+        penalty  = self.calibrate_score(variance, k=self._penalty_sig_k, t=self._penalty_sig_t)
         # Layered mode: use pre-weighted fusion score as base instead of re-averaging.
         # Falls back to flat average of calibrated scores when no weighted_score supplied.
         base_avg = (
@@ -188,22 +256,30 @@ class ConvergenceController:
         # --- Step 5: Adaptive threshold update ---
         if len(self._outcome_window) > 0:
             accept_rate = sum(self._outcome_window) / len(self._outcome_window)
-            if accept_rate > _ACCEPT_RATE_HIGH:
-                self._threshold = _clamp(self._threshold + _THRESH_STEP, _THRESH_MIN, _THRESH_MAX)
-            elif accept_rate < _ACCEPT_RATE_LOW:
-                self._threshold = _clamp(self._threshold - _THRESH_STEP, _THRESH_MIN, _THRESH_MAX)
+            if accept_rate > self._accept_rate_high:
+                self._threshold = _clamp(self._threshold + self._thresh_step, self._thresh_min, self._thresh_max)
+            elif accept_rate < self._accept_rate_low:
+                self._threshold = _clamp(self._threshold - self._thresh_step, self._thresh_min, self._thresh_max)
 
-        # --- Step 6: Accept decision ---
-        accepted = final > self._threshold
+        # --- Step 6: Accept decision — enforce absolute quality floor ---
+        # The adaptive threshold can drift down to _THRESH_MIN (0.30) when the
+        # accept_rate is chronically low.  Without a floor, the controller forces
+        # trades during low-signal regimes.  The abs_quality_floor ensures that no
+        # matter how low the adaptive threshold falls, the final_score must still
+        # exceed a minimum absolute threshold before a trade is accepted.
+        floor_breached = final < self._abs_quality_floor
+        accepted = (final > self._threshold) and not floor_breached
 
         result: dict = {
-            "final_score":     round(final, 4),
-            "scores":          calibrated,
-            "missing_engines": missing,
-            "variance":        round(variance, 6),
-            "entropy":         round(entropy, 6),
-            "threshold":       round(self._threshold, 4),
-            "accepted":        accepted,
+            "final_score":      round(final, 4),
+            "scores":           calibrated,
+            "missing_engines":  missing,
+            "variance":         round(variance, 6),
+            "entropy":          round(entropy, 6),
+            "threshold":        round(self._threshold, 4),
+            "abs_quality_floor": round(self._abs_quality_floor, 4),
+            "floor_breached":   floor_breached,
+            "accepted":         accepted,
         }
 
         if debug:

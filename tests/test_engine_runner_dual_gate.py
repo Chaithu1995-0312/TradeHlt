@@ -9,7 +9,7 @@ def _make_runner():
             return {"score": 1.0, "reason": "ok"}
 
     class DummyGaussian:
-        def compute(self, payload):
+        def compute(self, payload, **kwargs):
             return {"score": 0.2}
 
     class DummyBitNet:
@@ -21,17 +21,21 @@ def _make_runner():
             return {"score": 0.3}
 
     class DummyDecision:
-        def evaluate(self, score, p_win, zone_gate, fusion, config):
+        def evaluate(self, score, p_win, feature_cluster_similarity, fusion, config):
             return {"decision": "Approved", "confidence": 0.9, "reason": "ok"}
 
     class DummyFusion:
         def __init__(self):
             self.called = False
             self.last = None
+            # EPIC-84: run() reads the per-engine weights from fusion.cfg (FusionConfig).
+            from types import SimpleNamespace
+            self.cfg = SimpleNamespace(**ENGINE_RUNNER_DEFAULTS["fusion_engine"])
 
-        def compute(self, payload):
+        def compute(self, payload, *, regime=None, **kwargs):
             self.called = True
             self.last = payload
+            self.last_regime = regime
             return {"final_score": 0.8}
 
     class DummyCollector:
@@ -49,29 +53,50 @@ def _make_runner():
     runner.rr = DummyRR()
     runner.fusion = DummyFusion()
     runner.collector = DummyCollector()
+    runner._zone_gate = None   # score_zone_cluster is stubbed; the gate object is never read
     runner.dual_cfg = dict(engine_runner.DUAL_ENGINE_DEFAULTS)
     runner._audit = SignalAuditRecorder(debug_mode=False)
     runner.decision = DummyDecision()
+    runner.gaussian_shadow = None
     runner.rr_fusion = None
     runner._rr_fusion_enabled = False
+    runner._last_regime = None
+    runner._belief_enabled = False
+    runner._regime_governor_enabled = False
+    from core.regime_governor import RegimeGovernor
+    runner._regime_governor = RegimeGovernor()
     runner._fusion_use_evaluate = False
     runner._fusion_compare_evaluate = False
     from core.acceptance_controller import AcceptanceController
-    runner._acceptance = AcceptanceController({})
+    # EPIC-84 STORY-84.2: AcceptanceController has no defaults — explicit complete config
+    # (active-config values + declared cold-path thresholds).
+    runner._acceptance = AcceptanceController({
+        "theta_min": 0.5, "theta_max": 0.95, "min_history": 10, "fusion_percentile": 85,
+        "acceptance_alpha": 0.01, "acceptance_target_low": 0.05, "acceptance_target_high": 0.15,
+        "acceptance_k_sigma": 1.0, "acceptance_window": 200,
+        "engine_threshold": 0.60, "fusion_threshold": 0.65, "score_threshold": 0.45,
+    })
     from core.convergence_controller import ConvergenceController
     runner._convergence = ConvergenceController(window_size=500)
+    # PLAN-002: engines-path weights — test uses legacy defaults
+    runner._score_component_weights = (0.35, 0.25, 0.20, 0.20)
     return runner
 
 
+def _stub_zone_gate(*args, **kwargs):
+    """Stub for engine_runner.score_zone_cluster — returns neutral pass so dual-gate tests
+    are not affected by canonical-key validation added in feature_cluster_similarity.py."""
+    return {"score": 0.4, "passed": True, "meta": {}}
+
+
 def test_dual_gate_trend_selects_breakout(monkeypatch):
-    monkeypatch.setattr(
-        engine_runner,
-        "crt_compute",
-        lambda trade_id, features, context: {"score": 0.1},
-    )
+    monkeypatch.setattr(engine_runner, "crt_compute",
+                        lambda trade_id, features, context: {"score": 0.1})
+    monkeypatch.setattr(engine_runner, "score_zone_cluster", _stub_zone_gate)
     runner = _make_runner()
 
     input_data = {
+        "direction": 1,  # EPIC-84: per-trade value, required (no fallback to long)
         "trend_bias": 1.0,
         "ema_spread": 0.9,
         "momentum_score": 0.8,
@@ -87,14 +112,13 @@ def test_dual_gate_trend_selects_breakout(monkeypatch):
 
 
 def test_dual_gate_range_selects_trap(monkeypatch):
-    monkeypatch.setattr(
-        engine_runner,
-        "crt_compute",
-        lambda trade_id, features, context: {"score": 0.1},
-    )
+    monkeypatch.setattr(engine_runner, "crt_compute",
+                        lambda trade_id, features, context: {"score": 0.1})
+    monkeypatch.setattr(engine_runner, "score_zone_cluster", _stub_zone_gate)
     runner = _make_runner()
 
     input_data = {
+        "direction": 1,  # EPIC-84: per-trade value, required (no fallback to long)
         "trend_bias": -1.0,
         "ema_spread": 0.05,
         "momentum_score": 0.1,
@@ -110,14 +134,13 @@ def test_dual_gate_range_selects_trap(monkeypatch):
 
 
 def test_dual_gate_neutral_low_confidence_rejects(monkeypatch):
-    monkeypatch.setattr(
-        engine_runner,
-        "crt_compute",
-        lambda trade_id, features, context: {"score": 0.1},
-    )
+    monkeypatch.setattr(engine_runner, "crt_compute",
+                        lambda trade_id, features, context: {"score": 0.1})
+    monkeypatch.setattr(engine_runner, "score_zone_cluster", _stub_zone_gate)
     runner = _make_runner()
 
     input_data = {
+        "direction": 1,  # EPIC-84: per-trade value, required (no fallback to long)
         "trend_bias": 0.0,
         "ema_spread": 0.02,
         "momentum_score": 0.02,
@@ -132,14 +155,13 @@ def test_dual_gate_neutral_low_confidence_rejects(monkeypatch):
 
 
 def test_layered_flow_fusion_runs_before_dual_veto(monkeypatch):
-    monkeypatch.setattr(
-        engine_runner,
-        "crt_compute",
-        lambda trade_id, features, context: {"score": 0.1},
-    )
+    monkeypatch.setattr(engine_runner, "crt_compute",
+                        lambda trade_id, features, context: {"score": 0.1})
+    monkeypatch.setattr(engine_runner, "score_zone_cluster", _stub_zone_gate)
     runner = _make_runner()
 
     input_data = {
+        "direction": 1,  # EPIC-84: per-trade value, required (no fallback to long)
         "trend_bias": 0.0,
         "ema_spread": 0.02,
         "momentum_score": 0.02,
@@ -150,5 +172,6 @@ def test_layered_flow_fusion_runs_before_dual_veto(monkeypatch):
 
     out = runner.run(input_data, {"symbol": "AUDUSD"})
     assert runner.fusion.called is True
-    assert set(runner.fusion.last.keys()) == {"crt", "gaussian", "zone_gate", "rr"}
+    assert set(runner.fusion.last.keys()) == {"crt", "ema_momentum_kernel", "feature_cluster_similarity", "candle_commitment"}
     assert out["decision"] == "REJECT"
+

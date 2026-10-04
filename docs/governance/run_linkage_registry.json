@@ -1,0 +1,399 @@
+{
+  "_doc": "TRACKED_BINDING: instrument → run_id → observation artifacts. Occupancy (JSONL/parquet bytes) stays in gitignored logs/ and results/. This file only names the join. Keys are the parquet `run_id` field, not a fabricated results/run_*_<INSTR>/ directory name. Consumed by src/utils/run_linkage.py::resolve_artifacts (method=registry). Optional schema_bridge.has is the corpus/dataset/CAD join for that run_id; missing slots are omitted, never invented. This file also carries two analysis-grain record types under each instrument: _analyses (AN-*: question + claims, stable across re-measurement) and _traces (TR-*: one immutable evidence assembly of runs consumed + artifact sha256s). AN 1-N TR; a re-measurement mints a new TR against the same AN. Claims cite a surface as '<run_id>#<surface>' resolving into that run's schema_bridge.surfaces -- a pointer, never a copy. Both keys are underscore-prefixed and are not run_ids; resolve_artifacts does a keyed run_id lookup and never sees them.",
+  "XAUUSD": {
+    "run_20260906_013609": {
+      "logs_dir": "logs/dual_construction_full_gapfix",
+      "parquet_globs": [
+        "logs/dual_construction_full_gapfix/XAUUSD_crt_construction.parquet",
+        "logs/dual_construction_full_gapfix/XAUUSD_bar_structure.parquet",
+        "results/decision_atlas_full/transition_decision.parquet",
+        "results/decision_atlas_full/envelope_bar.parquet"
+      ],
+      "config_version": "v4_dual_construction_2026_09",
+      "corpus": "data/mt5/XAUUSD_M15.csv",
+      "corpus_sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+      "note": "Isolated dual-construction emit. Scratch results/run_20260906_013609_XAUUSD was deleted with the tempfile. JSONL copied to logs/dual_construction_full_gapfix/. No dashboard ledger.",
+      "schema_bridge": {
+        "run_id": "run_20260906_013609",
+        "has": {
+          "logical_corpus_id": "XAUUSD_M15",
+          "decision_id": "CAD-XAUUSD_M15-PHASE1-FROZEN",
+          "dataset_id": "XAUUSD_MT5_PHASE1_20260521",
+          "symbol": "XAUUSD",
+          "source_family": "mt5",
+          "clock_basis": "broker_local",
+          "volume_semantic": "TICK_VOLUME",
+          "canonical_artifact": {
+            "path": "data/mt5/XAUUSD_M15.csv",
+            "sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56"
+          },
+          "parent_timeframe_source": "derived_h4",
+          "decision_status": "FROZEN_CANDIDATE_PENDING_PHASE1_VALIDATION",
+          "approved_physical_path": null
+        }
+      }
+    },
+    "run_20260909_190546": {
+      "logs_dir": "logs/dual_construction_full_gapfix",
+      "parquet_globs": [
+        "logs/dual_construction_full_gapfix/XAUUSD_crt_construction.parquet",
+        "logs/dual_construction_full_gapfix/XAUUSD_bar_structure.parquet",
+        "results/decision_atlas_full/transition_decision.parquet",
+        "results/decision_atlas_full/envelope_bar.parquet"
+      ],
+      "source_run_id": "run_20260906_013609",
+      "scoreboard_dir": "results/analysis/phase1_resolver_replay/run_20260909_190546",
+      "note": "Four-arm H20+SEM-015 measurement. Not a backtest ledger. source_run_id is the dual-construction object."
+    },
+    "run_20260909_202201": {
+      "logs_dir": "logs/dual_construction_full_gapfix",
+      "parquet_globs": [
+        "logs/dual_construction_full_gapfix/XAUUSD_crt_construction.parquet",
+        "logs/dual_construction_full_gapfix/XAUUSD_bar_structure.parquet",
+        "results/decision_atlas_full/transition_decision.parquet",
+        "results/decision_atlas_full/envelope_bar.parquet"
+      ],
+      "source_run_id": "run_20260906_013609",
+      "scoreboard_dir": "results/analysis/phase1_resolver_replay/run_20260909_202201",
+      "note": "Four-arm H20+SEM-015 measurement (second mint). Not a backtest ledger. source_run_id is the dual-construction object.",
+      "schema_bridge": {
+        "run_id": "run_20260909_202201",
+        "has": {
+          "source_run_id": "run_20260906_013609",
+          "logical_corpus_id": "XAUUSD_M15",
+          "decision_id": "CAD-XAUUSD_M15-PHASE1-FROZEN",
+          "dataset_id": "XAUUSD_MT5_PHASE1_20260521",
+          "symbol": "XAUUSD",
+          "source_family": "mt5",
+          "clock_basis": "broker_local",
+          "volume_semantic": "TICK_VOLUME",
+          "canonical_artifact": {
+            "path": "data/mt5/XAUUSD_M15.csv",
+            "sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56"
+          },
+          "parent_timeframe_source": "derived_h4",
+          "decision_status": "FROZEN_CANDIDATE_PENDING_PHASE1_VALIDATION",
+          "approved_physical_path": null,
+          "economic_claims_allowed": false,
+          "cost_model_id": "component_measured.v1",
+          "scoreboard": "results/analysis/phase1_resolver_replay/run_20260909_202201/scoreboard.json",
+          "create_census": "results/analysis/phase1_resolver_replay/run_20260909_202201/create_economic_census/census.json",
+          "create_census_funnel_counts": "VALID",
+          "create_census_context_join": "EVENT_TIMESTAMP_TO_CSV",
+          "create_census_context_inference": "REBUILT_TIMESTAMP_JOIN",
+          "coding_llm_context_pack": "docs/research/phase1_run_20260909_202201_coding_llm_context.yaml"
+        },
+        "surfaces": {
+          "four_arm_economics": "VALID",
+          "four_arm_H20": "VALID",
+          "create_lifecycle_counts": "VALID",
+          "create_timing_race_counts": "VALID",
+          "create_age_at_reset_distributions": "VALID",
+          "create_session_hour_tables": "INVALIDATED",
+          "create_htf_parent_context_tables": "INVALIDATED",
+          "create_H20_context_economics": "INVALIDATED",
+          "rebuild_completed": true,
+          "join_logic_fixed_for_future_rebuild": true
+        },
+        "surfaces_ruling": {
+          "date_utc": "2026-09-10",
+          "ruling": "forbidden_inferences outranks trust_table for this run",
+          "reason": "CREATE timestamp join defect -- the context pack's trust_table is a strict key-copy of this surfaces block guarded by a STALE warning; forbidden_inferences (quote_create_h20_headline, quote_create_session_hour, quote_create_htf_parent, quote_create_h20_buckets) forbids exactly the three surfaces this table had marked VALID. Before this edit the machine-readable side never carried the ruling, so a new claim citing create_H20_context_economics would have been silently admitted by tests/test_run_linkage_traces.py.",
+          "changed": [
+            "create_session_hour_tables",
+            "create_htf_parent_context_tables",
+            "create_H20_context_economics"
+          ],
+          "unaffected": [
+            "create_lifecycle_counts",
+            "create_timing_race_counts",
+            "create_age_at_reset_distributions",
+            "four_arm_economics",
+            "four_arm_H20"
+          ],
+          "source": "docs/research/phase1_run_20260909_202201_coding_llm_context.yaml (superseded_by.user_ruling_preserved)",
+          "change_id": "CH-f069-epoch-scope"
+        }
+      }
+    },
+    "_analyses": {
+      "AN-SHADOWMEM-XAUUSD-M15-V1": {
+        "question": "Of HTF-displacement pending-memory objects created by the CRT engine (crt_engine_v2.reset_to_range, predicate DISPLACEMENT + displacement_candle + 'HTF' in reason), what governs whether the memory survives to restore?",
+        "lane": "measurement/evidence",
+        "authority": "none",
+        "economic_claims_allowed": false,
+        "note": "Analysis grain: question + claims, stable across re-measurement. Runs are not claims-bearing; a re-measurement mints a new TR-* against this same AN-*.",
+        "traces": [
+          "TR-SHADOWMEM-01",
+          "TR-SHADOWMEM-02"
+        ],
+        "claims": [
+          {
+            "id": "C1",
+            "statement": "TTL is not the binding constraint on pending-memory survival; the memory expires because no confirming sweep arrives, not because a wrong-direction sweep arrives.",
+            "class": "COUNTING_FACT",
+            "trace": "TR-SHADOWMEM-02",
+            "surface": "run_20260909_202201#create_timing_race_counts",
+            "rests_on": [
+              "A2"
+            ],
+            "numbers": {
+              "n_expire": 45,
+              "n_expire_with_any_live_SWEEP": 0,
+              "NO_SWEEP_IN_LIVE_OR_POST_HORIZON": 33,
+              "ONLY_OPPOSITE_DIR_AROUND_EXPIRY": 9,
+              "SAME_DIR_ON_EXPIRE_BAR_TOO_LATE": 2,
+              "SAME_DIR_AFTER_EXPIRY_WITHIN_HORIZON": 1
+            },
+            "supporting_source_fact": "crt_engine_v2.py:2968 decrements TTL before detect_sweep at :2979, so a same-dir sweep on the expire bar cannot arm SHADOW_PENDING."
+          },
+          {
+            "id": "C2",
+            "statement": "Resolver-Memory and Resolver-TrendBias are exact mirror trades on the same 31 entries, not two independent directional explanations.",
+            "class": "STRUCTURAL",
+            "trace": "TR-SHADOWMEM-02",
+            "surface": "run_20260909_202201#four_arm_economics",
+            "rests_on": [
+              "A4"
+            ],
+            "numbers": {
+              "memory_trendbias_dir_agree": "0/31",
+              "win_split": "17/14",
+              "win_rate_sum": 1.0
+            }
+          },
+          {
+            "id": "C3",
+            "statement": "Restore yield is not stationary across the corpus; the 6/69 headline averages a declining rate.",
+            "class": "DESCRIPTIVE",
+            "trace": "TR-SHADOWMEM-02",
+            "surface": "run_20260909_202201#create_lifecycle_counts",
+            "rests_on": [
+              "A1"
+            ],
+            "numbers": {
+              "2024": "4/17",
+              "2025": "2/37",
+              "2026": "0/15"
+            },
+            "caveat": "Calendar partition inspected after the timestamps were seen; concentration is described, not tested. No p-value earned."
+          }
+        ],
+        "withdrawn_claims": [
+          {
+            "statement": "atr_tercile separates pending-memory lifecycle outcome",
+            "reason": "NO_SURFACE",
+            "detail": "No registered surface provides atr_tercile; claim_protocol.refuse_unnamed_surface.",
+            "withdrawn_utc": "2026-09-10"
+          },
+          {
+            "statement": "t1_t3 agreement separates pending-memory lifecycle outcome",
+            "reason": "NO_SURFACE",
+            "detail": "No registered surface provides t1_t3.",
+            "withdrawn_utc": "2026-09-10"
+          },
+          {
+            "statement": "resolver CREATE occupancy (454/47/31) characterises the population",
+            "reason": "NO_SURFACE",
+            "detail": "resolver_create_census.json provides no surface registered on the run.",
+            "withdrawn_utc": "2026-09-10"
+          },
+          {
+            "statement": "parent_crt separates pending-memory lifecycle outcome",
+            "reason": "FORBIDDEN",
+            "detail": "forbidden_inferences.quote_create_htf_parent; user ruling 2026-09-10 that forbidden_inferences outranks trust_table for this run.",
+            "withdrawn_utc": "2026-09-10"
+          },
+          {
+            "statement": "session bucket separates pending-memory lifecycle outcome",
+            "reason": "FORBIDDEN",
+            "detail": "forbidden_inferences.quote_create_session_hour; same ruling.",
+            "withdrawn_utc": "2026-09-10"
+          }
+        ]
+      },
+      "AN-PIPEB-STRAT-XAUUSD-M15-V1": {
+        "question": "Can Pipeline B produce a config-only strategy candidate on the Phase-1 frozen XAUUSD M15 corpus that survives replay+ledger, with no promote?",
+        "lane": "measurement/evidence",
+        "authority": "none",
+        "economic_claims_allowed": false,
+        "note": "Campaign grain for the 2026-09-13 Pipeline B dry scan. No claims yet; first artifact is the unbiased opportunity log. Re-measurement mints a new TR-* against this same AN-*.",
+        "traces": [
+          "TR-PIPEB-STRAT-01"
+        ],
+        "claims": [],
+        "withdrawn_claims": []
+      }
+    },
+    "_traces": {
+      "TR-SHADOWMEM-01": {
+        "analysis_id": "AN-SHADOWMEM-XAUUSD-M15-V1",
+        "status": "SUPERSEDED",
+        "superseded_by": "TR-SHADOWMEM-02",
+        "create_census_join": "ENGINE_CANDLE_INDEX_PLUS_62",
+        "clock_basis": "UTC",
+        "ordering_key": "generated_at_utc",
+        "code_state": "UNIDENTIFIED",
+        "note": "Pre-rebuild evidence assembly. Its census.json was overwritten in place by the 2026-09-10 timestamp-join rebuild, so its content hash is UNRECOVERABLE. Recorded rather than dropped: the unrecoverable hash is the argument for binding artifacts by sha256 at assembly time.",
+        "artifacts": [
+          {
+            "id": "A1",
+            "path": "results/analysis/phase1_resolver_replay/run_20260909_202201/create_economic_census/census.json",
+            "sha256": "UNRECOVERABLE",
+            "produced_by_run": "run_20260909_202201",
+            "surface_refs": [],
+            "surface_origin": "unrecoverable"
+          }
+        ]
+      },
+      "TR-SHADOWMEM-02": {
+        "analysis_id": "AN-SHADOWMEM-XAUUSD-M15-V1",
+        "status": "CURRENT",
+        "create_census_join": "EVENT_TIMESTAMP_TO_CSV",
+        "clock_basis": "UTC",
+        "ordering_key": "generated_at_utc",
+        "ordering_note": "Never sort by run_id: analysis run_ids are UTC while backtest run-dir ids are local IST, so a lexical sort puts run_20260909_190546 before run_20260909_224658 when the true order is the reverse. Verified against file mtimes.",
+        "code_state": "UNIDENTIFIED",
+        "code_state_note": "Every bound artifact declares git_sha=61094ea6 with tree_dirty=true; HEAD was committed 2026-09-09 15:42 IST. The sha identifies none of them.",
+        "corpus": {
+          "path": "data/mt5/XAUUSD_M15.csv",
+          "sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+          "bars": 47275,
+          "span": "2024-05-22T01:00 .. 2026-05-21T23:45",
+          "n_eligible_h20": 47255
+        },
+        "consumes_runs": [
+          {
+            "run_id": "run_20260906_013609",
+            "role": "source_corpus_construction",
+            "id_basis": "UTC",
+            "registered": true
+          },
+          {
+            "run_id": "run_20260909_202201",
+            "role": "primary_analysis",
+            "id_basis": "UTC",
+            "registered": true
+          },
+          {
+            "run_id": "run_20260909_190546",
+            "role": "superseded_scoreboard",
+            "id_basis": "UTC",
+            "registered": true
+          },
+          {
+            "run_id": "run_20260909_224658_XAUUSD",
+            "role": "upstream_backtest",
+            "id_basis": "IST",
+            "registered": false
+          },
+          {
+            "run_id": "run_20260910_010142_XAUUSD",
+            "role": "upstream_probe_backtest",
+            "id_basis": "IST",
+            "registered": false
+          }
+        ],
+        "artifacts": [
+          {
+            "id": "A1",
+            "path": "results/analysis/phase1_resolver_replay/run_20260909_202201/create_economic_census/census.json",
+            "sha256": "8b78cfa74f46f825ee3bc10712f6aec718a740a9bdd0c3e3faed319229c40c5f",
+            "generated_at_utc": "2026-09-10T06:21:33Z",
+            "produced_by_run": "run_20260909_202201",
+            "surface_refs": [
+              "run_20260909_202201#create_lifecycle_counts",
+              "run_20260909_202201#create_age_at_reset_distributions",
+              "run_20260909_202201#create_H20_context_economics",
+              "run_20260909_202201#create_session_hour_tables",
+              "run_20260909_202201#create_htf_parent_context_tables"
+            ],
+            "surface_origin": "registry",
+            "note": "Rebuilt 10h after its run_id was minted. Provides more surfaces than any claim cites: artifact-provides is a fact, claim-admissible is a separate test."
+          },
+          {
+            "id": "A2",
+            "path": "results/analysis/phase1_resolver_replay/event_census/memory_timing_race.json",
+            "sha256": "ce67590eb8ec71593df3f2aa3925a8ea23ac417303f7eeed3c4debaac9034aac",
+            "generated_at_utc": "2026-09-09T20:21:01Z",
+            "produced_by_run": null,
+            "predates_primary_run_by": "60s",
+            "surface_refs": [
+              "run_20260909_202201#create_timing_race_counts"
+            ],
+            "surface_origin": "registry_asserted_artifact_unscoped"
+          },
+          {
+            "id": "A3",
+            "path": "results/analysis/phase1_resolver_replay/event_census/memory_subsystem.json",
+            "sha256": "ec236849727fc204b17820ee1bdf8f43a12c4737ebd34999e11ca3c8c0e1b4fc",
+            "generated_at_utc": "2026-09-09T19:33:11Z",
+            "produced_by_run": null,
+            "predates_primary_run_by": "49m",
+            "surface_refs": [
+              "run_20260909_202201#create_lifecycle_counts"
+            ],
+            "surface_origin": "registry_asserted_artifact_unscoped",
+            "note": "Origin of the 69/45/17/6/1 CREATE funnel."
+          },
+          {
+            "id": "A4",
+            "path": "results/analysis/phase1_resolver_replay/run_20260909_202201/scoreboard.json",
+            "sha256": "38b84adc2e38eccbd55eaedabe563e87cc9c88e2d05b353b96cd939a08eb2f21",
+            "generated_at_utc": "2026-09-09T20:22:49Z",
+            "produced_by_run": "run_20260909_202201",
+            "surface_refs": [
+              "run_20260909_202201#four_arm_economics",
+              "run_20260909_202201#four_arm_H20"
+            ],
+            "surface_origin": "registry"
+          },
+          {
+            "id": "A5",
+            "path": "results/analysis/phase1_resolver_replay/run_20260909_202201/resolver_create_census.json",
+            "sha256": "3cf8f9302c94d42623c49bcfbf6ac626bf2af66d404779308e28e667b23bafed",
+            "generated_at_utc": "2026-09-10T05:45:57Z",
+            "produced_by_run": "run_20260909_202201",
+            "surface_refs": [],
+            "surface_origin": "none_registered",
+            "note": "Resolver CREATE occupancy (n=454). No surface registered on the run, so no claim may cite it; the corresponding statement sits in withdrawn_claims."
+          }
+        ]
+      },
+      "TR-PIPEB-STRAT-01": {
+        "analysis_id": "AN-PIPEB-STRAT-XAUUSD-M15-V1",
+        "status": "CURRENT",
+        "clock_basis": "UTC",
+        "ordering_key": "generated_at_utc",
+        "code_state": "UNIDENTIFIED",
+        "note": "Dry scan only. CRT not consulted. No train, no promote, no live.",
+        "corpus": {
+          "path": "data/mt5/XAUUSD_M15.csv",
+          "sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+          "bars": 47275,
+          "span": "2024-05-22T01:00 .. 2026-05-21T23:45"
+        },
+        "consumes_runs": [
+          {
+            "run_id": "20260913_130531",
+            "role": "pipeline_b_dry_scan",
+            "id_basis": "UTC",
+            "registered": false
+          }
+        ],
+        "artifacts": [
+          {
+            "id": "A1",
+            "path": "logs/XAUUSD/20260913_130531/opportunities.jsonl",
+            "sha256": "5f47def0ead6375f8cd45840a6186b3cfdbdd711dbb1f4a29280c2c7d31edf90",
+            "generated_at_utc": "2026-09-13T13:21:17Z",
+            "produced_by_run": null,
+            "surface_refs": [],
+            "surface_origin": "none_registered",
+            "note": "Unbiased long/short ATR opportunity log. Header+rows stamped TR-PIPEB-STRAT-01. 47166 long + 47166 short. No registered surface yet; no claim may cite it."
+          }
+        ]
+      }
+    }
+  }
+}

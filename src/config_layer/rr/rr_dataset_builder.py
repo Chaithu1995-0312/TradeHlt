@@ -13,7 +13,8 @@ FIXES (vs broken version):
       win: outcome OR win OR derived from rr > 0
   - Handles missing values, type conversion, and invalid rows gracefully.
   - validate_dataset_integrity() ensures labels are NOT all zeros.
-  - Dataset remains schema-aligned to CANONICAL_FEATURES (32 keys).
+  - Dataset remains schema-aligned to CANONICAL_FEATURES (39 keys under schema v4.0;
+    the width is CANONICAL_FEATURE_DIM, never a literal — this said "32" from the v2.0 era).
 """
 
 from __future__ import annotations
@@ -97,13 +98,13 @@ def _build_canonical_features_df(
 
 def extract_features(features: dict) -> List[float]:
     """
-    Convert a canonical feature dict to the model vector (32-width).
+    Convert a canonical feature dict to the model vector (CANONICAL_FEATURE_DIM-width).
 
     Args:
         features: canonical feature dict keyed by CANONICAL_FEATURES
 
     Returns:
-        List of 32 floats in CANONICAL_FEATURES order
+        List of CANONICAL_FEATURE_DIM floats in CANONICAL_FEATURES order
 
     Raises:
         ValueError: if schema validation fails or values are invalid
@@ -187,7 +188,7 @@ def extract_target(trade: Any, features: dict) -> Tuple[float, int]:
     outcome = trade_dict.get("outcome")
     if outcome is not None:
         if isinstance(outcome, str):
-            win = 1 if outcome.strip().upper() in ("WIN", "W", "TP", "1") else 0
+            win = 1 if outcome.strip().upper() in ("WIN", "W", "TP", "TP_HIT", "1") else 0
         else:
             try:
                 win = 1 if int(outcome) == 1 else 0

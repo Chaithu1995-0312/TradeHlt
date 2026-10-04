@@ -1,0 +1,1481 @@
+{
+  "contract_id": "MC-CTXATTR-XAUUSD-M15-V1",
+  "sem_id": "SEM-036",
+  "authority": "RESEARCH_ONLY",
+  "economic_claims_allowed": false,
+  "y_key": "y_R_net",
+  "k_frozen": 0.5,
+  "n_units": 94314,
+  "n_tests_preregistered": 22,
+  "n_pass": 0,
+  "pass_ceiling": 6,
+  "multiplicity_artifact_suspected": false,
+  "verdict": "NO_FAMILY_CLEARS",
+  "controls": {
+    "long_only_train": {
+      "n": 37651,
+      "mean": -0.2935142674032562
+    },
+    "long_only_holdout": {
+      "n": 9415,
+      "mean": -0.17308203632501326
+    }
+  },
+  "split": {
+    "contract_id": "MC-CTXATTR-XAUUSD-M15-V1",
+    "scheme": "single_holdout_chronologic",
+    "holdout_start": "2025-12-24 19:15:00",
+    "train_last_allowed": "2025-12-23 19:15:00",
+    "embargo_bars": 96,
+    "purge_horizon_bars": 40,
+    "n_train": 75302,
+    "n_holdout": 18830,
+    "n_embargo_dropped": 182,
+    "first_holdout_bar_index": 37820,
+    "last_train_bar_index": 37728,
+    "calendar_source": "research.evidence.asymmetry_contract (frozen, shared with MC-ASYM/MAGPRIOR/MRPRIOR/VCRTPRIOR)",
+    "f086_stride_spent": false
+  },
+  "cells": {
+    "parent_crt|long": {
+      "family": "parent_crt",
+      "direction": "long",
+      "train": {
+        "delta": -0.020880311607223284,
+        "n_scored": 5021,
+        "n_agree": 2241,
+        "n_disagree": 2780,
+        "n_strata": 5
+      },
+      "holdout": {
+        "delta": 0.00621267609969231,
+        "n_scored": 1270,
+        "n_agree": 540,
+        "n_disagree": 730,
+        "n_strata": 5
+      },
+      "holdout_stratum_occupancy": {
+        "SWEEP": {
+          "n_units": 3394,
+          "n_scored": 432,
+          "n_agree": 187,
+          "n_disagree": 245,
+          "informative": true
+        },
+        "RANGE": {
+          "n_units": 4800,
+          "n_scored": 705,
+          "n_agree": 286,
+          "n_disagree": 419,
+          "informative": true
+        },
+        "DISPLACEMENT": {
+          "n_units": 127,
+          "n_scored": 13,
+          "n_agree": 7,
+          "n_disagree": 6,
+          "informative": true
+        },
+        "EXPANSION": {
+          "n_units": 1090,
+          "n_scored": 118,
+          "n_agree": 59,
+          "n_disagree": 59,
+          "informative": true
+        },
+        "RETEST": {
+          "n_units": 4,
+          "n_scored": 2,
+          "n_agree": 1,
+          "n_disagree": 1,
+          "informative": true
+        }
+      },
+      "delta_marginal_holdout": 0.016147405905511808,
+      "crt_proxy_component": 0.009934729805819498,
+      "sign_match": false,
+      "p_block_permutation": 0.82,
+      "control_shuffled_context": -0.028014633288439693,
+      "control_long_only_holdout": -0.17308203632501326,
+      "bh_fdr_survives": false,
+      "verdict": "DIAGNOSTIC_FAIL",
+      "beats_controls": false,
+      "powered": true
+    },
+    "parent_crt|short": {
+      "family": "parent_crt",
+      "direction": "short",
+      "train": {
+        "delta": -0.010108496300105973,
+        "n_scored": 5021,
+        "n_agree": 2780,
+        "n_disagree": 2241,
+        "n_strata": 5
+      },
+      "holdout": {
+        "delta": -0.018197463976057558,
+        "n_scored": 1270,
+        "n_agree": 730,
+        "n_disagree": 540,
+        "n_strata": 5
+      },
+      "holdout_stratum_occupancy": {
+        "SWEEP": {
+          "n_units": 3394,
+          "n_scored": 432,
+          "n_agree": 245,
+          "n_disagree": 187,
+          "informative": true
+        },
+        "RANGE": {
+          "n_units": 4800,
+          "n_scored": 705,
+          "n_agree": 419,
+          "n_disagree": 286,
+          "informative": true
+        },
+        "DISPLACEMENT": {
+          "n_units": 127,
+          "n_scored": 13,
+          "n_agree": 6,
+          "n_disagree": 7,
+          "informative": true
+        },
+        "EXPANSION": {
+          "n_units": 1090,
+          "n_scored": 118,
+          "n_agree": 59,
+          "n_disagree": 59,
+          "informative": true
+        },
+        "RETEST": {
+          "n_units": 4,
+          "n_scored": 2,
+          "n_agree": 1,
+          "n_disagree": 1,
+          "informative": true
+        }
+      },
+      "delta_marginal_holdout": -0.037384946850393674,
+      "crt_proxy_component": -0.019187482874336116,
+      "sign_match": true,
+      "p_block_permutation": 0.45,
+      "control_shuffled_context": 0.022367263052491287,
+      "control_long_only_holdout": -0.17308203632501326,
+      "bh_fdr_survives": false,
+      "verdict": "DIAGNOSTIC_FAIL",
+      "beats_controls": false,
+      "powered": true
+    },
+    "htf|long": {
+      "family": "htf",
+      "direction": "long",
+      "train": {
+        "delta": -0.018737448190880777,
+        "n_scored": 5021,
+        "n_agree": 1207,
+        "n_disagree": 3814,
+        "n_strata": 5
+      },
+      "holdout": {
+        "delta": -0.02070149374657524,
+        "n_scored": 1268,
+        "n_agree": 192,
+        "n_disagree": 1076,
+        "n_strata": 4
+      },
+      "holdout_stratum_occupancy": {
+        "SWEEP": {
+          "n_units": 3394,
+          "n_scored": 432,
+          "n_agree": 74,
+          "n_disagree": 358,
+          "informative": true
+        },
+        "RANGE": {
+          "n_units": 4800,
+          "n_scored": 705,
+          "n_agree": 87,
+          "n_disagree": 618,
+          "informative": true
+        },
+        "DISPLACEMENT": {
+          "n_units": 127,
+          "n_scored": 13,
+          "n_agree": 1,
+          "n_disagree": 12,
+          "informative": true
+        },
+        "EXPANSION": {
+          "n_units": 1090,
+          "n_scored": 118,
+          "n_agree": 30,
+          "n_disagree": 88,
+          "informative": true
+        },
+        "RETEST": {
+          "n_units": 4,
+          "n_scored": 2,
+          "n_agree": 0,
+          "n_disagree": 2,
+          "informative": false
+        }
+      },
+      "delta_marginal_holdout": 0.024701301181102378,
+      "crt_proxy_component": 0.04540279492767762,
+      "sign_match": true,
+      "p_block_permutation": 0.235,
+      "control_shuffled_context": -0.006358624744050304,
+      "control_long_only_holdout": -0.17308203632501326,
+      "bh_fdr_survives": false,
+      "verdict": "DIAGNOSTIC_FAIL",
+      "beats_controls": false,
+      "powered": true
+    },
+    "htf|short": {
+      "family": "htf",
+      "direction": "short",
+      "train": {
+        "delta": -0.00604798189853046,
+        "n_scored": 5021,
+        "n_agree": 1094,
+        "n_disagree": 3927,
+        "n_strata": 5
+      },
+      "holdout": {
+        "delta": 0.01171501630649271,
+        "n_scored": 1270,
+        "n_agree": 316,
+        "n_disagree": 954,
+        "n_strata": 5
+      },
+      "holdout_stratum_occupancy": {
+        "SWEEP": {
+          "n_units": 3394,
+          "n_scored": 432,
+          "n_agree": 96,
+          "n_disagree": 336,
+          "informative": true
+        },
+        "RANGE": {
+          "n_units": 4800,
+          "n_scored": 705,
+          "n_agree": 193,
+          "n_disagree": 512,
+          "informative": true
+        },
+        "DISPLACEMENT": {
+          "n_units": 127,
+          "n_scored": 13,
+          "n_agree": 3,
+          "n_disagree": 10,
+          "informative": true
+        },
+        "EXPANSION": {
+          "n_units": 1090,
+          "n_scored": 118,
+          "n_agree": 23,
+          "n_disagree": 95,
+          "informative": true
+        },
+        "RETEST": {
+          "n_units": 4,
+          "n_scored": 2,
+          "n_agree": 1,
+          "n_disagree": 1,
+          "informative": true
+        }
+      },
+      "delta_marginal_holdout": 0.07558260905511813,
+      "crt_proxy_component": 0.06386759274862541,
+      "sign_match": false,
+      "p_block_permutation": 0.6,
+      "control_shuffled_context": 0.005024146656627351,
+      "control_long_only_holdout": -0.17308203632501326,
+      "bh_fdr_survives": false,
+      "verdict": "DIAGNOSTIC_FAIL",
+      "beats_controls": false,
+      "powered": true
+    },
+    "objective|long": {
+      "family": "objective",
+      "direction": "long",
+      "train": {
+        "delta": 0.0029290848451628713,
+        "n_scored": 5019,
+        "n_agree": 1085,
+        "n_disagree": 3934,
+        "n_strata": 4
+      },
+      "holdout": {
+        "delta": 0.019195939239372465,
+        "n_scored": 1270,
+        "n_agree": 212,
+        "n_disagree": 1058,
+        "n_strata": 5
+      },
+      "holdout_stratum_occupancy": {
+        "SWEEP": {
+          "n_units": 3394,
+          "n_scored": 432,
+          "n_agree": 83,
+          "n_disagree": 349,
+          "informative": true
+        },
+        "RANGE": {
+          "n_units": 4800,
+          "n_scored": 705,
+          "n_agree": 112,
+          "n_disagree": 593,
+          "informative": true
+        },
+        "DISPLACEMENT": {
+          "n_units": 127,
+          "n_scored": 13,
+          "n_agree": 3,
+          "n_disagree": 10,
+          "informative": true
+        },
+        "EXPANSION": {
+          "n_units": 1090,
+          "n_scored": 118,
+          "n_agree": 13,
+          "n_disagree": 105,
+          "informative": true
+        },
+        "RETEST": {
+          "n_units": 4,
+          "n_scored": 2,
+          "n_agree": 1,
+          "n_disagree": 1,
+          "informative": true
+        }
+      },
+      "delta_marginal_holdout": 0.06326536023622048,
+      "crt_proxy_component": 0.04406942099684802,
+      "sign_match": true,
+      "p_block_permutation": 0.32,
+      "control_shuffled_context": -0.018997825370511208,
+      "control_long_only_holdout": -0.17308203632501326,
+      "bh_fdr_survives": false,
+      "verdict": "DIAGNOSTIC_FAIL",
+      "beats_controls": false,
+      "powered": true
+    },
+    "objective|short": {
+      "family": "objective",
+      "direction": "short",
+      "train": {
+        "delta": 0.0022507675039576108,
+        "n_scored": 5019,
+        "n_agree": 1602,
+        "n_disagree": 3417,
+        "n_strata": 4
+      },
+      "holdout": {
+        "delta": 0.015690779173549337,
+        "n_scored": 1150,
+        "n_agree": 434,
+        "n_disagree": 716,
+        "n_strata": 3
+      },
+      "holdout_stratum_occupancy": {
+        "SWEEP": {
+          "n_units": 3394,
+          "n_scored": 432,
+          "n_agree": 188,
+          "n_disagree": 244,
+          "informative": true
+        },
+        "RANGE": {
+          "n_units": 4800,
+          "n_scored": 705,
+          "n_agree": 242,
+          "n_disagree": 463,
+          "informative": true
+        },
+        "DISPLACEMENT": {
+          "n_units": 127,
+          "n_scored": 13,
+          "n_agree": 4,
+          "n_disagree": 9,
+          "informative": true
+        },
+        "EXPANSION": {
+          "n_units": 1090,
+          "n_scored": 118,
+          "n_agree": 0,
+          "n_disagree": 118,
+          "informative": false
+        },
+        "RETEST": {
+          "n_units": 4,
+          "n_scored": 2,
+          "n_agree": 0,
+          "n_disagree": 2,
+          "informative": false
+        }
+      },
+      "delta_marginal_holdout": 0.04754694291338582,
+      "crt_proxy_component": 0.031856163739836484,
+      "sign_match": true,
+      "p_block_permutation": 0.52,
+      "control_shuffled_context": 9.616728890364993e-05,
+      "control_long_only_holdout": -0.17308203632501326,
+      "bh_fdr_survives": false,
+      "verdict": "DIAGNOSTIC_FAIL",
+      "beats_controls": false,
+      "powered": true
+    },
+    "fvg|long": {
+      "family": "fvg",
+      "direction": "long",
+      "train": {
+        "delta": 0.0010121292666239298,
+        "n_scored": 34283,
+        "n_agree": 20104,
+        "n_disagree": 14179,
+        "n_strata": 7
+      },
+      "holdout": {
+        "delta": 0.017671689730372173,
+        "n_scored": 8588,
+        "n_agree": 4524,
+        "n_disagree": 4064,
+        "n_strata": 5
+      },
+      "holdout_stratum_occupancy": {
+        "SWEEP": {
+          "n_units": 3394,
+          "n_scored": 3069,
+          "n_agree": 1657,
+          "n_disagree": 1412,
+          "informative": true
+        },
+        "RANGE": {
+          "n_units": 4800,
+          "n_scored": 4453,
+          "n_agree": 2254,
+          "n_disagree": 2199,
+          "informative": true
+        },
+        "DISPLACEMENT": {
+          "n_units": 127,
+          "n_scored": 116,
+          "n_agree": 69,
+          "n_disagree": 47,
+          "informative": true
+        },
+        "EXPANSION": {
+          "n_units": 1090,
+          "n_scored": 946,
+          "n_agree": 543,
+          "n_disagree": 403,
+          "informative": true
+        },
+        "RETEST": {
+          "n_units": 4,
+          "n_scored": 4,
+          "n_agree": 1,
+          "n_disagree": 3,
+          "informative": true
+        }
+      },
+      "delta_marginal_holdout": 0.013442777421984159,
+      "crt_proxy_component": -0.004228912308388014,
+      "sign_match": true,
+      "p_block_permutation": 0.055,
+      "control_shuffled_context": 0.010790780980897658,
+      "control_long_only_holdout": -0.17308203632501326,
+      "bh_fdr_survives": false,
+      "verdict": "DIAGNOSTIC_FAIL",
+      "beats_controls": false,
+      "powered": true
+    },
+    "fvg|short": {
+      "family": "fvg",
+      "direction": "short",
+      "train": {
+        "delta": 0.006324162648213436,
+        "n_scored": 34283,
+        "n_agree": 14179,
+        "n_disagree": 20104,
+        "n_strata": 7
+      },
+      "holdout": {
+        "delta": 0.004585242395344292,
+        "n_scored": 8588,
+        "n_agree": 4064,
+        "n_disagree": 4524,
+        "n_strata": 5
+      },
+      "holdout_stratum_occupancy": {
+        "SWEEP": {
+          "n_units": 3394,
+          "n_scored": 3069,
+          "n_agree": 1412,
+          "n_disagree": 1657,
+          "informative": true
+        },
+        "RANGE": {
+          "n_units": 4800,
+          "n_scored": 4453,
+          "n_agree": 2199,
+          "n_disagree": 2254,
+          "informative": true
+        },
+        "DISPLACEMENT": {
+          "n_units": 127,
+          "n_scored": 116,
+          "n_agree": 47,
+          "n_disagree": 69,
+          "informative": true
+        },
+        "EXPANSION": {
+          "n_units": 1090,
+          "n_scored": 946,
+          "n_agree": 403,
+          "n_disagree": 543,
+          "informative": true
+        },
+        "RETEST": {
+          "n_units": 4,
+          "n_scored": 4,
+          "n_agree": 3,
+          "n_disagree": 1,
+          "informative": true
+        }
+      },
+      "delta_marginal_holdout": 0.009642868595714976,
+      "crt_proxy_component": 0.005057626200370684,
+      "sign_match": true,
+      "p_block_permutation": 0.57,
+      "control_shuffled_context": -0.003498450068601815,
+      "control_long_only_holdout": -0.17308203632501326,
+      "bh_fdr_survives": false,
+      "verdict": "DIAGNOSTIC_FAIL",
+      "beats_controls": false,
+      "powered": true
+    },
+    "order_block|long": {
+      "family": "order_block",
+      "direction": "long",
+      "train": {
+        "delta": 0.0018308482395223706,
+        "n_scored": 35574,
+        "n_agree": 20379,
+        "n_disagree": 15195,
+        "n_strata": 7
+      },
+      "holdout": {
+        "delta": 0.019710110445874274,
+        "n_scored": 8729,
+        "n_agree": 4562,
+        "n_disagree": 4167,
+        "n_strata": 5
+      },
+      "holdout_stratum_occupancy": {
+        "SWEEP": {
+          "n_units": 3394,
+          "n_scored": 3124,
+          "n_agree": 1679,
+          "n_disagree": 1445,
+          "informative": true
+        },
+        "RANGE": {
+          "n_units": 4800,
+          "n_scored": 4467,
+          "n_agree": 2235,
+          "n_disagree": 2232,
+          "informative": true
+        },
+        "DISPLACEMENT": {
+          "n_units": 127,
+          "n_scored": 114,
+          "n_agree": 48,
+          "n_disagree": 66,
+          "informative": true
+        },
+        "EXPANSION": {
+          "n_units": 1090,
+          "n_scored": 1021,
+          "n_agree": 599,
+          "n_disagree": 422,
+          "informative": true
+        },
+        "RETEST": {
+          "n_units": 4,
+          "n_scored": 3,
+          "n_agree": 1,
+          "n_disagree": 2,
+          "informative": true
+        }
+      },
+      "delta_marginal_holdout": 0.016055523141253275,
+      "crt_proxy_component": -0.0036545873046209994,
+      "sign_match": true,
+      "p_block_permutation": 0.015,
+      "control_shuffled_context": -0.006799718664588884,
+      "control_long_only_holdout": -0.17308203632501326,
+      "bh_fdr_survives": false,
+      "verdict": "DIAGNOSTIC_FAIL",
+      "beats_controls": false,
+      "powered": true
+    },
+    "order_block|short": {
+      "family": "order_block",
+      "direction": "short",
+      "train": {
+        "delta": 0.01510190648742655,
+        "n_scored": 35574,
+        "n_agree": 15195,
+        "n_disagree": 20379,
+        "n_strata": 7
+      },
+      "holdout": {
+        "delta": 0.015500083679137553,
+        "n_scored": 8729,
+        "n_agree": 4167,
+        "n_disagree": 4562,
+        "n_strata": 5
+      },
+      "holdout_stratum_occupancy": {
+        "SWEEP": {
+          "n_units": 3394,
+          "n_scored": 3124,
+          "n_agree": 1445,
+          "n_disagree": 1679,
+          "informative": true
+        },
+        "RANGE": {
+          "n_units": 4800,
+          "n_scored": 4467,
+          "n_agree": 2232,
+          "n_disagree": 2235,
+          "informative": true
+        },
+        "DISPLACEMENT": {
+          "n_units": 127,
+          "n_scored": 114,
+          "n_agree": 66,
+          "n_disagree": 48,
+          "informative": true
+        },
+        "EXPANSION": {
+          "n_units": 1090,
+          "n_scored": 1021,
+          "n_agree": 422,
+          "n_disagree": 599,
+          "informative": true
+        },
+        "RETEST": {
+          "n_units": 4,
+          "n_scored": 3,
+          "n_agree": 2,
+          "n_disagree": 1,
+          "informative": true
+        }
+      },
+      "delta_marginal_holdout": 0.019833080707984896,
+      "crt_proxy_component": 0.004332997028847343,
+      "sign_match": true,
+      "p_block_permutation": 0.12,
+      "control_shuffled_context": 0.0017843439651408879,
+      "control_long_only_holdout": -0.17308203632501326,
+      "bh_fdr_survives": false,
+      "verdict": "DIAGNOSTIC_FAIL",
+      "beats_controls": false,
+      "powered": true
+    },
+    "breaker|long": {
+      "family": "breaker",
+      "direction": "long",
+      "train": {
+        "delta": 0.013065536260429222,
+        "n_scored": 24999,
+        "n_agree": 13465,
+        "n_disagree": 11534,
+        "n_strata": 6
+      },
+      "holdout": {
+        "delta": 0.0033328533645039364,
+        "n_scored": 6143,
+        "n_agree": 3477,
+        "n_disagree": 2666,
+        "n_strata": 5
+      },
+      "holdout_stratum_occupancy": {
+        "SWEEP": {
+          "n_units": 3394,
+          "n_scored": 2093,
+          "n_agree": 1161,
+          "n_disagree": 932,
+          "informative": true
+        },
+        "RANGE": {
+          "n_units": 4800,
+          "n_scored": 3060,
+          "n_agree": 1688,
+          "n_disagree": 1372,
+          "informative": true
+        },
+        "DISPLACEMENT": {
+          "n_units": 127,
+          "n_scored": 103,
+          "n_agree": 56,
+          "n_disagree": 47,
+          "informative": true
+        },
+        "EXPANSION": {
+          "n_units": 1090,
+          "n_scored": 884,
+          "n_agree": 571,
+          "n_disagree": 313,
+          "informative": true
+        },
+        "RETEST": {
+          "n_units": 4,
+          "n_scored": 3,
+          "n_agree": 1,
+          "n_disagree": 2,
+          "informative": true
+        }
+      },
+      "delta_marginal_holdout": -0.006280835829399312,
+      "crt_proxy_component": -0.009613689193903248,
+      "sign_match": true,
+      "p_block_permutation": 0.735,
+      "control_shuffled_context": 0.011492013726208044,
+      "control_long_only_holdout": -0.17308203632501326,
+      "bh_fdr_survives": false,
+      "verdict": "DIAGNOSTIC_FAIL",
+      "beats_controls": false,
+      "powered": true
+    },
+    "breaker|short": {
+      "family": "breaker",
+      "direction": "short",
+      "train": {
+        "delta": 0.02081449923939511,
+        "n_scored": 24999,
+        "n_agree": 11534,
+        "n_disagree": 13465,
+        "n_strata": 6
+      },
+      "holdout": {
+        "delta": 0.017000010902277745,
+        "n_scored": 6143,
+        "n_agree": 2666,
+        "n_disagree": 3477,
+        "n_strata": 5
+      },
+      "holdout_stratum_occupancy": {
+        "SWEEP": {
+          "n_units": 3394,
+          "n_scored": 2093,
+          "n_agree": 932,
+          "n_disagree": 1161,
+          "informative": true
+        },
+        "RANGE": {
+          "n_units": 4800,
+          "n_scored": 3060,
+          "n_agree": 1372,
+          "n_disagree": 1688,
+          "informative": true
+        },
+        "DISPLACEMENT": {
+          "n_units": 127,
+          "n_scored": 103,
+          "n_agree": 47,
+          "n_disagree": 56,
+          "informative": true
+        },
+        "EXPANSION": {
+          "n_units": 1090,
+          "n_scored": 884,
+          "n_agree": 313,
+          "n_disagree": 571,
+          "informative": true
+        },
+        "RETEST": {
+          "n_units": 4,
+          "n_scored": 3,
+          "n_agree": 2,
+          "n_disagree": 1,
+          "informative": true
+        }
+      },
+      "delta_marginal_holdout": 0.02981157504476642,
+      "crt_proxy_component": 0.012811564142488675,
+      "sign_match": true,
+      "p_block_permutation": 0.05,
+      "control_shuffled_context": 0.015161645772465314,
+      "control_long_only_holdout": -0.17308203632501326,
+      "bh_fdr_survives": false,
+      "verdict": "DIAGNOSTIC_FAIL",
+      "beats_controls": false,
+      "powered": true
+    },
+    "mitigation|long": {
+      "family": "mitigation",
+      "direction": "long",
+      "train": {
+        "delta": -0.011214213295198306,
+        "n_scored": 20681,
+        "n_agree": 11579,
+        "n_disagree": 9102,
+        "n_strata": 6
+      },
+      "holdout": {
+        "delta": 0.0029501228178290184,
+        "n_scored": 5276,
+        "n_agree": 2961,
+        "n_disagree": 2315,
+        "n_strata": 5
+      },
+      "holdout_stratum_occupancy": {
+        "SWEEP": {
+          "n_units": 3394,
+          "n_scored": 1941,
+          "n_agree": 1106,
+          "n_disagree": 835,
+          "informative": true
+        },
+        "RANGE": {
+          "n_units": 4800,
+          "n_scored": 2694,
+          "n_agree": 1491,
+          "n_disagree": 1203,
+          "informative": true
+        },
+        "DISPLACEMENT": {
+          "n_units": 127,
+          "n_scored": 68,
+          "n_agree": 39,
+          "n_disagree": 29,
+          "informative": true
+        },
+        "EXPANSION": {
+          "n_units": 1090,
+          "n_scored": 571,
+          "n_agree": 324,
+          "n_disagree": 247,
+          "informative": true
+        },
+        "RETEST": {
+          "n_units": 4,
+          "n_scored": 2,
+          "n_agree": 1,
+          "n_disagree": 1,
+          "informative": true
+        }
+      },
+      "delta_marginal_holdout": -0.007292274734647469,
+      "crt_proxy_component": -0.010242397552476488,
+      "sign_match": false,
+      "p_block_permutation": 0.8,
+      "control_shuffled_context": 0.0014519926932509868,
+      "control_long_only_holdout": -0.17308203632501326,
+      "bh_fdr_survives": false,
+      "verdict": "DIAGNOSTIC_FAIL",
+      "beats_controls": false,
+      "powered": true
+    },
+    "mitigation|short": {
+      "family": "mitigation",
+      "direction": "short",
+      "train": {
+        "delta": -0.000960589269164688,
+        "n_scored": 20681,
+        "n_agree": 9102,
+        "n_disagree": 11579,
+        "n_strata": 6
+      },
+      "holdout": {
+        "delta": 0.010004944659529431,
+        "n_scored": 5276,
+        "n_agree": 2315,
+        "n_disagree": 2961,
+        "n_strata": 5
+      },
+      "holdout_stratum_occupancy": {
+        "SWEEP": {
+          "n_units": 3394,
+          "n_scored": 1941,
+          "n_agree": 835,
+          "n_disagree": 1106,
+          "informative": true
+        },
+        "RANGE": {
+          "n_units": 4800,
+          "n_scored": 2694,
+          "n_agree": 1203,
+          "n_disagree": 1491,
+          "informative": true
+        },
+        "DISPLACEMENT": {
+          "n_units": 127,
+          "n_scored": 68,
+          "n_agree": 29,
+          "n_disagree": 39,
+          "informative": true
+        },
+        "EXPANSION": {
+          "n_units": 1090,
+          "n_scored": 571,
+          "n_agree": 247,
+          "n_disagree": 324,
+          "informative": true
+        },
+        "RETEST": {
+          "n_units": 4,
+          "n_scored": 2,
+          "n_agree": 1,
+          "n_disagree": 1,
+          "informative": true
+        }
+      },
+      "delta_marginal_holdout": 0.022160048237301,
+      "crt_proxy_component": 0.012155103577771569,
+      "sign_match": false,
+      "p_block_permutation": 0.37,
+      "control_shuffled_context": 0.003925069449097676,
+      "control_long_only_holdout": -0.17308203632501326,
+      "bh_fdr_survives": false,
+      "verdict": "DIAGNOSTIC_FAIL",
+      "beats_controls": false,
+      "powered": true
+    },
+    "choch|long": {
+      "family": "choch",
+      "direction": "long",
+      "train": {
+        "delta": 0.03820595108411437,
+        "n_scored": 2384,
+        "n_agree": 1155,
+        "n_disagree": 1229,
+        "n_strata": 5
+      },
+      "holdout": {
+        "delta": 0.06393392486783762,
+        "n_scored": 591,
+        "n_agree": 296,
+        "n_disagree": 295,
+        "n_strata": 5
+      },
+      "holdout_stratum_occupancy": {
+        "SWEEP": {
+          "n_units": 3394,
+          "n_scored": 193,
+          "n_agree": 98,
+          "n_disagree": 95,
+          "informative": true
+        },
+        "RANGE": {
+          "n_units": 4800,
+          "n_scored": 306,
+          "n_agree": 158,
+          "n_disagree": 148,
+          "informative": true
+        },
+        "DISPLACEMENT": {
+          "n_units": 127,
+          "n_scored": 26,
+          "n_agree": 8,
+          "n_disagree": 18,
+          "informative": true
+        },
+        "EXPANSION": {
+          "n_units": 1090,
+          "n_scored": 64,
+          "n_agree": 31,
+          "n_disagree": 33,
+          "informative": true
+        },
+        "RETEST": {
+          "n_units": 4,
+          "n_scored": 2,
+          "n_agree": 1,
+          "n_disagree": 1,
+          "informative": true
+        }
+      },
+      "delta_marginal_holdout": 0.05949200676818951,
+      "crt_proxy_component": -0.004441918099648112,
+      "sign_match": true,
+      "p_block_permutation": 0.015,
+      "control_shuffled_context": 0.005346289317682638,
+      "control_long_only_holdout": -0.17308203632501326,
+      "bh_fdr_survives": false,
+      "verdict": "DIAGNOSTIC_FAIL",
+      "beats_controls": false,
+      "powered": true
+    },
+    "choch|short": {
+      "family": "choch",
+      "direction": "short",
+      "train": {
+        "delta": 0.026742556638213462,
+        "n_scored": 2384,
+        "n_agree": 1229,
+        "n_disagree": 1155,
+        "n_strata": 5
+      },
+      "holdout": {
+        "delta": 0.051198282626700155,
+        "n_scored": 591,
+        "n_agree": 295,
+        "n_disagree": 296,
+        "n_strata": 5
+      },
+      "holdout_stratum_occupancy": {
+        "SWEEP": {
+          "n_units": 3394,
+          "n_scored": 193,
+          "n_agree": 95,
+          "n_disagree": 98,
+          "informative": true
+        },
+        "RANGE": {
+          "n_units": 4800,
+          "n_scored": 306,
+          "n_agree": 148,
+          "n_disagree": 158,
+          "informative": true
+        },
+        "DISPLACEMENT": {
+          "n_units": 127,
+          "n_scored": 26,
+          "n_agree": 18,
+          "n_disagree": 8,
+          "informative": true
+        },
+        "EXPANSION": {
+          "n_units": 1090,
+          "n_scored": 64,
+          "n_agree": 33,
+          "n_disagree": 31,
+          "informative": true
+        },
+        "RETEST": {
+          "n_units": 4,
+          "n_scored": 2,
+          "n_agree": 1,
+          "n_disagree": 1,
+          "informative": true
+        }
+      },
+      "delta_marginal_holdout": 0.050898110829103255,
+      "crt_proxy_component": -0.0003001717975969001,
+      "sign_match": true,
+      "p_block_permutation": 0.08,
+      "control_shuffled_context": 0.004882199311553555,
+      "control_long_only_holdout": -0.17308203632501326,
+      "bh_fdr_survives": false,
+      "verdict": "DIAGNOSTIC_FAIL",
+      "beats_controls": false,
+      "powered": true
+    },
+    "eqh_eql|long": {
+      "family": "eqh_eql",
+      "direction": "long",
+      "train": {
+        "delta": -0.011424257124680044,
+        "n_scored": 15000,
+        "n_agree": 6546,
+        "n_disagree": 8454,
+        "n_strata": 5
+      },
+      "holdout": {
+        "delta": 0.004797849640107321,
+        "n_scored": 4208,
+        "n_agree": 1883,
+        "n_disagree": 2325,
+        "n_strata": 4
+      },
+      "holdout_stratum_occupancy": {
+        "SWEEP": {
+          "n_units": 3394,
+          "n_scored": 1459,
+          "n_agree": 578,
+          "n_disagree": 881,
+          "informative": true
+        },
+        "RANGE": {
+          "n_units": 4800,
+          "n_scored": 2174,
+          "n_agree": 907,
+          "n_disagree": 1267,
+          "informative": true
+        },
+        "DISPLACEMENT": {
+          "n_units": 127,
+          "n_scored": 57,
+          "n_agree": 34,
+          "n_disagree": 23,
+          "informative": true
+        },
+        "EXPANSION": {
+          "n_units": 1090,
+          "n_scored": 518,
+          "n_agree": 364,
+          "n_disagree": 154,
+          "informative": true
+        },
+        "RETEST": {
+          "n_units": 4,
+          "n_scored": 0,
+          "n_agree": 0,
+          "n_disagree": 0,
+          "informative": false
+        }
+      },
+      "delta_marginal_holdout": 0.015092421934410655,
+      "crt_proxy_component": 0.010294572294303334,
+      "sign_match": false,
+      "p_block_permutation": 0.735,
+      "control_shuffled_context": 0.02139500622081309,
+      "control_long_only_holdout": -0.17308203632501326,
+      "bh_fdr_survives": false,
+      "verdict": "DIAGNOSTIC_FAIL",
+      "beats_controls": false,
+      "powered": true
+    },
+    "eqh_eql|short": {
+      "family": "eqh_eql",
+      "direction": "short",
+      "train": {
+        "delta": -0.0029249489467818796,
+        "n_scored": 15000,
+        "n_agree": 8454,
+        "n_disagree": 6546,
+        "n_strata": 5
+      },
+      "holdout": {
+        "delta": 0.009074910050899861,
+        "n_scored": 4208,
+        "n_agree": 2325,
+        "n_disagree": 1883,
+        "n_strata": 4
+      },
+      "holdout_stratum_occupancy": {
+        "SWEEP": {
+          "n_units": 3394,
+          "n_scored": 1459,
+          "n_agree": 881,
+          "n_disagree": 578,
+          "informative": true
+        },
+        "RANGE": {
+          "n_units": 4800,
+          "n_scored": 2174,
+          "n_agree": 1267,
+          "n_disagree": 907,
+          "informative": true
+        },
+        "DISPLACEMENT": {
+          "n_units": 127,
+          "n_scored": 57,
+          "n_agree": 23,
+          "n_disagree": 34,
+          "informative": true
+        },
+        "EXPANSION": {
+          "n_units": 1090,
+          "n_scored": 518,
+          "n_agree": 154,
+          "n_disagree": 364,
+          "informative": true
+        },
+        "RETEST": {
+          "n_units": 4,
+          "n_scored": 0,
+          "n_agree": 0,
+          "n_disagree": 0,
+          "informative": false
+        }
+      },
+      "delta_marginal_holdout": 0.00017460836501900778,
+      "crt_proxy_component": -0.008900301685880853,
+      "sign_match": false,
+      "p_block_permutation": 0.435,
+      "control_shuffled_context": -0.018996263744691332,
+      "control_long_only_holdout": -0.17308203632501326,
+      "bh_fdr_survives": false,
+      "verdict": "DIAGNOSTIC_FAIL",
+      "beats_controls": false,
+      "powered": true
+    },
+    "pdh_pdl|long": {
+      "family": "pdh_pdl",
+      "direction": "long",
+      "train": {
+        "delta": 0.002763599128335933,
+        "n_scored": 37637,
+        "n_agree": 14523,
+        "n_disagree": 23114,
+        "n_strata": 7
+      },
+      "holdout": {
+        "delta": 0.00218072377302088,
+        "n_scored": 9415,
+        "n_agree": 4273,
+        "n_disagree": 5142,
+        "n_strata": 5
+      },
+      "holdout_stratum_occupancy": {
+        "SWEEP": {
+          "n_units": 3394,
+          "n_scored": 3394,
+          "n_agree": 1465,
+          "n_disagree": 1929,
+          "informative": true
+        },
+        "RANGE": {
+          "n_units": 4800,
+          "n_scored": 4800,
+          "n_agree": 2276,
+          "n_disagree": 2524,
+          "informative": true
+        },
+        "DISPLACEMENT": {
+          "n_units": 127,
+          "n_scored": 127,
+          "n_agree": 55,
+          "n_disagree": 72,
+          "informative": true
+        },
+        "EXPANSION": {
+          "n_units": 1090,
+          "n_scored": 1090,
+          "n_agree": 474,
+          "n_disagree": 616,
+          "informative": true
+        },
+        "RETEST": {
+          "n_units": 4,
+          "n_scored": 4,
+          "n_agree": 3,
+          "n_disagree": 1,
+          "informative": true
+        }
+      },
+      "delta_marginal_holdout": 0.009900920233669647,
+      "crt_proxy_component": 0.007720196460648767,
+      "sign_match": true,
+      "p_block_permutation": 0.77,
+      "control_shuffled_context": -0.009206587857356176,
+      "control_long_only_holdout": -0.17308203632501326,
+      "bh_fdr_survives": false,
+      "verdict": "DIAGNOSTIC_FAIL",
+      "beats_controls": false,
+      "powered": true
+    },
+    "pdh_pdl|short": {
+      "family": "pdh_pdl",
+      "direction": "short",
+      "train": {
+        "delta": -0.010662789753354183,
+        "n_scored": 37637,
+        "n_agree": 23114,
+        "n_disagree": 14523,
+        "n_strata": 7
+      },
+      "holdout": {
+        "delta": -0.005017383365802571,
+        "n_scored": 9415,
+        "n_agree": 5142,
+        "n_disagree": 4273,
+        "n_strata": 5
+      },
+      "holdout_stratum_occupancy": {
+        "SWEEP": {
+          "n_units": 3394,
+          "n_scored": 3394,
+          "n_agree": 1929,
+          "n_disagree": 1465,
+          "informative": true
+        },
+        "RANGE": {
+          "n_units": 4800,
+          "n_scored": 4800,
+          "n_agree": 2524,
+          "n_disagree": 2276,
+          "informative": true
+        },
+        "DISPLACEMENT": {
+          "n_units": 127,
+          "n_scored": 127,
+          "n_agree": 72,
+          "n_disagree": 55,
+          "informative": true
+        },
+        "EXPANSION": {
+          "n_units": 1090,
+          "n_scored": 1090,
+          "n_agree": 616,
+          "n_disagree": 474,
+          "informative": true
+        },
+        "RETEST": {
+          "n_units": 4,
+          "n_scored": 4,
+          "n_agree": 1,
+          "n_disagree": 3,
+          "informative": true
+        }
+      },
+      "delta_marginal_holdout": -0.0134287523101434,
+      "crt_proxy_component": -0.008411368944340828,
+      "sign_match": true,
+      "p_block_permutation": 0.6,
+      "control_shuffled_context": -0.0005731425798227533,
+      "control_long_only_holdout": -0.17308203632501326,
+      "bh_fdr_survives": false,
+      "verdict": "DIAGNOSTIC_FAIL",
+      "beats_controls": false,
+      "powered": true
+    },
+    "composite|long": {
+      "family": "composite",
+      "direction": "long",
+      "train": {
+        "delta": 0.004145691280317874,
+        "n_scored": 33226,
+        "n_agree": 17781,
+        "n_disagree": 15445,
+        "n_strata": 7
+      },
+      "holdout": {
+        "delta": 0.0171491589156628,
+        "n_scored": 8154,
+        "n_agree": 4111,
+        "n_disagree": 4043,
+        "n_strata": 5
+      },
+      "holdout_stratum_occupancy": {
+        "SWEEP": {
+          "n_units": 3394,
+          "n_scored": 2938,
+          "n_agree": 1492,
+          "n_disagree": 1446,
+          "informative": true
+        },
+        "RANGE": {
+          "n_units": 4800,
+          "n_scored": 4166,
+          "n_agree": 2016,
+          "n_disagree": 2150,
+          "informative": true
+        },
+        "DISPLACEMENT": {
+          "n_units": 127,
+          "n_scored": 103,
+          "n_agree": 53,
+          "n_disagree": 50,
+          "informative": true
+        },
+        "EXPANSION": {
+          "n_units": 1090,
+          "n_scored": 943,
+          "n_agree": 548,
+          "n_disagree": 395,
+          "informative": true
+        },
+        "RETEST": {
+          "n_units": 4,
+          "n_scored": 4,
+          "n_agree": 2,
+          "n_disagree": 2,
+          "informative": true
+        }
+      },
+      "delta_marginal_holdout": 0.0172098557763061,
+      "crt_proxy_component": 6.0696860643298656e-05,
+      "sign_match": true,
+      "p_block_permutation": 0.085,
+      "control_shuffled_context": -0.005281755665853721,
+      "control_long_only_holdout": -0.17308203632501326,
+      "bh_fdr_survives": false,
+      "verdict": "DIAGNOSTIC_FAIL",
+      "beats_controls": false,
+      "powered": true
+    },
+    "composite|short": {
+      "family": "composite",
+      "direction": "short",
+      "train": {
+        "delta": 0.009531605070360489,
+        "n_scored": 33115,
+        "n_agree": 14469,
+        "n_disagree": 18646,
+        "n_strata": 7
+      },
+      "holdout": {
+        "delta": 0.014902307743146747,
+        "n_scored": 8206,
+        "n_agree": 3740,
+        "n_disagree": 4466,
+        "n_strata": 5
+      },
+      "holdout_stratum_occupancy": {
+        "SWEEP": {
+          "n_units": 3394,
+          "n_scored": 2962,
+          "n_agree": 1363,
+          "n_disagree": 1599,
+          "informative": true
+        },
+        "RANGE": {
+          "n_units": 4800,
+          "n_scored": 4164,
+          "n_agree": 1959,
+          "n_disagree": 2205,
+          "informative": true
+        },
+        "DISPLACEMENT": {
+          "n_units": 127,
+          "n_scored": 105,
+          "n_agree": 44,
+          "n_disagree": 61,
+          "informative": true
+        },
+        "EXPANSION": {
+          "n_units": 1090,
+          "n_scored": 971,
+          "n_agree": 372,
+          "n_disagree": 599,
+          "informative": true
+        },
+        "RETEST": {
+          "n_units": 4,
+          "n_scored": 4,
+          "n_agree": 2,
+          "n_disagree": 2,
+          "informative": true
+        }
+      },
+      "delta_marginal_holdout": 0.02303783317085059,
+      "crt_proxy_component": 0.008135525427703844,
+      "sign_match": true,
+      "p_block_permutation": 0.105,
+      "control_shuffled_context": -0.0034805784804570763,
+      "control_long_only_holdout": -0.17308203632501326,
+      "bh_fdr_survives": false,
+      "verdict": "DIAGNOSTIC_FAIL",
+      "beats_controls": false,
+      "powered": true
+    }
+  },
+  "not": [
+    "G001",
+    "an economic claim",
+    "authority to size",
+    "authority to enter context_attribution.promoted_families",
+    "a statement about production's executed trades",
+    "E>0",
+    "F-086 stride holdout",
+    "a k sweep"
+  ]
+}

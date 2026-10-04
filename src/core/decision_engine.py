@@ -3,58 +3,47 @@ Central execution authority.
 
 Only this module decides execute vs reject.
 
+OWNERSHIP BOUNDARY (F-048 resolved 2026-07-24)
+----------------------------------------------
+DecisionEngine answers ONE question: "is this a valid market opportunity?" — a SEMANTIC judgment
+over market evidence (fused score, p_win, zone validity, weak-component). It does NOT know about,
+and MUST NOT gate on, economics: fees / taxes / slippage / brokerage / portfolio / capital, or
+reward:risk. Economic reward:risk is owned solely by ``UltronRiskGate`` (Check 2, cost-taxed
+``min_rr_ratio``, after ``ExecutionPlanner`` derives SL/TP); concrete SL/TP + sizing by
+``ExecutionPlanner``. The prior RR gate here consumed CandleCommitment candle polarity (∈[0.5,1]) against
+a reward:risk threshold — a producer/consumer contract mismatch (F-048) that has been REMOVED, not
+shimmed. There is no RR term in ``evaluate`` anymore.
+
 FIX 1 — Dynamic Threshold Calibration: threshold = percentile(scores, 85),
          clamped [0.45, 0.65]. Falls back to 0.55 until history is available.
-FIX 3 — Dead Engine Neutralization: zone_gate_invalid check is bypassed when
-         the zone_gate engine is detected as dead across the scoring window.
+FIX 3 — Dead Engine Neutralization: feature_cluster_similarity_invalid check is bypassed when
+         the feature_cluster_similarity engine is detected as dead across the scoring window.
 FIX 4 — Minimum Acceptance Fallback: decide_batch() promotes top-N signals
          when zero pass, guaranteeing ACCEPT > 0 per batch.
 FIX 5 — Logging: threshold_used and reject_stage always present in output.
+
+DynamicThreshold has been extracted to core/dynamic_threshold.py.
+It is re-exported here for backward compatibility.
+New code should import it from core.dynamic_threshold directly.
 """
 
 from __future__ import annotations
 
 import logging
-from collections import deque
 from dataclasses import dataclass
 from typing import Any
+
+from core.dynamic_threshold import DynamicThreshold  # noqa: F401 — re-export for backward compat
+from config_layer.strict_config import require_all
 
 log = logging.getLogger("DecisionEngine")
 
 # ─────────────────────────────────────────────────────────────────────────────
-# FIX 1 — DYNAMIC THRESHOLD
+# FIX 1 — DYNAMIC THRESHOLD (implementation lives in core/dynamic_threshold.py)
 # ─────────────────────────────────────────────────────────────────────────────
 
-_THRESHOLD_PERCENTILE = 85
-_THRESHOLD_MIN        = 0.45
-_THRESHOLD_MAX        = 0.65
-_FALLBACK_TOP_N       = 3
-
-
-class DynamicThreshold:
-    """
-    Percentile-based threshold: threshold = percentile(scores, 85),
-    clamped to [0.45, 0.65]. Returns 0.55 (midpoint) until history exists.
-    """
-
-    def __init__(self, window: int = 1000) -> None:
-        self._scores: deque[float] = deque(maxlen=window)
-
-    def update(self, score: float) -> None:
-        self._scores.append(score)
-
-    def compute(self) -> float:
-        if not self._scores:
-            return (_THRESHOLD_MIN + _THRESHOLD_MAX) / 2.0
-        sorted_scores = sorted(self._scores)
-        n   = len(sorted_scores)
-        idx = min(int(n * _THRESHOLD_PERCENTILE / 100), n - 1)
-        raw = sorted_scores[idx]
-        return max(_THRESHOLD_MIN, min(_THRESHOLD_MAX, raw))
-
-    @property
-    def n_samples(self) -> int:
-        return len(self._scores)
+# EPIC-84 STORY-84.2: _FALLBACK_TOP_N (3) and the threshold_window=1000 keyword default are gone —
+# both are declared decision_engine keys (``fallback_top_n``, ``threshold_window``), required.
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -102,21 +91,47 @@ def _require_decision_cfg(config: Any, key: str) -> float:
 # ─────────────────────────────────────────────────────────────────────────────
 
 class DecisionEngine:
-    def __init__(self, config=None, threshold_window: int = 1000, fallback_n: int = _FALLBACK_TOP_N):
+    #: Every decision_engine key read at construction (one require_all; no defaults).
+    _REQUIRED_KEYS: tuple[str, ...] = (
+        "score_threshold",
+        "p_win_threshold",
+        "weak_link_weight",
+        "weak_component_threshold",
+        "threshold_percentile",
+        "threshold_min",
+        "threshold_max",
+        "threshold_window",
+        "fallback_top_n",
+    )
+
+    def __init__(self, config=None, fallback_n: int | None = None):
         if config is None:
             raise ValueError(
                 "DecisionEngine requires a config dict. "
                 "Pass the decision_engine section from v1_multi_2026_03.json."
             )
+        if isinstance(config, dict):
+            require_all(config, self._REQUIRED_KEYS,
+                        section_name="decision_engine", consumer="DecisionEngine")
         self.config = config
         self.score_threshold          = _require_decision_cfg(config, "score_threshold")
         self.p_win_threshold          = _require_decision_cfg(config, "p_win_threshold")
-        self.rr_threshold             = _require_decision_cfg(config, "rr_threshold")
+        # rr_threshold intentionally NOT read (F-048 resolved): DecisionEngine owns no economic
+        # RR gate. The config key is retained-but-RETIRED; economic RR = ultron_risk_gate.min_rr_ratio.
         self.weak_link_weight         = _require_decision_cfg(config, "weak_link_weight")
         self.weak_component_threshold = _require_decision_cfg(config, "weak_component_threshold")
-        # FIX 1 — dynamic threshold replaces static score_threshold for score check
-        self._dynamic_threshold = DynamicThreshold(threshold_window)
-        self._fallback_n        = fallback_n
+        # FIX 1 — dynamic threshold replaces static score_threshold for score check.
+        # BEHAVIORAL knobs read fail-fast from config (no silent defaults): the percentile
+        # + clamp bounds were previously hardcoded module constants in dynamic_threshold.py.
+        self._dynamic_threshold = DynamicThreshold(
+            int(_require_decision_cfg(config, "threshold_window")),
+            percentile=int(_require_decision_cfg(config, "threshold_percentile")),
+            t_min=_require_decision_cfg(config, "threshold_min"),
+            t_max=_require_decision_cfg(config, "threshold_max"),
+        )
+        # FIX 4 — fallback_top_n: explicit arg overrides the (required) config key.
+        _cfg_fallback_n = int(_require_decision_cfg(config, "fallback_top_n"))
+        self._fallback_n = fallback_n if fallback_n is not None else _cfg_fallback_n
 
     # ── Single-signal evaluation ──────────────────────────────────────────────
 
@@ -124,13 +139,12 @@ class DecisionEngine:
         self,
         score: float,
         p_win: float,
-        zone_gate: dict,
+        feature_cluster_similarity: dict,
         fusion: dict,
         config: Any,
     ) -> dict:
         weak_component_threshold = _require_decision_cfg(config, "weak_component_threshold")
         p_win_threshold          = _require_decision_cfg(config, "p_win_threshold")
-        rr_threshold             = _require_decision_cfg(config, "rr_threshold")
 
         # Use the normalised score from fusion if present (FIX 2 output)
         effective_score = float(fusion.get("normalized_score", score))
@@ -139,10 +153,10 @@ class DecisionEngine:
         # is decided against historical distribution, not itself
         threshold = self._dynamic_threshold.compute()
 
-        # FIX 3 — bypass zone_gate_invalid rejection when engine is dead
-        zone_gate_dead = bool(fusion.get("zone_gate_dead", False))
-        if not zone_gate_dead and not bool(zone_gate.get("valid", False)):
-            result = self._reject("zone_gate_invalid", threshold)
+        # FIX 3 — bypass feature_cluster_similarity_invalid rejection when engine is dead
+        feature_cluster_similarity_dead = bool(fusion.get("feature_cluster_similarity_dead", False))
+        if not feature_cluster_similarity_dead and not bool(feature_cluster_similarity.get("valid", False)):
+            result = self._reject("feature_cluster_similarity_invalid", threshold)
             self._dynamic_threshold.update(effective_score)
             return result
 
@@ -156,10 +170,10 @@ class DecisionEngine:
             self._dynamic_threshold.update(effective_score)
             return result
 
-        if float(fusion.get("rr", 0.0)) < float(rr_threshold):
-            result = self._reject("low_rr", threshold)
-            self._dynamic_threshold.update(effective_score)
-            return result
+        # NO economic RR gate here (F-048 resolved 2026-07-24). Reward:risk — polarity (contract
+        # A, fused elsewhere) and true SL/TP RR (contract D) — is NOT a DecisionEngine concern.
+        # Economic RR is enforced downstream by UltronRiskGate.evaluate (cost-taxed min_rr_ratio),
+        # after ExecutionPlanner has built SL/TP. DecisionEngine stays purely semantic.
 
         if float(fusion.get("weak_component", 0.0)) > float(weak_component_threshold):
             result = self._reject("weak_setup", threshold)
@@ -181,7 +195,7 @@ class DecisionEngine:
     def decide_batch(self, signals: list[dict]) -> list[dict]:
         """
         Decide on a batch of pre-scored signals.
-        Each signal dict must contain: score, p_win, zone_gate, fusion, config.
+        Each signal dict must contain: score, p_win, feature_cluster_similarity, fusion, config.
         FIX 4: if zero signals pass, promote top-N by score to ACCEPT.
 
         Returns list of evaluate() dicts with an added 'input_score' key.
@@ -194,7 +208,7 @@ class DecisionEngine:
             r = self.evaluate(
                 score     = s.get("score", 0.0),
                 p_win     = s.get("p_win", 0.0),
-                zone_gate = s.get("zone_gate", {}),
+                feature_cluster_similarity = s.get("feature_cluster_similarity", {}),
                 fusion    = s.get("fusion", {}),
                 config    = s.get("config", self.config),
             )

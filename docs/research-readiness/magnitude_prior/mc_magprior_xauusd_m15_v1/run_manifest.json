@@ -1,0 +1,36 @@
+{
+  "ACTIVE_VERSION": "v2_htfcrt_2026_08",
+  "argv": [
+    "D:\\Tradelatest\\src\\research\\evidence\\magnitude_prior.py"
+  ],
+  "branch": "feature/truth-registry-v2",
+  "command": "python -m research.evidence (MC-MAGPRIOR-XAUUSD-M15-V1)",
+  "config_hash": "7de09f6233b712f0136fc1bf1d2a51322b5b7c65395c75b035d0f96db689d613",
+  "contract_id": "MC-MAGPRIOR-XAUUSD-M15-V1",
+  "cost_model_bps": "CM-INFO-STAGE-NONE",
+  "cwd": "D:\\Tradelatest",
+  "data_source": "data/mt5/XAUUSD_M15.csv",
+  "dry_run": true,
+  "economic_claims_allowed": false,
+  "exit_model": "EX-MAGPRIOR-HORIZON-MFE-V1",
+  "git_sha": "0fa376884d53f30dfcecc63769e45303ff5d83a6",
+  "instruments": [
+    "XAUUSD"
+  ],
+  "intended_work_item_id": "E-MAGPRIOR-XAUUSD-M15",
+  "label_source": "information_target",
+  "mt00": "PARTIAL",
+  "mt01_matrix_coverage": "UNRUN",
+  "network": "none",
+  "out_dir": "docs/research-readiness/magnitude_prior/mc_magprior_xauusd_m15_v1",
+  "run_id": "20260826T172044Z-8d9c3c12",
+  "spine_truth": {
+    "config_hash": "7de09f6233b712f0136fc1bf1d2a51322b5b7c65395c75b035d0f96db689d613",
+    "config_version": "v2_htfcrt_2026_08",
+    "feature_schema_hash": "160c96c52b198a16"
+  },
+  "timeframe": "M15",
+  "timestamp_utc": "2026-08-26T17:20:44.810522+00:00",
+  "validation_flow_review": "UNTRUSTED_RAW",
+  "validation_lens": "info_only"
+}

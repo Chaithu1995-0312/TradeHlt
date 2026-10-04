@@ -1,0 +1,43 @@
+{
+  "program": "PHASE1_CANONICAL_FEATURE_TRUTH_AND_MODEL_LINEAGE",
+  "run": "1.5A",
+  "PHASE1_RUN15A_STATUS": "COMPLETE",
+  "RUN15B_AUTHORIZATION": "NOT_AUTOMATIC",
+  "generated_at_utc": "2026-07-10T16:18:42Z",
+  "repository_commit": "b48d4d9a7abfb429f2a17c790d4b32083da5dd92",
+  "worktree_dirty": true,
+  "RUN1_INPUT_RECORDS": 142,
+  "RECORDS_ADJUDICATED": 142,
+  "PRIMARY_ROLE_COUNTS": {
+    "CANONICAL_SOURCE_FIELD": 5,
+    "DUPLICATE_IMPLEMENTATION": 5,
+    "CANONICAL_FEATURE_CANDIDATE": 35,
+    "IMPLEMENTATION_INTERMEDIATE": 9,
+    "EXPLICIT_MODEL_SPECIFIC_QUANTITY": 11,
+    "BLOCKED": 2,
+    "TRAINING_ONLY_QUANTITY": 1,
+    "RESEARCH_ONLY_QUANTITY": 20,
+    "PROVEN_UNREACHABLE_OR_ARCHIVED": 12,
+    "DIAGNOSTIC_OR_METRIC": 31,
+    "STATE_OR_CACHE": 11
+  },
+  "UNKNOWN_PRIMARY_ROLE": 0,
+  "NEW_DISCOVERY_BACKLOG_COUNT": 2,
+  "denominator_expanded": false,
+  "production_feature_code_changed": false,
+  "model_enablement_changed": false,
+  "model_artifacts_changed": false,
+  "ECONOMIC_CLAIMS_ALLOWED": false,
+  "model_training_lineage_started": false,
+  "canonical_formulas_defined": false,
+  "feature_universe_frozen": false,
+  "artifacts": [
+    "docs/governance/phase1_run15a_quantity_role_adjudication-2026-07-10.json",
+    "docs/governance/phase1_run15a_quantity_role_adjudication-2026-07-10.md",
+    "docs/governance/phase1_run15a_blocked_records-2026-07-10.json",
+    "docs/governance/phase1_run15a_new_discovery_backlog-2026-07-10.json",
+    "docs/governance/phase1_run15a_manifest-2026-07-10.json",
+    "scripts/analysis/phase1_run15a_quantity_role_adjudication.py",
+    "tests/test_phase1_run15a_quantity_roles.py"
+  ]
+}

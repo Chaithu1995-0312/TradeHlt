@@ -22,6 +22,22 @@ from unittest.mock import patch, MagicMock
 
 from features.feature_schema import CANONICAL_FEATURES
 
+# Strict Phase5Config for gate-rejection tests — independent of production config.
+# The production config may loosen these thresholds (e.g. min_corr=-1.0),
+# so tests that verify gate-rejection logic must patch _CFG directly.
+def _strict_cfg():
+    """Return a Phase5Config with canonical strict defaults for gate tests."""
+    from training.phase5_calibration import Phase5Config
+    return Phase5Config(
+        val_ratio        = 0.30,
+        min_val_samples  = 30,
+        min_corr         = 0.10,
+        max_cal_error    = 0.25,
+        cv_corr_std_max  = 0.05,
+        cv_n_folds       = 3,
+        require_cv_stable= True,
+    )
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Shared helpers
@@ -213,6 +229,7 @@ def test_reject_min_val_samples():
 
 def test_reject_min_corr():
     """Gate 2: corr(expected_rr, pnl_rr) below threshold → rejected."""
+    import training.phase5_calibration as _p5
     from training.phase5_calibration import make_calibration_fn
 
     model, scaler = _make_fitted_model_and_scaler()
@@ -221,7 +238,8 @@ def test_reject_min_corr():
 
     ev = _good_eval_result()
     ev.corr_expected_rr = 0.02   # below min_corr=0.10 ❌
-    with patch("training.evaluator.evaluate_gaussian", return_value=ev), \
+    with patch.object(_p5, "_CFG", _strict_cfg()), \
+         patch("training.evaluator.evaluate_gaussian", return_value=ev), \
          patch("training.trainer.cross_val_gaussian",  return_value=_good_cv_result()):
         result = fn(X, y_rr)
 
@@ -251,6 +269,7 @@ def test_reject_max_cal_error():
 
 def test_reject_cv_unstable():
     """Gate 4: CV corr_std above threshold → cv_stable=False → rejected."""
+    import training.phase5_calibration as _p5
     from training.phase5_calibration import make_calibration_fn
 
     model, scaler = _make_fitted_model_and_scaler()
@@ -258,7 +277,8 @@ def test_reject_cv_unstable():
     X, y_rr = _make_X_y(n=100)
 
     unstable_cv = {"stable": False, "corr_mean": 0.10, "corr_std": 0.12}
-    with patch("training.evaluator.evaluate_gaussian", return_value=_good_eval_result()), \
+    with patch.object(_p5, "_CFG", _strict_cfg()), \
+         patch("training.evaluator.evaluate_gaussian", return_value=_good_eval_result()), \
          patch("training.trainer.cross_val_gaussian",  return_value=unstable_cv):
         result = fn(X, y_rr)
 
@@ -273,6 +293,7 @@ def test_reject_cv_unstable():
 
 def test_multiple_gate_failures_all_reported():
     """gate_checks dict must capture ALL failed gates, not just the first."""
+    import training.phase5_calibration as _p5
     from training.phase5_calibration import make_calibration_fn
 
     model, scaler = _make_fitted_model_and_scaler()
@@ -284,7 +305,8 @@ def test_multiple_gate_failures_all_reported():
     ev.calibration_error = 0.50   # fails max_cal_error
     unstable_cv = {"stable": False, "corr_mean": 0.0, "corr_std": 0.20}
 
-    with patch("training.evaluator.evaluate_gaussian", return_value=ev), \
+    with patch.object(_p5, "_CFG", _strict_cfg()), \
+         patch("training.evaluator.evaluate_gaussian", return_value=ev), \
          patch("training.trainer.cross_val_gaussian",  return_value=unstable_cv):
         result = fn(X, y_rr)
 
@@ -302,13 +324,15 @@ def test_multiple_gate_failures_all_reported():
 
 def test_cv_exception_treated_as_unstable():
     """If cross_val_gaussian raises, cv_stable must default to False (no crash)."""
+    import training.phase5_calibration as _p5
     from training.phase5_calibration import make_calibration_fn
 
     model, scaler = _make_fitted_model_and_scaler()
     fn  = make_calibration_fn(model, scaler)
     X, y_rr = _make_X_y(n=100)
 
-    with patch("training.evaluator.evaluate_gaussian", return_value=_good_eval_result()), \
+    with patch.object(_p5, "_CFG", _strict_cfg()), \
+         patch("training.evaluator.evaluate_gaussian", return_value=_good_eval_result()), \
          patch("training.trainer.cross_val_gaussian", side_effect=RuntimeError("CV failed")):
         result = fn(X, y_rr)   # must NOT raise
 

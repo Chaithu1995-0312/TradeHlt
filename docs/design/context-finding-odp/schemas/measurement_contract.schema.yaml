@@ -1,0 +1,263 @@
+# DESIGN ONLY — not wired to runtime.
+# Artifact: MeasurementContract (ODP / Finding facing)
+# Subordinate to existing charter: docs/governance/MEASUREMENT_CONTRACT.md (E-MT-00 / E-MT-01)
+# Existing profiles: configs/research/measurement_contracts/*.json
+# Existing formal schema: docs/governance/measurement_contract.schema.json
+#
+# Purpose of THIS design artifact:
+#   Bridge Context/Finding/ODP to the repo's sealed MC-* instances so two ODPs
+#   that both claim outcome_metric: mfe_atr are only comparable when contract_ref matches.
+# Do NOT invent a second parallel contract system.
+
+schema_version: "0.3.0"
+artifact: MeasurementContract
+status: design_draft
+subordinate_to:
+  charter: docs/governance/MEASUREMENT_CONTRACT.md
+  formal_schema: docs/governance/measurement_contract.schema.json
+  profiles_dir: configs/research/measurement_contracts/
+  relationship: |
+    Sealed MC-* instances remain the admissibility authority (E0–E4).
+    This design schema defines the minimum fields an ODP/Finding must reference
+    so empirical rows are comparable. Prefer pointing at an existing sealed MC-*
+    via contract_ref rather than embedding a full E-MT surface here.
+
+authority:
+  declares: how_and_on_whom_a_measurement_was_taken
+  does_not_declare:
+    - trade_rules
+    - size_multiplier
+    - mechanism_stories
+  does_not_grant: economic_admissibility  # only E-MT-00 PASS + E-MT-01 COMPLETE
+
+workflow_alignment: |
+  Hypothesis
+    ↓ Measurement Contract   (this artifact / sealed MC-*)
+    ↓ ODP                    (measured facts under Context + contract)
+    ↓ Finding                (catalog claim + evidence + refs)
+    ↓ Promotion              (governance; out of scope here)
+
+fields:
+  id:
+    type: string
+    pattern: "^MC-[A-Z0-9_-]+$"
+    required: true
+    examples: [MC-ODP-CTX-XAUUSD-M15-V1]
+
+  title:
+    type: string
+    required: true
+
+  status:
+    type: string
+    enum: [DRAFT, SEALED, SUPERSEDED, RETIRED]
+    required: true
+    notes: |
+      DRAFT contracts may be referenced by OPEN findings / confidence:none ODPs.
+      Comparability and promotion require SEALED (and charter E4 trust when economic).
+
+  profile_ref:
+    type: string | null
+    description: Optional MP-* profile id (e.g. metals/FX profile under measurement_contracts/).
+
+  sealed_mc_ref:
+    type: string | null
+    description: |
+      Path or id of a sealed MC-* instance under the formal E-MT schema.
+      When set, surfaces below may be abbreviated to deltas from that seal.
+      When null, this design row must still populate population + sampling + splits
+      enough that two ODPs cannot silently share an outcome_metric name.
+
+  # --- Minimum surfaces for ODP comparability (subset of charter §3) ---
+
+  population:
+    type: object
+    required: true
+    fields:
+      instruments:
+        type: list[string]
+        required: true
+      timeframe:
+        type: string
+        required: true
+      unit_of_analysis:
+        type: string
+        enum: [candle, signal_event, trade_decision, settlement_event, panel_row, context_bar]
+        required: true
+        notes: |
+          For Context→ODP work prefer context_bar (every bar matching Context)
+          or trade_decision when measuring ledger outcomes. Never confuse the two
+          (F-022 / E-MT population substitution).
+      detection_vs_trade:
+        type: string
+        enum: [detection_stream, trade_ledger, observation_join, mixed_forbidden]
+        required: true
+      parent_timeframe_source:
+        type: string | null
+        enum: [derived_h4, native_h4, null]
+        notes: F-075 / CORPUS_AUTHORITY — derived_h4 ≠ native_h4 populations.
+      inclusion:
+        type: list[string]
+        required: true
+        description: Human-readable + machine keys for who is in the sample.
+        examples:
+          - "Context.state in EXECUTION_TIMEFRAME_STATES"
+          - "structure.breaker_present == true"
+          - "warmup bars excluded via bar_structure_snapshot identity"
+      exclusion:
+        type: list[string]
+        required: true
+        examples:
+          - "confidence fallback / unmatched Context"
+          - "parent graph states mixed into execution state field"
+      calendar_window:
+        type: string | null
+        examples: ["2024-01-01 .. 2026-06-30"]
+      n_declared_min:
+        type: integer
+        default: 30
+        notes: Historical INSUFFICIENT floor (F-030); soft for DRAFT ODPs.
+
+  sampling:
+    type: object
+    required: true
+    fields:
+      procedure:
+        type: string
+        required: true
+        examples:
+          - "all context_bar matches in window"
+          - "first hit per episode"
+          - "stratified by htf_bucket"
+      lookahead_bars:
+        type: integer
+        required: true
+      outcome_metric:
+        type: string
+        required: true
+        examples: [forward_return_atr, mfe_atr, mae_atr]
+      path_definition:
+        type: string
+        required: true
+        description: Exact path/label definition (close-only vs intrabar, etc.).
+      baseline:
+        type: string | null
+        description: Declared baseline / control for comparison, if any.
+
+  splits:
+    type: object
+    required: true
+    fields:
+      discovery_window:
+        type: string | null
+      holdout_window:
+        type: string | null
+      holdout_procedure:
+        type: string
+        enum: [none_declared, temporal_holdout, purged_kfold, walk_forward, other]
+        required: true
+      overlap_policy:
+        type: string
+        enum: [forbid_overlapping_labels, allow_with_note]
+        default: forbid_overlapping_labels
+
+  corpus_identity:
+    type: object
+    required: true
+    fields:
+      corpus_pin:
+        type: string | null
+        description: corpus_sha256 when available
+      dataset_identity:
+        type: string | null
+        description: Dataset Identity / admission API id when used
+      run_id_policy:
+        type: string
+        description: How run_id / bar_index identity is taken (prefer bar_structure_snapshot style)
+
+  hierarchy_scope:
+    type: object
+    required: true
+    description: Which observation-graph levels this contract is allowed to condition on.
+    fields:
+      levels_allowed:
+        type: list[string]
+        enum_members:
+          - L1_parent_crt
+          - L2_objective_status
+          - L3_execution_crt
+          - L4_structure_atoms
+          - L5_outcome_distribution
+        required: true
+      acyclic_rule: |
+        Higher layers may condition lower layers.
+        Lower layers may not redefine higher layers.
+        Example VALID: MANIPULATION_C2 → P(SWEEP) ↑
+        Example INVALID: CHoCH observed ⇒ redefine parent as MANIPULATION_C2
+
+  unknown_policy:
+    type: object
+    fields:
+      contract_unknown_allowed:
+        type: boolean
+        default: true
+        description: |
+          Finding.contract may still be UNKNOWN (honest, per current-findings.md).
+          UNKNOWN carries no comparability and settles nothing.
+      odp_requires_sealed_for_promotion:
+        type: boolean
+        default: true
+      odp_draft_may_reference_draft_mc:
+        type: boolean
+        default: true
+
+# Measured 2026-09-08 (schema-only inventory, see assistant_project.md session log): this
+# design file's field enums are NOT a re-derivation of the frozen JSON schema's enums --
+# several diverge with no declared mapping. Recorded here so a future ODP author does not
+# treat a YAML-only term as valid on a sealed MC-* instance (docs/governance/
+# measurement_contract.schema.json is FROZEN v1.0.0 and is the sole admissibility authority).
+vocabulary_divergence_from_formal_schema:
+  status: measured_2026_09_08
+  authority: docs/governance/measurement_contract.schema.json is authoritative on conflict
+  fields:
+    population.unit_of_analysis:
+      formal_json_enum: [candle, signal_event, trade_decision, settlement_event, panel_row, rebalance]
+      this_yaml_enum: [candle, signal_event, trade_decision, settlement_event, panel_row, context_bar]
+      disposition: |
+        design_only_term: context_bar has no formal-schema counterpart (Context/ODP-facing
+        addition for bar-matches-a-Context populations). rebalance (formal) has no YAML
+        counterpart -- carry-harvest-shaped contracts (F-034 class) must still use the formal
+        schema directly via sealed_mc_ref, not this design row.
+    population.detection_vs_trade:
+      formal_json_enum: [detection_stream, trade_ledger, hybrid_explicit, not_applicable]
+      this_yaml_enum: [detection_stream, trade_ledger, observation_join, mixed_forbidden]
+      disposition: |
+        different_vocabulary, not a subset. observation_join / mixed_forbidden are design-only
+        terms with no declared mapping to hybrid_explicit / not_applicable. Do NOT infer an
+        equivalence -- a sealed MC-* instance validates only against the formal enum.
+    splits.holdout_procedure (this file) vs splits.scheme (formal):
+      formal_json_enum: [walk_forward, purged_kfold, single_holdout_chronologic, event_study_matched, none_full_sample_info]
+      this_yaml_enum: [none_declared, temporal_holdout, purged_kfold, walk_forward, other]
+      disposition: |
+        different_field_name AND different_vocabulary. temporal_holdout / other / none_declared
+        are design-only; single_holdout_chronologic / event_study_matched /
+        none_full_sample_info (formal) have no YAML counterpart.
+    splits.overlap_policy:
+      formal_json_enum: [forbid_overlapping_labels, allow_with_block_bootstrap, event_nonoverlap]
+      this_yaml_enum: [forbid_overlapping_labels, allow_with_note]
+      disposition: |
+        design_only_term: allow_with_note has no formal-schema counterpart.
+        allow_with_block_bootstrap / event_nonoverlap (formal) have no YAML counterpart.
+  rule: |
+    A DRAFT ODP may use this file's vocabulary for exploratory, unsealed work. Any row
+    claiming comparability or promotion must set sealed_mc_ref and defer to the formal JSON
+    schema's enums for every field where the two diverge -- never treat this file's term as
+    if it validates against the formal schema.
+
+forbidden:
+  - Treating profile defaults as sealed identity
+  - Sharing outcome_metric name across different contract_ref values and pooling numbers
+  - Synthetic FALLBACK quantiles as if measured under this contract
+  - Lower-layer observations rewriting L1 parent identity
+  - Treating a YAML-only enum member (see vocabulary_divergence_from_formal_schema above) as
+    valid on a sealed MC-* instance -- the formal schema's enum is the sole admissibility gate

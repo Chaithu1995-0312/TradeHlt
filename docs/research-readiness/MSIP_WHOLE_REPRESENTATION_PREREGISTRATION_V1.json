@@ -1,0 +1,121 @@
+{
+  "schema_id": "MSIP_WHOLE_REPRESENTATION_PREREGISTRATION_V1",
+  "status": "DRAFT_FREEZE_BLOCKED_PARKED_CONTINUE_LATER",
+  "protocol_review_experiment_plane": "docs/governance/protocol_review_experiment_plane/",
+  "parked": true,
+  "parked_at": "2026-07-14",
+  "resume_trigger": "Continue PREP | Wave A | resume MSIP whole prereg review validation",
+  "task_class": "EXPLORATORY_RESEARCH_DESIGN_ONLY",
+  "hypothesis_id": "NOT_ASSIGNED_UNTIL_PROTOCOL_IS_REVIEW_COMPLETE",
+  "execution_authorized": false,
+  "implementation_authorized": false,
+  "run_authority_this_session": false,
+  "created_at_utc": "2026-07-14T13:00:00Z",
+  "primary_question": "Does the governed continuous MarketStateVector contain reproducible incremental predictive information about future market behavior beyond CRT lifecycle state and frozen baseline market controls?",
+  "primary_contrast": "M2_minus_M1",
+  "information_sets": {
+    "M0": "baseline_market_controls",
+    "M1": "M0_plus_CRT_lifecycle_observations",
+    "M2": "M1_plus_governed_MSV_WHAT"
+  },
+  "population": {
+    "corpus": "data/mt5/XAUUSD_M15.csv",
+    "corpus_sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+    "unit": "bar",
+    "occupancy_filter_primary": "none_full_eligible",
+    "min_total_eligible": 10000,
+    "min_outer_test_n_per_fold": 500
+  },
+  "outcome": {
+    "primary": "R_h",
+    "horizon": 8,
+    "secondary_horizons": [1, 4, 16, 32]
+  },
+  "msv_incremental_block": [
+    "higher_high", "lower_low", "break_of_structure", "liquidity_sweep", "sweep_detected",
+    "liquidity_distance", "liquidity_pressure_score",
+    "atr", "volatility_ratio",
+    "trend_strength", "ema_fast", "ema_slow",
+    "body_ratio", "body_size", "wick_size"
+  ],
+  "exclusions": [
+    "HOW_labels",
+    "crt_private_memory",
+    "economic_outputs",
+    "authority_surfaces",
+    "post_hoc_features"
+  ],
+  "model_families": {
+    "primary_for_success": "F-LIN",
+    "families": ["F-LIN", "F-ENET", "F-TREE"],
+    "forbidden_v1": ["random_forest", "gbm", "neural_net", "automl"]
+  },
+  "hyperparameters": {
+    "F-LIN": {"alpha": [0.1, 1.0, 10.0, 100.0]},
+    "F-ENET": {"alpha": [0.1, 1.0, 10.0], "l1_ratio": [0.2, 0.5, 0.8]},
+    "F-TREE": {"max_depth": [2, 3, 4], "min_samples_leaf": [200, 500]}
+  },
+  "nested_oos": {
+    "outer_folds": 5,
+    "inner_folds": 3,
+    "hyperparam_selection": "minimize_inner_MSE_on_M1_then_apply_to_all_M",
+    "primary_metric": "median_seed_outer_delta_MSE_M1_minus_M2",
+    "seeds": [0, 1, 2, 3, 4]
+  },
+  "global_null": {
+    "B": 200,
+    "seed": 20260714,
+    "method": "block_permute_R8_within_train_calendar_month_full_nested_procedure"
+  },
+  "negative_controls": ["NC-YPERM", "NC-MSVPERM", "NC-TIMESHIFT", "NC-CRTONLY"],
+  "ablations": ["A-STRUCT", "A-LIQ", "A-VOL", "A-TREND", "A-CANDLE"],
+  "research_relevance_floor": {
+    "relative_MSE_reduction_min": 0.005
+  },
+  "global_success_conjunction": [
+    "M2_outperforms_M1_primary_held_out",
+    "nested_temporal_OOS_stability",
+    "seed_aggregation_rule",
+    "negative_controls_do_not_reproduce",
+    "global_null_rejected",
+    "no_calendar_dominance",
+    "no_single_msv_family_required",
+    "exceeds_research_relevance_floor",
+    "provenance_causal_authority_gates"
+  ],
+  "result_classes": [
+    "REPRESENTATION_SUPPORTIVE",
+    "NO_INCREMENTAL_INFORMATION",
+    "INSUFFICIENT_SAMPLE",
+    "UNSTABLE_TEMPORAL",
+    "MODEL_CAPACITY_LIMIT",
+    "REPRESENTATION_REDUNDANCY",
+    "PROTOCOL_FAILURE",
+    "INCONCLUSIVE",
+    "FAMILY_DISAGREEMENT_NO_PRIMARY"
+  ],
+  "null_result_value_plan": [
+    "no_incremental_information",
+    "insufficient_sample",
+    "unstable_temporal_generalization",
+    "model_capacity_limitation",
+    "representation_redundancy",
+    "protocol_failure"
+  ],
+  "hard_flags": {
+    "CRT_BEHAVIOR_CHANGE": false,
+    "MSIP_AUTHORITY_CHANGE": false,
+    "THRESHOLD_RESEARCH": false,
+    "MIGRATION_AUTHORIZED": false,
+    "PRODUCTION_AUTHORITY": false,
+    "ECONOMIC_EDGE_CLAIM": false
+  },
+  "lifecycle": {
+    "now": "independent_technical_review",
+    "then": "freeze_protocol_hash",
+    "then2": "owner_acceptance_of_freeze",
+    "stop": "no_RUN_until_later_session_explicit_grant",
+    "hypothesis_id_assignment": "only_after_protocol_review_complete"
+  },
+  "preregistration_doc": "docs/research-readiness/MSIP_WHOLE_REPRESENTATION_PREREGISTRATION_V1.md"
+}

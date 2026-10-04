@@ -1,0 +1,45 @@
+{
+  "change_id": "CH-identity-store-phase4",
+  "date_utc": "2026-08-23",
+  "objective": "User accepted Phase 3. Stamp PHYSICAL_STORAGE_STATUS=CLOSED. Implement Phase 4 Identity Check + file-backed writers/readers at src/identity/ with no recompute path (no feature_pipeline/feature_states/feature_schema/crt_engine on load). Occupancy stored not folded. RESET first-class. Not live spine. Not G001.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY",
+    "IDENTITY_STORE_CHANGE"
+  ],
+  "change_class_rationale": "Phase 3 acceptance is documentation (closure index, architecture stamp). Phase 4 is a new src/identity substrate not on the decision path. Load is Identity Check only. IDENTITY_STORE_CHANGE added to change_contracts.json this turn.",
+  "affected_files": [
+    "src/identity/__init__.py",
+    "src/identity/tokens.py",
+    "src/identity/hashes.py",
+    "src/identity/check.py",
+    "src/identity/store.py",
+    "tests/test_identity_store.py",
+    "tests/test_construction_protocol.py",
+    "docs/governance/change_contracts.json",
+    "docs/governance/PHYSICAL_STORAGE_ARCHITECTURE.md",
+    "docs/governance/CANONICAL_LAYER_IDENTITY_CONTRACT.md",
+    "docs/governance/STORAGE_PRESERVATION_CONTRACT.md",
+    "docs/governance/closure_authority_index.json",
+    "docs/governance/build_manifests/CH-identity-store-phase4.impact.json",
+    "docs/knowledge-map.md",
+    "CLAUDE.md",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/test_closure_authority_index.py",
+    "tests/test_identity_store.py",
+    "tests/test_construction_protocol.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert src/identity/, tests/test_identity_store.py, IDENTITY_STORE_CHANGE class, Phase 3 CLOSED stamp, and CLAUDE/closure-index PHYSICAL_STORAGE row. Identity and preservation stay CLOSED.",
+  "authority_granted": "User 2026-08-23: Phase 3 accepted; continue Phase 4. Identity Check without recompute paths.",
+  "authority_NOT_granted": "No live-spine wiring, no G001, no promotion, no migration of existing gitignored corpora, no Phase 5 replay/query, no Semantic OS id, no F-id.",
+  "production_behavior_changed": "NO"
+}

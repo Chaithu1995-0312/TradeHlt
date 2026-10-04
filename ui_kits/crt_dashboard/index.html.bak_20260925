@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>CRT Operations Dashboard — Tradelatest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+<script src="vendor/react.development.js"></script>
+<script src="vendor/react-dom.development.js"></script>
+<script src="vendor/babel.min.js"></script>
+<!-- lightweight-charts v4.2.0 (TradingView, Apache-2.0) — sets window.LightweightCharts; see vendor/README.md -->
+<script src="vendor/lightweight-charts.standalone.production.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<!-- data.js loads first — provides static scaffold globals -->
+<script src="data.js"></script>
+<!-- apiClient.js — centralized fetch surface; sets window.ApiClient -->
+<script src="apiClient.js"></script>
+<!-- JSX components — receive data via props, never read window globals for runtime data -->
+<script type="text/babel" src="charts.jsx"></script>
+<script type="text/babel" src="shared.jsx"></script>
+<script type="text/babel" src="page0_executive.jsx"></script>
+<script type="text/babel" src="page1_runtime.jsx"></script>
+<script type="text/babel" src="page2_research.jsx"></script>
+<script type="text/babel" src="page3_models.jsx"></script>
+<script type="text/babel" src="page4_trade_chart.jsx"></script>
+<script type="text/babel" src="page4_trades.jsx"></script>
+<script type="text/babel" src="page5_backtests.jsx"></script>
+<script type="text/babel" src="page6_system.jsx"></script>
+<script type="text/babel" src="page7_intelligence.jsx"></script>
+<script type="text/babel" src="page8_replay.jsx"></script>
+<script type="text/babel" src="page9_knowledge.jsx"></script>
+<!-- app.jsx defines window.CrtDashboard; does NOT mount when _REAL_DATA_LOADING is set -->
+<script type="text/babel" src="app.jsx"></script>
+<!-- Mount-failure safety net: shows diagnostic banner if React never mounts after 5s -->
+<script>
+  window.addEventListener("load", function() {
+    setTimeout(function() {
+      var root = document.getElementById("root");
+      if (root && root.childElementCount === 0) {
+        root.innerHTML = '<div style="font-family:monospace;color:#ef4444;padding:40px;background:#0a1020;min-height:100vh">'
+          + '<b style="font-size:16px">&#9888; Dashboard failed to mount.</b><br><br>'
+          + 'Open DevTools (F12) &rarr; Console tab for the exact error.<br><br>'
+          + '<small style="color:#7f8da6">Common causes: Babel transpile error in a JSX file &bull; vendor/ files missing &bull; app.jsx threw at init</small>'
+          + '</div>';
+      }
+    }, 5000);
+  });
+</script>
+<!-- realData.js: legacy mount trigger — being phased out (Phase 6) -->
+<script src="realData.js"></script>
+</body>
+</html>

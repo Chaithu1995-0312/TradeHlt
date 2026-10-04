@@ -1,0 +1,62 @@
+{
+  "_doc": "MSIP-1 mechanical test execution report",
+  "started_at": "2026-07-14T07:08:48.250057+00:00",
+  "ended_at": "2026-07-14T07:09:31.102769+00:00",
+  "commit_sha": "b48d4d9a7abfb429f2a17c790d4b32083da5dd92",
+  "branch": "feature/truth-registry-v2",
+  "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+  "command": [
+    "C:\\Users\\Hi\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+    "-m",
+    "pytest",
+    "tests/test_candle_math.py",
+    "tests/test_derived_math.py",
+    "tests/test_crt_state_invariants.py",
+    "tests/test_fc1a_swing_causal.py",
+    "tests/test_fm_resolution_phase2.py",
+    "tests/test_feature_lineage.py",
+    "tests/test_feature_surface_query.py",
+    "tests/test_closure_authority_index.py",
+    "tests/test_crt_adversarial_closure.py",
+    "tests/test_state_contracts.py",
+    "tests/test_state_topology_phase.py",
+    "-q",
+    "--tb=no"
+  ],
+  "exit_code": 0,
+  "tests_requested": [
+    "tests/test_candle_math.py",
+    "tests/test_derived_math.py",
+    "tests/test_crt_state_invariants.py",
+    "tests/test_fc1a_swing_causal.py",
+    "tests/test_fm_resolution_phase2.py",
+    "tests/test_feature_lineage.py",
+    "tests/test_feature_surface_query.py",
+    "tests/test_closure_authority_index.py",
+    "tests/test_crt_adversarial_closure.py",
+    "tests/test_state_contracts.py",
+    "tests/test_state_topology_phase.py"
+  ],
+  "tests_existing": [
+    "tests/test_candle_math.py",
+    "tests/test_derived_math.py",
+    "tests/test_crt_state_invariants.py",
+    "tests/test_fc1a_swing_causal.py",
+    "tests/test_fm_resolution_phase2.py",
+    "tests/test_feature_lineage.py",
+    "tests/test_feature_surface_query.py",
+    "tests/test_closure_authority_index.py",
+    "tests/test_crt_adversarial_closure.py",
+    "tests/test_state_contracts.py",
+    "tests/test_state_topology_phase.py"
+  ],
+  "tests_missing": [],
+  "counts": {
+    "passed": 139,
+    "failed": null,
+    "skipped": null,
+    "errors": null
+  },
+  "stdout_stderr_tail": "........................................................................ [ 51%]\n...................................................................      [100%]\n139 passed in 38.54s\n\n",
+  "full_output_path": "05_tests/TEST_EXECUTION_OUTPUT.txt"
+}

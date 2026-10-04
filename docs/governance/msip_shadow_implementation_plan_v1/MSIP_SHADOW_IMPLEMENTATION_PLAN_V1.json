@@ -1,0 +1,266 @@
+{
+  "schema_id": "MSIP_SHADOW_IMPLEMENTATION_PLAN_V1",
+  "plan_version": "1.1.0",
+  "generated_at_utc": "2026-07-14T12:00:00Z",
+  "amended_for": "G-PLAN-01 completeness (insertion point, failure handling, rollback, G-IMPL-01 criteria)",
+  "task_class": "OBSERVATION_ONLY",
+  "prerequisite": "Owner acceptance of Decision C + MSIP_SHADOW_DESIGN_CONTRACT_V1 (CONFIRMED)",
+  "implementation_authorized": false,
+  "g_impl_01": "NOT_PASSED — READY only after separate explicit owner authorization; never opened by plan acceptance alone",
+  "g_plan_01_review": "docs/governance/msip_shadow_implementation_plan_v1/G_PLAN_01_REVIEW_V1.json",
+  "maps_contract_to": {
+    "modules_proposed": [
+      {
+        "path": "src/msip/",
+        "role": "NEW package root for shadow market-state only; NOT created until G-IMPL-01",
+        "boundary": "no imports from CRT mutators; no write to EngineState"
+      },
+      {
+        "path": "src/msip/__init__.py",
+        "role": "package export surface (public build_market_state only)"
+      },
+      {
+        "path": "src/msip/market_state_vector.py",
+        "role": "immutable value object + schema validation vs MARKET_STATE_VECTOR_SCHEMA_V1 field_authority"
+      },
+      {
+        "path": "src/msip/interpretation_config.py",
+        "role": "strict load msip_shadow; fail-closed missing keys when enabled"
+      },
+      {
+        "path": "src/msip/shadow_emitter.py",
+        "role": "assemble dimensions from feature map; attach provenance; enforce continuous twins for HOW labels"
+      },
+      {
+        "path": "src/msip/disagreement.py",
+        "role": "optional disagreement taxonomy vs CRT observation (read-only)"
+      },
+      {
+        "path": "src/msip/isolation.py",
+        "role": "import-guard helpers / forbidden-module list for tests"
+      },
+      {
+        "path": "scripts/analysis/run_msip_shadow.py",
+        "role": "batch CLI on frozen corpus; writes results/ under shadow paths only"
+      },
+      {
+        "path": "tests/test_msip_shadow_*.py",
+        "role": "contract tests listed below"
+      }
+    ],
+    "forbidden_modules_at_impl": [
+      "must not call StateMachine.try_* for mutation",
+      "must not assign EngineState fields",
+      "must not open trades or emit CRT events as side effect of shadow emit",
+      "must not write configs/production or ACTIVE_VERSION"
+    ],
+    "interfaces": {
+      "build_market_state": {
+        "signature": "build_market_state(bar_features: Mapping[str, Any], config: MsipShadowConfig, provenance_ctx: ProvenanceContext, crt_obs: CrtPhaseObservation | None = None) -> MarketStateVector",
+        "pure": true,
+        "side_effects": "none"
+      },
+      "emit_jsonl": {
+        "signature": "emit_jsonl(path: Path, vector: MarketStateVector) -> None",
+        "side_effects": "append-only file under shadow output root"
+      },
+      "observe_crt_state": {
+        "signature": "observe_crt_state(snapshot: Mapping[str, Any]) -> CrtPhaseObservation",
+        "pure": true,
+        "constraint": "read-only; must not be required for non-observation dimensions"
+      },
+      "load_msip_shadow_config": {
+        "signature": "load_msip_shadow_config(prod_cfg: dict) -> MsipShadowConfig | Disabled",
+        "fail_closed": true
+      }
+    },
+    "runtime_insertion_point": {
+      "batch_research_path": [
+        "1. Load frozen OHLCV corpus (Phase-1 XAUUSD binding when instrument=XAUUSD)",
+        "2. Run or load FeaturePipeline finalized feature table (authoritative WHAT)",
+        "3. Optionally co-run CRTEngine.process_candle for observation snapshot only (separate object graph)",
+        "4. For each bar with feature row: build_market_state(...); emit_jsonl",
+        "5. Optionally emit disagreement records",
+        "6. Write run manifest"
+      ],
+      "live_path_if_later": [
+        "After feature vector for bar is available",
+        "Before or after CRT candle processing is allowed for observation only",
+        "Shadow emit must not gate CRT; CRT must not await shadow"
+      ],
+      "not_insertion_points": [
+        "Inside StateMachine.try_*",
+        "Inside UltronRiskEngine.approve path as a veto",
+        "Inside TRADE_OPENED journal feature attach as authority rewrite"
+      ]
+    },
+    "authoritative_input_sourcing": {
+      "WHAT": [
+        "FeaturePipeline columns / feature_vectors aligned by timestamp",
+        "formula_registry / market_ontology identities for FM ids",
+        "CANONICAL_FEATURES + SCHEMA_HASH + FEATURE_ORDER_HASH recorded in provenance"
+      ],
+      "HOW": [
+        "configs/production/*.json section msip_shadow only when present",
+        "instrument/timeframe overrides = label bands / enables only"
+      ],
+      "FORBIDDEN_UNTIL_PARITY": [
+        "CRT-local atr",
+        "CRT-local ema_fast/ema_slow",
+        "CRT Candle.body_ratio / wick_size as MSIP source_features"
+      ],
+      "CRT_observation": "optional post-process_candle read-only state name/index; never identity dependency"
+    },
+    "schema_version_ownership": {
+      "MARKET_STATE_VECTOR_SCHEMA_V1": "design authority docs/governance/msip_shadow_design_v1/; code validator must pin schema_version",
+      "msip_shadow config": "HOW ownership; config_id/sha256 in every bar provenance",
+      "feature schema": "src/features/feature_schema.py remains WHAT order authority",
+      "CRTConfig": "untouched by MSIP shadow plan"
+    },
+    "provenance_emission": {
+      "contract": "SHADOW_PROVENANCE_CONTRACT_V1",
+      "required": [
+        "schema_version",
+        "config_id",
+        "config_sha256",
+        "feature_schema_hash",
+        "feature_order_hash",
+        "dimension_sources",
+        "how_label_provenance when any INTERPRETED_STATE_LABEL_HOW field present",
+        "continuous_twins_present when labels present"
+      ],
+      "incomplete_bar_status": "PARTIAL — never silent complete"
+    },
+    "shadow_isolation": {
+      "shadow_flags": {
+        "affects_crt": false,
+        "affects_execution": false,
+        "affects_events": false
+      },
+      "import_policy": "disallow crt_engine_v2 StateMachine mutation imports from shadow_emitter write path",
+      "process_isolation": "CRT engine instance if co-run must be separate; shadow cannot hold writable reference used to mutate"
+    },
+    "deterministic_execution": {
+      "requirements": [
+        "same corpus sha + config sha + schema version + commit → byte-identical JSONL payloads (DET-01)",
+        "no wall-clock in identity fields (timestamps are bar timestamps only)",
+        "stable key ordering in JSON serialization"
+      ]
+    },
+    "failure_handling": {
+      "config_missing_section": "shadow disabled; no error if optional; if enabled:true missing keys → fail-closed raise at load (not mid-bar)",
+      "feature_missing": "dimension field null + PARTIAL status; do not invent values",
+      "how_label_without_twins": "reject bar as INVALID_HOW or drop label field; continuous WHAT still emitted",
+      "crt_observation_unavailable": "crt_phase_observation.observed=false; other dimensions unaffected",
+      "emit_io_failure": "log + fail run; must not alter CRT objects",
+      "never": "swallow exceptions inside CRT process_candle by wrapping CRT in shadow try/except that changes CRT control flow"
+    },
+    "tests_proposed": [
+      {
+        "file": "tests/test_msip_shadow_schema_validation.py",
+        "covers": "schema_version, required fields, field authority classes"
+      },
+      {
+        "file": "tests/test_msip_shadow_what_how_separation.py",
+        "covers": "HOW labels require config id + continuous twins; overrides cannot change encodings"
+      },
+      {
+        "file": "tests/test_msip_shadow_neutrality_vs_crt.py",
+        "covers": "same candle sequence CRT action/state with shadow on vs off"
+      },
+      {
+        "file": "tests/test_msip_shadow_determinism.py",
+        "covers": "two-run JSONL equality"
+      },
+      {
+        "file": "tests/test_msip_shadow_crt_phase_not_identity.py",
+        "covers": "crt_state cannot be required dependency of other dimensions"
+      },
+      {
+        "file": "tests/test_msip_shadow_isolation_imports.py",
+        "covers": "static/import guard: shadow_emitter does not call try_*"
+      },
+      {
+        "file": "tests/test_msip_shadow_failure_modes.py",
+        "covers": "missing features, partial provenance, disabled section"
+      }
+    ],
+    "telemetry": [
+      "results/msip_shadow/{run_id}/market_state.jsonl",
+      "results/msip_shadow/{run_id}/run_manifest.json",
+      "results/msip_shadow/{run_id}/disagreement.jsonl (optional)",
+      "no writes to CRT event streams as shadow side effects"
+    ],
+    "rollout_sequence": [
+      "0. Owner confirmed Decision C + design contract (DONE)",
+      "1. G-PLAN-01 review PASS (this review)",
+      "2. Owner stamps plan ACCEPTED (separate from G-IMPL-01)",
+      "3. Owner separately authorizes G-IMPL-01 READY→OPEN if desired",
+      "4. Only then create src/msip and tests",
+      "5. Shadow run on Phase-1 XAUUSD (or declared subset) under OBSERVATION_ONLY",
+      "6. CRT_LOCAL_MATH_PARITY_AUDIT_V1 measurement",
+      "7. G-SHADOW-01 evaluation",
+      "8. G-MIG-01 remains CLOSED"
+    ],
+    "rollback_removal_path": {
+      "disable": "set msip_shadow.enabled=false or omit section",
+      "code_removal": "delete/disable src/msip package and scripts; CRT path unchanged",
+      "artifact_retention": "historical shadow JSONL retained as evidence; not golden CRT outputs",
+      "no_crt_rollback_needed": true
+    },
+    "g_impl_01_open_criteria": {
+      "all_required": [
+        "DECISION_C = ACCEPTED",
+        "MSIP_SHADOW_DESIGN_CONTRACT_V1 = ACCEPTED",
+        "DESIGN_CONTRACT_CONSISTENCY_REVIEW_V1 = PASS",
+        "G-PLAN-01 = PASSED",
+        "MSIP_SHADOW_IMPLEMENTATION_PLAN_V1 = ACCEPTED (owner stamp)",
+        "IMPLEMENTATION_AUTHORIZED remains a separate stamp; default NO until owner sets G-IMPL-01 OPEN",
+        "Plan still declares shadow-only isolation and non-goals",
+        "No CRTConfig threshold program attached to this impl phase"
+      ],
+      "not_sufficient_alone": [
+        "G-PLAN-01 PASS without owner plan acceptance",
+        "plan acceptance without explicit G-IMPL-01 OPEN"
+      ],
+      "when_open_allows": [
+        "create src/msip shadow modules",
+        "add tests listed",
+        "add scripts/analysis/run_msip_shadow.py",
+        "optional msip_shadow config section in non-production experiments first"
+      ],
+      "when_open_still_forbids": [
+        "CRT consumer migration",
+        "concurrent candidates",
+        "threshold retune of CRTConfig as part of MSIP",
+        "production behavior change claims"
+      ]
+    },
+    "acceptance_gates": [
+      "G-DESIGN-01 PASSED",
+      "G-PLAN-01 PASSED",
+      "G-IMPL-01 separate owner OPEN",
+      "G-SHADOW-01 after shadow runs",
+      "G-PARITY-01 before CRT-local deprecation",
+      "G-MIG-01 CLOSED"
+    ]
+  },
+  "non_goals": [
+    "production code in this plan artifact",
+    "opening G-IMPL-01 by this document alone",
+    "CRTConfig threshold changes",
+    "concurrent candidates",
+    "EngineRunner binding",
+    "economic optimization",
+    "historical CRT trade-hash golden equality"
+  ],
+  "design_refs": [
+    "docs/governance/msip_shadow_design_v1/MSIP_SHADOW_DESIGN_CONTRACT_V1.md",
+    "docs/governance/msip_shadow_design_v1/DESIGN_CONTRACT_CONSISTENCY_REVIEW_V1.json",
+    "docs/governance/msip_shadow_design_v1/MARKET_STATE_VECTOR_SCHEMA_V1.json",
+    "docs/governance/msip_shadow_design_v1/SHADOW_RUNTIME_BINDING_SPEC_V1.json",
+    "docs/governance/msip_shadow_design_v1/SHADOW_PROVENANCE_CONTRACT_V1.json",
+    "docs/governance/crt_architecture_adjudication_v1/ARCHITECTURE_DECISION_RECORD_V1.json",
+    "docs/governance/TASK_CLASSIFICATION_BEHAVIOR_POLICY.md"
+  ]
+}

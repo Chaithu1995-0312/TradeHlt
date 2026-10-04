@@ -1,0 +1,147 @@
+{
+  "episode_id": "JOINT_STATE_EXPLAINABILITY",
+  "status": "EPISODE_ACTIVE",
+  "opened_by_run_id": "l003_package_freeze_20260907_201945",
+  "opened_by_version": "L-003-FREEZE.v1",
+  "generated_at_utc": "2026-09-07T20:19:45.454186Z",
+  "git_commit_sha": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+  "branch": "feature/trace-parquet-duckdb-query",
+  "objective": "Observe Y_joint populations; NOT determine which outcome is correct",
+  "disappeared_question": "Which outcome is right?",
+  "candidate_populations": [
+    {
+      "coordinate": "STATE_SL_TP",
+      "population": "{ x : Y_joint(x) = STATE_SL_TP }"
+    },
+    {
+      "coordinate": "STATE_SL_SL",
+      "population": "{ x : Y_joint(x) = STATE_SL_SL }"
+    },
+    {
+      "coordinate": "STATE_TP_TP",
+      "population": "{ x : Y_joint(x) = STATE_TP_TP }"
+    }
+  ],
+  "measurement_questions": [
+    "Can state membership be predicted?",
+    "Can state membership be explained?",
+    "Can state membership be automated?",
+    "Does engine_state_asof (context; not CRT unless declared) explain state membership / path geometry?",
+    "Does engine_context_history (NOT CRT) predict path geometry better than asof-only?"
+  ],
+  "priors": {
+    "L-003G": "entry-time falsified AUC\u22480.516; path-defined not entry-defined",
+    "L-003C-E": "path geometry associates",
+    "L-003H-I": "exit-ordering associates; trail not sufficient",
+    "CRT_HTF": "not on anatomy join; engine_state_asof \u2260 CRT Context; richer CRT join later if declared"
+  },
+  "measurements_this_pass": true,
+  "non_promotions": {
+    "edge": false,
+    "attribution_unlock": false,
+    "which_outcome_correct": false,
+    "l003_doctrine_reopen": false
+  },
+  "latest_measurement": {
+    "finding_id": "JSE-003",
+    "version": "JSE-003.v1",
+    "run_id": "jse003_engine_context_history_path_geometry_20260908_021900",
+    "title": "Does engine_context_history predict path geometry? (NOT CRT)",
+    "scope": "BNB-only",
+    "measurement_process": "engine_context_history",
+    "coverage": 1.0,
+    "asof_only_macro_auc_peak_bucket": 0.5045400002788222,
+    "history_macro_auc_peak_bucket": 0.5146331681832417,
+    "asof_only_macro_auc_mfe_bucket": 0.5032637497704318,
+    "history_macro_auc_mfe_bucket": 0.5081230772203925,
+    "best_history_binary_auc": 0.521705073491662,
+    "lean": "FALSIFY",
+    "lean_reason": "History AUC still ~0.50-0.55 on path geometry; FALSIFY engine_context_history->path_geometry on this join (BNB-only; not CRT).",
+    "artifacts": [
+      "docs/research/jse003_engine_context_history_path_geometry-2026-09-07.json",
+      "docs/research/JOINT_STATE_EXPLAINABILITY.md",
+      "scripts/research/jse003_engine_context_history_path_geometry.py",
+      "results/research/jse003_engine_context_history_path_geometry/",
+      "docs/research/joint_state_explainability_pin.json"
+    ]
+  },
+  "jse001": {
+    "finding_id": "JSE-001",
+    "version": "JSE-001.v1",
+    "run_id": "jse001_crt_context_bnbusdt_20260908_020033",
+    "question": "Does engine_state_asof explain / predict joint-state membership on this join?",
+    "scope": "BNB-only",
+    "measurement_process": "engine_state_asof",
+    "coverage": 1.0,
+    "CRT_JOIN_WEAK": false,
+    "auc_test_STATE_SL_TP": 0.500400830066991,
+    "L003G_prior_AUC": 0.516,
+    "engine_state_better_than_L003G": false,
+    "lean": "FALSIFY",
+    "allowed_conclusion": {
+      "H0": "engine_state_asof explains {x: Y_joint(x)=STATE_SL_TP}",
+      "Result": "AUC \u2248 0.500",
+      "Status": "FALSIFIED for this specific join surface (BNBUSDT, one runtime events run)"
+    },
+    "ontology_note": "CRT Context \u2260 engine_state_asof",
+    "never_say": [
+      "CRT falsified",
+      "CRT does not explain Y_joint",
+      "CRT/engine context falsified"
+    ],
+    "artifacts": [
+      "docs/research/JOINT_STATE_EXPLAINABILITY.md",
+      "docs/research/jse001_crt_context_bnbusdt-2026-09-07.json",
+      "scripts/research/jse001_crt_context_join.py",
+      "results/research/jse001_crt_context_bnbusdt/",
+      "docs/research/joint_state_explainability_pin.json"
+    ]
+  },
+  "updated_at_utc": "2026-09-07T20:55:00Z",
+  "observation_hierarchy_banner": "Entry weak (L-003G) \u00b7 engine_state_asof weak (JSE-001/002) \u00b7 engine_context_history weak (JSE-003) \u00b7 Path geometry strong (L-003C\u2013E)",
+  "jse002": {
+    "finding_id": "JSE-002",
+    "version": "JSE-002.v1",
+    "run_id": "jse002_engine_state_path_geometry_20260908_021500",
+    "title": "Does engine_state_asof predict path geometry? (context = engine_state_asof, NOT CRT)",
+    "scope": "BNB-only",
+    "measurement_process": "engine_state_asof",
+    "coverage": 1.0,
+    "best_path_macro_auc_ovr": 0.5045400002788222,
+    "best_path_binary_auc": 0.5101901903174185,
+    "jse001_replay_auc_STATE_SL_TP": 0.500400830066991,
+    "path_better_than_yjoint_by_0p02": false,
+    "lean": "FALSIFY_PATH_AND_YJOINT",
+    "lean_reason": "Path-geometry AUCs also \u22480.5 on this join => engine_state_asof is weak for both direct Y_joint membership and path geometry descriptors (BNB-only; this join surface).",
+    "artifacts": [
+      "docs/research/JOINT_STATE_EXPLAINABILITY.md",
+      "docs/research/jse002_engine_state_path_geometry_bnbusdt-2026-09-07.json",
+      "scripts/research/jse002_engine_state_path_geometry.py",
+      "results/research/jse002_engine_state_path_geometry_bnbusdt/",
+      "docs/research/joint_state_explainability_pin.json"
+    ]
+  },
+  "jse003": {
+    "finding_id": "JSE-003",
+    "version": "JSE-003.v1",
+    "run_id": "jse003_engine_context_history_path_geometry_20260908_021900",
+    "title": "Does engine_context_history predict path geometry? (NOT CRT)",
+    "scope": "BNB-only",
+    "measurement_process": "engine_context_history",
+    "coverage": 1.0,
+    "asof_only_macro_auc_peak_bucket": 0.5045400002788222,
+    "history_macro_auc_peak_bucket": 0.5146331681832417,
+    "asof_only_macro_auc_mfe_bucket": 0.5032637497704318,
+    "history_macro_auc_mfe_bucket": 0.5081230772203925,
+    "best_history_binary_auc": 0.521705073491662,
+    "lean": "FALSIFY",
+    "lean_reason": "History AUC still ~0.50-0.55 on path geometry; FALSIFY engine_context_history->path_geometry on this join (BNB-only; not CRT).",
+    "artifacts": [
+      "docs/research/jse003_engine_context_history_path_geometry-2026-09-07.json",
+      "docs/research/JOINT_STATE_EXPLAINABILITY.md",
+      "scripts/research/jse003_engine_context_history_path_geometry.py",
+      "results/research/jse003_engine_context_history_path_geometry/",
+      "docs/research/joint_state_explainability_pin.json"
+    ]
+  }
+}

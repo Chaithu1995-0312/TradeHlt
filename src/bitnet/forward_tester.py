@@ -105,7 +105,7 @@ class ForwardTester:
         List[dict] — one entry per zone with keys:
             zone_id, status, train, test, rr_retention
         """
-        from bitnet.search_engine import _evaluate_subset
+        from bitnet.zone_cosine_searcher import _evaluate_subset
 
         (X_tr, rr_tr, win_tr), (X_te, rr_te, win_te) = self.split(X, y_rr, y_win)
 

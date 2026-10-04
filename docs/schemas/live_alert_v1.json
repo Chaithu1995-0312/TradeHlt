@@ -1,0 +1,32 @@
+﻿{
+  "schema_id": "live_alert_v1",
+  "authority": "RESEARCH_ONLY",
+  "parents": [
+    "docs/schemas/live_chart_bind_v1.json",
+    "docs/architecture/LIVE_CHART_STATE_MONITOR_ARCHITECTURE_2026-09-16.md",
+    "docs/research/LIVE_CHART_MONITOR_REMEDIATIONS_2026-09-16.md",
+    "results/live_rail_paper_20260916_212321/trader_read/PLAYBOOK.md"
+  ],
+  "join_keys": ["run_id", "instrument", "bar_ts", "constructor_id"],
+  "alert_kinds": {
+    "A_SETUP_CANDIDATE": "S→D→E with expansion_bars≥8 then RETEST (PLAYBOOK costume)",
+    "EXPANSION_ORANGE_DEATH": "EXPANSION → RESET/RANGE before RETEST (session/HTF kill)",
+    "EXECUTION_RARE": "state_to=EXECUTION (desk note; do not wait to manage risk)",
+    "CHART_UNBOUND": "live rail has no engine occupancy",
+    "COST_UNSTAMPED": "trades lack cost_model_id on artifact",
+    "STAMP_TRUST_OK": "fresh emit verified cost identity",
+    "RAIL_NO_ORDER": "paper rail audit NO_ORDER burst",
+    "BLOCKER_OPEN": "named remediation still open"
+  },
+  "severity": ["info", "watch", "action", "blocker"],
+  "forbidden": [
+    "economic_claim_from_alert",
+    "merge_engine_resolver_occupancy",
+    "alert_from_fusion_score_as_crt_state"
+  ],
+  "outputs": {
+    "alerts_jsonl": "results/.../alerts.jsonl",
+    "alerts_snapshot": "ui_kits/live_monitor/alerts.json",
+    "monitor_fields": ["alerts_open", "alerts_last", "alert_schema_id"]
+  }
+}

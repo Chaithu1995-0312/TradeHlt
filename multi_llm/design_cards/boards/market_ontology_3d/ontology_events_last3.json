@@ -1,0 +1,134 @@
+[
+  {
+    "day": "2026-09-15",
+    "session_open_ts": "2026-09-15 00:00:00-04:00",
+    "session_open": 4344.0,
+    "session_close_ts": "2026-09-15 23:00:00-04:00",
+    "session_close": 4367.2001953125,
+    "day_high": 4381.89990234375,
+    "day_low": 4301.60009765625,
+    "atr_regime": "typical_ATR",
+    "atr14_last": 16.814243861607142,
+    "swing_highs": [
+      {
+        "t": "2026-09-15 14:00:00",
+        "px": 4340.7001953125
+      },
+      {
+        "t": "2026-09-15 19:00:00",
+        "px": 4350.7998046875
+      }
+    ],
+    "swing_lows": [
+      {
+        "t": "2026-09-15 09:00:00",
+        "px": 4301.60009765625
+      },
+      {
+        "t": "2026-09-16 00:00:00",
+        "px": 4315.2001953125
+      }
+    ],
+    "structure_obs": {
+      "kind": "HH_after_prior_swing_high",
+      "t": "2026-09-15 19:00:00",
+      "level": 4350.7998046875,
+      "ontology": "MarketStructure observation (not BOS engine verdict)"
+    },
+    "fm_tags": [
+      "FM-040/041 ATR family",
+      "temporal_context session",
+      "MarketStructure swings (ontology category)"
+    ],
+    "disclaimer": "Labels/observations only \u2014 not signals, not edge",
+    "chart": "C:\\Users\\Hi\\Documents\\grok_bot_design_boards\\market_ontology_3d\\chart_GC_F_2026-09-15.png"
+  },
+  {
+    "day": "2026-09-16",
+    "session_open_ts": "2026-09-16 00:00:00-04:00",
+    "session_open": 4368.0,
+    "session_close_ts": "2026-09-16 23:00:00-04:00",
+    "session_close": 4335.39990234375,
+    "day_high": 4413.10009765625,
+    "day_low": 4273.2998046875,
+    "atr_regime": "elevated_ATR",
+    "atr14_last": 32.400076729910715,
+    "swing_highs": [
+      {
+        "t": "2026-09-16 17:00:00",
+        "px": 4413.10009765625
+      },
+      {
+        "t": "2026-09-17 01:00:00",
+        "px": 4356.2001953125
+      }
+    ],
+    "swing_lows": [
+      {
+        "t": "2026-09-16 14:00:00",
+        "px": 4364.5
+      },
+      {
+        "t": "2026-09-16 19:00:00",
+        "px": 4273.2998046875
+      }
+    ],
+    "structure_obs": {
+      "kind": "LL_after_prior_swing_low",
+      "t": "2026-09-16 19:00:00",
+      "level": 4273.2998046875,
+      "ontology": "MarketStructure observation (not BOS engine verdict)"
+    },
+    "fm_tags": [
+      "FM-040/041 ATR family",
+      "temporal_context session",
+      "MarketStructure swings (ontology category)"
+    ],
+    "disclaimer": "Labels/observations only \u2014 not signals, not edge",
+    "chart": "C:\\Users\\Hi\\Documents\\grok_bot_design_boards\\market_ontology_3d\\chart_GC_F_2026-09-16.png"
+  },
+  {
+    "day": "2026-09-17",
+    "session_open_ts": "2026-09-17 00:00:00-04:00",
+    "session_open": 4334.2001953125,
+    "session_close_ts": "2026-09-17 18:00:00-04:00",
+    "session_close": 4385.10009765625,
+    "day_high": 4423.2998046875,
+    "day_low": 4323.7001953125,
+    "atr_regime": "compressed_ATR",
+    "atr14_last": 18.48583984375,
+    "swing_highs": [
+      {
+        "t": "2026-09-17 07:00:00",
+        "px": 4374.39990234375
+      },
+      {
+        "t": "2026-09-17 12:00:00",
+        "px": 4423.2998046875
+      }
+    ],
+    "swing_lows": [
+      {
+        "t": "2026-09-17 10:00:00",
+        "px": 4343.7998046875
+      },
+      {
+        "t": "2026-09-17 15:00:00",
+        "px": 4391.7998046875
+      }
+    ],
+    "structure_obs": {
+      "kind": "HH_after_prior_swing_high",
+      "t": "2026-09-17 12:00:00",
+      "level": 4423.2998046875,
+      "ontology": "MarketStructure observation (not BOS engine verdict)"
+    },
+    "fm_tags": [
+      "FM-040/041 ATR family",
+      "temporal_context session",
+      "MarketStructure swings (ontology category)"
+    ],
+    "disclaimer": "Labels/observations only \u2014 not signals, not edge",
+    "chart": "C:\\Users\\Hi\\Documents\\grok_bot_design_boards\\market_ontology_3d\\chart_GC_F_2026-09-17.png"
+  }
+]

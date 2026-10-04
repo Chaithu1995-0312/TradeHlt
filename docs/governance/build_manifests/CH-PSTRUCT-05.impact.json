@@ -1,0 +1,33 @@
+{
+  "change_id": "CH-PSTRUCT-05",
+  "task_class": "OBSERVATION_ONLY",
+  "objective": "Named measurement only: non-economic coincidence counts of already-declared P-STRUCT-01 columns (direction × volume_participation × continuation_successor). Ages stay UNKNOWN_N. No new column, no new FM-id, no new cut, no CRT wire, no G001.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY"
+  ],
+  "affected_files": [
+    "scripts/research/p_struct_01_displacement_evidence.py",
+    "tests/test_p_struct_01_displacement_evidence.py",
+    "docs/research/p_struct_01_displacement_evidence.md",
+    "docs/research/structure-dimension-inventory-displacement.md",
+    "reports/p_struct_01_displacement_evidence.md",
+    "docs/topics/crt-spine.md",
+    ".grok/PENDING.md",
+    "docs/governance/build_manifests/CH-PSTRUCT-05.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "required_checks_ack": [
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/test_p_struct_01_displacement_evidence.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert coincidence rollup, tests, spec/report/topic/pending. No src/, no ontology, no production config.",
+  "authority_granted": "User 2026-08-18: authorize a different named contract / measurement. Named as CH-PSTRUCT-05 coincidence of already-declared columns. A new contract (N, EMA, after_range, CRT when:) was not named — none made.",
+  "authority_NOT_granted": "No explicit N, no against_ema, no after_range, no deep_retracement, no high_volume class, no CRT when: wire, no new SEM/FM-id, no G001, no fingerprint taxonomy.",
+  "production_behavior_changed": "NO"
+}

@@ -1,0 +1,17 @@
+{
+  "exit_model_governing": "intrabar_touch",
+  "expectancy_close_only": -0.03833888888888888,
+  "expectancy_intrabar": -0.4179777777777778,
+  "inflation_ratio": 2.0498,
+  "instrument": "BNBUSDT",
+  "max_drawdown_close_only": 0.05078455162040516,
+  "max_drawdown_intrabar": 0.11245205598364374,
+  "pf_close_only": 0.9416795544625577,
+  "pf_intrabar": 0.4594066377817536,
+  "total_return_close_only": -0.008473899999999994,
+  "total_return_intrabar": -0.07365850000000006,
+  "trade_count_close_only": 18,
+  "trade_count_intrabar": 18,
+  "win_rate_close_only": 0.3888888888888889,
+  "win_rate_intrabar": 0.2777777777777778
+}

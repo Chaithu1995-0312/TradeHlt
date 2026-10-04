@@ -1,0 +1,50 @@
+{
+  "change_id": "CH-evid-01-mr-prior-mc-v1",
+  "date_utc": "2026-08-24",
+  "change_classes": [
+    "SEMANTIC_REGISTRY_CHANGE",
+    "DOCUMENTATION_ONLY"
+  ],
+  "declared_files": [
+    "configs/formulas/market_ontology.yaml",
+    "configs/research/measurement_contracts/instances/MC-MRPRIOR-XAUUSD-M15-V1.json",
+    "docs/governance/build_manifests/CH-evid-01-mr-prior-mc-v1.impact.json",
+    "docs/governance/build_manifests/CH-evid-01-mr-prior-mc-v1.completion.json",
+    "docs/governance/research_family_registry.json",
+    "docs/research/mother_range_prior_object.md",
+    "docs/current-findings.md",
+    "docs/topics/research-measurement-contract.md",
+    "docs/analysis/readme.md",
+    "docs/analysis/mother-range-prior-holdout-2026-08-24.md",
+    "CLAUDE.md",
+    "assistant_project.md",
+    "src/research/evidence/mother_range_prior.py",
+    "tests/research/test_mother_range_prior.py",
+    "tests/test_measurement_contract.py",
+    "tests/test_research_family_registry.py",
+    "tests/test_semantic_registry.py"
+  ],
+  "checks_executed": [
+    "tests/test_semantic_registry.py",
+    "tests/test_feature_lineage.py",
+    "tests/test_semantic_grounding.py",
+    "tests/test_construction_protocol.py",
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/research/test_mother_range_prior.py",
+    "tests/test_measurement_contract.py",
+    "tests/test_research_family_registry.py",
+    "tests/test_findings_export.py"
+  ],
+  "checks_result": {
+    "focused_required_floors": "131 passed in 9.99s",
+    "impact_validation": "IMPACT: APPROVED",
+    "validate_completion": "BLOCKED on undeclared governed surfaces from shared dirty tree; required checks re-executed without check-failure output"
+  },
+  "repo_state_hash": "PENDING",
+  "completion_status": "WORK_COMPLETE_GATE_BLOCKED_BY_SHARED_DIRTY_TREE",
+  "production_behavior_changed": "NO",
+  "result_summary": "SEM-030 / MC-MRPRIOR-XAUUSD-M15-V1 closed as F-094 INSUFFICIENT. Holdout agree cell n=9 for both arms, below the pre-registered n>=30 floor; both signs flip. No retune, no side picker, no G001, no production.",
+  "completion_status_explanation": "All checks this change can affect are green. Mechanical validate-completion returned BLOCKED at repo_state 0fa376884d53+97b5002ed623 because this checkout has hundreds of unrelated pre-existing governed changes in git status (first reported: configs/data_provenance/, configs/experimental/spec/live_rail_tickdb_paper.json, configs/experimental/spec/live_rail_tickdb_paper_run.json, configs/formulas/crt_resolver_links.yaml, configs/formulas/market_crt_states.yaml, configs/formulas/structure_profiles.yaml, configs/market_reality/market_reality_v1.yaml, configs/production/ACTIVE_VERSION). Adding them to declared_files would launder unrelated work into this manifest."
+}

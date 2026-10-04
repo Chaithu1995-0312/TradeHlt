@@ -1,0 +1,256 @@
+{
+  "schema_version": "1.1",
+  "id": "ERP_INFORMATION_CLASS_BOUNDARY",
+  "created_at": "2026-07-16",
+  "updated_at": "2026-07-17T06Z-ic003b-partial",
+  "authority": "descriptive / governance only; PL-0; grants no promotion or production authority (\u00a76.5)",
+  "human_twin": "docs/research-readiness/erp-information-class-boundary.md",
+  "hard_guardrail": "Do not create new engines. Do not tune thresholds. Do not optimize features. Future work must introduce genuinely new information classes rather than re-analyzing IC-001.",
+  "ic_alias_map": {
+    "IC-001": "measured_boundary",
+    "IC-002": "RC-005",
+    "IC-003": "RC-005_extension_shape_library",
+    "IC-004": "IC-004_cross_instrument",
+    "IC-005": "RC-007",
+    "IC-003B": "IC-003B"
+  },
+  "measured_boundary": {
+    "ic_id": "IC-001",
+    "status": "COMPLETE",
+    "name": "Static Entry Mathematics",
+    "statement": "Within Information Class IC-001 (static entry-time OHLCV-derived information), no practically useful outcome discrimination was observed on the certified XAUUSD corpus under the evaluated research conditions.",
+    "statement_short": "Static entry-state morphology derived from OHLCV did not discriminate outcomes on the XAUUSD frozen-candidate corpus.",
+    "corpus": "data/mt5/XAUUSD_M15.csv (Phase-1 frozen candidate; ~23,447 traces; ~23,428 scored)",
+    "closure_doc": "docs/research-readiness/ic-001-xauusd-static-entry-closure.md",
+    "teaching_example": "docs/research-readiness/erp-teaching-dual-read-bar78.md",
+    "measured_surfaces": [
+      "static 38 PIT features at entry",
+      "engine scores (CRT / RR / Gaussian / Zone / Fusion)",
+      "feature distributions (by outcome / segment)",
+      "morphology clusters (KMeans on dimensionless shape features)",
+      "k-NN similarity (per-trace nearest neighbours)",
+      "family-specific engine calibration",
+      "near-miss SL path profile",
+      "representative library including dual-read bar 78",
+      "non-linear OOF (GBT) + time-series CV",
+      "continuous R calibration + permutation tests"
+    ],
+    "result": "no practically useful outcome separation: engine AUC~0.49-0.51; cluster outcomes ~uniform (SL 66-68% / TP 31-33%); k-NN concordance (0.5498) ~= random (0.5459); TS-CV OOF~0.51-0.52 after removing shuffle inflation; dual-read bar 78 constructive counterexample",
+    "evidence": {
+      "findings": [
+        "F-019",
+        "F-023",
+        "F-035"
+      ],
+      "work_items": [
+        "WI-005",
+        "WI-006",
+        "WI-007"
+      ],
+      "artifacts": [
+        "results/research/trace_corpus/xauusd/distributions.json",
+        "results/research/trace_corpus/xauusd/geometry/CLUSTERS.md",
+        "results/research/trace_corpus/xauusd/knn/knn_summary.json",
+        "results/research/trace_corpus/xauusd/ENGINE_EVALUATION.md",
+        "results/research/trace_corpus/xauusd/FAMILY_CALIBRATION.md",
+        "results/research/trace_corpus/xauusd/NEAR_MISS_PROFILE.md",
+        "results/research/trace_corpus/xauusd/REPRESENTATIVE_LIBRARY.md",
+        "results/research/trace_corpus/xauusd/ROBUSTNESS_XVRP.md",
+        "results/research/trace_corpus/xauusd/TIME_SERIES_CV_X.md",
+        "docs/research-readiness/ic-001-xauusd-static-entry-closure.md",
+        "docs/research-readiness/erp-teaching-dual-read-bar78.md"
+      ]
+    },
+    "explicitly_not": "This does NOT show that OTHER information classes are uninformative \u2014 those are UNMEASURED (below). 'Not measured' != 'likely to work' and != 'shown to be uninformative'. Does NOT archive entry research forever \u2014 only IC-001 on this corpus.",
+    "ohlcv_first_doctrine": "Prefer trajectory/shape chapters on OHLCV before pivoting to order flow / macro / alt-data."
+  },
+  "correction_note": {
+    "id": "E-001-CORR-2026-07-16",
+    "false_claim": "shape carries no outcome information AT ANY RESOLUTION (over-generalized the measured null)",
+    "corrected_to": "the measured_boundary statement above (scoped to static entry-state OHLCV morphology on this corpus; IC-001 COMPLETE)",
+    "phrase": "Caught me overclaiming; I owe you a correction.",
+    "fixed_instances": [
+      "assistant_project.md SESSION LOG (correction entry appended)",
+      "docs/research-readiness/edge-research-platform-program.{json,md} (CL-024 / WI-007)",
+      "memory project_trace_corpus_descriptive.md",
+      "scripts/research/trace_knn.py (read text)",
+      "docs/research-readiness/erp-information-class-boundary.{md,json} (v1.1 IC-001 COMPLETE)"
+    ]
+  },
+  "discipline": {
+    "one_at_a_time": true,
+    "next": "OWNER_TO_GRANT",
+    "next_ic_alias": null,
+    "next_note": "IC-003B MEASURED_PARTIAL (2026-07-17, RUN_COMPLETE all 9 units): sequence geometry gives a robustly-weak, structurally under-determined library (verdict IC003B_PARTIAL; independently re-derived + seed-robust). The next information class is an explicit owner grant, one at a time (P4). IC-003 remains archived LIBRARY_FAIL.",
+    "guard": "Each open class is a DISTINCT information class, NOT a reopening of static-entry morphology under a new name (including new ML on the same 38 static entry dims).",
+    "activation": "Each becomes a PRE-REGISTERED DESCRIPTIVE experiment only on an explicit owner grant; PL-0; grants no authority; measure-only.",
+    "refines_unknown": "U-008",
+    "phased_plan": "P4 (New Information Family)",
+    "related_studies_not_ic001": [
+      "H-RR-THRESHOLD-001 (execution/R-threshold; IC-005 / RC-007-adjacent)"
+    ]
+  },
+  "open_information_classes": [
+    {
+      "id": "RC-005",
+      "ic_alias": "IC-002",
+      "name": "Temporal Evolution",
+      "status": "MEASURED",
+      "prereg_status": "RUN_COMPLETE",
+      "prereg_doc": "docs/research-readiness/h-ic002-entry-evolution-preregistration.md",
+      "prereg_json": "docs/research-readiness/h-ic002-entry-evolution-experiment-definition.json",
+      "run_artifacts": "results/research/ic_002/",
+      "run_summary": "N=4 and N=16 RESEARCH_SUPPORTIVE (path AUC_OOS~0.57-0.60 vs static~0.51); N=8 REJECT on shuffle-path gap; concurrent path under fixed exits \u2014 research only, not entry-time tradable",
+      "next": false,
+      "information_class": "post-entry feature TRAJECTORY (how the state evolves after entry), not the entry snapshot",
+      "question": "Does adding post-entry feature evolution improve descriptive separation vs entry-only morphology?",
+      "distinct_because": "a trajectory over time is a different research object than a static entry-bar snapshot",
+      "caveat": "not measured != likely to work",
+      "in_corpus": true
+    },
+    {
+      "id": "IC-003",
+      "ic_alias": "IC-003",
+      "name": "Shape Library",
+      "status": "ARCHIVED_LIBRARY_FAIL",
+      "next": false,
+      "prereg_status": "ARCHIVED_V1_LIBRARY_FAIL",
+      "prereg_doc": "docs/research-readiness/h-ic003-shape-library-preregistration.md",
+      "prereg_json": "docs/research-readiness/h-ic003-shape-library-experiment-definition.json",
+      "information_class": "compressed mathematical prototypes of trajectories (shapes), not single-bar morphology",
+      "question": "Can complete paths be organized into a reusable shape library with descriptive structure?",
+      "distinct_because": "shapes are path objects built after IC-002 trajectories exist",
+      "depends_on": [
+        "RC-005"
+      ],
+      "caveat": "not measured != likely to work; LIBRARY_OK is not expectancy authority",
+      "in_corpus": true,
+      "run_artifacts": "results/research/ic_003/",
+      "run_summary": "v1 LIBRARY_FAIL (N=4 G1 0.873; N=16 G1+G2). A1 demoted. IC-002 independent.",
+      "authoritative_result": "LIBRARY_FAIL under G1=0.85 (v1)",
+      "lessons": "docs/research-readiness/ic-003-lessons-learned.md"
+    },
+    {
+      "id": "IC-003B",
+      "ic_alias": "IC-003B",
+      "name": "Sequence Geometry Shape Library",
+      "status": "MEASURED_PARTIAL",
+      "next": false,
+      "prereg_status": "RUN_COMPLETE",
+      "prereg_doc": "docs/research-readiness/h-ic003b-sequence-geometry-preregistration.md",
+      "prereg_json": "docs/research-readiness/h-ic003b-sequence-geometry-experiment-definition.json",
+      "information_class": "sequence-preserving path summaries and DTW geometry for prototype libraries; continuum diagnostic",
+      "question": "Under sequence representations (not M-FLAT Euclidean alone), can paths form a stable library \u2014 or is the manifold continuous?",
+      "distinct_because": "new representation vs archived IC-003 M-FLAT+KMeans; not a G1 amendment",
+      "depends_on": [
+        "RC-005",
+        "IC-003_archive"
+      ],
+      "caveat": "not measured != likely to work; LIBRARY_OK still not production; MEASURED_PARTIAL is descriptive, grants no authority",
+      "in_corpus": true,
+      "run_artifacts": "results/research/ic_003b/ (REPORT.md, report.json, SHAPE_LIBRARY.md, arm_C_continuum.json; checkpoint RUN_COMPLETE 2026-07-17T06:49Z, all 9 units)",
+      "program_verdict": "IC003B_PARTIAL",
+      "per_unit_verdicts": {
+        "arm_S": {"N4": "LIBRARY_OK (marginal: G1 0.8216, G2 0.0561)", "N16": "LIBRARY_FAIL (G1 0.8863)", "N8_diag": "LIBRARY_FAIL"},
+        "arm_T": {"N4": "LIBRARY_FAIL (DTW sil 0.019)", "N16": "LIBRARY_FAIL", "N8_diag": "LIBRARY_FAIL"},
+        "arm_C": {"flags": ["DISCRETE_HINT"], "note": "low cumvar ~0.32; dimensionality artifact (see robustness)"}
+      },
+      "verdict_basis": "RUN_COMPLETE (all 9 units) confirms the PARTIAL verdict: Arm S LIBRARY_OK at N=4 only (G1 0.8216<=0.85, G2 0.0561>=0.05) and LIBRARY_FAIL at N=16 (G1 0.8863>0.85) => Arm S OK on one primary N (s_one); Arm T LIBRARY_FAIL at BOTH primary N => not both-N (t_both false). report.json program_verdict.label == IC003B_PARTIAL. This session INDEPENDENTLY re-derived the completed-unit gates before the diagnostics finished; the final artifacts match.",
+      "run_summary": "Sequence geometry yields a robustly-WEAK, structurally under-determined library. Arm S OK is marginal at N=4 and fails at N=16; Arm T fails at all N; Arm C = DISCRETE_HINT but low cumvar (a dimensionality artifact, see robustness). Consistent with archived IC-003 LIBRARY_FAIL and the F-019..F-041 arc.",
+      "validation": {
+        "reviewer": "executor session 2026-07-17 (independent re-derivation)",
+        "trust": "FLOW_MATCHES_INTENT (completed units)",
+        "code_faithfulness": "Arms S/T/C, gates (G1=0.85,G2=0.05,G3 z<=2.0,G4 50/20,DTW r=floor(0.2N),channels body_ratio/disp_strength/rsi_14,PCA-4), seed-42 determinism, IS-only Arm-C fit, resume-safe verdict persistence all match the frozen prereg == schema.py",
+        "independent_rederivation": "G2 silhouette reproduced EXACTLY (0.0561); G1 sse_ratio to ~0.003 (member-mean-centroid vs MiniBatchKMeans-center); n_is/n_oos exact (16400/7028 N=4, 16393/7025 N=16); input contract clean (Z (23428,4,15)/(23418,16,15), D=15, channels present, meta aligned); floors 7/7 green",
+        "notes_for_prereg_author": "Arm T uses subsample floors more generous than the S5.2 text (all subsample pairs vs 500; silhouette on <=3000 vs <=2000; medoid on subsample per S8) - more thorough, deterministic, NON-gate-loosening. N=4 'OK' is fragile: k=6 selected by subsample-fit silhouette (0.198) but the gate uses full-IS silhouette (0.0561, clears by ~0.006)."
+      },
+      "robustness": {
+        "method": "8-seed sweep through the registered Arm-S pipeline (read-only; does NOT change the seed-42 verdict or any gate)",
+        "verdict_seed_robust": "S_N4 LIBRARY_OK 8/8 seeds; S_N16 LIBRARY_FAIL 8/8 seeds => IC003B_PARTIAL is stable, not a seed artifact",
+        "structure_under_determined": "k* (number of shape prototypes) is seed-UNSTABLE (N=4 lands k=6 only 6/8 seeds; N=16 k=4 only 5/8)",
+        "near_noise": "even the passing structure is weak: G1 ~0.80-0.90 => clusters capture only 10-20% of summary-space variance; silhouette 0.06-0.12 sits just above a very permissive 0.05 floor (real structure ~>0.25)",
+        "arm_c_artifact": "Arm C DISCRETE_HINT is a dimensionality artifact: PC-space KMeans silhouette 0.54 lives in 4 PCs explaining only 32% of variance (cumvar_4=0.32<0.50); full-space silhouette collapses to 0.056. Honest reading = weak continuum, not clean discrete prototypes."
+      },
+      "shape_documentation_hierarchy": {
+        "note": "4-level read-order for coding LLMs; authority is Level-1-only and never inverts upward",
+        "authority_rule": "Mathematics (Level 1) is authoritative; explanations (Level 2) and stories (Level 3) grant NO authority (§6.5)",
+        "levels": [
+          {"level": 1, "file": "results/research/ic_003b/SHAPE_LIBRARY.md", "role": "what mathematically exists (shape ids/gates/medoids/stats)", "authority": "AUTHORITATIVE", "generated": true},
+          {"level": 2, "file": "docs/research-readiness/shape_explanations.md", "role": "LLM->human explanation of each shape", "authority": "NONE", "generated": false},
+          {"level": 3, "file": "configs/research/market_story_ontology.yaml", "role": "closest story family (labels)", "authority": "NONE", "generated": false, "mapping_status": "MAPPED 2026-07-18 (descriptive nearest-family in shape_explanations.md; 2/6 -> active [s01 liquidity_reversal, s05 trend_continuation], 4/6 -> planned trend_reversal; weak, planned-dominated; no authority)"},
+          {"level": 4, "file": "results/research/ic_003b/REPORT.md", "role": "why it matters / governance", "authority": "governance_record", "generated": true}
+        ],
+        "floor": "tests/research/test_shape_explanations.py"
+      }
+    },
+    {
+      "id": "IC-004",
+      "ic_alias": "IC-004",
+      "name": "Cross-Instrument Generalization",
+      "status": "OPEN",
+      "next": false,
+      "information_class": "whether IC-001-style null regions replicate on other instruments",
+      "question": "Do the same mathematical null regions exist on EURUSD, BTCUSDT, etc.?",
+      "distinct_because": "new population / instrument, same IC-001 protocol as a fence test",
+      "caveat": "not measured != likely to work",
+      "in_corpus": true
+    },
+    {
+      "id": "RC-006",
+      "name": "Higher-Timeframe Context",
+      "status": "OPEN",
+      "information_class": "daily / H4 / H1 regime state at the entry bar (context around the M15 snapshot)",
+      "question": "Does adding higher-timeframe state improve descriptive separation vs entry-only M15 morphology?",
+      "distinct_because": "cross-timeframe context is not present in the single-bar M15 entry snapshot",
+      "caveat": "not measured != likely to work",
+      "in_corpus": true
+    },
+    {
+      "id": "RC-007",
+      "ic_alias": "IC-005",
+      "name": "Execution Effects",
+      "status": "OPEN",
+      "information_class": "alternative execution policy (stop placement, scaling in, partial exits, time-based exits, R-threshold admission)",
+      "question": "Would a different execution policy change the outcome distribution for the SAME entries?",
+      "distinct_because": "execution/exit policy is a different lever than entry information",
+      "related": [
+        "H-RR-THRESHOLD-001"
+      ],
+      "caveat": "not measured != likely to work",
+      "in_corpus": true
+    },
+    {
+      "id": "RC-008",
+      "name": "Order Flow",
+      "status": "OPEN",
+      "information_class": "bid/ask imbalance, market depth, order-book changes, aggressor side",
+      "question": "Does order-flow (microstructure) information improve descriptive separation?",
+      "distinct_because": "microstructure variables are not derivable from OHLCV",
+      "data_gap": "NOT in the current corpus \u2014 requires order-flow data acquisition first",
+      "caveat": "not measured != likely to work",
+      "in_corpus": false
+    },
+    {
+      "id": "RC-009",
+      "name": "Macro Information",
+      "status": "OPEN",
+      "information_class": "central-bank announcements, CPI, employment reports, geopolitical events",
+      "question": "Does macro-event context improve descriptive separation?",
+      "distinct_because": "exogenous events are not price-derived features",
+      "data_gap": "NOT in the current corpus \u2014 requires an event calendar / macro dataset",
+      "caveat": "not measured != likely to work",
+      "in_corpus": false
+    },
+    {
+      "id": "RC-010",
+      "name": "Alternative Data",
+      "status": "OPEN",
+      "information_class": "non-price alt-data (positioning, sentiment, on-chain, etc.)",
+      "question": "Does alternative data improve descriptive separation?",
+      "distinct_because": "alt-data is a different information source than OHLCV",
+      "data_gap": "NOT in the current corpus \u2014 requires alt-data acquisition",
+      "caveat": "not measured != likely to work",
+      "in_corpus": false
+    }
+  ]
+}

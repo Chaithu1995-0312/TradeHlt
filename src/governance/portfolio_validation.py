@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Optional
 
 sys.path.insert(0, os.path.dirname(__file__))
+from config_layer.strict_config import ConfigKeyMissingError, require, require_all
 from runtime.backtest_v2 import (
     BacktestConfig, BacktestMetrics, BacktestRunner,
     CandleLoader, TradeRecord,
@@ -38,11 +39,11 @@ try:
 except Exception:
     _PV_CFG = {}
 
-_DEFAULT_INITIAL_CAPITAL:    float = _PV_CFG.get("initial_capital",       100_000.0)
-_DEFAULT_OUTPUT_DIR:         str   = _PV_CFG.get("output_dir",            "results/portfolio")
-_DEFAULT_RISK_PCT:           float = _PV_CFG.get("risk_pct",              0.01)
-_DEFAULT_SLIPPAGE_FRACTION:  float = _PV_CFG.get("slippage_atr_fraction", 0.08)
-_DEFAULT_WARMUP_CANDLES:     int   = _PV_CFG.get("warmup_candles",        100)
+_DEFAULT_INITIAL_CAPITAL:    float = require(_PV_CFG, "initial_capital", section_name="portfolio", consumer="portfolio_validation")
+_DEFAULT_OUTPUT_DIR:         str   = require(_PV_CFG, "output_dir", section_name="portfolio", consumer="portfolio_validation")
+_DEFAULT_RISK_PCT:           float = require(_PV_CFG, "risk_pct", section_name="portfolio", consumer="portfolio_validation")
+_DEFAULT_SLIPPAGE_FRACTION:  float = require(_PV_CFG, "slippage_atr_fraction", section_name="portfolio", consumer="portfolio_validation")
+_DEFAULT_WARMUP_CANDLES:     int   = require(_PV_CFG, "warmup_candles", section_name="portfolio", consumer="portfolio_validation")
 
 # ─────────────────────────────────────────────────────────────────
 # INSTRUMENT REGISTRY
@@ -54,18 +55,20 @@ class InstrumentConfig:
     csv_path:       str
     pip_size:       float
     spread_pct:     float   # simulated spread as % of price
-    htf_candles:    int = 16
-    warmup:         int = _DEFAULT_WARMUP_CANDLES
+    htf_candles:    int
+    warmup:         int
+
+_HTF_CANDLES = 16  # running value; declared portfolio.htf_candles for Claude
 
 INSTRUMENTS = [
-    InstrumentConfig("EURUSD",  "data/EURUSD_M15.csv",  pip_size=0.0001, spread_pct=0.0002),
-    InstrumentConfig("GBPUSD",  "data/GBPUSD_M15.csv",  pip_size=0.0001, spread_pct=0.0003),
-    InstrumentConfig("USDJPY",  "data/USDJPY_M15.csv",  pip_size=0.01,   spread_pct=0.0002),
-    InstrumentConfig("AUDUSD",  "data/AUDUSD_M15.csv",  pip_size=0.0001, spread_pct=0.0003),
-    InstrumentConfig("EURCAD",  "data/EURCAD_M15.csv",  pip_size=0.0001, spread_pct=0.0003),
-    InstrumentConfig("XAUUSD",  "data/XAUUSD_M15.csv",  pip_size=0.0001, spread_pct=0.0003),
-    InstrumentConfig("BTCUSDT", "data/BTCUSDT_M15.csv", pip_size=1.0,    spread_pct=0.0008),
-    InstrumentConfig("ETHUSDT", "data/ETHUSDT_M15.csv", pip_size=1.0,    spread_pct=0.0008),
+    InstrumentConfig("EURUSD",  "data/EURUSD_M15.csv",  pip_size=0.0001, spread_pct=0.0002, htf_candles=_HTF_CANDLES, warmup=_DEFAULT_WARMUP_CANDLES),
+    InstrumentConfig("GBPUSD",  "data/GBPUSD_M15.csv",  pip_size=0.0001, spread_pct=0.0003, htf_candles=_HTF_CANDLES, warmup=_DEFAULT_WARMUP_CANDLES),
+    InstrumentConfig("USDJPY",  "data/USDJPY_M15.csv",  pip_size=0.01,   spread_pct=0.0002, htf_candles=_HTF_CANDLES, warmup=_DEFAULT_WARMUP_CANDLES),
+    InstrumentConfig("AUDUSD",  "data/AUDUSD_M15.csv",  pip_size=0.0001, spread_pct=0.0003, htf_candles=_HTF_CANDLES, warmup=_DEFAULT_WARMUP_CANDLES),
+    InstrumentConfig("EURCAD",  "data/EURCAD_M15.csv",  pip_size=0.0001, spread_pct=0.0003, htf_candles=_HTF_CANDLES, warmup=_DEFAULT_WARMUP_CANDLES),
+    InstrumentConfig("XAUUSD",  "data/XAUUSD_M15.csv",  pip_size=0.0001, spread_pct=0.0003, htf_candles=_HTF_CANDLES, warmup=_DEFAULT_WARMUP_CANDLES),
+    InstrumentConfig("BTCUSDT", "data/BTCUSDT_M15.csv", pip_size=1.0,    spread_pct=0.0008, htf_candles=_HTF_CANDLES, warmup=_DEFAULT_WARMUP_CANDLES),
+    InstrumentConfig("ETHUSDT", "data/ETHUSDT_M15.csv", pip_size=1.0,    spread_pct=0.0008, htf_candles=_HTF_CANDLES, warmup=_DEFAULT_WARMUP_CANDLES),
 ]
 
 # ─────────────────────────────────────────────────────────────────
@@ -76,12 +79,20 @@ INSTRUMENTS = [
 def make_crt_config(instrument: str) -> "CRTConfig":
     """
     Instrument-aware config factory.
-    Delegates entirely to ConfigBuilder so Forex and Crypto profiles diverge correctly.
-    Shared overrides (non-market-specific tuning) are applied on top of the router base.
+
+    F-057 fix (2026-07-29): bases on the governed production-JSON load
+    (load_prod_config_from_registry) instead of the bare router profile, so
+    this programmatic path matches what the CLI would build for the same
+    instrument. The 5 explicit overrides below are this script's deliberate
+    "no instrument-specific tuning — that would be curve-fitting" universality
+    test and are still applied last, on top of the governed base.
     """
-    return ConfigBuilder.build(
+    from config_layer.production_config import load_prod_config_from_registry, PROD_VERSION
+    base = load_prod_config_from_registry(PROD_VERSION, instrument)
+    return ConfigBuilder.from_existing(
         instrument,
-        overrides={
+        base,
+        extra_overrides={
             "score_threshold":        0.70,
             "max_sweep_age_candles":  30,
             "score_decay_lambda":     0.05,
@@ -161,14 +172,14 @@ class PortfolioAnalytics:
             wins   = sum(1 for t in trades if t.is_winner)
             total  = len(trades)
             rr     = sum(t.pnl_rr_net for t in trades)
-            scored = [t for t in trades if t.gaussian_score > 0]
+            scored = [t for t in trades if t.ema_momentum_kernel_score > 0]
             result[instr] = {
                 "trades":        total,
                 "win_rate":      round(wins / total, 4) if total else 0.0,
                 "total_pnl_rr":  round(rr, 4),
                 "avg_rr":        round(rr / total, 4) if total else 0.0,
                 "scored_trades": len(scored),
-                "avg_score":     round(sum(t.gaussian_score for t in scored) / len(scored), 4) if scored else 0.0,
+                "avg_score":     round(sum(t.ema_momentum_kernel_score for t in scored) / len(scored), 4) if scored else 0.0,
             }
         return result
 
@@ -181,7 +192,7 @@ class PortfolioAnalytics:
         thresholds = [(0.0, 0.2), (0.2, 0.4), (0.4, 0.6), (0.6, 0.8), (0.8, 1.0)]
 
         for t in self.trades:
-            s = t.gaussian_score
+            s = t.ema_momentum_kernel_score
             for label, (lo, hi) in zip(buckets.keys(), thresholds):
                 if lo <= s < hi:
                     buckets[label].append(t)
@@ -200,9 +211,9 @@ class PortfolioAnalytics:
         return result
 
     def gaussian_correlation(self) -> float:
-        """Pearson correlation: gaussian_score vs binary win/loss outcome."""
-        scored = [(t.gaussian_score, 1.0 if t.is_winner else 0.0)
-                  for t in self.trades if t.gaussian_score > 0]
+        """Pearson correlation: ema_momentum_kernel_score vs binary win/loss outcome."""
+        scored = [(t.ema_momentum_kernel_score, 1.0 if t.is_winner else 0.0)
+                  for t in self.trades if t.ema_momentum_kernel_score > 0]
         if len(scored) < 5:
             return float("nan")
 
@@ -216,9 +227,9 @@ class PortfolioAnalytics:
         return round(cov / (ss * so), 4) if ss > 0 and so > 0 else 0.0
 
     def score_outcome_rr_correlation(self) -> float:
-        """Pearson correlation: gaussian_score vs actual RR (continuous, not binary)."""
-        scored = [(t.gaussian_score, t.pnl_rr_net)
-                  for t in self.trades if t.gaussian_score > 0]
+        """Pearson correlation: ema_momentum_kernel_score vs actual RR (continuous, not binary)."""
+        scored = [(t.ema_momentum_kernel_score, t.pnl_rr_net)
+                  for t in self.trades if t.ema_momentum_kernel_score > 0]
         if len(scored) < 5:
             return float("nan")
 
@@ -337,6 +348,22 @@ def run_portfolio(
             gap_reset_minutes     = 120,
             event_flush_every     = 100,
             crt_config            = crt_cfg,
+            cost_model_id         = "",   # EPIC-84: declared explicitly (was the dataclass default)
+            cost_model_params_hash = "",
+            allow_router_crt_config = False,
+            scorer_mode           = "calibrated",
+            strategy_id           = "",
+            htf_clock_basis       = "count",
+            htf_reset_exempt_sweep = False,
+            sl_anchor             = "displacement",
+            session_window_basis  = "broker_static",
+            exchange_session_windows = None,
+            target_policy         = "fixed_r",
+            trade_ttl_candles     = None,
+            decider               = "engine",
+            entry_semantics       = "approval_bar_legacy",
+            retest_stop_guard     = False,
+            timeframe             = "M15",
         )
 
         loader = CandleLoader(instr.csv_path, instr.name)
@@ -485,7 +512,7 @@ def _patch_runner_for_journal_access():
                 reader = _csv.DictReader(f)
                 for row in reader:
                     from datetime import datetime
-                    from config_layer.crt_engine_v2 import Direction
+                    from config_layer.state_identity import Direction
                     tr = _build_trade_record(row)
                     self._last_journal_trades.append(tr)
         return result
@@ -534,7 +561,7 @@ def _build_trade_record(row: dict) -> TradeRecord:
         position_size     = _f("position_size"),
         risk_score        = _f("risk_score"),
         risk_pct          = _f("risk_pct") if "risk_pct" in row else 0.01,
-        gaussian_score    = _f("gaussian_score"),
+        ema_momentum_kernel_score    = _f("ema_momentum_kernel_score"),
         gaussian_p_win    = _f("gaussian_p_win"),
         score_retest      = _f("score_retest"),
         score_body        = _f("score_body"),

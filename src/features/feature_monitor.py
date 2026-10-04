@@ -71,8 +71,18 @@ class FeatureMonitor:
         Older samples are discarded automatically.
     """
 
-    def __init__(self, window_size: int = 500) -> None:
+    def __init__(
+        self,
+        window_size: int = 500,
+        soft_threshold: float = 2.5,
+        hard_threshold: float = 3.0,
+    ) -> None:
         self.window_size = window_size
+        # Governed drift Z-thresholds (config: feature_monitor.soft_drift_z /
+        # hard_drift_z). Stored so detect_drift_severity() honors config rather than
+        # its own hardcoded defaults. Defaults here equal the historical literals.
+        self.soft_threshold = soft_threshold
+        self.hard_threshold = hard_threshold
         self._buffer: deque[List[float]] = deque(maxlen=window_size)
         self._n_drift_detected: int = 0
         self._n_total: int = 0
@@ -84,6 +94,13 @@ class FeatureMonitor:
 
         Args:
             features: dict with keys retest_depth, body_ratio, disp_strength
+
+        EPIC-84 KEPT (here and the matching sites in detect_drift()/
+        summary() below): this class is diagnostic drift/distribution
+        monitoring only (module docstring) — never a trading decision. A
+        missing feature value degrading to 0.0 in the rolling buffer keeps
+        the monitor running rather than crashing observability on a
+        malformed input.
         """
         row = [
             features.get("retest_depth",  0.0),
@@ -163,22 +180,30 @@ class FeatureMonitor:
     def detect_drift_severity(
         self,
         features: Dict[str, float],
-        soft_threshold: float = 2.5,
-        hard_threshold: float = 3.0,
+        soft_threshold: float | None = None,
+        hard_threshold: float | None = None,
     ) -> str:
         """
         Return drift severity: 'none', 'soft', or 'hard'.
 
+        Thresholds default to the instance values (set from config at construction:
+        feature_monitor.soft_drift_z / hard_drift_z); pass explicitly to override.
+
         Args:
             features:       canonical feature dict
-            soft_threshold: Z-score for soft drift (default 2.5)
-            hard_threshold: Z-score for hard drift (default 3.0)
+            soft_threshold: Z-score for soft drift (default: instance soft_threshold)
+            hard_threshold: Z-score for hard drift (default: instance hard_threshold)
 
         Returns:
             'hard'  â€” strongly out-of-distribution (consider rejecting trade)
             'soft'  â€” mildly out-of-distribution (reduce confidence)
             'none'  â€” within expected distribution
         """
+        if soft_threshold is None:
+            soft_threshold = self.soft_threshold
+        if hard_threshold is None:
+            hard_threshold = self.hard_threshold
+
         stats = self._compute_stats()
         if stats is None:
             return "none"
@@ -278,12 +303,17 @@ if __name__ == "__main__":
 
     monitor = FeatureMonitor(window_size=200)
 
-    # Feed 50 normal samples
+    # Feed 50 normal samples (synthetic fixture noise — bind to intermediates so the
+    # governed keys receive TRANSPORTED values; the demo synthesizes inputs, not
+    # feature math — feature_math_lint 2026-07-11 hardening)
     for _ in range(50):
+        _rd = random.uniform(0.2, 0.6)
+        _br = random.uniform(0.4, 0.8)
+        _ds = random.uniform(0.1, 0.4)
         monitor.update({
-            "retest_depth":  random.uniform(0.2, 0.6),
-            "body_ratio":    random.uniform(0.4, 0.8),
-            "disp_strength": random.uniform(0.1, 0.4),
+            "retest_depth":  _rd,
+            "body_ratio":    _br,
+            "disp_strength": _ds,
         })
 
     print("After 50 normal samples:")

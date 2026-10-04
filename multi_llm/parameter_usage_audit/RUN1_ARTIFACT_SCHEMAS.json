@@ -1,0 +1,3965 @@
+{
+  "run": "run_20260916_225925_XAUUSD",
+  "canonical_content_id": "run_20260916_172925",
+  "folder": "D:\\Tradelatest\\results\\run_20260916_225925_XAUUSD",
+  "artifacts": {
+    "XAUUSD_trades.csv": {
+      "role": "trade ledger",
+      "format": "csv",
+      "columns": [
+        "trade_id",
+        "instrument",
+        "direction",
+        "entry_raw",
+        "entry_fill",
+        "sl",
+        "tp1",
+        "tp2",
+        "exit_fill",
+        "exit_reason",
+        "opened_at",
+        "closed_at",
+        "duration_candles",
+        "pnl_pips_raw",
+        "pnl_pips_net",
+        "pnl_rr_raw",
+        "pnl_rr_net",
+        "slippage_pips",
+        "spread_pips",
+        "capital_before",
+        "capital_after",
+        "position_size",
+        "risk_score",
+        "session",
+        "day_of_week",
+        "hour_of_day",
+        "htf_id",
+        "candle_idx",
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "volume_ratio",
+        "double_sweep",
+        "ema_fast",
+        "ema_slow",
+        "ema_spread",
+        "trend_bias",
+        "trend_strength_z",
+        "momentum_score",
+        "atr",
+        "volatility_ratio",
+        "rsi_14",
+        "macd_line",
+        "macd_signal",
+        "macd_hist_raw",
+        "macd_hist_z",
+        "sweep_detected",
+        "liquidity_sweep",
+        "break_of_structure",
+        "swing_high",
+        "swing_low",
+        "higher_high",
+        "lower_low",
+        "body_size",
+        "candle_range",
+        "body_ratio",
+        "volatility_regime",
+        "disp_strength",
+        "retest_depth",
+        "candles_since_sweep",
+        "liquidity_distance",
+        "liquidity_pressure_score",
+        "volume_spike",
+        "order_block_distance",
+        "fvg_distance",
+        "breaker_distance",
+        "mitigation_block_distance",
+        "pdh_distance",
+        "pdl_distance",
+        "eqh_distance",
+        "eql_distance",
+        "change_of_character",
+        "live_atr",
+        "live_ema_fast",
+        "live_ema_slow",
+        "cached_retest_depth",
+        "cached_body_ratio",
+        "cached_disp_strength",
+        "cached_session",
+        "cached_double_sweep",
+        "bitnet_score_at_entry",
+        "bitnet_decision_at_entry",
+        "config_version",
+        "shadow_used",
+        "cost_model_id",
+        "cost_model_params_hash",
+        "risk_denominator_id",
+        "run_id"
+      ],
+      "n_rows": 3,
+      "rows_preview_ids": [
+        {
+          "trade_id": "CRT-0001",
+          "instrument": "XAUUSD",
+          "direction": "LONG",
+          "entry_raw": "2614.46",
+          "entry_fill": "2615.0826845879556",
+          "sl": "2610.0475714285712",
+          "tp1": "2618.872428571429",
+          "tp2": "2623.2848571428576"
+        },
+        {
+          "trade_id": "CRT-0002",
+          "instrument": "XAUUSD",
+          "direction": "LONG",
+          "entry_raw": "2565.48",
+          "entry_fill": "2565.795144948401",
+          "sl": "2564.559857142857",
+          "tp1": "2566.860214285715",
+          "tp2": "2567.3202857142865"
+        },
+        {
+          "trade_id": "CRT-0003",
+          "instrument": "XAUUSD",
+          "direction": "LONG",
+          "entry_raw": "2934.39",
+          "entry_fill": "2935.026262719673",
+          "sl": "2933.209857142857",
+          "tp1": "2936.1602142857146",
+          "tp2": "2936.750285714286"
+        }
+      ]
+    },
+    "XAUUSD_summary.json": {
+      "role": "run summary / KPIs",
+      "format": "json_object",
+      "top_keys": [
+        "annualized_return_pct",
+        "approval_rate",
+        "approved_trades",
+        "avg_rr_net",
+        "avg_trade_duration",
+        "capital_curve",
+        "config_version",
+        "cost_model_id",
+        "cost_model_params_hash",
+        "distribution",
+        "funnel_counts",
+        "gap_resets",
+        "gross_loss_rr",
+        "gross_win_rr",
+        "htf_candles_per_range",
+        "htf_clock_basis",
+        "instrument",
+        "max_drawdown_pct",
+        "max_drawdown_rr",
+        "max_loss_streak",
+        "max_win_streak",
+        "monthly_pnl",
+        "profit_factor",
+        "rejected_trades",
+        "rejection_reasons",
+        "return_to_max_dd",
+        "risk_denominator_id",
+        "run_id",
+        "state_distribution",
+        "total_candles",
+        "total_pnl_rr_net",
+        "total_pnl_rr_raw",
+        "total_return_pct",
+        "total_setups",
+        "tp1_hits",
+        "tp2_hits",
+        "trades_per_month",
+        "win_rate"
+      ],
+      "tree": [
+        {
+          "path": "instrument",
+          "type": "str",
+          "example": "XAUUSD"
+        },
+        {
+          "path": "total_candles",
+          "type": "int",
+          "example": 47275
+        },
+        {
+          "path": "gap_resets",
+          "type": "int",
+          "example": 121
+        },
+        {
+          "path": "total_setups",
+          "type": "int",
+          "example": 3
+        },
+        {
+          "path": "approved_trades",
+          "type": "int",
+          "example": 3
+        },
+        {
+          "path": "rejected_trades",
+          "type": "int",
+          "example": 0
+        },
+        {
+          "path": "approval_rate",
+          "type": "float",
+          "example": 1.0
+        },
+        {
+          "path": "win_rate",
+          "type": "float",
+          "example": 0.3333
+        },
+        {
+          "path": "avg_rr_net",
+          "type": "float",
+          "example": -0.5641
+        },
+        {
+          "path": "total_pnl_rr_raw",
+          "type": "float",
+          "example": -0.3218
+        },
+        {
+          "path": "total_pnl_rr_net",
+          "type": "float",
+          "example": -1.6923
+        },
+        {
+          "path": "max_drawdown_rr",
+          "type": "float",
+          "example": 2.3052
+        },
+        {
+          "path": "max_drawdown_pct",
+          "type": "float",
+          "example": 0.0229
+        },
+        {
+          "path": "max_win_streak",
+          "type": "int",
+          "example": 1
+        },
+        {
+          "path": "max_loss_streak",
+          "type": "int",
+          "example": 2
+        },
+        {
+          "path": "tp1_hits",
+          "type": "int",
+          "example": 1
+        },
+        {
+          "path": "tp2_hits",
+          "type": "int",
+          "example": 1
+        },
+        {
+          "path": "avg_trade_duration",
+          "type": "float",
+          "example": 1.3
+        },
+        {
+          "path": "rejection_reasons",
+          "type": "object",
+          "child_keys": []
+        },
+        {
+          "path": "state_distribution",
+          "type": "object",
+          "child_keys": [
+            "DISPLACEMENT",
+            "EXECUTION",
+            "EXPANSION",
+            "RANGE",
+            "RETEST",
+            "SHADOW_PENDING",
+            "SWEEP"
+          ]
+        },
+        {
+          "path": "state_distribution.RANGE",
+          "type": "int",
+          "example": 22185
+        },
+        {
+          "path": "state_distribution.SWEEP",
+          "type": "int",
+          "example": 15566
+        },
+        {
+          "path": "state_distribution.DISPLACEMENT",
+          "type": "int",
+          "example": 778
+        },
+        {
+          "path": "state_distribution.EXPANSION",
+          "type": "int",
+          "example": 8632
+        },
+        {
+          "path": "state_distribution.RETEST",
+          "type": "int",
+          "example": 26
+        },
+        {
+          "path": "state_distribution.EXECUTION",
+          "type": "int",
+          "example": 4
+        },
+        {
+          "path": "state_distribution.SHADOW_PENDING",
+          "type": "int",
+          "example": 6
+        },
+        {
+          "path": "monthly_pnl",
+          "type": "object",
+          "child_keys": [
+            "2024-11",
+            "2025-02"
+          ]
+        },
+        {
+          "path": "monthly_pnl.2024-11",
+          "type": "float",
+          "example": -2.3052
+        },
+        {
+          "path": "monthly_pnl.2025-02",
+          "type": "float",
+          "example": 0.6128
+        },
+        {
+          "path": "capital_curve",
+          "type": "object",
+          "child_keys": [
+            "current_drawdown_pct",
+            "equity_curve_len",
+            "final_capital",
+            "initial_capital",
+            "max_drawdown_pct",
+            "peak_capital",
+            "total_return_pct"
+          ]
+        },
+        {
+          "path": "capital_curve.initial_capital",
+          "type": "float",
+          "example": 100000.0
+        },
+        {
+          "path": "capital_curve.final_capital",
+          "type": "float",
+          "example": 98306.8
+        },
+        {
+          "path": "capital_curve.total_return_pct",
+          "type": "float",
+          "example": -0.0169
+        },
+        {
+          "path": "capital_curve.max_drawdown_pct",
+          "type": "float",
+          "example": 0.0229
+        },
+        {
+          "path": "capital_curve.current_drawdown_pct",
+          "type": "float",
+          "example": 0.0169
+        },
+        {
+          "path": "capital_curve.peak_capital",
+          "type": "float",
+          "example": 100000.0
+        },
+        {
+          "path": "capital_curve.equity_curve_len",
+          "type": "int",
+          "example": 4
+        },
+        {
+          "path": "distribution",
+          "type": "object",
+          "child_keys": [
+            "best_hour_utc",
+            "best_trade",
+            "cost_analysis",
+            "day_of_week_breakdown",
+            "feature_drift",
+            "goal_report",
+            "loss_clustering_score",
+            "metrics_v2",
+            "rolling_win_rate",
+            "score_outcome_corr",
+            "session_breakdown",
+            "worst_hour_utc",
+            "worst_trade"
+          ]
+        },
+        {
+          "path": "distribution.session_breakdown",
+          "type": "object",
+          "child_keys": [
+            "LONDON",
+            "NEWYORK"
+          ]
+        },
+        {
+          "path": "distribution.session_breakdown.NEWYORK",
+          "type": "object",
+          "child_keys": [
+            "avg_rr",
+            "pnl_rr",
+            "trades",
+            "win_rate"
+          ]
+        },
+        {
+          "path": "distribution.session_breakdown.NEWYORK.trades",
+          "type": "int",
+          "example": 2
+        },
+        {
+          "path": "distribution.session_breakdown.NEWYORK.win_rate",
+          "type": "float",
+          "example": 0.5
+        },
+        {
+          "path": "distribution.session_breakdown.NEWYORK.pnl_rr",
+          "type": "float",
+          "example": -0.4419
+        },
+        {
+          "path": "distribution.session_breakdown.NEWYORK.avg_rr",
+          "type": "float",
+          "example": -0.2209
+        },
+        {
+          "path": "distribution.session_breakdown.LONDON",
+          "type": "object",
+          "child_keys": [
+            "avg_rr",
+            "pnl_rr",
+            "trades",
+            "win_rate"
+          ]
+        },
+        {
+          "path": "distribution.session_breakdown.LONDON.trades",
+          "type": "int",
+          "example": 1
+        },
+        {
+          "path": "distribution.session_breakdown.LONDON.win_rate",
+          "type": "float",
+          "example": 0.0
+        },
+        {
+          "path": "distribution.session_breakdown.LONDON.pnl_rr",
+          "type": "float",
+          "example": -1.2504
+        },
+        {
+          "path": "distribution.session_breakdown.LONDON.avg_rr",
+          "type": "float",
+          "example": -1.2504
+        },
+        {
+          "path": "distribution.day_of_week_breakdown",
+          "type": "object",
+          "child_keys": [
+            "Friday",
+            "Tuesday"
+          ]
+        },
+        {
+          "path": "distribution.day_of_week_breakdown.Tuesday",
+          "type": "object",
+          "child_keys": [
+            "pnl_rr",
+            "trades",
+            "win_rate"
+          ]
+        },
+        {
+          "path": "distribution.day_of_week_breakdown.Tuesday.trades",
+          "type": "int",
+          "example": 2
+        },
+        {
+          "path": "distribution.day_of_week_breakdown.Tuesday.win_rate",
+          "type": "float",
+          "example": 0.5
+        },
+        {
+          "path": "distribution.day_of_week_breakdown.Tuesday.pnl_rr",
+          "type": "float",
+          "example": -0.4419
+        },
+        {
+          "path": "distribution.day_of_week_breakdown.Friday",
+          "type": "object",
+          "child_keys": [
+            "pnl_rr",
+            "trades",
+            "win_rate"
+          ]
+        },
+        {
+          "path": "distribution.day_of_week_breakdown.Friday.trades",
+          "type": "int",
+          "example": 1
+        },
+        {
+          "path": "distribution.day_of_week_breakdown.Friday.win_rate",
+          "type": "float",
+          "example": 0.0
+        },
+        {
+          "path": "distribution.day_of_week_breakdown.Friday.pnl_rr",
+          "type": "float",
+          "example": -1.2504
+        },
+        {
+          "path": "distribution.best_hour_utc",
+          "type": "int",
+          "example": 15
+        },
+        {
+          "path": "distribution.worst_hour_utc",
+          "type": "int",
+          "example": 7
+        },
+        {
+          "path": "distribution.rolling_win_rate",
+          "type": "array[0]"
+        },
+        {
+          "path": "distribution.loss_clustering_score",
+          "type": "float",
+          "example": 0.3333
+        },
+        {
+          "path": "distribution.score_outcome_corr",
+          "type": "float",
+          "example": 0.5104
+        },
+        {
+          "path": "distribution.best_trade",
+          "type": "object",
+          "child_keys": [
+            "id",
+            "opened_at",
+            "rr",
+            "session"
+          ]
+        },
+        {
+          "path": "distribution.best_trade.id",
+          "type": "str",
+          "example": "CRT-0003"
+        },
+        {
+          "path": "distribution.best_trade.rr",
+          "type": "float",
+          "example": 0.6128297116361141
+        },
+        {
+          "path": "distribution.best_trade.session",
+          "type": "str",
+          "example": "NEWYORK"
+        },
+        {
+          "path": "distribution.best_trade.opened_at",
+          "type": "str",
+          "example": "2025-02-25T15:45:00"
+        },
+        {
+          "path": "distribution.worst_trade",
+          "type": "object",
+          "child_keys": [
+            "id",
+            "opened_at",
+            "rr",
+            "session"
+          ]
+        },
+        {
+          "path": "distribution.worst_trade.id",
+          "type": "str",
+          "example": "CRT-0002"
+        },
+        {
+          "path": "distribution.worst_trade.rr",
+          "type": "float",
+          "example": -1.2504399889771018
+        },
+        {
+          "path": "distribution.worst_trade.session",
+          "type": "str",
+          "example": "LONDON"
+        },
+        {
+          "path": "distribution.worst_trade.opened_at",
+          "type": "str",
+          "example": "2024-11-15T07:45:00"
+        },
+        {
+          "path": "distribution.cost_analysis",
+          "type": "object",
+          "child_keys": [
+            "avg_cost_per_trade",
+            "raw_vs_net_pnl_rr_delta",
+            "total_slippage_pips",
+            "total_spread_pips"
+          ]
+        },
+        {
+          "path": "distribution.cost_analysis.total_slippage_pips",
+          "type": "float",
+          "example": 114.75
+        },
+        {
+          "path": "distribution.cost_analysis.total_spread_pips",
+          "type": "float",
+          "example": 162.24
+        },
+        {
+          "path": "distribution.cost_analysis.avg_cost_per_trade",
+          "type": "float",
+          "example": 92.33
+        },
+        {
+          "path": "distribution.cost_analysis.raw_vs_net_pnl_rr_delta",
+          "type": "float",
+          "example": 1.3706
+        },
+        {
+          "path": "distribution.goal_report",
+          "type": "object",
+          "child_keys": [
+            "criteria",
+            "decision",
+            "enabled",
+            "enforced",
+            "goal_id"
+          ]
+        },
+        {
+          "path": "distribution.goal_report.enabled",
+          "type": "bool",
+          "example": true
+        },
+        {
+          "path": "distribution.goal_report.enforced",
+          "type": "bool",
+          "example": false
+        },
+        {
+          "path": "distribution.goal_report.goal_id",
+          "type": "str",
+          "example": "G001"
+        },
+        {
+          "path": "distribution.goal_report.decision",
+          "type": "str",
+          "example": "FAIL"
+        },
+        {
+          "path": "distribution.goal_report.criteria",
+          "type": "array[6]",
+          "elem0_keys": [
+            "actual",
+            "comparator",
+            "gap",
+            "name",
+            "status",
+            "target"
+          ]
+        },
+        {
+          "path": "distribution.metrics_v2",
+          "type": "object",
+          "child_keys": [
+            "concentration",
+            "distribution",
+            "efficiency",
+            "rr",
+            "survival"
+          ]
+        },
+        {
+          "path": "distribution.metrics_v2.rr",
+          "type": "object",
+          "child_keys": [
+            "avg_planned_rr",
+            "avg_realized_rr",
+            "median_rr",
+            "rr_p10",
+            "rr_p50",
+            "rr_p90"
+          ]
+        },
+        {
+          "path": "distribution.metrics_v2.rr.avg_realized_rr",
+          "type": "float",
+          "example": -0.564113
+        },
+        {
+          "path": "distribution.metrics_v2.rr.avg_planned_rr",
+          "type": "float",
+          "example": 1.333333
+        },
+        {
+          "path": "distribution.metrics_v2.rr.median_rr",
+          "type": "float",
+          "example": -1.054729
+        },
+        {
+          "path": "distribution.metrics_v2.rr.rr_p10",
+          "type": "float",
+          "example": -1.211298
+        },
+        {
+          "path": "distribution.metrics_v2.rr.rr_p50",
+          "type": "float",
+          "example": -1.054729
+        },
+        {
+          "path": "distribution.metrics_v2.rr.rr_p90",
+          "type": "float",
+          "example": 0.279318
+        },
+        {
+          "path": "distribution.metrics_v2.concentration",
+          "type": "object",
+          "child_keys": [
+            "largest_loser_rr",
+            "largest_winner_rr",
+            "top5_win_contribution_pct"
+          ]
+        },
+        {
+          "path": "distribution.metrics_v2.concentration.largest_winner_rr",
+          "type": "float",
+          "example": 0.61283
+        },
+        {
+          "path": "distribution.metrics_v2.concentration.largest_loser_rr",
+          "type": "float",
+          "example": -1.25044
+        },
+        {
+          "path": "distribution.metrics_v2.concentration.top5_win_contribution_pct",
+          "type": "float",
+          "example": 1.0
+        },
+        {
+          "path": "distribution.metrics_v2.distribution",
+          "type": "object",
+          "child_keys": [
+            "median_duration",
+            "trades_per_month",
+            "trades_per_session",
+            "trades_per_week"
+          ]
+        },
+        {
+          "path": "distribution.metrics_v2.distribution.trades_per_week",
+          "type": "float",
+          "example": 0.042644
+        },
+        {
+          "path": "distribution.metrics_v2.distribution.trades_per_month",
+          "type": "float",
+          "example": 0.185299
+        },
+        {
+          "path": "distribution.metrics_v2.distribution.trades_per_session",
+          "type": "object",
+          "child_keys": [
+            "LONDON",
+            "NEWYORK"
+          ]
+        },
+        {
+          "path": "distribution.metrics_v2.distribution.trades_per_session.NEWYORK",
+          "type": "int",
+          "example": 2
+        },
+        {
+          "path": "distribution.metrics_v2.distribution.trades_per_session.LONDON",
+          "type": "int",
+          "example": 1
+        },
+        {
+          "path": "distribution.metrics_v2.distribution.median_duration",
+          "type": "float",
+          "example": 1.0
+        },
+        {
+          "path": "distribution.metrics_v2.survival",
+          "type": "object",
+          "child_keys": [
+            "mae_rr_p50",
+            "mae_rr_p90",
+            "median_bars_to_peak",
+            "median_capture_ratio",
+            "median_giveback",
+            "mfe_rr_p50",
+            "mfe_rr_p90"
+          ]
+        },
+        {
+          "path": "distribution.metrics_v2.survival.median_capture_ratio",
+          "type": "float",
+          "example": 0.278336
+        },
+        {
+          "path": "distribution.metrics_v2.survival.median_giveback",
+          "type": "float",
+          "example": 0.721664
+        },
+        {
+          "path": "distribution.metrics_v2.survival.median_bars_to_peak",
+          "type": "float",
+          "example": 0.0
+        },
+        {
+          "path": "distribution.metrics_v2.survival.mfe_rr_p50",
+          "type": "float",
+          "example": 0.0
+        },
+        {
+          "path": "distribution.metrics_v2.survival.mfe_rr_p90",
+          "type": "float",
+          "example": 5.748457
+        },
+        {
+          "path": "distribution.metrics_v2.survival.mae_rr_p50",
+          "type": "float",
+          "example": -2.019296
+        },
+        {
+          "path": "distribution.metrics_v2.survival.mae_rr_p90",
+          "type": "float",
+          "example": -0.403859
+        },
+        {
+          "path": "distribution.metrics_v2.efficiency",
+          "type": "object",
+          "child_keys": [
+            "median_adverse_efficiency",
+            "median_time_efficiency",
+            "time_efficiency_p90"
+          ]
+        },
+        {
+          "path": "distribution.metrics_v2.efficiency.median_time_efficiency",
+          "type": "float",
+          "example": 0.0
+        },
+        {
+          "path": "distribution.metrics_v2.efficiency.time_efficiency_p90",
+          "type": "float",
+          "example": 0.8
+        },
+        {
+          "path": "distribution.metrics_v2.efficiency.median_adverse_efficiency",
+          "type": "float",
+          "example": 0.0
+        },
+        {
+          "path": "distribution.feature_drift",
+          "type": "object",
+          "child_keys": [
+            "n_drift_detected",
+            "n_samples",
+            "n_total",
+            "status"
+          ]
+        },
+        {
+          "path": "distribution.feature_drift.n_samples",
+          "type": "int",
+          "example": 3
+        },
+        {
+          "path": "distribution.feature_drift.n_total",
+          "type": "int",
+          "example": 3
+        },
+        {
+          "path": "distribution.feature_drift.n_drift_detected",
+          "type": "int",
+          "example": 0
+        },
+        {
+          "path": "distribution.feature_drift.status",
+          "type": "str",
+          "example": "insufficient_data (need 30)"
+        },
+        {
+          "path": "total_return_pct",
+          "type": "float",
+          "example": -0.016932
+        },
+        {
+          "path": "annualized_return_pct",
+          "type": "float",
+          "example": -0.012578
+        },
+        {
+          "path": "profit_factor",
+          "type": "float",
+          "example": 0.2659
+        },
+        {
+          "path": "return_to_max_dd",
+          "type": "float",
+          "example": -0.7387
+        },
+        {
+          "path": "trades_per_month",
+          "type": "float",
+          "example": 0.1853
+        },
+        {
+          "path": "gross_win_rr",
+          "type": "float",
+          "example": 0.6128
+        },
+        {
+          "path": "gross_loss_rr",
+          "type": "float",
+          "example": -2.3052
+        },
+        {
+          "path": "funnel_counts",
+          "type": "object",
+          "child_keys": [
+            "DISPLACEMENT",
+            "EXECUTION",
+            "EXPANSION",
+            "RANGE",
+            "RETEST",
+            "SHADOW_PENDING",
+            "SWEEP"
+          ]
+        },
+        {
+          "path": "funnel_counts.RANGE",
+          "type": "int",
+          "example": 22185
+        },
+        {
+          "path": "funnel_counts.SWEEP",
+          "type": "int",
+          "example": 15566
+        },
+        {
+          "path": "funnel_counts.DISPLACEMENT",
+          "type": "int",
+          "example": 778
+        },
+        {
+          "path": "funnel_counts.EXPANSION",
+          "type": "int",
+          "example": 8632
+        },
+        {
+          "path": "funnel_counts.RETEST",
+          "type": "int",
+          "example": 26
+        },
+        {
+          "path": "funnel_counts.EXECUTION",
+          "type": "int",
+          "example": 4
+        },
+        {
+          "path": "funnel_counts.SHADOW_PENDING",
+          "type": "int",
+          "example": 6
+        },
+        {
+          "path": "config_version",
+          "type": "str",
+          "example": "v2_htfcrt_2026_08"
+        },
+        {
+          "path": "htf_candles_per_range",
+          "type": "int",
+          "example": 16
+        },
+        {
+          "path": "htf_clock_basis",
+          "type": "str",
+          "example": "count"
+        },
+        {
+          "path": "run_id",
+          "type": "str",
+          "example": "run_20260916_172925"
+        },
+        {
+          "path": "cost_model_id",
+          "type": "str",
+          "example": "backtest_g1g2_v2"
+        },
+        {
+          "path": "cost_model_params_hash",
+          "type": "str",
+          "example": "8239f7adde53080c"
+        },
+        {
+          "path": "risk_denominator_id",
+          "type": "str",
+          "example": "entry_fill_to_sl__v1"
+        }
+      ]
+    },
+    "XAUUSD_events.jsonl": {
+      "role": "engine event stream",
+      "format": "jsonl",
+      "n_rows": 7112,
+      "envelope_keys_union": [
+        "candle_index",
+        "direction",
+        "event",
+        "metadata",
+        "price",
+        "reason",
+        "run_id",
+        "state_from",
+        "state_to",
+        "timestamp"
+      ],
+      "per_event": {
+        "RESET": {
+          "count": 2887,
+          "envelope_keys": [
+            "candle_index",
+            "direction",
+            "event",
+            "metadata",
+            "price",
+            "reason",
+            "run_id",
+            "state_from",
+            "state_to",
+            "timestamp"
+          ],
+          "metadata_keys": []
+        },
+        "STATE_TRANSITION": {
+          "count": 2382,
+          "envelope_keys": [
+            "candle_index",
+            "direction",
+            "event",
+            "metadata",
+            "price",
+            "reason",
+            "run_id",
+            "state_from",
+            "state_to",
+            "timestamp"
+          ],
+          "metadata_keys": [
+            "atr",
+            "displacement_atr_ratio",
+            "features",
+            "sweep_type"
+          ]
+        },
+        "SWEEP": {
+          "count": 1792,
+          "envelope_keys": [
+            "candle_index",
+            "direction",
+            "event",
+            "metadata",
+            "price",
+            "reason",
+            "run_id",
+            "state_from",
+            "state_to",
+            "timestamp"
+          ],
+          "metadata_keys": [
+            "double_confirmed"
+          ]
+        },
+        "BEGIN_SOFT_CONF": {
+          "count": 24,
+          "envelope_keys": [
+            "candle_index",
+            "direction",
+            "event",
+            "metadata",
+            "price",
+            "reason",
+            "run_id",
+            "state_from",
+            "state_to",
+            "timestamp"
+          ],
+          "metadata_keys": []
+        },
+        "FILTER_REJECTED": {
+          "count": 19,
+          "envelope_keys": [
+            "candle_index",
+            "direction",
+            "event",
+            "metadata",
+            "price",
+            "reason",
+            "run_id",
+            "state_from",
+            "state_to",
+            "timestamp"
+          ],
+          "metadata_keys": [
+            "session_name"
+          ]
+        },
+        "TRADE_OPENED": {
+          "count": 3,
+          "envelope_keys": [
+            "candle_index",
+            "direction",
+            "event",
+            "metadata",
+            "price",
+            "reason",
+            "run_id",
+            "state_from",
+            "state_to",
+            "timestamp"
+          ],
+          "metadata_keys": [
+            "S_score",
+            "id",
+            "risk_pct",
+            "session_name",
+            "sl",
+            "tp1",
+            "tp2"
+          ]
+        },
+        "TRADE_STOPPED": {
+          "count": 2,
+          "envelope_keys": [
+            "candle_index",
+            "direction",
+            "event",
+            "metadata",
+            "price",
+            "reason",
+            "run_id",
+            "state_from",
+            "state_to",
+            "timestamp"
+          ],
+          "metadata_keys": [
+            "pnl"
+          ]
+        },
+        "CONFIRMATION_FAILED": {
+          "count": 1,
+          "envelope_keys": [
+            "candle_index",
+            "direction",
+            "event",
+            "metadata",
+            "price",
+            "reason",
+            "run_id",
+            "state_from",
+            "state_to",
+            "timestamp"
+          ],
+          "metadata_keys": []
+        },
+        "TRADE_TP1": {
+          "count": 1,
+          "envelope_keys": [
+            "candle_index",
+            "direction",
+            "event",
+            "metadata",
+            "price",
+            "reason",
+            "run_id",
+            "state_from",
+            "state_to",
+            "timestamp"
+          ],
+          "metadata_keys": [
+            "pnl"
+          ]
+        },
+        "TRADE_TP2": {
+          "count": 1,
+          "envelope_keys": [
+            "candle_index",
+            "direction",
+            "event",
+            "metadata",
+            "price",
+            "reason",
+            "run_id",
+            "state_from",
+            "state_to",
+            "timestamp"
+          ],
+          "metadata_keys": [
+            "pnl"
+          ]
+        }
+      }
+    },
+    "XAUUSD_crt_telemetry.jsonl": {
+      "role": "CRT / candidate lifecycle telemetry",
+      "format": "jsonl",
+      "n_rows": 4883,
+      "kinds": [
+        [
+          "RESET_ATTRIBUTED",
+          2887
+        ],
+        [
+          "CANDIDATE_LIFECYCLE",
+          1798
+        ],
+        [
+          "EXPANSION_RETRACE_CHECK",
+          148
+        ],
+        [
+          "DECISION_DISTANCE",
+          26
+        ],
+        [
+          "RETEST_REPLAY",
+          23
+        ],
+        [
+          "TRANSITION_COUNTER",
+          1
+        ]
+      ],
+      "per_kind_keys": {
+        "RESET_ATTRIBUTED": [
+          "candidate_id",
+          "candle_index",
+          "from_state",
+          "htf_window_position",
+          "kind",
+          "reason",
+          "run_id",
+          "state_age_candles",
+          "to_state",
+          "would_expand",
+          "would_expand_score",
+          "would_expand_threshold"
+        ],
+        "CANDIDATE_LIFECYCLE": [
+          "age_candles",
+          "candidate_id",
+          "death_reason",
+          "entered_states",
+          "first_seen_idx",
+          "first_seen_ts",
+          "kind",
+          "last_seen_idx",
+          "max_score_seen",
+          "run_id",
+          "score_at_approval",
+          "shadow_context",
+          "shadow_displacement_br",
+          "shadow_used"
+        ],
+        "EXPANSION_RETRACE_CHECK": [
+          "age_hours_actual",
+          "age_hours_estimated",
+          "age_pct_of_threshold",
+          "candidate_age_at_entry",
+          "ceiling_at_max",
+          "duration_candles",
+          "ended_by",
+          "episode_end_idx",
+          "episode_start_idx",
+          "freshness_ratio",
+          "kind",
+          "max_retrace_depth_abs",
+          "outcome",
+          "qualified",
+          "run_id",
+          "shadow_used",
+          "time_to_max_retrace_candles"
+        ],
+        "DECISION_DISTANCE": [
+          "accepted",
+          "candidate_id",
+          "candle_index",
+          "decision_distance",
+          "kind",
+          "rejection_reason",
+          "run_id",
+          "score_actual",
+          "score_threshold",
+          "soft_conf_candle_num"
+        ],
+        "RETEST_REPLAY": [
+          "accepted",
+          "atr",
+          "candle_index",
+          "direction",
+          "disp_high",
+          "disp_low",
+          "entry",
+          "intent",
+          "kind",
+          "reject_reason",
+          "run_id",
+          "score",
+          "sl_atr_buffer",
+          "timestamp",
+          "tp1_mult",
+          "tp2_mult"
+        ],
+        "TRANSITION_COUNTER": [
+          "expansion_dwell_stats",
+          "kind",
+          "run_id",
+          "state_entry_counts"
+        ]
+      }
+    },
+    "LIVE_CHART_BIND_V1.json": {
+      "role": "chart UI bind contract",
+      "format": "json_object",
+      "top_keys": [
+        "authority",
+        "bind",
+        "generated_utc",
+        "join_keys",
+        "parents",
+        "schema_id",
+        "ui",
+        "views"
+      ],
+      "tree": [
+        {
+          "path": "schema_id",
+          "type": "str",
+          "example": "live_chart_bind_v1"
+        },
+        {
+          "path": "authority",
+          "type": "str",
+          "example": "RESEARCH_ONLY \u2014 implements LIVE_CHART_STATE_MONITOR_ARCHITECTURE + INFRA-CPC-V1 A0"
+        },
+        {
+          "path": "parents",
+          "type": "array[3]"
+        },
+        {
+          "path": "join_keys",
+          "type": "array[3]"
+        },
+        {
+          "path": "views",
+          "type": "object",
+          "child_keys": [
+            "state_monitor",
+            "trade_chart"
+          ]
+        },
+        {
+          "path": "views.trade_chart",
+          "type": "object",
+          "child_keys": [
+            "api",
+            "constructor_id",
+            "forbidden",
+            "occupancy_source",
+            "role"
+          ]
+        },
+        {
+          "path": "views.trade_chart.role",
+          "type": "str",
+          "example": "L5a desk chart"
+        },
+        {
+          "path": "views.trade_chart.constructor_id",
+          "type": "str",
+          "example": "engine"
+        },
+        {
+          "path": "views.trade_chart.occupancy_source",
+          "type": "str",
+          "example": "XAUUSD_events.jsonl"
+        },
+        {
+          "path": "views.trade_chart.api",
+          "type": "str",
+          "example": "/api/chart_series"
+        },
+        {
+          "path": "views.trade_chart.forbidden",
+          "type": "array[3]"
+        },
+        {
+          "path": "views.state_monitor",
+          "type": "object",
+          "child_keys": [
+            "live_rail_note",
+            "occupancy_source",
+            "role"
+          ]
+        },
+        {
+          "path": "views.state_monitor.role",
+          "type": "str",
+          "example": "L5b ops monitor"
+        },
+        {
+          "path": "views.state_monitor.occupancy_source",
+          "type": "NoneType",
+          "example": null
+        },
+        {
+          "path": "views.state_monitor.live_rail_note",
+          "type": "str",
+          "example": "paper rail does not call process_candle \u2014 chart_unbound on rail until REM-CRT-02"
+        },
+        {
+          "path": "bind",
+          "type": "object",
+          "child_keys": [
+            "api_run_id",
+            "chart_bound",
+            "chart_payload_ok",
+            "constructor_id",
+            "content_run_id",
+            "cost_model_id",
+            "cost_model_params_hash",
+            "f101_note",
+            "folder_run_id",
+            "has_events",
+            "has_trades",
+            "instrument",
+            "risk_denominator_id",
+            "run_dir",
+            "stamp_trust",
+            "summary_cost_model_id",
+            "summary_cost_model_params_hash",
+            "summary_risk_denominator_id"
+          ]
+        },
+        {
+          "path": "bind.instrument",
+          "type": "str",
+          "example": "XAUUSD"
+        },
+        {
+          "path": "bind.run_dir",
+          "type": "str",
+          "example": "results/run_20260916_225925_XAUUSD"
+        },
+        {
+          "path": "bind.content_run_id",
+          "type": "str",
+          "example": "run_20260916_172925"
+        },
+        {
+          "path": "bind.cost_model_id",
+          "type": "str",
+          "example": "backtest_g1g2_v2"
+        },
+        {
+          "path": "bind.cost_model_params_hash",
+          "type": "str",
+          "example": "8239f7adde53080c"
+        },
+        {
+          "path": "bind.risk_denominator_id",
+          "type": "str",
+          "example": "entry_fill_to_sl__v1"
+        },
+        {
+          "path": "bind.chart_bound",
+          "type": "bool",
+          "example": true
+        },
+        {
+          "path": "bind.constructor_id",
+          "type": "str",
+          "example": "engine"
+        },
+        {
+          "path": "bind.stamp_trust",
+          "type": "str",
+          "example": "FRESH_EMIT_VERIFIED"
+        },
+        {
+          "path": "bind.summary_cost_model_id",
+          "type": "str",
+          "example": "backtest_g1g2_v2"
+        },
+        {
+          "path": "bind.summary_cost_model_params_hash",
+          "type": "str",
+          "example": "8239f7adde53080c"
+        },
+        {
+          "path": "bind.summary_risk_denominator_id",
+          "type": "str",
+          "example": "entry_fill_to_sl__v1"
+        },
+        {
+          "path": "bind.has_events",
+          "type": "bool",
+          "example": true
+        },
+        {
+          "path": "bind.has_trades",
+          "type": "bool",
+          "example": true
+        },
+        {
+          "path": "bind.api_run_id",
+          "type": "str",
+          "example": "run_20260916_225925_XAUUSD"
+        },
+        {
+          "path": "bind.folder_run_id",
+          "type": "str",
+          "example": "run_20260916_225925_XAUUSD"
+        },
+        {
+          "path": "bind.f101_note",
+          "type": "str",
+          "example": "API/dropdown use folder name; summary.run_id is content mint (F-101)"
+        },
+        {
+          "path": "bind.chart_payload_ok",
+          "type": "bool",
+          "example": true
+        },
+        {
+          "path": "ui",
+          "type": "object",
+          "child_keys": [
+            "api_example",
+            "live_monitor_url",
+            "select",
+            "trade_chart_url"
+          ]
+        },
+        {
+          "path": "ui.trade_chart_url",
+          "type": "str",
+          "example": "http://127.0.0.1:8787/ui_kits/crt_dashboard/"
+        },
+        {
+          "path": "ui.live_monitor_url",
+          "type": "str",
+          "example": "http://127.0.0.1:8787/ui_kits/live_monitor/"
+        },
+        {
+          "path": "ui.select",
+          "type": "object",
+          "child_keys": [
+            "instrument",
+            "run_id_from_summary"
+          ]
+        },
+        {
+          "path": "ui.select.instrument",
+          "type": "str",
+          "example": "XAUUSD"
+        },
+        {
+          "path": "ui.select.run_id_from_summary",
+          "type": "bool",
+          "example": true
+        },
+        {
+          "path": "ui.api_example",
+          "type": "str",
+          "example": "/api/chart_series?instrument=XAUUSD&run_id=run_20260916_225925_XAUUSD&timeframe=M15&limit=1500"
+        },
+        {
+          "path": "generated_utc",
+          "type": "str",
+          "example": "2026-09-16T17:44:25.204642+00:00"
+        }
+      ]
+    },
+    "chart_payload_smoke.json": {
+      "role": "chart payload smoke",
+      "format": "json_object",
+      "top_keys": [
+        "bars",
+        "config_pin",
+        "crt_state",
+        "event_pins",
+        "gap_bands",
+        "instrument",
+        "integrity",
+        "legend",
+        "ok",
+        "run_id",
+        "timeframe",
+        "trades"
+      ],
+      "tree": [
+        {
+          "path": "ok",
+          "type": "bool",
+          "example": true
+        },
+        {
+          "path": "instrument",
+          "type": "str",
+          "example": "XAUUSD"
+        },
+        {
+          "path": "run_id",
+          "type": "str",
+          "example": "run_20260916_225925_XAUUSD"
+        },
+        {
+          "path": "timeframe",
+          "type": "str",
+          "example": "M15"
+        },
+        {
+          "path": "bars",
+          "type": "str",
+          "example": "list"
+        },
+        {
+          "path": "crt_state",
+          "type": "str",
+          "example": "dict"
+        },
+        {
+          "path": "trades",
+          "type": "str",
+          "example": "list"
+        },
+        {
+          "path": "event_pins",
+          "type": "str",
+          "example": "list"
+        },
+        {
+          "path": "gap_bands",
+          "type": "str",
+          "example": "list"
+        },
+        {
+          "path": "integrity",
+          "type": "str",
+          "example": "dict"
+        },
+        {
+          "path": "legend",
+          "type": "str",
+          "example": "dict"
+        },
+        {
+          "path": "config_pin",
+          "type": "str",
+          "example": "dict"
+        }
+      ]
+    },
+    "cost_audit/ultron_sem_r_shadow.json": {
+      "role": "SEM-R shadow cost audit",
+      "format": "json_object",
+      "top_keys": [
+        "authority",
+        "design_note",
+        "min_rr_ratio",
+        "n_flip_vs_gross",
+        "n_trades",
+        "rows",
+        "sem_components"
+      ],
+      "tree": [
+        {
+          "path": "authority",
+          "type": "str",
+          "example": "RESEARCH_ONLY \u2014 REM-SOFT-01 shadow; Ultron tax NOT activated"
+        },
+        {
+          "path": "min_rr_ratio",
+          "type": "float",
+          "example": 1.5
+        },
+        {
+          "path": "sem_components",
+          "type": "object",
+          "child_keys": [
+            "commission",
+            "entry_slippage",
+            "entry_slippage_basis",
+            "half_spread",
+            "stop_slippage"
+          ]
+        },
+        {
+          "path": "sem_components.half_spread",
+          "type": "float",
+          "example": 0.045
+        },
+        {
+          "path": "sem_components.commission",
+          "type": "float",
+          "example": 0.04
+        },
+        {
+          "path": "sem_components.entry_slippage",
+          "type": "float",
+          "example": 0.09
+        },
+        {
+          "path": "sem_components.stop_slippage",
+          "type": "float",
+          "example": 0.09
+        },
+        {
+          "path": "sem_components.entry_slippage_basis",
+          "type": "str",
+          "example": "PROXY_FROM_STOP"
+        },
+        {
+          "path": "n_trades",
+          "type": "int",
+          "example": 3
+        },
+        {
+          "path": "n_flip_vs_gross",
+          "type": "int",
+          "example": 2
+        },
+        {
+          "path": "rows",
+          "type": "array[3]",
+          "elem0_keys": [
+            "admit_gross_none",
+            "admit_sem_shadow",
+            "cost_model_id",
+            "direction",
+            "exit_reason",
+            "flip_vs_gross",
+            "gate_rr_sem_shadow",
+            "min_rr",
+            "planned_rr_raw_tp1",
+            "pnl_rr_net_g1g2",
+            "pnl_rr_raw_ledger",
+            "risk_denominator_id",
+            "sem_cost_r_actual_exit",
+            "sem_cost_r_sl_assumption",
+            "trade_id"
+          ]
+        },
+        {
+          "path": "design_note",
+          "type": "str",
+          "example": "docs/research/REM_SOFT_01_ULTRON_GROSS_VS_LEDGER_NET_2026-09-16.md"
+        }
+      ]
+    },
+    "cost_audit/ultron_sem_r_shadow.csv": {
+      "role": "SEM-R shadow cost audit rows",
+      "format": "csv",
+      "columns": [
+        "trade_id",
+        "direction",
+        "exit_reason",
+        "planned_rr_raw_tp1",
+        "pnl_rr_raw_ledger",
+        "pnl_rr_net_g1g2",
+        "sem_cost_r_sl_assumption",
+        "sem_cost_r_actual_exit",
+        "gate_rr_sem_shadow",
+        "min_rr",
+        "admit_gross_none",
+        "admit_sem_shadow",
+        "flip_vs_gross",
+        "cost_model_id",
+        "risk_denominator_id"
+      ]
+    },
+    "XAUUSD_report.txt": {
+      "role": "human report",
+      "format": "text",
+      "n_lines": 55,
+      "head": [
+        "\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550",
+        "  CRT ENGINE BACKTEST v2 \u2014 XAUUSD",
+        "\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550",
+        "",
+        "\u2500\u2500 COVERAGE \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+        "  Total candles:                   47,275",
+        "  Session gap resets:                 121",
+        "  Total setups:                         3",
+        "  Approved / Rejected:             3 / 0    ",
+        "  Approval rate:                   100.0%",
+        "",
+        "\u2500\u2500 PERFORMANCE (NET of costs) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+        "  Win rate:                         33.3%",
+        "  Avg RR (net):                     -0.56R",
+        "  Total PnL raw/net:            -0.32R /  -1.69R",
+        "  Cost drag:                        +1.37R",
+        "  TP1 / TP2 hit rate:          33.3% / 33.3%",
+        "",
+        "\u2500\u2500 RISK \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+        "  Max drawdown (R):                  2.31R",
+        "  Max drawdown (% equity):           2.3%",
+        "  Max win / loss streak:          1 / 2   ",
+        "  Avg trade duration:                 1.3 candles",
+        "",
+        "\u2500\u2500 CAPITAL CURVE \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+        "  Starting capital:               100,000",
+        "  Final capital:                   98,307",
+        "  Total return:                     -1.7%",
+        "",
+        "\u2500\u2500 TRADE COSTS \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+        "  Total slippage:                   114.8 pips",
+        "  Total spread:                     162.2 pips",
+        "  Avg cost per trade:                92.3 pips",
+        "  Raw vs Net PnL delta:             +1.37R",
+        "  Cost model applied:          backtest_g1g2_v2",
+        "",
+        "\u2500\u2500 SESSION BREAKDOWN \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+        "  LONDON          1 trades  WR=0%  PnL= -1.25R",
+        "  NEWYORK         2 trades  WR=50%  PnL= -0.44R",
+        ""
+      ]
+    }
+  },
+  "linked_external": {
+    "logs/config_dumps/XAUUSD_run_20260916_172925_config.json": {
+      "role": "config dump (canonical id)",
+      "format": "json_object",
+      "top_keys": [
+        "backtest_params",
+        "config_version",
+        "crt_engine",
+        "decision_engine",
+        "dumped_at",
+        "engine_runner",
+        "execution_planner",
+        "fusion_engine",
+        "instrument",
+        "mode",
+        "overrides",
+        "run_id",
+        "source_config_path"
+      ],
+      "tree": [
+        {
+          "path": "dumped_at",
+          "type": "str",
+          "example": "2026-09-16T17:29:25.466229+00:00"
+        },
+        {
+          "path": "instrument",
+          "type": "str",
+          "example": "XAUUSD"
+        },
+        {
+          "path": "run_id",
+          "type": "str",
+          "example": "run_20260916_172925"
+        },
+        {
+          "path": "config_version",
+          "type": "str",
+          "example": "v2_htfcrt_2026_08"
+        },
+        {
+          "path": "mode",
+          "type": "str",
+          "example": "backtest"
+        },
+        {
+          "path": "source_config_path",
+          "type": "str",
+          "example": "configs/production/v2_htfcrt_2026_08.json"
+        },
+        {
+          "path": "overrides",
+          "type": "object",
+          "child_keys": []
+        },
+        {
+          "path": "backtest_params",
+          "type": "object",
+          "child_keys": [
+            "allow_router_crt_config",
+            "cost_model_id",
+            "cost_model_params_hash",
+            "event_flush_every",
+            "gap_reset_enabled",
+            "gap_reset_minutes",
+            "htf_candles_per_range",
+            "htf_clock_basis",
+            "initial_capital",
+            "instrument",
+            "pip_size",
+            "risk_pct_per_trade",
+            "scorer_mode",
+            "simulated_spread_pct",
+            "slippage_atr_fraction",
+            "slippage_enabled",
+            "slippage_seed",
+            "strategy_id",
+            "use_compounding",
+            "warmup_candles"
+          ]
+        },
+        {
+          "path": "backtest_params.htf_candles_per_range",
+          "type": "int",
+          "example": 16
+        },
+        {
+          "path": "backtest_params.slippage_enabled",
+          "type": "bool",
+          "example": true
+        },
+        {
+          "path": "backtest_params.slippage_atr_fraction",
+          "type": "float",
+          "example": 0.1
+        },
+        {
+          "path": "backtest_params.slippage_seed",
+          "type": "int",
+          "example": 42
+        },
+        {
+          "path": "backtest_params.simulated_spread_pct",
+          "type": "float",
+          "example": 0.0002
+        },
+        {
+          "path": "backtest_params.initial_capital",
+          "type": "float",
+          "example": 100000.0
+        },
+        {
+          "path": "backtest_params.risk_pct_per_trade",
+          "type": "float",
+          "example": 0.01
+        },
+        {
+          "path": "backtest_params.use_compounding",
+          "type": "bool",
+          "example": true
+        },
+        {
+          "path": "backtest_params.gap_reset_enabled",
+          "type": "bool",
+          "example": true
+        },
+        {
+          "path": "backtest_params.gap_reset_minutes",
+          "type": "int",
+          "example": 120
+        },
+        {
+          "path": "backtest_params.event_flush_every",
+          "type": "int",
+          "example": 100
+        },
+        {
+          "path": "backtest_params.warmup_candles",
+          "type": "int",
+          "example": 78
+        },
+        {
+          "path": "backtest_params.instrument",
+          "type": "str",
+          "example": "XAUUSD"
+        },
+        {
+          "path": "backtest_params.pip_size",
+          "type": "float",
+          "example": 0.01
+        },
+        {
+          "path": "backtest_params.allow_router_crt_config",
+          "type": "bool",
+          "example": false
+        },
+        {
+          "path": "backtest_params.scorer_mode",
+          "type": "str",
+          "example": "calibrated"
+        },
+        {
+          "path": "backtest_params.cost_model_id",
+          "type": "str",
+          "example": "backtest_g1g2_v2"
+        },
+        {
+          "path": "backtest_params.cost_model_params_hash",
+          "type": "str",
+          "example": "8239f7adde53080c"
+        },
+        {
+          "path": "backtest_params.strategy_id",
+          "type": "str",
+          "example": ""
+        },
+        {
+          "path": "backtest_params.htf_clock_basis",
+          "type": "str",
+          "example": "count"
+        },
+        {
+          "path": "crt_engine",
+          "type": "object",
+          "child_keys": [
+            "allowed_sessions",
+            "atr_buffer_multiplier",
+            "atr_min_displacement",
+            "atr_multiplier_min",
+            "atr_period",
+            "bitnet_main_threshold",
+            "body_ratio_min",
+            "breakout_disp_threshold",
+            "conf_alpha",
+            "conf_beta",
+            "conf_floor",
+            "conf_weights",
+            "confirmation_body_min",
+            "displacement_origin_kill_enabled",
+            "displacement_origin_kill_precedence",
+            "ema_fast",
+            "ema_slow",
+            "exit_model",
+            "expansion_age_warn_candles",
+            "expansion_atr_min_distance",
+            "extension_reset_fib",
+            "max_displacement_strength",
+            "max_expansion_age_candles",
+            "max_expansion_age_hours",
+            "max_spread_pct",
+            "max_sweep_age_candles",
+            "news_blackout_minutes",
+            "pending_displacement_ttl_candles",
+            "retest_atr_depth_fraction",
+            "retest_depth_max",
+            "retest_min_depth_atr_fraction",
+            "retrace_reset_pct",
+            "risk_score_weights",
+            "score_component_weights",
+            "score_decay_lambda",
+            "score_threshold",
+            "session_windows",
+            "shadow_advisory_only",
+            "shadow_age_norm_candles",
+            "shadow_age_penalty_lambda",
+            "sizing_bands",
+            "sl_atr_buffer",
+            "soft_conf_max_candles",
+            "tier_1_threshold",
+            "tier_2_threshold",
+            "tp1_atr_multiplier",
+            "tp1_atr_multiplier_breakout",
+            "tp1_atr_multiplier_liq_sweep",
+            "tp1_atr_multiplier_pullback",
+            "tp1_atr_multiplier_reversal",
+            "tp2_atr_multiplier",
+            "use_bitnet",
+            "weak_link_weight"
+          ]
+        },
+        {
+          "path": "crt_engine.body_ratio_min",
+          "type": "float",
+          "example": 0.65
+        },
+        {
+          "path": "crt_engine.atr_multiplier_min",
+          "type": "float",
+          "example": 1.0
+        },
+        {
+          "path": "crt_engine.retest_depth_max",
+          "type": "float",
+          "example": 0.15
+        },
+        {
+          "path": "crt_engine.atr_period",
+          "type": "int",
+          "example": 14
+        },
+        {
+          "path": "crt_engine.atr_buffer_multiplier",
+          "type": "int",
+          "example": 3
+        },
+        {
+          "path": "crt_engine.max_sweep_age_candles",
+          "type": "int",
+          "example": 20
+        },
+        {
+          "path": "crt_engine.expansion_atr_min_distance",
+          "type": "float",
+          "example": 0.3
+        },
+        {
+          "path": "crt_engine.retest_atr_depth_fraction",
+          "type": "float",
+          "example": 0.3
+        },
+        {
+          "path": "crt_engine.retest_min_depth_atr_fraction",
+          "type": "float",
+          "example": 0.1
+        },
+        {
+          "path": "crt_engine.risk_score_weights",
+          "type": "array[4]"
+        },
+        {
+          "path": "crt_engine.score_component_weights",
+          "type": "array[4]"
+        },
+        {
+          "path": "crt_engine.max_displacement_strength",
+          "type": "float",
+          "example": 2.0
+        },
+        {
+          "path": "crt_engine.score_decay_lambda",
+          "type": "float",
+          "example": 0.05
+        },
+        {
+          "path": "crt_engine.score_threshold",
+          "type": "float",
+          "example": 0.45
+        },
+        {
+          "path": "crt_engine.max_spread_pct",
+          "type": "float",
+          "example": 0.05
+        },
+        {
+          "path": "crt_engine.atr_min_displacement",
+          "type": "float",
+          "example": 1.2
+        },
+        {
+          "path": "crt_engine.confirmation_body_min",
+          "type": "float",
+          "example": 0.6
+        },
+        {
+          "path": "crt_engine.sl_atr_buffer",
+          "type": "float",
+          "example": 0.2
+        },
+        {
+          "path": "crt_engine.tp1_atr_multiplier",
+          "type": "float",
+          "example": 1.0
+        },
+        {
+          "path": "crt_engine.tp2_atr_multiplier",
+          "type": "float",
+          "example": 2.0
+        },
+        {
+          "path": "crt_engine.exit_model",
+          "type": "str",
+          "example": "intrabar_touch"
+        },
+        {
+          "path": "crt_engine.breakout_disp_threshold",
+          "type": "float",
+          "example": 1.5
+        },
+        {
+          "path": "crt_engine.tp1_atr_multiplier_breakout",
+          "type": "float",
+          "example": 1.5
+        },
+        {
+          "path": "crt_engine.tp1_atr_multiplier_pullback",
+          "type": "float",
+          "example": 0.8
+        },
+        {
+          "path": "crt_engine.tp1_atr_multiplier_liq_sweep",
+          "type": "float",
+          "example": 1.2
+        },
+        {
+          "path": "crt_engine.tp1_atr_multiplier_reversal",
+          "type": "float",
+          "example": 1.0
+        },
+        {
+          "path": "crt_engine.bitnet_main_threshold",
+          "type": "float",
+          "example": 0.55
+        },
+        {
+          "path": "crt_engine.use_bitnet",
+          "type": "bool",
+          "example": false
+        },
+        {
+          "path": "crt_engine.session_windows",
+          "type": "object",
+          "child_keys": [
+            "ASIA",
+            "LONDON",
+            "NEWYORK"
+          ]
+        },
+        {
+          "path": "crt_engine.session_windows.LONDON",
+          "type": "array[2]"
+        },
+        {
+          "path": "crt_engine.session_windows.NEWYORK",
+          "type": "array[2]"
+        },
+        {
+          "path": "crt_engine.session_windows.ASIA",
+          "type": "array[2]"
+        },
+        {
+          "path": "crt_engine.allowed_sessions",
+          "type": "array[3]"
+        },
+        {
+          "path": "crt_engine.retrace_reset_pct",
+          "type": "float",
+          "example": 0.5
+        },
+        {
+          "path": "crt_engine.extension_reset_fib",
+          "type": "float",
+          "example": 1.618
+        },
+        {
+          "path": "crt_engine.news_blackout_minutes",
+          "type": "int",
+          "example": 15
+        },
+        {
+          "path": "crt_engine.conf_alpha",
+          "type": "float",
+          "example": 0.7
+        },
+        {
+          "path": "crt_engine.conf_beta",
+          "type": "float",
+          "example": 0.3
+        },
+        {
+          "path": "crt_engine.conf_weights",
+          "type": "array[4]"
+        },
+        {
+          "path": "crt_engine.conf_floor",
+          "type": "float",
+          "example": 0.2
+        },
+        {
+          "path": "crt_engine.weak_link_weight",
+          "type": "float",
+          "example": 0.3
+        },
+        {
+          "path": "crt_engine.ema_fast",
+          "type": "int",
+          "example": 2
+        },
+        {
+          "path": "crt_engine.ema_slow",
+          "type": "int",
+          "example": 5
+        },
+        {
+          "path": "crt_engine.tier_1_threshold",
+          "type": "float",
+          "example": 0.75
+        },
+        {
+          "path": "crt_engine.tier_2_threshold",
+          "type": "float",
+          "example": 0.3
+        },
+        {
+          "path": "crt_engine.soft_conf_max_candles",
+          "type": "int",
+          "example": 3
+        },
+        {
+          "path": "crt_engine.pending_displacement_ttl_candles",
+          "type": "int",
+          "example": 4
+        },
+        {
+          "path": "crt_engine.displacement_origin_kill_enabled",
+          "type": "bool",
+          "example": false
+        },
+        {
+          "path": "crt_engine.displacement_origin_kill_precedence",
+          "type": "str",
+          "example": "after_resting_fills"
+        },
+        {
+          "path": "crt_engine.max_expansion_age_candles",
+          "type": "int",
+          "example": 495
+        },
+        {
+          "path": "crt_engine.max_expansion_age_hours",
+          "type": "int",
+          "example": 124
+        },
+        {
+          "path": "crt_engine.expansion_age_warn_candles",
+          "type": "int",
+          "example": 342
+        },
+        {
+          "path": "crt_engine.shadow_age_penalty_lambda",
+          "type": "float",
+          "example": 0.0
+        },
+        {
+          "path": "crt_engine.shadow_age_norm_candles",
+          "type": "int",
+          "example": 0
+        },
+        {
+          "path": "crt_engine.shadow_advisory_only",
+          "type": "bool",
+          "example": false
+        },
+        {
+          "path": "crt_engine.sizing_bands",
+          "type": "array[2]"
+        },
+        {
+          "path": "engine_runner",
+          "type": "object",
+          "child_keys": [
+            "allowed_sessions",
+            "convergence_window",
+            "debug_mode",
+            "dual_engine",
+            "fusion_compare_evaluate",
+            "fusion_use_evaluate",
+            "gaussian_impl",
+            "min_atr",
+            "model_path",
+            "rr_fusion",
+            "ultron_gate_enabled",
+            "zone_cluster_threshold",
+            "zone_gate",
+            "zone_gate_execution_mode",
+            "zone_min_samples",
+            "zone_mode",
+            "zone_registry_path"
+          ]
+        },
+        {
+          "path": "engine_runner.model_path",
+          "type": "str",
+          "example": "results/model_export_format.json"
+        },
+        {
+          "path": "engine_runner.min_atr",
+          "type": "float",
+          "example": 0.0003
+        },
+        {
+          "path": "engine_runner.allowed_sessions",
+          "type": "array[3]"
+        },
+        {
+          "path": "engine_runner.zone_cluster_threshold",
+          "type": "float",
+          "example": 0.25
+        },
+        {
+          "path": "engine_runner.zone_registry_path",
+          "type": "str",
+          "example": "models/zone_registry_v4_2026_07.json"
+        },
+        {
+          "path": "engine_runner.zone_gate_execution_mode",
+          "type": "str",
+          "example": "normal"
+        },
+        {
+          "path": "engine_runner.zone_mode",
+          "type": "str",
+          "example": "hard"
+        },
+        {
+          "path": "engine_runner.zone_gate",
+          "type": "object",
+          "child_keys": [
+            "cluster_min_n",
+            "cluster_spread_max",
+            "top_k"
+          ]
+        },
+        {
+          "path": "engine_runner.zone_gate.top_k",
+          "type": "int",
+          "example": 3
+        },
+        {
+          "path": "engine_runner.zone_gate.cluster_min_n",
+          "type": "int",
+          "example": 2
+        },
+        {
+          "path": "engine_runner.zone_gate.cluster_spread_max",
+          "type": "float",
+          "example": 0.15
+        },
+        {
+          "path": "engine_runner.debug_mode",
+          "type": "bool",
+          "example": false
+        },
+        {
+          "path": "engine_runner.gaussian_impl",
+          "type": "str",
+          "example": "heuristic"
+        },
+        {
+          "path": "engine_runner.convergence_window",
+          "type": "int",
+          "example": 500
+        },
+        {
+          "path": "engine_runner.rr_fusion",
+          "type": "object",
+          "child_keys": [
+            "enabled",
+            "full_feature_vector",
+            "model_path",
+            "threshold"
+          ]
+        },
+        {
+          "path": "engine_runner.rr_fusion.enabled",
+          "type": "bool",
+          "example": false
+        },
+        {
+          "path": "engine_runner.rr_fusion.model_path",
+          "type": "str",
+          "example": "models/XAUUSD/20260728_v39/rr_model_20260728_v39_xau.json"
+        },
+        {
+          "path": "engine_runner.rr_fusion.threshold",
+          "type": "float",
+          "example": 0.5
+        },
+        {
+          "path": "engine_runner.rr_fusion.full_feature_vector",
+          "type": "bool",
+          "example": true
+        },
+        {
+          "path": "engine_runner.dual_engine",
+          "type": "object",
+          "child_keys": [
+            "breakout_min_score",
+            "fusion_min_score",
+            "momentum_threshold",
+            "neutral_min_score",
+            "range_volatility_threshold",
+            "trap_min_score",
+            "trend_strength_threshold"
+          ]
+        },
+        {
+          "path": "engine_runner.dual_engine.trend_strength_threshold",
+          "type": "float",
+          "example": 0.15
+        },
+        {
+          "path": "engine_runner.dual_engine.momentum_threshold",
+          "type": "float",
+          "example": 0.3
+        },
+        {
+          "path": "engine_runner.dual_engine.range_volatility_threshold",
+          "type": "float",
+          "example": 0.8
+        },
+        {
+          "path": "engine_runner.dual_engine.breakout_min_score",
+          "type": "float",
+          "example": 0.3
+        },
+        {
+          "path": "engine_runner.dual_engine.trap_min_score",
+          "type": "float",
+          "example": 0.32
+        },
+        {
+          "path": "engine_runner.dual_engine.neutral_min_score",
+          "type": "float",
+          "example": 0.45
+        },
+        {
+          "path": "engine_runner.dual_engine.fusion_min_score",
+          "type": "float",
+          "example": 0.25
+        },
+        {
+          "path": "engine_runner.fusion_compare_evaluate",
+          "type": "bool",
+          "example": true
+        },
+        {
+          "path": "engine_runner.fusion_use_evaluate",
+          "type": "bool",
+          "example": false
+        },
+        {
+          "path": "engine_runner.ultron_gate_enabled",
+          "type": "bool",
+          "example": false
+        },
+        {
+          "path": "engine_runner.zone_min_samples",
+          "type": "int",
+          "example": 50
+        },
+        {
+          "path": "fusion_engine",
+          "type": "object",
+          "child_keys": [
+            "_comment_consensus",
+            "conflict_resolution_policy",
+            "enable_llm",
+            "gaussian_weight",
+            "llm_lower_band",
+            "llm_upper_band",
+            "llm_weight",
+            "min_consensus_agreement",
+            "min_consensus_signals",
+            "neural_weight",
+            "tier_full",
+            "tier_half",
+            "tier_quarter",
+            "weight_crt",
+            "weight_gaussian",
+            "weight_rr",
+            "weight_zone_gate"
+          ]
+        },
+        {
+          "path": "fusion_engine.weight_crt",
+          "type": "float",
+          "example": 0.4
+        },
+        {
+          "path": "fusion_engine.weight_gaussian",
+          "type": "float",
+          "example": 0.2
+        },
+        {
+          "path": "fusion_engine.weight_zone_gate",
+          "type": "float",
+          "example": 0.2
+        },
+        {
+          "path": "fusion_engine.weight_rr",
+          "type": "float",
+          "example": 0.2
+        },
+        {
+          "path": "fusion_engine.conflict_resolution_policy",
+          "type": "str",
+          "example": "conservative"
+        },
+        {
+          "path": "fusion_engine.gaussian_weight",
+          "type": "float",
+          "example": 0.6
+        },
+        {
+          "path": "fusion_engine.neural_weight",
+          "type": "float",
+          "example": 0.4
+        },
+        {
+          "path": "fusion_engine.llm_weight",
+          "type": "float",
+          "example": 0.2
+        },
+        {
+          "path": "fusion_engine.llm_lower_band",
+          "type": "float",
+          "example": 0.45
+        },
+        {
+          "path": "fusion_engine.llm_upper_band",
+          "type": "float",
+          "example": 0.65
+        },
+        {
+          "path": "fusion_engine.enable_llm",
+          "type": "bool",
+          "example": true
+        },
+        {
+          "path": "fusion_engine.tier_full",
+          "type": "float",
+          "example": 0.75
+        },
+        {
+          "path": "fusion_engine.tier_half",
+          "type": "float",
+          "example": 0.6
+        },
+        {
+          "path": "fusion_engine.tier_quarter",
+          "type": "float",
+          "example": 0.5
+        },
+        {
+          "path": "fusion_engine._comment_consensus",
+          "type": "str",
+          "example": "T-22 (2026-07-19): declared because engine_runner previously read these via .get(key, literal) while its six neighbourin"
+        },
+        {
+          "path": "fusion_engine.min_consensus_signals",
+          "type": "int",
+          "example": 2
+        },
+        {
+          "path": "fusion_engine.min_consensus_agreement",
+          "type": "float",
+          "example": 0.6
+        },
+        {
+          "path": "execution_planner",
+          "type": "object",
+          "child_keys": [
+            "default_account_balance",
+            "partial_tp_breakeven_enabled",
+            "partial_tp_fraction",
+            "precision_default",
+            "precision_overrides",
+            "reject_unknown_intent",
+            "risk_percent",
+            "ttl_breakout_sec",
+            "ttl_continuation_sec",
+            "ttl_liq_sweep_sec",
+            "ttl_pullback_sec",
+            "ttl_reversal_sec",
+            "ttl_unknown_sec"
+          ]
+        },
+        {
+          "path": "execution_planner.ttl_breakout_sec",
+          "type": "int",
+          "example": 300
+        },
+        {
+          "path": "execution_planner.ttl_pullback_sec",
+          "type": "int",
+          "example": 420
+        },
+        {
+          "path": "execution_planner.ttl_reversal_sec",
+          "type": "int",
+          "example": 180
+        },
+        {
+          "path": "execution_planner.ttl_liq_sweep_sec",
+          "type": "int",
+          "example": 300
+        },
+        {
+          "path": "execution_planner.ttl_continuation_sec",
+          "type": "int",
+          "example": 180
+        },
+        {
+          "path": "execution_planner.risk_percent",
+          "type": "float",
+          "example": 0.5
+        },
+        {
+          "path": "execution_planner.reject_unknown_intent",
+          "type": "bool",
+          "example": true
+        },
+        {
+          "path": "execution_planner.partial_tp_breakeven_enabled",
+          "type": "bool",
+          "example": true
+        },
+        {
+          "path": "execution_planner.partial_tp_fraction",
+          "type": "float",
+          "example": 0.5
+        },
+        {
+          "path": "execution_planner.precision_default",
+          "type": "int",
+          "example": 8
+        },
+        {
+          "path": "execution_planner.default_account_balance",
+          "type": "float",
+          "example": 10000.0
+        },
+        {
+          "path": "execution_planner.ttl_unknown_sec",
+          "type": "int",
+          "example": 180
+        },
+        {
+          "path": "execution_planner.precision_overrides",
+          "type": "object",
+          "child_keys": [
+            "BTCUSD",
+            "BTCUSDT",
+            "ETHUSD",
+            "ETHUSDT",
+            "XAUUSD"
+          ]
+        },
+        {
+          "path": "execution_planner.precision_overrides.XAUUSD",
+          "type": "int",
+          "example": 2
+        },
+        {
+          "path": "execution_planner.precision_overrides.BTCUSDT",
+          "type": "int",
+          "example": 2
+        },
+        {
+          "path": "execution_planner.precision_overrides.ETHUSDT",
+          "type": "int",
+          "example": 2
+        },
+        {
+          "path": "execution_planner.precision_overrides.BTCUSD",
+          "type": "int",
+          "example": 2
+        },
+        {
+          "path": "execution_planner.precision_overrides.ETHUSD",
+          "type": "int",
+          "example": 2
+        },
+        {
+          "path": "decision_engine",
+          "type": "object",
+          "child_keys": [
+            "p_win_threshold",
+            "rr_threshold",
+            "rr_threshold__retired",
+            "score_threshold",
+            "threshold_max",
+            "threshold_min",
+            "threshold_percentile",
+            "weak_component_threshold",
+            "weak_link_weight"
+          ]
+        },
+        {
+          "path": "decision_engine.score_threshold",
+          "type": "float",
+          "example": 0.45
+        },
+        {
+          "path": "decision_engine.p_win_threshold",
+          "type": "float",
+          "example": 0.4
+        },
+        {
+          "path": "decision_engine.rr_threshold",
+          "type": "float",
+          "example": 1.5
+        },
+        {
+          "path": "decision_engine.rr_threshold__retired",
+          "type": "str",
+          "example": "F-048 2026-07-24 - DecisionEngine no longer reads this; economic RR owned by ultron_risk_gate.min_rr_ratio. Key kept for"
+        },
+        {
+          "path": "decision_engine.weak_component_threshold",
+          "type": "float",
+          "example": 0.4
+        },
+        {
+          "path": "decision_engine.weak_link_weight",
+          "type": "float",
+          "example": 0.3
+        },
+        {
+          "path": "decision_engine.threshold_percentile",
+          "type": "int",
+          "example": 85
+        },
+        {
+          "path": "decision_engine.threshold_min",
+          "type": "float",
+          "example": 0.45
+        },
+        {
+          "path": "decision_engine.threshold_max",
+          "type": "float",
+          "example": 0.65
+        }
+      ]
+    },
+    "logs/config_dumps/XAUUSD_run_20260921_172937_config.json": {
+      "role": "Run2 config dump",
+      "format": "json_object",
+      "top_keys": [
+        "backtest_params",
+        "config_version",
+        "crt_engine",
+        "decision_engine",
+        "dumped_at",
+        "engine_runner",
+        "execution_planner",
+        "fusion_engine",
+        "instrument",
+        "mode",
+        "overrides",
+        "run_id",
+        "source_config_path"
+      ],
+      "tree": [
+        {
+          "path": "dumped_at",
+          "type": "str",
+          "example": "2026-09-21T17:29:37.446984+00:00"
+        },
+        {
+          "path": "instrument",
+          "type": "str",
+          "example": "XAUUSD"
+        },
+        {
+          "path": "run_id",
+          "type": "str",
+          "example": "run_20260921_172937"
+        },
+        {
+          "path": "config_version",
+          "type": "str",
+          "example": "v2_htfcrt_2026_08"
+        },
+        {
+          "path": "mode",
+          "type": "str",
+          "example": "backtest"
+        },
+        {
+          "path": "source_config_path",
+          "type": "str",
+          "example": "configs/production/v2_htfcrt_2026_08.json"
+        },
+        {
+          "path": "overrides",
+          "type": "object",
+          "child_keys": []
+        },
+        {
+          "path": "backtest_params",
+          "type": "object",
+          "child_keys": [
+            "allow_router_crt_config",
+            "cost_model_id",
+            "cost_model_params_hash",
+            "event_flush_every",
+            "gap_reset_enabled",
+            "gap_reset_minutes",
+            "htf_candles_per_range",
+            "htf_clock_basis",
+            "initial_capital",
+            "instrument",
+            "pip_size",
+            "risk_pct_per_trade",
+            "scorer_mode",
+            "simulated_spread_pct",
+            "slippage_atr_fraction",
+            "slippage_enabled",
+            "slippage_seed",
+            "strategy_id",
+            "use_compounding",
+            "warmup_candles"
+          ]
+        },
+        {
+          "path": "backtest_params.htf_candles_per_range",
+          "type": "int",
+          "example": 16
+        },
+        {
+          "path": "backtest_params.slippage_enabled",
+          "type": "bool",
+          "example": true
+        },
+        {
+          "path": "backtest_params.slippage_atr_fraction",
+          "type": "float",
+          "example": 0.1
+        },
+        {
+          "path": "backtest_params.slippage_seed",
+          "type": "int",
+          "example": 42
+        },
+        {
+          "path": "backtest_params.simulated_spread_pct",
+          "type": "float",
+          "example": 0.0002
+        },
+        {
+          "path": "backtest_params.initial_capital",
+          "type": "float",
+          "example": 100000.0
+        },
+        {
+          "path": "backtest_params.risk_pct_per_trade",
+          "type": "float",
+          "example": 0.01
+        },
+        {
+          "path": "backtest_params.use_compounding",
+          "type": "bool",
+          "example": true
+        },
+        {
+          "path": "backtest_params.gap_reset_enabled",
+          "type": "bool",
+          "example": true
+        },
+        {
+          "path": "backtest_params.gap_reset_minutes",
+          "type": "int",
+          "example": 120
+        },
+        {
+          "path": "backtest_params.event_flush_every",
+          "type": "int",
+          "example": 100
+        },
+        {
+          "path": "backtest_params.warmup_candles",
+          "type": "int",
+          "example": 78
+        },
+        {
+          "path": "backtest_params.instrument",
+          "type": "str",
+          "example": "XAUUSD"
+        },
+        {
+          "path": "backtest_params.pip_size",
+          "type": "float",
+          "example": 0.0001
+        },
+        {
+          "path": "backtest_params.allow_router_crt_config",
+          "type": "bool",
+          "example": false
+        },
+        {
+          "path": "backtest_params.scorer_mode",
+          "type": "str",
+          "example": "calibrated"
+        },
+        {
+          "path": "backtest_params.cost_model_id",
+          "type": "str",
+          "example": "backtest_g1g2_v2"
+        },
+        {
+          "path": "backtest_params.cost_model_params_hash",
+          "type": "str",
+          "example": "8239f7adde53080c"
+        },
+        {
+          "path": "backtest_params.strategy_id",
+          "type": "str",
+          "example": ""
+        },
+        {
+          "path": "backtest_params.htf_clock_basis",
+          "type": "str",
+          "example": "count"
+        },
+        {
+          "path": "crt_engine",
+          "type": "object",
+          "child_keys": [
+            "allowed_sessions",
+            "atr_buffer_multiplier",
+            "atr_min_displacement",
+            "atr_multiplier_min",
+            "atr_period",
+            "bitnet_main_threshold",
+            "body_ratio_min",
+            "breakout_disp_threshold",
+            "conf_alpha",
+            "conf_beta",
+            "conf_floor",
+            "conf_weights",
+            "confirmation_body_min",
+            "displacement_origin_kill_enabled",
+            "displacement_origin_kill_precedence",
+            "ema_fast",
+            "ema_slow",
+            "exit_model",
+            "expansion_age_warn_candles",
+            "expansion_atr_min_distance",
+            "extension_reset_fib",
+            "max_displacement_strength",
+            "max_expansion_age_candles",
+            "max_expansion_age_hours",
+            "max_spread_pct",
+            "max_sweep_age_candles",
+            "news_blackout_minutes",
+            "pending_displacement_ttl_candles",
+            "retest_atr_depth_fraction",
+            "retest_depth_max",
+            "retest_min_depth_atr_fraction",
+            "retrace_reset_pct",
+            "risk_score_weights",
+            "score_component_weights",
+            "score_decay_lambda",
+            "score_threshold",
+            "session_windows",
+            "shadow_advisory_only",
+            "shadow_age_norm_candles",
+            "shadow_age_penalty_lambda",
+            "sizing_bands",
+            "sl_atr_buffer",
+            "soft_conf_max_candles",
+            "tier_1_threshold",
+            "tier_2_threshold",
+            "tp1_atr_multiplier",
+            "tp1_atr_multiplier_breakout",
+            "tp1_atr_multiplier_liq_sweep",
+            "tp1_atr_multiplier_pullback",
+            "tp1_atr_multiplier_reversal",
+            "tp2_atr_multiplier",
+            "use_bitnet",
+            "weak_link_weight"
+          ]
+        },
+        {
+          "path": "crt_engine.body_ratio_min",
+          "type": "float",
+          "example": 0.65
+        },
+        {
+          "path": "crt_engine.atr_multiplier_min",
+          "type": "float",
+          "example": 1.0
+        },
+        {
+          "path": "crt_engine.retest_depth_max",
+          "type": "float",
+          "example": 0.15
+        },
+        {
+          "path": "crt_engine.expansion_atr_min_distance",
+          "type": "float",
+          "example": 0.3
+        },
+        {
+          "path": "crt_engine.atr_period",
+          "type": "int",
+          "example": 14
+        },
+        {
+          "path": "crt_engine.atr_buffer_multiplier",
+          "type": "int",
+          "example": 3
+        },
+        {
+          "path": "crt_engine.max_sweep_age_candles",
+          "type": "int",
+          "example": 20
+        },
+        {
+          "path": "crt_engine.retest_atr_depth_fraction",
+          "type": "float",
+          "example": 0.3
+        },
+        {
+          "path": "crt_engine.retest_min_depth_atr_fraction",
+          "type": "float",
+          "example": 0.1
+        },
+        {
+          "path": "crt_engine.risk_score_weights",
+          "type": "array[4]"
+        },
+        {
+          "path": "crt_engine.score_component_weights",
+          "type": "array[4]"
+        },
+        {
+          "path": "crt_engine.max_displacement_strength",
+          "type": "float",
+          "example": 2.0
+        },
+        {
+          "path": "crt_engine.score_decay_lambda",
+          "type": "float",
+          "example": 0.05
+        },
+        {
+          "path": "crt_engine.score_threshold",
+          "type": "float",
+          "example": 0.45
+        },
+        {
+          "path": "crt_engine.max_spread_pct",
+          "type": "float",
+          "example": 0.05
+        },
+        {
+          "path": "crt_engine.atr_min_displacement",
+          "type": "float",
+          "example": 1.2
+        },
+        {
+          "path": "crt_engine.confirmation_body_min",
+          "type": "float",
+          "example": 0.6
+        },
+        {
+          "path": "crt_engine.sl_atr_buffer",
+          "type": "float",
+          "example": 0.2
+        },
+        {
+          "path": "crt_engine.tp1_atr_multiplier",
+          "type": "float",
+          "example": 1.0
+        },
+        {
+          "path": "crt_engine.tp2_atr_multiplier",
+          "type": "float",
+          "example": 2.0
+        },
+        {
+          "path": "crt_engine.exit_model",
+          "type": "str",
+          "example": "intrabar_touch"
+        },
+        {
+          "path": "crt_engine.breakout_disp_threshold",
+          "type": "float",
+          "example": 1.5
+        },
+        {
+          "path": "crt_engine.tp1_atr_multiplier_breakout",
+          "type": "float",
+          "example": 1.5
+        },
+        {
+          "path": "crt_engine.tp1_atr_multiplier_pullback",
+          "type": "float",
+          "example": 0.8
+        },
+        {
+          "path": "crt_engine.tp1_atr_multiplier_liq_sweep",
+          "type": "float",
+          "example": 1.2
+        },
+        {
+          "path": "crt_engine.tp1_atr_multiplier_reversal",
+          "type": "float",
+          "example": 1.0
+        },
+        {
+          "path": "crt_engine.bitnet_main_threshold",
+          "type": "float",
+          "example": 0.55
+        },
+        {
+          "path": "crt_engine.use_bitnet",
+          "type": "bool",
+          "example": false
+        },
+        {
+          "path": "crt_engine.session_windows",
+          "type": "object",
+          "child_keys": [
+            "ASIA",
+            "LONDON",
+            "NEWYORK"
+          ]
+        },
+        {
+          "path": "crt_engine.session_windows.LONDON",
+          "type": "array[2]"
+        },
+        {
+          "path": "crt_engine.session_windows.NEWYORK",
+          "type": "array[2]"
+        },
+        {
+          "path": "crt_engine.session_windows.ASIA",
+          "type": "array[2]"
+        },
+        {
+          "path": "crt_engine.allowed_sessions",
+          "type": "array[3]"
+        },
+        {
+          "path": "crt_engine.retrace_reset_pct",
+          "type": "float",
+          "example": 0.5
+        },
+        {
+          "path": "crt_engine.extension_reset_fib",
+          "type": "float",
+          "example": 1.618
+        },
+        {
+          "path": "crt_engine.news_blackout_minutes",
+          "type": "int",
+          "example": 15
+        },
+        {
+          "path": "crt_engine.conf_alpha",
+          "type": "float",
+          "example": 0.7
+        },
+        {
+          "path": "crt_engine.conf_beta",
+          "type": "float",
+          "example": 0.3
+        },
+        {
+          "path": "crt_engine.conf_weights",
+          "type": "array[4]"
+        },
+        {
+          "path": "crt_engine.conf_floor",
+          "type": "float",
+          "example": 0.2
+        },
+        {
+          "path": "crt_engine.weak_link_weight",
+          "type": "float",
+          "example": 0.3
+        },
+        {
+          "path": "crt_engine.ema_fast",
+          "type": "int",
+          "example": 2
+        },
+        {
+          "path": "crt_engine.ema_slow",
+          "type": "int",
+          "example": 5
+        },
+        {
+          "path": "crt_engine.tier_1_threshold",
+          "type": "float",
+          "example": 0.75
+        },
+        {
+          "path": "crt_engine.tier_2_threshold",
+          "type": "float",
+          "example": 0.3
+        },
+        {
+          "path": "crt_engine.soft_conf_max_candles",
+          "type": "int",
+          "example": 3
+        },
+        {
+          "path": "crt_engine.pending_displacement_ttl_candles",
+          "type": "int",
+          "example": 4
+        },
+        {
+          "path": "crt_engine.displacement_origin_kill_enabled",
+          "type": "bool",
+          "example": false
+        },
+        {
+          "path": "crt_engine.displacement_origin_kill_precedence",
+          "type": "str",
+          "example": "after_resting_fills"
+        },
+        {
+          "path": "crt_engine.max_expansion_age_candles",
+          "type": "int",
+          "example": 495
+        },
+        {
+          "path": "crt_engine.max_expansion_age_hours",
+          "type": "int",
+          "example": 124
+        },
+        {
+          "path": "crt_engine.expansion_age_warn_candles",
+          "type": "int",
+          "example": 342
+        },
+        {
+          "path": "crt_engine.shadow_age_penalty_lambda",
+          "type": "float",
+          "example": 0.0
+        },
+        {
+          "path": "crt_engine.shadow_age_norm_candles",
+          "type": "int",
+          "example": 0
+        },
+        {
+          "path": "crt_engine.shadow_advisory_only",
+          "type": "bool",
+          "example": false
+        },
+        {
+          "path": "crt_engine.sizing_bands",
+          "type": "array[2]"
+        },
+        {
+          "path": "engine_runner",
+          "type": "object",
+          "child_keys": [
+            "allowed_sessions",
+            "convergence_window",
+            "debug_mode",
+            "dual_engine",
+            "fusion_compare_evaluate",
+            "fusion_use_evaluate",
+            "gaussian_impl",
+            "min_atr",
+            "model_path",
+            "rr_fusion",
+            "signal_belief",
+            "ultron_gate_enabled",
+            "zone_cluster_threshold",
+            "zone_gate",
+            "zone_gate_execution_mode",
+            "zone_min_samples",
+            "zone_mode",
+            "zone_registry_path"
+          ]
+        },
+        {
+          "path": "engine_runner.model_path",
+          "type": "str",
+          "example": "results/model_export_format.json"
+        },
+        {
+          "path": "engine_runner.min_atr",
+          "type": "float",
+          "example": 0.0003
+        },
+        {
+          "path": "engine_runner.allowed_sessions",
+          "type": "array[3]"
+        },
+        {
+          "path": "engine_runner.zone_cluster_threshold",
+          "type": "float",
+          "example": 0.25
+        },
+        {
+          "path": "engine_runner.zone_registry_path",
+          "type": "str",
+          "example": "models/zone_registry_v4_2026_07.json"
+        },
+        {
+          "path": "engine_runner.zone_gate_execution_mode",
+          "type": "str",
+          "example": "normal"
+        },
+        {
+          "path": "engine_runner.zone_mode",
+          "type": "str",
+          "example": "hard"
+        },
+        {
+          "path": "engine_runner.zone_gate",
+          "type": "object",
+          "child_keys": [
+            "cluster_min_n",
+            "cluster_spread_max",
+            "top_k"
+          ]
+        },
+        {
+          "path": "engine_runner.zone_gate.top_k",
+          "type": "int",
+          "example": 3
+        },
+        {
+          "path": "engine_runner.zone_gate.cluster_min_n",
+          "type": "int",
+          "example": 2
+        },
+        {
+          "path": "engine_runner.zone_gate.cluster_spread_max",
+          "type": "float",
+          "example": 0.15
+        },
+        {
+          "path": "engine_runner.debug_mode",
+          "type": "bool",
+          "example": false
+        },
+        {
+          "path": "engine_runner.gaussian_impl",
+          "type": "str",
+          "example": "heuristic"
+        },
+        {
+          "path": "engine_runner.convergence_window",
+          "type": "int",
+          "example": 500
+        },
+        {
+          "path": "engine_runner.rr_fusion",
+          "type": "object",
+          "child_keys": [
+            "enabled",
+            "full_feature_vector",
+            "model_path",
+            "threshold"
+          ]
+        },
+        {
+          "path": "engine_runner.rr_fusion.enabled",
+          "type": "bool",
+          "example": false
+        },
+        {
+          "path": "engine_runner.rr_fusion.model_path",
+          "type": "str",
+          "example": "models/XAUUSD/20260728_v39/rr_model_20260728_v39_xau.json"
+        },
+        {
+          "path": "engine_runner.rr_fusion.threshold",
+          "type": "float",
+          "example": 0.5
+        },
+        {
+          "path": "engine_runner.rr_fusion.full_feature_vector",
+          "type": "bool",
+          "example": true
+        },
+        {
+          "path": "engine_runner.dual_engine",
+          "type": "object",
+          "child_keys": [
+            "breakout_min_score",
+            "fusion_min_score",
+            "momentum_threshold",
+            "neutral_min_score",
+            "range_volatility_threshold",
+            "trap_min_score",
+            "trend_strength_threshold"
+          ]
+        },
+        {
+          "path": "engine_runner.dual_engine.trend_strength_threshold",
+          "type": "float",
+          "example": 0.15
+        },
+        {
+          "path": "engine_runner.dual_engine.momentum_threshold",
+          "type": "float",
+          "example": 0.3
+        },
+        {
+          "path": "engine_runner.dual_engine.range_volatility_threshold",
+          "type": "float",
+          "example": 0.8
+        },
+        {
+          "path": "engine_runner.dual_engine.breakout_min_score",
+          "type": "float",
+          "example": 0.3
+        },
+        {
+          "path": "engine_runner.dual_engine.trap_min_score",
+          "type": "float",
+          "example": 0.32
+        },
+        {
+          "path": "engine_runner.dual_engine.neutral_min_score",
+          "type": "float",
+          "example": 0.45
+        },
+        {
+          "path": "engine_runner.dual_engine.fusion_min_score",
+          "type": "float",
+          "example": 0.25
+        },
+        {
+          "path": "engine_runner.fusion_compare_evaluate",
+          "type": "bool",
+          "example": true
+        },
+        {
+          "path": "engine_runner.fusion_use_evaluate",
+          "type": "bool",
+          "example": false
+        },
+        {
+          "path": "engine_runner.ultron_gate_enabled",
+          "type": "bool",
+          "example": false
+        },
+        {
+          "path": "engine_runner.zone_min_samples",
+          "type": "int",
+          "example": 50
+        },
+        {
+          "path": "engine_runner.signal_belief",
+          "type": "object",
+          "child_keys": [
+            "_comment",
+            "decay",
+            "enabled",
+            "high_conviction_threshold",
+            "min_confirmations"
+          ]
+        },
+        {
+          "path": "engine_runner.signal_belief._comment",
+          "type": "str",
+          "example": "SignalBeliefTracker knobs (src/core/signal_belief_tracker.py). Restored 2026-09-18: the section was present in v1_multi_"
+        },
+        {
+          "path": "engine_runner.signal_belief.enabled",
+          "type": "bool",
+          "example": false
+        },
+        {
+          "path": "engine_runner.signal_belief.decay",
+          "type": "float",
+          "example": 0.7
+        },
+        {
+          "path": "engine_runner.signal_belief.high_conviction_threshold",
+          "type": "float",
+          "example": 0.65
+        },
+        {
+          "path": "engine_runner.signal_belief.min_confirmations",
+          "type": "int",
+          "example": 2
+        },
+        {
+          "path": "fusion_engine",
+          "type": "object",
+          "child_keys": [
+            "_comment_consensus",
+            "conflict_resolution_policy",
+            "enable_llm",
+            "gaussian_weight",
+            "llm_lower_band",
+            "llm_upper_band",
+            "llm_weight",
+            "min_consensus_agreement",
+            "min_consensus_signals",
+            "neural_weight",
+            "tier_full",
+            "tier_half",
+            "tier_quarter",
+            "weight_crt",
+            "weight_gaussian",
+            "weight_rr",
+            "weight_zone_gate"
+          ]
+        },
+        {
+          "path": "fusion_engine.weight_crt",
+          "type": "float",
+          "example": 0.4
+        },
+        {
+          "path": "fusion_engine.weight_gaussian",
+          "type": "float",
+          "example": 0.2
+        },
+        {
+          "path": "fusion_engine.weight_zone_gate",
+          "type": "float",
+          "example": 0.2
+        },
+        {
+          "path": "fusion_engine.weight_rr",
+          "type": "float",
+          "example": 0.2
+        },
+        {
+          "path": "fusion_engine.conflict_resolution_policy",
+          "type": "str",
+          "example": "conservative"
+        },
+        {
+          "path": "fusion_engine.gaussian_weight",
+          "type": "float",
+          "example": 0.6
+        },
+        {
+          "path": "fusion_engine.neural_weight",
+          "type": "float",
+          "example": 0.4
+        },
+        {
+          "path": "fusion_engine.llm_weight",
+          "type": "float",
+          "example": 0.2
+        },
+        {
+          "path": "fusion_engine.llm_lower_band",
+          "type": "float",
+          "example": 0.45
+        },
+        {
+          "path": "fusion_engine.llm_upper_band",
+          "type": "float",
+          "example": 0.65
+        },
+        {
+          "path": "fusion_engine.enable_llm",
+          "type": "bool",
+          "example": true
+        },
+        {
+          "path": "fusion_engine.tier_full",
+          "type": "float",
+          "example": 0.75
+        },
+        {
+          "path": "fusion_engine.tier_half",
+          "type": "float",
+          "example": 0.6
+        },
+        {
+          "path": "fusion_engine.tier_quarter",
+          "type": "float",
+          "example": 0.5
+        },
+        {
+          "path": "fusion_engine._comment_consensus",
+          "type": "str",
+          "example": "T-22 (2026-07-19): declared because engine_runner previously read these via .get(key, literal) while its six neighbourin"
+        },
+        {
+          "path": "fusion_engine.min_consensus_signals",
+          "type": "int",
+          "example": 2
+        },
+        {
+          "path": "fusion_engine.min_consensus_agreement",
+          "type": "float",
+          "example": 0.6
+        },
+        {
+          "path": "execution_planner",
+          "type": "object",
+          "child_keys": [
+            "default_account_balance",
+            "partial_tp_breakeven_enabled",
+            "partial_tp_fraction",
+            "precision_default",
+            "precision_overrides",
+            "reject_unknown_intent",
+            "risk_percent",
+            "ttl_breakout_sec",
+            "ttl_continuation_sec",
+            "ttl_liq_sweep_sec",
+            "ttl_pullback_sec",
+            "ttl_reversal_sec",
+            "ttl_unknown_sec"
+          ]
+        },
+        {
+          "path": "execution_planner.ttl_breakout_sec",
+          "type": "int",
+          "example": 300
+        },
+        {
+          "path": "execution_planner.ttl_pullback_sec",
+          "type": "int",
+          "example": 420
+        },
+        {
+          "path": "execution_planner.ttl_reversal_sec",
+          "type": "int",
+          "example": 180
+        },
+        {
+          "path": "execution_planner.ttl_liq_sweep_sec",
+          "type": "int",
+          "example": 300
+        },
+        {
+          "path": "execution_planner.ttl_continuation_sec",
+          "type": "int",
+          "example": 180
+        },
+        {
+          "path": "execution_planner.risk_percent",
+          "type": "float",
+          "example": 0.5
+        },
+        {
+          "path": "execution_planner.reject_unknown_intent",
+          "type": "bool",
+          "example": true
+        },
+        {
+          "path": "execution_planner.partial_tp_breakeven_enabled",
+          "type": "bool",
+          "example": true
+        },
+        {
+          "path": "execution_planner.partial_tp_fraction",
+          "type": "float",
+          "example": 0.5
+        },
+        {
+          "path": "execution_planner.precision_default",
+          "type": "int",
+          "example": 8
+        },
+        {
+          "path": "execution_planner.default_account_balance",
+          "type": "float",
+          "example": 10000.0
+        },
+        {
+          "path": "execution_planner.ttl_unknown_sec",
+          "type": "int",
+          "example": 180
+        },
+        {
+          "path": "execution_planner.precision_overrides",
+          "type": "object",
+          "child_keys": [
+            "BTCUSD",
+            "BTCUSDT",
+            "ETHUSD",
+            "ETHUSDT",
+            "XAUUSD"
+          ]
+        },
+        {
+          "path": "execution_planner.precision_overrides.XAUUSD",
+          "type": "int",
+          "example": 2
+        },
+        {
+          "path": "execution_planner.precision_overrides.BTCUSDT",
+          "type": "int",
+          "example": 2
+        },
+        {
+          "path": "execution_planner.precision_overrides.ETHUSDT",
+          "type": "int",
+          "example": 2
+        },
+        {
+          "path": "execution_planner.precision_overrides.BTCUSD",
+          "type": "int",
+          "example": 2
+        },
+        {
+          "path": "execution_planner.precision_overrides.ETHUSD",
+          "type": "int",
+          "example": 2
+        },
+        {
+          "path": "decision_engine",
+          "type": "object",
+          "child_keys": [
+            "p_win_threshold",
+            "rr_threshold",
+            "rr_threshold__retired",
+            "score_threshold",
+            "threshold_max",
+            "threshold_min",
+            "threshold_percentile",
+            "weak_component_threshold",
+            "weak_link_weight"
+          ]
+        },
+        {
+          "path": "decision_engine.score_threshold",
+          "type": "float",
+          "example": 0.45
+        },
+        {
+          "path": "decision_engine.p_win_threshold",
+          "type": "float",
+          "example": 0.4
+        },
+        {
+          "path": "decision_engine.rr_threshold",
+          "type": "float",
+          "example": 1.5
+        },
+        {
+          "path": "decision_engine.rr_threshold__retired",
+          "type": "str",
+          "example": "F-048 2026-07-24 - DecisionEngine no longer reads this; economic RR owned by ultron_risk_gate.min_rr_ratio. Key kept for"
+        },
+        {
+          "path": "decision_engine.weak_component_threshold",
+          "type": "float",
+          "example": 0.4
+        },
+        {
+          "path": "decision_engine.weak_link_weight",
+          "type": "float",
+          "example": 0.3
+        },
+        {
+          "path": "decision_engine.threshold_percentile",
+          "type": "int",
+          "example": 85
+        },
+        {
+          "path": "decision_engine.threshold_min",
+          "type": "float",
+          "example": 0.45
+        },
+        {
+          "path": "decision_engine.threshold_max",
+          "type": "float",
+          "example": 0.65
+        }
+      ]
+    },
+    "results/layer_trace/XAUUSD_layer_trace.jsonl": {
+      "role": "shared bar/layer trace (may hold multiple runs)",
+      "format": "jsonl",
+      "bytes": 153247797,
+      "peek_rows": 20000,
+      "union_keys_first_20k": [
+        "active_version",
+        "artifact_path",
+        "bar_idx",
+        "bar_ts",
+        "code_sha",
+        "config_hash",
+        "corpus_path",
+        "corpus_rows",
+        "corpus_sha256",
+        "dataset_id",
+        "emitted_by",
+        "input_hash",
+        "instrument",
+        "layer",
+        "module",
+        "note",
+        "output_hash",
+        "plane",
+        "preexisting_run_ids",
+        "rail",
+        "run_id",
+        "schema_hash",
+        "schema_version",
+        "span_id",
+        "status",
+        "timeframe",
+        "trace_id",
+        "tree_dirty"
+      ],
+      "run_id_values_first_20k": [
+        [
+          "lt_20260916_172925_XAUUSD",
+          20000
+        ]
+      ],
+      "rows_matching_run1_in_peek": 20000,
+      "matched_row_keys": [
+        "active_version",
+        "artifact_path",
+        "bar_idx",
+        "bar_ts",
+        "code_sha",
+        "config_hash",
+        "corpus_path",
+        "corpus_rows",
+        "corpus_sha256",
+        "dataset_id",
+        "emitted_by",
+        "input_hash",
+        "instrument",
+        "layer",
+        "module",
+        "note",
+        "output_hash",
+        "plane",
+        "preexisting_run_ids",
+        "rail",
+        "run_id",
+        "schema_hash",
+        "schema_version",
+        "span_id",
+        "status",
+        "timeframe",
+        "trace_id",
+        "tree_dirty"
+      ],
+      "note": "Document claimed lt_20260916_172925_XAUUSD (94400 rows). This shared file may be a different layout; id-named lt_* file not found under results/layer_trace*."
+    }
+  },
+  "run2_dirs": [],
+  "id_named_files": [
+    "D:\\Tradelatest\\logs\\config_dumps\\XAUUSD_run_20260916_172925_config.json",
+    "D:\\Tradelatest\\logs\\config_dumps\\XAUUSD_run_20260921_172937_config.json"
+  ]
+}

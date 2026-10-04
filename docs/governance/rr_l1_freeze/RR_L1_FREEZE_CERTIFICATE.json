@@ -1,0 +1,227 @@
+{
+  "schema_id": "RR_L1_FREEZE_CERTIFICATE_V1",
+  "certificate_id": "RR_L1_FREEZE_2026_07_21_V1",
+  "status": "SIGNED",
+  "checklist_ref": "docs/governance/rr_production_readiness_checklist.md#21a-rc-four-layer-dependency-graph-authoritative",
+  "package_dir": "docs/governance/rr_l1_freeze",
+  "human_doc": "docs/governance/rr_l1_freeze/RR_L1_FREEZE_CERTIFICATE.md",
+  "created_at_utc": "2026-07-21T00:00:00Z",
+  "filled_at_utc": "2026-07-21T00:00:00Z",
+  "branch_context": "feature/truth-registry-v2",
+  "active_config_at_freeze": "v2_multi_2026_04",
+  "task_class": "EXPLORATORY_RESEARCH",
+  "authority": "research_only",
+  "fill_authority": "proposed_defaults_awaiting_owner_signature",
+  "rc_ids_closed_by_this_certificate": [
+    "RR-FEAT-005",
+    "RR-LAB-003",
+    "RR-GOV-008",
+    "RR-GOV-004"
+  ],
+  "rc_ids_declared_for_later_layers": {
+    "RR-LAB-002": "contract.target_definition → materialize L3",
+    "RR-FEAT-003": "contract.structure_mask_policy → materialize L2",
+    "RR-FEAT-006": "contract.feature_list → schema_hash at L2",
+    "RR-LAB-001": "contract.governing_exit → materialize L3"
+  },
+  "contract": {
+    "meta": {
+      "title": "RR contract-B clean research L1 freeze",
+      "program_alias": "RR_B_CLEAN_EPOCH_CANDIDATE",
+      "description": "Immutable experiment freeze for clean-feature + clean-label RR research. Does not authorize rr_fusion enable or production promote.",
+      "related_findings": [
+        "F-022",
+        "F-037",
+        "F-038",
+        "F-044",
+        "F-045",
+        "F-048",
+        "F-051",
+        "F-054",
+        "F-058"
+      ],
+      "orthogonal_programs_not_coupled": [
+        "H-RR-THRESHOLD-001"
+      ]
+    },
+    "instrument_universe": {
+      "rc_id": "RR-FEAT-005",
+      "timeframe": "M15",
+      "instruments": [
+        "BNBUSDT"
+      ],
+      "multi_instrument_claims_allowed": false,
+      "notes": "BNB-only epoch candidate. Matches incumbent train instrument (202605_bnb_v2). Multi-instrument claims require a superseding certificate with multi data in L2/L3."
+    },
+    "sampling": {
+      "rc_id": "RR-LAB-003",
+      "design": "natural_base_rate",
+      "class_balance_target": "none",
+      "primary_metrics": [
+        "rr_corr",
+        "pr_auc_y_win",
+        "top_decile_mean_y_rr"
+      ],
+      "secondary_metrics": [
+        "auc_y_win",
+        "brier_y_win",
+        "mean_y_rr"
+      ],
+      "min_samples_floor": 500,
+      "notes": "Do not rebalance to 50/50. Legacy run-id 'balanced' is not a design. Prefer PR-AUC over accuracy given low base rate (~6.5% on contaminated corpus is historical only)."
+    },
+    "measure_regime": {
+      "rc_id": "RR-GOV-008",
+      "backtest_engine_gate": "1",
+      "costs_bps_round_trip": 12,
+      "exit_model": "forward_walk",
+      "exit_params": {
+        "mode": "intrabar_fixed"
+      },
+      "primary_evaluation_mode": "offline_matrix_cv",
+      "spine_shadow_if_used": {
+        "backtest_engine_gate": "1",
+        "note": "Any spine ledger A/B under this certificate uses gate ON; never rely on silent .env"
+      },
+      "confidence_gate_for_head_eval": "bypassed",
+      "silent_env_dependence_forbidden": true,
+      "notes": "Primary kill-test = offline CV on clean (X,y) matrix with F-044 legacy confidence gate BYPASSED (raw ridge/GNB heads). Spine measurements if any are secondary and must declare BACKTEST_ENGINE_GATE=1 explicitly."
+    },
+    "target_definition": {
+      "rc_id": "RR-LAB-002",
+      "target_kind": "continuous_realized_r",
+      "primary_target_name": "y_rr",
+      "secondary_target_name": "y_win",
+      "win_forces_y_rr_plus_one_forbidden": true,
+      "y_rr_definition": "realized_net_R_under_governing_exit",
+      "y_win_definition": "1 if y_rr > 0 else 0",
+      "notes": "y_rr must be continuous realized R from governing exit — never forced +1.0 on wins (F-045 degeneracy ban). y_win is derived from y_rr sign for classification metrics only."
+    },
+    "structure_mask_policy": {
+      "rc_id": "RR-FEAT-003",
+      "mode": "pit_clean_structure_plus_legacy_price_zero",
+      "zero_indices_or_names": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "ema_fast",
+        "ema_slow",
+        "macd_line",
+        "macd_signal",
+        "body_size",
+        "wick_size"
+      ],
+      "pit_structure_required": true,
+      "notes": "Structure dims (swings/BOS/HH-LL/etc.) stay ACTIVE but MUST be PIT-clean causal publication (FC1-A). Legacy zero mask matches incumbent rr_model zero_indices (price/EMA/MACD/body/wick). No centered-swing train population (F-051)."
+    },
+    "feature_list": {
+      "rc_id": "RR-FEAT-006",
+      "schema_name": "canonical_38",
+      "n_features": 38,
+      "names": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "volume_ratio",
+        "double_sweep",
+        "ema_fast",
+        "ema_slow",
+        "ema_spread",
+        "trend_bias",
+        "trend_strength",
+        "momentum_score",
+        "atr",
+        "volatility_ratio",
+        "rsi_14",
+        "macd_line",
+        "macd_signal",
+        "macd_hist",
+        "sweep_detected",
+        "liquidity_sweep",
+        "break_of_structure",
+        "swing_high",
+        "swing_low",
+        "higher_high",
+        "lower_low",
+        "body_size",
+        "wick_size",
+        "body_ratio",
+        "volatility_regime",
+        "session",
+        "hour_of_day",
+        "disp_strength",
+        "retest_depth",
+        "candles_since_retest",
+        "liquidity_distance",
+        "liquidity_pressure_score",
+        "volume_spike"
+      ],
+      "names_frozen": true,
+      "notes": "Frozen to CANONICAL_FEATURES order. L2 emits schema_hash over this list; loaders reject mismatch. volatility_regime must be rolling causal (FC1-D), not global-batch."
+    },
+    "governing_exit": {
+      "rc_id": "RR-LAB-001",
+      "method": "forward_walk",
+      "params": {
+        "mode": "intrabar_fixed",
+        "cost_bps_round_trip": 12
+      },
+      "detection_stream_as_primary_y_forbidden": true,
+      "f022_fields_xref_only": true,
+      "notes": "Primary y only from forward_walk(intrabar_fixed) on entry geometry + candles. opportunities.jsonl outcome/rr_achieved are x-ref only (F-022)."
+    },
+    "success_failure_rules": {
+      "kill_test_primary": "5_fold_cv_offline_heads_gate_bypassed",
+      "keep_candidate_rule": "label_validity_pass AND (rr_corr > 0.03 OR pr_auc_y_win > shuffle_pr_auc + 0.02) AND top_decile_mean_y_rr > random_decile_mean_y_rr; research authority only — not production weight",
+      "retire_rule": "label_validity_pass AND rr_corr <= 0.03 AND pr_auc_y_win <= shuffle_pr_auc + 0.02 AND top_decile_mean_y_rr <= random_decile_mean_y_rr",
+      "insufficient_rule": "n < min_samples_floor OR label_validity_fail OR fold_power_insufficient",
+      "smoke_results_are_not_findings": true,
+      "notes": "Supersedes contaminated F-045 numbers. KEEP_CANDIDATE never enables rr_fusion (hard_flags). F-044 gate remains bypassed for head eval under this certificate."
+    },
+    "hard_flags": {
+      "PRODUCTION_BEHAVIOR_CHANGED": false,
+      "RR_FUSION_REENABLE": false,
+      "AUTO_PROMOTE_CONFIG": false,
+      "POST_HOC_THRESHOLD_MINING": false,
+      "USE_LEGACY_F022_LABELS_AS_PRIMARY_Y": false,
+      "COUPLE_H_RR_THRESHOLD_001_AS_B_EVIDENCE": false,
+      "ENTRY_DISCOVERY": false
+    }
+  },
+  "protocol_hash": "521fc88f97b13e91ab0a768b1b852fb09f46f12327ca920d707eb722d2ae993e",
+  "protocol_hash_alg": "sha256",
+  "protocol_hash_scope": "canonical_json(contract) only — excludes status, signature, protocol_hash",
+  "signature": {
+    "signed": true,
+    "signed_by": "owner",
+    "signed_at_utc": "2026-07-21T07:30:30Z",
+    "statement": "I freeze the contract object as the sole L1 research contract for RR clean-B work under this certificate_id. I understand L2/L3/L4 and any research epoch must embed protocol_hash, and that editing contract after SIGNED is forbidden (supersede instead).",
+    "authorization_note": "User authorized L1 Complete Done in session 2026-07-21"
+  },
+  "consumption": {
+    "required_by_layers": [
+      "L2_FEATURE_TRUTH",
+      "L3_LABEL_GENERATION",
+      "L4_RESEARCH_EXECUTION",
+      "RR_RESEARCH_EPOCH"
+    ],
+    "artifact_must_embed": [
+      "certificate_id",
+      "protocol_hash",
+      "l1_certificate_path"
+    ],
+    "assert_command": "python scripts/governance/rr_l1_freeze_certificate.py assert-signed",
+    "consumer_doc": "docs/governance/rr_l1_freeze/CONSUMER_CONTRACT.md"
+  },
+  "superseded_by": null,
+  "unset_sentinel": "__UNSET__",
+  "notes_for_owner": [
+    "PROPOSED FILL 2026-07-21 — not SIGNED. Review contract decisions then sign.",
+    "To sign: set signature.signed=true, signed_by, signed_at_utc, status=SIGNED; re-run assert-signed.",
+    "Reject path: edit contract (new decisions), re-run hash --write, then sign."
+  ]
+}

@@ -1,0 +1,191 @@
+# REP shard — producer: crt_engine (config_layer.crt_engine_v2 CRTEngine._transition / events.jsonl).
+# Producer identity is part of REPRESENTATION identity only; the resolver is a different producer
+# and its CRTState occupancy is never equal to the engine's (L3 §7.2).
+
+schema: representation_registry/v1
+producer_id: crt_engine
+schema_version: "crt_state_identity/12"
+
+representations:
+
+  CRTState.RANGE:
+    concept_id: MKT-P01.AWAITING_SWEEP
+    encoding: enum_member
+    parameterization: {founding: m15_structural_range}
+    absence: "n/a"
+
+  CRTState.SWEEP:
+    concept_id: MKT-P01.SWEPT
+    encoding: enum_member
+    parameterization: {founding: m15_structural_range}
+    absence: "n/a"
+
+  CRTState.SHADOW_PENDING:
+    concept_id: MKT-P01.SHADOW_PENDING
+    encoding: enum_member
+    parameterization: {founding: m15_structural_range}
+    absence: "n/a"
+
+  CRTState.DISPLACEMENT:
+    concept_id: MKT-P01.DISPLACED
+    encoding: enum_member
+    parameterization: {founding: m15_structural_range}
+    absence: "n/a"
+
+  CRTState.EXPANSION:
+    concept_id: MKT-P01.EXTENDED
+    encoding: enum_member
+    parameterization: {founding: m15_structural_range}
+    absence: "n/a"
+
+  CRTState.RETEST:
+    concept_id: MKT-P01.RETESTING
+    encoding: enum_member
+    parameterization: {founding: m15_structural_range}
+    absence: "n/a"
+
+  SweepEvent:
+    concept_id: MKT-E01
+    encoding: object (direction = implied bias, price = swept extreme, candle_index)
+    parameterization: {founding: m15_structural_range, tie: strict}
+    absence: "None"
+
+  events.RESET:
+    concept_id: MKT-P01
+    encoding: "termination record: legacy `reason` string -> terminal_reason_map.yaml"
+    parameterization: {founding: m15_structural_range}
+    absence: "n/a"
+
+  # ── slice 2: the engine's trade plan (Trade dataclass, crt_engine_v2.py:205) ──
+  Trade.direction:
+    concept_id: TRS-01
+    encoding: "Direction LONG | SHORT"
+    parameterization: {founding: m15_structural_range}
+    absence: "n/a (a Trade is only built with a direction)"
+
+  Trade.entry_price:
+    concept_id: TRS-04
+    encoding: price
+    parameterization: {entry_semantics: approval_bar_legacy}   # active config setup.entry_semantics
+    divergence_ref: "TRS-04 setup.entry_semantics = approval_bar_legacy"
+    absence: "n/a"
+
+  Trade.sl_price:
+    concept_id: TRS-05
+    encoding: price
+    parameterization: {anchor: backtest.sl_anchor, buffer_atr: crt_engine.sl_atr_buffer}
+    absence: "n/a (build_trade refuses a plan without a stop)"
+
+  "Trade.tp1_price[liq_sweep]":
+    concept_id: TRS-06
+    encoding: price
+    parameterization: {ordinal: 1, intent: liq_sweep, r_multiple: crt_engine.tp1_atr_multiplier_liq_sweep}
+    absence: "n/a"
+
+  "Trade.tp1_price[pullback]":
+    concept_id: TRS-06
+    encoding: price
+    parameterization: {ordinal: 1, intent: pullback, r_multiple: crt_engine.tp1_atr_multiplier_pullback}
+    absence: "n/a"
+
+  "Trade.tp1_price[breakout]":
+    concept_id: TRS-06
+    encoding: price
+    parameterization: {ordinal: 1, intent: breakout, r_multiple: crt_engine.tp1_atr_multiplier_breakout}
+    absence: "n/a"
+
+  "Trade.tp1_price[reversal]":
+    concept_id: TRS-06
+    encoding: price
+    parameterization: {ordinal: 1, intent: reversal, r_multiple: crt_engine.tp1_atr_multiplier_reversal}
+    absence: "n/a"
+
+  Trade.tp2_price:
+    concept_id: TRS-06
+    encoding: price
+    parameterization: {ordinal: 2, target_policy: setup.target_policy, r_multiple: crt_engine.tp2_atr_multiplier}
+    absence: "n/a"
+
+  # ── slice 3: the engine's position (Decision/Execution) ──
+  Trade.risk_pct:
+    concept_id: DEX-01
+    encoding: "float fraction of equity (dataclass default, never read from config)"
+    parameterization: {risk_fraction: 0.01}
+    divergence_ref: "DEX-01 Trade.risk_pct"
+    absence: "n/a"
+
+  Trade.opened_at:
+    concept_id: DEX-03
+    encoding: "datetime of the fill bar"
+    parameterization: {entry_semantics: setup.entry_semantics}
+    divergence_ref: "DEX-03 setup.entry_semantics = approval_bar_legacy"
+    absence: "None until filled"
+
+  Trade.open_candle_index:
+    concept_id: DEX-03
+    encoding: "int bar index of the fill bar"
+    parameterization: {entry_semantics: setup.entry_semantics}
+    divergence_ref: "DEX-03 setup.entry_semantics = approval_bar_legacy"
+    absence: "0 before the fill (a sentinel; the Trade is only read after it fills)"
+
+  events.TRADE_OPENED:
+    concept_id: DEX-04
+    encoding: "event row: the CRT rail approved and opened the plan"
+    parameterization: {rail: crt_engine}
+    divergence_ref: "DEX-04 CRT engine DECISION/FILTERED resets"
+    absence: "n/a (a FILTERED plan is an events.RESET row instead)"
+
+  Trade.status:
+    concept_id: DEX-05
+    encoding: "str PENDING | OPEN | TP1 | TP2 | STOPPED | STOPPED_STRUCTURAL | TIMEOUT | UNCONFIRMED"
+    parameterization: {}
+    divergence_ref: "DEX-05 Trade.status"
+    absence: "n/a"
+
+  Trade.closed_at:
+    concept_id: DEX-05
+    encoding: "datetime of the close bar"
+    parameterization: {}
+    absence: "None while open"
+
+  ExecutionEngine.update_trade:
+    concept_id: DEX-06
+    encoding: "per-bar resting-exit update (partial at TP1, runner stop moved)"
+    parameterization: {partial_fraction: 0.5, trail_fraction: 0.5, tie_break: stop_first}
+    divergence_ref: "DEX-06 ExecutionEngine.update_trade"
+    absence: "n/a"
+
+  Trade.displacement_origin:
+    concept_id: DEX-07
+    encoding: "price: open of the founding MKT-E04 candle (the close_on_origin reference)"
+    parameterization: {on_invalidation: close_on_origin, precedence: crt_engine.displacement_origin_kill_precedence}
+    divergence_ref: "DEX-07 active config crt_engine.displacement_origin_kill_enabled = true"
+    absence: "None when the trade was built without a displacement candle (the rule then never fires)"
+
+  Trade.pnl:
+    concept_id: DEX-09
+    encoding: "float price per unit, partial and runner blended"
+    parameterization: {walk: bar_replay, basis: gross, cost_model: none}
+    divergence_ref: "DEX-09 Trade.pnl"
+    absence: "0.0 while open (a sentinel; read only after the close)"
+
+# Representations of no live concept: kept and marked, never deleted (I-13).
+deprecated:
+  SweepEvent.double_confirmed: "structurally constant False (crt_engine_v2.py:965 vs :2041); 0 true in 873,561 recorded SWEEP events"
+  cached_features.double_sweep: "carries SweepEvent.double_confirmed under the FM-060 key name (crt_engine_v2.py:1912)"
+  RejectReason.NO_DOUBLE_SWEEP: "unreachable"
+
+# Shrink-only ratchet.
+unmapped:
+  CRTState.EXECUTION: "position lifecycle (Execution layer) — needs L3 v2.0.0 and the Trading/Execution slice"
+  CRTState.RESOLUTION: "position lifecycle (Execution layer) — needs L3 v2.0.0 and the Trading/Execution slice"
+  CRTState.EXPIRED: "TTL soft-archive state; termination authority PRODUCER — stage vs termination record undecided"
+  CRTState.RANGE_C1: "parent track; stage mapping PROPOSED (F-075/F-077)"
+  CRTState.MANIPULATION_C2: "parent track; stage mapping PROPOSED"
+  CRTState.DISTRIBUTION_C3: "parent track; stage mapping PROPOSED"
+  # slice 2: Trade fields that are not plan meaning. New coverage of the Trade type (V-10 extended),
+  # not growth of an existing type's list; shrink-only from here.
+  Trade.id: "identifier, not a concept"
+  Trade.runner_active: "set at build, never read by the engine (grep 2026-10-02); no position meaning"
+  Trade.partial_pnl: "component of DEX-09 (the TP1 leg), not a concept of its own"
+  Trade.cached_features: "feature snapshot at build time, not plan meaning"

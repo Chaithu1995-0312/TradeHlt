@@ -1,0 +1,31 @@
+{
+  "change_id": "CH-trace-parquet-events-exclusion",
+  "date_utc": "2026-09-07",
+  "declared_files": [
+    "scripts/maintenance/jsonl_to_parquet.py",
+    "scripts/analysis/query_trace.py",
+    "tests/test_jsonl_to_parquet_family.py",
+    "tests/test_query_trace.py",
+    "docs/governance/ANALYTICS_SCHEMA_REGISTRY.md",
+    "docs/governance/ANALYTICS_LINEAGE_REGISTRY.md",
+    "docs/governance/build_manifests/CH-trace-parquet-events-exclusion.impact.json",
+    "docs/governance/build_manifests/CH-trace-parquet-events-exclusion.completion.json"
+  ],
+  "checks_executed": [
+    "tests/test_jsonl_to_parquet_family.py",
+    "tests/test_query_trace.py",
+    "tests/test_script_registry.py",
+    "tests/test_script_matrix_sync.py",
+    "tests/test_construction_protocol.py"
+  ],
+  "repo_state_hash": "PENDING",
+  "completion_status": "BLOCKED_PREEXISTING_DIRTY_TREE",
+  "completion_note": "Following CH-trace-parquet-duckdb-query / CH-resolver-engine-envelope precedent: validate-completion compares the whole porcelain tree against declared_files; this worktree carries hundreds of undeclared governed paths from concurrent sessions. They are NOT absorbed into declared_files.\\\\n\\\\nChange-specific work is done: GT-3 population separation \u2014 jsonl_to_parquet.py EVENTS_FAMILY_EXCLUDE guards resolve_family; query_trace.py NON_EVENTS_FAMILY_PREFIXES filters discover_projections, so integrity_events and secondlow_prospective_events no longer project/query into the runtime-events family. GT-1 \u2014 both analytics registries annotated that tp2_surrogate_r is the legacy name of canonical tp2_stretch_r (annotation only; NO row added, 268/1608 counts unchanged). All change-specific suites green: 6+4+49+3+17=79 passed (includes 2 new GT-3 regression tests). Ground-truth re-sweep: 8/8 foreign *_events files -> partition=None (excluded); runtime XAUUSD_events still -> event. Lineage parity re-audited: 268<->268, 1:1 exact, 12 UNKNOWN produced_by all opportunities, 100% EXACT_MATCH.\\\\n\\\\nValidation floor: test_current_findings (3), test_doc_citations (1) remain RED on PRE-EXISTING floors (findings revalidate-by dates, untracked src/research/evidence/* citation paths) unrelated to this change; no broken code citation references any file changed here.",
+  "production_behavior_changed": "NO",
+  "evidence": {
+    "change_specific_pytest": "test_jsonl_to_parquet_family.py 6 passed; test_query_trace.py 4 passed; test_script_registry.py 49 passed; test_script_matrix_sync.py 3 passed; test_construction_protocol.py 17 passed (79 total)",
+    "impact_validation": "validate-impact -> APPROVED",
+    "ground_truth_resweep": "resolve_family: 8/8 foreign *_events -> partition None; runtime events -> 'event'. discover_projections live: events family contains only runtime XAUUSD_events.parquet; 0 integrity/secondlow leakage",
+    "parity_audit": "schema 268 <-> lineage 268; exact 1:1; 0 dups; UNKNOWN produced_by = 12 all in opportunities; classification 100% EXACT_MATCH; 1608 cells"
+  }
+}

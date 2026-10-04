@@ -1,0 +1,51 @@
+# ILLUSTRATIVE MeasurementContract bridge for Context→ODP work.
+# Not sealed. Not economically admissible. Points at charter surfaces.
+
+id: MC-ODP-CTX-XAUUSD-M15-EXAMPLE
+title: "Context-bar forward ATR distribution under execution CRT + structure atoms"
+status: DRAFT
+profile_ref: null
+sealed_mc_ref: null
+
+population:
+  instruments: [XAUUSD]
+  timeframe: M15
+  unit_of_analysis: context_bar
+  detection_vs_trade: observation_join
+  parent_timeframe_source: derived_h4
+  inclusion:
+    - "L3 state is an EXECUTION_TIMEFRAME_STATES member"
+    - "structure atoms matched exactly as declared on Context"
+    - "joins from crt_construction_trace / bar_structure_snapshot when enabled"
+  exclusion:
+    - "ODP-FALLBACK / unmatched Context"
+    - "parent identity written into L3 state field"
+    - "detection stream counted as trade_decision"
+  calendar_window: null
+  n_declared_min: 30
+
+sampling:
+  procedure: "all context_bar matches in window"
+  lookahead_bars: 5
+  outcome_metric: forward_return_atr
+  path_definition: "PENDING — declare close-only vs intrabar before seal"
+  baseline: null
+
+splits:
+  discovery_window: null
+  holdout_window: null
+  holdout_procedure: none_declared
+  overlap_policy: forbid_overlapping_labels
+
+corpus_identity:
+  corpus_pin: null
+  dataset_identity: null
+  run_id_policy: "instrument + corpus_sha256 + run_id + gapless bar_index (bar_structure_snapshot style)"
+
+hierarchy_scope:
+  levels_allowed:
+    - L1_parent_crt
+    - L2_objective_status
+    - L3_execution_crt
+    - L4_structure_atoms
+    - L5_outcome_distribution

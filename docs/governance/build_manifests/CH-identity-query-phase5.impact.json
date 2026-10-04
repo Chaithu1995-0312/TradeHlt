@@ -1,0 +1,38 @@
+{
+  "change_id": "CH-identity-query-phase5",
+  "date_utc": "2026-08-23",
+  "objective": "Phase 5 replay/query over PRESERVED identity records only. Joins by copied frozen PKs. Occupancy not folded from events. No recompute producers on the query path. Not live spine. Not G001.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY",
+    "IDENTITY_STORE_CHANGE"
+  ],
+  "change_class_rationale": "Adds identity.query.IdentityQuery and store.scan. Query emits only Identity Check PRESERVED payloads. Docs update architecture Phase 5 pointer. Identity/preservation/physical-storage closures not reopened as new meaning — Phase 5 is the authorized query role.",
+  "affected_files": [
+    "src/identity/query.py",
+    "src/identity/store.py",
+    "src/identity/tokens.py",
+    "src/identity/__init__.py",
+    "tests/test_identity_store.py",
+    "docs/governance/PHYSICAL_STORAGE_ARCHITECTURE.md",
+    "docs/governance/STORAGE_PRESERVATION_CONTRACT.md",
+    "docs/governance/build_manifests/CH-identity-query-phase5.impact.json",
+    "docs/knowledge-map.md",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/test_identity_store.py",
+    "tests/test_construction_protocol.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert src/identity/query.py and scan/query exports; restore Phase 5 NOT STARTED wording. Store Identity Check remains.",
+  "authority_granted": "User 2026-08-23: Phase 5. Query/replay of PRESERVED objects.",
+  "authority_NOT_granted": "No live-spine wiring, no G001, no promotion, no migration of gitignored corpora, no Semantic OS id, no F-id.",
+  "production_behavior_changed": "NO"
+}

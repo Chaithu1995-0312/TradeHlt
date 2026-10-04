@@ -1,0 +1,71 @@
+{
+  "_doc": "FC-0.5 search coverage. Shallow text hits \u2260 semantic coverage.",
+  "directories": {
+    "src": {
+      "files": 1873,
+      "py": 627,
+      "json_yaml": 4
+    },
+    "scripts": {
+      "files": 753,
+      "py": 451,
+      "json_yaml": 5
+    },
+    "models": {
+      "files": 60,
+      "py": 0,
+      "json_yaml": 53
+    },
+    "configs": {
+      "files": 99,
+      "py": 0,
+      "json_yaml": 93
+    },
+    "docs/governance": {
+      "files": 618,
+      "py": 0,
+      "json_yaml": 416
+    },
+    "tests": {
+      "files": 2027,
+      "py": 570,
+      "json_yaml": 4
+    }
+  },
+  "methods": [
+    "static read of feature_pipeline / derived_math / candle_math",
+    "active_models.yaml model inventory",
+    "PASS-A executable probes",
+    "FeaturePipeline runtime probes on frozen XAUUSD",
+    "AST FunctionDef scan on features/*",
+    "contract feature list enumeration"
+  ],
+  "model_artifacts_inspected": [
+    "active_models.yaml",
+    "models/gaussian_registry.json (referenced)",
+    "models/zone_registry.json (referenced)",
+    "models/rr_model.json (referenced)",
+    "models/tradenet_registry.json (referenced)",
+    "models/bitnet/ (referenced)"
+  ],
+  "unresolved_dynamic_paths": [
+    "optional imports in live_engine_hook",
+    "config-driven strategy modules",
+    "historical training scripts not bit-identical to current HEAD"
+  ],
+  "excluded": [
+    {
+      "path": "venv/",
+      "reason": "third-party"
+    },
+    {
+      "path": "data/",
+      "reason": "corpus only; binding via phase1"
+    }
+  ],
+  "coverage_limitations": [
+    "Not every scripts/research file re-executed",
+    "Model binary weights not reverse-engineered",
+    "Notebooks not exhaustively present"
+  ]
+}

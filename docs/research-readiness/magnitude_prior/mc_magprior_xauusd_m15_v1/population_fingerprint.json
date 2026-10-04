@@ -1,0 +1,14 @@
+{
+  "contract_id": "MC-MAGPRIOR-XAUUSD-M15-V1",
+  "n": 94332,
+  "sha256": "28b3ad3c3af3f9ce36762717eaba53873364a9c47924a4692687d09067911887",
+  "population_hash_inputs": [
+    "instrument",
+    "decision_ts",
+    "side",
+    "y_mfe_r",
+    "corpus_path",
+    "corpus_sha256",
+    "contract_id"
+  ]
+}

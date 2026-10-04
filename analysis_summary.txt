@@ -1,0 +1,64 @@
+CODEBASE WIRING ANALYSIS
+============================================================
+
+Total Modules: 351
+Total Dependencies: 696
+Packages: 36
+Circular Dependencies: 5
+
+TOP PACKAGES (by module count):
+------------------------------------------------------------
+  research              77 modules
+  config_layer          22 modules
+  core                  20 modules
+  features              20 modules
+  agent                 19 modules
+  utils                 18 modules
+  strategies            16 modules
+  governance            14 modules
+  engines               12 modules
+  control_plane         11 modules
+
+TOP DEPENDED-ON MODULES (bottlenecks):
+------------------------------------------------------------
+  config_layer.production_config                      54 in-edges
+  utils.logging_config                                36 in-edges
+  features.feature_schema                             35 in-edges
+  utils.integrity_events                              18 in-edges
+  research.contracts                                  18 in-edges
+  research.indicators                                 17 in-edges
+  config_layer.crt_engine_v2                          16 in-edges
+  strategies.strategy_result                          15 in-edges
+  runtime.backtest_v2                                 14 in-edges
+  strategies.base_strategy                            12 in-edges
+
+TOP DEPENDENT MODULES (exporters):
+------------------------------------------------------------
+  runtime.backtest_v2                                 24 out-edges
+  core.engine_runner                                  20 out-edges
+  runtime.live_engine_hook                            19 out-edges
+  strategies.strategy_orchestrator                    16 out-edges
+  strategies                                          13 out-edges
+  config_layer.crt_engine_v2                          12 out-edges
+  research.synthetic.story_builder                    12 out-edges
+  control_plane.server                                10 out-edges
+  research.cli                                         9 out-edges
+  agent.agent_core                                     8 out-edges
+
+PER-FLOW ISOLATION:
+------------------------------------------------------------
+  agent           17 mods, 20 internal,  0 boundary, isolation=1.00
+  control_plane   17 mods, 19 internal,  0 boundary, isolation=1.00
+  governance      30 mods, 31 internal,  0 boundary, isolation=1.00
+  research        32 mods, 59 internal,  0 boundary, isolation=1.00
+  runtime         45 mods, 58 internal,  0 boundary, isolation=1.00
+  telemetry       36 mods, 35 internal,  0 boundary, isolation=1.00
+  training        23 mods, 43 internal,  0 boundary, isolation=1.00
+
+CIRCULAR DEPENDENCIES (first 5):
+------------------------------------------------------------
+  Cycle 1: config_layer.llm_inference_client -> config_layer.llm_narrative -> config_layer.llm_inference_client...
+  Cycle 2: config_layer.llm_inference_client -> config_layer.llm_scorer -> config_layer.llm_inference_client...
+  Cycle 3: config_layer.crt_engine_v2 -> config_layer.state_contract_loader -> config_layer.crt_engine_v2...
+  Cycle 4: config_layer.crt_engine_v2 -> config_layer.state_topology -> config_layer.crt_engine_v2...
+  Cycle 5: training.trainer -> training.trade_net_v2 -> training.trainer...

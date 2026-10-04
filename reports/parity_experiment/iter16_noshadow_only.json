@@ -1,0 +1,231 @@
+{
+  "authority": "research_only",
+  "engine_mode": "enter",
+  "agreement": 30731,
+  "total": 47197,
+  "agreement_rate": 0.6511218933406784,
+  "engine_counts": {
+    "RANGE": 35103,
+    "SWEEP": 7046,
+    "DISPLACEMENT": 371,
+    "SHADOW_PENDING": 51,
+    "EXPANSION": 4604,
+    "RETEST": 17,
+    "EXECUTION": 5
+  },
+  "resolver_counts": {
+    "RANGE": 40016,
+    "SWEEP": 6330,
+    "DISPLACEMENT": 248,
+    "EXPANSION": 570,
+    "RETEST": 33
+  },
+  "reference_counts": {
+    "RANGE": 35159,
+    "SWEEP": 6987,
+    "DISPLACEMENT": 373,
+    "EXPANSION": 4605,
+    "RETEST": 17,
+    "EXECUTION": 5,
+    "RESOLUTION": 0,
+    "SHADOW_PENDING": 51,
+    "EXPIRED": 0
+  },
+  "matrix": {
+    "RANGE|RANGE": 29697,
+    "SWEEP|RANGE": 6056,
+    "RANGE|SWEEP": 4824,
+    "DISPLACEMENT|RANGE": 315,
+    "SHADOW_PENDING|RANGE": 49,
+    "SWEEP|SWEEP": 893,
+    "RANGE|DISPLACEMENT": 205,
+    "SWEEP|DISPLACEMENT": 17,
+    "EXPANSION|RANGE": 3882,
+    "DISPLACEMENT|SWEEP": 51,
+    "EXPANSION|SWEEP": 557,
+    "RETEST|RANGE": 14,
+    "EXECUTION|RANGE": 3,
+    "RETEST|SWEEP": 2,
+    "EXECUTION|SWEEP": 2,
+    "EXPANSION|DISPLACEMENT": 25,
+    "RANGE|EXPANSION": 352,
+    "SWEEP|EXPANSION": 72,
+    "DISPLACEMENT|EXPANSION": 4,
+    "RANGE|RETEST": 25,
+    "SWEEP|RETEST": 8,
+    "SHADOW_PENDING|EXPANSION": 1,
+    "EXPANSION|EXPANSION": 140,
+    "RETEST|EXPANSION": 1,
+    "DISPLACEMENT|DISPLACEMENT": 1,
+    "SHADOW_PENDING|SWEEP": 1
+  },
+  "top_confusions": [
+    {
+      "engine": "SWEEP",
+      "resolver": "RANGE",
+      "n": 6056
+    },
+    {
+      "engine": "RANGE",
+      "resolver": "SWEEP",
+      "n": 4824
+    },
+    {
+      "engine": "EXPANSION",
+      "resolver": "RANGE",
+      "n": 3882
+    },
+    {
+      "engine": "EXPANSION",
+      "resolver": "SWEEP",
+      "n": 557
+    },
+    {
+      "engine": "RANGE",
+      "resolver": "EXPANSION",
+      "n": 352
+    },
+    {
+      "engine": "DISPLACEMENT",
+      "resolver": "RANGE",
+      "n": 315
+    },
+    {
+      "engine": "RANGE",
+      "resolver": "DISPLACEMENT",
+      "n": 205
+    },
+    {
+      "engine": "SWEEP",
+      "resolver": "EXPANSION",
+      "n": 72
+    },
+    {
+      "engine": "DISPLACEMENT",
+      "resolver": "SWEEP",
+      "n": 51
+    },
+    {
+      "engine": "SHADOW_PENDING",
+      "resolver": "RANGE",
+      "n": 49
+    },
+    {
+      "engine": "EXPANSION",
+      "resolver": "DISPLACEMENT",
+      "n": 25
+    },
+    {
+      "engine": "RANGE",
+      "resolver": "RETEST",
+      "n": 25
+    },
+    {
+      "engine": "SWEEP",
+      "resolver": "DISPLACEMENT",
+      "n": 17
+    },
+    {
+      "engine": "RETEST",
+      "resolver": "RANGE",
+      "n": 14
+    },
+    {
+      "engine": "SWEEP",
+      "resolver": "RETEST",
+      "n": 8
+    },
+    {
+      "engine": "DISPLACEMENT",
+      "resolver": "EXPANSION",
+      "n": 4
+    },
+    {
+      "engine": "EXECUTION",
+      "resolver": "RANGE",
+      "n": 3
+    },
+    {
+      "engine": "RETEST",
+      "resolver": "SWEEP",
+      "n": 2
+    },
+    {
+      "engine": "EXECUTION",
+      "resolver": "SWEEP",
+      "n": 2
+    },
+    {
+      "engine": "SHADOW_PENDING",
+      "resolver": "EXPANSION",
+      "n": 1
+    },
+    {
+      "engine": "RETEST",
+      "resolver": "EXPANSION",
+      "n": 1
+    },
+    {
+      "engine": "SHADOW_PENDING",
+      "resolver": "SWEEP",
+      "n": 1
+    }
+  ],
+  "edge_mismatch_n": 3361,
+  "timeline": {
+    "n_bars": 47275,
+    "n_transitions": 3869,
+    "n_resets": 10869,
+    "htf_resets": 10666,
+    "gap_resets": 121,
+    "reset_from_counts": {
+      "RANGE": 7441,
+      "SWEEP": 3062,
+      "DISPLACEMENT": 298,
+      "SHADOW_PENDING": 8,
+      "EXPANSION": 43,
+      "RETEST": 12,
+      "RESOLUTION": 1,
+      "EXECUTION": 4
+    }
+  },
+  "resolver_meta": {
+    "n_raw": 47275,
+    "n_resolved": 47197,
+    "n_dropped_warmup": 78,
+    "resolver_counts": {
+      "RANGE": 40016,
+      "SWEEP": 6330,
+      "DISPLACEMENT": 248,
+      "EXPANSION": 570,
+      "RETEST": 33
+    },
+    "config": "reports\\parity_experiment\\iter16_noshadow_only.yaml",
+    "lifecycle_stats": {
+      "htf_reset_count": 11634,
+      "gap_reset_count": 121,
+      "forced_reset_count": 0,
+      "last_reset_reason": "HTF changed: XAUUSD-HTF-011817 \u2192 XAUUSD-HTF-011818"
+    },
+    "lifecycle_cfg": {
+      "htf_reset_enabled": true,
+      "htf_candles_per_range": 4,
+      "htf_protect_states": [
+        "EXPANSION",
+        "RETEST"
+      ],
+      "htf_protect_execution": true,
+      "gap_reset_enabled": true,
+      "gap_reset_minutes": 120.0,
+      "shadow_on_htf_displacement_reset": false,
+      "pending_displacement_ttl_candles": 4
+    },
+    "htf_mode": "engine",
+    "htf_instrument": "XAUUSD",
+    "htf_candles_per_range": 4,
+    "htf_unique_ids": 11800,
+    "htf_changes_on_resolved_slice": 11799,
+    "htf_first_id": "XAUUSD-HTF-000019",
+    "htf_last_id": "XAUUSD-HTF-011818"
+  }
+}

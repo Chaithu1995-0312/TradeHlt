@@ -1,0 +1,222 @@
+# D1 STATUS: OPEN (belief vs preference) — 2026-09-06 rev2
+# Provisional implementer guide: SOCKET_ADAPTER_MATRIX.md v1.1 (DecisionEngine ABSTAIN-only).
+# Threshold-mutation surfaces below are PROVISIONALLY suspended, not permanently closed.
+# Do not implement dual systems while D1 is open.
+
+# DESIGN ONLY — ExecutionPolicy = user-chosen opinions.
+# May READ Context, Finding, ODP (under named contract_ref).
+# May NOT WRITE Context, Finding, ODP, MeasurementContract, or engine S_t.
+# Contains ZERO measured fields (no quantiles, n, sample confidence, corpus pins).
+
+schema_version: "0.3.0-SUPERSEDED-IN-PART"
+artifact: ExecutionPolicy
+status: design_draft
+
+authority:
+  kind: opinions
+  may_read:
+    - Context
+    - FindingRegistry
+    - OutcomeDistributionProfile   # only via contract_ref match
+    - MeasurementContract          # status / sealed check; not to mutate
+  may_not_write:
+    - Context
+    - FindingRegistry
+    - OutcomeDistributionProfile
+    - MeasurementContract
+    - CRTEngine.S_t
+    - CRTStateResolver
+    - construction_trace / bar_structure_snapshot observation streams
+  does_not_own:
+    - empirical_distributions
+    - finding_claims
+    - identity_graphs
+
+pipeline_position: |
+  Hypothesis
+    ↓ Measurement Contract
+    ↓ ODP                 (measured)
+    ↓ Finding             (knowledge / catalog)
+    ↓ Execution Policy    (this artifact — opinions)
+    ↓ Live Decision       (DecisionEngine / Planner / Ultron / CRTEngine consumers)
+
+separation:
+  Identity:     L1–L3 Context graphs / CRT identity
+  Observation:  L4 structure + joins
+  Measurement:  MeasurementContract + ODP
+  Knowledge:    Finding Registry
+  Policy:       ExecutionPolicy
+
+fields:
+  id:
+    type: string
+    pattern: "^POLICY-[A-Z0-9_-]+$"
+    required: true
+    examples: [POLICY-ODP-READ-XAUUSD-M15-V1]
+
+  title:
+    type: string
+    required: true
+
+  status:
+    type: string
+    enum: [DRAFT, ACTIVE, SUPERSEDED, RETIRED]
+    required: true
+
+  owner:
+    type: string
+    enum: [user]
+    required: true
+    notes: Policies are user-owned opinions. Agents may draft; user activates.
+
+  # --- Read bindings (not measurements) ---
+  reads:
+    type: object
+    required: true
+    fields:
+      context_selector:
+        type: Context | null
+        description: |
+          Optional sparse Context this policy applies under.
+          null selectors are normal (admissible-not-mandatory doctrine).
+      finding_ids:
+        type: list[string]
+        description: Findings this policy is allowed to consult (facts, not mutate).
+      odp_ids:
+        type: list[string] | null
+        description: Explicit ODP ids, or null to resolve via Context + contract_ref.
+      contract_ref:
+        type: string
+        required: true
+        description: |
+          MC-* id. Policy may only consume ODPs whose contract_ref matches
+          and whose MeasurementContract status permits use (prefer SEALED for ACTIVE policy).
+      require_odp_confidence_in:
+        type: list[string]
+        default: [survivor, confirmed]
+        description: Reject / abstain if matched ODP.confidence not in this set.
+      on_odp_fallback:
+        type: string
+        enum: [abstain, use_baseline_rules_only, reject]
+        default: abstain
+        description: |
+          Behaviour when ODP-FALLBACK / confidence:none is the only match.
+          Also applies (D2 producer-match rule, odp.schema.yaml producer_actionability_rule)
+          when the only matching ODP has state_producer=resolver: a resolver-produced ODP
+          is observation-only and must be treated as if no match existed, not consumed as
+          if it were an engine-produced measurement.
+
+  # --- Opinion surfaces (chosen values; never copied from ODP quantiles as "facts") ---
+  decision_thresholds:
+    type: object
+    required: true
+    status: PROVISIONALLY_SUSPENDED  # D1 OPEN — see DESIGN_DEFECTS_*.md
+    description: |
+      Provisionally suspended as a mutation surface (v1.1 working hypothesis; D1 OPEN). DecisionEngineAdapter may ABSTAIN only.
+      Retained for documentation of historical knob names; MUST NOT be used to
+      retune p_win/score/weak-component from PolicyOpinion AGGRESSIVE/DEFENSIVE.
+      Semantic / score gates as opinions. Aligns with DecisionEngine config keys
+      as *references*, not a claim that this schema owns runtime.
+    fields:
+      score_threshold: { type: float | null }
+      p_win_threshold: { type: float | null }
+      weak_component_threshold: { type: float | null }
+      threshold_percentile: { type: integer | null }
+      threshold_min: { type: float | null }
+      threshold_max: { type: float | null }
+      notes: { type: string | null }
+
+  participation_rules:
+    type: object
+    required: true
+    fields:
+      participation_allowed_default: { type: boolean, default: false }
+      require_matching_odp: { type: boolean, default: true }
+      max_trades_per_day: { type: integer | null }  # opinion; Ultron also gates live
+      session_allowlist: { type: "list[string] | null" }
+      intent_allowlist:
+        type: list[string] | null
+        examples: [[LIQ_SWEEP, PULLBACK]]
+        notes: Intent names from ExecutionPlanner vocabulary when used.
+      reject_unknown_intent: { type: boolean, default: true }
+
+  sizing_rules:
+    type: object
+    required: true
+    description: |
+      Chosen size opinions. MUST NOT embed measured quantile→multiplier formulas
+      as if they were findings. If a rule *reads* an ODP field, the mapping is
+      explicitly user-chosen and cited as policy, not evidence.
+    fields:
+      base_size_multiplier: { type: float, default: 1.0 }
+      min_size_multiplier: { type: float, default: 0.5 }
+      max_size_multiplier: { type: float, default: 2.0 }
+      max_risk_per_trade_pct: { type: float | null }
+      rules:
+        type: list[object]
+        description: Ordered user rules; each is an opinion.
+        item_fields:
+          rule_id: string
+          when: string          # human + optional machine predicate over Context/ODP metadata
+          then: string          # e.g. size_multiplier = 1.25
+          cites_odp_field: string | null   # e.g. quantiles.p5 — citation only, not a measurement
+          notes: string | null
+      forbidden:
+        - "Treating size_multiplier as an ODP field"
+        - "Silent p5→size translation without an explicit POLICY rule id"
+
+  risk_rules:
+    type: object
+    required: true
+    description: |
+      Capital / RR opinions. Economic RR floor is UltronRiskGate territory in runtime
+      (F-048: DecisionEngine does not own RR). This schema declares user policy intent.
+    fields:
+      min_rr_ratio: { type: float | null }
+      max_portfolio_risk_pct: { type: float | null }
+      max_daily_loss_pct: { type: float | null }
+      kill_switch_enabled: { type: boolean, default: true }
+      stop_target_source:
+        type: string
+        enum: [crt_engine_owned, policy_override_forbidden_by_default, policy_override_explicit]
+        default: crt_engine_owned
+        notes: |
+          Planner docs: SL/TP/RR are CRT engine responsibility unless an explicit
+          authorized override exists. Default keeps that boundary.
+
+  conflict_resolution:
+    type: object
+    required: true
+    fields:
+      multiple_odp_matches:
+        type: string
+        enum: [most_specific_context, abstain, prefer_listed_odp_ids_order]
+        default: most_specific_context
+      finding_vs_odp_disagreement:
+        type: string
+        enum: [prefer_odp_measurement, prefer_finding_status, abstain]
+        default: abstain
+      policy_vs_runtime_engine:
+        type: string
+        enum: [runtime_engine_wins, policy_wins_when_authorized, abstain]
+        default: runtime_engine_wins
+        notes: |
+          Dual-core: CRTEngine remains execution authority for S_t / lifecycle.
+          Policy does not become a parallel runtime path.
+      missing_sealed_contract:
+        type: string
+        enum: [abstain, allow_draft_with_flag]
+        default: abstain
+
+  measured_fields:
+    type: object
+    required: true
+    const: {}
+    description: MUST be empty. Presence of quantiles/n/confidence/corpus_pin here is a schema violation.
+
+forbidden:
+  - Writing or rewriting ODP quantiles / n / confidence
+  - Writing Finding claims or evidence
+  - Inventing synthetic FALLBACK averages for policy consumption
+  - Becoming a second CRT state constructor
+  - Quiet quantile→constraint formulas without explicit POLICY rule ids

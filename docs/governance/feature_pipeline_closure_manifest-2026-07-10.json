@@ -1,0 +1,46 @@
+{
+  "_doc": "Feature Pipeline Closure Program stable manifest. FC-0 freezes evidence+contract only.",
+  "program": "FEATURE_PIPELINE_CLOSURE",
+  "phase": "FC-0",
+  "status": "EVIDENCE_AND_CONTRACT_FROZEN",
+  "FEATURE_PIPELINE_FC0_STATUS": "EVIDENCE_AND_CONTRACT_FROZEN",
+  "production_remediation_started": false,
+  "economic_claims_allowed": false,
+  "stop_for_review": true,
+  "next_phase": "FC-1",
+  "corpus_binding": {
+    "physical_path": "data/mt5/XAUUSD_M15.csv",
+    "sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+    "rows": 47275,
+    "status": "FROZEN_CANDIDATE_PENDING_PHASE1_VALIDATION"
+  },
+  "artifacts": [
+    "docs/governance/legacy_feature_semantics_v1-2026-07-10.json",
+    "docs/governance/legacy_feature_semantics_v1-2026-07-10.md",
+    "docs/governance/legacy_feature_output_fingerprint_xauusd-2026-07-10.json",
+    "docs/governance/feature_contract.schema.json",
+    "docs/governance/feature_contract_v1-2026-07-10.json",
+    "docs/governance/feature_pipeline_fc0_semantic_separations-2026-07-10.md",
+    "docs/governance/feature_pipeline_change_contracts/FC1-A-SWING-CAUSAL.json",
+    "docs/governance/feature_pipeline_change_contracts/FC1-B-VOLUME-SEMANTIC-SPLIT.json",
+    "docs/governance/feature_pipeline_change_contracts/FC1-C-FM-IDENTITY-SEPARATION.json",
+    "docs/governance/feature_pipeline_change_contracts/FC1-D-VOLREGIME-CAUSAL.json",
+    "docs/governance/feature_pipeline_fc0_consumer_impact-2026-07-10.json",
+    "scripts/analysis/legacy_feature_fingerprint.py",
+    "scripts/analysis/build_feature_contract_v1_seed.py",
+    "tests/test_feature_contract_v1.py"
+  ],
+  "evidence_inputs": [
+    "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+    "docs/governance/feature_38_lineage_census-2026-07-10.json",
+    "docs/governance/xauusd_phase1_validation_report-2026-07-10.json"
+  ],
+  "pass_a_verdicts": {
+    "A": "MIXED_BY_CALL_SITE",
+    "B": "MIXED_BY_CORPUS",
+    "C": "FORMULA_IDENTITY_DIVERGENT",
+    "D": "GLOBAL_FIT_DEPENDENCE"
+  },
+  "legacy_fingerprint_joint_sha256_prefix": "af4fb27af60b24d1",
+  "notes": "FC-0 does not remediate production feature code. FC-1 requires user authorization."
+}

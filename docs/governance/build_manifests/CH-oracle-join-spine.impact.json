@@ -1,0 +1,74 @@
+{
+ "change_id": "CH-oracle-join-spine",
+ "objective": "Make every labelled unit carry the identity of the bar it was derived from. (C) build_bar_matrix.py stamps lt_id / trace_id / bar_open_ts / engine_state_after / trace_join_status, inherited from the layer-trace L3 rows of ONE lt_id filtered out of the shared results/layer_trace/XAUUSD_layer_trace.jsonl (323,294 rows, 9 run_ids measured 2026-09-22). --lt-id is now MANDATORY (never auto-picks the latest run) unless --no-trace-join. (C2) crt_state_resolved is renamed ontology_state (CRTStateResolver's declarative label) and engine_state_after is added (the CRT engine's own curr_state, read from the L3 output_hash) -- two DIFFERENT quantities per F-069 that must never share a column name again; both names reused verbatim from runtime/crt_construction_trace.py, which already emits exactly these two producer-qualified fields. (D) the oracle labeler (src/research/oracle/labeler.py) INHERITS lt_id / trace_id / bar_open_ts from the matrix by row index -- no new id is minted -- and its own run_id column is renamed label_run_id (a differently-scoped id from lt_id: the labeling invocation vs the spine walk). New invariant I8 (label_trace_resolution) in src/governance/identity_chain.py verifies the join: every label row's (lt_id, bar_open_ts) resolves to an L3 row under that SAME lt_id, trace_id's embedded timestamp agrees with the row's own bar_open_ts, and the file carries exactly one lt_id. Fail-closed readers fixed in the SAME commit: src/research/oracle/scan.py, scripts/research/oracle_pattern_scan.py, scripts/research/validate_oracle_harness.py all read crt_state_resolved with a tolerant `if extra in df.columns`, which under the rename would silently drop the resolver stratum from every downstream scan -- the exact F-056/F-079/F-083/F-085 silent-gap class this change closes elsewhere. Identity only: no trading decision, no trade math, no cost model, no label VALUE changes -- proved by a byte-identity test on label values and on ontology_state values (with vs without the identity columns), not merely asserted. This closes only the JOIN precondition -- the three parity contracts (cost model / tie-break / stop geometry) from the originating thread remain separate, unstarted, unscoped work.",
+ "change_classes": [
+  "TRACE_OBSERVATION_JOIN",
+  "RUN_IDENTITY_CHANGE",
+  "SCRIPT_LIFECYCLE_CHANGE"
+ ],
+ "affected_files": [
+  "scripts/research/build_bar_matrix.py",
+  "src/research/oracle/labeler.py",
+  "src/research/oracle/scan.py",
+  "src/governance/identity_chain.py",
+  "scripts/research/oracle_pattern_scan.py",
+  "scripts/research/validate_oracle_harness.py",
+  "tests/research/test_bar_matrix_trace_stamp.py",
+  "tests/research/test_oracle_labeler.py",
+  "tests/test_identity_chain.py",
+  "docs/reference/schemas.md",
+  "docs/memory/identity-chain-memory.md",
+  "docs/topics/feature-schema.md",
+  "docs/governance/build_manifests/CH-oracle-join-spine.impact.json",
+  "docs/governance/build_manifests/CH-oracle-join-spine.completion.json",
+  "assistant_project.md"
+ ],
+ "required_checks_ack": [
+  "tests/test_crt_construction_trace.py",
+  "tests/test_crt_construction_trace_envelope.py",
+  "tests/test_resolver_metadata.py",
+  "tests/test_construction_protocol.py",
+  "tests/test_run_identity.py",
+  "tests/test_script_registry.py",
+  "tests/test_script_matrix_sync.py"
+ ],
+ "unknowns": [
+  {
+   "id": "U1",
+   "blocking": false,
+   "question": "src/governance/identity_chain.py and src/governance/identity_spine.py were UNTRACKED (git status '??') at the start of this change (Phase 1, same session). Adding invariant I8 also first-commits both modules on the same commit as this change, so this change carries a larger tracked surface than its own diff.",
+   "resolution": "declared, disclosed in completion notes, I8 kept additive to INVARIANTS."
+  },
+  {
+   "id": "U2",
+   "blocking": false,
+   "question": "labels.csv carries TWO differently-scoped run ids: label_run_id (the LABELING invocation) and lt_id (the SPINE walk).",
+   "resolution": "RESOLVED (user decision 2026-09-22): renamed run_id -> label_run_id, identity_chain.py I7 updated in the same commit."
+  },
+  {
+   "id": "U3",
+   "blocking": false,
+   "question": "mint_run_id has 1-second resolution (layer_trace.py:162), so two runs of the same instrument starting in the same UTC second mint the SAME lt_id into the SAME shared append-only file.",
+   "resolution": "the duplicate-bar_open_ts guard (DuplicateTraceBar) raises rather than first/last-wins. 0 duplicates measured across all 9 current lt_ids. Per-run trace files are separate, unstarted, deferred work (track A)."
+  },
+  {
+   "id": "U4",
+   "blocking": false,
+   "question": "Whether to refine CC-L3-FORBIDDEN-JOIN's `against:` prose text to name the two new column names explicitly.",
+   "resolution": "left untouched (user decision) -- pulling in JSONL_CLAIM_SURFACE_CHANGE (+6 required checks) buys no mechanical gain; the guarantee is carried by tests (test_bar_matrix_trace_stamp.py), not catalog prose."
+  },
+  {
+   "id": "U5",
+   "blocking": false,
+   "question": "Whether labels.csv should carry an explicit LABEL_SCHEMA_VERSION token.",
+   "resolution": "NO (user decision) -- a new *SCHEMA_VERSION* symbol under src/ must be fully registered in schema_version_registry.json (unregistered_pinned is a shrink-only ratchet) and buys a number nothing branches on. Staleness is enforced by the fail-closed column-presence read in labeler.py's main(), matching how I7 already works."
+  },
+  {
+   "id": "U6",
+   "blocking": false,
+   "question": "The ~377K labelled units and the bar_matrix.csv already on disk under results/research/ (both dated before this change) lack the new identity columns entirely.",
+   "resolution": "declared STALE, not migrated or back-filled -- a back-fill would assert an lt_id association that was never observed at write time (no lt_id existed at generation time). results/ is gitignored; nothing tracked cites those bytes. Regeneration is the only path (~6 minutes measured: 340.1s matrix + 13.4s labeler in the prior build's own manifests)."
+  }
+ ],
+ "rollback_boundary": "Single commit. The 8 matrix columns, the rename crt_state_resolved->ontology_state, the 3 inherited label columns, the run_id->label_run_id rename (+ identity_chain.py I7 update), invariant I8, and the fail-closed readers in scan.py / oracle_pattern_scan.py / validate_oracle_harness.py revert together. Reverting must not leave a reader keyed on ontology_state while the builder emits crt_state_resolved, and must not orphan tests/research/test_bar_matrix_trace_stamp.py or the I8 entry in INVARIANTS. No config, no ACTIVE_VERSION, no config_hash, no CANONICAL_FEATURES and no promotion is in the boundary. Artifacts under results/ are gitignored and are regenerated, not reverted."
+}

@@ -1,0 +1,46 @@
+{
+  "schema_id": "OWNER_G_IMPL_01_AUTHORIZATION_V1",
+  "confirmed_at_utc": "2026-07-14T12:45:00Z",
+  "OWNER_AUTHORIZATION_STATUS": "CONFIRMED",
+  "G-IMPL-01": "OPEN",
+  "TASK_CLASS": "OBSERVATION_ONLY",
+  "IMPLEMENTATION_AUTHORIZED": "YES — NARROW SHADOW IMPLEMENTATION ONLY",
+  "GOVERNING_DESIGN": "MSIP_SHADOW_DESIGN_CONTRACT_V1",
+  "GOVERNING_PLAN": "MSIP_SHADOW_IMPLEMENTATION_PLAN_V1 v1.1.0",
+  "AUTHORIZED_SCOPE": [
+    "implement the frozen MarketStateVector schema",
+    "implement governed WHAT input readers",
+    "implement HOW interpretation under the accepted config schema",
+    "implement provenance emission",
+    "implement shadow runtime binding after FeaturePipeline and parallel to CRT",
+    "implement comparison/disagreement telemetry",
+    "implement deterministic failure handling",
+    "implement required unit, contract, isolation, provenance, determinism, and integration tests",
+    "execute shadow evidence runs authorized by the governing plan",
+    "perform CRT-local math parity audit where required by the accepted plan"
+  ],
+  "FORBIDDEN_SCOPE": [
+    "changing CRT behavior",
+    "influencing CRT state, guards, candidate ownership, events, trades, or execution",
+    "CRT input migration",
+    "replacing CRT-local ATR/EMA/body/wick math before parity audit and separate authorization",
+    "threshold optimization or selection",
+    "concurrent candidate implementation",
+    "production cutover",
+    "opening G-MIG-01",
+    "treating shadow outputs as authoritative trading decisions"
+  ],
+  "REQUIRED_INVARIANT": "SHADOW_OFF == CURRENT AUTHORITATIVE BEHAVIOR",
+  "SHADOW_ON_RULE": "observational and incapable of influencing the authoritative CRT path",
+  "COMPLETION_DOES_NOT_IMPLY": [
+    "SHADOW_PROMOTED",
+    "CRT_MIGRATION_AUTHORIZED",
+    "PRODUCTION_CUTOVER_AUTHORIZED"
+  ],
+  "REQUIRED_STOP_BOUNDARY": "Complete narrow implementation and evidence package, evaluate G-SHADOW-01 and G-PARITY-01, then STOP for owner review",
+  "gates_at_authorization": {
+    "G-SHADOW-01": "NOT_PASSED",
+    "G-PARITY-01": "NOT_PASSED",
+    "G-MIG-01": "CLOSED"
+  }
+}

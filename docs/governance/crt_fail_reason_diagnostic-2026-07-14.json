@@ -1,0 +1,137 @@
+{
+  "_doc": "CRT fail-reason diagnostic (OBSERVATION_ONLY)",
+  "generated_at_utc": "2026-08-07T04:57:32.170229+00:00",
+  "task_class": "OBSERVATION_ONLY",
+  "policy_ref": "docs/governance/TASK_CLASSIFICATION_BEHAVIOR_POLICY.md",
+  "max_process_candles": 3000,
+  "on_off_action_parity": true,
+  "processed_off": 3000,
+  "processed_on": 3000,
+  "fail_reason_counts": {
+    "enabled": true,
+    "evaluations": 2992,
+    "by_guard_id": {
+      "G_DISP_EXP_ATR_DIST": {
+        "distance_below_atr_min": 1
+      },
+      "G_DISP_EXP_DIR_LONG": {
+        "long_not_bullish_bar": 5
+      },
+      "G_DISP_EXP_DIR_SHORT": {
+        "short_not_bearish_bar": 1
+      },
+      "G_EXP_RET_CEILING": {
+        "depth_above_ceiling": 128
+      },
+      "G_EXP_RET_DISP_STRENGTH": {
+        "overextended_displacement": 6
+      },
+      "G_EXP_RET_MIN_DEPTH": {
+        "depth_below_min": 229
+      },
+      "G_EXP_RET_PASS": {
+        "PASS": 2
+      },
+      "G_RANGE_SWEEP_DETECT": {
+        "PASS": 227,
+        "no_sweep_detected": 2147
+      },
+      "G_SWEEP_DISP_BODY": {
+        "body_ratio_below_min": 7
+      },
+      "G_SWEEP_DISP_MOVE": {
+        "move_below_atr_min_displacement": 219
+      },
+      "G_SWEEP_DISP_PASS": {
+        "PASS": 20
+      }
+    },
+    "by_edge": {
+      "DISPLACEMENT->EXPANSION": {
+        "distance_below_atr_min": 1,
+        "long_not_bullish_bar": 5,
+        "short_not_bearish_bar": 1
+      },
+      "EXPANSION->RETEST": {
+        "PASS": 2,
+        "depth_above_ceiling": 128,
+        "depth_below_min": 229,
+        "overextended_displacement": 6
+      },
+      "RANGE->SWEEP": {
+        "PASS": 227,
+        "no_sweep_detected": 2147
+      },
+      "SWEEP->DISPLACEMENT": {
+        "PASS": 20,
+        "body_ratio_below_min": 7,
+        "move_below_atr_min_displacement": 219
+      }
+    },
+    "raw_counts": [
+      {
+        "guard_id": "G_RANGE_SWEEP_DETECT",
+        "reason": "no_sweep_detected",
+        "count": 2147
+      },
+      {
+        "guard_id": "G_EXP_RET_MIN_DEPTH",
+        "reason": "depth_below_min",
+        "count": 229
+      },
+      {
+        "guard_id": "G_RANGE_SWEEP_DETECT",
+        "reason": "PASS",
+        "count": 227
+      },
+      {
+        "guard_id": "G_SWEEP_DISP_MOVE",
+        "reason": "move_below_atr_min_displacement",
+        "count": 219
+      },
+      {
+        "guard_id": "G_EXP_RET_CEILING",
+        "reason": "depth_above_ceiling",
+        "count": 128
+      },
+      {
+        "guard_id": "G_SWEEP_DISP_PASS",
+        "reason": "PASS",
+        "count": 20
+      },
+      {
+        "guard_id": "G_SWEEP_DISP_BODY",
+        "reason": "body_ratio_below_min",
+        "count": 7
+      },
+      {
+        "guard_id": "G_EXP_RET_DISP_STRENGTH",
+        "reason": "overextended_displacement",
+        "count": 6
+      },
+      {
+        "guard_id": "G_DISP_EXP_DIR_LONG",
+        "reason": "long_not_bullish_bar",
+        "count": 5
+      },
+      {
+        "guard_id": "G_EXP_RET_PASS",
+        "reason": "PASS",
+        "count": 2
+      },
+      {
+        "guard_id": "G_DISP_EXP_ATR_DIST",
+        "reason": "distance_below_atr_min",
+        "count": 1
+      },
+      {
+        "guard_id": "G_DISP_EXP_DIR_SHORT",
+        "reason": "short_not_bearish_bar",
+        "count": 1
+      }
+    ],
+    "warnings": []
+  },
+  "baseline_hash_parity_required": false,
+  "note": "Full 47k historical hash equality not required. Neutrality validated on smallest sufficient deterministic prefix."
+}

@@ -58,7 +58,7 @@ class _DummyAdapter:
 
 
 class _DummyGaussian:
-    def compute(self, _payload):
+    def compute(self, _payload, **kwargs):
         return {"score": 0.6}
 
 
@@ -76,14 +76,15 @@ class _DummyFusion:
             (),
             {
                 "weight_crt": 0.30,
-                "weight_gaussian": 0.25,
-                "weight_zone_gate": 0.25,
-                "weight_rr": 0.20,
+                "weight_ema_momentum_kernel": 0.25,
+                "weight_feature_cluster_similarity": 0.25,
+                "weight_candle_commitment": 0.20,
             },
         )()
 
-    def compute(self, payload):
+    def compute(self, payload, *, regime=None, **kwargs):
         self.last = payload
+        self.last_regime = regime
         return {"final_score": 0.9}
 
     def evaluate(self, features, signal, candle_idx=0):
@@ -94,7 +95,7 @@ class _DummyFusion:
             def to_dict(self):
                 return {
                     "final_score": self._score,
-                    "gaussian": 0.6,
+                    "ema_momentum_kernel": 0.6,
                     "neural": None,
                     "llm": None,
                     "llm_fired": False,
@@ -123,6 +124,7 @@ def _build_runner(rr_fusion, fusion_compare=False, fusion_use=False, eval_score=
     runner.gaussian = _DummyGaussian()
     runner.rr = _DummyRR()
     runner.rr_fusion = rr_fusion
+    runner._rr_fusion_full_vector = False
     runner.fusion = _DummyFusion(eval_score=eval_score)
     runner.decision = _DummyDecision()
     runner.collector = _DummyCollector()
@@ -132,17 +134,26 @@ def _build_runner(rr_fusion, fusion_compare=False, fusion_use=False, eval_score=
     runner._convergence = _DummyConvergence()
     runner._fusion_compare_evaluate = fusion_compare
     runner._fusion_use_evaluate = fusion_use
+    runner.gaussian_shadow = None
+    runner._last_regime = None
+    runner._belief_enabled = False
+    runner._regime_governor_enabled = False
+    from core.regime_governor import RegimeGovernor
+    runner._regime_governor = RegimeGovernor()
     runner.dual_cfg = {
         **er.DUAL_ENGINE_DEFAULTS,
         "fusion_min_score": 0.0,
         "trend_strength_threshold": 0.1,
         "momentum_threshold": 0.1,
     }
+    # PLAN-002: engines-path weights — test uses legacy defaults
+    runner._score_component_weights = (0.35, 0.25, 0.20, 0.20)
     return runner
 
 
 def _input_data():
     return {
+        "direction": 1,  # EPIC-84 STORY-84.2: per-trade value, required (no fallback to long)
         "close": 100.0,
         "high": 101.0,
         "low": 99.0,
@@ -172,16 +183,20 @@ def test_rr_fusion_applies_score_before_fusion(monkeypatch):
     monkeypatch.setattr(er, "crt_compute", lambda trade_id, features, context: {"score": 0.2})
     monkeypatch.setattr(
         er,
-        "run_zone_gate_engine",
-        lambda **_kwargs: {"score": 0.8, "passed": True},
+        "score_zone_cluster",
+        lambda *_a, **_k: {
+            "score": 0.8,
+            "passed": True,
+            "meta": {"score": 0.8, "passed": True},
+        },
     )
 
     runner = _build_runner(_GoodFusion())
     result = runner.run(_input_data(), {"symbol": "AUDUSD"})
 
     assert result["decision"] == "execute"
-    assert runner.fusion.last["rr"]["score"] == 0.77
-    assert runner.fusion.last["rr"]["rr_ratio"] == 1.8
+    assert runner.fusion.last["candle_commitment"]["score"] == 0.77
+    assert runner.fusion.last["candle_commitment"]["rr_ratio"] == 1.8
 
 
 def test_rr_fusion_failure_falls_back_to_base_rr(monkeypatch):
@@ -194,40 +209,76 @@ def test_rr_fusion_failure_falls_back_to_base_rr(monkeypatch):
     monkeypatch.setattr(er, "crt_compute", lambda trade_id, features, context: {"score": 0.2})
     monkeypatch.setattr(
         er,
-        "run_zone_gate_engine",
-        lambda **_kwargs: {"score": 0.8, "passed": True},
+        "score_zone_cluster",
+        lambda *_a, **_k: {
+            "score": 0.8,
+            "passed": True,
+            "meta": {"score": 0.8, "passed": True},
+        },
     )
 
     runner = _build_runner(_BadFusion())
     result = runner.run(_input_data(), {"symbol": "AUDUSD"})
 
     assert result["decision"] == "execute"
-    assert runner.fusion.last["rr"]["score"] == 0.3
-    assert runner.fusion.last["rr"]["rr_ratio"] == 1.8
+    assert runner.fusion.last["candle_commitment"]["score"] == 0.3
+    assert runner.fusion.last["candle_commitment"]["rr_ratio"] == 1.8
+
+
+def test_rr_fusion_disabled_is_base_rr_identity(monkeypatch):
+    """F-038: rr_fusion.enabled=false (self.rr_fusion is None) must leave the `rr` engine
+    result byte-identical to the base CandleCommitment output — no score mutation, no metadata
+    injection (e.g. an `rr_fusion` key), so a disabled layer can never reintroduce the
+    Gaussian-duplicate behavior via a partial mutation."""
+    monkeypatch.setattr(er, "crt_compute", lambda trade_id, features, context: {"score": 0.2})
+    monkeypatch.setattr(
+        er,
+        "score_zone_cluster",
+        lambda *_a, **_k: {
+            "score": 0.8,
+            "passed": True,
+            "meta": {"score": 0.8, "passed": True},
+        },
+    )
+
+    runner = _build_runner(rr_fusion=None)
+    base_rr = runner.rr.compute(_input_data())
+
+    result = runner.run(_input_data(), {"symbol": "AUDUSD"})
+
+    assert result["decision"] == "execute"
+    assert runner.rr_fusion is None
+    assert runner.fusion.last["candle_commitment"] == base_rr
+    assert "rr_fusion" not in runner.fusion.last["candle_commitment"]
 
 
 def test_weighted_vote_falls_back_when_fusion_cfg_missing():
+    """Rewritten (EPIC-84 STORY-84.2): a fusion without cfg no longer falls back to literal
+    weights (0.30/0.25/0.25/0.20) — the weights come only from FusionConfig, so it raises."""
+    import pytest
     runner = er.EngineRunner.__new__(er.EngineRunner)
     runner.fusion = type("_FusionNoCfg", (), {})()
-    vote = runner._compute_weighted_vote(
-        {
-            "crt": {"score": 0.7},
-            "gaussian": {"score": 0.6},
-            "zone_gate": {"score": 0.8},
-            "rr": {"score": 0.55},
-        }
-    )
-    assert isinstance(vote, float)
-    assert vote == vote  # NaN guard
-    assert 0.0 <= vote <= 1.0
+    with pytest.raises(AttributeError):
+        runner._compute_weighted_vote(
+            {
+                "crt": {"score": 0.7},
+                "ema_momentum_kernel": {"score": 0.6},
+                "feature_cluster_similarity": {"score": 0.8},
+                "candle_commitment": {"score": 0.55},
+            }
+        )
 
 
 def test_fusion_compare_mode_records_evaluate_shadow(monkeypatch):
     monkeypatch.setattr(er, "crt_compute", lambda trade_id, features, context: {"score": 0.2})
     monkeypatch.setattr(
         er,
-        "run_zone_gate_engine",
-        lambda **_kwargs: {"score": 0.8, "passed": True},
+        "score_zone_cluster",
+        lambda *_a, **_k: {
+            "score": 0.8,
+            "passed": True,
+            "meta": {"score": 0.8, "passed": True},
+        },
     )
 
     runner = _build_runner(rr_fusion=None, fusion_compare=True, fusion_use=False, eval_score=0.12)
@@ -243,8 +294,12 @@ def test_fusion_use_evaluate_overrides_final_score(monkeypatch):
     monkeypatch.setattr(er, "crt_compute", lambda trade_id, features, context: {"score": 0.2})
     monkeypatch.setattr(
         er,
-        "run_zone_gate_engine",
-        lambda **_kwargs: {"score": 0.8, "passed": True},
+        "score_zone_cluster",
+        lambda *_a, **_k: {
+            "score": 0.8,
+            "passed": True,
+            "meta": {"score": 0.8, "passed": True},
+        },
     )
 
     runner = _build_runner(rr_fusion=None, fusion_compare=False, fusion_use=True, eval_score=0.12)
@@ -253,3 +308,46 @@ def test_fusion_use_evaluate_overrides_final_score(monkeypatch):
     assert abs(result["final_score"] - 0.12) < 1e-9
     fusion_payload = runner.collector.records[-1]["fusion"]
     assert fusion_payload["evaluate_used"] is True
+
+
+# ── EPIC-84 STORY-84.2: direction is a per-trade value -> REJECT, never "long" ──
+
+def _stub_zone(monkeypatch):
+    monkeypatch.setattr(er, "crt_compute", lambda trade_id, features, context: {"score": 0.2})
+    monkeypatch.setattr(
+        er,
+        "score_zone_cluster",
+        lambda *_a, **_k: {"score": 0.8, "passed": True, "meta": {"score": 0.8, "passed": True}},
+    )
+
+
+def test_missing_direction_rejects_with_config_key_missing(monkeypatch):
+    _stub_zone(monkeypatch)
+    runner = _build_runner(rr_fusion=None)
+    data = _input_data()
+    del data["direction"]
+    out = runner.run(data, {"symbol": "AUDUSD"})
+    assert out["decision"] == "REJECT"
+    assert out["reason"] == "config_key_missing:input_data.direction"
+    assert runner.fusion.last is None  # rejected before fusion — no "long" substitution
+    # the engine keeps running: the next candle with a direction proceeds normally
+    out2 = runner.run(_input_data(), {"symbol": "AUDUSD"})
+    assert out2["decision"] == "execute"
+
+
+def test_zero_direction_rejects_invalid(monkeypatch):
+    _stub_zone(monkeypatch)
+    runner = _build_runner(rr_fusion=None)
+    out = runner.run({**_input_data(), "direction": 0}, {"symbol": "AUDUSD"})
+    assert out["decision"] == "REJECT"
+    assert out["reason"] == "input_data_invalid_direction"
+
+
+def test_signal_dir_alias_still_accepted(monkeypatch):
+    _stub_zone(monkeypatch)
+    runner = _build_runner(rr_fusion=None)
+    data = _input_data()
+    del data["direction"]
+    data["signal_dir"] = -1
+    out = runner.run(data, {"symbol": "AUDUSD"})
+    assert out["decision"] == "execute"

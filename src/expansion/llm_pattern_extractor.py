@@ -54,7 +54,7 @@ def extract_expansion_plan(
         ExpansionPlan with ordered candidates
     """
     try:
-        from src.config_layer.llama_gate import llm_chat
+        from src.config_layer.llm_inference_client import llm_chat
         candidates = _llm_extract(base_config, baseline_metrics, trade_log_sample, target_multiplier, llm_chat)
     except Exception as exc:
         log.warning("LLM pattern extraction failed: %s — using fallback plan", exc)

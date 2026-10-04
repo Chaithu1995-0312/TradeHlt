@@ -1,0 +1,64 @@
+{
+  "change_id": "CH-live-rail-cert-replay",
+  "declared_files": [
+    "CLAUDE.md",
+    "assistant_project.md",
+    "docs/architecture/entry-exit-map.md",
+    "docs/current-findings.md",
+    "docs/governance/build_manifests/CH-live-rail-cert-replay.completion.json",
+    "docs/governance/build_manifests/CH-live-rail-cert-replay.impact.json",
+    "docs/governance/script_registry_stubs.jsonl",
+    "scripts/governance/seed_script_registry.py",
+    "scripts/live/run_live_rail.py",
+    "src/core/feature_store.py",
+    "src/features/feature_builder.py",
+    "src/features/feature_pipeline.py",
+    "src/inout/live_rail/__init__.py",
+    "src/inout/live_rail/ohlcv_replay_port.py",
+    "src/runtime/live_engine_hook.py",
+    "src/runtime/live_rail_orchestrator.py",
+    "tests/test_live_rail_orchestrator.py",
+    "tests/test_live_rail_replay_cert.py"
+  ],
+  "checks_executed": [
+    "tests/test_live_rail_replay_cert.py",
+    "tests/test_live_rail_orchestrator.py",
+    "tests/test_live_rail_feeder.py",
+    "tests/test_live_rail_hook_xor.py",
+    "tests/test_live_rail_dm001_atr.py",
+    "tests/test_live_rail_tickdb.py",
+    "tests/test_live_rail_contracts.py",
+    "tests/test_live_rail_bar_builder.py",
+    "tests/test_live_rail_ultron_adapter.py",
+    "tests/test_live_rail_order_manager.py",
+    "tests/test_live_rail_dry_run_tool.py",
+    "tests/test_live_rail_binance_ws.py",
+    "tests/test_live_rail_cli.py",
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py"
+  ],
+  "checks_result": {
+    "replay_cert": "12 passed",
+    "live_rail_suite": "81 passed",
+    "findings_floor": "10 passed",
+    "doc_citations": "3 passed (2 stale live_engine_hook.py:781 citations synced to :817 per CLAUDE.md 6.3)"
+  },
+  "certification_result": {
+    "arm_a_bar_injection": "200 corpus bars -> 122 attempts / 122 process_calls / 122 NO_ORDER / 0 ENGINE_ERROR / 0 FEEDER_REJECT",
+    "arm_b_tick_replay": "200 corpus rows -> 199 closed bars / 121 attempts / 121 process_calls / 0 errors (last row cannot close by construction)",
+    "determinism": "run4 vs run5 byte-identical over 122 records with wall-clock ts excluded",
+    "orders_placed": 0,
+    "before": "closed_bars=80 process_calls=0, 2 FEATURE_REJECT (ZoneGate: 29 of 48 canonical keys missing)"
+  },
+  "pre_existing_failures_not_caused_here": [
+    "tests/test_feature_math_lint.py::test_universe_reconciliation_with_census -- all rows in msip_1_verification_package/ (untouched)",
+    "tests/features/test_liquidity_distance.py::test_canonical_dim -- asserts CANONICAL_FEATURE_DIM==39, actual 48 (F-076 migration)",
+    "tests/test_vector_fixture_freshness.py::test_fixture_schema_matches -- fixture predates the v5 SMC keys",
+    "tests/research/{episodes/test_candidate_features,test_story_ontology,test_trace_corpus}.py, tests/test_fm_ownership_matrix.py -- same 39-vs-48 class",
+    "tests/test_session_log.py::test_session_log_entry_count_is_bounded -- log needs rotation",
+    "tests/test_gate5_lineage_report.py::test_session_log_cites_report"
+  ],
+  "repo_state_hash": "PENDING",
+  "completion_status": "INCOMPLETE",
+  "completion_notes": "Certification PASSES on its own criteria and F-085 is registered. COMPLETE is still DENIED by the same two pre-existing conditions every live-rail PR hit today: a dirty working tree with undeclared surfaces, and the pre-existing census/GREEN_FLOOR red (msip package). Neither was caused here and neither is in this change's boundary. Scope held: no ACTIVE_VERSION edit, dry_run still true, hook_submit_orders still false, zero orders, F-073 and F-010 both still OPEN."
+}

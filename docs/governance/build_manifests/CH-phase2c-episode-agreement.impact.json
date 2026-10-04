@@ -1,0 +1,31 @@
+{
+  "change_id": "CH-phase2c-episode-agreement",
+  "objective": "Phase 2C O14: typed Agreement object folding Phase 2B propositions under AGR-v0. Preserve CONFLICT (no false agreement). Research shadow only. No new measurements, no spine.",
+  "change_classes": ["DOCUMENTATION_ONLY"],
+  "affected_files": [
+    "src/research/episode_agreement.py",
+    "scripts/research/xauusd_episode_semantic_reconstruction.py",
+    "scripts/research/xauusd_episode_coverage_census.py",
+    "tests/test_episode_agreement.py",
+    "docs/governance/EPISODE_SEMANTIC_INTEGRATION_PHASE2.md",
+    "docs/governance/build_manifests/CH-phase2c-episode-agreement.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": "none",
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "required_checks_ack": [
+    "tests/test_episode_agreement.py",
+    "tests/test_episode_propositions.py",
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "remove episode_agreement.py + wire + tests; restore legacy heuristic agreement dict only",
+  "production_behavior_changed": false,
+  "notes": [
+    "AGR-v0: exit CONFLICT ⇒ BREAK; COHERENT requires O11 SAME_EVENT",
+    "O14 COVERED means object present, not verdict=COHERENT"
+  ]
+}

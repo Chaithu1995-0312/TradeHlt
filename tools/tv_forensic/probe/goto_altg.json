@@ -1,0 +1,2796 @@
+{
+  "title": "XAUUSD 4,351.450 \u25bc \u22121.29%",
+  "url": "https://www.tradingview.com/chart/?symbol=OANDA%3AXAUUSD&interval=15",
+  "els": [
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Compare symbols",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "15 minutes",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Candles",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "open-indicators-dialog",
+      "role": "",
+      "aria": "Indicators, metrics, and strategies",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Indicator templates",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Create alert",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Bar replay",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Layout setup",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Save all charts for all symbols and intervals on your layout",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Manage layouts",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Quick search",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Settings",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Fullscreen mode",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Take a snapshot",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Share your idea with the trade community",
+      "placeholder": "",
+      "type": "button",
+      "text": "Publish"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Compare symbols",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "15 minutes",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Candles",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "open-indicators-dialog",
+      "role": "",
+      "aria": "Indicators, metrics, and strategies",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Indicator templates",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Create alert",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Bar replay",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Layout setup",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Save all charts for all symbols and intervals on your layout",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Manage layouts",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Quick search",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Settings",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Fullscreen mode",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Take a snapshot",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Share your idea with the trade community",
+      "placeholder": "",
+      "type": "button",
+      "text": "Publish"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "header-toolbar-symbol-search",
+      "name": "",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": "XAUUSD"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "header-toolbar-switch-data-type",
+      "name": "",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "header-toolbar-compare",
+      "name": "",
+      "role": "",
+      "aria": "Compare symbols",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "15 minutes",
+      "placeholder": "",
+      "type": "button",
+      "text": "15m"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Candles",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "open-indicators-dialog",
+      "role": "",
+      "aria": "Indicators, metrics, and strategies",
+      "placeholder": "",
+      "type": "button",
+      "text": "Indicators"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Indicator templates",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "header-toolbar-alerts",
+      "name": "",
+      "role": "",
+      "aria": "Create alert",
+      "placeholder": "",
+      "type": "button",
+      "text": "Alert"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "header-toolbar-replay",
+      "name": "",
+      "role": "",
+      "aria": "Bar replay",
+      "placeholder": "",
+      "type": "button",
+      "text": "Replay"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "header-toolbar-layouts",
+      "name": "",
+      "role": "",
+      "aria": "Layout setup",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "header-toolbar-save-load",
+      "name": "",
+      "role": "",
+      "aria": "Save all charts for all symbols and intervals on your layout",
+      "placeholder": "",
+      "type": "button",
+      "text": "Save\nSave"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "save-load-menu",
+      "role": "",
+      "aria": "Manage layouts",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "header-toolbar-quick-search",
+      "name": "header-toolbar-quick-search",
+      "role": "",
+      "aria": "Quick search",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "header-toolbar-properties",
+      "name": "header-toolbar-properties",
+      "role": "",
+      "aria": "Settings",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "header-toolbar-fullscreen",
+      "name": "header-toolbar-fullscreen",
+      "role": "",
+      "aria": "Fullscreen mode",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Take a snapshot",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Share your idea with the trade community",
+      "placeholder": "",
+      "type": "button",
+      "text": "Publish"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": "Trade"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Share your idea with the trade community",
+      "placeholder": "",
+      "type": "button",
+      "text": "Publish"
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "name": "linetool-group-cursors",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Cross",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Cursors",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "name": "linetool-group-trend-line",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Trendline",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Trend tools",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "name": "linetool-group-gann-and-fibonacci",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Fib retracement",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Gann and Fibonacci tools",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "name": "linetool-group-patterns",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "XABCD pattern",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Patterns",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "name": "linetool-group-prediction-and-measurement",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Long position",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Forecasting and measurement tools",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "name": "linetool-group-geometric-shapes",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Brush",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Geometric shapes",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "name": "linetool-group-annotation",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Text",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Annotation tools",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "name": "linetool-group-font-icons",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Icon",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Icons",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "measure",
+      "role": "",
+      "aria": "Measure",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "zoom",
+      "role": "",
+      "aria": "Zoom in",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "name": "magnet-button",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Magnet mode snaps drawings placed near price bars to the closest OHLC value",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Magnets",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "drawginmode",
+      "role": "",
+      "aria": "Keep drawing",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "lockAllDrawings",
+      "role": "",
+      "aria": "Lock all drawings",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "name": "hide-all",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Hide all drawings",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Hide options",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "name": "removeAllDrawingTools",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Remove objects",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Remove options",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "name": "",
+      "role": "region",
+      "aria": "Chart #1",
+      "placeholder": "",
+      "type": "",
+      "text": "X\nGold Spot / U.S. Dollar\n15\nOANDA\nO\n4,351.685\nH\n4,352.160\nL\n4,349.760\nC\n4,351.490\n\u22120.255 (\u22120.01%)\n4,351.130\nSELL\n63.0\n4"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Change symbol",
+      "placeholder": "",
+      "type": "button",
+      "text": "Gold Spot / U.S. Dollar"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Change interval",
+      "placeholder": "",
+      "type": "button",
+      "text": "15"
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "name": "actions",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Flag symbol",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Symbol/interval chart syncing",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Hide",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "More",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "name": "buy-sell-buttons",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": "4,351.130\nSELL\n63.0\n4,351.760\nBUY"
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "name": "sell-order-button",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": "4,351.130\nSELL"
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "name": "qtyEl",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": "1"
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "name": "buy-order-button",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": "4,351.760\nBUY"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Hide indicator legend",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "name": "actions",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Hide",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Show interval settings",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Settings",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Remove",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "More",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "CANVAS",
+      "id": "",
+      "name": "pane-canvas",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "CANVAS",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Chart for OANDA:XAUUSD, 15 minutes",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "name": "price-axis-A",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "name": "currency-unit-label-wrapper",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "name": "currency-label-selector",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "name": "unit-label-selector",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "name": "metric-label-selector",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Toggle auto scale",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Toggle log scale",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "date-ranges-menu",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "name": "date-ranges-tabs",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": "1D\n5D\n1M\n3M\n6M\nYTD\n1Y\n5Y\nAll"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "date-range-tab-1D",
+      "role": "",
+      "aria": "1 day in 1 minute intervals",
+      "placeholder": "",
+      "type": "button",
+      "text": "1D"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "date-range-tab-5D",
+      "role": "",
+      "aria": "5 days in 5 minutes intervals",
+      "placeholder": "",
+      "type": "button",
+      "text": "5D"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "date-range-tab-1M",
+      "role": "",
+      "aria": "1 month in 30 minutes intervals",
+      "placeholder": "",
+      "type": "button",
+      "text": "1M"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "date-range-tab-3M",
+      "role": "",
+      "aria": "3 months in 1 hour intervals",
+      "placeholder": "",
+      "type": "button",
+      "text": "3M"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "date-range-tab-6M",
+      "role": "",
+      "aria": "6 months in 2 hours intervals",
+      "placeholder": "",
+      "type": "button",
+      "text": "6M"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "date-range-tab-YTD",
+      "role": "",
+      "aria": "Year to day in 1 day intervals",
+      "placeholder": "",
+      "type": "button",
+      "text": "YTD"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "date-range-tab-12M",
+      "role": "",
+      "aria": "1 year in 1 day intervals",
+      "placeholder": "",
+      "type": "button",
+      "text": "1Y"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "date-range-tab-60M",
+      "role": "",
+      "aria": "5 years in 1 week intervals",
+      "placeholder": "",
+      "type": "button",
+      "text": "5Y"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "date-range-tab-ALL",
+      "role": "",
+      "aria": "All data in 1 month intervals",
+      "placeholder": "",
+      "type": "button",
+      "text": "All"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "go-to-date",
+      "role": "",
+      "aria": "Go to",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "time-zone-menu",
+      "role": "",
+      "aria": "Timezone",
+      "placeholder": "",
+      "type": "button",
+      "text": "19:35:48 UTC"
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "name": "widgetbar-wrap",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": "Watchlist\nSymbol\nLast\nChg\nChg%\nINDICES\nS\nSPX\nD\n7,804.25\n55.75\n0.72%\nN\nNDQ\n30,114.92\n372.31\n1.25%\nD\nDJI\n53,836.37\n60.99\n0"
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "name": "right-toolbar",
+      "role": "toolbar",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "base",
+      "role": "",
+      "aria": "Watchlist, details, and news",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "alerts",
+      "role": "",
+      "aria": "Alerts",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "object_tree",
+      "role": "",
+      "aria": "Object tree and data window",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "screener-dialog-button",
+      "role": "",
+      "aria": "Screeners",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "pine-dialog-button",
+      "role": "",
+      "aria": "Pine",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "calendar-dialog-button",
+      "role": "",
+      "aria": "Calendars",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "community-hub-button",
+      "role": "",
+      "aria": "Community",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "notifications-button",
+      "role": "",
+      "aria": "Notifications",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Products",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "help-button",
+      "role": "",
+      "aria": "Help Center",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "name": "widgetbar-pages-with-tabs",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": "Watchlist\nSymbol\nLast\nChg\nChg%\nINDICES\nS\nSPX\nD\n7,804.25\n55.75\n0.72%\nN\nNDQ\n30,114.92\n372.31\n1.25%\nD\nDJI\n53,836.37\n60.99\n0"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "watchlists-button",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "button",
+      "text": "Watchlist"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "add-symbol-button",
+      "role": "",
+      "aria": "Add symbol",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "advanced-view-button",
+      "role": "",
+      "aria": "Advanced view",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "settings-button",
+      "role": "",
+      "aria": "Settings",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "button",
+      "text": "Symbol"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "button",
+      "text": "Last"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "button",
+      "text": "Chg"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "button",
+      "text": "Chg%"
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "name": "symbol-list-wrap",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": "INDICES\nS\nSPX\nD\n7,804.25\n55.75\n0.72%\nN\nNDQ\n30,114.92\n372.31\n1.25%\nD\nDJI\n53,836.37\n60.99\n0.11%\nV\nVIX\nD\n14.75\n0.20\n1.37%\nD"
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "name": "tree",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": "INDICES\nS\nSPX\nD\n7,804.25\n55.75\n0.72%\nN\nNDQ\n30,114.92\n372.31\n1.25%\nD\nDJI\n53,836.37\n60.99\n0.11%\nV\nVIX\nD\n14.75\n0.20\n1.37%\nD"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "name": "details-add-note-button",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "name": "details-settings-button",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": "More seasonals"
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "name": "details-more-technicals-button",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": "More technicals"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": "More technicals"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toggle-visibility-button",
+      "role": "",
+      "aria": "Open panel",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toggle-maximize-button",
+      "role": "",
+      "aria": "Maximize panel",
+      "placeholder": "",
+      "type": "button",
+      "text": ""
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Trading panel",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-orders",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "role": "img",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-orders",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-alerts",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "role": "img",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-alerts",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-alertsFireControl",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "role": "img",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-alertsFireControl",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-alertsWatchlistFireControl",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "role": "img",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-alertsWatchlistFireControl",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-trading-notifications",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "role": "img",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-trading-notifications",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-gift",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "role": "img",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-gift",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-force-password-change",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "role": "img",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-force-password-change",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-chat-message",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "role": "img",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-chat-message",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-three-month-offer",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "role": "img",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-account-deletion-initiated",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "role": "img",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-account-deletion-initiated",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-account-deletion-cancelled",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "role": "img",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-account-deletion-cancelled",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-support-portal",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "role": "img",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-support-portal",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-global-notification",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "role": "img",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-global-notification",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-news-notification",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "role": "img",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-news-notification",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-chart_warning",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "role": "img",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-chart_warning",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-chart_info",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "role": "img",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-chart_info",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-x-share-group",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "role": "img",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-x-share-group",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-bf-notification",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "role": "img",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-bf-notification",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-coupon-notification",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "role": "img",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-coupon-notification",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-cookies",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "role": "img",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-expand-button-charting-ad",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "name": "",
+      "role": "img",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "toast-group-close-button-charting-ad",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "name": "go-to-date-dialog",
+      "role": "dialog",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": "Go to\nClose menu\nDateCustom range\nAugust 2026\nMo\nTu\nWe\nTh\nFr\nSa\nSu\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "button",
+      "text": "Close menu"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "Date",
+      "name": "",
+      "role": "tab",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": "Date"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "CustomRange",
+      "name": "",
+      "role": "tab",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": "Custom range"
+    },
+    {
+      "tag": "INPUT",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "",
+      "placeholder": "YYYY-MM-DD",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "INPUT",
+      "id": "",
+      "name": "",
+      "role": "combobox",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Previous month, July 2026",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Switch to months, 2026",
+      "placeholder": "",
+      "type": "",
+      "text": "August 2026"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "Next month, September 2026",
+      "placeholder": "",
+      "type": "",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "cell",
+      "aria": "Saturday 1 August 2026",
+      "placeholder": "",
+      "type": "",
+      "text": "1"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "cell",
+      "aria": "Sunday 2 August 2026",
+      "placeholder": "",
+      "type": "",
+      "text": "2"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "cell",
+      "aria": "Monday 3 August 2026",
+      "placeholder": "",
+      "type": "",
+      "text": "3"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "cell",
+      "aria": "Tuesday 4 August 2026",
+      "placeholder": "",
+      "type": "",
+      "text": "4"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "cell",
+      "aria": "Wednesday 5 August 2026",
+      "placeholder": "",
+      "type": "",
+      "text": "5"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "cell",
+      "aria": "Thursday 6 August 2026",
+      "placeholder": "",
+      "type": "",
+      "text": "6"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "cell",
+      "aria": "Friday 7 August 2026",
+      "placeholder": "",
+      "type": "",
+      "text": "7"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "cell",
+      "aria": "Saturday 8 August 2026",
+      "placeholder": "",
+      "type": "",
+      "text": "8"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "cell",
+      "aria": "Sunday 9 August 2026",
+      "placeholder": "",
+      "type": "",
+      "text": "9"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "cell",
+      "aria": "Monday 10 August 2026",
+      "placeholder": "",
+      "type": "",
+      "text": "10"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "cell",
+      "aria": "Tuesday 11 August 2026",
+      "placeholder": "",
+      "type": "",
+      "text": "11"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "cell",
+      "aria": "Wednesday 12 August 2026",
+      "placeholder": "",
+      "type": "",
+      "text": "12"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "cell",
+      "aria": "Thursday 13 August 2026",
+      "placeholder": "",
+      "type": "",
+      "text": "13"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "cell",
+      "aria": "Friday 14 August 2026",
+      "placeholder": "",
+      "type": "",
+      "text": "14"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "cell",
+      "aria": "Saturday 15 August 2026",
+      "placeholder": "",
+      "type": "",
+      "text": "15"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "cell",
+      "aria": "Sunday 16 August 2026",
+      "placeholder": "",
+      "type": "",
+      "text": "16"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "cell",
+      "aria": "Monday 17 August 2026",
+      "placeholder": "",
+      "type": "",
+      "text": "17"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "cell",
+      "aria": "Tuesday 18 August 2026",
+      "placeholder": "",
+      "type": "",
+      "text": "18"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "cell",
+      "aria": "Wednesday 19 August 2026",
+      "placeholder": "",
+      "type": "",
+      "text": "19"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "cell",
+      "aria": "Thursday 20 August 2026",
+      "placeholder": "",
+      "type": "",
+      "text": "20"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "cell",
+      "aria": "Friday 21 August 2026",
+      "placeholder": "",
+      "type": "",
+      "text": "21"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "cell",
+      "aria": "Saturday 22 August 2026",
+      "placeholder": "",
+      "type": "",
+      "text": "22"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "cell",
+      "aria": "Sunday 23 August 2026",
+      "placeholder": "",
+      "type": "",
+      "text": "23"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "cell",
+      "aria": "Monday 24 August 2026",
+      "placeholder": "",
+      "type": "",
+      "text": "24"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "cell",
+      "aria": "Tuesday 25 August 2026",
+      "placeholder": "",
+      "type": "",
+      "text": "25"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "cell",
+      "aria": "Wednesday 26 August 2026",
+      "placeholder": "",
+      "type": "",
+      "text": "26"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "cell",
+      "aria": "Thursday 27 August 2026",
+      "placeholder": "",
+      "type": "",
+      "text": "27"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "cell",
+      "aria": "Friday 28 August 2026",
+      "placeholder": "",
+      "type": "",
+      "text": "28"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "cell",
+      "aria": "Saturday 29 August 2026",
+      "placeholder": "",
+      "type": "",
+      "text": "29"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "cell",
+      "aria": "Sunday 30 August 2026",
+      "placeholder": "",
+      "type": "",
+      "text": "30"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "cell",
+      "aria": "Monday 31 August 2026",
+      "placeholder": "",
+      "type": "",
+      "text": "31"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": "Cancel"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "name": "submit-button",
+      "role": "",
+      "aria": "",
+      "placeholder": "",
+      "type": "",
+      "text": "Go to"
+    }
+  ]
+}

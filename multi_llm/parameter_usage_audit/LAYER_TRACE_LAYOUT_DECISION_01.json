@@ -1,0 +1,64 @@
+{
+  "artifact_id": "LAYER_TRACE_LAYOUT_DECISION_01",
+  "decision_id": "E-TRACE-LAYOUT",
+  "title": "Layer-trace storage layout",
+  "purpose": "Audit trail for User choice on how layer_trace is stored. Closes the shared-append vs per-run fork that complicates Run1 joins (F-101). Does not by itself authorize emitter code change \u2014 that is a separate Act/story.",
+  "status": "FROZEN",
+  "choice": "A_PER_RUN_FILES",
+  "choice_label": "A \u2014 per-run trace files",
+  "formula_frozen": "TRACE_LAYOUT := PER_RUN_FILE; path := f(run_id); \u00acSHARED_APPEND_MEGASTORE; join := open(path(run_id)) (no cross-run filter required)",
+  "options_presented": [
+    {
+      "id": "A_PER_RUN_FILES",
+      "label": "A \u2014 per-run trace files",
+      "meaning": "Each run writes its own layer_trace file keyed by content run_id (e.g. results/layer_trace/{run_id}_layer_trace.jsonl or under the run folder). No shared append across runs. Joins use path+run_id equality, not filter-of-megastore.",
+      "recommended": true,
+      "chosen": true
+    },
+    {
+      "id": "B_SHARED_APPEND",
+      "label": "B \u2014 shared append file (status quo)",
+      "meaning": "Keep results/layer_trace/XAUUSD_layer_trace.jsonl as multi-run append; consumers filter by run_id / lt_* slice. Current forensic pain (F-101 folder vs content id).",
+      "recommended": false,
+      "chosen": false
+    },
+    {
+      "id": "C_HYBRID_POINTER",
+      "label": "C \u2014 hybrid (shared file + per-run pointer/manifest)",
+      "meaning": "Keep shared append for write path but emit a per-run manifest/pointer listing byte range or filtered extract path. Middle ground; more moving parts.",
+      "recommended": false,
+      "chosen": false,
+      "note": "Inferred alternative \u2014 confirm if a different C was on the card."
+    }
+  ],
+  "options_not_chosen": [
+    "B_SHARED_APPEND",
+    "C_HYBRID_POINTER"
+  ],
+  "options_note": "A was User answer 2026-09-23. B is documented status quo. C is the natural third cell for audit completeness; if the original card used a different B/C wording, amend this artifact \u2014 choice A still stands.",
+  "status_quo_path": "results/layer_trace/XAUUSD_layer_trace.jsonl",
+  "status_quo_observed": {
+    "bytes": 382207561,
+    "mtime_ist_approx": "2026-09-22 10:18"
+  },
+  "does_not_authorize": [
+    "emitter rewrite",
+    "migration of existing shared file",
+    "deletion of XAUUSD_layer_trace.jsonl",
+    "structural-break patch"
+  ],
+  "next_act_if_authorized": [
+    "Story: emitter writes per-run path under results/layer_trace/{run_id}_*.jsonl (or run folder)",
+    "Update RUN_ARTIFACT_SCHEMA_CATALOG + join map",
+    "Optional: one-time extract of Run1 slice from shared file into per-run path for forensics"
+  ],
+  "related": {
+    "F-101": "folder name \u2260 content run_id on Run1",
+    "join_map": "multi_llm/parameter_usage_audit/RUN1_JOIN_KEY_MAP.json",
+    "htf_locks": "DC-HTF-AUTHORITY-01_LOCK_DECISIONS (orthogonal; still PARKED for patch)"
+  },
+  "frozen_by": "User",
+  "frozen_at_utc": "2026-09-22T19:40:46Z",
+  "frozen_at_ist": "2026-09-23",
+  "source_answer": "A \u2014 per-run trace files"
+}

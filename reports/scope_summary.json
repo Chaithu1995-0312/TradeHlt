@@ -1,0 +1,29 @@
+{
+  "accepted_count": 203588,
+  "accepted_instruments": [
+    "ETHUSDT"
+  ],
+  "rejected_count": 101794,
+  "rejected_instruments": [
+    "EURUSD"
+  ],
+  "rules": {
+    "crypto": [
+      "*USDT",
+      "BTC*",
+      "ETH*",
+      "SOL*",
+      "DOGE*",
+      "XRP*",
+      "BNB*"
+    ],
+    "forex": [
+      "EUR*",
+      "GBP*",
+      "USD*",
+      "AUD*",
+      "XAU*"
+    ]
+  },
+  "scope": "crypto"
+}

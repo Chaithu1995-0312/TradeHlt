@@ -1,0 +1,24 @@
+{
+  "change_id": "CH-probes-extract-all-states-economic-2026-09-14",
+  "change_classes": [
+    "REFACTOR_EXTRACT",
+    "NO_BEHAVIOR_CHANGE_INTENDED"
+  ],
+  "declared_files": [
+    "scripts/analysis/all_states_economic_probe.py",
+    "scripts/analysis/sweep_structure_economic_probe.py",
+    "src/research/probes/costs_path.py",
+    "src/research/probes/__init__.py",
+    "archive/probes_extraction_all_states_economic_2026-09-14/MANIFEST.csv",
+    "archive/probes_extraction_all_states_economic_2026-09-14/MANIFEST.md",
+    "docs/governance/build_manifests/CH-probes-extract-all-states-economic-2026-09-14.impact.json",
+    "docs/governance/build_manifests/CH-probes-extract-all-states-economic-2026-09-14.completion.json",
+    "docs/research/probes_extraction_audit_2026-09-14.md"
+  ],
+  "checks_executed": [
+    "py_compile all_states_economic_probe",
+    "import load_cost_model from research.probes"
+  ],
+  "completion_status": "COMPLETE_LOCAL",
+  "behavior_evidence": "Same close_at_horizon / load_corpus / assert_no_claim_keys / SEM-015 TIMEOUT path; importlib removed."
+}

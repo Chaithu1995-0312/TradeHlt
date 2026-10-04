@@ -1,0 +1,136 @@
+{
+  "schema_id": "H_GAUSS_DELTA_001_EXPERIMENT_DEFINITION_V1",
+  "program_alias": "H-GAUSS-DELTA-001",
+  "title": "GAUSSIAN_CALIBRATION_GAP_DELTA_ML_MINUS_H",
+  "status": "PRE_REGISTERED_OPEN",
+  "task_class": "EXPLORATORY_RESEARCH",
+  "authority": "research",
+  "created_at_utc": "2026-07-21T00:00:00Z",
+  "pre_registered_before_protocol_primary_outcome_measurement": true,
+  "human_doc": "docs/research-readiness/h-gauss-delta-001-preregistration.md",
+  "hard_flags": {
+    "PRODUCTION_BEHAVIOR_CHANGED": false,
+    "GAUSSIAN_COORDINATOR": false,
+    "FAMILY_CONSENSUS_IN_FUSION": false,
+    "GAUSSIAN_IMPL_FLIP_TO_ML": false,
+    "POST_HOC_THRESHOLD_MINING": false,
+    "BINARY_AGREE_AT_0_5_AS_PRIMARY": false,
+    "AUTO_PROMOTE_CONFIG": false,
+    "ENTRY_DISCOVERY": false,
+    "RETRAIN_ML_IN_PROGRAM": false
+  },
+  "motivation": {
+    "trigger": "User: do not build coordinator; preregister study of Δ=ML-H as primary signal stratified by geometry",
+    "exploratory_pilot_non_primary": "results/zone_maps/bnbusdt_gaussian_family_shadow.{json,md}",
+    "pilot_lessons": [
+      "binary_agree_at_0_5_saturated",
+      "pearson_h_ml_near_zero",
+      "mean_delta_negative_ml_below_h",
+      "consensus_subsets_empty"
+    ],
+    "related": [
+      "docs/governance/gaussian_lineage_audit.md",
+      "F-019",
+      "F-022",
+      "F-025",
+      "F-045",
+      "CLAUDE.md §6.5 Authority Ladder"
+    ]
+  },
+  "hypothesis": {
+    "H1": "Within at least one primary geometry stratum, signed Δ=ML-H has incremental predictive association with honest forward net-R beyond score_H alone and score_ML alone after BH and OOS",
+    "H0": "No primary stratum×instrument cell shows incremental residual association of Δ after MTC/OOS (or all INSUFFICIENT)",
+    "H2_secondary": "Δ distribution differs across geometry strata (descriptive only)",
+    "H3_secondary": "Signed Δ outperforms |Δ| on incremental test only if H1 fires"
+  },
+  "primary_signal": {
+    "definition": "delta = score_ml - score_h",
+    "score_h": "HeuristicGaussianEngine.compute",
+    "score_ml": "MLGaussianEngine.compute",
+    "contract": "shadow_ml dual path",
+    "encodings_primary": ["D-CONT", "D-TERC", "D-RES-H", "D-RES-ML"],
+    "forbidden_primary": [
+      "binary_agree_0_5",
+      "mean_h_ml",
+      "max_h_ml",
+      "post_hoc_quantiles"
+    ]
+  },
+  "geometry_strata": {
+    "primary": [
+      "S-RARE_ZONE",
+      "S-RARE_ENTRY",
+      "S-BOUNDARY",
+      "S-DISPLACEMENT"
+    ],
+    "diagnostic": [
+      "S-ALL",
+      "S-RARE_ENTRY_x_DISPLACEMENT",
+      "S-BOUNDARY_x_DISPLACEMENT"
+    ],
+    "rare_zones": ["zone_1", "zone_4", "zone_5", "zone_6"],
+    "boundary": "lowest_quintile_margin_best_second_IS_edges_applied_OOS",
+    "zone_config": "ZoneMapConfig.from_prod_engine_runner"
+  },
+  "population": {
+    "primary_universe": ["BNBUSDT", "BTCUSDT", "ETHUSDT", "SOLUSDT"],
+    "timeframe": "M15",
+    "csv_template": "data/{INSTR}_M15.csv",
+    "optional_diagnostic_universe": ["XAUUSD"],
+    "direction_rule": "crt_if_pm1_else_ema_polarity_else_momentum_sign",
+    "atr_price": "atr_relative * close",
+    "exit_model": "intrabar_fixed",
+    "sl_atr_mult": 1.0,
+    "tp_atr_mult": 2.0,
+    "max_forward": 40,
+    "cost_round_trip_bps": 12,
+    "oos_mode": "time_ordered_70_30",
+    "oos_fraction": 0.3,
+    "min_n_oos_cell": 100,
+    "min_n_oos_pooled": 200,
+    "n_perm": 1000,
+    "perm_seed": 42,
+    "ml_fallback_rate_skip_threshold": 0.01
+  },
+  "tests": {
+    "primary_bh_family": [
+      "T-SP-D",
+      "T-SP-RES-H",
+      "T-SP-RES-ML",
+      "T-TERC-D"
+    ],
+    "bh_q": 0.1,
+    "nested_baselines_required": ["score_h", "score_ml", "abs_delta"],
+    "cell_claim_rule": {
+      "informative": [
+        "not_insufficient",
+        "T-SP-RES-H_or_T-SP-RES-ML_BH_significant",
+        "T-TERC-D_positive_oos"
+      ],
+      "consumable_research_only": [
+        "informative",
+        "oos_top_delta_tercile_E_net_gt_0",
+        "top_delta_E_beats_h_top_and_ml_top"
+      ]
+    }
+  },
+  "gates": {
+    "skip_instrument_if_no_ml_or_high_fallback": true,
+    "h0_close_null": "no_primary_cell_passes_informative",
+    "coordinator_forbidden": true,
+    "production_wire_forbidden": true
+  },
+  "implementation": {
+    "module": "src/research/zone_mapping/gaussian_delta_gap_eval.py",
+    "cli": "scripts/research/build_gaussian_delta_gap_eval.py",
+    "reuses": [
+      "src/research/zone_mapping/gaussian_family_shadow_eval.py"
+    ]
+  },
+  "deliverables": {
+    "per_instrument_json": "results/zone_maps/{instr}_h_gauss_delta_001.json",
+    "per_instrument_md": "results/zone_maps/{instr}_h_gauss_delta_001.md",
+    "pooled": "results/zone_maps/pooled_h_gauss_delta_001.{json,md}",
+    "run_findings": "docs/research-readiness/h-gauss-delta-001-run-findings.md"
+  }
+}

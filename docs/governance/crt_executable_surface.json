@@ -1,0 +1,423 @@
+{
+  "schema": "crt_executable_surface.v1",
+  "phase": 1,
+  "program": "CRT_CLOSURE",
+  "generated_at_utc": "2026-07-09T08:00:00Z",
+  "commit": "ed1e418e47489dc8d76a2f7cc4e0cd340348b661",
+  "worktree_note": "DIRTY at generation; baseline and this inventory pin exact working-tree code under audit, not a clean commit tree",
+  "active_config_version": "v2_multi_2026_04",
+  "authority_verdict": "UNIQUE",
+  "authority_summary": "Exactly one ACTIVE 9-state CRT state-machine implementation exists: config_layer.crt_engine_v2.CRTEngine. No other module constructs CRTEngine or calls process_candle in production runtime except backtest_v2. The name 'CRT' also appears as a fusion scoring slot (engines.crt_engine.compute) and a strategy wrapper (S01) — different roles, not dual state-machine authorities.",
+  "crt_active_authority": {
+    "role": "STATE_MACHINE_AND_CANDIDATE_EMITTER",
+    "module": "src/config_layer/crt_engine_v2.py",
+    "class": "CRTEngine",
+    "class_line": 2129,
+    "entry_method": "process_candle",
+    "entry_method_line": 2257,
+    "state_enum": {"name": "CRTState", "line": 64, "members": ["RANGE", "SHADOW_PENDING", "SWEEP", "DISPLACEMENT", "EXPANSION", "EXPIRED", "RETEST", "EXECUTION", "RESOLUTION"], "count": 9},
+    "transition_map": {"name": "VALID_TRANSITIONS", "line": 1075},
+    "state_machine_class": {"name": "StateMachine", "line": 1088},
+    "config_class": {"name": "CRTConfig", "line": 310, "frozen": true},
+    "constructor_requires_config": true,
+    "constructor_line": 2136,
+    "constructor_note": "CRTEngine(config=None) raises ValueError; must use ConfigBuilder / explicit CRTConfig"
+  },
+  "implementation_files": [
+    {
+      "path": "src/config_layer/crt_engine_v2.py",
+      "classification": "ACTIVE",
+      "role": "sole 9-state CRT state machine + risk + execution + reset orchestration",
+      "evidence": ["src/config_layer/crt_engine_v2.py:2129", "src/runtime/backtest_v2.py:1776", "src/runtime/backtest_v2.py:1948"]
+    },
+    {
+      "path": "src/config_layer/crt_sweep_taxonomy.py",
+      "classification": "ACTIVE",
+      "role": "sweep geometry classifier imported by RangeDetector/StateMachine path",
+      "evidence": ["src/config_layer/crt_engine_v2.py:32"]
+    },
+    {
+      "path": "src/config_layer/config_builder.py",
+      "classification": "ACTIVE",
+      "role": "sole allowed CRTConfig factory for application code",
+      "evidence": ["src/config_layer/config_builder.py:55", "src/config_layer/config_builder.py:64"]
+    },
+    {
+      "path": "src/config_layer/market_router.py",
+      "classification": "ACTIVE",
+      "role": "instrument → base CRTConfig profile (FOREX/CRYPTO)",
+      "evidence": ["src/config_layer/market_router.py:49"]
+    },
+    {
+      "path": "src/engines/crt_engine.py",
+      "classification": "ACTIVE",
+      "role": "fusion scoring slot only — compute() → scoring_engine.compute_scores; NOT the state machine",
+      "evidence": ["src/engines/crt_engine.py:17", "src/core/engine_runner.py:25", "src/core/engine_runner.py:654"]
+    },
+    {
+      "path": "src/config_layer/crt_gaussian_scorer.py",
+      "classification": "ACTIVE",
+      "role": "heuristic Gaussian scorer used by backtest Phase-5 path / fusion adapters; not the SM",
+      "evidence": ["src/config_layer/crt_gaussian_scorer.py:25"]
+    },
+    {
+      "path": "src/features/crt_feature_builder.py",
+      "classification": "DEAD",
+      "role": "build_bitnet_features has zero production call sites; stale vs 38-dim schema if invoked",
+      "evidence": ["src/features/crt_feature_builder.py:8", "src/features/candle_math.py:14"]
+    },
+    {
+      "path": "src/strategies/s01_crt_wrapper.py",
+      "classification": "ACTIVE",
+      "role": "strategy orchestrator S1 adapter over engines.crt_engine.compute — sidecar, not spine SM",
+      "evidence": ["src/strategies/s01_crt_wrapper.py:44", "src/strategies/strategy_orchestrator.py:62"]
+    },
+    {
+      "path": "src/research/weekly_sweep/weekly_range.py",
+      "classification": "RESEARCH_ONLY",
+      "role": "reimplements local-sweep geometry against WEEKLY range; does not replace crt_engine_v2",
+      "evidence": ["src/research/weekly_sweep/weekly_range.py:5"]
+    },
+    {
+      "path": "src/runtime/backtest_v2.py",
+      "classification": "ACTIVE",
+      "role": "sole production runtime that constructs CRTEngine and calls process_candle",
+      "evidence": ["src/runtime/backtest_v2.py:1776", "src/runtime/backtest_v2.py:1948"]
+    },
+    {
+      "path": "src/runtime/live_engine_hook.py",
+      "classification": "ACTIVE",
+      "role": "live path uses EngineRunner + engines.crt_engine scoring; does NOT construct CRTEngine SM",
+      "evidence": ["src/runtime/live_engine_hook.py:20", "src/runtime/live_engine_hook.py:655"]
+    }
+  ],
+  "parallel_implementations": [
+    {
+      "id": "CRT-SM-V2",
+      "path": "src/config_layer/crt_engine_v2.py",
+      "classification": "ACTIVE",
+      "semantic_role": "deterministic 9-state opportunity state machine + TRADE_OPENED emission"
+    },
+    {
+      "id": "CRT-SCORE-SLOT",
+      "path": "src/engines/crt_engine.py",
+      "classification": "ACTIVE",
+      "semantic_role": "EngineRunner fusion component named 'crt' — scalar score from features only"
+    },
+    {
+      "id": "CRT-S01-WRAPPER",
+      "path": "src/strategies/s01_crt_wrapper.py",
+      "classification": "ACTIVE",
+      "semantic_role": "StrategyOrchestrator S1 adapter over CRT-SCORE-SLOT"
+    },
+    {
+      "id": "CRT-FEATURE-BUILDER",
+      "path": "src/features/crt_feature_builder.py",
+      "classification": "DEAD",
+      "semantic_role": "unused BitNet feature builder"
+    },
+    {
+      "id": "CRT-GAUSSIAN-SCORER",
+      "path": "src/config_layer/crt_gaussian_scorer.py",
+      "classification": "ACTIVE",
+      "semantic_role": "heuristic scorer; name collision with F-050 retest_depth semantics (defer Phase 2)"
+    },
+    {
+      "id": "CRT-SWEEP-TAXONOMY",
+      "path": "src/config_layer/crt_sweep_taxonomy.py",
+      "classification": "ACTIVE",
+      "semantic_role": "sweep classification helper for SM"
+    },
+    {
+      "id": "CRT-WEEKLY-RESEARCH",
+      "path": "src/research/weekly_sweep/",
+      "classification": "RESEARCH_ONLY",
+      "semantic_role": "weekly calendar sweep ontology; independent of live SM"
+    }
+  ],
+  "constructors_factories": [
+    {
+      "symbol": "CRTEngine.__init__",
+      "file": "src/config_layer/crt_engine_v2.py",
+      "line": 2136,
+      "requires": "CRTConfig",
+      "fail_if_missing_config": true
+    },
+    {
+      "symbol": "ConfigBuilder.build",
+      "file": "src/config_layer/config_builder.py",
+      "line": 64,
+      "role": "application factory for CRTConfig"
+    },
+    {
+      "symbol": "ConfigBuilder.from_existing",
+      "file": "src/config_layer/config_builder.py",
+      "line": 102,
+      "role": "replay/override factory"
+    },
+    {
+      "symbol": "market_router.get_crt_config",
+      "file": "src/config_layer/market_router.py",
+      "line": 49,
+      "role": "instrument profile base CRTConfig"
+    },
+    {
+      "symbol": "BacktestConfig.from_prod_config",
+      "file": "src/runtime/backtest_v2.py",
+      "line": 162,
+      "role": "loads prod + CRTConfig for backtest harness"
+    }
+  ],
+  "production_entry_points": [
+    {
+      "path": "src/runtime/backtest_v2.py",
+      "function": "BacktestRunner.run",
+      "constructs_crtengine": true,
+      "line_construct": 1776,
+      "line_process_candle": 1948,
+      "role": "canonical CRT SM production research path"
+    },
+    {
+      "path": "src/runtime/backtest_v2.py",
+      "function": "main",
+      "line": 2671,
+      "role": "CLI entry to BacktestRunner"
+    },
+    {
+      "path": "src/runtime/live_engine_hook.py",
+      "constructs_crtengine": false,
+      "uses": "EngineRunner + engines.crt_engine.compute",
+      "role": "live decision path does not drive the 9-state SM",
+      "boundary_note": "LIVE_PATH_SM_NOT_WIRED — record for later live-path audit; not Phase 1 blocker for SM uniqueness"
+    }
+  ],
+  "direct_callers_of_process_candle": [
+    {"file": "src/runtime/backtest_v2.py", "line": 1948, "class": "ACTIVE"},
+    {"file": "scripts/analysis/p1_sweep_memory_diag.py", "line": 99, "class": "RESEARCH_ONLY", "note": "monkeypatch"},
+    {"file": "scripts/analysis/p3a_zone_attribution_diag.py", "line": 96, "class": "RESEARCH_ONLY", "note": "monkeypatch"},
+    {"file": "scripts/analysis/p3c_zone_relax_diag.py", "line": 274, "class": "RESEARCH_ONLY", "note": "monkeypatch"}
+  ],
+  "direct_external_dependencies": [
+    {"module": "features.candle_math", "used_for": "Candle.body_size/wick_size/body_ratio", "evidence": "src/config_layer/crt_engine_v2.py:31"},
+    {"module": "features.feature_schema.CANONICAL_FEATURES", "used_for": "schema constants", "evidence": "src/config_layer/crt_engine_v2.py:29"},
+    {"module": "features.schema_validator.validate_features", "used_for": "cached_features soft schema check", "evidence": "src/config_layer/crt_engine_v2.py:30"},
+    {"module": "config_layer.crt_sweep_taxonomy.classify_sweep", "used_for": "sweep geometry class", "evidence": "src/config_layer/crt_engine_v2.py:32"},
+    {"module": "bitnet.bitnet_inference.bitnet_score", "used_for": "optional BitNet gate inside UltronRiskEngine when use_bitnet", "evidence": "src/config_layer/crt_engine_v2.py:20", "active_on_prod": false, "note": "use_bitnet=false on v2_multi_2026_04"},
+    {"module": "utils.sweep_trace_logger.SweepTraceLogger", "used_for": "optional sweep trace", "evidence": "src/config_layer/crt_engine_v2.py:33"},
+    {"module": "utils.integrity_events.emit_integrity_event", "used_for": "TTL/paradox/shadow advisory integrity events", "evidence": "src/config_layer/crt_engine_v2.py:34"},
+    {"module": "events.event_fabric", "used_for": "optional dual-write envelopes", "evidence": "src/config_layer/crt_engine_v2.py:42", "fail_open": true}
+  ],
+  "active_configuration_keys": {
+    "prod_section": "crt_engine",
+    "prod_section_keys_present": [
+      "atr_buffer_multiplier", "atr_min_displacement", "atr_period", "bitnet_main_threshold",
+      "breakout_disp_threshold", "conf_alpha", "conf_beta", "conf_floor", "conf_weights",
+      "confirmation_body_min", "ema_fast", "ema_slow", "exit_model", "expansion_age_warn_candles",
+      "extension_reset_fib", "max_displacement_strength", "max_expansion_age_candles",
+      "max_expansion_age_hours", "max_spread_pct", "max_sweep_age_candles", "news_blackout_minutes",
+      "pending_displacement_ttl_candles", "retrace_reset_pct", "score_decay_lambda", "score_threshold",
+      "session_windows", "shadow_advisory_only", "shadow_age_norm_candles", "shadow_age_penalty_lambda",
+      "sizing_bands", "sl_atr_buffer", "soft_conf_max_candles", "tier_1_threshold", "tier_2_threshold",
+      "tp1_atr_multiplier", "tp1_atr_multiplier_breakout", "tp1_atr_multiplier_liq_sweep",
+      "tp1_atr_multiplier_pullback", "tp1_atr_multiplier_reversal", "tp2_atr_multiplier",
+      "use_bitnet", "weak_link_weight"
+    ],
+    "params_section_keys_also_crt": [
+      "atr_multiplier_min", "body_ratio_min", "expansion_atr_min_distance",
+      "retest_atr_depth_fraction", "retest_depth_max"
+    ],
+    "crtconfig_fields_all": [
+      "body_ratio_min", "atr_multiplier_min", "retest_depth_max", "atr_period",
+      "atr_buffer_multiplier", "max_sweep_age_candles", "expansion_atr_min_distance",
+      "retest_atr_depth_fraction", "max_displacement_strength", "score_decay_lambda",
+      "score_threshold", "max_spread_pct", "atr_min_displacement", "confirmation_body_min",
+      "sl_atr_buffer", "tp1_atr_multiplier", "tp2_atr_multiplier", "exit_model",
+      "breakout_disp_threshold", "tp1_atr_multiplier_breakout", "tp1_atr_multiplier_pullback",
+      "tp1_atr_multiplier_liq_sweep", "tp1_atr_multiplier_reversal", "bitnet_main_threshold",
+      "use_bitnet", "session_windows", "allowed_sessions", "retrace_reset_pct",
+      "extension_reset_fib", "news_blackout_minutes", "conf_alpha", "conf_beta", "conf_weights",
+      "conf_floor", "weak_link_weight", "ema_fast", "ema_slow", "tier_1_threshold",
+      "tier_2_threshold", "soft_conf_max_candles", "pending_displacement_ttl_candles",
+      "max_expansion_age_candles", "max_expansion_age_hours", "expansion_age_warn_candles",
+      "shadow_age_penalty_lambda", "shadow_age_norm_candles", "shadow_advisory_only", "sizing_bands"
+    ],
+    "note": "Phase 5 will prove each key reaches a consumption site or is dead; Phase 1 only inventories"
+  },
+  "environment_overrides": [
+    {
+      "name": "TRUST_INTRABAR_TOUCH",
+      "file": "src/config_layer/crt_engine_v2.py",
+      "line": 2151,
+      "effect": "overrides exit_model for intrabar vs close-only exit triggers when set",
+      "precedence": "constructor arg > TRUST_INTRABAR_TOUCH env > config.exit_model > default intrabar_touch"
+    }
+  ],
+  "runtime_defaults_note": "CRTConfig dataclass fields carry defaults (src/config_layer/crt_engine_v2.py:310+). Production path is supposed to inject via ConfigBuilder + prod JSON; Phase 5 will detect shadowing.",
+  "state_variables_engine_state": [
+    "current_state", "active_range", "sweep_event", "risk_score", "active_trade", "direction",
+    "atr", "displacement_candle", "retest_candle", "retest_candle_index", "current_candle_index",
+    "transition_log", "event_log", "evaluating_soft_conf", "soft_conf_candles", "cached_features",
+    "ema_fast_val", "ema_slow_val", "htf_remaining_candles", "_displacement_entry_idx",
+    "pending_displacement_candle", "pending_displacement_dir", "pending_displacement_ttl",
+    "pending_displacement_source_htf", "pending_displacement_formed_idx",
+    "pending_displacement_age_at_reset", "pending_displacement_reason_created",
+    "_came_from_shadow", "_expansion_entry_idx", "_expansion_entry_ts", "_shadow_htf_alignment"
+  ],
+  "state_variables_evidence": "src/config_layer/crt_engine_v2.py:250",
+  "cached_features": {
+    "set_at": "StateMachine.try_expansion_to_retest when retest accepted",
+    "line": 1384,
+    "keys_when_full": ["retest_depth", "body_ratio", "disp_strength", "retest_index", "session", "double_sweep"],
+    "semantic_note": "retest_depth here is cross-candle displacement retrace (F-050); not FM-021 same-candle pipeline retest_depth",
+    "cleared_on": "reset_to_range",
+    "clear_line": 1515
+  },
+  "emitted_actions": [
+    {"action": "RESET", "line": 2295},
+    {"action": "TRADE_* (exit results)", "line": 2327, "note": "TRADE_STOPPED / TRADE_TP1 / TRADE_TP2 etc from executor"},
+    {"action": "SHADOW_SWEEP_DETECTED", "line": 2354},
+    {"action": "SWEEP_DETECTED", "line": 2367},
+    {"action": "SHADOW_LEAK", "line": 2424},
+    {"action": "SHADOW_EXPANSION_CONFIRMED", "line": 2430},
+    {"action": "DISPLACEMENT_CONFIRMED", "line": 2459},
+    {"action": "SWEEP_EXPIRED", "line": 2491},
+    {"action": "EXPANSION_CONFIRMED", "line": 2495},
+    {"action": "RETEST_CONFIRMED", "line": 2505},
+    {"action": "EXPANSION_EXPIRED", "line": 2583},
+    {"action": "EXPANSION_TTL_RESET", "line": 2589},
+    {"action": "FILTER_REJECTED", "lines": [2673, 2679, 2707]},
+    {"action": "SHADOW_ADVISORY_BLOCK", "line": 2727},
+    {"action": "TRADE_OPENED", "line": 2753, "event_log_line": 2740},
+    {"action": "CONFIRMATION_FAILED", "line": 2816},
+    {"action": "EVALUATING_SOFT_CONF", "line": 2822}
+  ],
+  "event_log_kinds_min": [
+    "TRADE_OPENED", "FILTER_REJECTED", "CONFIRMATION_FAILED", "STATE_TRANSITION",
+    "SWEEP", "RESET", "TRADE_STOPPED", "TRADE_TP1", "TRADE_TP2"
+  ],
+  "candidate_payload_fields": {
+    "process_candle_action_on_TRADE_OPENED": {
+      "action": "TRADE_OPENED",
+      "trade_id": "string",
+      "risk_pct": "float",
+      "live_metrics": "dict from get_live_metrics()",
+      "state_after": "CRTState.name",
+      "candle": "timestamp",
+      "evidence": "src/config_layer/crt_engine_v2.py:2753"
+    },
+    "event_log_TRADE_OPENED_metadata": {
+      "id": "trade.id",
+      "session_name": "str",
+      "S_score": "float effective soft-conf score",
+      "sl": "float",
+      "tp1": "float",
+      "tp2": "float",
+      "risk_pct": "float",
+      "evidence": "src/config_layer/crt_engine_v2.py:2743"
+    },
+    "Trade_dataclass_fields": [
+      "id", "direction", "entry_price", "sl_price", "tp1_price", "tp2_price",
+      "risk_pct", "runner_active", "opened_at", "closed_at", "pnl", "partial_pnl",
+      "status", "cached_features", "open_candle_index"
+    ],
+    "Trade_evidence": "src/config_layer/crt_engine_v2.py:225"
+  },
+  "reset_paths": [
+    {
+      "symbol": "StateMachine.reset_to_range",
+      "line": 1439,
+      "role": "canonical reset to RANGE; clears trade/sweep/displacement/cached_features/soft_conf/shadow fields"
+    },
+    {
+      "symbol": "ResetLogic",
+      "line": 2074,
+      "role": "mid-episode geometric/extension resets invoked from process_candle"
+    },
+    {
+      "triggers_documented_in_process_candle": [
+        "gap/external reset via backtest GapDetector then sm.reset_to_range",
+        "FILTER_REJECTED zone/session",
+        "CONFIRMATION_FAILED soft conf timeout",
+        "SHADOW_ADVISORY_BLOCK",
+        "EXPANSION_TTL → EXPIRED → reset",
+        "sweep age / retrace / extension via ResetLogic",
+        "illegal transitions logged then constrained by VALID_TRANSITIONS"
+      ]
+    }
+  ],
+  "persistence_state_restoration": {
+    "in_process_persistence": "EngineState held only in CRTEngine.state for process lifetime",
+    "disk_persistence": "none in CRTEngine itself",
+    "export_apis": [
+      {"symbol": "dump_event_log", "line": 2219},
+      {"symbol": "dump_telemetry", "line": 2223},
+      {"symbol": "get_live_metrics", "line": 2830}
+    ],
+    "note": "No CRTEngine checkpoint/restore for live resume found in Phase 1 surface scan"
+  },
+  "internal_subcomponents": [
+    {"class": "RangeDetector", "line": 981},
+    {"class": "StateMachine", "line": 1088},
+    {"class": "UltronRiskEngine", "line": 1528, "role": "CRT-internal soft-conf / score / news / spread / BitNet gates"},
+    {"class": "ExecutionEngine", "line": 1848, "role": "build_trade / open / update exits"},
+    {"class": "ResetLogic", "line": 2074},
+    {"class": "EventLogger", "line": 444},
+    {"class": "TelemetryCollector", "line": 517}
+  ],
+  "valid_transitions": {
+    "RANGE": ["SWEEP", "SHADOW_PENDING"],
+    "SHADOW_PENDING": ["SWEEP", "RANGE"],
+    "SWEEP": ["DISPLACEMENT", "EXPANSION", "RANGE"],
+    "DISPLACEMENT": ["EXPANSION", "RANGE"],
+    "EXPANSION": ["RETEST", "EXPIRED", "RANGE"],
+    "EXPIRED": ["RANGE"],
+    "RETEST": ["EXECUTION", "RANGE"],
+    "EXECUTION": ["RESOLUTION"],
+    "RESOLUTION": ["RANGE"]
+  },
+  "tests_existing": [
+    "tests/test_crt_state_invariants.py",
+    "tests/test_crt_session_filter.py",
+    "tests/test_crt_fixes.py",
+    "tests/test_breakout_disp_threshold.py",
+    "tests/test_disp_strength_filter.py",
+    "tests/test_active_models_registry.py",
+    "tests/test_btcusdt_crt_v3_handover.py"
+  ],
+  "open_items_frozen": [
+    {
+      "id": "OI-ER-001",
+      "title": "13-candidate EngineRunner admission provenance",
+      "status": "FROZEN",
+      "resume_when": "CRT_CLOSURE_STATUS=CLOSED or explicit re-authorization"
+    },
+    {
+      "id": "OI-F048-E2E",
+      "title": "F-048 end-to-end claim reconciliation / possible split",
+      "status": "FROZEN",
+      "resume_when": "after OI-ER-001"
+    },
+    {
+      "id": "OI-GATE6",
+      "title": "Gate 6 remediation",
+      "status": "FROZEN",
+      "resume_when": "after CRT closed + OI-ER-001"
+    },
+    {
+      "id": "OI-ARCH-MS",
+      "title": "MarketSnapshot / StructuredOpportunity architecture",
+      "status": "FROZEN",
+      "resume_when": "after CRT closed"
+    },
+    {
+      "id": "OI-LIVE-SM",
+      "title": "Live path does not wire CRTEngine 9-state SM",
+      "status": "RECORDED",
+      "severity_note": "Not an SM dual-authority defect; live uses fusion score slot. Full live/SM parity is a later audit.",
+      "evidence": ["src/runtime/live_engine_hook.py:20", "src/runtime/backtest_v2.py:1776"]
+    }
+  ],
+  "phase1_status": "PASS",
+  "blockers": [],
+  "next_phase": "Phase 2 — CRT input and formula contract (requires user authorization)"
+}

@@ -1,0 +1,113 @@
+{
+  "picked_trade_id": "CRT-0003",
+  "direction": "LONG",
+  "entry": 2934.39,
+  "sl": 2933.209857142857,
+  "tp1": 2936.1602142857146,
+  "tp2": 2936.750285714286,
+  "entry_fill": 2935.026262719673,
+  "opened_at": "2025-02-25 15:45:00",
+  "closed_at": "2025-02-25T16:15:00",
+  "trades_candle_idx": 18092,
+  "corpus_bar_idx_birth": 18091,
+  "offset_trades_candle_idx_minus_bar_idx": 1,
+  "event_meta": {
+    "event_id": "CRT-0003",
+    "price": 2934.39,
+    "sl": 2933.209857142857,
+    "tp1": 2936.1602142857146,
+    "tp2": 2936.750285714286,
+    "candle_index_event": 18029,
+    "S_score": 0.5649299316624503,
+    "session_name": "NEWYORK"
+  },
+  "offset_note": "trades.candle_idx = corpus.bar_idx + 1; events.candle_index + 62 = corpus.bar_idx (for CRT-0003: 18029+62=18091)",
+  "range": {
+    "start_ts": "2025-02-25 15:45:00",
+    "end_ts": "2025-02-25 16:30:00",
+    "start_bar_idx": 18091,
+    "end_bar_idx": 18094,
+    "n_bars": 4,
+    "inclusive": true
+  },
+  "specimen_bars": [
+    {
+      "bar_idx": 18091,
+      "timestamp": "2025-02-25 15:45:00",
+      "open": 2934.39,
+      "high": 2938.05,
+      "low": 2933.07,
+      "close": 2937.51,
+      "volume": 3384,
+      "sl": 2933.209857142857,
+      "entry": 2934.39,
+      "predicate_sl_lt_entry_lt_close": true
+    },
+    {
+      "bar_idx": 18092,
+      "timestamp": "2025-02-25 16:00:00",
+      "open": 2937.52,
+      "high": 2940.51,
+      "low": 2937.35,
+      "close": 2939.86,
+      "volume": 2813,
+      "sl": 2933.209857142857,
+      "entry": 2934.39,
+      "predicate_sl_lt_entry_lt_close": true
+    },
+    {
+      "bar_idx": 18093,
+      "timestamp": "2025-02-25 16:15:00",
+      "open": 2939.86,
+      "high": 2942.87,
+      "low": 2939.85,
+      "close": 2942.77,
+      "volume": 2672,
+      "sl": 2933.209857142857,
+      "entry": 2934.39,
+      "predicate_sl_lt_entry_lt_close": true
+    },
+    {
+      "bar_idx": 18094,
+      "timestamp": "2025-02-25 16:30:00",
+      "open": 2942.77,
+      "high": 2944.8,
+      "low": 2938.56,
+      "close": 2938.83,
+      "volume": 2905,
+      "sl": 2933.209857142857,
+      "entry": 2934.39,
+      "predicate_sl_lt_entry_lt_close": true
+    }
+  ],
+  "n_matching_birth_bars_across_3_long_trades": 1,
+  "n_corpus_bars_global_with_close_gt_entry_for_this_geometry": 28477,
+  "interpretation": "LONG geometry from Run1 trades.csv / TRADE_OPENED; predicate applied to corpus bar close; range = contiguous bars from opportunity birth while close > entry (hence sl < entry < close)",
+  "sources": {
+    "trades": "D:\\Tradelatest\\results\\run_20260916_225925_XAUUSD\\XAUUSD_trades.csv",
+    "events": "D:\\Tradelatest\\results\\run_20260916_225925_XAUUSD\\XAUUSD_events.jsonl",
+    "summary": "D:\\Tradelatest\\results\\run_20260916_225925_XAUUSD\\XAUUSD_summary.json",
+    "corpus": "D:\\Tradelatest\\data\\mt5\\XAUUSD_M15.csv",
+    "run_folder": "D:\\Tradelatest\\results\\run_20260916_225925_XAUUSD",
+    "run_id_content": "run_20260916_172925",
+    "config_version": "v2_htfcrt_2026_08"
+  },
+  "all_long_trades_brief": [
+    {
+      "trade_id": "CRT-0001",
+      "birth_match": false,
+      "note": "birth close 2606.32 < entry 2614.46; later contiguous range exists but not from birth"
+    },
+    {
+      "trade_id": "CRT-0002",
+      "birth_match": false,
+      "note": "birth close 2559.94 < entry 2565.48; later contiguous range exists but not from birth"
+    },
+    {
+      "trade_id": "CRT-0003",
+      "birth_match": true,
+      "note": "picked"
+    }
+  ],
+  "short_geometry": "NONE in Run1 approved trades (all 3 LONG); no SHORT to report for sl<entry predicate"
+}

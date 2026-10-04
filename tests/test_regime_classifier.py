@@ -125,10 +125,13 @@ def test_exception_returns_ranging():
 
 
 def test_missing_features_defaults_gracefully():
-    """Empty features dict → defaults to 0.5 for all → RANGING."""
+    """Empty features dict used to default to 0.5. It now names the missing keys."""
+    from config_layer.strict_config import ConfigKeyMissingError
     clf = RegimeClassifier(atr_high_threshold=0.8, trend_threshold=0.7)
-    result = clf.classify({})
-    assert result == REGIME_RANGING
+    with pytest.raises(ConfigKeyMissingError) as ei:
+        clf.classify({})
+    assert "atr" in ei.value.missing
+    assert "trend_score" in ei.value.missing
 
 
 def test_current_regime_property():

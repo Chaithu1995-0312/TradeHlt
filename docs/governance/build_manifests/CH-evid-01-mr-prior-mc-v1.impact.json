@@ -1,0 +1,50 @@
+{
+  "change_id": "CH-evid-01-mr-prior-mc-v1",
+  "date_utc": "2026-08-24",
+  "objective": "Authorize P-EVID-01 with a named population: freeze SEM-030 'mother-range sparse inside signal + FM-054 trend-bias magnitude/time prior' in sealed MC-MRPRIOR-XAUUSD-M15-V1, then single-pass holdout only. The sparse independent signal is the causal SEM-026 mother inside-close entry set (not every-bar x side, the F-093 grain that collapsed), each entry resolved to its clean_labels path label; the prior is the SEM-028 agree rule on FM-054. Arm S (y_mfe_r) and Arm T (y_time_to_mfe) pre-registered, independent. Same chronologic split as MC-MRANGE/MC-ASYM. F-086 stride holdout remains unspent. No retune. No production. No G001 (economic_claims_allowed false). P-GOAL-04 not opened.",
+  "change_classes": [
+    "SEMANTIC_REGISTRY_CHANGE",
+    "DOCUMENTATION_ONLY"
+  ],
+  "change_class_rationale": "New research-only SEM-030 node + sealed MC instance + isolated evidence runner under execution_behaviours. Not live-spine. Not IDENTITY_STORE. Frozen runtime sections untouched (additive semantic_registry only). DOCUMENTATION_ONLY covers the spec/findings/session docs companions.",
+  "affected_files": [
+    "configs/formulas/market_ontology.yaml",
+    "configs/research/measurement_contracts/instances/MC-MRPRIOR-XAUUSD-M15-V1.json",
+    "docs/governance/build_manifests/CH-evid-01-mr-prior-mc-v1.impact.json",
+    "docs/governance/research_family_registry.json",
+    "docs/research/mother_range_prior_object.md",
+    "docs/current-findings.md",
+    "docs/topics/research-measurement-contract.md",
+    "docs/analysis/readme.md",
+    "docs/analysis/mother-range-prior-holdout-2026-08-24.md",
+    "CLAUDE.md",
+    "assistant_project.md",
+    ".grok/PENDING.md",
+    "src/research/evidence/mother_range_prior.py",
+    "tests/research/test_mother_range_prior.py",
+    "tests/test_measurement_contract.py",
+    "tests/test_research_family_registry.py",
+    "tests/test_semantic_registry.py"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": ["SEM-030"],
+  "required_checks_ack": [
+    "tests/test_semantic_registry.py",
+    "tests/test_feature_lineage.py",
+    "tests/test_semantic_grounding.py",
+    "tests/test_construction_protocol.py",
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/research/test_mother_range_prior.py",
+    "tests/test_measurement_contract.py",
+    "tests/test_research_family_registry.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert SEM-030, MC instance, measurer, family row, floor test, docs. SEM-026/SEM-027/SEM-028/SEM-029 untouched. Identity L5 freeze and F-086 strategy unspent. No production config touched.",
+  "authority_granted": "User 2026-08-24 (P-EVID-01): authorize the sparse mother-range inside signal + Parquet magnitude prior as a new MC-*. Named population is the SEM-026 inside-close entries.",
+  "authority_NOT_granted": "No production, no G001, no economic_claims_allowed on this contract, no F-086 stride spend, no SEM-026/028/029 PRIMARY retune, no P-GOAL-04 open, no live overlay, no side picker, no TradeLib, no re-run/retune of the F-093 every-bar grain.",
+  "production_behavior_changed": "NO"
+}

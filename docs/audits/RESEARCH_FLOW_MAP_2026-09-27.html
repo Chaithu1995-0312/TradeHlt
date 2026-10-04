@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Research Flow Map - 2026-09-27</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Segoe UI,Helvetica,Arial,sans-serif;background:#f4f6f9;color:#1d2733;font-size:13px}
+header{padding:14px 22px 8px;background:#1d2733;color:#fff}
+header h1{margin:0;font-size:19px}
+header p{margin:4px 0 0;font-size:12px;color:#c9d3de}
+.wrap{padding:12px 18px 18px}
+.top{display:flex;gap:14px;align-items:stretch;margin-bottom:10px}
+.legend,.counts,.reduce{background:#fff;border:1px solid #d5dce4;border-radius:8px;padding:8px 12px}
+.legend span{display:inline-block;margin:2px 10px 2px 0}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:4px;border:1px solid #0003}
+.counts{flex:1}
+.counts b{color:#b3261e}
+.reduce{flex:1.1}
+.reduce table{border-collapse:collapse;font-size:12px}
+.reduce td{padding:1px 8px 1px 0}
+.flow{display:grid;grid-template-columns:repeat(8,1fr);gap:10px;position:relative}
+.stage{background:#fff;border:1px solid #d5dce4;border-radius:8px;padding:6px;min-height:430px;position:relative}
+.stage h2{margin:0 0 2px;font-size:12.5px;text-transform:uppercase;letter-spacing:.4px;color:#34495e}
+.stage .sub{font-size:11px;color:#6b7a8a;margin-bottom:6px}
+.stage:not(:last-child)::after{content:"";position:absolute;right:-10px;top:50%;border:6px solid transparent;border-left:9px solid #7f8c9a;transform:translateY(-50%)}
+.node{border-radius:6px;padding:5px 6px;margin:5px 0;cursor:pointer;border:1px solid #0002;font-size:11.5px;line-height:1.25;transition:transform .08s}
+.node:hover{transform:scale(1.03);box-shadow:0 2px 6px #0003}
+.node .k{display:block;font-size:10px;opacity:.8}
+.node.risk{outline:2px solid #b3261e;outline-offset:1px}
+.A{background:#1f6fb2;color:#fff}.T{background:#2e9e5b;color:#fff}.S{background:#f0a020;color:#1d2733}.E{background:#d9dee4;color:#1d2733}.U{background:#9b59b6;color:#fff}.X{background:#fff;color:#1d2733;border:1px dashed #7f8c9a}
+.base{margin-top:10px;background:#e8eef6;border:2px solid #1f6fb2;border-radius:8px;padding:8px 12px}
+.base h3{margin:0 0 6px;font-size:13px;color:#1f6fb2}
+.base .row{display:flex;gap:8px;flex-wrap:wrap}
+.base .node{margin:0;flex:1;min-width:140px}
+.exec{margin-top:10px;display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #d5dce4;border-radius:8px;padding:8px 12px}
+.exec .box{background:#34495e;color:#fff;border-radius:6px;padding:6px 10px;font-size:12px}
+.exec .arrow{font-size:22px;color:#34495e}
+.exec .no{color:#b3261e;font-weight:600}
+.risks{margin-top:10px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.risk-card{background:#fff5f4;border:1px solid #e4a9a4;border-left:5px solid #b3261e;border-radius:6px;padding:7px 9px;font-size:12px;cursor:pointer}
+.risk-card b{color:#b3261e}
+#panel{position:fixed;right:16px;bottom:16px;width:380px;max-height:60vh;overflow:auto;background:#fff;border:1px solid #1d2733;border-radius:8px;box-shadow:0 6px 18px #0004;padding:10px 12px;display:none;font-size:12.5px}
+#panel h4{margin:0 0 6px;font-size:14px}
+#panel .tag{display:inline-block;padding:1px 6px;border-radius:4px;background:#1d2733;color:#fff;font-size:10.5px;margin-right:4px}
+#panel .close{float:right;cursor:pointer;color:#6b7a8a}
+footer{padding:6px 22px 16px;font-size:11px;color:#6b7a8a}
+a{color:#1f6fb2}
+</style>
+</head>
+<body>
+<header>
+<h1>Tradelatest research flow map (L0 &rarr; R5), 2026-09-27</h1>
+<p>Static, read-only census view at HEAD 09ffcb1. Click any node or risk card for details. Evidence tags: RUNTIME, STATIC, DOC, UNKNOWN, ESTIMATE. Works offline; no external resources.</p>
+</header>
+<div class="wrap">
+<div class="top">
+ <div class="legend"><b>Role</b><br>
+  <span><i class="sw A"></i>Authority</span><span><i class="sw T"></i>Twin</span><span><i class="sw S"></i>Shadow / competing Authority</span><br>
+  <span><i class="sw E"></i>Experiment</span><span><i class="sw U"></i>Unknown</span><span><i class="sw X"></i>group / data</span><br>
+  <span style="outline:2px solid #b3261e;padding:0 4px">red outline</span> = risk callout
+ </div>
+ <div class="counts"><b style="color:#1d2733">Key counts</b> (STATIC unless noted)<br>
+  L0: <b>53</b> OHLC loaders, <b>31</b> bypass every shared loader or validator; 3 compete with CandleLoader.<br>
+  L1: <b>17+</b> independent ATR implementations (SMA, Wilder, median, range-proxy) + inline TR in 26 files.<br>
+  L9: 4 Authorities, 3 Twins, <b>8 Shadows</b>, 10 Experiments, 2 Unknown walk/MFE producers.<br>
+  R4: 10 permutation, 8 BH-FDR, 4 bootstrap implementations.<br>
+  Expected (Twin+Experiment) <b style="color:#2e9e5b">59</b> vs drift (Shadow+competing Authority) <b>31</b>, Unknown 6.
+ </div>
+ <div class="reduce"><b>Reduction estimate</b> (ESTIMATE; if every gap were closed)<br>
+  <table>
+  <tr><td>Baseline</td><td>527 files, 141,274 code LOC (+31 __init__)</td></tr>
+  <tr><td>Whole files retirable</td><td>20 - 93 files, 5.5k - 28.1k LOC</td></tr>
+  <tr><td>Duplicate logic (files stay)</td><td>~1.0k - 2.1k LOC (net)</td></tr>
+  <tr><td><b>Total</b></td><td><b>~6.6k - 30.2k LOC (4.7% - 21.4%)</b></td></tr>
+  </table>
+  Docs: <a href="RESEARCH_REDUCTION_ESTIMATE_2026-09-27.md">reduction estimate</a> &middot; <a href="RESEARCH_FUNCTION_CENSUS_2026-09-27.md">function census</a> &middot; <a href="RESEARCH_AUTHORITY_CENSUS_2026-09-27.md">authority census</a>
+ </div>
+</div>
+
+<div class="flow" id="flow"></div>
+
+<div class="base"><h3>R0 Research Substrate (implicit layer; CONFIRMED, partly bypassed) - the base every stage builds on</h3><div class="row" id="base"></div></div>
+
+<div class="exec">
+ <div class="box">All research stages (src/research, scripts/research, scripts/analysis)</div>
+ <div class="arrow">&rarr;</div>
+ <div class="box">Execution modules: runtime.backtest_v2 (fan-in 90), config_layer.crt_engine_v2 (75), features.feature_pipeline (84)</div>
+ <div style="margin-left:10px">Research depends on execution. <span class="no">Execution never imports research</span> (no src/research module reachable from runtime/live/inout/engines/strategies/core/execution/portfolio). STATIC. Layering duplicates such as <code>features/calendar_periods</code> are documented as intentional.</div>
+</div>
+
+<div class="risks" id="risks"></div>
+</div>
+<div id="panel"><span class="close" onclick="hide()">close [x]</span><div id="pc"></div></div>
+<footer>Sources: docs/audits/RESEARCH_FUNCTION_CENSUS_2026-09-27.md, RESEARCH_AUTHORITY_CENSUS_2026-09-27.md, RESEARCH_REDUCTION_ESTIMATE_2026-09-27.md. Role assignments are audit judgement against the definitions in the authority census.</footer>
+<script>
+var STAGES=[
+{t:"1. OHLC",s:"L0 loaders / CSV / resample / HTF / session",n:[
+["X","Corpora: data/*_M15.csv, data/mt5/*","CSV corpora; clock declared in configs/data_provenance/ohlcv_clock_registry.json","data/*_M15.csv (2024-05-22..2026-05-21), data/mt5/XAUUSD_M15.csv (47,275 bars)","STATIC"],
+["A","CandleLoader","Candle stream; clock gate require_reviewed_clock; validate_dataset only in BacktestRunner (F-039)","src/runtime/backtest_v2.py:896-953","STATIC+RUNTIME (refuses unreviewed BNBUSDT)"],
+["S","3 competing research loaders","mc_kit.bars.load_bars (4 importers), probes.corpus.load_corpus (19), model_runners.substrate.load_ohlcv_csv (16); none use the clock gate","src/research/mc_kit/bars.py, probes/corpus.py, model_runners/substrate.py","STATIC (competing Authority)","","competing Authority (drift)"],
+["T","14 Twin loaders","Thin wrappers over CandleLoader / mc_kit (runner, visual_crt, mother_range, sujan_crt, phase_b/d, qualify_regime_*, ...)","see authority census A.2 rows 5-18","STATIC"],
+["S","13 Shadow loaders","Own parsers feeding labels / replay / qualification / certification","bnbusdt_trade_anatomy, rr_l3_label_generation, opportunity_scanner, build_bar_matrix, sl_tp_comparator, timing_reconstructor, ...","STATIC"],
+["E","18 Experiment + 4 Unknown loaders","Study-local readers with no downstream consumer","purge_delay_scan, zone_x_o4_gap_study, smc_visual_verification, ...","STATIC"],
+["A","HTFBuilder (count id)","HTF clock id per LTF candle; htf_clock_basis default count; no config sets calendar","src/runtime/backtest_v2.py:1058; BacktestConfig :271","STATIC; DOC F-075"],
+["S","research.resample (calendar)","Calendar-true HTF candles; competing HTF authority","src/research/resample.py","STATIC","","competing Authority (drift)"],
+["T","HTF twins","calendar_periods (documented duplicate), build_htf_id_timeline (byte-equivalent), trace_sweep_geometry.build_htf_ids","features/calendar_periods.py, features/crt_state_resolver.py","STATIC/DOC"],
+["S","4 M1->M15 corpus builders","build_m15_unified, prepare_data, convert_binance_m1_to_m15, misc/resample_m1_to_m15","scripts/data/*, scripts/misc/resample_m1_to_m15.py","STATIC"],
+["A","session_classifier + broker_clock","Session labels; research shadows use raw ts.hour with disagreeing windows (~7)","features/session_classifier.py, features/broker_clock.py","STATIC"]]},
+{t:"2. Features",s:"L1 ATR / EMA / RSI / body",n:[
+["A","feature_pipeline","atr_14_raw (SMA of TR), EMA ewm(adjust=False), SMA-RSI, session","src/features/feature_pipeline.py (l.614, l.595)","STATIC"],
+["A","research.indicators.atr","Research ATR (SMA); reused by sujan_crt, visual_crt.controls, structural_event_source","src/research/indicators.py","STATIC"],
+["S","17+ ATR versions","Wilder (zone_x_o4), median TR (corpus_gate), range proxy (btcusdt replay), min_periods variants, 5 high_acceptance copies (one identical)","see function census hotspot #2","STATIC"],
+["S","EMA / RSI shadows","gaussian_rr_scatter.compute_ema, momentum_continuation_bnbusdt (EMA+RSI)","scripts/research/*","STATIC"],
+["T","Feature certification oracles","oracle_true_range, feature_dag_* , feature_38_lineage_census","scripts/analysis/*certification*.py","STATIC"],
+["A","candle_math.body_ratio","Body ratio; ~26 inline body/range copies (mostly probes/certification)","src/features/candle_math.py","STATIC"]]},
+{t:"3. States",s:"R2 / L3 CRT, resolver, oracle, HTF, regime",n:[
+["A","crt_engine_v2 StateMachine","Execution CRT state (try_displacement_to_expansion)","src/config_layer/crt_engine_v2.py","STATIC"],
+["S","CRTStateResolver","Declarative state; 88.16% agreement, EXPANSION recall 10.77% (F-069); feeds build_bar_matrix -> oracle labels","src/features/crt_state_resolver.py (~31 importers)","DOC F-069 + STATIC (competing Authority)","risk","competing Authority (drift)"],
+["A","parent_crt (H4 calendar)","Parent-TF bias gate, ON by default (F-075)","config_layer/htf_state.py, runtime/parent_crt_feed.py","DOC"],
+["E","Sujan 4H / mother_range / secondlow","Declared independent objects (F-077); not drift","src/research/sujan_crt, mother_range, secondlow_v1","DOC F-077"],
+["T","Reconstruction twins","crt_range_rebuild_probe, crt_state_confusion_matrix, trace_sweep_geometry, retest_divergence_probe; visual/weekly re-expressions","scripts/research/*","STATIC"],
+["S","btcusdt_crt_v3_replay","Independent state replay","tools/btcusdt_crt_v3_replay.py","STATIC"],
+["S","~14 sweep detectors","Independent sweep logic besides engine/resolver/parent","see function census hotspot #4","STATIC"],
+["X","Regime observers","interpreters/regime_observer (own ATR), research.regime_conditioning","src/interpreters, src/research","STATIC"]]},
+{t:"4. Decisions",s:"R6 model_runners, L4-L7",n:[
+["A","research.model_runners","Substrate + 15 adapters that call production engines only","src/research/model_runners/","STATIC"],
+["A","ExecutionPlannerV1_2 / gates","Planner + risk gates (live-only parts, F-010)","src/config_layer/execution_planner.py","STATIC/DOC"],
+["X","RETEST_REPLAY telemetry","Selected/rejected retest records written by the backtest","results/**/_run/*/*_crt_telemetry.jsonl","RUNTIME"],
+["U","XAUUSD rejected records","All 20 rejected RETEST_REPLAY rows have entry=0, disp_low=0, disp_high=0","results/research/execution_planner_replay_xauusd_postfix/_run/run_20260913_183517_XAUUSD","RUNTIME","risk"]]},
+{t:"5. Trades / Outcome walks",s:"L9",n:[
+["A","forward_walk","research.contracts.Outcome; SL-first; GOVERNING; fan-in 35","src/research/measurement/forward_walk.py","STATIC+RUNTIME+DOC"],
+["A","multi_tp_walk","OracleOutcome; tie_break explicit (production default); labeler records both","src/research/oracle/multi_tp_walk.py","STATIC"],
+["A","engine _intrabar_trigger_price + backtest ledger","TradeRecord; effective SL-first","crt_engine_v2.py, backtest_v2.py:_resolve_exit","STATIC"],
+["T","reference_walker","Independent oracle twin; 300/300 agreement","src/research/oracle/reference_walker.py","RUNTIME"],
+["T","trade_replay_validator, exit_analysis","Replay validation; basis-declared excursions","scripts/misc/, src/research/oracle/exit_analysis.py","STATIC"],
+["S","sl_tp_comparator.simulate_exit (TP2-first)","Ad-hoc exit dict; opposite tie-break to engine; only consumer execution_planner_replay","src/analytics/sl_tp_comparator.py:149-205","STATIC+RUNTIME","risk"],
+["S","7 other Shadows","opportunity_scanner._simulate (training feed), timing_reconstructor, xauusd_excel trace, strategy_backtest, run_xau_metals, xauusd_gaussian_m4_qualify, gate0 _bars_to_mfe","authority census A.1 #9-#15","STATIC"],
+["E","10 Experiments + 2 Unknown","p3b, l003h, zone_x_o4, manual_backtest, erp_synth, structural_asymmetry, ... ; certify._update_path, _m8_cert_probe","authority census A.1 #16-#27","STATIC"]]},
+{t:"6. Measurement / Costs",s:"R3",n:[
+["A","research.costs","Cost models (fan-in 40)","src/research/costs.py","STATIC"],
+["A","measurement.metrics / EdgeAggregator","EdgeReport aggregates of Outcome (20 consumers)","src/research/measurement/metrics.py","STATIC"],
+["S","PF / win-rate copies","7 PF and 7 win-rate reimplementations","cross_sectional, probes/scoreboard, visual_crt/measure, consensus_sweep, ...","STATIC"],
+["S","execution_planner_replay","2x2 selection vs SL/TP attribution using comparator dicts","scripts/research/execution_planner_replay.py","STATIC+RUNTIME","risk"]]},
+{t:"7. Attribution / Qualification",s:"R4",n:[
+["A","research.qualification","Permutation / BH / gates (fan-in 24)","src/research/qualification.py","STATIC"],
+["S","Stats reimplementations","9 permutation, 10 BH, 3 bootstrap, 3 Wilson outside the authority","context_attribution, zone_label_audit, oracle/scan, rc003, ...","STATIC"],
+["X","Findings F-002 / F-010","Cite docs/analysis/execution-planner-replay-bnbusdt-2026-06-03.md (comparator output); F-021 marks +0.145R STALE","docs/current-findings.md","DOC","risk"]]},
+{t:"8. Validation",s:"R5",n:[
+["T","Parity / certification probes","crt_parity_*, *_certification, validate_oracle_harness","scripts/research, scripts/analysis","STATIC"],
+["A","validate_dataset","Dataset pre-flight; only backtest_v2 runs it (F-039)","src/data_ingestion/dataset_integrity.py","DOC"],
+["X","Clock registry review","BNBUSDT_M15 UNREVIEWED (LOOKS_UTC, low confidence); XAUUSD mt5 REVIEWED","configs/data_provenance/ohlcv_clock_registry.json","RUNTIME","risk"]]}
+];
+var BASE=[
+["A","provenance","Run/artifact provenance helpers; fan-in 67","src/research/provenance.py","STATIC"],
+["A","contracts","Signal, Outcome contracts; fan-in 47","src/research/contracts.py","STATIC"],
+["A","costs","Cost models; fan-in 40","src/research/costs.py","STATIC"],
+["A","forward_walk","Governing exit kernel; fan-in 35; DOC 'do not invent a fourth simulator'","src/research/measurement/forward_walk.py","STATIC+DOC"],
+["A","qualification","Qualification gates; fan-in 24 (+20 EdgeAggregator users)","src/research/qualification.py","STATIC"],
+["S","Bypass","31/53 loaders and 8 Shadow walks bypass R0; label loaders skip the clock gate","see authority census s.B","STATIC"]];
+var RISKS=[
+["TP2-first comparator","sl_tp_comparator.simulate_exit (TP2-first) feeds execution_planner_replay, whose BNBUSDT report is evidence for F-002 / F-010. SL-first replay: 1.3% of 1,534 setups flip; expectancy +0.117R -> +0.091R; XAUUSD -0.082R; replay cell D +0.172R -> -0.040R; selection effect 0.185 -> 0.398.","RUNTIME + DOC"],
+["Label loaders skip clock check","bnbusdt_trade_anatomy.load_candles (TN/Envelope clean labels via build_clean_labels_tn_env) and rr_l3_label_generation._load_candles parse naive timestamps without require_reviewed_clock.","STATIC"],
+["BNBUSDT clock UNREVIEWED","data/BNBUSDT_M15.csv: clock registry user_reviewed=false (detector LOOKS_UTC, low confidence). Gated loaders refuse it; ungated label loaders would accept it.","RUNTIME"],
+["XAUUSD entry=0 artifacts","All 20 rejected RETEST_REPLAY records (xauusd_postfix) carry entry=0. Stored XAUUSD replay cells C/D = -1.0 and selection effect 1.0 / 2.0 are artifacts.","RUNTIME (calendar file: inferred)"]];
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;")}
+var ROLE={A:"Authority",T:"Twin",S:"Shadow",E:"Experiment",U:"Unknown",X:"Group / data"};
+function mk(n){var d=document.createElement("div");d.className="node "+n[0]+(n[5]?" risk":"");d.innerHTML=esc(n[1])+"<span class='k'>"+(n[6]||ROLE[n[0]])+"</span>";d.title=n[2];d.onclick=function(){show(n[1],[["Role",n[6]||ROLE[n[0]]],["Object / detail",n[2]],["Key files",n[3]],["Evidence",n[4]]])};return d}
+function show(t,rows){var h="<h4>"+esc(t)+"</h4>";rows.forEach(function(r){h+="<p><span class='tag'>"+esc(r[0])+"</span>"+esc(r[1])+"</p>"});document.getElementById("pc").innerHTML=h;document.getElementById("panel").style.display="block"}
+function hide(){document.getElementById("panel").style.display="none"}
+var F=document.getElementById("flow");
+STAGES.forEach(function(st){var s=document.createElement("div");s.className="stage";s.innerHTML="<h2>"+esc(st.t)+"</h2><div class='sub'>"+esc(st.s)+"</div>";st.n.forEach(function(n){s.appendChild(mk(n))});F.appendChild(s)});
+var B=document.getElementById("base");BASE.forEach(function(n){B.appendChild(mk(n))});
+var RK=document.getElementById("risks");RISKS.forEach(function(r){var d=document.createElement("div");d.className="risk-card";d.innerHTML="<b>RISK: "+esc(r[0])+"</b><br>"+esc(r[1]);d.onclick=function(){show(r[0],[["Detail",r[1]],["Evidence",r[2]]])};RK.appendChild(d)});
+</script>
+</body>
+</html>

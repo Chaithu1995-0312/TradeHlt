@@ -1,0 +1,150 @@
+{
+  "finding_id": "L-003J",
+  "version": "L-003J.v1",
+  "run_id": "l003j_joint_outcome_state_ontology_20260907_194325",
+  "generated_at_utc": "2026-09-07T19:43:25.602796Z",
+  "git_commit_sha": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+  "branch": "feature/trace-parquet-duckdb-query",
+  "status": "ONTOLOGY_LOCKED",
+  "status_detail": "measurement-object framing only Ã¢â‚¬â€ NOT registry promotion",
+  "doctrine": "Observation before intervention. Promote JOINT_OUTCOME_STATE as primary measured object in docs framing; measure-before-promote for schema columns.",
+  "primary_observable": {
+    "id": "JOINT_OUTCOME_STATE",
+    "alias": "Y_joint",
+    "formula": "Y_joint = (Y_scanner, Y_oracle) = (scanner_outcome, oracle_outcome)",
+    "components": [
+      "scanner_outcome",
+      "oracle_outcome"
+    ],
+    "components_are_rivals": false,
+    "components_are_noisy_versions_of_each_other": false
+  },
+  "claim_board": [
+    {
+      "claim": "Y_scanner = Y_oracle",
+      "status": "FALSIFIED"
+    },
+    {
+      "claim": "Label mismatch means error",
+      "status": "FALSIFIED"
+    },
+    {
+      "claim": "JOINT_STATE_SL_TP stable population",
+      "status": "OBSERVED"
+    },
+    {
+      "claim": "Entry-time predicts JOINT",
+      "status": "FALSIFIED",
+      "source": "L-003G"
+    },
+    {
+      "claim": "Path geometry associates with JOINT",
+      "status": "OBSERVED"
+    },
+    {
+      "claim": "Trail activation causes JOINT",
+      "status": "NOT_DEMONSTRATED"
+    },
+    {
+      "claim": "Trail activation associated with JOINT",
+      "status": "OBSERVED"
+    },
+    {
+      "claim": "Trail exit ordering associated with JOINT",
+      "status": "OBSERVED"
+    },
+    {
+      "claim": "Scanner exit_bar earlier than oracle on path",
+      "status": "OBSERVED"
+    },
+    {
+      "claim": "Why that happened",
+      "status": "NOT_ESTABLISHED"
+    }
+  ],
+  "ontology_rules": [
+    "Primary observable: JOINT_OUTCOME_STATE / Y_joint",
+    "Components: scanner_outcome, oracle_outcome (not rivals; not noisy versions of each other)",
+    "Named populations are states, not errors",
+    "LABEL_MATCH / LABEL_MISMATCH = terminal label equality only; prefer state membership over who-is-right",
+    "EARLY_STOP_CANDIDATE remains research alias for JOINT_STATE_SL_TP only",
+    "Forbidden without new evidence: trail causality; detector stopped early beyond exit_bar inequality; T_MAE as FAE; drives/causes for peak duration"
+  ],
+  "named_states_examples": [
+    "BOTH_SL",
+    "JOINT_STATE_SL_TP",
+    "BOTH_TP",
+    "SCANNER_SL_ORACLE_TIMEOUT",
+    "BOTH_TIMEOUT"
+  ],
+  "terminology": {
+    "parity": "L-003-TERM.v1",
+    "EARLY_STOP_CANDIDATE": {
+      "role": "SAFE_ALIAS",
+      "maps_to": "JOINT_STATE_SL_TP",
+      "note": "Research alias only Ã¢â‚¬â€ NOT observation that detector stopped early"
+    },
+    "LABEL_MATCH": "scanner_outcome == oracle_outcome (terminal label equality only)",
+    "LABEL_MISMATCH": "scanner_outcome != oracle_outcome"
+  },
+  "promotion": {
+    "ontology_framing_locked": true,
+    "registry_column_promoted": false,
+    "EARLY_STOP_CANDIDATE_promoted_to_ontology_as_fact": false,
+    "EARLY_STOP_CANDIDATE_promoted_to_registry": false,
+    "JOINT_OUTCOME_STATE_registry_column": false,
+    "replace_scanner_with_oracle": false,
+    "economic_claims_allowed": false,
+    "attribution_unblocked": false,
+    "l003_frozen": false,
+    "causal_language_upgrade": false,
+    "src_edits": false,
+    "new_measurements": false,
+    "git_commit": false
+  },
+  "attribution_blockers_remain": [
+    "ATTRIBUTION_BLOCKER_IDENTITY",
+    "ATTRIBUTION_BLOCKER_OUTCOME_SEMANTICS"
+  ],
+  "artifacts": [
+    "docs/governance/ANALYTICS_JOINT_OUTCOME_STATE_ONTOLOGY_L003J.md",
+    "docs/governance/analytics_joint_outcome_state_ontology_l003j-2026-09-07.json",
+    "docs/governance/analytics_joint_outcome_state_ontology_l003j_impact-2026-09-07.json"
+  ],
+  "pointers_updated": [
+    "docs/governance/ANALYTICS_JOINT_OUTCOME_STATES_L003F.md",
+    "docs/governance/ANALYTICS_L003_TERMINOLOGY_PARITY_AUDIT.md",
+    "docs/design/context-finding-odp/ANALYTICS_LINEAGE_SEMANTICS_DECISION.md",
+    "docs/governance/ANALYTICS_OUTCOME_DISAGREEMENT_POPULATION_L003C.md",
+    "docs/governance/ANALYTICS_OUTCOME_PATH_MECHANICS_L003D.md",
+    "docs/governance/ANALYTICS_OUTCOME_ADVERSE_TIMING_L003E.md",
+    "docs/governance/ANALYTICS_TRAIL_EXIT_TRANSITIONS_L003H.md",
+    "docs/governance/ANALYTICS_TRAIL_BASELINE_INVERSION_L003I.md",
+    "docs/governance/ANALYTICS_JOINT_OUTCOME_FORMULAS_L003K.md"
+  ],
+  "pointers": [
+    "docs/governance/ANALYTICS_JOINT_STATE_SPACE_L003L.md"
+  ],
+  "successor_l003l": {
+    "finding_id": "L-003L",
+    "path": "docs/governance/ANALYTICS_JOINT_STATE_SPACE_L003L.md",
+    "run_id": "l003l_joint_state_space_measurement_objects_20260907_200006",
+    "role": "Omega_joint freeze + four-layer freeze + MeasurementObject identity registry"
+  },
+  "l003m_noun_parity_pointer": {
+    "finding_id": "L-003M",
+    "version": "L-003M.v1",
+    "run_id": "l003m_noun_parity_20260907_201028",
+    "status": "NOUN_PARITY_LOCKED",
+    "path_md": "docs/governance/ANALYTICS_NOUN_PARITY_L003M.md",
+    "path_json": "docs/governance/analytics_noun_parity_l003m-2026-09-07.json"
+  },
+  "package_freeze": {
+    "status": "L003_PACKAGE_FROZEN",
+    "version": "L-003-FREEZE.v1",
+    "run_id": "l003_package_freeze_20260907_201945",
+    "generated_at_utc": "2026-09-07T20:19:45.454186Z",
+    "prohibit_further_l003_doctrine_except_errata": true,
+    "successor_episode": "docs/research/JOINT_STATE_EXPLAINABILITY.md"
+  }
+}

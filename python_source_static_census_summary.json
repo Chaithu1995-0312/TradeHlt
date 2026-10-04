@@ -1,0 +1,18 @@
+{
+  "files_with_config_reads": 126,
+  "files_with_entry_point_markers": 207,
+  "files_with_file_io": 208,
+  "files_with_network_usage": 9,
+  "files_with_subprocess_usage": 43,
+  "files_with_test_references": 306,
+  "files_with_top_level_execution": 240,
+  "parse_errors": 0,
+  "parse_ok": 508,
+  "schema": "python_source_static_census.v1",
+  "source_file_count": 508,
+  "source_roots": [
+    "src",
+    "scripts"
+  ],
+  "test_file_count": 259
+}

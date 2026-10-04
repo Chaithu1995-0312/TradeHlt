@@ -1,4 +1,8 @@
 # trade_logger.py — persists TradeRecord to JSONL log
+#
+# Integration rule: all writes MUST also route through core.collector so there
+# is a single authoritative audit trail in logs/collector.jsonl.
+# TradeLogger retains its own trade_journal.jsonl for outcome-level queries.
 import json
 import logging
 from pathlib import Path
@@ -10,14 +14,64 @@ log = logging.getLogger(__name__)
 
 _DEFAULT_LOG = Path("logs/trade_journal.jsonl")
 
+try:
+    import core.collector as _collector_mod
+    _COLLECTOR_AVAILABLE = True
+except Exception:
+    _collector_mod = None  # type: ignore[assignment]
+    _COLLECTOR_AVAILABLE = False
+
+# Threshold above which trade_journal.jsonl is flagged as systemically corrupted.
+# Canonical default for unit-test / programmatic construction ONLY — the production path reads
+# trade_journal.max_corruption_ratio via TradeLogger.from_prod_config (§6.5 A1). This module is
+# the single home for the threshold; replay.replay_memory_engine reads the same config key.
+MAX_CORRUPTION_RATIO: float = 0.10
+
+try:
+    from src.utils.integrity_events import emit_integrity_event  # noqa: F401
+except Exception:  # pragma: no cover
+    def emit_integrity_event(*_a, **_kw):  # type: ignore[no-redef]
+        return None
+
 
 class TradeLogger:
-    """Appends TradeRecord entries to logs/trade_journal.jsonl."""
+    """
+    Appends TradeRecord entries to logs/trade_journal.jsonl.
 
-    def __init__(self, log_path: Optional[str] = None):
+    Also routes each record through core.collector so the authoritative audit
+    trail in logs/collector.jsonl stays complete (integration rule §6.7).
+    """
+
+    @classmethod
+    def from_prod_config(cls, log_path: Optional[str] = None) -> "TradeLogger":
+        """Production constructor — fail-fast. Strict-reads ``trade_journal.max_corruption_ratio``
+        (§6.5 A1). The import is lazy so importing this module stays config-dependency-free.
+
+        This is the single source of truth for the corruption threshold:
+        ``replay.replay_memory_engine`` reads the SAME key rather than keeping its own copy
+        (§6.2 rule 5 — one truth, one home)."""
+        from config_layer.production_config import get_prod_section
+        section = get_prod_section("trade_journal")
+        if not isinstance(section, dict) or "max_corruption_ratio" not in section:
+            raise KeyError(
+                "Required config key 'max_corruption_ratio' missing from 'trade_journal' "
+                "section. Add it to the production config (config-first doctrine: no silent "
+                "defaults)."
+            )
+        return cls(log_path=log_path, max_corruption_ratio=float(section["max_corruption_ratio"]))
+
+    def __init__(
+        self,
+        log_path: Optional[str] = None,
+        # Two-tier: this module-constant default is the TEST / programmatic seam; the live path
+        # supplies the value via from_prod_config (fail-fast, no silent config default).
+        max_corruption_ratio: float = MAX_CORRUPTION_RATIO,
+    ):
         self._path = Path(log_path) if log_path else _DEFAULT_LOG
+        self._max_corruption_ratio = float(max_corruption_ratio)
 
     def log(self, record: TradeRecord) -> None:
+        # Primary write — outcome-level JSONL (trade_journal.jsonl)
         self._path.parent.mkdir(parents=True, exist_ok=True)
         try:
             with open(self._path, "a", encoding="utf-8") as f:
@@ -25,17 +79,70 @@ class TradeLogger:
         except Exception as exc:
             log.warning("TradeLogger: write failed: %s", exc)
 
+        # Secondary write — route through Collector for unified audit trail.
+        # Maps TradeRecord fields to Collector.log() dict format.
+        if _COLLECTOR_AVAILABLE and _collector_mod is not None:
+            try:
+                _collector_record = {
+                    "features": {"id": record.trade_id, "symbol": record.symbol},
+                    "engines": {},
+                    "decision": record.engine_action or record.override_action or "UNKNOWN",
+                    "pnl": record.pnl,
+                    "fusion": {},
+                    "kind": "trade_outcome",
+                    "result": record.result,
+                    "regime": record.regime,
+                    "rr": record.rr,
+                }
+                _collector_mod.Collector().log(_collector_record)
+            except Exception as exc:
+                log.debug("TradeLogger: Collector routing failed (ignored): %s", exc)
+
     def load_all(self) -> list:
-        """Load all TradeRecord dicts from the log file."""
+        """Load all TradeRecord dicts from the log file.
+
+        Malformed lines no longer fail silently — they emit a JSONL_CORRUPTION
+        integrity event and (if the file is >10% malformed) a
+        JSONL_CORRUPTION_THRESHOLD_EXCEEDED event. The return shape is
+        unchanged: a list of dicts for the valid lines.
+        """
         if not self._path.exists():
             return []
-        records = []
+        records: list = []
+        malformed = 0
+        valid = 0
         with open(self._path, encoding="utf-8") as f:
-            for line in f:
+            for lineno, line in enumerate(f, 1):
                 line = line.strip()
-                if line:
-                    try:
-                        records.append(json.loads(line))
-                    except json.JSONDecodeError:
-                        pass
+                if not line:
+                    continue
+                try:
+                    records.append(json.loads(line))
+                    valid += 1
+                except json.JSONDecodeError as exc:
+                    malformed += 1
+                    emit_integrity_event(
+                        "JSONL_CORRUPTION",
+                        "WARNING",
+                        "src.journal.trade_logger",
+                        {
+                            "path":        str(self._path),
+                            "line_number": lineno,
+                            "raw_preview": line[:160],
+                            "error":       str(exc),
+                        },
+                    )
+        total = malformed + valid
+        if total and (malformed / total) > self._max_corruption_ratio:
+            emit_integrity_event(
+                "JSONL_CORRUPTION_THRESHOLD_EXCEEDED",
+                "ERROR",
+                "src.journal.trade_logger",
+                {
+                    "path":             str(self._path),
+                    "malformed_lines":  malformed,
+                    "valid_lines":      valid,
+                    "corruption_ratio": malformed / total,
+                },
+            )
         return records

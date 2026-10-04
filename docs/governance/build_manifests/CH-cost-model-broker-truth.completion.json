@@ -1,0 +1,139 @@
+{
+  "change_id": "CH-cost-model-broker-truth",
+  "date_utc": "2026-08-19",
+  "declared_files": [
+    "src/research/costs.py",
+    "src/research/config.py",
+    "src/research/measurement/forward_walk.py",
+    "src/research/measurement/metrics.py",
+    "src/research/provenance.py",
+    "configs/formulas/market_ontology.yaml",
+    "configs/research/measurement_contracts/metals_mt5.v1.json",
+    "configs/production/v2_htfcrt_2026_08.json",
+    "tests/test_component_cost_model.py",
+    "tests/test_cost_model_parity.py",
+    "tests/test_forward_walk_adverse_fill.py",
+    "tests/test_measurement_profile_calibration.py",
+    "tests/test_measurement_contract.py",
+    "docs/current-findings.md",
+    "docs/topics/research-measurement-contract.md",
+    "CLAUDE.md",
+    "docs/governance/build_manifests/CH-cost-model-broker-truth.impact.json",
+    "assistant_project.md"
+  ],
+  "checks_executed": [
+    {
+      "check": "tests/test_component_cost_model.py",
+      "result": "PASS",
+      "detail": "13 passed"
+    },
+    {
+      "check": "tests/test_cost_model_parity.py",
+      "result": "PASS",
+      "detail": "27 passed — all 23 parsable research configs byte-identical config_sha256"
+    },
+    {
+      "check": "tests/test_forward_walk_adverse_fill.py",
+      "result": "PASS",
+      "detail": "13 passed"
+    },
+    {
+      "check": "tests/test_measurement_profile_calibration.py",
+      "result": "PASS",
+      "detail": "10 passed"
+    },
+    {
+      "check": "tests/test_measurement_contract.py",
+      "result": "PASS",
+      "detail": "16 passed"
+    },
+    {
+      "check": "tests/test_semantic_registry.py",
+      "result": "PASS",
+      "detail": "validate_semantic_registry() == [] with SEM-015/016"
+    },
+    {
+      "check": "tests/test_feature_lineage.py",
+      "result": "PASS"
+    },
+    {
+      "check": "tests/test_formula_registry.py",
+      "result": "PASS"
+    },
+    {
+      "check": "tests/test_semantic_grounding.py",
+      "result": "PASS"
+    },
+    {
+      "check": "tests/test_construction_protocol.py",
+      "result": "PASS"
+    },
+    {
+      "check": "tests/test_current_findings.py",
+      "result": "PASS",
+      "detail": "F-082 + CLAUDE.md index row agree"
+    },
+    {
+      "check": "tests/test_topic_docs.py",
+      "result": "PASS"
+    },
+    {
+      "check": "tests/test_doc_citations.py",
+      "result": "PASS"
+    },
+    {
+      "check": "aggregate",
+      "result": "PASS",
+      "detail": "171 passed across the new floors + every declared required check"
+    },
+    {
+      "check": "tests/test_config_reachability.py",
+      "result": "PASS"
+    },
+    {
+      "check": "tests/test_reachability_golden.py",
+      "result": "PRE_EXISTING_FAIL",
+      "detail": "2 failures. Verified pre-existing: reproduced identically with this change's config keys removed."
+    },
+    {
+      "check": "tests/test_active_models_registry.py",
+      "result": "PRE_EXISTING_FAIL",
+      "detail": "1 failure (rr_model how_path_ref). Verified pre-existing: reproduced with config keys removed; rr_model untouched by this change."
+    },
+    {
+      "check": "tests/test_feature_layer_freeze.py + test_vector_fixture_freshness.py + test_feature_math_lint.py + test_ohlcv_corpus_freeze.py",
+      "result": "PRE_EXISTING_FAIL",
+      "detail": "6 failures. Verified pre-existing: reproduced identically after reverting market_ontology.yaml to its pre-change state. Together with the 3 above these are the 9 untriaged GREEN_FLOOR failures F-071 recorded."
+    },
+    {
+      "check": "PARITY GATE (manual, load-bearing)",
+      "result": "PASS",
+      "detail": "forward_walk default path bit-identical over 47,275-bar XAUUSD corpus probe (sha256 7019b32e…, 970 signals/649 SL_HIT, before==after); all 29 research configs config_sha256 unchanged; SCHEMA_HASH f52bf5d3… and CANONICAL_FEATURE_DIM=48 unchanged; active config_hash 7de09f62… unchanged; flat CostModel arithmetic byte-identical."
+    }
+  ],
+  "repo_state_hash": "84fff5176f57+a55e171c3579",
+  "completion_status": "WORK_COMPLETE_GATE_BLOCKED_BY_SHARED_DIRTY_TREE",
+  "production_behavior_changed": "NO",
+  "parity_evidence": {
+    "forward_walk_default_sha256": "7019b32e7aa6c60f556617dbed10ae04ef47ecf7fa5a6c82583b53eba11b7564",
+    "research_config_sha_diffs": 0,
+    "schema_hash": "f52bf5d3f2ae6ddb75e8a35e9c323e07",
+    "canonical_feature_dim": 48,
+    "active_config_hash": "7de09f6233b712f0136fc1bf1d2a51322b5b7c65395c75b035d0f96db689d613"
+  },
+  "deviations_from_impact_manifest": [
+    "src/research/measurement/metrics.py was planned as 'pass-through only' but required two real edits: (1) exit-awareness — it called net_rr POSITIONALLY, so a ComponentCostModel would have defaulted every outcome to exit_kind='SL_HIT' and over-charged take-profit exits; (2) EdgeReport.round_trip_bps has no single value for a component model (absolute price units), so it now reports the REALISED mean effective bps over the book instead of a constant or a sentinel. The flat model path is unchanged in both cases (feature-detected via inspect.signature).",
+    "truth_standard_block output is NOT byte-identical: the default block gains one explicit key, fill_model='perfect_stop_fill'. Kept deliberately — the silent perfect-fill assumption is precisely the defect this change surfaces. Verified safe: the provenance block is written into report JSON but is not hashed (config_sha256 covers only ResearchConfig._canonical, which is unchanged).",
+    "tests/test_measurement_contract.py::test_costs_are_derived_not_a_shared_constant was broadened from a literal 'derived_per_instrument' prefix to accept 'component_measured' as well. The test's stated intent ('cost must be per-instrument, not a flat bps') is preserved and still rejects any flat/shared constant; a measured per-instrument broker model is strictly stronger evidence than the volatility proxy it supersedes.",
+    "Ontology node ids are SEM-015/SEM-016 (execution_behaviours), not the EXF-00x placeholders named in the first draft of the impact manifest; the manifest was corrected before approval. SEM-014 was left free because a pending implementation plan already names it."
+  ],
+  "residual_open_items": [
+    "UNK-COST-01 (non-blocking): change_contracts.json still registers no change class for the research measurement harness.",
+    "UNK-COST-02 (non-blocking): the volatility-proxy cost formula is retained alongside the measured decomposition pending user adjudication.",
+    "Reported, NOT fixed (each needs separate authorization): UltronRiskGate cost tax declared but not activated; pip_size default 0.0001 is the FX pip, wrong for XAUUSD; capital_management.pip_value_per_lot omits XAUUSD; execution_planner.default_account_balance (10000.0 USD) vs capital_management.total_capital_inr (100000 INR) is an unreconciled TruthConflict.",
+    "OBSERVED: configs/production/v2_htfcrt_2026_08.json — the ACTIVE production config — is UNTRACKED in git (F-071 class recurrence). Not remediated here; committing it is a governance decision.",
+    "No re-measurement performed, per explicit user instruction ('build it, measure nothing yet')."
+  ],
+  "completion_status_explanation": "All declared work is complete and every declared check that this change can affect is green (171 passed). The mechanical validate-completion gate returns DENIED for a reason OUTSIDE this change's control: _changed_files() scopes to the entire `git status --porcelain`, so it counts 132 undeclared governed paths that belong to pre-existing working-tree modifications and to concurrently-running sessions (this repo routinely runs many Claude sessions at once; two docs/implementation_plan/*.md files were observed changing during this session's window and were deliberately left alone). Those files were NOT added to declared_files: declaring paths this change never touched would launder another session's work through this manifest and defeat the gate's purpose. The 18 declared files were verified by modification time against this session's working window. Resolving this needs either a clean tree or a validator scoped to a declared path set — a governance decision, not a code change.",
+  "session_log_note": "tests/test_session_log.py::test_session_log_entry_count_is_bounded fails at 81 entries against a cap of 30. PRE-EXISTING (80 before this session's entry). The documented remedy (scripts/maintenance/rotate_session_log.py) rewrites a file other sessions are actively appending to, so it was NOT run unilaterally; flagged for the user instead."
+}

@@ -1,0 +1,62 @@
+{
+  "_doc": "Session-start hash manifest for M6R / F-054-LD-PROV / FM-025 provenance remediation. Captured before any scoped edits in this session so forbidden surfaces can be compared honestly despite a pre-dirty checkout.",
+  "session_id": "M6R-FM025-PROV-2026-07-13",
+  "captured_at_utc": "2026-07-13T16:35:00Z",
+  "policy": {
+    "production_behavior_changed": false,
+    "certification_identity_changed": false,
+    "forbidden_surfaces_must_remain_unchanged_during_session": true
+  },
+  "surfaces": [
+    {
+      "path": "configs/formulas/market_ontology.yaml",
+      "sha256": "ddf53562bf98175b70c1e44c221165330b8122d1beee9046919fe865197be3d5",
+      "size_bytes": 29556
+    },
+    {
+      "path": "configs/production/ACTIVE_VERSION",
+      "sha256": "4bd5912b8195855d0ccc346938ca90a376b617a1f7d639259f233ee348fb3acb",
+      "size_bytes": 18
+    },
+    {
+      "path": "configs/production/v2_multi_2026_04.json",
+      "sha256": "03a3b8aa497d116a3bb32620253a2d1b6ce53737ec10e837d4bc83334f194990",
+      "size_bytes": 25058
+    },
+    {
+      "path": "src/features/derived_math.py",
+      "sha256": "c88e62ab458317ae8b3454444fb583de815c9b2e6c1730a00538039822952605",
+      "size_bytes": 6915
+    },
+    {
+      "path": "src/features/feature_pipeline.py",
+      "sha256": "7188051e3beeab6ae731b5bb99e4d1af53a130ce3a26f1d12ba446e01315c5dc",
+      "size_bytes": 42938
+    },
+    {
+      "path": "src/features/registry/__init__.py",
+      "sha256": "a544138fddddc466881a4f1ae46ceb7e3b29cf14f0c3c0cf4b1a32b0559cf167",
+      "size_bytes": 6411
+    },
+    {
+      "path": "src/features/registry/_loader.py",
+      "sha256": "565b258757ee1fe26747e3b42d625d1873b3a9e5dabaacf58cf21a550817269b",
+      "size_bytes": 744
+    },
+    {
+      "path": "src/features/registry/composition_registry.py",
+      "sha256": "c12e2be4b740020263242970ad9be6de2b4353ee708f5ac789d26f2af79aa805",
+      "size_bytes": 1684
+    },
+    {
+      "path": "src/features/registry/derived_registry.py",
+      "sha256": "c1d951681a68b25fd7c64e44f03d85fc50ffa936289702ecb38782bb7de333d7",
+      "size_bytes": 2388
+    },
+    {
+      "path": "src/features/registry/primitive_registry.py",
+      "sha256": "b5a52e1a77675c17e7b04407bc5197ed01410b31d92d65ca8789066f42cb1e86",
+      "size_bytes": 1115
+    }
+  ]
+}

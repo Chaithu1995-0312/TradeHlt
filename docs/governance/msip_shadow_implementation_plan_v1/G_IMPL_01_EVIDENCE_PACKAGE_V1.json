@@ -1,0 +1,81 @@
+{
+  "schema_id": "G_IMPL_01_EVIDENCE_PACKAGE_V1",
+  "generated_at_utc": "2026-07-14T12:50:00Z",
+  "TASK_CLASS": "OBSERVATION_ONLY",
+  "G-IMPL-01": "OPEN_EXECUTED_NARROW_SHADOW",
+  "IMPLEMENTATION_AUTHORIZED": "YES — NARROW SHADOW IMPLEMENTATION ONLY",
+  "implementation_complete": true,
+  "shadow_promoted": false,
+  "crt_migration_authorized": false,
+  "production_cutover_authorized": false,
+  "REQUIRED_INVARIANT": "SHADOW_OFF == CURRENT AUTHORITATIVE BEHAVIOR",
+  "invariant_status": "HELD",
+  "invariant_evidence": [
+    "shadow package never imports/calls StateMachine.try_* (tests/test_msip_shadow_isolation_imports.py)",
+    "build_market_state pure; CRT path objects unchanged (tests/test_msip_shadow_neutrality_vs_crt.py)",
+    "shadow_flags forced false on every vector",
+    "no production config / ACTIVE_VERSION writes",
+    "msip_shadow section absent from production configs; experimental config only for shadow CLI"
+  ],
+  "code_delivered": {
+    "package": "src/msip/",
+    "modules": [
+      "__init__.py",
+      "market_state_vector.py",
+      "interpretation_config.py",
+      "shadow_emitter.py",
+      "disagreement.py",
+      "isolation.py"
+    ],
+    "scripts": [
+      "scripts/analysis/run_msip_shadow.py",
+      "scripts/analysis/run_crt_local_math_parity_audit.py"
+    ],
+    "tests": [
+      "tests/test_msip_shadow_schema_validation.py",
+      "tests/test_msip_shadow_what_how_separation.py",
+      "tests/test_msip_shadow_neutrality_vs_crt.py",
+      "tests/test_msip_shadow_determinism.py",
+      "tests/test_msip_shadow_crt_phase_not_identity.py",
+      "tests/test_msip_shadow_isolation_imports.py",
+      "tests/test_msip_shadow_failure_modes.py",
+      "tests/test_msip_shadow_integration_pipeline.py"
+    ],
+    "pytest_result": "22 passed"
+  },
+  "shadow_evidence_runs": {
+    "population": "Phase-1 XAUUSD M15 data/mt5/XAUUSD_M15.csv sha256=4d73f5ce… first 800 bars → 722 enriched after pipeline finalize",
+    "run_a": "results/msip_shadow/g_impl01_shadow_a/",
+    "run_b": "results/msip_shadow/g_impl01_shadow_b/",
+    "COV-01": 1.0,
+    "DET-01": "PASS (byte-identical market_state.jsonl a==b; payload_sha256_chain match)",
+    "PROV-01": "PASS (status COMPLETE on all emitted bars; required provenance keys present)",
+    "CMP-01": "N/A (CRT co-run observation disabled in default batch; crt_phase_observation.observed=false)",
+    "DIS-01": "taxonomy emitter present; lifecycle/label classes optional"
+  },
+  "parity_audit": {
+    "artifact": "docs/governance/msip_shadow_design_v1/CRT_LOCAL_MATH_PARITY_AUDIT_RESULT_V1.json",
+    "body_ratio": "PASS (CRT vs candle_math max_err=0)",
+    "wick_size": "PASS (exact)",
+    "atr": "TRANSFORM_CANDIDATE_OR_FAIL — not registered; max|pipe - crt_abs/close|≈0.0028",
+    "ema_fast_ema_slow": "TRANSFORM_OR_MISMATCH — CRT(2,5) ≠ pipeline spans",
+    "migration_authorized": false
+  },
+  "gate_evaluation": {
+    "G-SHADOW-01": {
+      "status": "PASSED",
+      "scope": "declared population = Phase-1 XAUUSD 800-bar prefix / 722 enriched bars under experimental msip_shadow_v1",
+      "note": "PASS is observation quality only — not promotion of shadow to trading authority"
+    },
+    "G-PARITY-01": {
+      "status": "NOT_PASSED",
+      "detail": "PARTIAL_TRANSFORM_REGISTRY_INCOMPLETE — body/wick PASS; ATR/EMA not registered transforms",
+      "blocks": "deprecating CRT-local market math / CRT input migration"
+    },
+    "G-MIG-01": {
+      "status": "CLOSED"
+    }
+  },
+  "forbidden_scope_respected": true,
+  "stop_boundary": "REACHED — STOP for owner review of G-SHADOW-01 PASS + G-PARITY-01 NOT_PASSED; no further gate advancement without owner decision"
+}

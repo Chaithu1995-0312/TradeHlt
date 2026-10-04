@@ -1,0 +1,64 @@
+{
+  "change_id": "FC1-D-VOLREGIME-CAUSAL",
+  "phase": "FC-1",
+  "title": "volatility_regime global rank \u2192 causal regime semantic",
+  "status": "IMPLEMENTED",
+  "implemented_at": "2026-07-11",
+  "implementation_change_id": "CH-fc1d-volregime-causal",
+  "selected_implementation": {
+    "production_bind": "volatility_regime_rolling_causal",
+    "window_N": 200,
+    "tercile_edges": [
+      0.33,
+      0.66
+    ],
+    "adjudication": "docs/governance/volatility_regime_semantic_adjudication_fc05-2026-07-10.md",
+    "verdict": "SEPARATE_LOCAL_VOLATILITY_CONTEXT_FEATURE",
+    "semantic": "local ATR percentile tercile context \u2014 NOT latent Regime Detection",
+    "legacy_global": "volatility_regime_global_batch only (research/legacy)",
+    "window_N_note": "N=200 CONFIRMED structural 2026-07-11 (audit A7) \u2014 criteria + revision trigger in docs/governance/volatility_regime_semantic_adjudication_fc05-2026-07-10.md Addendum; changing N = new identity version, never a knob sweep"
+  },
+  "affected_feature_ids": [
+    "FEAT-VOLATILITY_REGIME"
+  ],
+  "legacy_semantics": {
+    "formula": "atr_14.rank(pct=True) GLOBAL over full DataFrame; terciles 0/1/2",
+    "env_escape": "TRUST_VOLREGIME_CAUSAL=expanding|rolling"
+  },
+  "new_semantics": {
+    "rule": "one causal production path; no future rows; no env dual authority",
+    "candidate_implementations": [
+      "expanding percentile",
+      "rolling window percentile"
+    ],
+    "selection": "adjudicate intended regime meaning in FC-1 design note before coding"
+  },
+  "reason": "PASS-A TARGET_D GLOBAL_FIT_DEPENDENCE; prefix mismatch ~43%",
+  "evidence": [
+    "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json",
+    "src/features/feature_pipeline.py compute_volatility_regime"
+  ],
+  "expected_population_impact": "regime labels will re-partition; any strategy blocking on regime shifts",
+  "required_tests": [
+    "prefix invariance",
+    "future-tail mutation",
+    "batch == prefix under declared causal rule"
+  ],
+  "required_mutants": [
+    "global-fit regime mutant",
+    "future-row regime mutation"
+  ],
+  "affected_consumers": [
+    "FeaturePipeline vector",
+    "s05_grid / strategies using volatility_regime (if any)"
+  ],
+  "affected_artifacts": [
+    "models conditioned on regime labels may need retrain"
+  ],
+  "migration_retraining_required": true,
+  "rollback_path": "restore global rank under LEGACY freeze for shadow only",
+  "build_manifests": [
+    "docs/governance/build_manifests/CH-fc1d-volregime-causal.impact.json",
+    "docs/governance/build_manifests/CH-fc1d-volregime-causal.completion.json"
+  ]
+}

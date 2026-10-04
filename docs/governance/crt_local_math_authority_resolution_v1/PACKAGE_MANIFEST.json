@@ -1,0 +1,36 @@
+{
+  "package": "crt_local_math_authority_resolution_v1",
+  "task_class": "OBSERVATION_ONLY",
+  "implementation_authorized": false,
+  "migration_authorized": false,
+  "G-PARITY-01": "PARTIAL",
+  "generated_at_utc": "2026-07-14T11:24:56.183802+00:00",
+  "files": [
+    {
+      "path": "CRT_LOCAL_MATH_AUTHORITY_PROBE_V1.json",
+      "sha256": "39dc06c47ceb46ffca4eeb3b9ae1b44fd08e5285aafc2d13c925ab02463862bd",
+      "bytes": 1840
+    },
+    {
+      "path": "CRT_LOCAL_MATH_AUTHORITY_RESOLUTION_V1.json",
+      "sha256": "e311e508a0c55dce0bcf3099a451ad7b81b65feb5610f199b161c617b53b4227",
+      "bytes": 10824
+    },
+    {
+      "path": "CRT_LOCAL_MATH_AUTHORITY_RESOLUTION_V1.md",
+      "sha256": "85477fed22d4f16c9f17d15cb47dd72cb1dfe4baef7f51624636da514ec4e9d4",
+      "bytes": 4735
+    },
+    {
+      "path": "OWNER_BOUNDARY_STAMP_V1.json",
+      "sha256": "eb8b3cccb70689537fb0db970060cf2a7f1f84dd4479a852b713ad996a58c298",
+      "bytes": 1135
+    },
+    {
+      "path": "README.md",
+      "sha256": "00dc8b754a6b4117f9c885ac9beb99b4e388acdbb5c7bffa51f9e74fe6f472d3",
+      "bytes": 901
+    }
+  ],
+  "package_aggregate_sha256": "8efda8ad3e60df42a8ea718ec39d4dcc69a1c42ff9d9288a3c5697416b5dbde8"
+}

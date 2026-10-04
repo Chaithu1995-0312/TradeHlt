@@ -1,0 +1,53 @@
+{
+  "_doc": "Non-active live_rail example for CH-live-rail-pr1. NOT loaded by ACTIVE_VERSION. Do not copy into v2_htfcrt_2026_08.json without a separate authorized PRODUCTION_CONFIG_CHANGE.",
+  "live_rail": {
+    "enabled": false,
+    "dry_run": true,
+    "auto_execute": false,
+    "data_venue": "tickdb",
+    "order_venue": "paper",
+    "symbol": "XAUUSD",
+    "timeframe": "M15",
+    "clock_basis": "broker_local",
+    "hook_submit_orders": false,
+    "account_balance_source": "paper",
+    "tickdb": {
+      "path": "data/ticks/XAUUSD.jsonl",
+      "speed_mult": 0.0,
+      "require_clock_record": true
+    },
+    "binance": {
+      "ws_base": "wss://stream.binance.com:9443",
+      "streams": ["btcusdt@bookTicker", "btcusdt@trade"],
+      "max_quote_age_ms": 2000,
+      "heartbeat_s": 15
+    },
+    "longport": {
+      "enabled": false
+    },
+    "bar_builder": {
+      "emit_incomplete_on_stop": false,
+      "volume_mode": "sum_size"
+    },
+    "reconnect": {
+      "base_delay_s": 1.0,
+      "max_delay_s": 60.0,
+      "max_attempts": 20,
+      "fail_count_disable": 10
+    },
+    "order_manager": {
+      "enabled": false,
+      "default_order_type": "MARKET",
+      "fill_timeout_s": 5.0,
+      "allow_partial": false,
+      "allow_lot_clamp": false
+    },
+    "portfolio": {
+      "paper_balance": 10000.0
+    },
+    "queues": {
+      "tick_maxsize": 4096,
+      "bar_maxsize": 256
+    }
+  }
+}

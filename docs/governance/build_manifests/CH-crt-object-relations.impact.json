@@ -1,0 +1,37 @@
+{
+  "change_id": "CH-crt-object-relations",
+  "date_utc": "2026-08-17",
+  "objective": "Make relationships among existing CRT objects (M15-SLR, HTFBuilder, ParentRange, ParentCRT bias/objective, SMC detectors) explicit and testable. No new liquidity object (P-CRT-LIQ-01). No geometry change. No G001.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY"
+  ],
+  "change_class_rationale": "Hand-authored relation table + Semantic OS CT-009 + tests. No src/ trading-path edit. P-CRT-LIQ-01 forbids a second liquidity type.",
+  "affected_files": [
+    "docs/governance/crt_object_relations.yaml",
+    "docs/governance/semantic_os/contracts.yaml",
+    "docs/governance/semantic_os/boundaries.yaml",
+    "docs/governance/semantic_os/concepts.yaml",
+    "docs/governance/semantic_os/file_identities.yaml",
+    "tests/test_crt_object_relations.py",
+    "docs/topics/crt-spine.md",
+    "reports/monthly_tv_vs_active_production_semantic_comparison.md",
+    "reports/monthly_tv_vs_active_production_semantic_comparison.json",
+    "docs/governance/build_manifests/CH-crt-object-relations.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "required_checks_ack": [
+    "tests/test_crt_object_relations.py",
+    "tests/test_m15_structural_range.py",
+    "tests/test_semantic_os.py",
+    "tests/test_topic_docs.py",
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Delete crt_object_relations.yaml + test; revert CT-009 / BD-006 member / CN-004 ontology_ids / topic / report notes.",
+  "authority_granted": "User: next architecture work is to make relationships between existing objects explicit and testable (2026-08-17). P-CRT-LIQ-01 remains no second liquidity object.",
+  "production_behavior_changed": "NO"
+}

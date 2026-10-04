@@ -1,0 +1,78 @@
+{
+  "artifact": "phase1_duplicate_implementation_authority_decisions",
+  "date": "2026-07-10",
+  "decisions": [
+    {
+      "duplicate_pair": [
+        "Q-VOL-PROXY-T003",
+        "Q-VOL-RANGE-PROXY-SEPARATE"
+      ],
+      "family": "VOLUME",
+      "rejected_path": "T-003 overwrite of df['volume'] with high-low",
+      "rejection_reason": "same-name substitution under source-volume identity",
+      "relationship": "SAME_SEMANTICS_SAME_FORMULA",
+      "selected_authority": "FEAT-VOLUME_RANGE_PROXY / FeaturePipeline.volume_range_proxy",
+      "status": "CANONICAL_IMPLEMENTATION_SELECTED"
+    },
+    {
+      "family": "VOLUME",
+      "identity": "FEAT-VOLUME",
+      "selected_authority": "source OHLCV passthrough",
+      "status": "CANONICAL_IMPLEMENTATION_SELECTED"
+    },
+    {
+      "family": "SWING",
+      "identities": [
+        "FEAT-SWING_HIGH_CENTERED_BATCH",
+        "FEAT-SWING_LOW_CENTERED_BATCH",
+        "FEAT-SWING_HIGH_CAUSAL_CONFIRMED",
+        "FEAT-SWING_LOW_CAUSAL_CONFIRMED"
+      ],
+      "rejected_mutation": "TRUST_SWING_CAUSAL in-place rewrite of swing_high/low",
+      "relationship": "DIFFERENT_SEMANTICS (temporal publication)",
+      "selected_authority_production_vector": "CENTERED_BATCH columns",
+      "status": "DISTINCT_SEMANTIC_PRESERVED"
+    },
+    {
+      "N_rolling_note": "N=200 provisional implementation param only; not final regime model selection",
+      "family": "VOLATILITY_REGIME",
+      "identities": [
+        "FEAT-VOLATILITY_REGIME_GLOBAL_BATCH_RANK",
+        "FEAT-VOLATILITY_REGIME_EXPANDING_CAUSAL_RANK",
+        "FEAT-VOLATILITY_REGIME_ROLLING_CAUSAL_RANK"
+      ],
+      "rejected_mutation": "TRUST_VOLREGIME_CAUSAL in-place rewrite of volatility_regime",
+      "relationship": "DIFFERENT_SEMANTICS (rank population + temporal)",
+      "selected_authority_production_vector": "GLOBAL_BATCH",
+      "status": "DISTINCT_SEMANTIC_PRESERVED"
+    },
+    {
+      "family": "BODY_RATIO",
+      "identities": [
+        "FEAT-BODY_TO_RANGE_RATIO",
+        "FEAT-BODY_TO_TOTAL_WICK_RATIO"
+      ],
+      "range_authority": "candle_math.body_ratio / FM-010",
+      "relationship": "DIFFERENT_SEMANTICS",
+      "status": "DISTINCT_SEMANTIC_PRESERVED",
+      "total_wick_authority": "candle_math.body_to_total_wick_ratio / FM-013 + live_engine_hook binding"
+    },
+    {
+      "authorities": {
+        "FM-020": "derived_math.disp_strength",
+        "FM-021": "derived_math.retest_depth",
+        "FM-027": "derived_math.displacement_retrace",
+        "FM-028": "derived_math.displacement_atr_ratio"
+      },
+      "family": "DISPLACEMENT_RETEST",
+      "identities": [
+        "FEAT-DISP_STRENGTH",
+        "FEAT-RETEST_DEPTH",
+        "FEAT-DISPLACEMENT_RETRACE",
+        "FEAT-DISPLACEMENT_ATR_RATIO"
+      ],
+      "relationship": "all pairs DIFFERENT_SEMANTICS",
+      "status": "IDENTITY_CLOSED"
+    }
+  ]
+}

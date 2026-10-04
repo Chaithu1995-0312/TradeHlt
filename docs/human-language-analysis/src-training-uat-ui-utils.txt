@@ -1,0 +1,593 @@
+# Human-Readable Execution Cognition: src/training, src/uat, src/ui, src/utils
+
+---
+
+## MODULE: src/training
+
+### File: `trainer.py`
+
+**1. File Purpose**
+
+This file owns the two model families that the trading system uses to make decisions:
+- **TradeNet**: a PyTorch neural network (6→32→16→1 sigmoid) that classifies whether a signal is "winning" or "losing" (binary classification).
+- **GaussianNBModel**: a pure-Python Gaussian Naive Bayes classifier (4 classes) that predicts **expected R:R** (risk-to-reward ratio) for each signal — i.e. *how much* you're expected to win or lose, not just *whether*.
+
+The Gaussian path is the primary production path. TradeNet is an older binary classifier still maintained for legacy compatibility.
+
+**2. Runtime Role**
+
+This file is a **training engine** — it's invoked during the model update pipeline (offline/periodic), not at trading time. The live trading system loads pre-trained bundles (model + scaler JSON) via `load_gaussian_model()` and `load_model()` / `load_tradenet_scaler()`.
+
+```
+Scripts/auto-training pipeline → train_pipeline.run_gaussian_update()
+  → trainer.train_gaussian()     [this file]
+  → trainer.cross_val_gaussian() [this file]
+  → trainer.save_gaussian_model() [this file]
+  → Phase-5 gate
+  → core.model_registry.register_gaussian()
+
+At inference time (live):
+  LiveEngine → load_gaussian_model() [this file]
+            → scaler.transform_one()
+            → model.predict_expected_rr()
+```
+
+**3. Classes**
+
+#### `StandardScaler`
+**Purpose**: Pure-Python feature normaliser (mean=0, std=1 per feature). No sklearn dependency.
+
+**Ownership**: Internal to training pipeline. Saved alongside every GaussianNBModel.
+
+**Runtime responsibility**: At inference time, `scaler.transform_one(feature_vector)` is called before `model.predict_proba()`. If the scaler was not saved (old models), the fallback is `None` — meaning raw unscaled features go into the Gaussian, which silently degrades accuracy (see Fallbacks below).
+
+#### `GaussianNBModel`
+**Purpose**: 4-class Gaussian Naive Bayes classifier. Classes: 0=loss (pnl_rr < 0), 1=small win (0 ≤ pnl_rr < 1), 2=mid win (1 ≤ pnl_rr < 2), 3=big win (pnl_rr ≥ 2).
+
+**Ownership**: Training pipeline. Primary model used in production for expected RR prediction.
+
+**Runtime responsibility**: At live inference, `predict_expected_rr(x)` computes:
+1. Log-probabilities per class using Gaussian log-likelihood + log-prior
+2. Softmax for numerical stability
+3. Weighted sum: `Σ P(class_i) × RR_weight_i` where weights = `[0.0, 0.5, 1.5, 2.5]`
+
+**# Human execution explanation**: When a feature vector arrives, the model computes the log-probability that it belongs to each of 4 classes using the Gaussian formula: `-0.5 * log(2π * variance) - (x - mean)² / (2 * variance)` summed across all features. It adds the log-prior for each class, then softmax-normalises. The expected RR is the dot product of these probabilities with `[0, 0.5, 1.5, 2.5]`. That means class 0 (loss) contributes **zero** to the expected RR — the model punishes itself by assigning zero weight to loss outcomes. Confidence = `max(probabilities)`.
+
+**4. Methods / Functions**
+
+---
+
+#### `train_gaussian(X, y_rr, train_ratio=0.70) → (model, scaler, metrics)`
+
+**Human purpose**: Train a GaussianNBModel on time-ordered data. Does a 70/30 temporal split (no shuffle), fits scaler on training data only, fits model on scaled training data, computes correlation and calibration error on the validation set.
+
+**Invocation sources**: `train_pipeline.run_gaussian_update()` step 3/8.
+
+**Downstream calls**:
+- `features.dataset_builder.rr_to_class()` — converts pnl_rr to class 0-3
+- `StandardScaler.fit()` and `.transform()`
+- `GaussianNBModel.fit()`
+- `_pearson()` and `_calibration_error()` for metrics
+
+**Runtime flow**:
+1. Validates `n >= 20`
+2. Splits at `int(n * 0.70)` — first 70% for training, last 30% for validation
+3. Fits `StandardScaler` on training split only
+4. Transforms both splits
+5. Fits `GaussianNBModel` on scaled training features + class labels
+6. Computes correlation between predicted RR and actual RR on validation set
+7. Computes calibration error = |mean predicted win prob - actual win rate|
+8. Returns (model, scaler, metrics_dict)
+
+**Inputs**: `X` = raw unscaled 35-dim feature vectors (time-ordered), `y_rr` = pnl_rr values
+
+**Outputs**: `(GaussianNBModel, StandardScaler, metrics_dict)`
+
+**State mutations**: None (pure computation)
+
+**Side effects**: Logs training result
+
+**File writes**: None
+
+**Subprocess usage**: None
+
+**Fallbacks**: If `X_val` is empty (all data used for training), evaluates on training data instead (leaky metrics but non-fatal).
+
+**Failure modes**:
+- Raises `ValueError` if `n < MIN_GAUSSIAN_SAMPLES (20)`
+- Raises `ValueError` if `StandardScaler.fit()` receives empty data
+
+**Determinism**: Deterministic — no randomness in GaussianNB
+
+**Corruption risks**: Low — pure computation
+
+**Trust level**: CANONICAL — this is the primary Gaussian training path
+
+---
+
+#### `cross_val_gaussian(X, y_rr, n_folds=3) → dict`
+
+**Human purpose**: Run 3-fold time-series cross-validation to measure stability of the Gaussian model. Uses forward-only expanding windows (no shuffle). Returns corr_mean, corr_std, and a `stable` flag (True if corr_std < 0.05).
+
+**Invocation sources**: `train_pipeline.run_gaussian_update()` step 4/8.
+
+**Downstream calls**: Creates temporary `StandardScaler` and `GaussianNBModel` per fold, calls `_pearson()` and `_calibration_error()`.
+
+**Runtime flow**: What ACTUALLY happens:
+1. Compute `step = n // 4`
+2. For fold 1: train on `[0:step]`, validate on `[step:2*step]`
+3. For fold 2: train on `[0:2*step]`, validate on `[2*step:3*step]`
+4. For fold 3: train on `[0:3*step]`, validate on `[3*step:4*step]`
+5. Each fold fits its own scaler and model from scratch
+6. Collects corr and cal_error per fold, computes mean and std
+
+**Inputs**: `X` = raw feature vectors, `y_rr` = pnl_rr, `n_folds` (default 3)
+
+**Outputs**: dict with corr_mean, corr_std, cal_mean, cal_std, stable, fold_metrics
+
+**State mutations**: None
+
+**Failure modes**:
+- If `n < 20`, raises ValueError
+- If a fold has `< 30` training or `< 10` validation samples, that fold is silently skipped (line 502-503: `if train_end < 30 or val_end <= train_end + 10: continue`)
+- If no folds succeed, returns `{corr_mean: 0.0, corr_std: 0.0, cal_mean: 1.0, cal_std: 0.0, stable: False, fold_metrics: []}` — **silent fallback**, no exception raised
+
+**Determinism**: Deterministic
+
+**Trust level**: CANONICAL
+
+---
+
+#### `save_gaussian_model(model, scaler, metrics, name, feature_schema) → Path`
+
+**Human purpose**: Serialise model + scaler + metadata as a single JSON bundle to `models/<name>`. NEVER overwrites — caller must use versioned names.
+
+**Runtime flow**: Creates a dict with 8 keys (model_dict, scaler_dict, metrics, feature_schema, schema_name, schema_version, schema_checksum, feature_order_hash), writes to disk. Creates parent directories automatically if name contains sub-paths like `EURUSD/20260518/gaussian_v6.json`.
+
+**File writes**: Writes to `models/<name>`
+
+**Silent fallback**: Feature order hash import `try/except Exception: _foh = ""` — if `features.feature_schema` can't be imported, stores empty string. This means schema drift detection is silently disabled on import failure.
+
+**Trust level**: CANONICAL
+
+---
+
+#### `load_gaussian_model(name) → (model, scaler, meta)`
+
+**Human purpose**: Load a Gaussian model bundle from disk. Raises ValueError if saved feature schema doesn't match current schema — FIX 2 hard schema check.
+
+**Runtime flow**:
+1. Reads `models/<name>` JSON
+2. Compares `bundle["feature_schema"]` against `GAUSSIAN_FEATURE_SCHEMA` — hard mismatch = ValueError
+3. Deserialises model and scaler
+4. Attempts to register stored hash in `FeatureSchemaRegistry` — **swallows exception** if registry unavailable (line 449: `except Exception: pass`)
+5. Returns (model, scaler, meta)
+
+**Failure modes**:
+- `FileNotFoundError` if path doesn't exist
+- `ValueError` if feature schema mismatch (hard error — won't load incompatible model)
+- Registry registration silently fails (line 449: `pass`) — model still loads
+
+**Trust level**: CANONICAL
+
+---
+
+#### `train(X, y, epochs=100, lr=0.001, batch_size=64, ...) → model`
+
+**Human purpose**: Train TradeNet (PyTorch neural net) with weighted BCE loss to handle class imbalance. Not used in the Gaussian pipeline — this is the older binary classifier path.
+
+**Runtime flow**:
+1. Builds TradeNet: 35→32 ReLU → Dropout(0.2) → 16 ReLU → 1 sigmoid
+2. Computes `pos_weight = n_neg / n_pos` for class imbalance
+3. Creates DataLoader with shuffle=True (note: temporal ordering is destroyed)
+4. For each epoch: forward pass, weighted BCE loss (loss samples weight=1.0, win samples weight=pos_weight), backward, Adam step
+5. Returns model in eval mode
+
+**Invocation sources**: Scripts using the TradeNet binary path. Not called by the Gaussian pipeline.
+
+**Inputs**: `X` (should be SCALED), `y` (binary 0/1)
+
+**Outputs**: Trained TradeNet model
+
+**File writes**: None directly (save_model does)
+
+**Trust level**: LIVE — used by scripts/training pipelines but Gaussian is the production primary
+
+---
+
+#### `save_model(model, name, metrics, version, scaler, instrument, run_id) → Path`
+
+**Human purpose**: Save TradeNet PyTorch state_dict + scaler JSON + register in model_registry. Auto-promotes if no active version exists.
+
+**Runtime flow**:
+1. Saves `model.state_dict()` to `models/<name>.pth`
+2. If scaler provided, saves scaler JSON to `models/<stem>_scaler.json` with feature_order_hash
+3. Calls `core.model_registry.register_tradenet(version, path, metrics, ...)`
+4. If no active TradeNet exists, calls `promote_tradenet(version)` — **auto-promotes the first model**
+5. If version is None, infers from filename (legacy format only: `tradenet_p5_20260406T005347` → version="20260406T005347")
+6. Whole registry update is wrapped in try/except — **silently logs and continues** on failure
+
+**Hidden danger**: If version is None and filename doesn't match the 3-segment pattern, version = full stem (line 722). This can cause registry key collisions.
+
+**Trust level**: LIVE
+
+---
+
+#### `make_neural_fn(model, scaler=None) → callable`
+
+**Human purpose**: Wraps a trained TradeNet into a callable suitable for `FusionEngine.neural_fn`. The callable accepts a features dict, extracts the 35-dim vector, optionally scales it, runs inference, returns confidence.
+
+**Runtime flow**: What ACTUALLY happens:
+1. Receives a `features: dict` (e.g., `{"retest_depth": 0.002, "body_ratio": 0.5, ...}`)
+2. Calls `dataset_builder.extract_feature_vector(features)` — builds 35-dim vector from dict keys
+3. If scaler provided, calls `scaler.transform_one(vec)` for normalisation
+4. Unsqueezes to shape `[1, 35]`, runs `model(x)` with `torch.no_grad()`
+5. Returns float confidence
+6. **On ANY exception**: logs warning, returns `0.5` — **silent fallback to neutral confidence** (line 817-818)
+
+**Failure modes**: Any exception in the lambda returns 0.5. This means if `extract_feature_vector` fails (e.g., missing key), or scaler fails, the fusion engine silently gets a neutral 0.5 prediction. The trade still executes with degraded signal quality.
+
+**Trust level**: CANONICAL — primary inference wrapper for TradeNet in FusionEngine
+
+---
+
+### File: `evaluator.py`
+
+**1. File Purpose**
+
+This file measures model quality. It provides:
+- **Gaussian evaluation**: correlation between predicted RR and actual RR, calibration error, class distribution
+- **TradeNet evaluation**: accuracy, precision, recall, confidence-bucket win rates
+- **Composite scoring**: trading-weighted score that prioritises high-confidence bucket performance
+- **Update gate**: `should_update()` — decides if a new ML model is good enough to replace the Gaussian baseline
+
+**2. Runtime Role**
+
+Called during the training pipeline AFTER `train_gaussian()` or `train()` completes. The results feed into:
+- Phase-5 calibration gate (which checks min_corr, max_cal_error thresholds)
+- `should_update()` gate (which decides if ML beats Gaussian by a margin)
+
+---
+
+#### `evaluate_gaussian(model, scaler, X, y_rr) → GaussianEvalResult`
+
+**Human purpose**: Run trained GaussianNBModel against hold-out data. Computes Pearson correlation between predicted expected_rr and actual pnl_rr (FIX 5 — uses actual P&L not gaussian_score). Also computes calibration error = |mean predicted win rate - actual win rate|.
+
+**Runtime flow**:
+1. Scales raw X using the trained scaler
+2. For each sample: calls `model.predict_expected_rr(x)` → (expected_rr, confidence, probs)
+3. Computes `_pearson(predicted_rr_list, actual_rr_list)` — covariance over product of std devs
+4. Calibration error = |mean(P(class 2 or 3)) - mean(actual wins)|
+5. Class distribution from `rr_to_class()`
+6. Returns GaussianEvalResult
+
+**Inputs**: model, scaler, X (RAW unscaled), y_rr (actual pnl_rr)
+
+**Hidden defaults**: If `n < 3`, _pearson returns 0.0 (line 76). If n == 0, returns zero-filled result.
+
+**Trust level**: CANONICAL
+
+---
+
+#### `should_update(ml_metrics, gaussian_metrics, corr_margin=0.02) → (bool, str)`
+
+**Human purpose**: Safety gate that prevents an ML model from being promoted unless it is *statistically better* than the Gaussian baseline by at least 2% correlation AND has better calibration.
+
+**Runtime logic**:
+1. ML approved ONLY if: `ml_corr > gauss_corr + 0.02` AND `ml_cal < gauss_cal`
+2. Returns detailed reason string for all 4 cases (pass, cal-worse, corr-insufficient, no-improvement)
+
+**Hidden defaults**: `corr_margin=0.02`, `ml_cal defaults to 1.0` if key missing (line 170), `gauss_cal defaults to 1.0` — new models start with "worst possible calibration" for the comparison.
+
+**Trust level**: CANONICAL
+
+---
+
+### File: `phase5_calibration.py`
+
+**1. File Purpose**
+
+Quality gate that runs AFTER training completes. Checks 4 hard gates before a model can be registered:
+1. `min_val_samples` — at least 30 validation rows
+2. `min_corr` — correlation >= 0.10
+3. `max_cal_error` — calibration error <= 0.25
+4. `cv_stable` — cross-validation corr_std < 0.05 (can be skipped with `require_cv_stable=False`)
+
+**2. Runtime Role**
+
+This is a **factory** that creates a `calibration_fn` closure. The closure is passed to `train_pipeline.run_training_pipeline()` which calls it as a post-training gate. When the gate fails, `run_training_pipeline()` raises RuntimeError and the model is not registered.
+
+#### `Phase5Config` (dataclass)
+
+**Purpose**: Threshold dataclass for the Phase-5 gate. Loads from `configs/production/v1_multi_2026_03.json §phase5_calibration`.
+
+**Hidden defaults**: If the config section is missing entirely, ALL gates use hard defaults:
+- `val_ratio=0.30`, `min_val_samples=30`, `min_corr=0.10`, `max_cal_error=0.25`
+- `cv_corr_std_max=0.05`, `cv_n_folds=3`, `require_cv_stable=True`
+
+**Failure mode**: Config load wraps in try/except, defaults to `{}` (line 44-46). Missing keys log at DEBUG level and return default. So a missing production config does NOT crash — it uses safe defaults.
+
+#### `make_calibration_fn(model, scaler, *, label="gaussian") → callable`
+
+**Human purpose**: Creates a closure that, when called with (X_raw, y_rr), runs the full Phase-5 gate: temporal hold-out evaluation, cross-validation stability check, and 4 hard gates.
+
+**Runtime flow**: What ACTUALLY happens when the closure is called:
+1. Splits X_raw at `int(n * (1 - 0.30))` → last 30% for validation
+2. If validation samples < 30: logs WARNING but continues (gate will fail on `min_val_samples`)
+3. Calls `evaluate_gaussian(model, scaler, X_val, y_val)` for metrics
+4. Calls `cross_val_gaussian(X_raw, y_rr, n_folds=3)` for stability
+5. **If cross_val_gaussian raises ANY exception**: swallows it, logs WARNING, sets `cv_stable=False`, fills metrics with 0.0/1.0 (lines 201-208)
+6. Runs `_run_gates(metrics, cv_stable)` — all 4 gates must pass
+7. Returns dict with `integration_approved`, `verdict`, `metrics`, `gate_checks`
+
+**Swallowed exception danger**: If `cross_val_gaussian` raises (e.g., due to insufficient data), the cv_stable gate silently fails closed (returns False). But the metrics are filled with fake values (0.0, 1.0) — this doesn't cause incorrect approval but it does mask the CV failure reason.
+
+**Trust level**: CANONICAL
+
+---
+
+### File: `train_pipeline.py`
+
+**1. File Purpose**
+
+Orchestration layer — wires together data loading, validation, training, evaluation, and Phase-5 gate into business-logic pipelines.
+
+**2. Runtime Role**
+
+Two public entry points:
+- `run_training_pipeline()` — generic TradeNet binary-label pipeline (not the primary Gaussian path)
+- `run_gaussian_update()` — full 8-step Gaussian pipeline (steps 1-8)
+
+**Neither of these runs at trading time. They are called by scripts/ for offline model updates.**
+
+---
+
+#### `run_gaussian_update(log_paths, version, promote=True, force_promote=False, ...) → dict`
+
+**Human purpose**: The main Gaussian model update pipeline. 8 steps: validate logs → build dataset → train → cross-val → evaluate → Phase-5 gate → register → promote.
+
+**Runtime flow**: What ACTUALLY happens:
+1. **Step 1**: Calls `validate_logs(*log_paths)` — loads ENTRY/EXIT fusion log pairs, checks validity
+2. **Step 2**: Extracts `feature_vec` and `outcome.pnl_rr_net` from paired records, calls `validate_dataset_integrity()`
+3. **Step 3**: Calls `train_gaussian(X, y_rr)` → returns (model, scaler, metrics)
+4. **Step 4**: Calls `cross_val_gaussian(X, y_rr)` — if NOT stable, logs WARNING but continues (doesn't abort here — Phase-5 gate will reject later if needed)
+5. **Steps 5-6**: Calls `make_calibration_fn(model, scaler, label=version)` then `cal_fn(X, y_rr)` → if NOT approved, returns early with `{approved: False, promoted: False, ...}`. **Does NOT raise RuntimeError** here (unlike run_training_pipeline which raises). Returns a dict instead.
+6. **Step 7**: If approved, calls `save_gaussian_model()` then `register_gaussian()`
+7. **Step 8**: If `promote=True`, calls `_gaussian_registry.promote_gaussian(version, force=force_promote)`
+
+**Failure modes**: If Phase-5 gate fails, returns `{approved: False, promoted: False}` — no exception. Caller must check `result["approved"]`.
+
+**Trust level**: CANONICAL — main pipeline entry point
+
+---
+
+#### `run_training_pipeline(data_path, model_fn, output_path=None, threshold=0.5, calibration_fn=None) → dict`
+
+**Human purpose**: Generic TradeNet training pipeline for binary classification. Not the Gaussian path.
+
+**Key difference from run_gaussian_update**: If calibration fails, this raises `RuntimeError` (hard fail). The Gaussian path returns a dict with `approved: False`.
+
+**Trust level**: LIVE
+
+---
+
+## MODULE: src/uat
+
+### File: `uat_runner.py`
+
+**1. File Purpose**
+
+Orchestrates all 7 User Acceptance Testing areas into structured JSON payloads for LLM review sessions.
+
+**2. Runtime Role**
+
+This runs during UAT (pre-production validation), not during live trading. It wires together `StrategyOrchestrator`, `MonteCarloEngine`, `KillSwitch`, and `LLMStructuredLogger` to produce structured UAT exports.
+
+**Trust classification**: CANONICAL (UAT is a formal process)
+
+---
+
+#### `UATRunner.run_all(candle_data, trade_outcomes, alert_records)`
+
+**Human purpose**: Run all 7 UAT areas in sequence and export structured JSON.
+
+**Runtime flow**:
+1. Area 1: Feeds each (features, candle) through `StrategyOrchestrator.compute()`, logs actionable signals
+2. Area 2: Same data, logs simulation records (confidence >= 0.65 → "TP_HIT", else "SL_HIT") — **note**: predicted == actual always, this tests pipeline fidelity not true accuracy
+3. Area 3: Validates Telegram alert latency + field completeness
+4. Area 4: Per-strategy P&L scorecards with win rate, profit factor, status (APPROVED/WARN/REJECTED)
+5. Area 5: Runs Monte Carlo (1000 bootstrap resamples) on trade outcomes
+6. Area 6: Creates 3 TEMPORARY KillSwitch instances with different thresholds, tests daily breach, weekly accumulation, and profitable-trades-no-trip scenarios. **Important**: Uses temp state files (`logs/ks_uat_test_state.json`, etc.) to avoid corrupting live kill switch state.
+7. Area 7: Runs 8 edge cases (zero ATR, zero close, zero-range candle, news spike, off-hours, stale sweep, SL-INR cap, all zeros) against StrategyOrchestrator
+
+**Hidden behavior in Area 2**: `predicted = "TP_HIT" if result.confidence >= 0.65 else "SL_HIT"` and `actual = predicted` — **all simulations always report `correct=True`**. This is intentional (testing pipeline plumbing, not prediction accuracy) but could be confused for actual accuracy if the output is misinterpreted.
+
+**Trust level**: CANONICAL
+
+---
+
+### File: `kill_switch.py`
+
+**1. File Purpose**
+
+Stateful daily/weekly loss gate for live trading protection. Tracks cumulative realised P&L and halts trading if daily or weekly loss limit is breached.
+
+**TRUST CLASSIFICATION: DANGEROUS** — This gate is the last line of defence against catastrophic loss. If it fails, the system can trade into unlimited drawdown.
+
+**2. Runtime Role**
+
+This runs at TRADE COMPLETION TIME in the live execution hook (`LIVE_HOOK` flow logger). After each trade is closed and P&L is realised, `register_trade(pnl_inr)` is called.
+
+---
+
+#### `KillSwitch.__init__(daily_limit_inr=10000.0, weekly_limit_inr=25000.0, state_file=Path("logs/kill_switch_state.json"))`
+
+**Human purpose**: Initialise the gate with configurable limits and a persistent state file. State survives process restarts.
+
+**Hidden defaults** (from config): `daily_limit_inr` defaults to 10,000 INR, `weekly_limit_inr` to 25,000 INR. State file defaults to `logs/kill_switch_state.json`.
+
+#### `KillSwitch.register_trade(pnl_inr) → bool`
+
+**Human purpose**: Record a trade P&L, accumulate losses, check thresholds, trip if breached.
+
+**Runtime flow**:
+1. If already tripped: logs WARNING, returns False (ignores the trade — no accumulation)
+2. If date has changed: resets daily accumulator. If week has changed: resets weekly accumulator.
+3. **Only losses accumulate** — positive P&L is ignored for the gate
+4. Checks daily FIRST, then weekly. First threshold breached trips the switch.
+5. Saves state to JSON file.
+
+**State mutation**: Writes `kill_switch_state.json` on every trade (could be 1000s of writes/day). File lock not implemented — single-process assumed.
+
+**Corruption risks**:
+- If the state file is corrupted (JSON decode error), `_load_state()` resets to default state silently (line 205-206). This means the loss accumulators are LOST on restart after corruption. The system starts fresh with zero loss.
+- Since state is read once at init and written after each trade, a crash BETWEEN the trip condition and the save means the trip is lost on next restart (the loaded state won't have `tripped=True`).
+
+#### `KillSwitch.reset()`
+
+**Human purpose**: Manual operator reset. Clears trip flag but preserves loss accumulators. Never auto-resets.
+
+**Trust level**: DANGEROUS — single-process assumption, no file locking, silent corruption reset
+
+---
+
+### File: `monte_carlo.py`
+
+**1. File Purpose**
+
+Bootstrap resampling engine for strategy robustness validation. Runs N simulations where each simulation randomly shuffles the historical trade sequence (with replacement) and computes final equity, max drawdown, and probability of ruin.
+
+**2. Runtime Role**
+
+Called during UAT (Area 5) and potentially during monitoring. Not called during live trading.
+
+---
+
+#### `MonteCarloEngine.run(trades, strategy_id="ALL") → MonteCarloResult`
+
+**Human purpose**: Run N bootstrap simulations (default 1000) to estimate P(ruin) — the fraction of simulations where equity drops below 50% of initial capital.
+
+**Runtime flow**:
+1. If `n_trades < 10`: returns `INSUFFICIENT_DATA` with zero-filled stats (p_ruin=0, p_ruin_pass=True). **This means a strategy with < 10 trades automatically passes** — the gate is "safe" but masks the fact there's not enough data.
+2. For each of N simulations:
+   - Randomly samples `n` trades with replacement (bootstrap)
+   - Walks equity curve starting from `initial_capital`
+   - Tracks: final equity, max drawdown, worst consecutive loss streak
+   - If equity ≤ ruin_threshold (50% of capital), counts as ruin and breaks early
+3. Sorts final equities to get 5th/50th/95th percentiles
+4. Computes `p_ruin = ruin_count / n_simulations`
+5. Status: "PASSED" if p_ruin ≤ 0.05, else "FAILED"
+
+**Downsampling**: Stores ~3 equity curves (at 5th, 50th, 95th percentile positions) downsampled to max 20 points each for token efficiency.
+
+**Trust level**: CANONICAL
+
+---
+
+## MODULE: src/ui
+
+### File: `__init__.py`
+
+**Content**: `# src/ui — Dashboard (minimal Flask-lite API)`
+
+**Analysis**: The directory contains ONLY this init file. There is no actual UI implementation in `src/ui/`. The comment indicates the intention was to build a minimal Flask-based dashboard, but as of this source state, **no UI code exists**.
+
+The separate `ui_kits/` directory at project root may contain UI-related code, but per the instructions, recursive expansion beyond `src/` boundary is not performed. The `ui_kits/` directory is outside the requested analysis scope.
+
+**Trust classification**: PARTIAL (exists as namespace only, no implementation)
+
+---
+
+## MODULE: src/utils
+
+### File: `logging_config.py`
+
+**1. File Purpose**
+
+Centralised logging configuration for the entire trading system. Provides per-flow differentiated loggers that write to:
+1. Dedicated per-flow log file (e.g., `logs/flow_engine_runner_20260520_135744.log`)
+2. Aggregated system log (`logs/trade_system_20260520_135744.log`)
+3. Colour-coded console output
+
+**2. Runtime Role**
+
+Called at application startup via `setup_logging()` and by any module needing a logger via `get_flow_logger("ENGINE_RUNNER")`.
+
+---
+
+#### `get_flow_logger(flow_name) → logging.Logger`
+
+**Human purpose**: Return a configured logger for a specific system flow. Creates per-flow file handler + aggregated system handler + console handler.
+
+**Runtime flow**:
+1. Validates flow_name against FLOWS dict
+2. Creates logger named `flow.<lower(flow_name)>`
+3. Sets `propagate = False` to prevent double-logging to root
+4. Adds `FlowLogFilter` to inject `flow_name` into every record
+5. Creates per-flow file handler → `logs/flow_<name>_<RUN_ID>.log`
+6. Creates aggregated handler → `logs/trade_system_<RUN_ID>.log`
+7. Creates console handler with colour coding using `SafeStreamHandler`
+8. If logger already has handlers (repeated call), returns existing logger
+
+**Determinism**: RUN_ID is generated once at module import time — all logs for a process invocation share the same stamp.
+
+**Trust level**: CANONICAL
+
+---
+
+### File: `console_safe.py`
+
+**1. File Purpose** (inferred from import in logging_config)
+
+`SafeStreamHandler` is a custom logging handler used by `logging_config` for console output. It wraps console writes to handle encoding issues safely (prevents crashes on Unicode characters in Windows terminals).
+
+**Trust level**: CANONICAL
+
+---
+
+### Other utils files (`config_dumper.py`, `engine_telemetry.py`, `llm_logger.py`, `trade_logger.py`, `zone_schema_migrator.py`)
+
+These files were not directly invoked by the training, UAT, or UI modules analyzed here. `llm_logger.py` is imported by `uat_runner.py` as `LLMStructuredLogger`, `AlertRecord`, `EdgeCaseRecord`, etc. — these are data-class/logger utilities for structured UAT output. Full analysis would require reading those files, but per the **Dependency Rule**: tracing into `llm_logger.py` exceeds the immediate runtime relevance boundary for the training/UAT core analysis. They serve as data-structure contracts that the UAT runner fills and exports to JSON.
+
+---
+
+## TRUST CLASSIFICATION SUMMARY
+
+| Component | Classification | Source Proof |
+|-----------|---------------|-------------|
+| `trainer.py` (Gaussian) | **CANONICAL** | Primary production training path |
+| `trainer.py` (TradeNet) | **LIVE** | Still used by scripts but Gaussian is primary |
+| `evaluator.py` (Gaussian) | **CANONICAL** | Core evaluation for Phase-5 gate |
+| `evaluator.py` (TradeNet) | **LIVE** | Used for binary classifier training |
+| `phase5_calibration.py` | **CANONICAL** | Formal quality gate, hard-coded defaults |
+| `train_pipeline.py` | **CANONICAL** | Main orchestration layer |
+| `uat_runner.py` | **CANONICAL** | Formal UAT process |
+| `kill_switch.py` | **DANGEROUS** | No file lock, silent state reset on corruption |
+| `monte_carlo.py` | **CANONICAL** | Standard bootstrap technique |
+| `src/ui/` | **PARTIAL** | Namespace only, no implementation |
+| `logging_config.py` | **CANONICAL** | Standard logging infrastructure |
+
+---
+
+## FAIL-FAST / FALLBACK AUDIT
+
+| Location | Issue | Runtime Corruption Risk |
+|----------|-------|------------------------|
+| `trainer.py:449` | Except pass on FeatureSchemaRegistry.register() | Feature drift detection silently disabled |
+| `trainer.py:817-818` | neural_fn returns 0.5 on ANY exception | Silently trades with "neutral" degraded confidence |
+| `trainer.py:340-344` | train_gaussian evaluates on TRAIN data if no validation split | Metrics appear better than real (overfit hidden) |
+| `cross_val_gaussian:503` | Skips small folds silently | Fewer folds than expected, metrics less stable than reported |
+| `cross_val_gaussian:533-538` | All folds skipped → returns zero-filled dict with stable=False | No exception — caller sees `corr_mean: 0.0` and may misinterpret |
+| `phase5_calibration.py:44-46` | Config load failure → empty dict → all hard defaults used | Gate may be too permissive or too strict vs intended config |
+| `phase5_calibration.py:201-208` | CV exception → swallowed → cv_stable=False, fake metrics | CV failure reason masked; gate still functions (fails closed if stable required) |
+| `kill_switch.py:205-206` | Corrupt state file → silently reset to defaults | **LOSS OF ALL ACCUMULATED LOSS DATA** — protection resets to zero |
+| `kill_switch.py:114-118` | register_trade ignored when already tripped | Subsequent losses are NOT accumulated — the reason/governance can't know total drawdown |
+| `uat_runner.py:183-184` | Area 2: all simulations report correct=True | If JSON output is confused with real accuracy metrics, false confidence in system |
+| `monte_carlo.py:163` | < 10 trades → INSUFFICIENT_DATA with p_ruin=0, p_ruin_pass=True | "Passes" with zero data — masking insufficient testing |
+| `monte_carlo.py:138` | random_seed=42 hard-coded default | Deterministic by default — could mask stochastic edge cases if not changed |
+| `save_gaussian_model:387-389` | Feature order hash import fail → `""` | Schema drift detection correlation broken silently |
+| `make_neural_fn:817-818` | Returns 0.5 on exception | FusionEngine still signals with neutral confidence — live drift occurs gradually |
+
+**Replay/live drift potential**: The `make_neural_fn` returning 0.5 silently is the highest-impact live-drift risk. If feature extraction starts failing (e.g., schema change, missing key), every signal gets confidence 0.5 instead of crashing. The system continues trading with degraded quality — a gradual performance drift that would be hard to detect without monitoring inference failure rate.
+
+**Governance contamination risk**: None identified — the Phase-5 gate and should_update() gate both fail closed (reject unless clearly better). No path exists where a bad model can be auto-promoted without passing hard gates.

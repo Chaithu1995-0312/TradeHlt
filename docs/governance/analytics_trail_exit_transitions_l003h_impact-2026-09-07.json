@@ -1,0 +1,75 @@
+{
+  "finding_id": "L-003H",
+  "run_id": "l003h_trail_exit_transitions_20260907_192115",
+  "version": "L-003H.v1",
+  "git_commit_sha": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+  "pointers": {
+    "md": "docs/governance/ANALYTICS_TRAIL_EXIT_TRANSITIONS_L003H.md",
+    "json": "docs/governance/analytics_trail_exit_transitions_l003h-2026-09-07.json",
+    "script": "scripts/research/l003h_trail_exit_transition_replay.py",
+    "parent_L003F": "docs/governance/ANALYTICS_JOINT_OUTCOME_STATES_L003F.md",
+    "parent_L003G": "docs/governance/ANALYTICS_JOINT_STATE_ENTRY_PREDICTABILITY_L003G.md"
+  },
+  "headline": {
+    "trail_activated_rate_by_joint": {
+      "JOINT_STATE_SL_TP": 1.0,
+      "BOTH_SL": 0.4952340571260834,
+      "BOTH_TP": 1.0
+    },
+    "scanner_exit_before_oracle_tp_among_oracle_tp_JOINT_STATE_SL_TP": 0.9550577715318664,
+    "overall_lean": "LEAN_SUPPORTS_TRAIL_EARLY_EXIT_PATTERN_IN_JOINT_STATE_SL_TP",
+    "reconcile_artifact_joint_sl_tp_rate": 0.31525739234825856,
+    "trail_exit_rate_by_joint": {
+      "JOINT_STATE_SL_TP": 1.0,
+      "BOTH_SL": 0.4952340571260834,
+      "BOTH_TP": 0.0
+    }
+  },
+  "flags": {
+    "promotion": false,
+    "l003_frozen": false,
+    "attribution_unblocked": false,
+    "economic_claims": false,
+    "registry_edits": false
+  },
+  "falsification_lean": {
+    "trail_activated_rate_JOINT_STATE_SL_TP": 1.0,
+    "trail_activated_rate_BOTH_SL": 0.4952340571260834,
+    "trail_activated_rate_BOTH_TP": 1.0,
+    "trail_exit_rate_JOINT_STATE_SL_TP": 1.0,
+    "trail_exit_rate_BOTH_SL": 0.4952340571260834,
+    "trail_exit_rate_BOTH_TP": 0.0,
+    "enrichment_vs_BOTH_SL": 0.5047659428739166,
+    "enrichment_vs_BOTH_TP": 0.0,
+    "scanner_exit_before_oracle_tp_rate_JOINT_STATE_SL_TP": 0.9550577715318664,
+    "scanner_exit_before_oracle_tp_among_oracle_tp_JOINT_STATE_SL_TP": 0.9550577715318664,
+    "scanner_exit_before_oracle_tp_among_oracle_tp_BOTH_TP": 0.0,
+    "thresholds": {
+      "trail_enrichment_vs_BOTH_SL_abs_lt": 0.05,
+      "seb_near_certain_lt": 0.9,
+      "trail_enrichment_vs_BOTH_TP_gt": 0.1,
+      "seb_or_trail_exit_gap_vs_BOTH_TP_gt": 0.5
+    },
+    "criterion_flags": {
+      "weakens_trail_involvement_vs_BOTH_SL": false,
+      "weakens_stopped_earlier": false,
+      "supports_trail_activated_enrichment_vs_BOTH_TP": false,
+      "differentiates_vs_BOTH_TP_via_scanner_exit_before_oracle_tp": true,
+      "differentiates_vs_BOTH_TP_via_trail_exit": true
+    },
+    "leans": [
+      "SUPPORTS_TRAIL_INVOLVEMENT_VS_BOTH_SL: trail_activated enrichment=0.5048 (JOINT=1.0000 vs BOTH_SL=0.4952)",
+      "SUPPORTS_STOPPED_EARLIER_OPERATIONALIZATION: scanner_exit_before_oracle_tp among oracle-TP in JOINT_STATE_SL_TP=0.9551 (still not trail-causality proof)",
+      "NO_TRAIL_ACTIVATED_ENRICHMENT_VS_BOTH_TP: both near-certain activation (JOINT=1.0000, BOTH_TP=1.0000) \u2014 trail_activated alone does not separate these states",
+      "DIFFERENTIATES_VS_BOTH_TP_VIA_EXIT_TIMING: seb_otp JOINT=0.9551 vs BOTH_TP=0.0",
+      "DIFFERENTIATES_VS_BOTH_TP_VIA_TRAIL_EXIT: trail_exit_rate JOINT=1.0000 vs BOTH_TP=0.0000"
+    ],
+    "overall_lean": "LEAN_SUPPORTS_TRAIL_EARLY_EXIT_PATTERN_IN_JOINT_STATE_SL_TP",
+    "caveats": [
+      "scanner_exit_before_oracle_tp is a measured path-timing operationalization; not proof of trail causality alone",
+      "detector stopped early remains INFERENCE unless exit timestamps prove scanner_exit_bar < oracle_tp_bar (this pass measures that inequality rate)",
+      "trail_activated enrichment vs BOTH_SL supports trail-involvement candidate; both JOINT and BOTH_TP are fully trail-activated so activation alone does not separate them \u2014 exit timing / trail_exit does",
+      "trail_activated enrichment is not causation of label mismatch alone"
+    ]
+  }
+}

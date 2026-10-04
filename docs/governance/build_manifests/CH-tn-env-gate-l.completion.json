@@ -1,0 +1,30 @@
+{
+  "change_id": "CH-tn-env-gate-l",
+  "completed_utc": "2026-07-22",
+  "status": "COMPLETE",
+  "evidence": {
+    "unit_tests": "tests/research/test_clean_labels_tn_env.py — 5 passed",
+    "bnb_dataset": "results/clean_labels/BNBUSDT/20260721T221711Z",
+    "n_clean": 139942,
+    "train_eligible": true,
+    "protocol_id": "TN_ENV_CLEAN_L1",
+    "tp2_policy": "SURROGATE_2R_BEFORE_SL",
+    "stream_agree_tp1": 0.679639,
+    "clean_y_tp1_rate": 0.332852,
+    "clean_y_survives_be_rate": 0.503158
+  },
+  "authority_granted": [
+    "GATE-L PASS (dataset) for TN + ENV on BNBUSDT under TN_ENV_CLEAN_L1",
+    "GATE-O may start (offline metrics research)"
+  ],
+  "authority_not_granted": [
+    "train promote / registry update",
+    "KEEP/RETIRE production findings",
+    "neural_fn wire",
+    "EnvelopeNet inference model",
+    "planner/fusion consumption"
+  ],
+  "required_checks_ran": [
+    "tests/research/test_clean_labels_tn_env.py"
+  ]
+}

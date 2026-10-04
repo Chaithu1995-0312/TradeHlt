@@ -1,0 +1,35 @@
+{
+  "change_id": "CH-asymmetry-decomp-v1",
+  "date_utc": "2026-08-24",
+  "objective": "Diagnostic decomposition of sealed SEM-027 / MC-ASYM-XAUUSD-M15-V1 ΔMFE pairs by t=0 state family (mean, median, P(Δ>0), n). Rank families by E[Δ] spread vs directional opportunity. PRIMARY not retuned. No G001.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY"
+  ],
+  "change_class_rationale": "Point-in-time analysis + F-091 Note mechanism sentence + topic/readme pointers. No src/, no config, no PRIMARY retune, no new MC-*. JSON artifacts sit next to the existing MC-ASYM metrics.",
+  "affected_files": [
+    "docs/analysis/asymmetry-decomposition-2026-08-24.md",
+    "docs/analysis/asymmetry-holdout-2026-08-24.md",
+    "docs/analysis/readme.md",
+    "docs/current-findings.md",
+    "docs/topics/research-measurement-contract.md",
+    "CLAUDE.md",
+    "docs/research-readiness/asymmetry/mc_asym_xauusd_m15_v1/decomposition.json",
+    "docs/research-readiness/asymmetry/mc_asym_xauusd_m15_v1/decomposition_twoway.json",
+    "docs/governance/build_manifests/CH-asymmetry-decomp-v1.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert the analysis snapshot, F-091 Note sentence, topic/readme/CLAUDE pointers, JSON artifacts. Sealed MC-ASYM metrics and PRIMARY untouched.",
+  "authority_granted": "User 2026-08-24: decompose ΔMFE by every state family; rank what actually changes directional opportunity.",
+  "authority_NOT_granted": "No production, no G001, no PRIMARY retune, no hour/session/vol as PRIMARY (F-066), no F-086 stride, no treating ΔMFE as trade PnL, no trend_bias gate.",
+  "production_behavior_changed": "NO"
+}

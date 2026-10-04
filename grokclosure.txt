@@ -1,0 +1,191 @@
+Claude should run a playbook, not a second operating system. Every session turn is classified onto one owner that already exists — trigger vocabulary, kitchen PLAN_REGISTRY, or .grok/INFRA.md (including accepted CLAC code.*) — then retrieved by epistemic type, grounded only when a new claim is introduced, and closed through the existing session-log ritual. Nothing in this lab is rebuilt. Nothing was implemented this turn.
+
+Design document: `C:\Users\Hi\AppData\Local\Temp\grok-Hi\grok-design-doc-b578c7a8.md` (C:\Users\Hi\AppData\Local\Temp\grok-Hi\grok-design-doc-b578c7a8.md)
+Status: Accepted (user 2026-08-18) — A5 shape, A6 first ship
+Authority granted: none
+ACTIVE_VERSION (Tier 0): v2_htfcrt_2026_08
+Lane: session-LLM operating workflow. Not CRT recert. Not P-GOAL-04 / money.
+
+───
+
+What this is
+
+assistant_project.md was treated as a history and asset map, then checked against disk. The expensive failures in this repo (F-022, F-037, F-041B, F-071, GCMC 100% ≠ “an LLM can operate safely”) are routing and type-collapse failures. The capabilities already exist.
+
+Rejected alternatives: do nothing as the only answer; put Claude-session intents into PLAN_REGISTRY; a meta-agent / Claude OS; Portable Mind (context/*.md) as the workflow.
+
+Sibling, not successor: accepted CLAC Alternative B already owns coding phrases (code.orient … code.regenerate). This playbook is the meta-dispatch. The two tables are not merged.
+
+───
+
+Five types (do not collapse)
+
+┌────────────┬───────────────────────────────────────────┬──────────────────────────────────────────┐
+│ Type       │ May                                       │ Must not                                 │
+├────────────┼───────────────────────────────────────────┼──────────────────────────────────────────┤
+│ Artifact   │ Be opened and cited as “this file says”   │ Become a conclusion or override ACTIVE_  │
+│            │                                           │ VERSION                                  │
+├────────────┼───────────────────────────────────────────┼──────────────────────────────────────────┤
+│ Evidence   │ Support a claim at PROVEN / HEURISTIC /   │ Auto-register a finding or upgrade a TV  │
+│            │ TEXT_REFERENCE                            │ mark to a trade                          │
+├────────────┼───────────────────────────────────────────┼──────────────────────────────────────────┤
+│ Concept    │ Constrain language (ontology / Semantic   │ Invent a formula, state, or strategy     │
+│            │ OS / MIAR)                                │                                          │
+├────────────┼───────────────────────────────────────────┼──────────────────────────────────────────┤
+│ Capability │ Be invoked                                │ Grant authority the handler does not     │
+│            │                                           │ have                                     │
+├────────────┼───────────────────────────────────────────┼──────────────────────────────────────────┤
+│ Conclusion │ Bind future sessions (findings, closure   │ Be inferred from RAG, session log, or    │
+│            │ index, PROMOTED)                          │ Excel                                    │
+└────────────┴───────────────────────────────────────────┴──────────────────────────────────────────┘
+
+Forbidden promotions: session-log → finding; RAG chunk → GROUNDED; Excel/GCMC → runtime; TV mark → TRADE_OPENED; capability exists → capability has authority; MC-* file on disk → measurement layer CLOSED.
+
+───
+
+How Claude operates
+
+Once per session: BOOT → ORIENT_RUNTIME (ACTIVE_VERSION) → name the lane.
+
+Every turn: DISPATCH → cite a loaded authority or ground a new claim → typed retrieve → act → surface TruthConflict if authorities disagree → session log.
+
+┌──────────────────────────────────────────┬─────────────────────────┬──────────────────────────────┐
+│ Phrase class                             │ Owner                   │ Next existing step           │
+├──────────────────────────────────────────┼─────────────────────────┼──────────────────────────────┤
+│ Orient / Validate / Compile / other §12  │ Trigger vocabulary      │ That trigger’s load list     │
+│ trigger words                            │                         │                              │
+├──────────────────────────────────────────┼─────────────────────────┼──────────────────────────────┤
+│ Tune / promote / backtest / “Ask         │ PLAN_REGISTRY via       │ IntentRouter → PlanCompiler  │
+│ GrokAgenticAI”                           │ python -m src.agent.cli │ → Executor                   │
+├──────────────────────────────────────────┼─────────────────────────┼──────────────────────────────┤
+│ Trader claim / pending / semantic review │ .grok/INFRA.md          │ That intent’s happy flow     │
+├──────────────────────────────────────────┼─────────────────────────┼──────────────────────────────┤
+│ Coding: “orient this change / classify / │ INFRA code.* (accepted  │ That code.* flow             │
+│ implement / validate the floor”          │ CLAC B)                 │                              │
+├──────────────────────────────────────────┼─────────────────────────┼──────────────────────────────┤
+│ “Does CN-001 exist?”                     │ query_semantic_os.py -- │ Fail closed if not GROUNDED  │
+│                                          │ ground                  │                              │
+├──────────────────────────────────────────┼─────────────────────────┼──────────────────────────────┤
+│ Feature join                             │ feature_surface_query   │ Existing evidence_class      │
+│                                          │ .py                     │                              │
+├──────────────────────────────────────────┼─────────────────────────┼──────────────────────────────┤
+│ “Search the repo”                        │ rag_index.py query      │ Hits are artifacts; re-      │
+│                                          │                         │ ground before asserting      │
+├──────────────────────────────────────────┼─────────────────────────┼──────────────────────────────┤
+│ Anything else / two owners tie           │ ask_user                │ Do not guess                 │
+└──────────────────────────────────────────┴─────────────────────────┴──────────────────────────────┘
+
+Grounding carve-out: Orient may cite F-ids, ACTIVE_VERSION, and PLAN_REGISTRY after opening the living page. Ground when introducing a join, an implementation fact not on that page, or a token the user just invented.
+
+Typed retrieve order: concept → ontology / Semantic OS / MIAR; conclusion → docs/current-findings.md / closure index; evidence → the named procedure; artifact search → RAG / grep / How-index (only if the user asked for a search).
+
+───
+
+Existing capabilities (verified, not rebuilt)
+
+The census is sourced in the design. High-leverage CURRENT facts:
+
+• Kitchen: 22 PLAN_REGISTRY keys, 35 tools, 21 classifiable intents. semantic_ground is in the registry but not in IntentRouter — TUI already uses the CLI, so this is kitchen-NL hygiene, not a blocker.
+• Grounding: scripts/governance/query_semantic_os.py --ground and truth.ground_claim (SemanticGrounder.ground at semantic_grounding.py:288).
+• Governance floors: construction protocol, feature-surface query, feature-math lint, behavior census, script census, findings/hypothesis/framework/script registries.
+• Telemetry: event_fabric (including LLM_TURN), logs/agent_audit.jsonl, log_query (import / OpsDoctor allowlist — no kitchen intent).
+• RAG: real under src/retrieval/ + scripts/rag_index.py. Not on the spine. Not in PLAN_REGISTRY. EnterpriseGate.grounded is a string-cite heuristic, not CT-008 GROUNDED.
+• Visual: tools/tv_forensic/ + MT5 sidecar. Shots are artifacts. F-080/F-081 already bind the honest joins (OHLC reconcile; SEM-012 trade object has no edge).
+• Multi-LLM: Portable Mind is a derived paste pack (build_context.py), not the workflow.
+• Live rail: F-073 confirmed — HookedLiveEngine exists; LiveEngineHook does not; live_hook.dry_run returns an error dict.
+
+assistant_project.md rows were marked CONFIRMED / STALE / UNVERIFIED / SUPERSEDED. The log is an artifact map, not the findings index.
+
+───
+
+Real gaps vs non-gaps
+
+Real: no session dispatcher (G-1); stale operator-doc counts (G-4); RAG corpus historically omits living authorities (G-5, not this train); no visual↔CRT↔finding join recipe until this playbook (G-7); measurement charter vs sealed MC-* files (G-8 / P-GOV-MC-01, owned elsewhere).
+
+Not gaps: a second PLAN_REGISTRY; wrapping every CLI; putting RAG in the kitchen; rebuilding Semantic OS; a meta-agent; Portable Mind as the OS; unifying INFRA + triggers + kitchen; fixing F-073 from this lane.
+
+───
+
+Key decisions
+
+1. Playbook, not a fourth runtime.
+2. Compose three intent owners; do not merge them. Phrase collisions use the matrix in the design (extends CLAC).
+3. The playbook binds any session LLM (Claude chat, Grok TUI, six-model paste). Kitchen brand stays GrokAgenticAI.
+4. Ground new claims; RAG is never grounding; cite loaded authorities without a subprocess per F-id.
+5. Retrieval is typed.
+6. Unknown → existing ask_user.
+7. semantic_ground classifier is PR-3 after PR-2.
+8. CLAC B is CURRENT accepted. This train does not independently edit INFRA / GROK.md / knowledge-map / CLAC.md / CLOSURE_KPI.md.
+9. DOC_DRIFT is four gates: auto-fixable headers; generated cli-matrix.md (source = registry.py, do not hand-edit); user-gated PENDING; session-log convention.
+10. No new telemetry bus.
+11. Excel / GCMC / How-index are inventory, not runtime.
+12. Visual marks are not trades.
+13. BOOT once per session; DISPATCH every turn.
+14. First ship is A6 (one-screen table). A5 remains the shape.
+
+───
+
+Review loop
+
+┌───────────────────┬──────────────────────────────────────────┐
+│                   │                                          │
+├───────────────────┼──────────────────────────────────────────┤
+│ Rounds            │ 3 (14 issues → 2 leftover editorial → 0) │
+├───────────────────┼──────────────────────────────────────────┤
+│ Cumulative issues │ 2 critical, 5 major, 6 minor, 3 nit      │
+├───────────────────┼──────────────────────────────────────────┤
+│ Exit              │ Reviewer approve, 0 open                 │
+└───────────────────┴──────────────────────────────────────────┘
+
+───
+
+PR plan (future authorization only)
+
+┌──────────────┬──────────────────────────────────────────────────────────┬─────────────────────────┐
+│ PR           │ What                                                     │ Depends on              │
+├──────────────┼──────────────────────────────────────────────────────────┼─────────────────────────┤
+│ CLAC PR-1 (  │ INFRA code.* + .grok/CLAC.md                             │ —                       │
+│ owned by     │                                                          │                         │
+│ CLAC)        │                                                          │                         │
+├──────────────┼──────────────────────────────────────────────────────────┼─────────────────────────┤
+│ PR-1 (A6)    │ One-liner + one-screen table in docs/architecture        │ CLAC PR-1 landed or     │
+│              │ /trigger-vocabulary.md only                              │ folded by that owner    │
+├──────────────┼──────────────────────────────────────────────────────────┼─────────────────────────┤
+│ PR-2         │ Honest counts: 22 keys / 21 classifiable / 35 tools;     │ Independent of PR-1     │
+│              │ agent-memory ops/truth; audit.inspect NO-HANDLER;        │                         │
+│              │ session-log header comment                               │                         │
+├──────────────┼──────────────────────────────────────────────────────────┼─────────────────────────┤
+│ PR-3         │ Make semantic_ground classifiable                        │ After PR-2              │
+├──────────────┼──────────────────────────────────────────────────────────┼─────────────────────────┤
+│ PR-4         │ Optional assertions on existing agent tests (new test    │ PR-3 if it asserts      │
+│              │ file needs GCMC restore)                                 │ classifier reachability │
+├──────────────┼──────────────────────────────────────────────────────────┼─────────────────────────┤
+│ PR-5         │ RAG corpus expand                                        │ Not this train          │
+├──────────────┼──────────────────────────────────────────────────────────┼─────────────────────────┤
+│ PR-6         │ PENDING P-GOAL-11 pointer → v2_htfcrt_2026_08; T2 not    │ User-authorized overlay │
+│              │ seized                                                   │ hygiene                 │
+└──────────────┴──────────────────────────────────────────────────────────┴─────────────────────────┘
+
+Out of train: F-073, P-GOV-MC-01, fat INFRA router, How-index 38→48 (CLAC PR-5), any promotion / ontology / G001.
+
+───
+
+Open questions — resolved (user 2026-08-18)
+
+1. A6 home → trigger-vocabulary.md one-liner + table.
+2. CLAC B → already accepted on disk; not re-opened.
+3. G-2 → PR-3 after PR-2.
+4. P-GOAL-11 → correct pointer only.
+5. RAG expand → later, not this train.
+6. Session-log header → fix comment.
+7. EnterpriseGate ISS docstring → yes, later hygiene.
+8. P-GOV-MC-01 → still owned elsewhere.
+
+No implementation this turn. A later authorized turn starts at CLAC PR-1, then this design’s PR-1 (A6). If you want the accepted design copied next to CLAC under docs/implementation_plan/ so it is not only in temp, say so.
+
+───
+📝 SESSION LOG ENTRY Date: 2026-08-18 18:18 Topic: Design — Integrated Claude Operating Workflow (playbook over existing lab surfaces) Decision/Output: Design-skill loop closed (3 rounds, reviewer approve). Design at C:\Users\Hi\AppData\Local\Temp\grok-Hi\grok-design-doc-b578c7a8.md. A5 shape / A6 first ship. User locked six forks. Authority NONE. No repo PR implemented. ACTIVE_VERSION = v2_htfcrt_2026_08. Belief Update / ROI / Goal:
+  Goal: session LLMs systematically use the lab without rebuilding it.
+  Belief: typed routing over existing owners is the missing piece; RAG ≠ ground ≠ conclude.
+  Knowledge ROI: high — stops a Claude OS, a fat cold-start paste, and re-asking accepted CLAC B.
+  Action: wait for an implement turn; CLAC PR-1 first, then A6. Open Questions: none for this design. Next Step: later authorized turn — CLAC PR-1, then trigger-vocabulary A6 table.

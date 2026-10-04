@@ -1,0 +1,89 @@
+{
+  "_doc": "FM-026 (liquidity_pressure_score) certification session log — delta execution plan.",
+  "session_start_utc": "2026-07-13T03:04:38Z",
+  "session_end_utc": "2026-07-13T03:08:49Z",
+  "feature": "liquidity_pressure_score",
+  "formula_id": "FM-026",
+  "initial_state": {
+    "entry_status": "READY",
+    "gate_0": "PASS",
+    "ledger_status": "CERTIFIED then PROMOTED_PRODUCTION (2026-07-12T21:25:32)",
+    "certification_artifact": "docs/governance/fm026_certification-2026-07-13.json"
+  },
+  "session_type": "DELTA_VERIFICATION — certification already complete; validating current-state integrity",
+  "delta_execution": [
+    {
+      "step": 1,
+      "action": "Load maintained state",
+      "result": "PASS — certification evidence read (135 lines), ledger confirmed (113 lines, events 112-113 for FM-026)"
+    },
+    {
+      "step": 2,
+      "action": "Establish intended quantity from ontology + derived_math + pipeline",
+      "result": "PASS — ontology (YAML:275-284: clip(exp(-0.5 * liquidity_distance), 0.0, 1.0)) matches derived_math.py:150-157 and feature_pipeline.py:721-723"
+    },
+    {
+      "step": 3,
+      "action": "Executable dependency-contract gate",
+      "result": "PASS — declared ['liquidity_distance'] matches executable; no hidden deps found"
+    },
+    {
+      "step": 4,
+      "action": "Implementation-surface classification",
+      "result": "PASS — 6 surfaces: AUTHORITATIVE_PRODUCTION (x4), LIVE_RUNTIME (x1), TEST_ONLY (NONE FOUND)"
+    },
+    {
+      "step": 5,
+      "action": "Independent oracle design",
+      "result": "PASS — numpy re-implementation matches derived_math scalar byte-identically"
+    },
+    {
+      "step": 6,
+      "action": "Certification probes (A-H)",
+      "result": "ALL PASS — hand-calc (12/12), scalar/pipeline parity (11 vectors, max error 0.0), monotonicity (4 pairs decreasing), bounds [0,1] (9 values), prefix invariance (60/100), future mutation (50-cut), determinism (2 runs exact), degenerate input (4 cases), dependency perturbation (monotonic + bounds)"
+    },
+    {
+      "step": 7,
+      "action": "Batch/live parity gate",
+      "result": "PASS — by construction: live (causal_structure.py imports derived_math.liquidity_pressure_score) and batch (feature_pipeline.py:721-723) use same formula authority"
+    },
+    {
+      "step": 8,
+      "action": "Consumer/artifact binding",
+      "result": "PASS — 6 consumers checked (hierarchical_meta_fusion, tradenet_meta_engine, causal_structure, market_state_cluster_engine, feature_pipeline_vector, trained_artifacts)"
+    },
+    {
+      "step": 9,
+      "action": "Evidence artifact hash verification",
+      "result": "PASS — SHA-256 6b6b430a8e6a1e3dbf937a891d4459d661d049114302ce0b3b6cc93703b6c368 matches ledger line 112"
+    },
+    {
+      "step": 10,
+      "action": "Frontier recomputation (probe re-execution)",
+      "result": "PASS — _fm026_cert_probe.py: ALL PROBES PASS: True — FM-026 IS CERTIFIABLE FOR PROMOTED_PRODUCTION"
+    },
+    {
+      "step": 11,
+      "action": "FM-026-specific test",
+      "result": "PASS — test_derived_math.py::test_liquidity_pressure_score_bounds PASSED (1/1)"
+    },
+    {
+      "step": 12,
+      "action": "Governance protocol check",
+      "result": "PASS for FM-026 scope — 119/122 passed, 3 failures pre-existing (test_geometry_census, test_session_log x2 — unrelated to FM-026)"
+    },
+    {
+      "step": 13,
+      "action": "Drift-prevention analysis",
+      "result": "PASS — files unchanged from certification time: ontology.yaml (275-284), derived_math.py (150-157), feature_pipeline.py (721-723), derived_registry.py (line 20). Production_behavior_changed: NO"
+    },
+    {
+      "step": 14,
+      "action": "Terminal disposition",
+      "result": "PROMOTED_PRODUCTION — no regression detected; certification holds"
+    }
+  ],
+  "terminal_disposition": "PROMOTED_PRODUCTION — maintained",
+  "certification_artifact_hash": "6b6b430a8e6a1e3dbf937a891d4459d661d049114302ce0b3b6cc93703b6c368",
+  "session_authority": "FM-026 delta verification — research/governance only §6.5; grants no runtime/production authority."
+}

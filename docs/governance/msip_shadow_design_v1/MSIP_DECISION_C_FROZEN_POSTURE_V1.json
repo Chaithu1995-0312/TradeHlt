@@ -1,0 +1,117 @@
+{
+  "schema_id": "MSIP_DECISION_C_FROZEN_POSTURE_V1",
+  "frozen_at_utc": "2026-07-14T13:00:00Z",
+  "task_class": "OBSERVATION_ONLY",
+  "implementation_authorized": false,
+  "migration_authorized": false,
+  "frozen_posture": {
+    "ARCHITECTURE_DECISION": "C",
+    "MSIP_SHADOW_LAYER": "IMPLEMENTED_AND_OBSERVATIONAL",
+    "G-SHADOW-01": "PASSED_FOR_DECLARED_XAUUSD_POPULATION",
+    "G-PARITY-01": "PARTIAL",
+    "G-MIG-01": "CLOSED",
+    "CRT_AUTHORITATIVE_LIFECYCLE": "UNCHANGED",
+    "BODY_WICK_HYGIENE": "DEFERRED",
+    "NEW_FM_IDENTITIES": "DEFERRED_UNTIL_CONSUMER_NEED",
+    "THRESHOLD_RESEARCH": "NOT_AUTHORIZED",
+    "CONCURRENT_CANDIDATES": "NOT_AUTHORIZED",
+    "CRT_MIGRATION": "NOT_AUTHORIZED",
+    "PRODUCTION_CUTOVER": "NOT_AUTHORIZED",
+    "NEXT_BOUNDARY": "MSIP_WHOLE_REPRESENTATION_PREREGISTRATION_V1",
+    "NEXT_STATUS": "DRAFT_FOR_INDEPENDENT_TECHNICAL_REVIEW",
+    "H-017": {
+      "program_alias": "H-MSIP-001",
+      "registry_id": "H-017",
+      "result": "PRESERVED",
+      "verdict": "RESEARCH_SUPPORTIVE_MICRO_EFFECT",
+      "thread_status": "SCOPE_CLOSED",
+      "evidence_scope": "ORIGINAL_±32_BAR_MATCHED_ESTIMAND_ONLY",
+      "generalization": "NOT_SUPPORTED"
+    },
+    "H-018": {
+      "program_alias": "H-MSIP-002",
+      "registry_id": "H-018",
+      "result": "ACCEPTED",
+      "verdict": "MATCHING_DEPENDENT",
+      "closure_ref": "docs/research-readiness/h-msip-001-h018-thread-closure.md"
+    },
+    "P_BOS_PLUS_1_OCCUPANCY_WIDE_SIGNAL": "NOT_SUPPORTED",
+    "msip_whole_preregistration": {
+      "path": "docs/research-readiness/MSIP_WHOLE_REPRESENTATION_PREREGISTRATION_V1.md",
+      "json": "docs/research-readiness/MSIP_WHOLE_REPRESENTATION_PREREGISTRATION_V1.json",
+      "review_checklist": "docs/research-readiness/MSIP_WHOLE_REPRESENTATION_TECHNICAL_REVIEW_CHECKLIST_V1.md",
+      "primary_contrast": "M2_minus_M1",
+      "hypothesis_id": "NOT_ASSIGNED_UNTIL_PROTOCOL_IS_REVIEW_COMPLETE",
+      "execution_authorized": false,
+      "implementation_authorized": false,
+      "lifecycle": "technical_review → freeze → owner_accept_freeze → STOP (no RUN same session)"
+    }
+  },
+  "authority_relationship_summary": {
+    "body_ratio_wick_size": {
+      "relationship": "EXACT_CANONICAL_IDENTITY",
+      "later_work": "possible hygiene cleanup only; deferred; low research value now"
+    },
+    "atr": {
+      "relationship": "GOVERNED_TRANSFORM of shared absolute SMA-TR(14) substrate",
+      "representations": "CRT absolute runtime quantity ↔ close-relative FM-041",
+      "migration_implication": "would affect calibrated HOW semantics; not cosmetic"
+    },
+    "ema_2_5": {
+      "relationship": "DISTINCT_GOVERNED_MARKET_QUANTITIES",
+      "not_substitutes_for": "canonical EMA 9 / EMA 21 (FM-043 / FM-044)"
+    }
+  },
+  "g_parity_01_rationale": "PARTIAL is correct; forcing PASS would falsely imply every CRT-local quantity maps 1:1 onto an existing canonical feature",
+  "no_new_implementation_boundary": true,
+  "deferred_until_consumer_need": [
+    "body_ratio / wick_size call-path hygiene",
+    "new FM identities for absolute ATR and CRT EMA-2/5"
+  ],
+  "research_control_plane_handoff": {
+    "objective": "Define and run the first falsifiable market-state research hypothesis using existing infrastructure — not more MSIP architecture",
+    "pipeline": [
+      "hypothesis_registry",
+      "experiment definition",
+      "frozen population",
+      "controls",
+      "shadow MarketStateVector observations",
+      "evidence",
+      "critique",
+      "decision ledger"
+    ],
+    "entry_points": {
+      "hypothesis_registry_code": "src/governance/hypothesis_registry.py",
+      "hypothesis_seed": "scripts/governance/seed_hypothesis_registry.py",
+      "hypothesis_artifact": "data/hypothesis_registry.jsonl (GENERATED from seed)",
+      "query": "python scripts/governance/query_hypotheses.py --validate",
+      "qualification_gate": "src/research/qualification.py (M4) — research verdict only; no auto-promotion",
+      "shadow_runner": "scripts/analysis/run_msip_shadow.py",
+      "shadow_schema": "docs/governance/msip_shadow_design_v1/MARKET_STATE_VECTOR_SCHEMA_V1.json",
+      "findings": "docs/current-findings.md",
+      "task_class_policy": "docs/governance/TASK_CLASSIFICATION_BEHAVIOR_POLICY.md"
+    },
+    "constraints": {
+      "authority": "research only (CLAUDE.md §6.5 Authority Ladder)",
+      "shadow_outputs": "OBSERVATIONAL_ONLY — not trading decisions",
+      "crt_lifecycle": "remains authoritative; not mutated by shadow or research experiments unless BEHAVIOR_CHANGE_AUTHORIZED",
+      "no_threshold_optimization_as_default_next_step": true
+    },
+    "first_hypothesis_guidance": {
+      "must_be": "falsifiable statement about continuous market-state dimensions vs outcomes or vs CRT lifecycle occupancy",
+      "must_use": "frozen population + declared controls + shadow JSONL provenance",
+      "must_not": [
+        "open G-MIG-01",
+        "retune CRTConfig thresholds under OBSERVATION_ONLY",
+        "treat shadow labels as production authority",
+        "build more MSIP infrastructure before testing research value"
+      ]
+    }
+  },
+  "infrastructure_available_for_research": [
+    "deterministic continuous shadow observation layer with provenance (G-SHADOW-01)",
+    "measured CRT opportunity funnel + fail-reason telemetry",
+    "resolved CRT-local math authority (body/wick/ATR/EMA)",
+    "WHAT/HOW/WHO boundaries and Decision C architecture"
+  ]
+}

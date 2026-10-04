@@ -69,16 +69,18 @@ class Phase5Config:
     max_cal_error:    float  # |predicted_win_rate – actual_win_rate| must be <= this
     cv_corr_std_max:  float  # corr_std across CV folds must be < this (stability)
     cv_n_folds:       int    # number of expanding-window CV folds
+    require_cv_stable: bool  # set False to skip cv_stable gate (dev/small datasets)
 
     @classmethod
     def from_prod_config(cls) -> "Phase5Config":
         return cls(
-            val_ratio       = float(_require("val_ratio",       0.30)),
-            min_val_samples = int(  _require("min_val_samples", 30)),
-            min_corr        = float(_require("min_corr",        0.10)),
-            max_cal_error   = float(_require("max_cal_error",   0.25)),
-            cv_corr_std_max = float(_require("cv_corr_std_max", 0.05)),
-            cv_n_folds      = int(  _require("cv_n_folds",      3)),
+            val_ratio        = float(_require("val_ratio",        0.30)),
+            min_val_samples  = int(  _require("min_val_samples",  30)),
+            min_corr         = float(_require("min_corr",         0.10)),
+            max_cal_error    = float(_require("max_cal_error",    0.25)),
+            cv_corr_std_max  = float(_require("cv_corr_std_max",  0.05)),
+            cv_n_folds       = int(  _require("cv_n_folds",       3)),
+            require_cv_stable= bool( _require("require_cv_stable", True)),
         )
 
 
@@ -107,10 +109,10 @@ def _run_gates(metrics: dict, cv_stable: bool) -> tuple[bool, dict, str]:
       verdict     : human-readable summary string
     """
     gate_checks: dict[str, bool] = {
-        "min_val_samples": metrics.get("n_val", 0)              >= _CFG.min_val_samples,
-        "min_corr":        metrics.get("corr_expected_rr", 0.0) >= _CFG.min_corr,
+        "min_val_samples": metrics.get("n_val", 0)               >= _CFG.min_val_samples,
+        "min_corr":        metrics.get("corr_expected_rr", 0.0)  >= _CFG.min_corr,
         "max_cal_error":   metrics.get("calibration_error", 1.0) <= _CFG.max_cal_error,
-        "cv_stable":       cv_stable,
+        **( {"cv_stable": cv_stable} if _CFG.require_cv_stable else {} ),
     }
     approved = all(gate_checks.values())
     failed   = [k for k, ok in gate_checks.items() if not ok]

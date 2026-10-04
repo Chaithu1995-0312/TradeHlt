@@ -1,0 +1,107 @@
+[
+  {
+    "aria": "15 minutes",
+    "name": "",
+    "text": ""
+  },
+  {
+    "aria": "Save all charts for all symbols and intervals on your layout",
+    "name": "",
+    "text": ""
+  },
+  {
+    "aria": "15 minutes",
+    "name": "",
+    "text": ""
+  },
+  {
+    "aria": "Save all charts for all symbols and intervals on your layout",
+    "name": "",
+    "text": ""
+  },
+  {
+    "aria": "15 minutes",
+    "name": "",
+    "text": "15m"
+  },
+  {
+    "aria": "Save all charts for all symbols and intervals on your layout",
+    "name": "",
+    "text": "Save\nSave"
+  },
+  {
+    "aria": "Change interval",
+    "name": "",
+    "text": "15"
+  },
+  {
+    "aria": "Symbol/interval chart syncing",
+    "name": "",
+    "text": ""
+  },
+  {
+    "aria": "Show interval settings",
+    "name": "",
+    "text": ""
+  },
+  {
+    "aria": "1 day in 1 minute intervals",
+    "name": "date-range-tab-1D",
+    "text": "1D"
+  },
+  {
+    "aria": "5 days in 5 minutes intervals",
+    "name": "date-range-tab-5D",
+    "text": "5D"
+  },
+  {
+    "aria": "1 month in 30 minutes intervals",
+    "name": "date-range-tab-1M",
+    "text": "1M"
+  },
+  {
+    "aria": "3 months in 1 hour intervals",
+    "name": "date-range-tab-3M",
+    "text": "3M"
+  },
+  {
+    "aria": "6 months in 2 hours intervals",
+    "name": "date-range-tab-6M",
+    "text": "6M"
+  },
+  {
+    "aria": "Year to day in 1 day intervals",
+    "name": "date-range-tab-YTD",
+    "text": "YTD"
+  },
+  {
+    "aria": "1 year in 1 day intervals",
+    "name": "date-range-tab-12M",
+    "text": "1Y"
+  },
+  {
+    "aria": "5 years in 1 week intervals",
+    "name": "date-range-tab-60M",
+    "text": "5Y"
+  },
+  {
+    "aria": "All data in 1 month intervals",
+    "name": "date-range-tab-ALL",
+    "text": "All"
+  },
+  {
+    "aria": "Minutes",
+    "name": "",
+    "text": "MINUTES"
+  },
+  {
+    "aria": "Hours",
+    "name": "",
+    "text": "HOURS"
+  },
+  {
+    "aria": "Days",
+    "name": "",
+    "text": "DAYS"
+  }
+]

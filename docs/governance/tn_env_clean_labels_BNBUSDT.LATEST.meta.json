@@ -1,0 +1,54 @@
+{
+  "created_utc": "2026-07-21T22:33:13.705023+00:00",
+  "protocol_id": "TN_ENV_CLEAN_L2",
+  "protocol_hash": "09beb48635248dd077a7fc9b96b8ec30b9b7e10b67ac9c7b051de8799f1a0ec8",
+  "schema_hash": "1ba02abbafdd0786831181677de547c1",
+  "pit_status": "PIT_UNCLEAN_STORED_FEATURES",
+  "tp2_policy": "STRETCH_3R_BEFORE_SL",
+  "exit_model": "intrabar_fixed",
+  "n_raw": 139943,
+  "n_clean": 139942,
+  "train_eligible": true,
+  "min_samples_train_eligible": 500,
+  "skips": {
+    "not_opportunity": 1
+  },
+  "exception_count": 0,
+  "exception_samples": [],
+  "agreement": {
+    "n": 139942,
+    "agree_tp1_rate": 0.679639,
+    "agree_survives_be_rate": 0.706964,
+    "n_survives_comparable": 139942,
+    "clean_base_rates": {
+      "y_tp1": 0.332852,
+      "y_tp2": 0.241028,
+      "y_survives_be": 0.503158,
+      "y_expired_timeout": 0.010347
+    },
+    "note": "Stream agreement is diagnostic (F-022). Primary y is path-derived."
+  },
+  "config": {
+    "instrument": "BNBUSDT",
+    "max_forward": 40,
+    "cost_bps": 12.0,
+    "max_units": null,
+    "source_path": "logs/BNBUSDT/bnbusdt_training_20260524/opportunities.jsonl",
+    "candle_path": "data/BNBUSDT_M15.csv",
+    "builder_entrypoint": "scripts/research/build_clean_labels_tn_env.py"
+  },
+  "dataset_path": "D:\\Tradelatest\\results\\clean_labels\\BNBUSDT\\20260721T223243Z\\clean_labels.jsonl",
+  "label_rederive_report_path": "D:\\Tradelatest\\results\\clean_labels\\BNBUSDT\\20260721T223243Z\\label_rederive_report.json",
+  "authority": "research_dataset_only \u2014 no train promote / no neural_fn / no spine",
+  "gate_l_checklist": {
+    "gate_0_pass": true,
+    "prereg_freeze": true,
+    "builder_refuses_stream_primary_y": true,
+    "versioned_dataset": true,
+    "label_def_matches_protocol": true,
+    "schema_hash_set": true,
+    "pit_status_declared": true,
+    "label_rederive_report": true,
+    "n_closed_ge_floor": true
+  }
+}

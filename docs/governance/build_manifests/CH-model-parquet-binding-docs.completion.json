@@ -1,0 +1,46 @@
+{
+  "change_id": "CH-model-parquet-binding-docs",
+  "date_utc": "2026-09-16",
+  "agent": "Grok",
+  "parallel_window": "parquet-model-binding",
+  "change_classes": [
+    "DOCUMENTATION_ONLY"
+  ],
+  "declared_files": [
+    "docs/governance/build_manifests/CH-model-parquet-binding-docs.impact.json",
+    "docs/governance/build_manifests/CH-model-parquet-binding-docs.completion.json",
+    "docs/implementation_plan/model-parquet-column-binding.md",
+    "docs/research/parquet_evidence_layer.md",
+    "docs/topics/model-intent-and-feature-ownership.md",
+    ".grok/GROK_WINDOW_PARQUET_BINDING.md",
+    "assistant_project.md"
+  ],
+  "declared_files_note": "Grok window only. Concurrent porcelain (schema-v6 residue, DeepSeek cost-model-identity-stamping.md, other untracked) is NOT absorbed.",
+  "checks_executed": [
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py"
+  ],
+  "checks_detail": [
+    {
+      "check": "tests/test_doc_citations.py + tests/test_topic_docs.py",
+      "result": "PASS",
+      "detail": "6 passed"
+    },
+    {
+      "check": "tests/test_current_findings.py",
+      "result": "PRE_EXISTING_RED",
+      "detail": "test_nonterminal_findings_are_fresh — stale Revalidate-by on F-016…F-031. In the captured branch baseline; this change did not edit docs/current-findings.md."
+    }
+  ],
+  "repo_state_hash": "PENDING",
+  "completion_status": "BLOCKED_PREEXISTING_DIRTY_TREE",
+  "completion_status_note": "validate-completion diffs the whole porcelain tree against declared_files. This worktree already carries hundreds of undeclared governed paths (schema-v6 rename residue, models/*.json, scripts/**) plus DeepSeek's untracked cost-model plan. They are NOT absorbed. Change-specific docs are landed. DOCUMENTATION_ONLY behavior-surface guard would also trip on the foreign src/configs/models dirt. Same honesty as CH-trace-parquet-duckdb-query.",
+  "production_behavior_changed": "NO",
+  "authority_NOT_granted": "No query_trace --model, no RESEARCH_QUERY_BINDING class, no G001, no cost-model edits, no UNKNOWN adjudication.",
+  "left_alone": [
+    "docs/implementation_plan/cost-model-identity-stamping.md",
+    "src/** schema-v6 residue",
+    "configs/formulas/market_ontology.yaml"
+  ]
+}

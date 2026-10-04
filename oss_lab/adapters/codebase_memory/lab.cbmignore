@@ -1,0 +1,41 @@
+# Lab-only ignore template for Codebase-Memory indexing of Tradelatest.
+# Copy/merge into repo-root .cbmignore before first index, or pass via project config.
+# Goal: keep secrets and heavy non-source trees out of structural indexes.
+
+# Secrets / credentials
+.env
+**/.env
+**/.env.*
+*.pem
+*.key
+*credentials*
+*secret*
+secrets/
+.aws/
+.ssh/
+
+# Virtualenvs / packages
+venv/
+.venv/
+**/site-packages/
+**/node_modules/
+**/__pycache__/
+**/*.pyc
+
+# Large / generated / runtime (not structural source of truth for lab)
+results/
+logs/
+data/
+models/
+.chroma_db/
+**/chroma_db/
+
+# Archives / binaries
+**/*.zip
+**/*.tar.gz
+**/*.gguf
+**/*.exe
+**/*.dll
+
+# Git
+.git/

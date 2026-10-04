@@ -1,0 +1,54 @@
+{
+  "change_id": "CH-dataset-identity-r3-v1",
+  "date_utc": "2026-09-02",
+  "objective": "R3: Dataset Identity binding table + load-time admission. First bound dataset XAUUSD_MT5_PHASE1_20260521 (canonical M15 @ 4d73f5ce, direct ParentCandleBuilder projections). CandleLoader admits through DatasetRegistry. Unbound instruments path-passthrough. Native XAUUSD HTF CSVs FORENSIC reject. Not APPROVED, not OHLCV CLOSED, no CAD schema migration, no second L0-L5.",
+  "change_classes": [
+    "CORPUS_AUTHORITY_CHANGE"
+  ],
+  "change_class_rationale": "R3 is corpus admission (which bytes a governed load may stream), not L0-L5 identity store and not scoring/fusion. New class CORPUS_AUTHORITY_CHANGE added this turn. XAUUSD M15 already fail-closed via phase1 guard; registry becomes the admission API and that guard remains the hash/range enforcer.",
+  "affected_files": [
+    "docs/governance/change_contracts.json",
+    "docs/governance/CORPUS_AUTHORITY.md",
+    "docs/governance/dataset_identity.schema.json",
+    "docs/governance/dataset_identity_registry.json",
+    "docs/governance/datasets/XAUUSD_MT5_PHASE1_20260521.json",
+    "docs/governance/xauusd_m15_phase1_frozen_candidate.json",
+    "docs/governance/build_manifests/CH-dataset-identity-r3-v1.impact.json",
+    "docs/knowledge-map.md",
+    "docs/topics/crt-spine.md",
+    "src/data_ingestion/dataset_registry.py",
+    "src/runtime/backtest_v2.py",
+    "tests/test_dataset_registry.py",
+    "tests/test_construction_protocol.py",
+    "tests/test_ohlcv_corpus_freeze.py",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_dataset_registry.py",
+    "tests/test_corpus_authority_decisions.py",
+    "tests/test_xauusd_phase1_frozen_candidate.py",
+    "tests/test_construction_protocol.py"
+  ],
+  "unknowns": [
+    {
+      "question": "Fail-closed UNRESOLVED for every instrument the moment R3 exists (doctrine literal) vs bound-datasets-only this slice.",
+      "blocking": false,
+      "resolution": "R3 v1 admits only bound datasets. Unbound_load_policy=path_passthrough. Global UNRESOLVED reject would break BTC/FX CandleLoader paths and is a later authorized behavior change (R3b).",
+      "followup": "R3b only with explicit user authorization and a declared behavior-change."
+    },
+    {
+      "question": "CAD-* logical_corpus_id SYMBOL_TIMEFRAME schema migration.",
+      "blocking": false,
+      "resolution": "Archive retained. Dataset Identity is the R3 object; CAD rows are not rewritten this turn.",
+      "followup": "Separate change id if CAD is retired."
+    }
+  ],
+  "rollback_boundary": "Revert dataset_registry.py, CandleLoader admit wire, dataset JSON/schema/registry, CORPUS_AUTHORITY_CHANGE class, and docs. Phase-1 xauusd_phase1_candidate guard must remain. No config/ACTIVE_VERSION to revert.",
+  "authority_granted": "User 2026-09-02: R3 Authorized — binding table + load-time admission for the frozen Dataset Identity object.",
+  "authority_NOT_granted": "No APPROVED status, no OHLCV_CLOSURE_STATUS change, no CAD schema migration, no global UNRESOLVED reject, no G001, no promotion, no ACTIVE_VERSION, no Semantic OS id, no FM-id, no F-id, no CalendarHTFBuilder, no reopen of Canonical Layer Identity, no ParentCRTFeed rewrite.",
+  "production_behavior_changed": "NO for XAUUSD M15 (already rewritten+hashed) and unbound instruments (passthrough). YES only for governed loads of native XAUUSD H1/H4/M5/D1 CSVs via CandleLoader — those files had no src/ callers; they now fail closed as FORENSIC."
+}

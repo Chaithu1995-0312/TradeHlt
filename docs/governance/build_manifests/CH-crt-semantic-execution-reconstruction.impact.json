@@ -1,0 +1,23 @@
+{
+  "change_id": "CH-crt-semantic-execution-reconstruction",
+  "objective": "Produce a descriptive-only CRT Semantic Execution Reconstruction report and JSON twin. Reuse the existing Semantic OS object layer, active v2_multi_2026_04 config, declared state topology, tests, and observed XAUUSD event log. No runtime, config, model, script, or promotion behavior changes.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY"
+  ],
+  "affected_files": [
+    "reports/crt_semantic_execution_reconstruction.md",
+    "reports/crt_semantic_execution_reconstruction.json",
+    "docs/governance/build_manifests/CH-crt-semantic-execution-reconstruction.impact.json",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "required_checks_ack": [
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "single commit; remove the descriptive report artifacts, this manifest, and the session-log entry"
+}

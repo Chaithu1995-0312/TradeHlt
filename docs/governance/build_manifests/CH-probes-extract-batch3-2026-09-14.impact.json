@@ -1,0 +1,14 @@
+{
+  "change_id": "CH-probes-extract-batch3-2026-09-14",
+  "when_utc": "2026-09-14T10:43:40Z",
+  "archive_batch": "archive/probes_extraction_batch3_2026-09-14/",
+  "migrated_full": [
+    "all_states_persistence_probe.py",
+    "sweep_conditional_magnitude_probe.py"
+  ],
+  "migrated_partial": [
+    "phase1_shadow_create_economic_census.py",
+    "build_decision_atlas.py"
+  ],
+  "completion_status": "COMPLETE_LOCAL"
+}

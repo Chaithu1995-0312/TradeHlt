@@ -1,0 +1,941 @@
+# HUMAN-READABLE EXECUTION COGNITION ANALYSIS
+
+## TARGETS: `src/engines/`, `src/events/`, `src/execution/`, `src/expansion/`
+
+---
+
+# PART 1: `src/engines/` — THE SCORING LAYER
+
+This directory contains 11 files: 2 shim/wrappers, 1 data-integrity gate, and 8 actual scoring engines. Every file in this directory is a **score producer** — none of them place trades, write to broker APIs, or mutate system state beyond logging.
+
+---
+
+## 1. `crt_engine.py` — CRT Score Wrapper
+
+### File Purpose
+A parallel-engine wrapper that calls `compute_scores()` from `scoring_engine.py`, wraps the result in a log entry, and returns the score. It exists because the system has a "parallel engine" architecture where multiple scoring engines (CRT, LLM, etc.) are called independently and their results are fused later.
+
+### Runtime Role
+Called as one of N parallel scoring engines. Receives a `trade_id` string and two dicts (`features`, `context`). Produces a score. Logs everything to `logs/crt_engine.log`.
+
+### Functions
+
+#### `compute(trade_id, features, context) -> dict`
+
+**Human purpose:** Take CRT features (body_ratio, disp_strength, ATR, retest_depth, candles_since_retest, sweep_detected, double_sweep) plus a context dict that provides fallback values for optional fields, compute a CRT score, log it with a timestamp, and return `{"score": float}`.
+
+**What actually happens when this runs:**
+1. Extract 7 features from the `features` dict with hard casts: `float(features["body_ratio"])`, etc. If key not in features dict → KeyError.
+2. For optional fields `candles_since_retest` and `sweep_detected`, fall back to `context` dict values if missing from `features`.
+3. Call `scoring_engine.compute_scores(...)` with all 7 positional arguments.
+4. Extract `result["final"]` or `result["score"]` from the returned dict.
+5. If ANY exception occurs, return `{"score": 0.0, "reason": str(e)}` — the exception message is exposed in the output.
+6. Log entire input/output as JSON-serialized line to file.
+
+**Invocation sources:** The parallel engine runner (likely `EngineRunner` in `src/runtime/` or `engine_runner.py`).
+
+**Downstream calls:** `scoring_engine.compute_scores()`.
+
+**Inputs:** `trade_id` (str), `features` (dict with 7 keys), `context` (dict with fallback values).
+
+**Outputs:** `{"score": float}` or `{"score": 0.0, "reason": str}`.
+
+**State mutations:** Appends one line to `logs/crt_engine.log`.
+
+**Side effects:** File write to log file.
+
+**Network/API usage:** NONE.
+
+**Subprocess usage:** NONE.
+
+**Fallbacks:** If `candles_since_retest` or `sweep_detected` missing from features, falls back to `context` dict. If those also missing: defaults to `0` and `False` respectively.
+
+**Hidden defaults:** ALL numeric features cast with `float()` — any non-numeric value raises ValueError → swallowed → score=0.0.
+
+**Failure modes:**
+- Missing field in `features` dict (KeyError) → swallowed → score=0.0 silently.
+- `features` dict is not a dict (AttributeError on `.get()`) → swallowed → score=0.0.
+- `compute_scores()` returns dict without `"final"` or `"score"` key → `result.get("final", result.get("score", 0.0))` resolves to 0.0.
+
+**Determinism:** Pure function of its inputs. Same features + context → same score.
+
+**Corruption risks:** None — it only reads data and writes logs.
+
+**Trust level:** CANONICAL. This is a thin, well-defined wrapper with no hidden behavior.
+
+---
+
+## 2. `gaussian_engine.py` — BACKWARD-COMPAT SHIM
+
+### File Purpose
+Pure re-exporter. The real code moved to `heuristic_gaussian_engine.py`. This file exists so old `from engines.gaussian_engine import GaussianEngine` import paths still work. `GaussianEngine` is aliased to `HeuristicGaussianEngine`.
+
+### Trust Level: LEGACY shim. Safe, but a code smell — indicates an API change was made without updating all callers.
+
+---
+
+## 3. `heuristic_gaussian_engine.py` — The Real Gaussian Engine
+
+### File Purpose
+Computes a Gaussian probability score from three features (`ema_fast`, `ema_slow`, `momentum_score`) using a configurable/externally-trained mu/sigma pair. This is the default "heuristic" Gaussian implementation (as opposed to the ML-backed version in `ml_gaussian_engine.py`).
+
+### Runtime Role
+Primary scoring engine for the CRT pipeline. Called per-candle to produce a score in [0,1] that represents how "normal" the current market conditions are relative to trained parameters.
+
+### Classes
+
+#### `GaussianRegistry`
+
+**Purpose:** Loads the `models/gaussian_registry.json` file, normalizes entries, validates that at least one version has `active=true`, resolves the active version with artifact-existence fallback to predefined fallback versions (`["v1", "import_fix_v1"]`).
+
+**Ownership:** Owned by `HeuristicGaussianEngine`.
+
+**Runtime responsibility:** Provide mu, sigma, and metadata for the active model version.
+
+**What actually happens when `load()` is called:**
+1. `json.load()` the registry file.
+2. Validate it's a dict (not a list).
+3. Normalize each entry with `_normalize_registry_entry()`.
+4. Find all versions with `active=true`.
+5. If none active → `RuntimeError("no version has active=true")`.
+6. If multiple active → log WARNING, use first one.
+7. Call `_resolve_with_fallback()`: check if artifact file exists at `models/{model_file}`. If yes → return version. If no → try each fallback version in `_FALLBACK_PRIORITY`, checking artifact existence. If all fallbacks also missing → `RuntimeError("FAIL CLOSED")`.
+
+**Hidden defaults:** `_FALLBACK_PRIORITY = ["v1", "import_fix_v1"]`. These are the only fallback candidates. If neither exists → exception.
+
+**Determinism:** Deterministic given same registry file content.
+
+**Corruption risk:** If registry file is missing → `FileNotFoundError` raised. If registry file is corrupted (invalid JSON) → `json.load()` raises. These are not caught by the caller — the caller `HeuristicGaussianEngine` catches `(FileNotFoundError, RuntimeError)` only. JSON decode errors propagate.
+
+#### `HeuristicGaussianEngine`
+
+**Purpose:** Compute Gaussian probability using EMA ratio + momentum score with a Gaussian kernel.
+
+**Ownership:** One per engine runner instance.
+
+**Runtime responsibility:** Per-candle scoring.
+
+**What actually happens when `compute()` is called:**
+1. If registry not loaded and no override config given → call `_load_registry()`.
+2. Assert input is dict and has at least `len(CANONICAL_FEATURES)` features (CANONICAL_FEATURES is an iterable of feature names).
+3. Extract `ema_fast`, `ema_slow`, `momentum_score` from input.
+4. If `ema_fast == ema_slow and momentum == 0.0` → return `{"score": 0.5, "reason": "neutral_synthetic_condition"}`.
+5. If `ema_slow == 0` → `RuntimeError("cannot compute EMA ratio")`.
+6. Compute `ema_diff = (ema_fast - ema_slow) / ema_slow`.
+7. Compute `momentum_norm = tanh(momentum)`.
+8. Compute `x = (ema_diff + momentum_norm) / 2.0`.
+9. Compute Gaussian: `exp(-(x - mu)^2 / (2 * sigma^2))`.
+10. Return score rounded to 4 decimal places, reason "gaussian_computed", meta dict.
+
+**Hidden defaults:**
+- `self.mu` property: checks `_mu_override` first, then `self._registry.mu`, then `0.0`.
+- `self.sigma` property: checks `_sigma_override` first, then `self._registry.sigma`, then `1.0`.
+- If sigma is 0 (from registry), `GaussianRegistry.sigma` property clips it to `1.0`.
+- `_load_registry()` catches `FileNotFoundError` and `RuntimeError` but NOT `json.JSONDecodeError` — if the registry file is malformed JSON, the exception propagates.
+
+**Invocation sources:** Engine runner calling `.compute(input_data, candle_idx, direction)`.
+
+**Downstream calls:**
+- `features.feature_schema.CANONICAL_FEATURES` (module-level constant access)
+- `GaussianRegistry.load()` if registry is used
+
+**Inputs:** `input_data` (dict with ema_fast, ema_slow, momentum_score), `candle_idx` (unused), `direction` (accepted but ignored — direction-agnostic).
+
+**Outputs:** `{"score": float, "reason": str, "meta": dict}`.
+
+**State mutations:** Logs INFO message on registry load. No file writes at compute time.
+
+**Side effects:** None at compute time.
+
+**Network/API usage:** NONE.
+
+**Subprocess usage:** NONE.
+
+**Failure modes:**
+- Missing canonical features → `KeyError` wrapped in `RuntimeError` — fail-fast.
+- `ema_slow == 0` → `RuntimeError` — fail-fast.
+- Registry load JSON error → unhandled exception propagates.
+- Registry sigma = 0 → silently clipped to 1.0 (hidden correction).
+
+**Determinism:** Deterministic given same inputs + same mu/sigma.
+
+**Corruption risk:** If `_load_registry()` fails with an unhandled exception, the compute() call chain breaks. No silent fallback inside compute() for registry JSON errors.
+
+**Trust level:** CANONICAL — well-documented, explicit assertions, clear fail-fast on missing features.
+
+---
+
+## 4. `live_engine.py` — Live Trading Decision + Telegram Alerts
+
+### File Purpose
+The live trading decision system. Takes a trade setup, runs Gaussian inference via an injected model, applies deterministic decision rules, and sends Telegram alerts to a human operator. **NEVER places orders** — human is always the final executor.
+
+### Runtime Role
+The outermost live trading loop. Called once per detected trade setup (per candle per symbol).
+
+### Classes
+
+#### `LiveEngineConfig` (dataclass)
+
+**Purpose:** All configuration parameters for the live engine. Loaded from environment variables with hardcoded defaults.
+
+**What actually happens:**
+- `from_env()` reads 8 environment variables.
+- **Hardcoded defaults in source code:**
+  - `TELEGRAM_BOT_TOKEN` defaults to `"8540111634:AAF29RTVnbIiBBMxITfSJ50WnwiQVGaZqhY"`
+  - `TELEGRAM_CHAT_ID` defaults to `"1103644701"`
+  - These are **production tokens hardcoded into the source**.
+- `LIVE_ENGINE_ENABLED` defaults to `"0"` (disabled).
+- `LIVE_RR_THRESHOLD` defaults to `1.5`.
+- `LIVE_CONF_MIN` defaults to `0.55`.
+- `LIVE_CONF_STRONG` defaults to `0.60`.
+- `LIVE_ML_OVERRIDE` defaults to `0.75`.
+- `LIVE_COOLDOWN_SECONDS` defaults to `60`.
+- `LIVE_DEDUP_CANDLES` defaults to `4`.
+
+**Trust level:** DANGEROUS — hardcoded Telegram bot token and chat ID. Any developer who runs this code has access to production Telegram credentials.
+
+#### `BitNetZoneGate`
+
+**Purpose:** Trade filter that gates trades based on pre-computed BitNet zones. Only allows trades where the Gaussian similarity score to a known profitable zone exceeds a zone-specific threshold.
+
+**What actually happens when `check(features)` is called:**
+1. If `enabled=False` → pass through, return `allowed=True`.
+2. If `_underpowered=True` (total training samples < zone_min_samples) → auto-bypass with reason `"underpowered_zone_registry"`.
+3. If no zones loaded → log CRITICAL, pass through with reason `"no_zones_fail_open"`.
+4. If `bitnet.zone_cosine_searcher` not importable → pass through with reason `"bitnet_unavailable"`.
+5. For each zone: compute Gaussian similarity score via `compute_gaussian_score(features, zone)`. If ANY zone's score >= threshold → allowed=True.
+6. Return top-3 scores in response.
+
+**Hidden defaults:**
+- `zone_min_samples` defaults to `50` (hardcoded).
+- Zone threshold defaults to `0.7` if zone dict doesn't have `"threshold"`.
+- `ImportError` → pass-through (no zone filtering).
+- `_load_registry()` sets `self._zones = []` on ANY error — fail-open literally.
+
+**Invocation sources:** `get_zone_gate()` singleton factory, then `.check(features)` called by `LiveEngine.process()` or by `EngineRunner`.
+
+**Downstream calls:** `bitnet.zone_cosine_searcher.load_zone_registry()` and `compute_gaussian_score()`.
+
+**Inputs:** `features` (list[float], 11-dim).
+
+**Outputs:** `{"allowed": bool, "score": float, "threshold": float, "zone_id": str, "reason": str, "top_scores": list}`.
+
+**State mutations:** None.
+
+**Failure modes:**
+- ImportError for bitnet module → silent pass-through.
+- Missing zone registry file → warning logged, empty zones, pass-through.
+- Invalid zone schema → warning, empty zones.
+
+**Trust level:** EXPERIMENTAL — fail-open by design, which means if this gate is supposed to protect against bad trades, it silently passes everything when misconfigured.
+
+#### `LiveEngine`
+
+**Purpose:** Orchestrates the full live inference pipeline: feature building → scaling → Gaussian inference → ML advisory → decision → cooldown/dedup filter → Telegram dispatch → audit log.
+
+**What actually happens when `process()` is called:**
+1. **Kill switch:** Check `self.config.enabled`. If False → log "kill switch", return BLOCK result with `suppressed_reason="kill_switch_disabled"`.
+2. **Feature build:** Import `features.dataset_builder.build_feature_vector()` and `validate_feature_vector()`. Build 9-dim feature vector from `trade_data`.
+3. **Scale:** Call `scaler.transform_one(vec)`.
+4. **Gaussian inference:** Call `gaussian_model.predict_expected_rr(vec_scaled)` → returns (expected_rr, confidence, probabilities).
+5. **ML advisory (fail-open):** Import `config_layer.rr.rr_fusion.get_fusion_layer()`. If RR fusion layer loaded, augment trade_data with Gaussian results and call `_rr_layer.score()`. If RR layer not available, fall back to injected `neural_fn` callable. If both fail → `ml_score = None`.
+6. **Decision:** Call `decide_trade(expected_rr, confidence, ml_score, ...)` → returns (decision, reason).
+7. **Cooldown:** If decision is BLOCK → skip cooldown check. Otherwise check cooldown + dedup. If suppressed → log and return.
+8. **Format message:** Build Telegram message string.
+9. **Send Telegram:** Call `send_telegram_alert()`.
+10. **Record state:** On success, call `self._state.record()`.
+11. **Audit log:** Append entry to `logs/live_alerts.jsonl`.
+12. Return result dict.
+
+**Hidden defaults:**
+- `lambda_decay` in `build_feature_vector()` is hardcoded to `0.05`.
+- `time_decay` in the alert message falls back to `exp(-0.05 * candles_since_retest)`.
+- Blocked decisions don't even check cooldown — cooldown only filters non-BLOCK signals.
+- ALL exceptions during feature build, scaling, or Gaussian inference are caught and result in a logged error + BLOCK return. This means if scaler is uninitialized or model is None, the signal is suppressed with a reason.
+
+**Invocation sources:** External loop or test harness calling `process()` or `dry_run()`.
+
+**Downstream calls:**
+- `features.dataset_builder.build_feature_vector()`, `validate_feature_vector()`
+- `config_layer.rr.rr_fusion.get_fusion_layer()`
+- `decide_trade()` (local function)
+- `send_telegram_alert()` (local function)
+- `format_alert_message()` (local function)
+- `_log_alert()` (local function — file append)
+
+**Inputs:** `trade_data` (dict), `gaussian_model` (object with `.predict_expected_rr()`), `scaler` (object with `.transform_one()`), `neural_fn` (optional callable), `candle_idx` (int), `timeframe` (str).
+
+**Outputs:** Comprehensive result dict with decision, reason, expected_rr, confidence, ml_score, sent, suppressed_reason.
+
+**State mutations:**
+- Appends to `logs/live_alerts.jsonl`.
+- Updates `_AlertState` cooldown/dedup tracking dict.
+- Sends Telegram message (if configured).
+
+**Side effects:** Telegram API call, file write to audit log.
+
+**Network/API usage:** `requests.post()` to `api.telegram.org`.
+
+**Subprocess usage:** NONE.
+
+**Failure modes:**
+- Any import inside `process()` (e.g., `features.dataset_builder`) could raise `ImportError` if the module is not installed → caught → error logged → BLOCK.
+- `send_telegram_alert()` never raises — it catches all exceptions.
+- `format_alert_message()` raises if `probabilities` has wrong length.
+- `_log_alert()` never raises — catches all exceptions in write.
+
+**Determinism:** Deterministic given same inputs and same model state. Telegram send success/failure is non-deterministic but the rest of the pipeline is.
+
+**Corruption risk:** The `_log_alert()` fail-safe swallows write errors — if the log file can't be written, the system silently loses audit data.
+
+**Trust level:** LIVE — actively used in production. Contains hardcoded production credentials (see `LiveEngineConfig`).
+
+#### `_AlertState` (private)
+
+**Purpose:** Per-symbol cooldown and setup deduplication to prevent alert spam.
+
+**What actually happens:**
+- `should_alert()` checks: (1) time since last alert for this symbol >= cooldown, (2) setup hash (symbol:session:regime MD5) not seen within last `dedup_candles` indices.
+- Uses `time.time()` for cooldown — wall clock, not candle time. If system clock changes, cooldown can be wrong.
+
+**Failure modes:**
+- Setup dedup uses `candle_idx` — if `candle_idx` resets or goes backward (e.g., across sessions), dedup may fail or produce false positives.
+
+### Functions
+
+#### `decide_trade(expected_rr, confidence, ml_score, ...) -> (str, str)`
+
+**Human purpose:** The core decision ladder. Given Gaussian RR and confidence, optionally ML score, return one of {BLOCK, EXECUTE, WARN, WATCH}.
+
+**Decision ladder (first match wins):**
+1. `confidence < conf_min` → BLOCK (low_confidence)
+2. `rr >= threshold AND conf >= conf_strong` → EXECUTE (strong_setup)
+3. `rr >= threshold AND conf < conf_strong` → WARN (rr_good_but_low_conf)
+4. `ml_score is not None AND ml_score > ml_override AND rr < threshold` → WATCH (ml_disagrees_positive)
+5. default → BLOCK (no_edge)
+
+**Determinism:** Purely deterministic.
+
+#### `send_telegram_alert(message, bot_token, chat_id, timeout=5) -> (bool, str|None)`
+
+**What actually happens when this runs:**
+1. If `bot_token` or `chat_id` empty → log DEBUG, return `(False, "not_configured")`.
+2. `requests.post(f"https://api.telegram.org/bot{bot_token}/sendMessage", json=payload, timeout=5)`.
+3. If HTTP 200 → `(True, None)`.
+4. If other HTTP status → log warning, `(False, err_msg)`.
+5. ImportError → `(False, "requests_not_installed")`.
+6. Exception → `(False, str(e))`.
+
+**Network:** Direct HTTP POST to Telegram API.
+
+**Fail-safe:** Catches ALL exceptions. Never raises.
+
+#### `format_alert_message(...) -> str`
+
+**What it does:** Builds a Markdown-formatted Telegram message with emoji icons, scores, probabilities, and human-readable fields.
+
+#### `alert_from_scores(...) -> dict`
+
+**Purpose:** Standalone function to send a Telegram alert from pre-computed scores without needing a LiveEngine instance. Runs `decide_trade()` and `format_alert_message()` internally, sends, and logs.
+
+#### `get_zone_gate(path, min_samples) -> BitNetZoneGate`
+
+Lazy singleton factory. Creates one `BitNetZoneGate` on first call, returns same instance thereafter.
+
+---
+
+## 5. `llm_engine.py` — LLM Score Wrapper
+
+### File Purpose
+Parallel engine wrapper that calls `config_layer.llm_scorer.llm_score_safe()`, logs, and returns score.
+
+### Functions
+
+#### `compute(trade_id, features, context) -> dict`
+
+**What actually happens when this runs:**
+1. Call `llm_score_safe(features)` → gets score as float.
+2. If success → `{"score": round(score, 6)}`.
+3. If ANY exception → `{"score": 1.0, "reason": str(e)}`. **NOTE: LLM fallback is 1.0 (maximum confidence), not 0.0.**
+
+**Hidden defaults:** LLM engine falls back to score=1.0 on failure — the LLM default is "trust the trade" while CRT engine falls back to 0.0 ("reject the trade").
+
+**Side effects:** Appends to `logs/llm_engine.log`.
+
+**Trust level:** CANONICAL for the LLM scoring role. The 1.0 fallback is an intentional design choice but creates a potential silent override.
+
+---
+
+## 6. `ml_gaussian_engine.py` — ML-Backed Gaussian
+
+### File Purpose
+ML-based Gaussian engine using a trained GaussianNBModel (32-dim). Selected via `GAUSSIAN_IMPL=ml` env var.
+
+### Runtime Role
+Alternative to `HeuristicGaussianEngine`. Uses a trained ML model instead of heuristic EMA-based scoring.
+
+### Class
+
+#### `MLGaussianEngine`
+
+**What actually happens when `compute()` is called:**
+1. Lazy-load model from `GaussianModelRegistry` if not loaded.
+2. If model is None and `_load_failed=True` → return `{"score": 0.5, "reason": "ml_gaussian_fallback"}`.
+3. Extract 35-dim vector via `extract_feature_vector(input_data)`.
+4. If `direction == "short"`: mirror directional features using `_mirror_features_for_short()`.
+5. If vector longer than model.n_features → truncate silently (schema migration compat).
+6. If vector length != model.n_features → return 0.5 fallback.
+7. Scale vector with `self._scaler.transform_one()`.
+8. Call `model.predict_expected_rr(scaled)`.
+9. Convert expected_rr to score via sigmoid: `1 / (1 + exp(-expected_rr))`.
+10. Clamp to [0,1].
+
+**Failure modes:**
+- Model load failure → `_load_failed=True`, all subsequent compute() calls return 0.5 fallback without retrying.
+- Vector length mismatch → 0.5 fallback (not an exception).
+- Any exception inside compute() → caught, logged as warning, returns 0.5 fallback.
+
+**Determinism:** Deterministic given same model weights and scaler.
+
+**Trust level:** LIVE — used in production when GAUSSIAN_IMPL=ml is set.
+
+---
+
+## 7. `rr_engine.py` — Candle Polarity Index (formerly misnamed RR Engine)
+
+### File Purpose
+Computes the Candle Polarity Index (CPI) — a measure of how directionally committed a candle is. **NOT** actually risk:reward despite the name.
+
+### Class
+
+#### `RREngine`
+
+**What actually happens when `compute(input_data)` runs:**
+1. Extract close, high, low from input_data.
+2. Validate: `high >= close >= low` — if not → `{"score": 0.0, "reason": "invalid_price_structure"}`.
+3. `candle_range = high - low`.
+4. If `candle_range < 1e-9` (doji) → `{"score": 0.0, "reason": "doji_zero_range"}`.
+5. `upper_body = (high - close) / candle_range` — 1.0 when close at low (bullish pin).
+6. `lower_body = (close - low) / candle_range` — 1.0 when close at high (bearish pin).
+7. `polarity = max(upper_body, lower_body)` — peaks at 1.0 (directional bar), 0.5 at midpoint (doji).
+8. Returns polarity as score, plus legacy `"rr_ratio"` field for backward compat.
+
+**Hidden defaults:** `_EPS = 1e-9` for doji detection. `min_rr` from config is stored but never used in scoring.
+
+**Failure modes:**
+- Missing key → `{"score": 0.0, "reason": "missing_key:{key}"}`.
+- Type/Value error → `{"score": 0.0, "reason": "value_error:{msg}"}`.
+
+**Trust level:** CANONICAL — well-documented semantic correction. The file's docstring explicitly explains the historical naming bug and why the current formula is correct.
+
+---
+
+## 8. `scoring_engine.py` — The Core Scoring Functions
+
+### File Purpose
+Contains:
+1. `compute_scores()` — the canonical CRT scoring function (7 inputs → 4 sub-scores → weighted final).
+2. `ScoringEngine` class — a multi-mode scoring orchestrator with Gaussian + neural + LLM fusion.
+3. `compute_gaussian_score()` — inline fallback for zone-based Gaussian scoring when bitnet module unavailable.
+
+### Functions
+
+#### `compute_scores(body_ratio, move, atr, retest_depth, candles_since_retest, sweep_detected, double_sweep, lambda_decay=0.05) -> dict`
+
+**What actually happens:**
+1. `disp_strength = move / atr` (if ATR > 0, else 0).
+2. Sweep score: no sweep = 0.0, double sweep = 1.0, single sweep = 0.7.
+3. Breakout score: 0.5 × clamp(body_ratio, 0-1) + 0.5 × clamp(disp_strength/2, 0-1).
+4. Retest score: `exp(-((retest_depth - 0.5)^2) / 0.04)` — Gaussian centered at 0.5 retest depth.
+5. Time decay: `exp(-lambda_decay × max(0, candles_since_retest))`.
+6. **Final = 0.35×sweep + 0.25×breakout + 0.20×retest + 0.20×time**.
+7. Returns all sub-scores plus `final` and `score` (both same value).
+
+**Hidden defaults:** `lambda_decay=0.05` hardcoded. `disp_strength = 0` if ATR is 0. Sweep defaults to 0 if no sweep.
+
+**Determinism:** Purely deterministic.
+
+**Trust level:** CANONICAL — this is the core CRT scoring formula.
+
+#### `compute_gaussian_score(features, params) -> float`
+
+**Purpose:** Compute Gaussian score from feature vector and zone params. First tries to import from `bitnet.zone_cosine_searcher`; falls back to inline calculation using mu/sigma/weights from params dict.
+
+**Failure modes:** If bitnet unavailable and params dict is malformed → likely KeyError or IndexError.
+
+### Class
+
+#### `ScoringEngine`
+
+**What actually happens when `score()` is called:**
+1. If mode is `"deterministic"`: return gaussian_score as final, decision = EXECUTE if >= threshold else BLOCK.
+2. If mode is not deterministic:
+   - Optionally compute neural score via `neural_fn(features)`.
+   - Optionally compute LLM score via `llm_score_safe(features)` if near threshold or models disagree.
+   - **Fusion formula: final = 0.6×gaussian + 0.3×neural + 0.1×llm**.
+   - Override logic:
+     - `llm < 0.2` → BLOCK (LLM veto).
+     - `neural > 0.8 AND gaussian < threshold` → EXECUTE (neural override rescue).
+     - `neural < 0.3 AND gaussian < threshold` → BLOCK (weak confluence).
+     - `final_score < threshold` → BLOCK.
+     - `final_score < threshold + 0.05` → WARN.
+
+**Hidden defaults:**
+- `llm_trigger_margin = 0.05` — LLM triggered when score within 0.05 of threshold or disagreement > 0.25.
+- If `llm_score_safe()` raises → `llm = 1.0` (trust the trade).
+- If `neural_fn()` raises → `neural = 0.0`.
+- `validate_features()` import is commented out — the schema validation line `#validate_features(features, CANONICAL_FEATURES)` is dead code.
+
+**Failure modes:**
+- Neural function raises → neural defaults to 0.0 (no logging of the error).
+- LLM function raises → llm defaults to 1.0 (silently trusts the trade — DANGEROUS).
+- Reporter raises → caught, logged as debug.
+
+**Trust level:** PARTIAL — the commented-out `validate_features` call is a concern (code was intentionally disabled but left in). The silent LLM fallback to 1.0 in `score()` is DANGEROUS.
+
+---
+
+## 9. `tradenet_meta_engine.py` — Capital Quality Meta-Cognition
+
+### File Purpose
+Meta-cognition layer that takes outputs from Gaussian, RR, Zone, Replay, and Market State engines and produces a capital quality score, expected trade quality tier, allocation confidence, and risk authority level.
+
+### Runtime Role
+Called AFTER all individual engines have computed their scores. Aggregates them into a single "should we allocate capital to this trade?" decision.
+
+### Class
+
+#### `TradeNetMetaEngine`
+
+**What actually happens when `compute()` is called:**
+1. Lazy-load TradeNet model from registry (if PyTorch available).
+2. Compute base p_win from canonical features via TradeNet forward pass.
+3. If elapsed time > 100ms → return fail-close fallback (MARGINAL, QUARTER authority).
+4. Extract: gaussian_score, rr_score, zone_score, historical_winrate, cluster_stability, replay_density, trap_probability, state_persistence, liquidity_pressure.
+5. **Capital quality formula:**
+   ```
+   cq = 0.30*base_p_win + 0.20*g_score + 0.15*rr_score + 0.10*zone_score
+        + 0.15*hist_wr + 0.05*cluster_stb + 0.05*state_pers
+        - 0.05*trap_prob - 0.05*liq_pressure*(1-cluster_stb)
+   ```
+6. Clamp to [0,1].
+7. **Tier mapping:** >= 0.75 → PREMIUM (FULL authority), >= 0.60 → STANDARD (HALF), >= 0.45 → MARGINAL (QUARTER), else → POOR (NONE).
+8. Allocation confidence = `0.50*cluster_stb + 0.30*replay_dens + 0.20*state_pers`.
+
+**Fallback output:** `{"capital_quality_score": 0.5, "expected_trade_quality": "MARGINAL", "allocation_confidence": 0.0, "risk_authority": "QUARTER", "meta": {"reason": "tradenet_meta_fallback"}}`.
+
+**Hidden defaults:**
+- `_TIMEOUT_MS = 100` hardcoded.
+- `trap_prob` defaults to 0.3 if market_state_result is None.
+- `state_pers` defaults to 0.5 if market_state_result is None.
+- `liq_pressure` defaults to 0.3 if not in features.
+- If model is None → `_inference_base()` returns 0.5.
+- If PyTorch unavailable → `_load_failed=True`, base p_win = 0.5 always.
+- Vector length mismatch → returns 0.5.
+
+**Failure modes:**
+- Exception inside compute() → caught, logged as warning, returns fallback.
+- `_inference_base()` exception → returns 0.5.
+
+**Determinism:** Deterministic given same inputs + same model weights.
+
+**Trust level:** LIVE.
+
+---
+
+## 10. `trap_validator_engine.py` — Data Integrity Pre-Gate
+
+### File Purpose
+Data integrity validator and pre-gating layer. Validates that market conditions meet structural preconditions before a trade is considered.
+
+### Class
+
+#### `TrapValidatorEngine`
+
+**What actually happens when `compute(input_data)` runs:**
+1. **Gate 0:** Check `input_data.get("_data_integrity") == "real"`. If not → `{"score": 0.0, "reason": "data_integrity_failed"}`.
+2. **Gate 1:** Check all CANONICAL_REQUIRED keys present: close, high, low, open, volume, atr, ema_fast, ema_slow, session. Missing → `{"score": 0.0, "reason": "missing_fields:[...]"}`.
+3. **Gate 2:** ATR must be > 0 and >= min_atr (default 0.0005).
+4. **Gate 3:** Session must be in allowed_sessions (default: asia, london, new_york — both int and string forms).
+
+**Hidden defaults:**
+- `min_atr = config.get("min_atr", 0.0005)`.
+- `allowed_sessions = config.get("allowed_sessions", ["asia", "london", "new_york"])`.
+- Session mapping handles: 0→asia, 1→london, 2→new_york, "asia"→asia, "london"→london, "new_york"→new_york, "newyork"→new_york.
+- Float session values (e.g., 0.0) are converted to int.
+
+**Failure modes:**
+- Missing `_data_integrity` field → block with "data_integrity_failed".
+- ATR <= 0 or too low → block with reason.
+- Invalid session → block with "invalid_session:{session}".
+- Session value 3 (not in session_map) → not in allowed_sessions → block.
+
+**Trust level:** CANONICAL — well-structured validation gate.
+
+---
+
+## 11. `zone_gate_engine.py` — BitNet Zone Gate with Schema Validation
+
+### File Purpose
+BitNet zone gating: scores a feature vector against a zone model, returns pass/fail with optional force_pass execution mode. Includes schema validation of the zone registry.
+
+### Runtime Role
+Called as part of the engine pipeline to determine if the current market state falls within a known "zone" (a region of the feature space where the BitNet model was trained). If the regime/pattern matches known zones, the trade is allowed through.
+
+### Functions
+
+#### `run_zone_gate_engine(raw_features, model_fn, threshold=0.5, zone_registry=None, execution_mode="normal", zone_debug_config=None) -> dict`
+
+**What actually happens:**
+1. Validate canonical feature keys via `filter_canonical_inputs()` — missing keys → ValueError (fail-fast).
+2. If zone_registry provided → validate schema via `validate_zone_schema()`. On ANY error → return `{"score": 0.5, "passed": True}` (fail-open neutral).
+3. Extract feature vector via `_extract_vector()` — if vector too long, truncate to `CANONICAL_FEATURE_DIM` (schema migration compat). If too short → AssertionError.
+4. Score via `model_fn(vector)`.
+5. If execution_mode = "force_pass" → always return passed=True, but record real_passed.
+6. Normal mode → increment counters, return real result.
+
+**Module-level counters:**
+- `_ZONE_COUNTERS` tracks total_pass, total_block, block_reason_dist across session lifetime.
+- `get_zone_gate_counters()` returns read-only copy.
+- `reset_zone_gate_counters()` resets (for backtests).
+
+**Hidden defaults:**
+- `threshold=0.5`.
+- Schema validation errors → fail-open with passed=True.
+- Vector over-length → silent truncation.
+- Debug logging is a no-op if zone_debug_config is None.
+
+**Trust level:** CANONICAL.
+
+---
+
+# PART 2: `src/events/` — THE EVENT FABRIC
+
+## `event_fabric.py` — Canonical Event Envelope
+
+### File Purpose
+Every cross-component event in the Tradelatest runtime is wrapped in a canonical envelope. Provides a standardized structure for event_id, generation number, event_type, instrument, source, timestamp, schema_hash, parent_event_id, and payload.
+
+### Runtime Role
+Called by every component that emits a cross-component event. The events go to JSONL audit files (not a message bus — this is a log-based architecture).
+
+### Classes
+
+#### `EventType` (Enum)
+Constants: DECISION_SNAPSHOT, COGNITIVE_TELEMETRY, ENGINE_TELEMETRY, DECISION_LINEAGE, DRIFT_AUDIT, REPLAY_QUERY, FEATURE_SNAPSHOT, REGIME_CLASSIFICATION, QUEUE_HEALTH.
+
+#### `_GenerationCounter` (private)
+Thread-safe monotonic counter. Each call to `next()` increments and returns. Per-process, not persistent across restarts.
+
+### Functions
+
+#### `make_event_envelope(event_type, instrument, source, payload, schema_hash="", parent_event_id="") -> dict`
+
+**What actually happens:**
+1. Generate 8-char hex from `uuid.uuid4().hex[:8]`.
+2. Increment generation counter (thread-safe).
+3. Build ISO-8601 UTC timestamp.
+4. Use cached `_SCHEMA_HASH` (resolved at module load time from `FEATURE_ORDER_HASH`).
+5. Assemble and return dict.
+
+**Performance note:** O(1), < 1 μs. Safe to call per-bar.
+
+**Hidden defaults:**
+- `schema_hash` if empty → uses module-level cached `_SCHEMA_HASH`.
+- `_resolve_schema_hash()` returns "" on ANY exception (fail-open).
+- Schema hash is resolved ONCE at module load time — if feature schema changes during process lifetime, the hash won't reflect it.
+
+**Trust level:** CANONICAL.
+
+#### `make_decision_snapshot_envelope(instrument, source, decision_id, decision, score, cluster_id, features_hash="") -> dict`
+
+Convenience wrapper for DECISION_SNAPSHOT events. Adds features_hash field for detecting identical market states.
+
+---
+
+# PART 3: `src/execution/` — THE EXECUTION LOOP
+
+This directory contains 3 files that form the tick-based execution pipeline.
+
+## `__init__.py`
+
+Module docstring only. States: "Execution Loop + Alerts + Manual Override."
+
+## `loop.py` — The Main Orchestration Loop
+
+### File Purpose
+Continuous tick-based pipeline orchestrator. Runs `scan → rank → regime → allocate → gate → alert → override → execute` on a 60s tick.
+
+### Runtime Role
+The outermost control loop for live trading. Designed to run forever (blocking), processing one tick per candle.
+
+### Classes
+
+#### `SystemState`
+Shared mutable state: `paused` (kill switch), `running`, `positions`, `signals`.
+
+#### `ExecutionLoop`
+
+**What actually happens when `run(state)` is called:**
+1. Loop while `state.running`.
+2. If `max_ticks` set (for testing) → stop after that many ticks.
+3. If `state.paused` → sleep 1s, skip tick.
+4. Call `_process_tick()`:
+   - `scanner.scan()` → get signals.
+   - `ranker.rank(signals)` → rank.
+   - `pool.top_k(ranked, top_k)` → top K signals (default 3).
+   - For each signal: `_process_signal()`.
+5. Keep last 20 signals in state.
+
+**`_process_signal(signal)`:**
+1. `regime_clf.classify(signal)` → regime.
+2. `config_router.select_profile(regime)` → config.
+3. `allocator.allocate(signal)` → allocation (REJECT → return None).
+4. `risk_gate(signal)` → if not allow → return None.
+5. `alert_manager.send(signal)` → notify.
+6. `override_handler.wait_for_decision(signal)` → EXECUTE/SKIP/REDUCE (TIMEOUT_SKIP on timeout).
+7. `trade_executor(signal, config, allocation)` → PLACE ORDER.
+
+**HARD RULES (from source):**
+- `AUTO_EXECUTE=False` by default.
+- Override timeout → SKIP (never auto-executes on timeout).
+- Kill switch (paused) checked first.
+
+**Invocation sources:** Entry point for live trading; also used in tests with `max_ticks`.
+
+**Downstream calls:** scanner, ranker, pool, regime_clf, config_router, allocator, risk_gate (all injected).
+
+**Side effects:** Places orders via `trade_executor`.
+
+**Failure modes:** Single tick error → logged, loop continues.
+
+**Trust level:** LIVE — this is the production execution loop.
+
+---
+
+## `alert_manager.py` — CLI/Log Alert Sender
+
+### File Purpose
+Sends trade signal alerts to configured channels: Python logging (always), CLI stdout (optional), external hook (optional).
+
+### Class
+
+#### `AlertManager`
+
+**What actually happens when `send(signal)` is called:**
+1. Extract symbol, action, confidence, rr, risk from signal (defaults: ?, ?, 0.0, 0.0, 0.0).
+2. Log at INFO level.
+3. If `print_to_stdout=True` → `print(message)`.
+4. If `external_hook` callable → call with (signal, message). Exceptions caught and logged.
+
+**Trust level:** CANONICAL.
+
+---
+
+## `override_handler.py` — Human-in-Loop Decision Gate
+
+### File Purpose
+Presents a trade signal to the human operator via stdin and waits for a decision. Timeout → SKIP.
+
+### Class
+
+#### `OverrideHandler`
+
+**What actually happens when `wait_for_decision(signal)` is called:**
+1. If `AUTO_EXECUTE=True` → log warning, return EXECUTE immediately.
+2. Prompt user with remaining timeout countdown: `y`=EXECUTE, `n`=SKIP, `r`=REDUCE (risk × 0.5).
+3. On `EOFError` or `KeyboardInterrupt` → TIMEOUT_SKIP.
+4. On timeout → TIMEOUT_SKIP.
+5. On invalid input → re-prompt (does NOT count as error).
+
+**Hidden defaults:**
+- `timeout=30` seconds.
+- `reduce_factor=0.5`.
+- `AUTO_EXECUTE=False` (class-level, not instance-level — this is a singleton flag).
+
+**Trust level:** CANONICAL. Well-designed human-in-loop mechanism.
+
+---
+
+# PART 4: `src/expansion/` — CONTROLLED EDGE EXPANSION
+
+## `__init__.py`
+
+Architecture docstring: LLM suggests directions → ExpansionEngine deterministically loops → ConfigMutator tweaks one param per step → BacktestRunner evaluates → Evaluator scores → stop if guardrails breached.
+
+## `expansion_engine.py` — The Deterministic Expansion Loop
+
+### File Purpose
+Systematically relaxes ONE parameter per step, runs a backtest, evaluates the result via `Evaluator`, and stops when guardrails are breached or target trade count is reached.
+
+### Runtime Role
+Offline/periodic config optimization. NOT part of the live trading loop. Run to produce SAFE/BALANCED/AGGRESSIVE config variants.
+
+### Class
+
+#### `ExpansionEngine`
+
+**What actually happens when `run(base_config, expansion_plan, csv_paths)` is called:**
+1. Run baseline backtest across all csv_paths.
+2. For each candidate (sorted by priority):
+   - For up to 3 steps per candidate (`MAX_STEPS_PER_PARAM`):
+     - Mutate config via `ConfigMutator.mutate()`.
+     - Run backtest on mutated config.
+     - Score via `Evaluator.score()`.
+     - Check guardrails via `Evaluator.passes_guardrails()`.
+     - If guardrail fails → log rejection with reason, stop expanding this param.
+     - If accepted → classify tier (SAFE/BALANCED/AGGRESSIVE) based on trade count ratio.
+     - If target trades reached → stop.
+3. Build ranked configs: SAFE (always includes baseline), BALANCED, AGGRESSIVE (best score per tier).
+4. Return ExpansionResult with best config, ranked configs, full trace.
+
+**File writes:**
+- `logs/expansion_trace.jsonl` — every accepted step.
+- `logs/expansion_rejected.jsonl` — every rejected step with config snapshot.
+
+**Hidden defaults:**
+- `MAX_STEPS_PER_PARAM = 3`.
+- `MAX_PARAM_CHANGE = 0.15` from baseline (per policy_schema).
+- `MIN_PNL_RATIO = 0.90` — pnl must stay >= 90% of baseline.
+- `MAX_DRAWDOWN_RATIO = 1.50` — drawdown must stay <= 150% of baseline.
+
+**Failure modes:**
+- Backtest exception on csv_path → logged as warning, continues to next path.
+- ConfigMutator ValueError → log warning, break candidate loop.
+
+**Trust level:** LIVE — used for production config generation.
+
+---
+
+## `config_mutator.py` — Single-Parameter Mutation
+
+### File Purpose
+Deep-copies a config dict, changes ONE parameter by a delta, clips to PARAM_BOUNDS and MAX_PARAM_CHANGE guard, returns new dict. Never mutates the original.
+
+### Class
+
+#### `ConfigMutator`
+
+**`mutate(config, param, direction, step, baseline_value=None)` → dict**
+
+1. Validate param exists in config → ValueError if not.
+2. Deep-copy config.
+3. Compute delta (+step for increase, -step for decrease).
+4. Clip new value to PARAM_BOUNDS[param] if defined.
+5. If baseline_value given: clip total change to MAX_PARAM_CHANGE (0.15).
+6. Round to 4 decimal places.
+
+**Trust level:** CANONICAL — pure function, no side effects.
+
+---
+
+## `evaluator.py` — Profit-Aware Scoring
+
+### File Purpose
+Scores backtest results relative to baseline. Optimizes for profit density, not raw trade count or win rate.
+
+### Class
+
+#### `Evaluator`
+
+**`score(metrics, baseline)` → float**
+```
+score = pnl - 2.0*drawdown + 10.0*max(0, trades - baseline_trades)
+```
+Drawdown penalized 2×. Trade bonus is small (10 per extra trade).
+
+**`passes_guardrails(metrics, baseline)` → (bool, reason)**
+- PnL must stay >= 90% of baseline.
+- Drawdown must stay <= 150% of baseline.
+
+**`classify_config(score, baseline_score, trades, baseline_trades)` → str**
+- trade_ratio < 1.3 → SAFE.
+- trade_ratio < 1.8 → BALANCED.
+- else → AGGRESSIVE.
+
+**Trust level:** CANONICAL.
+
+---
+
+## `policy_schema.py` — Dataclasses and Bounds
+
+### File Purpose
+All dataclasses for expansion: ExpansionCandidate, ExpansionPlan, ExpansionStep, ExpansionResult, RegimeWeightCandidate, RegimeSearchResult. Also defines PARAM_BOUNDS and guardrail constants.
+
+### Trust level: CANONICAL.
+
+---
+
+# CROSS-CUTTING FAIL-FAST/FALLBACK AUDIT
+
+## Silent Fallbacks Identified
+
+| Component | Condition | Silent Behavior | Risk |
+|-----------|-----------|-----------------|------|
+| `crt_engine.compute()` | Any exception | Returns `{"score": 0.0}` — no indication of which field failed | LOW — score=0 is conservative |
+| `llm_engine.compute()` | Any exception | Returns `{"score": 1.0}` — maximum confidence on failure | **DANGEROUS** — LLM always trusts the trade on error |
+| `ScoringEngine.score()` | `llm_score_safe()` raises | `llm = 1.0` (trust the trade) | **DANGEROUS** — LLM failure leads to maximum LLM contribution |
+| `ScoringEngine.score()` | `neural_fn()` raises | `neural = 0.0` (no contribution) | LOW — conservative |
+| `LiveEngine.process()` | feature build fails | BLOCK with reason "feature_error" | LOW |
+| `LiveEngine.process()` | scaler fails | BLOCK with reason "scaler_error" | LOW |
+| `LiveEngine.process()` | Gaussian inference fails | BLOCK with reason "gaussian_error" | LOW |
+| `LiveEngine.process()` | RR fusion layer not imported | Falls to neural_fn fallback | MEDIUM — logic path depends on import timing |
+| `BitNetZoneGate.check()` | bitnet module unavailable | Returns allowed=True | MEDIUM — gate silently disabled |
+| `BitNetZoneGate.check()` | registry load error | Empty zones, pass-through | MEDIUM |
+| `BitNetZoneGate.check()` | registry underpowered | Auto-bypass with logged reason | LOW — logged |
+| `TradeNetMetaEngine.compute()` | Timeout > 100ms | Returns fallback (0.5, MARGINAL, QUARTER) | LOW |
+| `TradeNetMetaEngine._inference_base()` | model None | Returns 0.5 | LOW |
+| `TradeNetMetaEngine` | PyTorch unavailable | `_load_failed=True`, base_p_win=0.5 | MEDIUM — degrades silently |
+| `MLGaussianEngine.compute()` | model load failure | Returns 0.5 on ALL subsequent calls | MEDIUM — no retry |
+| MLGaussianEngine | vector length mismatch | Silent truncation or 0.5 | LOW — logged |
+| `run_zone_gate_engine()` | registry schema error | Returns passed=True, score=0.5 | MEDIUM — gate silently passes |
+| `run_zone_gate_engine()` | execution_mode="force_pass" | Always returns passed=True (but records real_passed) | LOW — intentional |
+| `ExpansionEngine._run_backtest()` | per-file backtest failure | Logged warning, continues with next file | MEDIUM — partial results may be misleading |
+| `_log_alert()` | file write fails | Logged warning, returns None | LOW |
+| `send_telegram_alert()` | ImportError for requests | Returns (False, "requests_not_installed") | LOW |
+| `send_telegram_alert()` | Any exception | Caught, logged, returns (False, str(e)) | LOW |
+| `_AlertState.should_alert()` | uses `time.time()` | Wall clock, not candle time | MEDIUM — cooldown is clock-dependent |
+
+## Hardcoded Production Credentials
+
+**`src/engines/live_engine.py` line 357-358:**
+```python
+bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "8540111634:AAF29RTVnbIiBBMxITfSJ50WnwiQVGaZqhY")
+chat_id   = os.environ.get("TELEGRAM_CHAT_ID",   "1103644701")
+```
+These are hardcoded default values. If `TELEGRAM_BOT_TOKEN` env var is unset, the system falls back to the production token hardcoded in source. **This is a security risk.**
+
+## Governance Contamination Risk
+
+The `event_fabric.py` module computes `_SCHEMA_HASH` ONCE at import time from `FEATURE_ORDER_HASH`. If the feature schema changes during the process's lifetime (e.g., through a hot-reload or module reimport), the hash in all events still reflects the OLD schema. Audit tools comparing schema_hash across events may incorrectly flag events as schema-mismatched.
+
+## Replay/Live Drift Risk
+
+The `HeuristicGaussianEngine` uses mu/sigma from a registry file or config. If the registry file is updated while the process is running, changes are only picked up on the next `_load_registry()` call, which only happens if `_mu_override is None and _registry is None`. Once loaded, the registry stays loaded for the lifetime of the engine instance. **Hot-reload of mu/sigma requires destroying and recreating the engine.**
+
+---
+
+# TRUST CLASSIFICATION SUMMARY
+
+| Component | Classification | Proof |
+|-----------|---------------|-------|
+| `crt_engine.py` | **CANONICAL** | Thin wrapper; well-defined behavior |
+| `gaussian_engine.py` | **LEGACY** | Pure re-exporter for backward compat |
+| `heuristic_gaussian_engine.py` | **CANONICAL** | Well-documented, explicit assertions |
+| `live_engine.py` | **LIVE** (DANGEROUS credentials) | Production code with hardcoded Telegram tokens |
+| `llm_engine.py` | **CANONICAL** (1.0 fallback is intentional) | Thin wrapper |
+| `ml_gaussian_engine.py` | **LIVE** | Production ML engine |
+| `rr_engine.py` | **CANONICAL** | Well-documented semantic correction |
+| `scoring_engine.py` | **PARTIAL** | Commented-out validation; DANGEROUS LLM fallback |
+| `tradenet_meta_engine.py` | **LIVE** | Production meta-cognition |
+| `trap_validator_engine.py` | **CANONICAL** | Well-structured validation |
+| `zone_gate_engine.py` | **CANONICAL** | Well-structured, counter-tracked |
+| `event_fabric.py` | **CANONICAL** | Well-documented; schema hash resolved at import |
+| `loop.py` | **LIVE** | Production execution loop |
+| `alert_manager.py` | **CANONICAL** | Simple notification dispatch |
+| `override_handler.py` | **CANONICAL** | Well-designed human-in-loop |
+| `config_mutator.py` | **CANONICAL** | Pure function |
+| `evaluator.py` | **CANONICAL** | Pure function |
+| `expansion_engine.py` | **LIVE** | Production config optimizer |
+| `policy_schema.py` | **CANONICAL** | Dataclass definitions |

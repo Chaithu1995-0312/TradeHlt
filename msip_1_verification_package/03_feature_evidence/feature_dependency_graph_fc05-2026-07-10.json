@@ -1,0 +1,1628 @@
+{
+  "_doc": "FC-0.5 feature dependency graph \u2014 code-derived, not empty contract arrays.",
+  "generated_at_utc": "2026-07-10T15:48:17Z",
+  "swing_window": 2,
+  "rolling_width": 5,
+  "intermediates": {
+    "last_swing_high_price": {
+      "deps": [
+        "swing_high"
+      ],
+      "lookahead": 2,
+      "pit": "INHERITS_SWING"
+    },
+    "last_swing_low_price": {
+      "deps": [
+        "swing_low"
+      ],
+      "lookahead": 2,
+      "pit": "INHERITS_SWING"
+    },
+    "retest_flag": {
+      "deps": [
+        "liquidity_sweep",
+        "ema_fast",
+        "atr"
+      ],
+      "lookahead": 2,
+      "pit": "INHERITS_SWING"
+    },
+    "atr_14_raw": {
+      "deps": [],
+      "lookahead": 0,
+      "pit": "CAUSAL"
+    }
+  },
+  "dependency_cycles": [],
+  "missing_from_deps_map": [],
+  "nodes": [
+    {
+      "feature_id": "FEAT-OPEN",
+      "feature_name": "open",
+      "formula_id": "FORMULA-LEGACY-OPEN",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "open"
+      ],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "direct_intermediate_dependencies": [],
+      "lookback": 0,
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t",
+      "publication_delay": 0,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "RAW",
+      "PIT_transitive_status": "PIT_LOCAL_OK",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-HIGH",
+      "feature_name": "high",
+      "formula_id": "FORMULA-LEGACY-HIGH",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "high"
+      ],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "direct_intermediate_dependencies": [],
+      "lookback": 0,
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t",
+      "publication_delay": 0,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "RAW",
+      "PIT_transitive_status": "PIT_LOCAL_OK",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-LOW",
+      "feature_name": "low",
+      "formula_id": "FORMULA-LEGACY-LOW",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "low"
+      ],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "direct_intermediate_dependencies": [],
+      "lookback": 0,
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t",
+      "publication_delay": 0,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "RAW",
+      "PIT_transitive_status": "PIT_LOCAL_OK",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-CLOSE",
+      "feature_name": "close",
+      "formula_id": "FORMULA-LEGACY-CLOSE",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "close"
+      ],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "direct_intermediate_dependencies": [],
+      "lookback": 0,
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t",
+      "publication_delay": 0,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "RAW",
+      "PIT_transitive_status": "PIT_LOCAL_OK",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-VOLUME",
+      "feature_name": "volume",
+      "formula_id": "FORMULA-SOURCE-TICK-VOLUME",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "volume",
+        "high",
+        "low"
+      ],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "direct_intermediate_dependencies": [],
+      "lookback": 0,
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t",
+      "publication_delay": 0,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "RAW_OR_T003",
+      "PIT_transitive_status": "SEMANTIC_RISK",
+      "semantic_variants_by_call_site": "T-003 may rewrite volume from high-low",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-VOLUME_RATIO",
+      "feature_name": "volume_ratio",
+      "formula_id": "FORMULA-LEGACY-VOLUME_RATIO",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "volume",
+        "high",
+        "low"
+      ],
+      "direct_feature_dependencies": [
+        "volume"
+      ],
+      "transitive_feature_dependencies": [
+        "volume"
+      ],
+      "direct_intermediate_dependencies": [],
+      "lookback": 20,
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t",
+      "publication_delay": 0,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "CAUSAL_ROLLING",
+      "PIT_transitive_status": "SEMANTIC_RISK",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-DOUBLE_SWEEP",
+      "feature_name": "double_sweep",
+      "formula_id": "FORMULA-LEGACY-DOUBLE_SWEEP",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "high",
+        "low",
+        "close"
+      ],
+      "direct_feature_dependencies": [
+        "liquidity_sweep"
+      ],
+      "transitive_feature_dependencies": [
+        "liquidity_sweep",
+        "swing_high",
+        "swing_low"
+      ],
+      "direct_intermediate_dependencies": [],
+      "lookback": 5,
+      "lookahead": 2,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "inherits",
+      "publication_delay": 2,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "INHERITS_SWING",
+      "PIT_transitive_status": "LEAKING",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-EMA_FAST",
+      "feature_name": "ema_fast",
+      "formula_id": "FORMULA-LEGACY-EMA_FAST",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "close"
+      ],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "direct_intermediate_dependencies": [],
+      "lookback": 9,
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t",
+      "publication_delay": 0,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "CAUSAL_EWM",
+      "PIT_transitive_status": "PIT_LOCAL_OK",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-EMA_SLOW",
+      "feature_name": "ema_slow",
+      "formula_id": "FORMULA-LEGACY-EMA_SLOW",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "close"
+      ],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "direct_intermediate_dependencies": [],
+      "lookback": 21,
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t",
+      "publication_delay": 0,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "CAUSAL_EWM",
+      "PIT_transitive_status": "PIT_LOCAL_OK",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-EMA_SPREAD",
+      "feature_name": "ema_spread",
+      "formula_id": "FORMULA-LEGACY-EMA_SPREAD",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "close"
+      ],
+      "direct_feature_dependencies": [
+        "ema_fast",
+        "ema_slow",
+        "atr"
+      ],
+      "transitive_feature_dependencies": [
+        "atr",
+        "ema_fast",
+        "ema_slow"
+      ],
+      "direct_intermediate_dependencies": [],
+      "lookback": 21,
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t",
+      "publication_delay": 0,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "CAUSAL_DERIVED",
+      "PIT_transitive_status": "PIT_LOCAL_OK",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-TREND_BIAS",
+      "feature_name": "trend_bias",
+      "formula_id": "FORMULA-LEGACY-TREND_BIAS",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "close"
+      ],
+      "direct_feature_dependencies": [
+        "ema_fast",
+        "ema_slow"
+      ],
+      "transitive_feature_dependencies": [
+        "ema_fast",
+        "ema_slow"
+      ],
+      "direct_intermediate_dependencies": [],
+      "lookback": 21,
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t",
+      "publication_delay": 0,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "CAUSAL_DERIVED",
+      "PIT_transitive_status": "PIT_LOCAL_OK",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-TREND_STRENGTH",
+      "feature_name": "trend_strength",
+      "formula_id": "FORMULA-LEGACY-TREND_STRENGTH",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "close"
+      ],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "direct_intermediate_dependencies": [
+        "ma_20",
+        "ma_slope_20"
+      ],
+      "lookback": 30,
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t",
+      "publication_delay": 0,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "CAUSAL_ROLLING",
+      "PIT_transitive_status": "PIT_LOCAL_OK",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-MOMENTUM_SCORE",
+      "feature_name": "momentum_score",
+      "formula_id": "FORMULA-LEGACY-MOMENTUM_SCORE",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "close"
+      ],
+      "direct_feature_dependencies": [
+        "atr"
+      ],
+      "transitive_feature_dependencies": [
+        "atr"
+      ],
+      "direct_intermediate_dependencies": [],
+      "lookback": 14,
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t",
+      "publication_delay": 0,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "CAUSAL_DERIVED",
+      "PIT_transitive_status": "PIT_LOCAL_OK",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-ATR",
+      "feature_name": "atr",
+      "formula_id": "FORMULA-LEGACY-ATR",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "high",
+        "low",
+        "close"
+      ],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "direct_intermediate_dependencies": [
+        "atr_14_raw",
+        "true_range"
+      ],
+      "lookback": 14,
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t",
+      "publication_delay": 0,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "CAUSAL_ROLLING",
+      "PIT_transitive_status": "PIT_LOCAL_OK",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-VOLATILITY_RATIO",
+      "feature_name": "volatility_ratio",
+      "formula_id": "FORMULA-LEGACY-VOLATILITY_RATIO",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "high",
+        "low",
+        "close"
+      ],
+      "direct_feature_dependencies": [
+        "atr"
+      ],
+      "transitive_feature_dependencies": [
+        "atr"
+      ],
+      "direct_intermediate_dependencies": [],
+      "lookback": 14,
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t",
+      "publication_delay": 0,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "CAUSAL_DERIVED",
+      "PIT_transitive_status": "PIT_LOCAL_OK",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-RSI_14",
+      "feature_name": "rsi_14",
+      "formula_id": "FORMULA-LEGACY-RSI_14",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "close"
+      ],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "direct_intermediate_dependencies": [],
+      "lookback": 14,
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t",
+      "publication_delay": 0,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "CAUSAL_ROLLING",
+      "PIT_transitive_status": "PIT_LOCAL_OK",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-MACD_LINE",
+      "feature_name": "macd_line",
+      "formula_id": "FORMULA-LEGACY-MACD_LINE",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "close"
+      ],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "direct_intermediate_dependencies": [],
+      "lookback": 26,
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t",
+      "publication_delay": 0,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "CAUSAL_EWM",
+      "PIT_transitive_status": "PIT_LOCAL_OK",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-MACD_SIGNAL",
+      "feature_name": "macd_signal",
+      "formula_id": "FORMULA-LEGACY-MACD_SIGNAL",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "close"
+      ],
+      "direct_feature_dependencies": [
+        "macd_line"
+      ],
+      "transitive_feature_dependencies": [
+        "macd_line"
+      ],
+      "direct_intermediate_dependencies": [],
+      "lookback": 35,
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t",
+      "publication_delay": 0,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "CAUSAL_EWM",
+      "PIT_transitive_status": "PIT_LOCAL_OK",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-MACD_HIST",
+      "feature_name": "macd_hist",
+      "formula_id": "FORMULA-LEGACY-MACD_HIST",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "close"
+      ],
+      "direct_feature_dependencies": [
+        "macd_line",
+        "macd_signal"
+      ],
+      "transitive_feature_dependencies": [
+        "macd_line",
+        "macd_signal"
+      ],
+      "direct_intermediate_dependencies": [],
+      "lookback": 35,
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t",
+      "publication_delay": 0,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "CAUSAL_DERIVED",
+      "PIT_transitive_status": "PIT_LOCAL_OK",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-SWEEP_DETECTED",
+      "feature_name": "sweep_detected",
+      "formula_id": "FORMULA-LEGACY-SWEEP_DETECTED",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "high",
+        "low",
+        "close"
+      ],
+      "direct_feature_dependencies": [
+        "liquidity_sweep"
+      ],
+      "transitive_feature_dependencies": [
+        "liquidity_sweep",
+        "swing_high",
+        "swing_low"
+      ],
+      "direct_intermediate_dependencies": [],
+      "lookback": 2,
+      "lookahead": 2,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "inherits swing",
+      "publication_delay": 2,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "INHERITS_SWING",
+      "PIT_transitive_status": "LEAKING",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-LIQUIDITY_SWEEP",
+      "feature_name": "liquidity_sweep",
+      "formula_id": "FORMULA-LEGACY-LIQUIDITY_SWEEP",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "high",
+        "low",
+        "close"
+      ],
+      "direct_feature_dependencies": [
+        "swing_high",
+        "swing_low"
+      ],
+      "transitive_feature_dependencies": [
+        "swing_high",
+        "swing_low"
+      ],
+      "direct_intermediate_dependencies": [],
+      "lookback": 2,
+      "lookahead": 2,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "inherits swing",
+      "publication_delay": 2,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "INHERITS_SWING",
+      "PIT_transitive_status": "LEAKING",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-BREAK_OF_STRUCTURE",
+      "feature_name": "break_of_structure",
+      "formula_id": "FORMULA-LEGACY-BREAK_OF_STRUCTURE",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "close",
+        "high",
+        "low"
+      ],
+      "direct_feature_dependencies": [
+        "swing_high",
+        "swing_low"
+      ],
+      "transitive_feature_dependencies": [
+        "swing_high",
+        "swing_low"
+      ],
+      "direct_intermediate_dependencies": [],
+      "lookback": 2,
+      "lookahead": 2,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "inherits swing",
+      "publication_delay": 2,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "INHERITS_SWING",
+      "PIT_transitive_status": "LEAKING",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-SWING_HIGH",
+      "feature_name": "swing_high",
+      "formula_id": "FORMULA-LEGACY-SWING_HIGH",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "high"
+      ],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "direct_intermediate_dependencies": [],
+      "lookback": 2,
+      "lookahead": 2,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t+2 math; published at t (legacy)",
+      "publication_delay": 0,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "CENTERED_SWING",
+      "PIT_transitive_status": "LEAKING",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-SWING_LOW",
+      "feature_name": "swing_low",
+      "formula_id": "FORMULA-LEGACY-SWING_LOW",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "low"
+      ],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "direct_intermediate_dependencies": [],
+      "lookback": 2,
+      "lookahead": 2,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t+2 math; published at t (legacy)",
+      "publication_delay": 2,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "CENTERED_SWING",
+      "PIT_transitive_status": "LEAKING",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-HIGHER_HIGH",
+      "feature_name": "higher_high",
+      "formula_id": "FORMULA-LEGACY-HIGHER_HIGH",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "high"
+      ],
+      "direct_feature_dependencies": [
+        "swing_high"
+      ],
+      "transitive_feature_dependencies": [
+        "swing_high"
+      ],
+      "direct_intermediate_dependencies": [
+        "last_swing_high_price"
+      ],
+      "lookback": 2,
+      "lookahead": 2,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "inherits swing publication",
+      "publication_delay": 2,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "INHERITS_SWING",
+      "PIT_transitive_status": "LEAKING",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-LOWER_LOW",
+      "feature_name": "lower_low",
+      "formula_id": "FORMULA-LEGACY-LOWER_LOW",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "low"
+      ],
+      "direct_feature_dependencies": [
+        "swing_low"
+      ],
+      "transitive_feature_dependencies": [
+        "swing_low"
+      ],
+      "direct_intermediate_dependencies": [
+        "last_swing_low_price"
+      ],
+      "lookback": 2,
+      "lookahead": 2,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "inherits swing publication",
+      "publication_delay": 2,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "INHERITS_SWING",
+      "PIT_transitive_status": "LEAKING",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-BODY_SIZE",
+      "feature_name": "body_size",
+      "formula_id": "FORMULA-LEGACY-BODY_SIZE",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "open",
+        "close"
+      ],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "direct_intermediate_dependencies": [],
+      "lookback": 0,
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t",
+      "publication_delay": 0,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "RAW",
+      "PIT_transitive_status": "PIT_LOCAL_OK",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-WICK_SIZE",
+      "feature_name": "wick_size",
+      "formula_id": "FORMULA-LEGACY-WICK_SIZE",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "high",
+        "low"
+      ],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "direct_intermediate_dependencies": [],
+      "lookback": 0,
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t",
+      "publication_delay": 0,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "RAW",
+      "PIT_transitive_status": "PIT_LOCAL_OK",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-BODY_RATIO",
+      "feature_name": "body_ratio",
+      "formula_id": "FORMULA-LEGACY-BODY_RATIO",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "open",
+        "high",
+        "low",
+        "close"
+      ],
+      "direct_feature_dependencies": [
+        "body_size",
+        "wick_size"
+      ],
+      "transitive_feature_dependencies": [
+        "body_size",
+        "wick_size"
+      ],
+      "direct_intermediate_dependencies": [],
+      "lookback": 0,
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t",
+      "publication_delay": 0,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "RAW",
+      "PIT_transitive_status": "PIT_LOCAL_OK",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-VOLATILITY_REGIME",
+      "feature_name": "volatility_regime",
+      "formula_id": "FORMULA-LEGACY-VOLATILITY_REGIME",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "high",
+        "low",
+        "close"
+      ],
+      "direct_feature_dependencies": [
+        "atr"
+      ],
+      "transitive_feature_dependencies": [
+        "atr"
+      ],
+      "direct_intermediate_dependencies": [],
+      "lookback": "full_batch",
+      "lookahead": "full_batch",
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "depends on future rows in batch",
+      "publication_delay": "full_batch",
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "GLOBAL_FIT",
+      "PIT_transitive_status": "GLOBAL_FIT_DEPENDENCE",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-SESSION",
+      "feature_name": "session",
+      "formula_id": "FORMULA-LEGACY-SESSION",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "timestamp"
+      ],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "direct_intermediate_dependencies": [],
+      "lookback": 0,
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t",
+      "publication_delay": 0,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "CALENDAR",
+      "PIT_transitive_status": "PIT_LOCAL_OK",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-HOUR_OF_DAY",
+      "feature_name": "hour_of_day",
+      "formula_id": "FORMULA-LEGACY-HOUR_OF_DAY",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "timestamp"
+      ],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "direct_intermediate_dependencies": [],
+      "lookback": 0,
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t",
+      "publication_delay": 0,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "CALENDAR",
+      "PIT_transitive_status": "PIT_LOCAL_OK",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-DISP_STRENGTH",
+      "feature_name": "disp_strength",
+      "formula_id": "FM-020",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "open",
+        "close"
+      ],
+      "direct_feature_dependencies": [
+        "atr"
+      ],
+      "transitive_feature_dependencies": [
+        "atr"
+      ],
+      "direct_intermediate_dependencies": [],
+      "lookback": 14,
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t",
+      "publication_delay": 0,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "CAUSAL_DERIVED",
+      "PIT_transitive_status": "PIT_LOCAL_OK",
+      "semantic_variants_by_call_site": "FM-020",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-RETEST_DEPTH",
+      "feature_name": "retest_depth",
+      "formula_id": "FM-021",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "close"
+      ],
+      "direct_feature_dependencies": [
+        "liquidity_sweep",
+        "ema_fast",
+        "atr"
+      ],
+      "transitive_feature_dependencies": [
+        "atr",
+        "ema_fast",
+        "liquidity_sweep",
+        "swing_high",
+        "swing_low"
+      ],
+      "direct_intermediate_dependencies": [],
+      "lookback": 10,
+      "lookahead": 2,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "via retest_flag via liquidity_sweep",
+      "publication_delay": 2,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "INHERITS_SWING",
+      "PIT_transitive_status": "LEAKING",
+      "semantic_variants_by_call_site": "FM-021 gated",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-CANDLES_SINCE_RETEST",
+      "feature_name": "candles_since_retest",
+      "formula_id": "FORMULA-LEGACY-CANDLES_SINCE_RETEST",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [],
+      "direct_feature_dependencies": [
+        "liquidity_sweep"
+      ],
+      "transitive_feature_dependencies": [
+        "liquidity_sweep",
+        "swing_high",
+        "swing_low"
+      ],
+      "direct_intermediate_dependencies": [],
+      "lookback": "stateful",
+      "lookahead": 2,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "via sweep groups",
+      "publication_delay": 2,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "INHERITS_SWING",
+      "PIT_transitive_status": "LEAKING",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-LIQUIDITY_DISTANCE",
+      "feature_name": "liquidity_distance",
+      "formula_id": "FORMULA-LEGACY-LIQUIDITY_DISTANCE",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "close"
+      ],
+      "direct_feature_dependencies": [
+        "swing_high",
+        "swing_low",
+        "atr"
+      ],
+      "transitive_feature_dependencies": [
+        "atr",
+        "swing_high",
+        "swing_low"
+      ],
+      "direct_intermediate_dependencies": [],
+      "lookback": 2,
+      "lookahead": 2,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "uses last_swing.shift(1) but last_swing itself non-causal",
+      "publication_delay": 2,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "INHERITS_SWING",
+      "PIT_transitive_status": "LEAKING",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-LIQUIDITY_PRESSURE_SCORE",
+      "feature_name": "liquidity_pressure_score",
+      "formula_id": "FORMULA-LEGACY-LIQUIDITY_PRESSURE_SCORE",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "close"
+      ],
+      "direct_feature_dependencies": [
+        "liquidity_distance"
+      ],
+      "transitive_feature_dependencies": [
+        "atr",
+        "liquidity_distance",
+        "swing_high",
+        "swing_low"
+      ],
+      "direct_intermediate_dependencies": [],
+      "lookback": 2,
+      "lookahead": 2,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "inherits liquidity_distance",
+      "publication_delay": 2,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "INHERITS_SWING",
+      "PIT_transitive_status": "LEAKING",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-VOLUME_SPIKE",
+      "feature_name": "volume_spike",
+      "formula_id": "FORMULA-LEGACY-VOLUME_SPIKE",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "volume"
+      ],
+      "direct_feature_dependencies": [
+        "volume_ratio"
+      ],
+      "transitive_feature_dependencies": [
+        "volume",
+        "volume_ratio"
+      ],
+      "direct_intermediate_dependencies": [],
+      "lookback": 20,
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t",
+      "publication_delay": 0,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "CAUSAL_DERIVED",
+      "PIT_transitive_status": "SEMANTIC_RISK",
+      "semantic_variants_by_call_site": "default pipeline",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "HIGH",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-VOLUME_RANGE_PROXY",
+      "feature_name": "volume_range_proxy",
+      "formula_id": "FORMULA-T003-RANGE-PROXY",
+      "implementation_refs": [
+        "src/features/feature_pipeline.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "high",
+        "low"
+      ],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "direct_intermediate_dependencies": [],
+      "lookback": 0,
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "t",
+      "publication_delay": 0,
+      "statefulness": "batch DataFrame",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "SYNTHETIC",
+      "PIT_transitive_status": "PIT_LOCAL_OK",
+      "semantic_variants_by_call_site": "T-003 range proxy (not tick volume)",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "MEDIUM",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-DISPLACEMENT_RETRACE",
+      "feature_name": "displacement_retrace",
+      "formula_id": "FM-027",
+      "implementation_refs": [
+        "src/features/derived_math.py + src/config_layer/crt_engine_v2.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "open",
+        "close"
+      ],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "direct_intermediate_dependencies": [],
+      "lookback": "cross_candle",
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "at RETEST confirmation",
+      "publication_delay": 0,
+      "statefulness": "CRT state machine",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "CRT_STATEFUL",
+      "PIT_transitive_status": "PIT_LOCAL_OK",
+      "semantic_variants_by_call_site": "FM-027",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "MEDIUM",
+      "unknowns": []
+    },
+    {
+      "feature_id": "FEAT-DISPLACEMENT_ATR_RATIO",
+      "feature_name": "displacement_atr_ratio",
+      "formula_id": "FM-028",
+      "implementation_refs": [
+        "src/features/derived_math.py + src/config_layer/crt_engine_v2.py",
+        "src/features/feature_pipeline.py"
+      ],
+      "source_ohlcv_fields": [
+        "high",
+        "low"
+      ],
+      "direct_feature_dependencies": [],
+      "transitive_feature_dependencies": [],
+      "direct_intermediate_dependencies": [],
+      "lookback": "ATR",
+      "lookahead": 0,
+      "value_timestamp_semantic": "bar t",
+      "available_at_timestamp_semantic": "at RETEST confirmation",
+      "publication_delay": 0,
+      "statefulness": "CRT state machine",
+      "warmup": "ATR14/MA200 as applicable",
+      "missing_value_policy": "NaN drop in finalize for ATR-gated; retest_depth 0.0 if no retest",
+      "fallback_policy": "implementation-defined",
+      "normalization_policy": "NORMALIZE_COLS rolling z-score 50 where applicable",
+      "PIT_local_status": "CRT_STATEFUL",
+      "PIT_transitive_status": "PIT_LOCAL_OK",
+      "semantic_variants_by_call_site": "FM-028",
+      "evidence": [
+        "src/features/feature_pipeline.py",
+        "docs/governance/feature_semantic_adjudication_pass_a-2026-07-10.json"
+      ],
+      "confidence": "MEDIUM",
+      "unknowns": []
+    }
+  ],
+  "counts": {
+    "contract_entries": 41,
+    "complete_direct_bindings": 41,
+    "with_nonempty_direct_deps": 21,
+    "with_nonempty_transitive_deps": 21,
+    "pit_local_causal_or_raw": 27,
+    "pit_transitive": {
+      "PIT_LOCAL_OK": 25,
+      "SEMANTIC_RISK": 3,
+      "LEAKING": 12,
+      "GLOBAL_FIT_DEPENDENCE": 1
+    },
+    "leaking": 12,
+    "global_fit_dependent": 1,
+    "semantic_risk": 3,
+    "pit_safe_transitive": 25,
+    "unknown_or_unproven": 0
+  },
+  "critical_discoveries": [
+    "Contract empty direct_feature_dependencies arrays are incomplete; 12+ structure features inherit swing lookahead",
+    "liquidity_distance uses shift(1) on last_swing but last_swing is still non-causal under default center=True",
+    "retest_depth/candles_since_retest inherit liquidity_sweep \u2192 swing leak",
+    "volatility_regime global rank is GLOBAL_FIT independent of swing",
+    "volume T-003 mutates source identity before volume_ratio/spike",
+    "disp_strength (FM-020) is causal; retest_depth inherits swing leak via liquidity_sweep",
+    "last_swing_high/last_swing_low are intermediates (not vector members) but feed HH/LL/BOS/liq features"
+  ],
+  "downstream_closure_of_swing": [
+    "break_of_structure",
+    "candles_since_retest",
+    "double_sweep",
+    "higher_high",
+    "liquidity_distance",
+    "liquidity_pressure_score",
+    "liquidity_sweep",
+    "lower_low",
+    "retest_depth",
+    "sweep_detected",
+    "swing_high",
+    "swing_low"
+  ]
+}

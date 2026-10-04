@@ -1,0 +1,72 @@
+{
+  "schema_version": "1.0",
+  "description": "Curated ERP context for plan initiation — NOT full-repo scan. Edit this list to change what models receive.",
+  "max_chars_per_file_default": 120000,
+  "docs": [
+    {
+      "path": "docs/research-readiness/erp-decision-board-and-story-authority.md",
+      "role": "decisions_and_story_authority",
+      "priority": 1
+    },
+    {
+      "path": "docs/research-readiness/edge-research-platform-phased-plan.md",
+      "role": "phased_plan_p0_p7",
+      "priority": 2
+    },
+    {
+      "path": "docs/research-readiness/edge-research-platform-promise-ladder.md",
+      "role": "promise_ladder",
+      "priority": 3
+    },
+    {
+      "path": "docs/research-readiness/edge-research-platform-mllm-how.md",
+      "role": "mllm_how",
+      "priority": 4
+    },
+    {
+      "path": "docs/research-readiness/edge-research-platform-before-after.md",
+      "role": "before_after",
+      "priority": 5
+    },
+    {
+      "path": "docs/research-readiness/edge-research-platform-io-map.md",
+      "role": "io_map",
+      "priority": 6
+    },
+    {
+      "path": "docs/research-readiness/edge-research-platform-testing-plan.md",
+      "role": "testing_plan",
+      "priority": 7
+    },
+    {
+      "path": "docs/research-readiness/edge-research-platform-multi-llm-design.md",
+      "role": "mllm_design_amb",
+      "priority": 8
+    },
+    {
+      "path": "docs/research-readiness/edge-research-platform-program.md",
+      "role": "program_tracker",
+      "priority": 9
+    },
+    {
+      "path": "docs/research-readiness/erp-synthetic-4h-trace.md",
+      "role": "synth_trace",
+      "priority": 10
+    },
+    {
+      "path": "multi_llm/research_lane/README.md",
+      "role": "research_lane_ops",
+      "priority": 11
+    },
+    {
+      "path": "multi_llm/research_lane/RESEARCH_ROLES.md",
+      "role": "research_roles",
+      "priority": 12
+    },
+    {
+      "path": "multi_llm/research_lane/package_schema.json",
+      "role": "package_schema",
+      "priority": 13
+    }
+  ]
+}

@@ -1,0 +1,237 @@
+{
+  "generated_at_utc": "2026-07-14T08:12:37.280834+00:00",
+  "task_class": "OBSERVATION_ONLY",
+  "policy": {
+    "BASELINE_HASH_PARITY_GENERAL_REQUIREMENT": "SUPERSEDED",
+    "HISTORICAL_BASELINE_ARTIFACTS": "PRESERVED",
+    "FUTURE_ACCEPTANCE_POLICY": "TASK_CLASSIFICATION_BASED",
+    "ref": "docs/governance/TASK_CLASSIFICATION_BEHAVIOR_POLICY.md"
+  },
+  "baseline_trace_v1": {
+    "_doc": "Immutable freeze pointer for XAUUSD CRT baseline trace V1. Do not overwrite the dated JSONL; later runs are new artifacts.",
+    "artifact_id": "XAUUSD_CRT_BASELINE_TRACE_V1",
+    "status": "FROZEN_SUCCESS",
+    "selection_rule": "FIRST_16_FINALIZED_BARS",
+    "trace_path": "docs/governance/xauusd_crt_baseline_trace/xauusd_crt_baseline_trace_v1.jsonl",
+    "manifest_path": "docs/governance/xauusd_crt_baseline_trace/xauusd_crt_baseline_trace_v1.manifest.json",
+    "summary_path": "docs/governance/xauusd_crt_baseline_trace/xauusd_crt_baseline_trace_v1.summary.md",
+    "trace_sha256": "26e185b943ec5caeee31d32a0b598b543f00a48f953d9fefc9a272eb77ea72d7",
+    "corpus_path": "data/mt5/XAUUSD_M15.csv",
+    "corpus_sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+    "target_start_timestamp": "2024-05-22 20:30:00",
+    "target_end_timestamp": "2024-05-23 01:15:00",
+    "target_bar_count": 16,
+    "architectural_finding": "CRT process_candle transition guards do not consume the 38-dim FeaturePipeline vector; vector is journal-attached at TRADE_OPENED.",
+    "overwrite_policy": "FORBIDDEN \u2014 create new dated artifacts; do not mutate this freeze pointer's identity fields",
+    "frozen_at_utc": "2026-07-14T07:30:00Z",
+    "acceptance_role": "HISTORICAL_COMPARISON_EVIDENCE_NOT_GOLDEN_FUTURE_OUTPUT",
+    "policy_ref": "docs/governance/TASK_CLASSIFICATION_BEHAVIOR_POLICY.md",
+    "baseline_hash_parity_general_requirement": "SUPERSEDED",
+    "note": "Future authorized behavior changes need not match this trace's transition/event/trade hashes. OBSERVATION_ONLY work must still preserve current-path neutrality when hooks are off."
+  },
+  "funnel_full_run": {
+    "source": "docs/governance/crt_xauusd_funnel_diagnostic-2026-07-14.json",
+    "run": "results/cert_xau_phase2/run_20260711_202626_XAUUSD",
+    "candles": 47275,
+    "RANGE_TO_SWEEP": 3390,
+    "SWEEP_TO_DISPLACEMENT": 315,
+    "DISPLACEMENT_TO_EXPANSION": 17,
+    "SWEEP_TO_EXPANSION_shadow": 43,
+    "UNIQUE_EXPANSION_EPISODES": 60,
+    "EXPANSION_TO_RETEST": 17,
+    "RETEST_TO_EXECUTION": 5,
+    "EXECUTION_TO_RESOLUTION": 1,
+    "TRADE_OPENED": 1,
+    "RESET_HTF_candidate_deaths": "3323/3433",
+    "expansion_ended_by": {
+      "retest": 17,
+      "reset": 43,
+      "expired": 0,
+      "eof": 0
+    },
+    "expansion_dwell": {
+      "median": 1,
+      "max": 346
+    },
+    "occupancy_note": "4605 EXPANSION candles != 60 episodes",
+    "downstream_rejected_trades": 0
+  },
+  "fail_reason_diagnostic": {
+    "source": "docs/governance/crt_fail_reason_diagnostic-2026-07-14.json",
+    "evidence_class": "DIAGNOSTIC_SAMPLE_EVIDENCE",
+    "not": "POPULATION_RATE_EVIDENCE",
+    "max_process_candles": 3000,
+    "on_off_parity": true,
+    "top_counts": [
+      {
+        "guard_id": "G_RANGE_SWEEP_DETECT",
+        "reason": "no_sweep_detected",
+        "count": 2142
+      },
+      {
+        "guard_id": "G_RANGE_SWEEP_DETECT",
+        "reason": "PASS",
+        "count": 230
+      },
+      {
+        "guard_id": "G_EXP_RET_MIN_DEPTH",
+        "reason": "depth_below_min",
+        "count": 229
+      },
+      {
+        "guard_id": "G_SWEEP_DISP_MOVE",
+        "reason": "move_below_atr_min_displacement",
+        "count": 221
+      },
+      {
+        "guard_id": "G_EXP_RET_CEILING",
+        "reason": "depth_above_ceiling",
+        "count": 128
+      },
+      {
+        "guard_id": "G_SWEEP_DISP_PASS",
+        "reason": "PASS",
+        "count": 20
+      },
+      {
+        "guard_id": "G_SWEEP_DISP_BODY",
+        "reason": "body_ratio_below_min",
+        "count": 7
+      },
+      {
+        "guard_id": "G_EXP_RET_DISP_STRENGTH",
+        "reason": "overextended_displacement",
+        "count": 6
+      },
+      {
+        "guard_id": "G_DISP_EXP_DIR_LONG",
+        "reason": "long_not_bullish_bar",
+        "count": 5
+      },
+      {
+        "guard_id": "G_EXP_RET_PASS",
+        "reason": "PASS",
+        "count": 2
+      },
+      {
+        "guard_id": "G_DISP_EXP_ATR_DIST",
+        "reason": "distance_below_atr_min",
+        "count": 1
+      },
+      {
+        "guard_id": "G_DISP_EXP_DIR_SHORT",
+        "reason": "short_not_bearish_bar",
+        "count": 1
+      }
+    ]
+  },
+  "schema": {
+    "CANONICAL_FEATURE_DIM": 38,
+    "SCHEMA_HASH": "1ba02abbafdd0786831181677de547c1",
+    "FEATURE_ORDER_HASH": "235553310100a340",
+    "CANONICAL_FEATURES": [
+      "open",
+      "high",
+      "low",
+      "close",
+      "volume",
+      "volume_ratio",
+      "double_sweep",
+      "ema_fast",
+      "ema_slow",
+      "ema_spread",
+      "trend_bias",
+      "trend_strength",
+      "momentum_score",
+      "atr",
+      "volatility_ratio",
+      "rsi_14",
+      "macd_line",
+      "macd_signal",
+      "macd_hist",
+      "sweep_detected",
+      "liquidity_sweep",
+      "break_of_structure",
+      "swing_high",
+      "swing_low",
+      "higher_high",
+      "lower_low",
+      "body_size",
+      "wick_size",
+      "body_ratio",
+      "volatility_regime",
+      "session",
+      "hour_of_day",
+      "disp_strength",
+      "retest_depth",
+      "candles_since_retest",
+      "liquidity_distance",
+      "liquidity_pressure_score",
+      "volume_spike"
+    ]
+  },
+  "closure_surfaces_untouched": [
+    {
+      "surface_id": "CRT",
+      "surface_name": "CRT closure",
+      "status": "CLOSED",
+      "status_detail": "CRT_CLOSURE_STATUS=CLOSED (Phase 8 post CH-002)",
+      "scope_boundary": "OHLCV \u2192 CRT TRADE_OPENED only (executable CRT surface, formulas, state graph, diversions, config reachability, candidate provenance, adversarial suite). Does NOT include EngineRunner admission, DecisionEngine low_rr, live SM wiring, or model training lineages.",
+      "authoritative_artifact": "docs/governance/crt_closure_report.md",
+      "status_token": "CRT_CLOSURE_STATUS = CLOSED",
+      "frozen": true,
+      "reopen_policy": "boundary_scoped_default",
+      "reopen_conditions": [
+        "governed CRT code/config/formula dependencies inside OHLCV\u2192TRADE_OPENED change",
+        "CRT adversarial/closure/formula mechanical checks fail",
+        "new contradictory evidence invalidates CRT_CLOSURE_STATUS=CLOSED",
+        "construction-protocol change explicitly requires re-running CRT Phases 1\u20138"
+      ],
+      "upstream_surfaces": [],
+      "downstream_not_implied_closed": [
+        "GAUSSIAN_LINEAGE",
+        "ZONEGATE_LINEAGE",
+        "RR_LINEAGE",
+        "BITNET_LINEAGE",
+        "TRADENET_LINEAGE",
+        "FEATURE_QUERY_SURFACE"
+      ],
+      "economically_validated": false,
+      "notes": "Residual non-blockers (OI-ER-001, OI-F048-E2E, live SM, historical JSONL keys) do not reopen CRT CLOSED."
+    },
+    {
+      "surface_id": "CANONICAL_FEATURE_CODE_SURFACE",
+      "surface_name": "Canonical Feature Code Surface",
+      "status": "CLOSED",
+      "status_detail": "CANONICAL_FEATURE_CODE_SURFACE_STATUS=CLOSED (38/0/0/0)",
+      "scope_boundary": "The 38-dim CANONICAL_FEATURES code surface: formula/PIT/producer write-sites/doc alignment/ontology aliases for vector members after FC1-A+FC1-D. Does NOT close economic admissibility of existing RR/Zone artifacts, model enablement, \u0394G001 claims, or Feature Query Surface as a product boundary.",
+      "authoritative_artifact": "docs/governance/canonical_feature_code_surface_closure-2026-07-11.md",
+      "status_token": "CANONICAL_FEATURE_CODE_SURFACE_STATUS = CLOSED",
+      "supporting_artifacts": [
+        "docs/governance/feature_surface_closure_audit-2026-07-11.json",
+        "docs/governance/feature_surface_closure_audit-2026-07-11.md"
+      ],
+      "frozen": true,
+      "reopen_policy": "boundary_scoped_default",
+      "reopen_conditions": [
+        "governed feature-pipeline / ontology / identity-registry / FC1 contract code inside the 38-dim boundary changes",
+        "feature_surface_closure_audit or related mechanical floors fail",
+        "new contradictory evidence invalidates CANONICAL_FEATURE_CODE_SURFACE_STATUS=CLOSED",
+        "authoritative gate note defines an explicit revalidation that fires"
+      ],
+      "upstream_surfaces": [
+        "GEOMETRY_STATIC_LINEAGE"
+      ],
+      "downstream_not_implied_closed": [
+        "FEATURE_QUERY_SURFACE",
+        "GAUSSIAN_LINEAGE",
+        "ZONEGATE_LINEAGE",
+        "RR_LINEAGE",
+        "BITNET_LINEAGE",
+        "TRADENET_LINEAGE"
+      ],
+      "economically_validated": false,
+      "notes": "LINEAGE/CODE CLOSED != ECONOMICALLY VALIDATED. RR/Zone remain PIT_UNCLEAN_CENTERED_SWINGS (separate state machine)."
+    }
+  ]
+}

@@ -32,7 +32,7 @@ CONFIDENCE_BUCKETS = [
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# GAUSSIAN EVALUATION (FIX 5: use corr(expected_rr, pnl_rr) not gaussian_score)
+# GAUSSIAN EVALUATION (FIX 5: use corr(expected_rr, pnl_rr) not ema_momentum_kernel_score)
 # ─────────────────────────────────────────────────────────────────────────────
 
 @dataclass
@@ -119,7 +119,7 @@ def evaluate_gaussian(
         pred_rr.append(exp_rr)
         pred_p_win.append(sum(probs[2:]))  # P(class 2 or 3) = P(RR >= 1)
 
-    # FIX 5: correlation against actual pnl_rr_net (not gaussian_score)
+    # FIX 5: correlation against actual pnl_rr_net (not ema_momentum_kernel_score)
     corr = _pearson(pred_rr, y_rr)
 
     # Calibration error: |mean predicted win rate - actual win rate|

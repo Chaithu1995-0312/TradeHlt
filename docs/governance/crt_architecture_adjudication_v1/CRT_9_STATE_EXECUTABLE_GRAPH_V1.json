@@ -1,0 +1,424 @@
+{
+  "_doc": "Executable 9-state CRT graph for adjudication V1",
+  "generated_at_utc": "2026-07-14T08:12:37.280834+00:00",
+  "states": [
+    "RANGE",
+    "SHADOW_PENDING",
+    "SWEEP",
+    "DISPLACEMENT",
+    "EXPANSION",
+    "EXPIRED",
+    "RETEST",
+    "EXECUTION",
+    "RESOLUTION"
+  ],
+  "valid_transitions": {
+    "RANGE": [
+      "SHADOW_PENDING",
+      "SWEEP"
+    ],
+    "SHADOW_PENDING": [
+      "RANGE",
+      "SWEEP"
+    ],
+    "SWEEP": [
+      "DISPLACEMENT",
+      "EXPANSION",
+      "RANGE"
+    ],
+    "DISPLACEMENT": [
+      "EXPANSION",
+      "RANGE"
+    ],
+    "EXPANSION": [
+      "EXPIRED",
+      "RANGE",
+      "RETEST"
+    ],
+    "EXPIRED": [
+      "RANGE"
+    ],
+    "RETEST": [
+      "EXECUTION",
+      "RANGE"
+    ],
+    "EXECUTION": [
+      "RESOLUTION"
+    ],
+    "RESOLUTION": [
+      "RANGE"
+    ]
+  },
+  "edges": [
+    {
+      "from_state": "RANGE",
+      "to_state": "SHADOW_PENDING",
+      "in_valid_transitions": true,
+      "guard_function": "sweep matches pending_displacement_dir",
+      "market_inputs_read": [
+        "high",
+        "low",
+        "close"
+      ],
+      "state_memory_read": [
+        "pending_displacement_*",
+        "sweep_event"
+      ],
+      "config_values_read": [
+        "pending_displacement_ttl_candles"
+      ],
+      "output_event": "SHADOW_SWEEP_DETECTED",
+      "candidate_lifecycle_effect": "single _active_candidate advances/closes",
+      "reset_behavior": "many edges force reset_to_range bypassing graph",
+      "observed_xauusd_full_run_count": 43,
+      "observed": true,
+      "authority_source": "state_topology.VALID_TRANSITIONS + crt_engine_v2 + funnel diagnostic"
+    },
+    {
+      "from_state": "RANGE",
+      "to_state": "SWEEP",
+      "in_valid_transitions": true,
+      "guard_function": "detect_sweep then try_range_to_sweep",
+      "market_inputs_read": [
+        "high",
+        "low",
+        "close",
+        "h_ref",
+        "l_ref"
+      ],
+      "state_memory_read": [
+        "active_range",
+        "sweep_event"
+      ],
+      "config_values_read": [],
+      "output_event": "SWEEP / SWEEP_DETECTED",
+      "candidate_lifecycle_effect": "single _active_candidate advances/closes",
+      "reset_behavior": "many edges force reset_to_range bypassing graph",
+      "observed_xauusd_full_run_count": 3390,
+      "observed": true,
+      "authority_source": "state_topology.VALID_TRANSITIONS + crt_engine_v2 + funnel diagnostic"
+    },
+    {
+      "from_state": "SHADOW_PENDING",
+      "to_state": "RANGE",
+      "in_valid_transitions": true,
+      "guard_function": null,
+      "market_inputs_read": [],
+      "state_memory_read": [],
+      "config_values_read": [],
+      "output_event": null,
+      "candidate_lifecycle_effect": "single _active_candidate advances/closes",
+      "reset_behavior": "many edges force reset_to_range bypassing graph",
+      "observed_xauusd_full_run_count": null,
+      "observed": "UNKNOWN",
+      "authority_source": "state_topology.VALID_TRANSITIONS + crt_engine_v2 + funnel diagnostic"
+    },
+    {
+      "from_state": "SHADOW_PENDING",
+      "to_state": "SWEEP",
+      "in_valid_transitions": true,
+      "guard_function": "try_shadow_pending_to_expansion hop1",
+      "market_inputs_read": [],
+      "state_memory_read": [
+        "pending_displacement_candle"
+      ],
+      "config_values_read": [],
+      "output_event": "STATE_TRANSITION (governed double hop)",
+      "candidate_lifecycle_effect": "single _active_candidate advances/closes",
+      "reset_behavior": "many edges force reset_to_range bypassing graph",
+      "observed_xauusd_full_run_count": 43,
+      "observed": true,
+      "authority_source": "state_topology.VALID_TRANSITIONS + crt_engine_v2 + funnel diagnostic"
+    },
+    {
+      "from_state": "SWEEP",
+      "to_state": "DISPLACEMENT",
+      "in_valid_transitions": true,
+      "guard_function": "try_sweep_to_displacement (move/body/wick/age)",
+      "market_inputs_read": [
+        "open",
+        "close",
+        "body_ratio",
+        "wick_size",
+        "atr"
+      ],
+      "state_memory_read": [
+        "sweep_event",
+        "atr"
+      ],
+      "config_values_read": [
+        "atr_min_displacement",
+        "body_ratio_min",
+        "atr_multiplier_min",
+        "max_sweep_age_candles"
+      ],
+      "output_event": "DISPLACEMENT_CONFIRMED",
+      "candidate_lifecycle_effect": "single _active_candidate advances/closes",
+      "reset_behavior": "many edges force reset_to_range bypassing graph",
+      "observed_xauusd_full_run_count": 315,
+      "observed": true,
+      "authority_source": "state_topology.VALID_TRANSITIONS + crt_engine_v2 + funnel diagnostic"
+    },
+    {
+      "from_state": "SWEEP",
+      "to_state": "EXPANSION",
+      "in_valid_transitions": true,
+      "guard_function": "shadow resume hop2 (skips disp strength)",
+      "market_inputs_read": [],
+      "state_memory_read": [
+        "pending_displacement_candle"
+      ],
+      "config_values_read": [],
+      "output_event": "SHADOW_EXPANSION_CONFIRMED",
+      "candidate_lifecycle_effect": "single _active_candidate advances/closes",
+      "reset_behavior": "many edges force reset_to_range bypassing graph",
+      "observed_xauusd_full_run_count": 43,
+      "observed": true,
+      "authority_source": "state_topology.VALID_TRANSITIONS + crt_engine_v2 + funnel diagnostic"
+    },
+    {
+      "from_state": "SWEEP",
+      "to_state": "RANGE",
+      "in_valid_transitions": true,
+      "guard_function": null,
+      "market_inputs_read": [],
+      "state_memory_read": [],
+      "config_values_read": [],
+      "output_event": null,
+      "candidate_lifecycle_effect": "single _active_candidate advances/closes",
+      "reset_behavior": "many edges force reset_to_range bypassing graph",
+      "observed_xauusd_full_run_count": null,
+      "observed": "UNKNOWN",
+      "authority_source": "state_topology.VALID_TRANSITIONS + crt_engine_v2 + funnel diagnostic"
+    },
+    {
+      "from_state": "DISPLACEMENT",
+      "to_state": "EXPANSION",
+      "in_valid_transitions": true,
+      "guard_function": "try_displacement_to_expansion",
+      "market_inputs_read": [
+        "open",
+        "close"
+      ],
+      "state_memory_read": [
+        "displacement_candle",
+        "direction",
+        "atr"
+      ],
+      "config_values_read": [
+        "expansion_atr_min_distance"
+      ],
+      "output_event": "EXPANSION_CONFIRMED",
+      "candidate_lifecycle_effect": "single _active_candidate advances/closes",
+      "reset_behavior": "many edges force reset_to_range bypassing graph",
+      "observed_xauusd_full_run_count": 17,
+      "observed": true,
+      "authority_source": "state_topology.VALID_TRANSITIONS + crt_engine_v2 + funnel diagnostic"
+    },
+    {
+      "from_state": "DISPLACEMENT",
+      "to_state": "RANGE",
+      "in_valid_transitions": true,
+      "guard_function": null,
+      "market_inputs_read": [],
+      "state_memory_read": [],
+      "config_values_read": [],
+      "output_event": null,
+      "candidate_lifecycle_effect": "single _active_candidate advances/closes",
+      "reset_behavior": "many edges force reset_to_range bypassing graph",
+      "observed_xauusd_full_run_count": null,
+      "observed": "UNKNOWN",
+      "authority_source": "state_topology.VALID_TRANSITIONS + crt_engine_v2 + funnel diagnostic"
+    },
+    {
+      "from_state": "EXPANSION",
+      "to_state": "EXPIRED",
+      "in_valid_transitions": true,
+      "guard_function": "TTL max_expansion_age_candles/hours after retest fail",
+      "market_inputs_read": [],
+      "state_memory_read": [
+        "_expansion_entry_idx",
+        "_expansion_entry_ts"
+      ],
+      "config_values_read": [
+        "max_expansion_age_candles",
+        "max_expansion_age_hours"
+      ],
+      "output_event": "EXPANSION_EXPIRED",
+      "candidate_lifecycle_effect": "single _active_candidate advances/closes",
+      "reset_behavior": "many edges force reset_to_range bypassing graph",
+      "observed_xauusd_full_run_count": 0,
+      "observed": false,
+      "authority_source": "state_topology.VALID_TRANSITIONS + crt_engine_v2 + funnel diagnostic"
+    },
+    {
+      "from_state": "EXPANSION",
+      "to_state": "RANGE",
+      "in_valid_transitions": true,
+      "guard_function": null,
+      "market_inputs_read": [],
+      "state_memory_read": [],
+      "config_values_read": [],
+      "output_event": null,
+      "candidate_lifecycle_effect": "single _active_candidate advances/closes",
+      "reset_behavior": "many edges force reset_to_range bypassing graph",
+      "observed_xauusd_full_run_count": null,
+      "observed": "UNKNOWN",
+      "authority_source": "state_topology.VALID_TRANSITIONS + crt_engine_v2 + funnel diagnostic"
+    },
+    {
+      "from_state": "EXPANSION",
+      "to_state": "RETEST",
+      "in_valid_transitions": true,
+      "guard_function": "try_expansion_to_retest (depth floor/ceiling/disp strength)",
+      "market_inputs_read": [
+        "close"
+      ],
+      "state_memory_read": [
+        "active_range",
+        "direction",
+        "displacement_candle",
+        "atr"
+      ],
+      "config_values_read": [
+        "retest_depth_max",
+        "retest_atr_depth_fraction",
+        "retest_min_depth_atr_fraction",
+        "max_displacement_strength"
+      ],
+      "output_event": "RETEST_CONFIRMED / BEGIN_SOFT_CONF",
+      "candidate_lifecycle_effect": "single _active_candidate advances/closes",
+      "reset_behavior": "many edges force reset_to_range bypassing graph",
+      "observed_xauusd_full_run_count": 17,
+      "observed": true,
+      "authority_source": "state_topology.VALID_TRANSITIONS + crt_engine_v2 + funnel diagnostic"
+    },
+    {
+      "from_state": "EXPIRED",
+      "to_state": "RANGE",
+      "in_valid_transitions": true,
+      "guard_function": "one-bar soft archive reset",
+      "market_inputs_read": [],
+      "state_memory_read": [],
+      "config_values_read": [],
+      "output_event": "EXPANSION_TTL_RESET",
+      "candidate_lifecycle_effect": "single _active_candidate advances/closes",
+      "reset_behavior": "many edges force reset_to_range bypassing graph",
+      "observed_xauusd_full_run_count": 0,
+      "observed": false,
+      "authority_source": "state_topology.VALID_TRANSITIONS + crt_engine_v2 + funnel diagnostic"
+    },
+    {
+      "from_state": "RETEST",
+      "to_state": "EXECUTION",
+      "in_valid_transitions": true,
+      "guard_function": "soft-conf approve + zone + session filters",
+      "market_inputs_read": [
+        "close",
+        "EMA state"
+      ],
+      "state_memory_read": [
+        "cached_features",
+        "risk_score",
+        "retest_candle",
+        "active_range"
+      ],
+      "config_values_read": [
+        "tier_*",
+        "conf_*",
+        "allowed_sessions",
+        "session_windows"
+      ],
+      "output_event": "TRADE_OPENED path / soft conf",
+      "candidate_lifecycle_effect": "single _active_candidate advances/closes",
+      "reset_behavior": "many edges force reset_to_range bypassing graph",
+      "observed_xauusd_full_run_count": 5,
+      "observed": true,
+      "authority_source": "state_topology.VALID_TRANSITIONS + crt_engine_v2 + funnel diagnostic"
+    },
+    {
+      "from_state": "RETEST",
+      "to_state": "RANGE",
+      "in_valid_transitions": true,
+      "guard_function": null,
+      "market_inputs_read": [],
+      "state_memory_read": [],
+      "config_values_read": [],
+      "output_event": null,
+      "candidate_lifecycle_effect": "single _active_candidate advances/closes",
+      "reset_behavior": "many edges force reset_to_range bypassing graph",
+      "observed_xauusd_full_run_count": null,
+      "observed": "UNKNOWN",
+      "authority_source": "state_topology.VALID_TRANSITIONS + crt_engine_v2 + funnel diagnostic"
+    },
+    {
+      "from_state": "EXECUTION",
+      "to_state": "RESOLUTION",
+      "in_valid_transitions": true,
+      "guard_function": "trade exit via executor",
+      "market_inputs_read": [
+        "high",
+        "low",
+        "close"
+      ],
+      "state_memory_read": [
+        "active_trade"
+      ],
+      "config_values_read": [
+        "exit_model",
+        "sl/tp mults"
+      ],
+      "output_event": "TRADE_*",
+      "candidate_lifecycle_effect": "single _active_candidate advances/closes",
+      "reset_behavior": "many edges force reset_to_range bypassing graph",
+      "observed_xauusd_full_run_count": 1,
+      "observed": true,
+      "authority_source": "state_topology.VALID_TRANSITIONS + crt_engine_v2 + funnel diagnostic"
+    },
+    {
+      "from_state": "RESOLUTION",
+      "to_state": "RANGE",
+      "in_valid_transitions": true,
+      "guard_function": "post-resolution / post-trade reset",
+      "market_inputs_read": [],
+      "state_memory_read": [],
+      "config_values_read": [],
+      "output_event": "RESET",
+      "candidate_lifecycle_effect": "single _active_candidate advances/closes",
+      "reset_behavior": "many edges force reset_to_range bypassing graph",
+      "observed_xauusd_full_run_count": 1,
+      "observed": true,
+      "authority_source": "state_topology.VALID_TRANSITIONS + crt_engine_v2 + funnel diagnostic"
+    }
+  ],
+  "force_reset_surface": {
+    "from_any_via_reset_to_range": {
+      "note": "reset_to_range bypasses VALID_TRANSITIONS",
+      "observed_reset_events": 10881,
+      "dominant_reason_class": "HTF",
+      "resets_from_SWEEP": 3075,
+      "resets_from_DISPLACEMENT": 298,
+      "resets_from_EXPANSION": 43,
+      "resets_from_RETEST": 12,
+      "resets_from_EXECUTION": 4
+    }
+  },
+  "shadow_path": {
+    "sequence": [
+      "RANGE",
+      "SHADOW_PENDING",
+      "SWEEP",
+      "EXPANSION"
+    ],
+    "skips": "body_ratio/ATR displacement strength on shadow resume",
+    "measured_SWEEP_to_EXPANSION_shadow": 43
+  },
+  "single_active_candidate": true,
+  "source": [
+    "src/config_layer/state_topology.py",
+    "src/config_layer/crt_engine_v2.py",
+    "docs/governance/crt_executable_state_graph.json",
+    "docs/governance/crt_xauusd_funnel_diagnostic-2026-07-14.json"
+  ],
+  "prior_state_graph_artifact": "docs/governance/crt_executable_state_graph.json"
+}

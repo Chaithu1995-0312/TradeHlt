@@ -1,0 +1,32 @@
+{
+  "change_id": "CH-identity-l5-executed-record-freeze",
+  "date_utc": "2026-08-23",
+  "objective": "User lock: the certified 4-of-4 L5 records are the complete historical record of executed CRTEngine closes on this corpus/basis. F-086 remains the definitive answer on M15 structural tradeability. No 100% window scan. No TradeLib. No new F-id. No production.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY"
+  ],
+  "change_class_rationale": "Scope freeze of two already-validated objects (identity L5 cert + F-086). Copies the 4 L5 PKs into the tracked cert report because results/ is gitignored. Does not change identity PK, engine, or F-086 conclusion.",
+  "affected_files": [
+    "docs/governance/xauusd_identity_certification_2y.md",
+    "docs/governance/xauusd_identity_certification_2y.json",
+    "docs/current-findings.md",
+    "docs/knowledge-map.md",
+    "docs/governance/build_manifests/CH-identity-l5-executed-record-freeze.impact.json",
+    ".grok/PENDING.md",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert the freeze banner, copied L5 table, F-086 Note sentence, PENDING row. Identity store and F-086 conclusion unchanged.",
+  "authority_granted": "User 2026-08-23: preserve certified 4-of-4 L5 as complete executed CRT close record; leave F-086 as definitive on M15 structural tradeability.",
+  "authority_NOT_granted": "No production, no G001, no TradeLib scan, no 100% window harvest, no F-086 reopen, no new F-id, no ACTIVE_VERSION change.",
+  "production_behavior_changed": "NO"
+}

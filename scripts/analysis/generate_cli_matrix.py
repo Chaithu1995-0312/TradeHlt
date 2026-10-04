@@ -5,14 +5,20 @@ from pathlib import Path
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
 SRC_DIR = ROOT_DIR / "src"
+# Prefer repo-root imports (src.control_plane.*) used by control_plane package __init__.
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from src.control_plane.registry import generate_cli_matrix_markdown
+try:
+    from src.control_plane.registry import generate_cli_matrix_markdown
+except ImportError:
+    from control_plane.registry import generate_cli_matrix_markdown
 
 
 def main() -> None:
-    out_path = Path("docs/CLI_MATRIX.md")
+    out_path = Path("docs/reference/cli-matrix.md")
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(generate_cli_matrix_markdown(), encoding="utf-8")
     print(f"Wrote {out_path}")

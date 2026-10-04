@@ -1,0 +1,105 @@
+{
+  "id": "FINDINGS_REVALIDATION_GATE_E4",
+  "kind": "PREREGISTRATION",
+  "status": "DESIGN",
+  "frozen": true,
+  "date_frozen": "2026-07-16",
+  "freeze_acceptance": "owner-accepted",
+  "protocol_hash": "sha256:454b2351e77728821703f1f54c5b4e740622df73f7dcb9e2e56c07caeefd54f4",
+  "protocol_hash_target": "findings-revalidation-gate-e4-preregistration.md",
+  "task_class": "EXPLORATORY_RESEARCH_DESIGN_ONLY",
+  "authority": "RESEARCH_ONLY",
+  "grants_production_authority": false,
+  "grants_capital_authority": false,
+  "program": "EDGE_RESEARCH_PLATFORM",
+  "program_slot": "WS-OUTCOME-FACTORY / P2.0",
+  "branch_scope": "feature/truth-registry-v2",
+  "active_version_at_design": "v2_multi_2026_04",
+  "date_design": "2026-07-16",
+  "md_twin": "findings-revalidation-gate-e4-preregistration.md",
+  "motivation": {
+    "epoch": "E4 = post-F-051 (causal swings) + post-F-054 (re-certified feature DAG)",
+    "problem": "ERP priority stack / D-16 / program-§12.4 anchor on findings F-019..F-035 computed on a pre-fix feature layer.",
+    "last_revalidation": "E3 (2026-06-27, finding_dependency_audit Phase B) survived byte-identically, but E3 predates F-051 and F-054.",
+    "cost_bound": "F-029/F-051: centered-swing leak left CRT trade GENERATION byte-identical; expensive re-derive reserved for feature-consuming findings."
+  },
+  "feature_layer_fixes": [
+    {"finding": "F-051", "change": "centered-swing non-PIT lookahead removed (FC1-A/FC1-D causal swings); 10/38 canonical dims contaminated pre-fix (~63% bars differ)"},
+    {"finding": "F-054", "change": "feature-DAG re-cert; ATR/RSI/EMA first-class FM-040..046; legacy FM-022/023 SUPERSEDED; FM-030/031 promoted; STALE cascade over rr_model/gaussian/dual_engine/backtests/evidence"},
+    {"finding": "F-046/047/050", "change": "body_ratio/wick_size unified (candle_math); CRT emission -> FM-027/FM-028"}
+  ],
+  "scope_classification": {
+    "A_crt_state_entries_only": {
+      "expected": "ROBUST",
+      "method": "cheap byte-identity confirm vs E3 baseline (sha256 entry set)",
+      "findings": [
+        {"id": "F-019-spine", "driver": "scripts/research/qualify_majors.py"},
+        {"id": "F-021", "driver": "scripts/research/phase_s_selection_effect.py"},
+        {"id": "F-037", "driver": "architectural - no economic re-run"}
+      ]
+    },
+    "B_toy_directional_arms": {
+      "expected": "BYTE_IDENTICAL_FEATURE_INDEPENDENT",
+      "rvg_u2_finding": "toys run on isolated src/research/ stack (research.indicators + research.measurement.bar_features); detect() ignores the features dict; never imports src/features/ where F-051/F-054 live",
+      "method": "src/research/ drift check (git-diff E3-commit->HEAD) + determinism re-confirm vs E3 baseline + *_run2 twins; NOT a feature re-derive",
+      "findings": [
+        {"id": "F-019-toy", "driver": "scripts/research/qualify_majors.py"},
+        {"id": "F-020", "driver": "scripts/research/phase_b_conditional_entropy.py"},
+        {"id": "F-025", "driver": "scripts/research/phase_d_exit_grid.py"},
+        {"id": "F-027", "driver": "scripts/research/qualify_htf.py"},
+        {"id": "F-028", "driver": "scripts/research/qualify_interpreter.py"},
+        {"id": "F-035", "driver": "scripts/research/qualify_fx_metals.py"}
+      ]
+    },
+    "C_feature_consuming_models": {
+      "expected": "GENUINELY_SUSPECT",
+      "method": "full re-derive from certified feature IDs, re-fit/re-score, re-run forward_walk",
+      "findings": [
+        {"id": "F-023", "driver": "scripts/research/feature_region_oos_study.py"},
+        {"id": "F-036", "driver": "scripts/research/diagnose_zone_inertness.py"},
+        {"id": "F-041B", "driver": "scripts/research/discover_zones.py"},
+        {"id": "F-045", "driver": "scripts/research/rr_shadow_value.py"},
+        {"id": "gaussian_lineage", "driver": "docs/governance/gaussian_lineage_audit.md"}
+      ]
+    },
+    "D_closed_programs": {
+      "expected": "DEFERRED",
+      "method": "re-derive only if a Class-C dependency flips",
+      "findings": ["F-030", "F-032", "F-033", "F-034", "F-042", "F-043"]
+    }
+  },
+  "epoch_pinning": {
+    "feature_source": ["configs/formulas/market_ontology.yaml", "src/features/feature_certification_state.py"],
+    "certified_ids_included": ["FM-040..046", "FM-030", "FM-031", "FM-027", "FM-028"],
+    "excluded_legacy": ["FM-022", "FM-023"],
+    "swing_definition": "causal_delayed (FC1-A/FC1-D)",
+    "exit_truth": "forward_walk(exit_model=intrabar_fixed)",
+    "exit_entrypoint": "src/research/measurement/forward_walk.py:27",
+    "cost_bps_round_trip": 12,
+    "default_lens": "CRT-only gate-OFF (BACKTEST_ENGINE_GATE=0, F-037)"
+  },
+  "verdict_tokens": [
+    "SURVIVES_E4",
+    "SURVIVES_E4_BYTE_IDENTICAL",
+    "OVERTURNED_E4",
+    "UNDERPOWERED_E4",
+    "SCOPE_CHANGED_E4",
+    "PROTOCOL_FAILURE"
+  ],
+  "outputs_root": "results/research/findings_revalidation_e4/",
+  "work_items": [
+    {"id": "RVG-0", "phase": "DESIGN->freeze", "status": "FROZEN", "grant": "Owner 'freeze RVG' (granted 2026-07-16)", "note": "doc placed + FROZEN; protocol_hash recorded; registered in ERP program"},
+    {"id": "RVG-1", "phase": "IMPLEMENTATION", "status": "PENDING", "grant": "Implement RVG-1", "artifact": "scripts/research/revalidate_findings_e4.py"},
+    {"id": "RVG-2", "phase": "RUN", "status": "PENDING", "grant": "Run RVG Class A"},
+    {"id": "RVG-3", "phase": "RUN", "status": "PENDING", "grant": "Run RVG Class B"},
+    {"id": "RVG-4", "phase": "RUN", "status": "PENDING", "grant": "Run RVG Class C"},
+    {"id": "RVG-5", "phase": "REVIEW", "status": "PENDING", "grant": "part of each run close"}
+  ],
+  "open_unknowns": [
+    {"id": "RVG-U1", "status": "RESOLVED", "date": "2026-07-16", "finding": "E3 baselines on disk (qualification_2026_06_27, phase_s_2026_06_27, phase_b(+run2), phase_d(+run2), qualification_htf, qualification_fx_metals, bnbusdt_trade_anatomy_2026_06_27); no E3 re-run needed"},
+    {"id": "RVG-U2", "status": "RESOLVED", "date": "2026-07-16", "finding": "Class B is feature-pipeline-independent: toys ignore features dict, use research.indicators/research.measurement; src/research/ never imports src/features/ (F-051/F-054); indicators.py unchanged. Reclassified to drift-check + determinism"},
+    {"id": "RVG-U3", "status": "OPEN", "q": "Did F-041B honest re-derive use certified (post-F-051) features or pre-fix?", "resolve": "check zonegate_lineage_audit.md provenance; if pre-fix, F-041B is Class-C"},
+    {"id": "RVG-U4", "status": "OPEN", "q": "Who signs E4 trust tokens / finding flips?", "resolve": "owner co-sign per ERP AMB-02/AMB-12"}
+  ],
+  "stop_boundary": "FROZEN 2026-07-16 (owner-accepted) -> RVG-1 harness + RVG-2..4 runs require explicit grants"
+}

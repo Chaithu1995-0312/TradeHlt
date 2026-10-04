@@ -1,0 +1,418 @@
+{
+  "finding_id": "L-003",
+  "run_id": "l003_outcome_semantics_20260907_172143",
+  "generated_at_utc": "2026-09-07T17:21:43.552Z",
+  "git_commit_sha": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+  "doctrine_version": "L-003.v1",
+  "status": "OBSERVED_PARTIAL",
+  "status_note": "Demoted from FROZEN. Phase A = DETECTION_STREAM vocab census only (incomplete for same-RV semantic-boundary claim). Phase B confusion matrix required before freeze. NOT a registry promotion. l003_frozen=false.",
+  "populations": [
+    {
+      "id": "DETECTION_STREAM",
+      "emitter": "scripts/research/opportunity_scanner.py::_simulate",
+      "label_model": "trailing_stop_0.5R (trail_mult=0.5); labels SL_HIT/TP_HIT/TIMEOUT",
+      "filename_glob": "**/opportunities.jsonl",
+      "attribution_eligible": false,
+      "rv_name": "scanner_outcome",
+      "csv_column_note": "opportunities field often named outcome; anatomy join column art_outcome"
+    },
+    {
+      "id": "GOVERNING_ORACLE",
+      "emitter": "forward_walk(intrabar_fixed) / anatomy re-derivation (scripts/analysis/bnbusdt_trade_anatomy.py and cross-instrument anatomy pipeline)",
+      "label_model": "fixed-stop governing exit; realized SL/TP/TIMEOUT derived, not artifact stream labels",
+      "filename_glob": "results/research/*/anatomy_summary.json (derived); not opportunities.jsonl outcome field",
+      "attribution_eligible": false,
+      "rv_name": "oracle_outcome",
+      "csv_column_note": "anatomy column literally named outcome"
+    },
+    {
+      "id": "LIVE_INGEST_TWIN",
+      "emitter": "scripts/research/ingest_live_outcomes.py",
+      "label_model": "WIN/LOSS/BREAKEVEN (+ source=live_alerts); different filename",
+      "filename_glob": "logs/live_training.jsonl (CLI --output); NOT opportunities.jsonl",
+      "attribution_eligible": false,
+      "rv_name": "live_outcome"
+    },
+    {
+      "id": "SPINE_LEDGER_NEIGHBOR",
+      "emitter": "runtime spine / TRADE_OPENED events (architectural neighbor; not opportunities writer)",
+      "label_model": "production/spine ledger events family — not collapsed into opportunities",
+      "filename_glob": "*_events.jsonl / spine ledger (S-004)",
+      "attribution_eligible": false
+    }
+  ],
+  "vocab_census": {
+    "DETECTION_STREAM": {
+      "files_sampled": [
+        {
+          "path": "logs/XAUUSD/xauusd_phase1_20260723/opportunities.jsonl",
+          "n_outcome_rows": 94332,
+          "outcome_counts": {
+            "SL_HIT": 92937,
+            "TP_HIT": 1344,
+            "TIMEOUT": 51
+          },
+          "run_id": "xauusd_phase1_20260723",
+          "instrument": "XAUUSD"
+        },
+        {
+          "path": "logs/BNBUSDT/20260530_011521/opportunities.jsonl",
+          "n_outcome_rows": 139942,
+          "outcome_counts": {
+            "SL_HIT": 138091,
+            "TP_HIT": 1830,
+            "TIMEOUT": 21
+          },
+          "run_id": "20260530_011521",
+          "instrument": "BNBUSDT"
+        },
+        {
+          "path": "logs/BTCUSDT/anatomy_BTCUSDT_20260613/opportunities.jsonl",
+          "n_outcome_rows": 139942,
+          "outcome_counts": {
+            "SL_HIT": 137648,
+            "TP_HIT": 2259,
+            "TIMEOUT": 35
+          },
+          "run_id": "anatomy_BTCUSDT_20260613",
+          "instrument": "BTCUSDT"
+        },
+        {
+          "path": "logs/ETHUSDT/anatomy_ETHUSDT_20260613/opportunities.jsonl",
+          "n_outcome_rows": 139942,
+          "outcome_counts": {
+            "SL_HIT": 137477,
+            "TP_HIT": 2411,
+            "TIMEOUT": 54
+          },
+          "run_id": "anatomy_ETHUSDT_20260613",
+          "instrument": "ETHUSDT"
+        },
+        {
+          "path": "logs/SOLUSDT/anatomy_SOLUSDT_20260613/opportunities.jsonl",
+          "n_outcome_rows": 139942,
+          "outcome_counts": {
+            "SL_HIT": 138490,
+            "TP_HIT": 1414,
+            "TIMEOUT": 38
+          },
+          "run_id": "anatomy_SOLUSDT_20260613",
+          "instrument": "SOLUSDT"
+        }
+      ],
+      "n_files": 5,
+      "n_outcome_rows_total": 654100,
+      "outcome_counts_aggregate": {
+        "SL_HIT": 644643,
+        "TP_HIT": 9258,
+        "TIMEOUT": 199
+      },
+      "dominant_labels": [
+        "SL_HIT",
+        "TP_HIT",
+        "TIMEOUT"
+      ],
+      "measurement_note": "stdlib json stream over local **/opportunities.jsonl samples; run_header rows excluded"
+    },
+    "LIVE_INGEST_TWIN": {
+      "files_checked": {
+        "logs/live_alerts.jsonl": {
+          "n_outcome_rows": 0,
+          "outcome_counts": {},
+          "note": "present; no outcome field in sampled rows"
+        },
+        "logs/live_rail.jsonl": {
+          "n_outcome_rows": 0,
+          "outcome_counts": {},
+          "note": "present; no outcome field in sampled rows"
+        },
+        "logs/live_training.jsonl": {
+          "n_outcome_rows": null,
+          "outcome_counts": null,
+          "note": "ABSENT locally; ingest_live_outcomes default output path"
+        }
+      },
+      "code_declared_vocab": [
+        "WIN",
+        "LOSS",
+        "BREAKEVEN"
+      ],
+      "emitter": "scripts/research/ingest_live_outcomes.py",
+      "measurement_note": "No local live_training.jsonl present; live_alerts/live_rail have zero outcome fields in scan. Vocab pinned from emitter docstring/code."
+    },
+    "GOVERNING_ORACLE": {
+      "measurement_note": "Not re-measured this pass; cite published F-022 anatomy distributions only",
+      "published_artifact_vs_governing_example_BNB": {
+        "source": "docs/current-findings.md F-022 / results/research/bnbusdt_trade_anatomy/anatomy_summary.json",
+        "artifact": "138091 SL / 1830 TP / 21 TIMEOUT",
+        "governing": "91914 SL / 46580 TP / 1448 TIMEOUT"
+      }
+    },
+    "phase_a_incomplete_for_semantic_boundary_claim": true,
+    "note": "Phase A content retained. Incomplete for claim that detection outcome is same RV as oracle outcome; see Phase B."
+  },
+  "f022_citations": [
+    {
+      "path": "docs/current-findings.md",
+      "finding": "F-022",
+      "published_rates": {
+        "BNBUSDT_artifact_consistency_rate": 0.368,
+        "BTCUSDT": 0.372,
+        "ETHUSDT": 0.37,
+        "SOLUSDT": 0.358,
+        "cluster_note": "~0.36-0.37 repository-wide"
+      },
+      "governing_path": "forward_walk(intrabar_fixed)"
+    },
+    {
+      "path": "docs/analysis/cross-instrument-anatomy-2026-06-13.md",
+      "published_rates": {
+        "BNBUSDT": 0.368,
+        "BTCUSDT": 0.372,
+        "ETHUSDT": 0.37,
+        "SOLUSDT": 0.358
+      },
+      "note": "Self-consistency clusters 0.358-0.372; artifact ~98-99% SL_HIT vs governing ~66% SL / ~33% TP"
+    },
+    {
+      "path": "docs/analysis/BNBUSDT_TRADE_ANATOMY_2026_06_13.md",
+      "note": "BNB anatomy narrative; consistency check art_outcome==SL_HIT and art_mae > -risk"
+    },
+    {
+      "path": "results/research/bnbusdt_trade_anatomy/anatomy_summary.json",
+      "published_rates": {
+        "artifact_consistency_rate": 0.368
+      }
+    },
+    {
+      "path": "docs/governance/ANALYTICS_LINEAGE_ANOMALY_REVIEW.md",
+      "section": "L-003"
+    },
+    {
+      "path": "docs/design/context-finding-odp/ANALYTICS_LINEAGE_SEMANTICS_DECISION.md",
+      "section": "§5 Attribution eligibility — opportunities.outcome/rr_achieved NOT eligible"
+    }
+  ],
+  "promotion": {
+    "registry_column_added": false,
+    "attribution_unblocked": false,
+    "analytics_schema_registry_edited": false,
+    "analytics_lineage_registry_edited": false,
+    "holdout_lesson": "EC-001 was 268/268 CORPUS_VERIFIED → no evidence_class column. Same Phase B / measure-before-promote: do not add outcome_population/outcome_semantics column unless variance across populations AND a concrete consumer require it.",
+    "future_promotion_candidates_doctrine_only_until_gated": [
+      "optional annotation outcome_population / outcome_semantics (not a new analytics fact column this pass)"
+    ],
+    "l003_frozen": false
+  },
+  "rules": [
+    {
+      "id": "R-L003-001",
+      "rule": "scanner_outcome (DETECTION_STREAM; column outcome/art_outcome) MUST NOT be aliased to oracle_outcome (GOVERNING_ORACLE; column outcome)",
+      "class": "HOMONYM / PROHIBITED_ALIAS",
+      "falsifier": "Any SAFE_ALIAS or registry note equating opportunities.outcome with forward_walk(intrabar_fixed) outcome",
+      "note_historical": "Formerly worded as DETECTION_STREAM.outcome vs GOVERNING_ORACLE.outcome"
+    },
+    {
+      "id": "R-L003-002",
+      "rule": "DETECTION_STREAM.rr_achieved MUST NOT feed attribution eligibility",
+      "class": "ATTRIBUTION_BLOCKER_OUTCOME_SEMANTICS",
+      "falsifier": "Attribution consumer reading opportunities.rr_achieved as realized edge without re-derivation",
+      "note": "Distinct from ATTRIBUTION_BLOCKER_IDENTITY (L-001 produced_by UNKNOWN)"
+    },
+    {
+      "id": "R-L003-003",
+      "rule": "Training/calibration that reads opportunities.outcome/rr_achieved without governing re-derivation inherits F-022 contamination",
+      "class": "CONTAMINATION_INHERITANCE",
+      "falsifier": "Documented counterexample where stream labels equal governing labels at corpus scale (artifact_consistency_rate ~1.0)",
+      "examples_already_documented": [
+        "F-045 (RR-model kill-test indeterminate on contaminated labels)",
+        "docs/governance/gaussian_lineage_audit.md"
+      ]
+    },
+    {
+      "id": "R-L003-004",
+      "rule": "UNKNOWN / unresolved governing path => attribution blocked",
+      "class": "ATTRIBUTION_GATE",
+      "falsifier": "Attribution claim advanced while exit/oracle contract remains UNKNOWN",
+      "blocker_classes": [
+        "ATTRIBUTION_BLOCKER_OUTCOME_SEMANTICS",
+        "ATTRIBUTION_BLOCKER_IDENTITY"
+      ]
+    },
+    {
+      "id": "R-L003-005",
+      "rule": "LIVE_INGEST_TWIN MUST remain outside opportunities family unless FAMILY_DEFAULTS intentionally expanded (S-002)",
+      "class": "POPULATION_SEPARATION",
+      "falsifier": "jsonl_to_parquet FAMILY_DEFAULTS or query_trace FAMILY_GLOBS silently ingest live_training.jsonl as opportunities"
+    },
+    {
+      "id": "R-L003-006",
+      "rule": "Path companions mfe/mae/duration_candles on opportunities inherit DETECTION_STREAM semantics (same _simulate emitter)",
+      "class": "COMPANION_BOUND",
+      "falsifier": "Treating opportunities.mfe/mae/duration_candles as governing-oracle path metrics without re-derivation"
+    }
+  ],
+  "non_goals": [
+    "No produced_by fills (still blocked on L-001 doctrine choice)",
+    "No Phase 5 Attribution unlock",
+    "No src/ changes",
+    "No venv work",
+    "No ANALYTICS_SCHEMA_REGISTRY or ANALYTICS_LINEAGE_REGISTRY table mutations"
+  ],
+  "cross_links": [
+    "docs/governance/ANALYTICS_LINEAGE_ANOMALY_REVIEW.md (L-003)",
+    "docs/current-findings.md (F-022, F-045)",
+    "docs/design/context-finding-odp/ANALYTICS_LINEAGE_SEMANTICS_DECISION.md §5",
+    "docs/governance/analytics_evidence_class_census-2026-09-07.md (EC-001 sibling measurement pattern)",
+    "docs/analysis/cross-instrument-anatomy-2026-06-13.md",
+    "docs/governance/gaussian_lineage_audit.md"
+  ],
+  "artifacts": {
+    "md": "docs/governance/ANALYTICS_OUTCOME_SEMANTICS_L003.md",
+    "json": "docs/governance/analytics_outcome_semantics_l003-2026-09-07.json",
+    "impact": "docs/governance/build_manifests/CH-l003-outcome-semantics.impact.json"
+  },
+  "phase": "A",
+  "phase_complete_for_freeze": false,
+  "phase_b_required": true,
+  "phase_b_artifacts": {
+    "md": "docs/governance/ANALYTICS_OUTCOME_POPULATION_COMPARISON_L003B.md",
+    "json": "docs/governance/analytics_outcome_population_comparison_l003b-2026-09-07.json",
+    "run_id": "l003b_outcome_population_comparison_20260907_173349",
+    "measurement_version": "L-003B.v1"
+  },
+  "banner": "Phase A = scanner_outcome vocab only; Phase B = scanner_outcome x oracle_outcome confusion matrix required before freeze. Discipline: Observation -> Measurement -> Evidence -> Promotion. Terminology: L-003-TERM.v1.",
+  "demotion": {
+    "from_status": "FROZEN",
+    "to_status": "OBSERVED_PARTIAL",
+    "reason": "User rejected treating L-003 as FROZEN; Phase A lacked governing-oracle join / confusion matrix / agreement rate.",
+    "demoted_at_utc": "2026-09-07T17:33:49.906Z",
+    "git_commit_sha": "d7c25f6e55616261b8b229b000875abd3bd315eb"
+  },
+  "terminology_parity": {
+    "version": "L-003-TERM.v1",
+    "run_id": "l003_terminology_parity_20260907_182845",
+    "generated_at_utc": "2026-09-07T18:28:45.866Z",
+    "git_commit_sha": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+    "pass_type": "documentation_terminology_parity_only",
+    "no_new_measurements": true,
+    "canonical_terms": {
+      "scanner_outcome": {
+        "emitter": "opportunity_scanner._simulate",
+        "labels": [
+          "SL_HIT",
+          "TP_HIT",
+          "TIMEOUT"
+        ],
+        "csv_column": "art_outcome",
+        "former_aliases": [
+          "art_outcome",
+          "detection outcome",
+          "DETECTION_STREAM.outcome"
+        ]
+      },
+      "oracle_outcome": {
+        "emitter": "forward_walk(intrabar_fixed)",
+        "labels": [
+          "SL_HIT",
+          "TP_HIT",
+          "TIMEOUT"
+        ],
+        "csv_column": "outcome",
+        "former_aliases": [
+          "outcome",
+          "governing outcome",
+          "GOVERNING_ORACLE.outcome"
+        ]
+      },
+      "live_outcome": {
+        "emitter": "ingest_live_outcomes",
+        "labels": [
+          "WIN",
+          "LOSS",
+          "BREAKEVEN"
+        ],
+        "former_aliases": [
+          "LIVE_INGEST_TWIN outcome"
+        ]
+      },
+      "attribution_target": {
+        "meaning": "trade edge realization (implicit eligibility target; not a scanner/oracle terminal label)"
+      },
+      "LABEL_MATCH": {
+        "formula": "scanner_outcome == oracle_outcome",
+        "meaning": "terminal label equality only; NOT semantic/process agreement",
+        "historical_synonym": "AGREE"
+      },
+      "LABEL_MISMATCH": {
+        "formula": "scanner_outcome != oracle_outcome",
+        "historical_synonym": "DISAGREE"
+      },
+      "LABEL_MISMATCH_SL_TP": {
+        "formula": "scanner_outcome==SL_HIT AND oracle_outcome==TP_HIT",
+        "historical_synonym": "DISAGREE_SL_TP",
+        "primary_mismatch_class": true
+      },
+      "path_geometry_or_path_shape_metrics": {
+        "measured_set": [
+          "time_to_peak / bars_to_peak_within_trade",
+          "MFE / mfe_r",
+          "T_MAE / time_to_bottom_path"
+        ],
+        "note": "Prefer 'path geometry' / 'path-shape metrics' for the measured set; 'path mechanics' retained as finding-id narrative only"
+      },
+      "T_MAE": {
+        "formula": "time_to_bottom_path = timing of deepest adverse on PEAK_HORIZON path",
+        "not": [
+          "magnitude+timing composite",
+          "first stop-threat",
+          "true FAE-to-stop"
+        ],
+        "preferred_prose": "early MAE timing / early-path minimum"
+      },
+      "trailing_stop_hypothesis": {
+        "claim_class": "hypothesis_only_unmeasured",
+        "labels": [
+          "path-mechanics hypothesis",
+          "trailing-stop hypothesis (unmeasured)"
+        ],
+        "unmeasured": [
+          "trail activation",
+          "trail move",
+          "trail exit",
+          "trail touch"
+        ]
+      },
+      "early_stop_inference": {
+        "claim_class": "INFERENCE_not_observation",
+        "observation_is_only": "terminal label pair (scanner_outcome, oracle_outcome)",
+        "would_require": "detector_exit_ts < oracle_tp_ts (unmeasured)"
+      }
+    },
+    "attribution_blockers": {
+      "ATTRIBUTION_BLOCKER_IDENTITY": "12 opportunities.produced_by UNKNOWN (L-001)",
+      "ATTRIBUTION_BLOCKER_OUTCOME_SEMANTICS": "scanner_outcome ≠ oracle_outcome as RVs (L-003B HOMONYM)"
+    },
+    "machine_key_policy": "Existing JSON keys AGREE / DISAGREE / DISAGREE_SL_TP / art_outcome / outcome retained for prior run_id reproducibility; see label_vocabulary aliases."
+  },
+  "label_vocabulary": {
+    "canonical": {
+      "LABEL_MATCH": "scanner_outcome == oracle_outcome (terminal equality only)",
+      "LABEL_MISMATCH": "scanner_outcome != oracle_outcome",
+      "LABEL_MISMATCH_SL_TP": "scanner SL_HIT × oracle TP_HIT",
+      "scanner_outcome": "art_outcome / opportunities outcome field",
+      "oracle_outcome": "anatomy column outcome (forward_walk)",
+      "live_outcome": "WIN/LOSS/BREAKEVEN"
+    },
+    "historical_machine_keys_retained": true,
+    "historical_synonyms": {
+      "AGREE": "LABEL_MATCH",
+      "DISAGREE": "LABEL_MISMATCH",
+      "DISAGREE_SL_TP": "LABEL_MISMATCH_SL_TP",
+      "DISAGREE_OTHER": "LABEL_MISMATCH_OTHER",
+      "art_outcome": "scanner_outcome",
+      "outcome (anatomy)": "oracle_outcome"
+    },
+    "note": "Machine keys AGREE/DISAGREE/... kept for prior run_id reproducibility; prose uses canonical terms."
+  }
+}

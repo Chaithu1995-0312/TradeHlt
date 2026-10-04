@@ -1,0 +1,137 @@
+{
+  "_doc": "Terminal and near-terminal consumers of XAUUSD OHLCV lineage (April-2026 trace). LATENT = not executed this run; UNREACHABLE = cannot consume historical frozen CSV as wired.",
+  "schema_version": "1.0.0",
+  "trace_id": "XAUUSD-APR2026-OHLCV-TERMINALS-2026-07-10",
+  "binding_sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+  "terminals": [
+    {
+      "id": "T-BACKTEST-SPINE",
+      "entrypoint": "src/runtime/backtest_v2.BacktestRunner.run",
+      "inputs": ["CandleLoader.stream", "FeaturePipeline dual pd.read_csv", "CRTEngine", "optional EngineRunner"],
+      "artifacts": ["results/**/trades*.csv", "summary/report json", "*_events.jsonl", "CRT telemetry jsonl"],
+      "branch": "TERMINAL",
+      "xau_guard": true,
+      "l3": "if via CLI/_preflight",
+      "executed_this_trace": false,
+      "status": "LATENT"
+    },
+    {
+      "id": "T-RUN-BACKTEST-SIMPLIFIED",
+      "entrypoint": "src/runtime/backtest_v2.run_backtest",
+      "inputs": ["pd.read_csv", "FeaturePipeline", "EngineRunner"],
+      "artifacts": ["in-memory decision list"],
+      "branch": "TERMINAL",
+      "xau_guard": true,
+      "l3": false,
+      "candleloader": false,
+      "executed_this_trace": false,
+      "status": "LATENT"
+    },
+    {
+      "id": "T-MULTI-INSTRUMENT",
+      "entrypoint": "src/runtime/backtest_v2.MultiInstrumentRunner",
+      "inputs": ["data_dir/*.csv", "validate_universe", "CandleLoader"],
+      "artifacts": ["aggregate_summary.json", "per-instrument results"],
+      "branch": "TERMINAL",
+      "executed_this_trace": false,
+      "status": "LATENT"
+    },
+    {
+      "id": "T-HYPOTHESIS-RUNNER",
+      "entrypoint": "src/research/runner.HypothesisRunner",
+      "inputs": ["CandleLoader", "hypotheses", "forward_walk"],
+      "artifacts": ["EdgeReport", "qualify_*.json"],
+      "branch": "TERMINAL",
+      "executed_this_trace": false,
+      "status": "LATENT"
+    },
+    {
+      "id": "T-SECONDLOW-RESEARCH",
+      "entrypoint": "src/research/secondlow_v1 + package scripts",
+      "inputs": ["resolved_canonical_csv / load_ohlcv"],
+      "artifacts": ["event tables", "study closures under H-SECONDLOW package"],
+      "branch": "TERMINAL/REPORT",
+      "bypass": ["CandleLoader", "L3"],
+      "executed_this_trace": true,
+      "status": "PROVEN"
+    },
+    {
+      "id": "T-OPPORTUNITY-SCANNER",
+      "entrypoint": "scripts/research/opportunity_scanner.py",
+      "inputs": ["pd.read_csv OHLCV", "FeaturePipeline"],
+      "artifacts": ["opportunities.jsonl"],
+      "branch": "PERSIST",
+      "executed_this_trace": false,
+      "status": "LATENT"
+    },
+    {
+      "id": "T-STAGE1-TRAINING",
+      "entrypoint": "src/training/stage1_dataset_builder.py",
+      "inputs": ["opportunities.jsonl / trades — not raw OHLCV"],
+      "artifacts": ["training JSONL"],
+      "branch": "PERSIST",
+      "ohlcv_direct": false,
+      "status": "LATENT"
+    },
+    {
+      "id": "T-TRAIN-BITNET",
+      "entrypoint": "scripts/training/train_bitnet.py",
+      "inputs": ["pd.read_csv OHLCV", "FeaturePipeline"],
+      "artifacts": ["BitNet model JSON"],
+      "branch": "TERMINAL",
+      "executed_this_trace": false,
+      "status": "LATENT"
+    },
+    {
+      "id": "T-CONFIG-VALIDATOR",
+      "entrypoint": "src/config_layer/config_validator.py",
+      "inputs": ["CandleLoader + BacktestRunner"],
+      "artifacts": ["ValidationReport"],
+      "branch": "TERMINAL",
+      "status": "LATENT"
+    },
+    {
+      "id": "T-AUTO-TUNER",
+      "entrypoint": "scripts/training/auto_tuner*.py",
+      "inputs": ["CandleLoader stream"],
+      "artifacts": ["tuner checkpoints"],
+      "branch": "TERMINAL",
+      "status": "LATENT"
+    },
+    {
+      "id": "T-LIVE-ENGINE",
+      "entrypoint": "src/runtime/live_engine_hook.py",
+      "inputs": ["live MT5 bar dicts"],
+      "artifacts": ["orders / risk decisions"],
+      "branch": "UNREACHABLE",
+      "historical_csv": false,
+      "status": "UNREACHABLE"
+    },
+    {
+      "id": "T-METRICS-REPORTS",
+      "entrypoint": "BacktestMetrics / qualify_* / EdgeAggregator",
+      "inputs": ["trades / events from upstream terminals"],
+      "artifacts": ["reports/*.json", "results/**"],
+      "branch": "REPORT",
+      "status": "LATENT"
+    },
+    {
+      "id": "T-LINEAGE-SLICE-ARTIFACTS",
+      "entrypoint": "this trace",
+      "inputs": ["frozen binding", "April filter"],
+      "artifacts": [
+        "results/lineage/xauusd_apr2026_slice.csv",
+        "results/lineage/xauusd_apr2026_slice_identity.json",
+        "results/lineage/xauusd_apr2026_executed_stages.json",
+        "docs/governance/xauusd_apr2026_ohlcv_*-2026-07-10.*"
+      ],
+      "branch": "REPORT",
+      "executed_this_trace": true,
+      "status": "PROVEN"
+    }
+  ],
+  "bypass_summary": {
+    "no_candleloader": ["secondlow.load_ohlcv", "run_backtest", "opportunity_scanner", "train_bitnet", "BacktestRunner feature pd.read_csv", "strategy_backtest", "ad-hoc scripts"],
+    "no_l3": ["all research CandleLoader streams", "secondlow", "opportunity_scanner", "train_bitnet", "FeaturePipeline direct"]
+  }
+}

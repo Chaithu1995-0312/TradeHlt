@@ -6,7 +6,7 @@ CRT Engine — Multi-Instrument Deterministic Optimizer  (Ultron Phase-7)
 ARCHITECTURE UPGRADE (v3):
   - True multi-instrument optimization: every param set scored across ALL
     instruments simultaneously (not primary + post-hoc validation).
-  - ConfigBuilder.build() enforced — zero direct CRTConfig/get_crt_config usage.
+  - ConfigBuilder.from_production() enforced (EPIC-84: production base, no code defaults).
   - Consistency penalty: configs that only work on one market are penalised.
   - Replay-safe: every result carries a full config_snapshot per instrument.
   - Deterministic: fixed seeds, no global mutable state, same input → same output.
@@ -43,6 +43,7 @@ from copy import deepcopy
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Optional
+from tests.helpers.crt_config import crt_config_for_test
 
 # ── Path setup ───────────────────────────────────────────────────────────────
 _SRC = Path(__file__).resolve().parent.parent.parent / "src"
@@ -57,11 +58,11 @@ try:
     from backtest_v2 import BacktestConfig, BacktestRunner, CandleLoader
     from config_layer.crt_engine_v2 import CRTConfig          # kept only for type hints
     from config_layer.config_builder import ConfigBuilder      # REQUIRED — replaces get_crt_config
-    from config_layer.llama_gate import llm_score
+    from config_layer.llm_scorer import llm_score
 except ImportError as e:
     safe_print(f"\n  IMPORT ERROR: {e}\n"
           "  Ensure backtest_v2.py, crt_engine_v2.py, config_builder.py "
-          "and llama_gate.py are in the same directory.\n")
+          "and llm_inference_client.py are in the same directory.\n")
     sys.exit(1)
 
 # ── Logging ──────────────────────────────────────────────────────────────────
@@ -101,6 +102,12 @@ PARAM_SPACE: dict[str, list] = {
     "body_ratio_min":             [0.50, 0.60, 0.65, 0.70, 0.75, 0.80],
     "atr_multiplier_min":         [1.00, 1.20, 1.50, 1.75, 2.00],
     "expansion_atr_min_distance": [0.10, 0.15, 0.20, 0.25, 0.30],
+    # TP/SL sizing — exact CRTConfig field names, auto-threaded via hasattr filter
+    # in _run_single_instrument(); no additional plumbing required.
+    # tp2_atr_multiplier: main TP target distance in ATR units (default 2.0 = 2R)
+    # sl_atr_buffer:      ATR-scaled gap placed beyond displacement-candle extreme (default 0.2)
+    "tp2_atr_multiplier":  [1.5, 2.0, 2.5, 3.0, 3.5],
+    "sl_atr_buffer":       [0.1, 0.2, 0.3, 0.5, 0.75],
 }
 
 SPACE_SIZE = 1
@@ -270,6 +277,19 @@ def fitness_multi(
 # 4. SINGLE-INSTRUMENT BACKTEST WORKER (process-safe)
 # ═══════════════════════════════════════════════════════════════════════════
 
+# [EPIC-84 A3b] The CRT engine reads three canonical bar features at every RETEST, so a run
+# can no longer skip the FeaturePipeline. The pipeline is param-invariant for a CSV, so it is
+# built ONCE per CSV (per process) and reused by every trial via `prebuilt_features`.
+_PREBUILT_FEATURES: dict = {}
+
+
+def _prebuilt_features(bt_cfg, csv_path):
+    key = str(csv_path)
+    if key not in _PREBUILT_FEATURES:
+        _PREBUILT_FEATURES[key] = BacktestRunner(bt_cfg, csv_path=csv_path).export_features()
+    return _PREBUILT_FEATURES[key]
+
+
 def _run_single_instrument(
     params:        dict,
     csv_path:      str,
@@ -289,7 +309,7 @@ def _run_single_instrument(
     """
     try:
         # Build base config to get valid keys
-        base_cfg = ConfigBuilder.build(instrument)
+        base_cfg = ConfigBuilder.from_production(instrument)
 
         # Filter only valid override keys
         valid_params = {
@@ -301,8 +321,8 @@ def _run_single_instrument(
         if len(valid_params) != len(params):
             invalid = set(params) - set(valid_params)
             tuner_log.warning(f"[{instrument}] Invalid params filtered: {invalid}")
-        # ── Config via ConfigBuilder ONLY — no CRTConfig(), no get_crt_config() ──
-        cfg: CRTConfig = ConfigBuilder.build(instrument, overrides=valid_params)
+        # ── Config via ConfigBuilder ONLY — no crt_config_for_test(), no get_crt_config() ──
+        cfg: CRTConfig = ConfigBuilder.from_production(instrument, overrides=valid_params)
         config_snapshot: dict = dataclasses.asdict(cfg)
 
         pip_size = INSTRUMENT_PIP.get(instrument, 0.0001)
@@ -338,11 +358,9 @@ def _run_single_instrument(
                 bt_cfg.debug_mode = False
 
         loader = CandleLoader(csv_path, instrument)
-        # skip_features=True: FeaturePipeline is param-invariant for a given CSV
-        # (OHLCV → indicators has no dependency on CRT params).  The tuner fitness
-        # function only reads metric scalars so feature columns in _trades.csv are
-        # not required here.  Full-feature runs use the default BacktestRunner path.
-        runner = BacktestRunner(bt_cfg, csv_path=csv_path, skip_features=True)
+        # EPIC-84 A3b: the pipeline is param-invariant for a CSV -> built once, reused.
+        runner = BacktestRunner(bt_cfg, csv_path=csv_path,
+                                prebuilt_features=_prebuilt_features(bt_cfg, csv_path))
         stream = loader.stream()
         total_candles = loader.count()
 

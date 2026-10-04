@@ -1,5 +1,5 @@
 """
-test_trap_validator.py — standalone integration tests for adapter_engine.
+test_trap_validator.py — standalone integration tests for trap_validator_engine.
 Run directly: python tests/test_trap_validator.py
 Not collected by pytest (no pytest-style test functions).
 """
@@ -7,11 +7,11 @@ import ast
 import sys
 
 if __name__ == "__main__":
-    from engines import adapter_engine
+    from engines import trap_validator_engine as adapter_engine
 
     # Syntax check
-    ast.parse(open('src/engines/adapter_engine.py').read())
-    print('adapter_engine.py: syntax OK')
+    ast.parse(open('src/engines/trap_validator_engine.py').read())
+    print('trap_validator_engine.py: syntax OK')
 
     print('\n=== TrapValidator Test Suite ===')
 

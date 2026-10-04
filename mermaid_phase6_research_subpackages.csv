@@ -1,0 +1,62 @@
+subpackage,module_count,in_reduced_schema,schema_role
+hypotheses,8,yes,7 plugins + package. cli registers them
+runner,1,yes,HypothesisRunner: detect → forward_walk → EdgeReport. Imports backtest_v2
+qualification,1,yes,M4 7-gate. Research-internal only — not live spine
+cli,1,yes,python -m research.cli. No src importer — process entry
+contracts,1,yes,Shared research contracts. 31 importers including interpreters.adapter
+costs,1,yes,Cost model used by qualification + runner
+measurement,5,yes,forward_walk + metrics. 19 importers of forward_walk
+registry,1,yes,Hypothesis registry
+config,1,yes,ResearchConfig
+controls,3,yes,always_long / random baselines
+provenance,1,yes,Research provenance
+model_runners,23,yes,OBSERVATION_ONLY adapters of live engines
+probes,12,yes,scriptmod choke-point. semantic_query + validation_access.ladder
+synthetic,10,yes,VA ladder ontology + story_builder
+mother_range,4,yes,Named MC driver
+sujan_crt,6,yes,Named MC driver — identity lock applies
+visual_crt,7,yes,Named MC driver
+weekly_sweep,2,yes,Named MC / Program 8
+evidence,14,yes,Sealed MC evidence objects
+mc_kit,4,no,Package node isolated; children exist (trade used by forward_walk consumers)
+episodes,13,no,Episode store — not on qualify walk
+zone_mapping,13,no,Zone audit cluster
+sujan_manipulation,9,no,Sujan manipulation sibling
+oracle,8,no,Labeler/scan cluster
+candle_state,7,no,State encoder cluster
+ic003b_sequence_geometry,8,no,Shape sequence
+ic002_entry_evolution,5,no,Entry evolution
+ic003_shapes,3,no,Shape library
+secondlow_v1,5,no,Second-low object
+clean_labels,3,no,Clean-label builder
+envelope_offline,3,no,Offline envelope
+adapters,4,no,spine/shape/structural signal sources → backtest
+path,2,no,Ambiguity census
+rc003_distinct_object,2,no,Distinct object driver
+cross_sectional,1,no,Program 5
+regime_conditioning,1,no,Program 4
+qualify_matrix,1,no,Qualify matrix helper
+indicators,1,no,Shared research indicators
+resample,1,no,ONLY P5 inbound: charts.chart_series
+band_tables,1,no,Band tables
+band_validation,1,no,Band validation
+conditional_entropy_grid,1,no,Entropy grid
+exit_grid,1,no,Exit grid
+experiment_spec,1,no,ISOLATED
+forensics,1,no,Forensics → backtest
+goal_alignment,1,no,Goal schema
+mt5_cost_calibration,1,no,ISOLATED
+ohlcv_probe_report,1,no,OHLCV probe
+ohlcv_tick_attribution,1,no,Tick attribution
+ohlcv_volume_semantics,1,no,Volume semantics
+opportunity_bands,1,no,Opportunity bands
+process_characterization,1,no,Process characterization
+process_diagnostics,1,no,Process diagnostics
+selection_effect,1,no,ISOLATED
+shape_statistics,1,no,Shape stats
+structural_asymmetry,1,no,ISOLATED
+xau_metals_protocol,1,no,ISOLATED
+zone_label_audit,1,no,Zone labels → bitnet cosine
+episode_agreement,1,no,Episode agreement
+episode_propositions,1,no,Episode propositions
+(package),1,no,research __init__

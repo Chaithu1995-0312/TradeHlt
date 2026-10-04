@@ -1,0 +1,1206 @@
+{
+  "finding_id": "L-003F",
+  "version": "L-003F.v1",
+  "run_id": "l003f_joint_outcome_states_20260907_184519",
+  "generated_at_utc": "2026-09-07T18:45:19.742273Z",
+  "git_commit_sha": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+  "branch": "feature/trace-parquet-duckdb-query",
+  "status": "OBSERVED_CANDIDATE_POPULATION",
+  "doctrine": "Observation before intervention. Y_scanner != Y_oracle (HOMONYM) established; superiority / replace NOT established.",
+  "questions_answered": [
+    "What joint outcome states Y_joint=(scanner_outcome, oracle_outcome) exist?",
+    "How large is each named state population (per instrument + aggregate)?",
+    "What is the size/rate/LOO stability of EARLY_STOP_CANDIDATE as a research object (candidate name only)?"
+  ],
+  "questions_NOT_answered": [
+    "Which of Y_scanner / Y_oracle is correct or better?",
+    "Whether replacing scanner with oracle improves anything?",
+    "Whether the detector stopped early (that remains INFERENCE without detector_exit_ts < oracle_tp_ts).",
+    "Whether trailing-stop path mechanics are measured (unmeasured; hypothesis only)."
+  ],
+  "terminology": {
+    "scanner_outcome": "col art_outcome",
+    "oracle_outcome": "col outcome",
+    "LABEL_MATCH": "scanner_outcome == oracle_outcome (terminal label equality only)",
+    "LABEL_MISMATCH": "scanner_outcome != oracle_outcome",
+    "EARLY_STOP_CANDIDATE": "SAFE_ALIAS for JOINT_STATE_SL_TP (scanner=SL_HIT & oracle=TP_HIT); candidate research name only — NOT observation that detector stopped early",
+    "attribution_blockers": [
+      "ATTRIBUTION_BLOCKER_IDENTITY",
+      "ATTRIBUTION_BLOCKER_OUTCOME_SEMANTICS"
+    ],
+    "parity": "L-003-TERM.v1",
+    "canonical_id_mapping": {
+      "JOINT_STATE_SL_TP": {
+        "formula": "scanner_outcome(art_outcome)==SL_HIT AND oracle_outcome(outcome)==TP_HIT",
+        "machine_key_retained": "EARLY_STOP_CANDIDATE",
+        "role": "canonical_identity",
+        "claim_class": "OBSERVED population (label pair membership)"
+      },
+      "EARLY_STOP_CANDIDATE": {
+        "role": "SAFE_ALIAS / research alias (provisional interpretation name)",
+        "maps_to": "JOINT_STATE_SL_TP",
+        "note": "Alias retained in prior run_id machine keys for reproducibility; does NOT assert detector stopped early"
+      }
+    },
+    "JOINT_STATE_SL_TP": "Canonical identity for joint state scanner=SL_HIT & oracle=TP_HIT (measured formula; machine key historically EARLY_STOP_CANDIDATE)"
+  },
+  "state_machine": {
+    "map": {
+      "TP_HIT|TP_HIT": "BOTH_TP",
+      "SL_HIT|SL_HIT": "BOTH_SL",
+      "TIMEOUT|TIMEOUT": "BOTH_TIMEOUT",
+      "SL_HIT|TP_HIT": "EARLY_STOP_CANDIDATE",
+      "TP_HIT|SL_HIT": "FALSE_TP_CANDIDATE",
+      "TIMEOUT|TP_HIT": "LATE_REALIZATION",
+      "TIMEOUT|SL_HIT": "LATE_FAILURE",
+      "TP_HIT|TIMEOUT": "SCANNER_TP_ORACLE_TIMEOUT",
+      "SL_HIT|TIMEOUT": "SCANNER_SL_ORACLE_TIMEOUT"
+    },
+    "other_rule": "OTHER_<scanner>_<oracle>",
+    "canonical_id_for_SL_HIT_TP_HIT": "JOINT_STATE_SL_TP",
+    "safe_alias_for_SL_HIT_TP_HIT": "EARLY_STOP_CANDIDATE",
+    "note": "Machine keys in map retain EARLY_STOP_CANDIDATE for prior run_id reproducibility; canonical identity is JOINT_STATE_SL_TP."
+  },
+  "promotion": {
+    "EARLY_STOP_CANDIDATE_promoted_to_ontology": false,
+    "EARLY_STOP_CANDIDATE_promoted_to_registry": false,
+    "status": "OBSERVED_CANDIDATE_POPULATION",
+    "replace_scanner_with_oracle": false,
+    "economic_claims_allowed": false,
+    "attribution_unblocked": false,
+    "L003_frozen": false
+  },
+  "reproducibility": {
+    "git_commit_sha": "d7c25f6e55616261b8b229b000875abd3bd315eb",
+    "datasets": {
+      "BNBUSDT": {
+        "path": "results/research/bnbusdt_trade_anatomy/trade_dataset_BNBUSDT.csv",
+        "summary": "results/research/bnbusdt_trade_anatomy/anatomy_summary.json",
+        "dataset_sha256": "f8bdabbe683fe43f54f3853dcce809f113fe22e9385828210d48c6cc2aa34934",
+        "n": 139942
+      },
+      "BTCUSDT": {
+        "path": "results/research/btcusdt_trade_anatomy/trade_dataset_BTCUSDT.csv",
+        "summary": "results/research/btcusdt_trade_anatomy/anatomy_summary.json",
+        "dataset_sha256": "09baca48253a50011a8869c991d6618bef79b99cc51764cb0ee71db2a2de0233",
+        "n": 139942
+      },
+      "ETHUSDT": {
+        "path": "results/research/ethusdt_trade_anatomy/trade_dataset_ETHUSDT.csv",
+        "summary": "results/research/ethusdt_trade_anatomy/anatomy_summary.json",
+        "dataset_sha256": "530c9a35f0db2c120cb9d3bcdbba7013ec4176c44109ae2d318a23556a39e1a0",
+        "n": 139942
+      },
+      "SOLUSDT": {
+        "path": "results/research/solusdt_trade_anatomy/trade_dataset_SOLUSDT.csv",
+        "summary": "results/research/solusdt_trade_anatomy/anatomy_summary.json",
+        "dataset_sha256": "69cdc70ea422b19937c9d50d4762e4fbbd0050a7f495707f548ad9b9238f5bbc",
+        "n": 139942
+      }
+    },
+    "usecols": [
+      "art_outcome",
+      "outcome",
+      "bars_to_peak_within_trade",
+      "mfe_r",
+      "time_to_bottom_path",
+      "favorable_first",
+      "mae_r",
+      "direction"
+    ],
+    "holdout": "No chronological train/holdout on anatomy CSV; instrument LOO used as stability; time dimension in-sample descriptive only."
+  },
+  "aggregate": {
+    "n": 559768,
+    "census": {
+      "n": 559768,
+      "by_state": [
+        {
+          "state_id": "BOTH_SL",
+          "n": 367923,
+          "rate": 0.6572776578868388
+        },
+        {
+          "state_id": "EARLY_STOP_CANDIDATE",
+          "n": 176471,
+          "rate": 0.31525739234825856
+        },
+        {
+          "state_id": "BOTH_TP",
+          "n": 7634,
+          "rate": 0.013637792799874234
+        },
+        {
+          "state_id": "SCANNER_SL_ORACLE_TIMEOUT",
+          "n": 7312,
+          "rate": 0.013062554486858842
+        },
+        {
+          "state_id": "FALSE_TP_CANDIDATE",
+          "n": 280,
+          "rate": 0.0005002072287090366
+        },
+        {
+          "state_id": "BOTH_TIMEOUT",
+          "n": 148,
+          "rate": 0.0002643952494604908
+        }
+      ],
+      "by_state_map": {
+        "BOTH_SL": {
+          "n": 367923,
+          "rate": 0.6572776578868388
+        },
+        "EARLY_STOP_CANDIDATE": {
+          "n": 176471,
+          "rate": 0.31525739234825856
+        },
+        "BOTH_TP": {
+          "n": 7634,
+          "rate": 0.013637792799874234
+        },
+        "SCANNER_SL_ORACLE_TIMEOUT": {
+          "n": 7312,
+          "rate": 0.013062554486858842
+        },
+        "FALSE_TP_CANDIDATE": {
+          "n": 280,
+          "rate": 0.0005002072287090366
+        },
+        "BOTH_TIMEOUT": {
+          "n": 148,
+          "rate": 0.0002643952494604908
+        }
+      },
+      "raw_pairs": {
+        "SL_HIT|SL_HIT": 367923,
+        "SL_HIT|TP_HIT": 176471,
+        "TP_HIT|TP_HIT": 7634,
+        "SL_HIT|TIMEOUT": 7312,
+        "TP_HIT|SL_HIT": 280,
+        "TIMEOUT|TIMEOUT": 148
+      }
+    },
+    "confusion_scanner_x_oracle": {
+      "SL_HIT": {
+        "SL_HIT": 367923,
+        "TP_HIT": 176471,
+        "TIMEOUT": 7312
+      },
+      "TP_HIT": {
+        "SL_HIT": 280,
+        "TP_HIT": 7634,
+        "TIMEOUT": 0
+      },
+      "TIMEOUT": {
+        "SL_HIT": 0,
+        "TP_HIT": 0,
+        "TIMEOUT": 148
+      }
+    },
+    "LABEL_MATCH_n": 375705,
+    "LABEL_MATCH_rate": 0.6711798459361735,
+    "LABEL_MISMATCH_n": 184063,
+    "LABEL_MISMATCH_rate": 0.3288201540638264,
+    "match_mass_by_state": {
+      "BOTH_TP": {
+        "n": 7634,
+        "rate_of_all": 0.013637792799874234,
+        "rate_of_match": 0.020319133362611624
+      },
+      "BOTH_SL": {
+        "n": 367923,
+        "rate_of_all": 0.6572776578868388,
+        "rate_of_match": 0.9792869405517627
+      },
+      "BOTH_TIMEOUT": {
+        "n": 148,
+        "rate_of_all": 0.0002643952494604908,
+        "rate_of_match": 0.00039392608562569036
+      }
+    },
+    "scanner_unique_mass": {
+      "n": 184063,
+      "rate": 0.3288201540638264,
+      "by_state": [
+        {
+          "state_id": "EARLY_STOP_CANDIDATE",
+          "n": 176471,
+          "rate": 0.958753252962301
+        },
+        {
+          "state_id": "SCANNER_SL_ORACLE_TIMEOUT",
+          "n": 7312,
+          "rate": 0.03972552875917485
+        },
+        {
+          "state_id": "FALSE_TP_CANDIDATE",
+          "n": 280,
+          "rate": 0.001521218278524201
+        }
+      ]
+    },
+    "scanner_marginal": {
+      "SL_HIT": 551706,
+      "TP_HIT": 7914,
+      "TIMEOUT": 148
+    },
+    "oracle_marginal": {
+      "SL_HIT": 368203,
+      "TP_HIT": 184105,
+      "TIMEOUT": 7460
+    },
+    "information_asymmetry_note": {
+      "mismatch_fraction": 0.3288201540638264,
+      "entropy_Y_joint_bits": 1.097842689070491,
+      "entropy_scanner_marginal_bits": 0.1106380586231864,
+      "entropy_oracle_marginal_bits": 1.0081803154932902,
+      "note": "Descriptive only; not a claim that one margin is better."
+    },
+    "path_geometry_fingerprints": {
+      "EARLY_STOP_CANDIDATE": {
+        "n": 176471,
+        "bars_to_peak_within_trade_median": 6.0,
+        "mfe_r_median": 4.5628,
+        "time_to_bottom_path_median": 40.0,
+        "favorable_first_rate": 0.6995143677998085,
+        "abs_mae_r_median": 0.8561
+      },
+      "BOTH_SL": {
+        "n": 367923,
+        "bars_to_peak_within_trade_median": 1.0,
+        "mfe_r_median": 1.7376,
+        "time_to_bottom_path_median": 45.0,
+        "favorable_first_rate": 0.1736830804271546,
+        "abs_mae_r_median": 3.6341
+      },
+      "BOTH_TP": {
+        "n": 7634,
+        "bars_to_peak_within_trade_median": 1.0,
+        "mfe_r_median": 6.48525,
+        "time_to_bottom_path_median": 32.0,
+        "favorable_first_rate": 0.8268273513230285,
+        "abs_mae_r_median": 0.9796
+      },
+      "FALSE_TP_CANDIDATE": {
+        "n": 280,
+        "bars_to_peak_within_trade_median": 1.0,
+        "mfe_r_median": 6.3372,
+        "time_to_bottom_path_median": 14.0,
+        "favorable_first_rate": 0.7642857142857142,
+        "abs_mae_r_median": 3.20895
+      },
+      "SCANNER_SL_ORACLE_TIMEOUT": {
+        "n": 7312,
+        "bars_to_peak_within_trade_median": 17.0,
+        "mfe_r_median": 1.6043500000000002,
+        "time_to_bottom_path_median": 57.0,
+        "favorable_first_rate": 0.4927516411378556,
+        "abs_mae_r_median": 0.70665
+      }
+    },
+    "EARLY_STOP_CANDIDATE": {
+      "n": 176471,
+      "rate": 0.31525739234825856,
+      "per_instrument": {
+        "BNBUSDT": {
+          "n": 44791,
+          "rate": 0.32006831401580654,
+          "n_all": 139942
+        },
+        "BTCUSDT": {
+          "n": 43392,
+          "rate": 0.3100713152591788,
+          "n_all": 139942
+        },
+        "ETHUSDT": {
+          "n": 43725,
+          "rate": 0.31245087250432324,
+          "n_all": 139942
+        },
+        "SOLUSDT": {
+          "n": 44563,
+          "rate": 0.3184390676137257,
+          "n_all": 139942
+        }
+      },
+      "per_instrument_rate_mean": 0.31525739234825856,
+      "per_instrument_rate_std": 0.004762351449807429,
+      "per_instrument_rate_min": 0.3100713152591788,
+      "per_instrument_rate_max": 0.32006831401580654,
+      "loo_stability": {
+        "folds": [
+          {
+            "holdout_instrument": "BNBUSDT",
+            "n_train": 419826,
+            "EARLY_STOP_CANDIDATE_n": 131680,
+            "EARLY_STOP_CANDIDATE_rate": 0.31365375179240923
+          },
+          {
+            "holdout_instrument": "BTCUSDT",
+            "n_train": 419826,
+            "EARLY_STOP_CANDIDATE_n": 133079,
+            "EARLY_STOP_CANDIDATE_rate": 0.31698608471128514
+          },
+          {
+            "holdout_instrument": "ETHUSDT",
+            "n_train": 419826,
+            "EARLY_STOP_CANDIDATE_n": 132746,
+            "EARLY_STOP_CANDIDATE_rate": 0.3161928989629037
+          },
+          {
+            "holdout_instrument": "SOLUSDT",
+            "n_train": 419826,
+            "EARLY_STOP_CANDIDATE_n": 131908,
+            "EARLY_STOP_CANDIDATE_rate": 0.3141968339264362
+          }
+        ],
+        "rate_mean": 0.31525739234825856,
+        "rate_std": 0.001587450483269142,
+        "rate_min": 0.31365375179240923,
+        "rate_max": 0.31698608471128514,
+        "rate_range": 0.003332332918875913,
+        "note": "Instrument leave-one-out on full anatomy corpus; no chronological holdout available on CSV. In-sample descriptive for time."
+      },
+      "status": "OBSERVED_CANDIDATE_POPULATION",
+      "promoted": false
+    }
+  },
+  "per_instrument": {
+    "BNBUSDT": {
+      "csv_path": "results/research/bnbusdt_trade_anatomy/trade_dataset_BNBUSDT.csv",
+      "summary_path": "results/research/bnbusdt_trade_anatomy/anatomy_summary.json",
+      "dataset_sha256_anatomy_summary": "f8bdabbe683fe43f54f3853dcce809f113fe22e9385828210d48c6cc2aa34934",
+      "dataset_sha256_expected": "f8bdabbe683fe43f54f3853dcce809f113fe22e9385828210d48c6cc2aa34934",
+      "sha256_match": true,
+      "n_summary": 139942,
+      "n": 139942,
+      "n_match_summary": true,
+      "census": {
+        "n": 139942,
+        "by_state": [
+          {
+            "state_id": "BOTH_SL",
+            "n": 91873,
+            "rate": 0.6565076960455045
+          },
+          {
+            "state_id": "EARLY_STOP_CANDIDATE",
+            "n": 44791,
+            "rate": 0.32006831401580654
+          },
+          {
+            "state_id": "BOTH_TP",
+            "n": 1789,
+            "rate": 0.012783867602292378
+          },
+          {
+            "state_id": "SCANNER_SL_ORACLE_TIMEOUT",
+            "n": 1427,
+            "rate": 0.01019708164811136
+          },
+          {
+            "state_id": "FALSE_TP_CANDIDATE",
+            "n": 41,
+            "rate": 0.0002929785196724357
+          },
+          {
+            "state_id": "BOTH_TIMEOUT",
+            "n": 21,
+            "rate": 0.000150062168612711
+          }
+        ],
+        "by_state_map": {
+          "BOTH_SL": {
+            "n": 91873,
+            "rate": 0.6565076960455045
+          },
+          "EARLY_STOP_CANDIDATE": {
+            "n": 44791,
+            "rate": 0.32006831401580654
+          },
+          "BOTH_TP": {
+            "n": 1789,
+            "rate": 0.012783867602292378
+          },
+          "SCANNER_SL_ORACLE_TIMEOUT": {
+            "n": 1427,
+            "rate": 0.01019708164811136
+          },
+          "FALSE_TP_CANDIDATE": {
+            "n": 41,
+            "rate": 0.0002929785196724357
+          },
+          "BOTH_TIMEOUT": {
+            "n": 21,
+            "rate": 0.000150062168612711
+          }
+        },
+        "raw_pairs": {
+          "SL_HIT|SL_HIT": 91873,
+          "SL_HIT|TP_HIT": 44791,
+          "TP_HIT|TP_HIT": 1789,
+          "SL_HIT|TIMEOUT": 1427,
+          "TP_HIT|SL_HIT": 41,
+          "TIMEOUT|TIMEOUT": 21
+        }
+      },
+      "confusion_scanner_x_oracle": {
+        "SL_HIT": {
+          "SL_HIT": 91873,
+          "TP_HIT": 44791,
+          "TIMEOUT": 1427
+        },
+        "TP_HIT": {
+          "SL_HIT": 41,
+          "TP_HIT": 1789,
+          "TIMEOUT": 0
+        },
+        "TIMEOUT": {
+          "SL_HIT": 0,
+          "TP_HIT": 0,
+          "TIMEOUT": 21
+        }
+      },
+      "EARLY_STOP_CANDIDATE_n": 44791,
+      "EARLY_STOP_CANDIDATE_rate": 0.32006831401580654,
+      "LABEL_MATCH_n": 93683,
+      "LABEL_MATCH_rate": 0.6694416258164096,
+      "LABEL_MISMATCH_n": 46259,
+      "LABEL_MISMATCH_rate": 0.33055837418359035,
+      "match_mass_by_state": {
+        "BOTH_TP": {
+          "n": 1789,
+          "rate_of_all": 0.012783867602292378,
+          "rate_of_match": 0.0190963141658572
+        },
+        "BOTH_SL": {
+          "n": 91873,
+          "rate_of_all": 0.6565076960455045,
+          "rate_of_match": 0.98067952563432
+        },
+        "BOTH_TIMEOUT": {
+          "n": 21,
+          "rate_of_all": 0.000150062168612711,
+          "rate_of_match": 0.0002241601998228067
+        }
+      },
+      "scanner_unique_mass": {
+        "n": 46259,
+        "rate": 0.33055837418359035,
+        "by_state": [
+          {
+            "state_id": "EARLY_STOP_CANDIDATE",
+            "n": 44791,
+            "rate": 0.9682656347953912
+          },
+          {
+            "state_id": "SCANNER_SL_ORACLE_TIMEOUT",
+            "n": 1427,
+            "rate": 0.030848051190038694
+          },
+          {
+            "state_id": "FALSE_TP_CANDIDATE",
+            "n": 41,
+            "rate": 0.0008863140145701377
+          }
+        ]
+      },
+      "scanner_marginal": {
+        "SL_HIT": 138091,
+        "TP_HIT": 1830,
+        "TIMEOUT": 21
+      },
+      "oracle_marginal": {
+        "SL_HIT": 91914,
+        "TP_HIT": 46580,
+        "TIMEOUT": 1448
+      },
+      "path_geometry_fingerprints": {
+        "EARLY_STOP_CANDIDATE": {
+          "n": 44791,
+          "bars_to_peak_within_trade_median": 6.0,
+          "mfe_r_median": 4.5722,
+          "time_to_bottom_path_median": 41.0,
+          "favorable_first_rate": 0.7009443861490031,
+          "abs_mae_r_median": 0.853
+        },
+        "BOTH_SL": {
+          "n": 91873,
+          "bars_to_peak_within_trade_median": 1.0,
+          "mfe_r_median": 1.727,
+          "time_to_bottom_path_median": 45.0,
+          "favorable_first_rate": 0.17476298803783483,
+          "abs_mae_r_median": 3.6588
+        },
+        "BOTH_TP": {
+          "n": 1789,
+          "bars_to_peak_within_trade_median": 1.0,
+          "mfe_r_median": 6.2168,
+          "time_to_bottom_path_median": 39.0,
+          "favorable_first_rate": 0.820011179429849,
+          "abs_mae_r_median": 0.9895
+        },
+        "FALSE_TP_CANDIDATE": {
+          "n": 41,
+          "bars_to_peak_within_trade_median": 1.0,
+          "mfe_r_median": 5.1949,
+          "time_to_bottom_path_median": 40.0,
+          "favorable_first_rate": 0.7073170731707317,
+          "abs_mae_r_median": 2.973
+        },
+        "SCANNER_SL_ORACLE_TIMEOUT": {
+          "n": 1427,
+          "bars_to_peak_within_trade_median": 18.0,
+          "mfe_r_median": 1.6266,
+          "time_to_bottom_path_median": 58.0,
+          "favorable_first_rate": 0.5171688857743518,
+          "abs_mae_r_median": 0.7043
+        }
+      },
+      "l003b_reconcile": {
+        "EARLY_STOP_CANDIDATE_equals_LABEL_MISMATCH_SL_TP": true,
+        "expected_BNB_44791_check": true
+      }
+    },
+    "BTCUSDT": {
+      "csv_path": "results/research/btcusdt_trade_anatomy/trade_dataset_BTCUSDT.csv",
+      "summary_path": "results/research/btcusdt_trade_anatomy/anatomy_summary.json",
+      "dataset_sha256_anatomy_summary": "09baca48253a50011a8869c991d6618bef79b99cc51764cb0ee71db2a2de0233",
+      "dataset_sha256_expected": "09baca48253a50011a8869c991d6618bef79b99cc51764cb0ee71db2a2de0233",
+      "sha256_match": true,
+      "n_summary": 139942,
+      "n": 139942,
+      "n_match_summary": true,
+      "census": {
+        "n": 139942,
+        "by_state": [
+          {
+            "state_id": "BOTH_SL",
+            "n": 91864,
+            "rate": 0.6564433836875276
+          },
+          {
+            "state_id": "EARLY_STOP_CANDIDATE",
+            "n": 43392,
+            "rate": 0.3100713152591788
+          },
+          {
+            "state_id": "SCANNER_SL_ORACLE_TIMEOUT",
+            "n": 2392,
+            "rate": 0.01709279558674308
+          },
+          {
+            "state_id": "BOTH_TP",
+            "n": 2169,
+            "rate": 0.015499278272427149
+          },
+          {
+            "state_id": "FALSE_TP_CANDIDATE",
+            "n": 90,
+            "rate": 0.0006431235797687613
+          },
+          {
+            "state_id": "BOTH_TIMEOUT",
+            "n": 35,
+            "rate": 0.0002501036143545183
+          }
+        ],
+        "by_state_map": {
+          "BOTH_SL": {
+            "n": 91864,
+            "rate": 0.6564433836875276
+          },
+          "EARLY_STOP_CANDIDATE": {
+            "n": 43392,
+            "rate": 0.3100713152591788
+          },
+          "SCANNER_SL_ORACLE_TIMEOUT": {
+            "n": 2392,
+            "rate": 0.01709279558674308
+          },
+          "BOTH_TP": {
+            "n": 2169,
+            "rate": 0.015499278272427149
+          },
+          "FALSE_TP_CANDIDATE": {
+            "n": 90,
+            "rate": 0.0006431235797687613
+          },
+          "BOTH_TIMEOUT": {
+            "n": 35,
+            "rate": 0.0002501036143545183
+          }
+        },
+        "raw_pairs": {
+          "SL_HIT|SL_HIT": 91864,
+          "SL_HIT|TP_HIT": 43392,
+          "SL_HIT|TIMEOUT": 2392,
+          "TP_HIT|TP_HIT": 2169,
+          "TP_HIT|SL_HIT": 90,
+          "TIMEOUT|TIMEOUT": 35
+        }
+      },
+      "confusion_scanner_x_oracle": {
+        "SL_HIT": {
+          "SL_HIT": 91864,
+          "TP_HIT": 43392,
+          "TIMEOUT": 2392
+        },
+        "TP_HIT": {
+          "SL_HIT": 90,
+          "TP_HIT": 2169,
+          "TIMEOUT": 0
+        },
+        "TIMEOUT": {
+          "SL_HIT": 0,
+          "TP_HIT": 0,
+          "TIMEOUT": 35
+        }
+      },
+      "EARLY_STOP_CANDIDATE_n": 43392,
+      "EARLY_STOP_CANDIDATE_rate": 0.3100713152591788,
+      "LABEL_MATCH_n": 94068,
+      "LABEL_MATCH_rate": 0.6721927655743094,
+      "LABEL_MISMATCH_n": 45874,
+      "LABEL_MISMATCH_rate": 0.32780723442569065,
+      "match_mass_by_state": {
+        "BOTH_TP": {
+          "n": 2169,
+          "rate_of_all": 0.015499278272427149,
+          "rate_of_match": 0.023057787983161118
+        },
+        "BOTH_SL": {
+          "n": 91864,
+          "rate_of_all": 0.6564433836875276,
+          "rate_of_match": 0.9765701407492452
+        },
+        "BOTH_TIMEOUT": {
+          "n": 35,
+          "rate_of_all": 0.0002501036143545183,
+          "rate_of_match": 0.00037207126759365564
+        }
+      },
+      "scanner_unique_mass": {
+        "n": 45874,
+        "rate": 0.32780723442569065,
+        "by_state": [
+          {
+            "state_id": "EARLY_STOP_CANDIDATE",
+            "n": 43392,
+            "rate": 0.9458952783711907
+          },
+          {
+            "state_id": "SCANNER_SL_ORACLE_TIMEOUT",
+            "n": 2392,
+            "rate": 0.05214282600165671
+          },
+          {
+            "state_id": "FALSE_TP_CANDIDATE",
+            "n": 90,
+            "rate": 0.0019618956271526353
+          }
+        ]
+      },
+      "scanner_marginal": {
+        "SL_HIT": 137648,
+        "TP_HIT": 2259,
+        "TIMEOUT": 35
+      },
+      "oracle_marginal": {
+        "SL_HIT": 91954,
+        "TP_HIT": 45561,
+        "TIMEOUT": 2427
+      },
+      "path_geometry_fingerprints": {
+        "EARLY_STOP_CANDIDATE": {
+          "n": 43392,
+          "bars_to_peak_within_trade_median": 6.0,
+          "mfe_r_median": 4.573,
+          "time_to_bottom_path_median": 40.0,
+          "favorable_first_rate": 0.7048073377581121,
+          "abs_mae_r_median": 0.8696
+        },
+        "BOTH_SL": {
+          "n": 91864,
+          "bars_to_peak_within_trade_median": 1.0,
+          "mfe_r_median": 1.7624,
+          "time_to_bottom_path_median": 45.0,
+          "favorable_first_rate": 0.17595576068971522,
+          "abs_mae_r_median": 3.6374500000000003
+        },
+        "BOTH_TP": {
+          "n": 2169,
+          "bars_to_peak_within_trade_median": 1.0,
+          "mfe_r_median": 6.7109,
+          "time_to_bottom_path_median": 32.0,
+          "favorable_first_rate": 0.8363301060396496,
+          "abs_mae_r_median": 1.0677
+        },
+        "FALSE_TP_CANDIDATE": {
+          "n": 90,
+          "bars_to_peak_within_trade_median": 1.0,
+          "mfe_r_median": 6.6724,
+          "time_to_bottom_path_median": 14.5,
+          "favorable_first_rate": 0.8111111111111111,
+          "abs_mae_r_median": 3.59225
+        },
+        "SCANNER_SL_ORACLE_TIMEOUT": {
+          "n": 2392,
+          "bars_to_peak_within_trade_median": 16.0,
+          "mfe_r_median": 1.57525,
+          "time_to_bottom_path_median": 55.0,
+          "favorable_first_rate": 0.4853678929765886,
+          "abs_mae_r_median": 0.7062
+        }
+      },
+      "l003b_reconcile": {
+        "EARLY_STOP_CANDIDATE_equals_LABEL_MISMATCH_SL_TP": true,
+        "expected_BNB_44791_check": null
+      }
+    },
+    "ETHUSDT": {
+      "csv_path": "results/research/ethusdt_trade_anatomy/trade_dataset_ETHUSDT.csv",
+      "summary_path": "results/research/ethusdt_trade_anatomy/anatomy_summary.json",
+      "dataset_sha256_anatomy_summary": "530c9a35f0db2c120cb9d3bcdbba7013ec4176c44109ae2d318a23556a39e1a0",
+      "dataset_sha256_expected": "530c9a35f0db2c120cb9d3bcdbba7013ec4176c44109ae2d318a23556a39e1a0",
+      "sha256_match": true,
+      "n_summary": 139942,
+      "n": 139942,
+      "n_match_summary": true,
+      "census": {
+        "n": 139942,
+        "by_state": [
+          {
+            "state_id": "BOTH_SL",
+            "n": 91811,
+            "rate": 0.6560646553572195
+          },
+          {
+            "state_id": "EARLY_STOP_CANDIDATE",
+            "n": 43725,
+            "rate": 0.31245087250432324
+          },
+          {
+            "state_id": "BOTH_TP",
+            "n": 2310,
+            "rate": 0.01650683854739821
+          },
+          {
+            "state_id": "SCANNER_SL_ORACLE_TIMEOUT",
+            "n": 1941,
+            "rate": 0.013870031870346286
+          },
+          {
+            "state_id": "FALSE_TP_CANDIDATE",
+            "n": 101,
+            "rate": 0.0007217275728516099
+          },
+          {
+            "state_id": "BOTH_TIMEOUT",
+            "n": 54,
+            "rate": 0.0003858741478612568
+          }
+        ],
+        "by_state_map": {
+          "BOTH_SL": {
+            "n": 91811,
+            "rate": 0.6560646553572195
+          },
+          "EARLY_STOP_CANDIDATE": {
+            "n": 43725,
+            "rate": 0.31245087250432324
+          },
+          "BOTH_TP": {
+            "n": 2310,
+            "rate": 0.01650683854739821
+          },
+          "SCANNER_SL_ORACLE_TIMEOUT": {
+            "n": 1941,
+            "rate": 0.013870031870346286
+          },
+          "FALSE_TP_CANDIDATE": {
+            "n": 101,
+            "rate": 0.0007217275728516099
+          },
+          "BOTH_TIMEOUT": {
+            "n": 54,
+            "rate": 0.0003858741478612568
+          }
+        },
+        "raw_pairs": {
+          "SL_HIT|SL_HIT": 91811,
+          "SL_HIT|TP_HIT": 43725,
+          "TP_HIT|TP_HIT": 2310,
+          "SL_HIT|TIMEOUT": 1941,
+          "TP_HIT|SL_HIT": 101,
+          "TIMEOUT|TIMEOUT": 54
+        }
+      },
+      "confusion_scanner_x_oracle": {
+        "SL_HIT": {
+          "SL_HIT": 91811,
+          "TP_HIT": 43725,
+          "TIMEOUT": 1941
+        },
+        "TP_HIT": {
+          "SL_HIT": 101,
+          "TP_HIT": 2310,
+          "TIMEOUT": 0
+        },
+        "TIMEOUT": {
+          "SL_HIT": 0,
+          "TP_HIT": 0,
+          "TIMEOUT": 54
+        }
+      },
+      "EARLY_STOP_CANDIDATE_n": 43725,
+      "EARLY_STOP_CANDIDATE_rate": 0.31245087250432324,
+      "LABEL_MATCH_n": 94175,
+      "LABEL_MATCH_rate": 0.6729573680524789,
+      "LABEL_MISMATCH_n": 45767,
+      "LABEL_MISMATCH_rate": 0.3270426319475211,
+      "match_mass_by_state": {
+        "BOTH_TP": {
+          "n": 2310,
+          "rate_of_all": 0.01650683854739821,
+          "rate_of_match": 0.024528802760817627
+        },
+        "BOTH_SL": {
+          "n": 91811,
+          "rate_of_all": 0.6560646553572195,
+          "rate_of_match": 0.9748977966551633
+        },
+        "BOTH_TIMEOUT": {
+          "n": 54,
+          "rate_of_all": 0.0003858741478612568,
+          "rate_of_match": 0.0005734005840191134
+        }
+      },
+      "scanner_unique_mass": {
+        "n": 45767,
+        "rate": 0.3270426319475211,
+        "by_state": [
+          {
+            "state_id": "EARLY_STOP_CANDIDATE",
+            "n": 43725,
+            "rate": 0.955382699324841
+          },
+          {
+            "state_id": "SCANNER_SL_ORACLE_TIMEOUT",
+            "n": 1941,
+            "rate": 0.04241047042628968
+          },
+          {
+            "state_id": "FALSE_TP_CANDIDATE",
+            "n": 101,
+            "rate": 0.0022068302488692727
+          }
+        ]
+      },
+      "scanner_marginal": {
+        "SL_HIT": 137477,
+        "TP_HIT": 2411,
+        "TIMEOUT": 54
+      },
+      "oracle_marginal": {
+        "SL_HIT": 91912,
+        "TP_HIT": 46035,
+        "TIMEOUT": 1995
+      },
+      "path_geometry_fingerprints": {
+        "EARLY_STOP_CANDIDATE": {
+          "n": 43725,
+          "bars_to_peak_within_trade_median": 6.0,
+          "mfe_r_median": 4.6092,
+          "time_to_bottom_path_median": 39.0,
+          "favorable_first_rate": 0.6991194968553459,
+          "abs_mae_r_median": 0.8531
+        },
+        "BOTH_SL": {
+          "n": 91811,
+          "bars_to_peak_within_trade_median": 1.0,
+          "mfe_r_median": 1.7284,
+          "time_to_bottom_path_median": 44.0,
+          "favorable_first_rate": 0.17264815762817093,
+          "abs_mae_r_median": 3.6511
+        },
+        "BOTH_TP": {
+          "n": 2310,
+          "bars_to_peak_within_trade_median": 1.0,
+          "mfe_r_median": 6.5754,
+          "time_to_bottom_path_median": 31.0,
+          "favorable_first_rate": 0.812987012987013,
+          "abs_mae_r_median": 0.9668
+        },
+        "FALSE_TP_CANDIDATE": {
+          "n": 101,
+          "bars_to_peak_within_trade_median": 1.0,
+          "mfe_r_median": 5.9852,
+          "time_to_bottom_path_median": 14.0,
+          "favorable_first_rate": 0.7326732673267327,
+          "abs_mae_r_median": 3.26
+        },
+        "SCANNER_SL_ORACLE_TIMEOUT": {
+          "n": 1941,
+          "bars_to_peak_within_trade_median": 16.0,
+          "mfe_r_median": 1.6002,
+          "time_to_bottom_path_median": 59.0,
+          "favorable_first_rate": 0.4884080370942813,
+          "abs_mae_r_median": 0.6998
+        }
+      },
+      "l003b_reconcile": {
+        "EARLY_STOP_CANDIDATE_equals_LABEL_MISMATCH_SL_TP": true,
+        "expected_BNB_44791_check": null
+      }
+    },
+    "SOLUSDT": {
+      "csv_path": "results/research/solusdt_trade_anatomy/trade_dataset_SOLUSDT.csv",
+      "summary_path": "results/research/solusdt_trade_anatomy/anatomy_summary.json",
+      "dataset_sha256_anatomy_summary": "69cdc70ea422b19937c9d50d4762e4fbbd0050a7f495707f548ad9b9238f5bbc",
+      "dataset_sha256_expected": "69cdc70ea422b19937c9d50d4762e4fbbd0050a7f495707f548ad9b9238f5bbc",
+      "sha256_match": true,
+      "n_summary": 139942,
+      "n": 139942,
+      "n_match_summary": true,
+      "census": {
+        "n": 139942,
+        "by_state": [
+          {
+            "state_id": "BOTH_SL",
+            "n": 92375,
+            "rate": 0.6600948964571036
+          },
+          {
+            "state_id": "EARLY_STOP_CANDIDATE",
+            "n": 44563,
+            "rate": 0.3184390676137257
+          },
+          {
+            "state_id": "SCANNER_SL_ORACLE_TIMEOUT",
+            "n": 1552,
+            "rate": 0.01109030884223464
+          },
+          {
+            "state_id": "BOTH_TP",
+            "n": 1366,
+            "rate": 0.0097611867773792
+          },
+          {
+            "state_id": "FALSE_TP_CANDIDATE",
+            "n": 48,
+            "rate": 0.0003429992425433394
+          },
+          {
+            "state_id": "BOTH_TIMEOUT",
+            "n": 38,
+            "rate": 0.000271541067013477
+          }
+        ],
+        "by_state_map": {
+          "BOTH_SL": {
+            "n": 92375,
+            "rate": 0.6600948964571036
+          },
+          "EARLY_STOP_CANDIDATE": {
+            "n": 44563,
+            "rate": 0.3184390676137257
+          },
+          "SCANNER_SL_ORACLE_TIMEOUT": {
+            "n": 1552,
+            "rate": 0.01109030884223464
+          },
+          "BOTH_TP": {
+            "n": 1366,
+            "rate": 0.0097611867773792
+          },
+          "FALSE_TP_CANDIDATE": {
+            "n": 48,
+            "rate": 0.0003429992425433394
+          },
+          "BOTH_TIMEOUT": {
+            "n": 38,
+            "rate": 0.000271541067013477
+          }
+        },
+        "raw_pairs": {
+          "SL_HIT|SL_HIT": 92375,
+          "SL_HIT|TP_HIT": 44563,
+          "SL_HIT|TIMEOUT": 1552,
+          "TP_HIT|TP_HIT": 1366,
+          "TP_HIT|SL_HIT": 48,
+          "TIMEOUT|TIMEOUT": 38
+        }
+      },
+      "confusion_scanner_x_oracle": {
+        "SL_HIT": {
+          "SL_HIT": 92375,
+          "TP_HIT": 44563,
+          "TIMEOUT": 1552
+        },
+        "TP_HIT": {
+          "SL_HIT": 48,
+          "TP_HIT": 1366,
+          "TIMEOUT": 0
+        },
+        "TIMEOUT": {
+          "SL_HIT": 0,
+          "TP_HIT": 0,
+          "TIMEOUT": 38
+        }
+      },
+      "EARLY_STOP_CANDIDATE_n": 44563,
+      "EARLY_STOP_CANDIDATE_rate": 0.3184390676137257,
+      "LABEL_MATCH_n": 93779,
+      "LABEL_MATCH_rate": 0.6701276243014963,
+      "LABEL_MISMATCH_n": 46163,
+      "LABEL_MISMATCH_rate": 0.32987237569850364,
+      "match_mass_by_state": {
+        "BOTH_TP": {
+          "n": 1366,
+          "rate_of_all": 0.0097611867773792,
+          "rate_of_match": 0.01456616086757163
+        },
+        "BOTH_SL": {
+          "n": 92375,
+          "rate_of_all": 0.6600948964571036,
+          "rate_of_match": 0.985028631143433
+        },
+        "BOTH_TIMEOUT": {
+          "n": 38,
+          "rate_of_all": 0.000271541067013477,
+          "rate_of_match": 0.0004052079889954041
+        }
+      },
+      "scanner_unique_mass": {
+        "n": 46163,
+        "rate": 0.32987237569850364,
+        "by_state": [
+          {
+            "state_id": "EARLY_STOP_CANDIDATE",
+            "n": 44563,
+            "rate": 0.9653402075255074
+          },
+          {
+            "state_id": "SCANNER_SL_ORACLE_TIMEOUT",
+            "n": 1552,
+            "rate": 0.03361999870025778
+          },
+          {
+            "state_id": "FALSE_TP_CANDIDATE",
+            "n": 48,
+            "rate": 0.0010397937742347768
+          }
+        ]
+      },
+      "scanner_marginal": {
+        "SL_HIT": 138490,
+        "TP_HIT": 1414,
+        "TIMEOUT": 38
+      },
+      "oracle_marginal": {
+        "SL_HIT": 92423,
+        "TP_HIT": 45929,
+        "TIMEOUT": 1590
+      },
+      "path_geometry_fingerprints": {
+        "EARLY_STOP_CANDIDATE": {
+          "n": 44563,
+          "bars_to_peak_within_trade_median": 6.0,
+          "mfe_r_median": 4.5132,
+          "time_to_bottom_path_median": 40.0,
+          "favorable_first_rate": 0.6933105939905303,
+          "abs_mae_r_median": 0.8485
+        },
+        "BOTH_SL": {
+          "n": 92375,
+          "bars_to_peak_within_trade_median": 1.0,
+          "mfe_r_median": 1.7358,
+          "time_to_bottom_path_median": 47.0,
+          "favorable_first_rate": 0.17137753721244925,
+          "abs_mae_r_median": 3.5893
+        },
+        "BOTH_TP": {
+          "n": 1366,
+          "bars_to_peak_within_trade_median": 1.0,
+          "mfe_r_median": 6.38475,
+          "time_to_bottom_path_median": 28.5,
+          "favorable_first_rate": 0.8440702781844802,
+          "abs_mae_r_median": 0.9045000000000001
+        },
+        "FALSE_TP_CANDIDATE": {
+          "n": 48,
+          "bars_to_peak_within_trade_median": 1.0,
+          "mfe_r_median": 7.7031,
+          "time_to_bottom_path_median": 8.5,
+          "favorable_first_rate": 0.7916666666666666,
+          "abs_mae_r_median": 3.11625
+        },
+        "SCANNER_SL_ORACLE_TIMEOUT": {
+          "n": 1552,
+          "bars_to_peak_within_trade_median": 19.0,
+          "mfe_r_median": 1.6222,
+          "time_to_bottom_path_median": 58.0,
+          "favorable_first_rate": 0.48711340206185566,
+          "abs_mae_r_median": 0.7201
+        }
+      },
+      "l003b_reconcile": {
+        "EARLY_STOP_CANDIDATE_equals_LABEL_MISMATCH_SL_TP": true,
+        "expected_BNB_44791_check": null
+      }
+    }
+  },
+  "l003b_reconcile": {
+    "expected_from_L003B_LABEL_MISMATCH_SL_TP": {
+      "BNBUSDT": 44791,
+      "BTCUSDT": 43392,
+      "ETHUSDT": 43725,
+      "SOLUSDT": 44563,
+      "AGGREGATE": 176471
+    },
+    "observed_EARLY_STOP_CANDIDATE": {
+      "BNBUSDT": 44791,
+      "BTCUSDT": 43392,
+      "ETHUSDT": 43725,
+      "SOLUSDT": 44563,
+      "AGGREGATE": 176471
+    },
+    "all_match": true,
+    "BNB_must_equal_44791": true
+  },
+  "latent_variable_hypotheses": [
+    {
+      "id": "H_SCANNER_CAPTUREABILITY",
+      "statement": "Y_scanner may reflect captureability under trailing process",
+      "claim_class": "HYPOTHESIS",
+      "tested": false
+    },
+    {
+      "id": "H_ORACLE_PATH_REACHABILITY",
+      "statement": "Y_oracle may reflect path reachability under fixed exit",
+      "claim_class": "HYPOTHESIS",
+      "tested": false
+    },
+    {
+      "id": "H_ESC_DISTINCT_PATH_STATE",
+      "statement": "EARLY_STOP_CANDIDATE may be a distinct path-state population",
+      "claim_class": "HYPOTHESIS",
+      "tested": false
+    }
+  ],
+  "parent_links": {
+    "L-003B": "docs/governance/ANALYTICS_OUTCOME_POPULATION_COMPARISON_L003B.md",
+    "L-003C": "docs/governance/ANALYTICS_OUTCOME_DISAGREEMENT_POPULATION_L003C.md",
+    "L-003D": "docs/governance/ANALYTICS_OUTCOME_PATH_MECHANICS_L003D.md",
+    "L-003E": "docs/governance/ANALYTICS_OUTCOME_ADVERSE_TIMING_L003E.md",
+    "L-003-TERM": "docs/governance/ANALYTICS_L003_TERMINOLOGY_PARITY_AUDIT.md"
+  },
+  "naming_correction_l003g_pointer": {
+    "pass": "L-003G Part0",
+    "canonical_id": "JOINT_STATE_SL_TP",
+    "safe_alias": "EARLY_STOP_CANDIDATE",
+    "prior_run_id_preserved": "l003f_joint_outcome_states_20260907_184519"
+  }
+}

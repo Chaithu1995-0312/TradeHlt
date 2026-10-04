@@ -1,0 +1,1480 @@
+{
+  "future_config_opportunities": [
+    "core/hierarchical_meta_fusion.py:127 _DEFAULT_WEIGHTS={...numeric...}",
+    "features/dataset_builder.py:185 LAMBDA_DECAY_DEFAULT=0.0",
+    "features/feature_monitor.py:60 DEFAULT_DRIFT_THRESHOLD=2.5",
+    "governance/semantic_os.py:124 SUMMARY_50_MAX=320",
+    "governance/semantic_os.py:125 SUMMARY_200_MAX=1400",
+    "governance/strategy_backtest.py:50 _WARMUP=60"
+  ],
+  "generated_at": "2026-09-18T07:16:53.615260+00:00",
+  "maturity_summary": {
+    "CONFIG_DRIVEN": 47,
+    "CONFIG_WIRED": 13,
+    "HARD_CODED": 5
+  },
+  "modules": {
+    "config_layer/config_validator.py": {
+      "behavioral": [],
+      "config_wired": true,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [
+        "def _aggregate_metrics.std=0.0 (L200)",
+        "def ConfigValidator.validate.W=60 (L391)"
+      ],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": []
+    },
+    "config_layer/crt_config_provenance.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": [
+        "<module>._MAX_OBSERVE_EVENTS=5000 (L23)"
+      ]
+    },
+    "config_layer/crt_engine_v2.py": {
+      "behavioral": [],
+      "config_wired": true,
+      "externally_wired": [],
+      "function_behavioral": [
+        "def UltronRiskEngine.approve.penalty=0.0 (L2253)",
+        "def ExecutionEngine.build_trade.risk_pct=0.005 (L2436)",
+        "def ExecutionEngine.build_trade.risk_pct=0.005 (L2442)",
+        "def CRTEngine.process_candle._body_ratio=0.0 (L3215)",
+        "def CRTEngine.process_candle._freshness_mult=1.0 (L3291)"
+      ],
+      "function_constants": [
+        "def TelemetryCollector.on_reset._would_expand_score=0.0 (L584)",
+        "def UltronRiskEngine.score_sweep.base=0.6 (L1966)",
+        "def UltronRiskEngine.approve.penalty=0.0 (L2253)",
+        "def UltronRiskEngine.approve.bonus=0.0 (L2254)",
+        "def ExecutionEngine.build_trade.risk_pct=0.005 (L2436)",
+        "def ExecutionEngine.build_trade.risk_pct=0.005 (L2442)",
+        "def ResetLogic.should_reset.retrace=0.0 (L2601)",
+        "def CRTEngine.process_candle._body_ratio=0.0 (L3215)",
+        "def CRTEngine.process_candle._freshness_mult=1.0 (L3291)",
+        "def CRTEngine.process_candle._shadow_disp_br=0.0 (L3293)",
+        "def CRTEngine.process_candle._shadow_disp_br=0.0 (L3326)"
+      ],
+      "goal_seeking": [
+        "RiskScore.sweep_score=0.0 (L175)",
+        "EngineState._expansion_entry_idx=0 (L280)"
+      ],
+      "hardcoded": [],
+      "is_goal_seeking": true,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [
+        "Candle.volume=0.0 (L94)",
+        "Candle.index=0 (L95)",
+        "SweepEvent.candle_index=0 (L165)",
+        "RiskScore.breakout_score=0.0 (L176)",
+        "RiskScore.retest_score=0.0 (L177)",
+        "RiskScore.time_score=0.0 (L178)",
+        "RiskScore.decay_factor=1.0 (L179)",
+        "RiskScore.weights=[0.35, 0.25, 0.2, 0.2] (L185)",
+        "Trade.risk_pct=0.01 (L209)",
+        "Trade.pnl=0.0 (L213)",
+        "Trade.partial_pnl=0.0 (L214)",
+        "Trade.open_candle_index=0 (L217)",
+        "EngineState.atr_abs=0.0 (L246)",
+        "EngineState.retest_candle_index=0 (L249)",
+        "EngineState.current_candle_index=0 (L250)",
+        "EngineState.soft_conf_candles=0 (L255)",
+        "EngineState.ema_fast_val=0.0 (L258)",
+        "EngineState.ema_slow_val=0.0 (L259)",
+        "EngineState.htf_remaining_candles=0 (L261)",
+        "EngineState._displacement_entry_idx=0 (L262)",
+        "EngineState.pending_displacement_ttl=0 (L266)",
+        "EngineState.pending_displacement_formed_idx=0 (L268)",
+        "EngineState.pending_displacement_age_at_reset=0 (L269)",
+        "EngineState.pending_displacement_created_idx=0 (L275)"
+      ],
+      "unclassified": []
+    },
+    "config_layer/crt_gaussian_scorer.py": {
+      "behavioral": [
+        "CRTGaussianScorer.RETEST_MIN=0.025 (L48)",
+        "CRTGaussianScorer.RETEST_MAX=1.0 (L49)",
+        "CRTGaussianScorer.DISP_MAX=3.67 (L50)"
+      ],
+      "config_wired": true,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_WIRED",
+      "structural": [],
+      "unclassified": []
+    },
+    "config_layer/crt_sweep_taxonomy.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [
+        "<module>.WICK_BONUS_FACTOR=0.35 (L33)"
+      ],
+      "hardcoded": [],
+      "is_goal_seeking": true,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": []
+    },
+    "config_layer/llm_inference_client.py": {
+      "behavioral": [],
+      "config_wired": true,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [
+        "def llm_chat.FAIL_COUNT=0 (L248)",
+        "def llm_chat.FAIL_COUNT=0 (L264)"
+      ],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": [
+        "<module>.FAIL_COUNT=0 (L112)"
+      ]
+    },
+    "config_layer/llm_scorer.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [
+        "def llm_score_safe.FAIL_COUNT=0 (L291)"
+      ],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": [
+        "<module>.FAIL_COUNT=0 (L49)"
+      ]
+    },
+    "config_layer/m15_structural_range.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": [
+        "M15StructuralLiquidityRange.child_count=0 (L46)"
+      ]
+    },
+    "config_layer/rr/rr_dataset_builder.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [
+        "def build_dataset.skipped=0 (L297)"
+      ],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": [
+        "<module>.MIN_SAMPLES=20 (L38)"
+      ]
+    },
+    "config_layer/rr/rr_pattern_miner.py": {
+      "behavioral": [
+        "<module>.RR_SCORE_MIN=-3.0 (L46)",
+        "<module>.RR_SCORE_MAX=5.0 (L47)"
+      ],
+      "config_wired": true,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [
+        "def _gcf.tiny=1e-300 (L128)",
+        "def RRPatternTrainer.train.eps=1e-06 (L244)",
+        "def RRPatternTrainer.train.prior_c=1e-10 (L229)",
+        "def RRPatternTrainer.loocv_report.n_buckets=10 (L361)",
+        "def RRPatternTrainer.loocv_report.rr_corr=0.0 (L357)",
+        "def NanoInferenceEngine.predict.d_sq=0.0 (L472)",
+        "def NanoInferenceEngine.predict.ll_loss=0.0 (L500)",
+        "def NanoInferenceEngine.predict.ll_win=0.0 (L501)",
+        "def NanoInferenceEngine.predict.row_dot=0.0 (L474)"
+      ],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_WIRED",
+      "structural": [],
+      "unclassified": []
+    },
+    "config_layer/stack_version.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [
+        "def resolve_epoch.max_epoch=0 (L321)"
+      ],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": []
+    },
+    "config_layer/state_identity.py": {
+      "behavioral": [
+        "CRTConfig.body_ratio_min=0.7 (L140)",
+        "CRTConfig.atr_multiplier_min=1.5 (L141)",
+        "CRTConfig.retest_depth_max=0.25 (L142)",
+        "CRTConfig.risk_score_weights=[0.35, 0.25, 0.2, 0.2] (L170)",
+        "CRTConfig.score_component_weights=[0.35, 0.25, 0.2, 0.2] (L171)",
+        "CRTConfig.score_decay_lambda=0.05 (L182)",
+        "CRTConfig.score_threshold=0.45 (L185)",
+        "CRTConfig.max_spread_pct=0.05 (L186)",
+        "CRTConfig.confirmation_body_min=0.6 (L189)",
+        "CRTConfig.tp1_atr_multiplier=1.0 (L191)",
+        "CRTConfig.tp2_atr_multiplier=2.0 (L192)",
+        "CRTConfig.breakout_disp_threshold=1.5 (L202)",
+        "CRTConfig.tp1_atr_multiplier_breakout=1.5 (L204)",
+        "CRTConfig.tp1_atr_multiplier_pullback=0.8 (L205)",
+        "CRTConfig.tp1_atr_multiplier_reversal=1.0 (L207)",
+        "CRTConfig.bitnet_main_threshold=0.55 (L208)",
+        "CRTConfig.retrace_reset_pct=0.5 (L226)",
+        "CRTConfig.conf_alpha=0.7 (L233)",
+        "CRTConfig.conf_beta=0.3 (L234)",
+        "CRTConfig.conf_weights=[0.35, 0.35, 0.15, 0.15] (L235)",
+        "CRTConfig.conf_floor=0.2 (L236)",
+        "CRTConfig.weak_link_weight=0.3 (L237)",
+        "CRTConfig.tier_1_threshold=0.75 (L242)",
+        "CRTConfig.tier_2_threshold=0.3 (L243)",
+        "CRTConfig.soft_conf_max_candles=3 (L244)",
+        "CRTConfig.shadow_age_penalty_lambda=0.0 (L289)"
+      ],
+      "config_wired": false,
+      "externally_wired": [
+        "CRTConfig.body_ratio_min=0.7 (L140)",
+        "CRTConfig.atr_multiplier_min=1.5 (L141)",
+        "CRTConfig.retest_depth_max=0.25 (L142)",
+        "CRTConfig.risk_score_weights=[0.35, 0.25, 0.2, 0.2] (L170)",
+        "CRTConfig.score_component_weights=[0.35, 0.25, 0.2, 0.2] (L171)",
+        "CRTConfig.score_decay_lambda=0.05 (L182)",
+        "CRTConfig.score_threshold=0.45 (L185)",
+        "CRTConfig.max_spread_pct=0.05 (L186)",
+        "CRTConfig.confirmation_body_min=0.6 (L189)",
+        "CRTConfig.tp1_atr_multiplier=1.0 (L191)",
+        "CRTConfig.tp2_atr_multiplier=2.0 (L192)",
+        "CRTConfig.breakout_disp_threshold=1.5 (L202)",
+        "CRTConfig.tp1_atr_multiplier_breakout=1.5 (L204)",
+        "CRTConfig.tp1_atr_multiplier_pullback=0.8 (L205)",
+        "CRTConfig.tp1_atr_multiplier_reversal=1.0 (L207)",
+        "CRTConfig.bitnet_main_threshold=0.55 (L208)",
+        "CRTConfig.retrace_reset_pct=0.5 (L226)",
+        "CRTConfig.conf_alpha=0.7 (L233)",
+        "CRTConfig.conf_beta=0.3 (L234)",
+        "CRTConfig.conf_weights=[0.35, 0.35, 0.15, 0.15] (L235)",
+        "CRTConfig.conf_floor=0.2 (L236)",
+        "CRTConfig.weak_link_weight=0.3 (L237)",
+        "CRTConfig.tier_1_threshold=0.75 (L242)",
+        "CRTConfig.tier_2_threshold=0.3 (L243)",
+        "CRTConfig.soft_conf_max_candles=3 (L244)",
+        "CRTConfig.shadow_age_penalty_lambda=0.0 (L289)"
+      ],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [
+        "CRTConfig.max_sweep_age_candles=20 (L149)",
+        "CRTConfig.expansion_atr_min_distance=0.2 (L152)",
+        "CRTConfig.tp1_atr_multiplier_liq_sweep=1.2 (L206)",
+        "CRTConfig.max_expansion_age_candles=495 (L280)",
+        "CRTConfig.max_expansion_age_hours=124 (L281)",
+        "CRTConfig.expansion_age_warn_candles=342 (L282)"
+      ],
+      "hardcoded": [],
+      "is_goal_seeking": true,
+      "maturity": "CONFIG_WIRED",
+      "structural": [
+        "CRTConfig.atr_period=14 (L145)",
+        "CRTConfig.atr_buffer_multiplier=3 (L146)",
+        "CRTConfig.sl_atr_buffer=0.2 (L190)"
+      ],
+      "unclassified": [
+        "CRTConfig.retest_atr_depth_fraction=0.5 (L155)",
+        "CRTConfig.retest_min_depth_atr_fraction=0.1 (L160)",
+        "CRTConfig.max_displacement_strength=2.0 (L179)",
+        "CRTConfig.atr_min_displacement=1.2 (L188)",
+        "CRTConfig.extension_reset_fib=1.618 (L227)",
+        "CRTConfig.news_blackout_minutes=15 (L230)",
+        "CRTConfig.ema_fast=2 (L238)",
+        "CRTConfig.ema_slow=5 (L239)",
+        "CRTConfig.pending_displacement_ttl_candles=4 (L250)",
+        "CRTConfig.shadow_age_norm_candles=0 (L296)"
+      ]
+    },
+    "core/acceptance_controller.py": {
+      "behavioral": [
+        "<module>._THETA_MIN=0.5 (L34)",
+        "<module>._THETA_MAX=0.95 (L35)"
+      ],
+      "config_wired": true,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_WIRED",
+      "structural": [],
+      "unclassified": [
+        "<module>._MIN_HISTORY=10 (L38)",
+        "<module>._DEFAULTS={...numeric...} (L41)"
+      ]
+    },
+    "core/convergence_controller.py": {
+      "behavioral": [
+        "<module>._WARMUP_BARS=10 (L39)",
+        "<module>._THRESH_MIN=0.3 (L42)",
+        "<module>._THRESH_MAX=0.9 (L43)",
+        "<module>._THRESH_STEP=0.02 (L44)",
+        "<module>._ACCEPT_RATE_HIGH=0.3 (L47)",
+        "<module>._ACCEPT_RATE_LOW=0.1 (L48)",
+        "<module>._ABS_QUALITY_FLOOR=0.3 (L54)",
+        "<module>._SIG_K=8.0 (L57)",
+        "<module>._SIG_T=0.6 (L58)"
+      ],
+      "config_wired": true,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_WIRED",
+      "structural": [],
+      "unclassified": []
+    },
+    "core/decision_engine.py": {
+      "behavioral": [],
+      "config_wired": true,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [
+        "DecisionResult.threshold_used=0.0 (L56)"
+      ],
+      "unclassified": [
+        "<module>._FALLBACK_TOP_N=3 (L44)"
+      ]
+    },
+    "core/dynamic_threshold.py": {
+      "behavioral": [],
+      "config_wired": true,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": []
+    },
+    "core/engine_runner.py": {
+      "behavioral": [],
+      "config_wired": true,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [
+        "def breakout_engine.direction=0 (L179)",
+        "def trap_engine.direction=0 (L212)",
+        "def EngineRunner._compute_weighted_vote.total=0.0 (L614)",
+        "def EngineRunner._evaluate_fusion_path.candle_idx=0 (L631)",
+        "def EngineRunner.run._dir_raw=1 (L734)"
+      ],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": [
+        "<module>.DUAL_ENGINE_DEFAULTS={...numeric...} (L80)"
+      ]
+    },
+    "core/fusion_engine.py": {
+      "behavioral": [
+        "FusionConfig.gaussian_weight=0.6 (L139)",
+        "FusionConfig.neural_weight=0.4 (L140)",
+        "FusionConfig.llm_weight=0.2 (L141)",
+        "FusionConfig.llm_lower_band=0.45 (L142)",
+        "FusionConfig.llm_upper_band=0.65 (L143)",
+        "FusionConfig.tier_full=0.75 (L147)",
+        "FusionConfig.tier_half=0.6 (L148)",
+        "FusionConfig.tier_quarter=0.5 (L149)",
+        "FusionConfig.weight_crt=0.3 (L152)",
+        "FusionConfig.weight_gaussian=0.25 (L153)",
+        "FusionConfig.weight_zone_gate=0.25 (L154)",
+        "FusionConfig.weight_rr=0.2 (L155)",
+        "FusionConfig.weight_strategy_consensus=0.0 (L158)"
+      ],
+      "config_wired": false,
+      "externally_wired": [
+        "FusionConfig.gaussian_weight=0.6 (L139)",
+        "FusionConfig.neural_weight=0.4 (L140)",
+        "FusionConfig.llm_weight=0.2 (L141)",
+        "FusionConfig.llm_lower_band=0.45 (L142)",
+        "FusionConfig.llm_upper_band=0.65 (L143)",
+        "FusionConfig.tier_full=0.75 (L147)",
+        "FusionConfig.tier_half=0.6 (L148)",
+        "FusionConfig.tier_quarter=0.5 (L149)",
+        "FusionConfig.weight_crt=0.3 (L152)",
+        "FusionConfig.weight_gaussian=0.25 (L153)",
+        "FusionConfig.weight_zone_gate=0.25 (L154)",
+        "FusionConfig.weight_rr=0.2 (L155)",
+        "FusionConfig.weight_strategy_consensus=0.0 (L158)"
+      ],
+      "function_behavioral": [],
+      "function_constants": [
+        "def FusionEngine.fuse_strategy_results.total_w=0.0 (L737)",
+        "def FusionEngine.fuse_strategy_results.w_score=0.0 (L738)",
+        "def FusionEngine.fuse_strategy_results.w_conf=0.0 (L739)"
+      ],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_WIRED",
+      "structural": [
+        "FusionResult.normalized_score=0.0 (L197)",
+        "FusionResult.threshold_used=0.0 (L198)"
+      ],
+      "unclassified": [
+        "FusionConfig.min_consensus_signals=2 (L172)",
+        "FusionConfig.min_consensus_agreement=0.6 (L173)"
+      ]
+    },
+    "core/gate_intelligence.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": [
+        "GateIntelligence._CONFIG_DEFAULTS={...numeric...} (L115)"
+      ]
+    },
+    "core/hierarchical_meta_fusion.py": {
+      "behavioral": [
+        "HierarchicalMetaFusion._DEFAULT_WEIGHTS={...numeric...} (L127)"
+      ],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [
+        "def HierarchicalMetaFusion._compute_inner.p1=0.08 (L250)",
+        "def HierarchicalMetaFusion._compute_inner.p1=0.0 (L253)",
+        "def HierarchicalMetaFusion._compute_inner.p2=0.0 (L260)",
+        "def HierarchicalMetaFusion._compute_inner.p3=0.05 (L264)",
+        "def HierarchicalMetaFusion._compute_inner.p3=0.0 (L267)",
+        "def HierarchicalMetaFusion._compute_inner.p5=0.05 (L276)",
+        "def HierarchicalMetaFusion._compute_inner.p5=0.0 (L279)"
+      ],
+      "goal_seeking": [],
+      "hardcoded": [
+        "HierarchicalMetaFusion._DEFAULT_WEIGHTS={...numeric...} (L127)"
+      ],
+      "is_goal_seeking": false,
+      "maturity": "HARD_CODED",
+      "structural": [],
+      "unclassified": [
+        "<module>._STATE_SCORES={...numeric...} (L38)"
+      ]
+    },
+    "core/model_registry.py": {
+      "behavioral": [
+        "<module>.PROMOTION_MARGIN=0.02 (L40)"
+      ],
+      "config_wired": true,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_WIRED",
+      "structural": [],
+      "unclassified": []
+    },
+    "core/regime_governor.py": {
+      "behavioral": [
+        "UltronGovernor.REGIME_PENALTY={...numeric...} (L105)",
+        "UltronGovernor.REGIME_ACCEPT_PERCENTILE={...numeric...} (L111)",
+        "UltronGovernor.DIRECTION_PENALTY=0.1 (L117)",
+        "UltronGovernor.FALLBACK_THRESHOLD=0.45 (L118)"
+      ],
+      "config_wired": true,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_WIRED",
+      "structural": [
+        "UltronGovernor.WINDOW_MAXLEN=100 (L120)"
+      ],
+      "unclassified": [
+        "UltronGovernor.MAX_TRADES_PER_BATCH=3 (L103)",
+        "UltronGovernor.WINDOW_MIN_SAMPLES=10 (L119)"
+      ]
+    },
+    "core/signal_audit.py": {
+      "behavioral": [
+        "<module>._TRADE_RATE_WARN=0.3 (L36)"
+      ],
+      "config_wired": true,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_WIRED",
+      "structural": [],
+      "unclassified": [
+        "<module>._ZONE_PASS_WARN=0.8 (L34)",
+        "<module>._FUSION_PASS_WARN=0.5 (L35)"
+      ]
+    },
+    "core/signal_belief_tracker.py": {
+      "behavioral": [
+        "SignalBeliefTracker._DEFAULT_DECAY=0.7 (L79)"
+      ],
+      "config_wired": true,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_WIRED",
+      "structural": [],
+      "unclassified": [
+        "SignalBeliefTracker._DEFAULT_HIGH_CONVICTION=0.65 (L80)",
+        "SignalBeliefTracker._DEFAULT_MIN_CONFIRMS=2 (L81)"
+      ]
+    },
+    "core/ultron_live_adapter.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [
+        "LivePosition.unrealized_pct=0.0 (L25)",
+        "LivePortfolioState.realized_pnl=0.0 (L36)",
+        "LivePortfolioState.equity=0.0 (L37)"
+      ],
+      "unclassified": []
+    },
+    "core/ultron_risk_gate_wrapper.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": [
+        "<module>._DEFAULT_REGIME_FACTORS={...numeric...} (L48)"
+      ]
+    },
+    "engines/live_engine.py": {
+      "behavioral": [
+        "LiveEngineConfig.rr_threshold=1.5 (L466)",
+        "LiveEngineConfig.confidence_min=0.55 (L467)",
+        "LiveEngineConfig.ml_override_threshold=0.75 (L469)"
+      ],
+      "config_wired": true,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [
+        "def BitNetZoneGate.check.best_score=0.0 (L356)",
+        "def BitNetZoneGate.check.best_thresh=0.0 (L358)",
+        "def _maybe_telegram_training_alert._BYPASS_CHECK_COUNTER=0 (L735)"
+      ],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_WIRED",
+      "structural": [],
+      "unclassified": [
+        "LiveEngineConfig.confidence_strong=0.6 (L468)",
+        "LiveEngineConfig.alert_cooldown_seconds=60 (L470)",
+        "LiveEngineConfig.dedup_candles=4 (L471)",
+        "<module>._BYPASS_CHECK_COUNTER=0 (L714)",
+        "<module>._BYPASS_CHECK_EVERY_N=50 (L715)"
+      ]
+    },
+    "engines/rr_engine.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": [
+        "<module>._EPS=1e-09 (L33)"
+      ]
+    },
+    "engines/scoring_engine.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [
+        "def compute_scores.s_sweep=0.0 (L41)",
+        "def compute_scores.s_sweep=1.0 (L43)",
+        "def compute_scores.s_sweep=0.7 (L45)",
+        "def compute_gaussian_score.total=0.0 (L78)",
+        "def compute_gaussian_score.total_w=0.0 (L79)",
+        "def ScoringEngine.score.neural=0.0 (L175)",
+        "def ScoringEngine.score.llm=0.0 (L176)",
+        "def ScoringEngine.score.neural=0.0 (L185)",
+        "def ScoringEngine.score.llm=1.0 (L191)"
+      ],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": []
+    },
+    "engines/zone_gate_engine.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [
+        "def compute_weighted_cluster_score.EPS=1e-12 (L129)"
+      ],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": []
+    },
+    "features/calendar_periods.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": [
+        "<module>.HOUR_GRID_HOURS={...numeric...} (L61)"
+      ]
+    },
+    "features/causal_structure.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [
+        "def causal_structure_series.d=10.0 (L180)"
+      ],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": []
+    },
+    "features/crt_feature_builder.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [
+        "def build_bitnet_features._nan_replaced=0 (L273)"
+      ],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": []
+    },
+    "features/crt_state_resolver.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [
+        "def CRTStateResolver.seed_ohlc.cph=1 (L478)",
+        "def build_htf_id_timeline.buffer_len=0 (L2171)",
+        "def build_htf_id_timeline.htf_idx=0 (L2172)",
+        "def build_htf_id_timeline.buffer_len=0 (L2179)"
+      ],
+      "goal_seeking": [
+        "CRTStateMemory.sweep_candle_index=-1 (L146)",
+        "CRTStateMemory.expansion_entry_index=-1 (L151)"
+      ],
+      "hardcoded": [],
+      "is_goal_seeking": true,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [
+        "CRTStateMemory.htf_bars_in_window=0 (L162)"
+      ],
+      "unclassified": [
+        "CRTStateMemory.displacement_candle_index=-1 (L147)",
+        "CRTStateMemory.displacement_candle_close=0.0 (L148)",
+        "CRTStateMemory.displacement_direction=0 (L149)",
+        "CRTStateMemory.retest_candle_index=-1 (L150)",
+        "CRTStateMemory.pending_displacement_formed_idx=-1 (L154)",
+        "CRTStateMemory.pending_displacement_ttl=0 (L156)",
+        "CRTStateMemory.pending_displacement_created_idx=-1 (L157)",
+        "CRTStateMemory.candle_index=0 (L159)",
+        "CRTStateMemory.htf_reset_count=0 (L165)",
+        "CRTStateMemory.gap_reset_count=0 (L166)",
+        "CRTStateMemory.forced_reset_count=0 (L167)",
+        "CRTStateMemory.range_h_ref=0.0 (L170)",
+        "CRTStateMemory.range_l_ref=0.0 (L171)"
+      ]
+    },
+    "features/dataset_builder.py": {
+      "behavioral": [
+        "<module>.LAMBDA_DECAY_DEFAULT=0.0 (L185)"
+      ],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [
+        "<module>.LAMBDA_DECAY_DEFAULT=0.0 (L185)"
+      ],
+      "is_goal_seeking": false,
+      "maturity": "HARD_CODED",
+      "structural": [],
+      "unclassified": [
+        "<module>.MIN_GAUSSIAN_SAMPLES=20 (L184)"
+      ]
+    },
+    "features/dataset_validator.py": {
+      "behavioral": [],
+      "config_wired": true,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [
+        "ValidationReport.total_lines=0 (L56)",
+        "ValidationReport.entry_records=0 (L57)",
+        "ValidationReport.exit_records=0 (L58)",
+        "ValidationReport.reject_records=0 (L59)",
+        "ValidationReport.paired_trades=0 (L60)",
+        "ValidationReport.valid_for_training=0 (L61)",
+        "ValidationReport.skipped_no_outcome=0 (L62)",
+        "ValidationReport.skipped_bad_features=0 (L63)",
+        "ValidationReport.skipped_duplicate=0 (L64)",
+        "ValidationReport.skipped_parse_error=0 (L65)"
+      ],
+      "unclassified": []
+    },
+    "features/feature_monitor.py": {
+      "behavioral": [
+        "<module>.DEFAULT_DRIFT_THRESHOLD=2.5 (L60)"
+      ],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [
+        "def FeatureMonitor._compute_stats.k=3 (L118)",
+        "def FeatureMonitor.detect_drift_severity.max_z=0.0 (L211)",
+        "def FeatureMonitor.stats.k=3 (L242)"
+      ],
+      "goal_seeking": [],
+      "hardcoded": [
+        "<module>.DEFAULT_DRIFT_THRESHOLD=2.5 (L60)"
+      ],
+      "is_goal_seeking": false,
+      "maturity": "HARD_CODED",
+      "structural": [],
+      "unclassified": [
+        "<module>._MIN_SAMPLES_FOR_DRIFT=30 (L57)"
+      ]
+    },
+    "features/feature_pipeline.py": {
+      "behavioral": [],
+      "config_wired": true,
+      "externally_wired": [],
+      "function_behavioral": [
+        "def FeaturePipeline.finalize._warmup_budget=300 (L1356)"
+      ],
+      "function_constants": [
+        "def FeaturePipeline.finalize._warmup_budget=300 (L1356)",
+        "def FeaturePipeline.run.n_drift=0 (L1487)"
+      ],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": []
+    },
+    "features/feature_schema.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [
+        "<module>.SCHEMA_V2_FEATURE_DIM=35 (L160)",
+        "<module>.CANONICAL_FEATURE_DIM=48 (L166)",
+        "<module>.SCHEMA_V3_FEATURE_DIM=38 (L169)",
+        "<module>.SCHEMA_V4_FEATURE_DIM=39 (L176)"
+      ],
+      "unclassified": [
+        "<module>.SESSION_UNKNOWN=-1.0 (L226)",
+        "<module>.TREND_MAP={...numeric...} (L228)"
+      ]
+    },
+    "features/market_context.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [
+        "def MarketContextBuilder.build.known_vector_bound=0 (L302)"
+      ],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [
+        "MarketContext.completeness_ratio=0.0 (L166)"
+      ],
+      "unclassified": []
+    },
+    "features/model_evidence.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [
+        "<module>._VALUE_PRECISION=6 (L82)"
+      ],
+      "unclassified": []
+    },
+    "features/resolver_supply.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [
+        "def build_supply_rows.fval=0.0 (L221)"
+      ],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": []
+    },
+    "features/session_classifier.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": [
+        "SessionOrdinal.ASIA=0 (L59)",
+        "SessionOrdinal.LONDON=1 (L60)",
+        "SessionOrdinal.NEWYORK=2 (L61)",
+        "SessionOrdinal.OVERLAP=3 (L62)",
+        "SessionOrdinal.CLOSED=4 (L63)",
+        "<module>.DEFAULT_SESSION_WINDOWS_UTC={...numeric...} (L91)"
+      ]
+    },
+    "governance/archive_manifest.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [
+        "Report.rows=0 (L133)",
+        "Report.manifests=0 (L134)",
+        "Report.archive_files=0 (L135)"
+      ],
+      "unclassified": []
+    },
+    "governance/expansion_integration.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [
+        "<module>._MIN_TRADES=30 (L27)",
+        "<module>._MAX_DRAWDOWN=0.25 (L28)",
+        "<module>._MAX_DD_MULTIPLIER=1.2 (L31)"
+      ],
+      "hardcoded": [],
+      "is_goal_seeking": true,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": []
+    },
+    "governance/framework_registry.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [
+        "<module>._DRIFT_WINDOW=30 (L60)"
+      ],
+      "unclassified": [
+        "<module>._TYPE_LEVEL={...numeric...} (L44)"
+      ]
+    },
+    "governance/module_census.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [
+        "def write_stubs.max_n=0 (L177)",
+        "def census_report.inits=0 (L225)"
+      ],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": []
+    },
+    "governance/multi_strategy_validator.py": {
+      "behavioral": [
+        "<module>._MIN_PORTFOLIO_WIN_RATE=0.3 (L58)",
+        "<module>._WARMUP_CANDLES=60 (L60)"
+      ],
+      "config_wired": true,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_WIRED",
+      "structural": [],
+      "unclassified": [
+        "<module>._MIN_STRATEGY_TRADES=5 (L57)",
+        "<module>._MAX_PORTFOLIO_DRAWDOWN=75000000.0 (L59)",
+        "<module>._MAX_FORWARD_CANDLES=40 (L61)"
+      ]
+    },
+    "governance/portfolio_validation.py": {
+      "behavioral": [],
+      "config_wired": true,
+      "externally_wired": [],
+      "function_behavioral": [
+        "def PortfolioAnalytics.score_distribution.thresholds=[[0.0, 0.2], [0.2, 0.4], [0.4, 0.6], [0.6, 0.8], [0.8, 1.0]] (L189)"
+      ],
+      "function_constants": [
+        "def PortfolioAnalytics.aggregate.eq=0.0 (L142)",
+        "def PortfolioAnalytics.aggregate.peak=0.0 (L142)",
+        "def PortfolioAnalytics.aggregate.dd=0.0 (L142)",
+        "def PortfolioAnalytics.aggregate.sharpe=0.0 (L139)",
+        "def PortfolioAnalytics.score_distribution.thresholds=[[0.0, 0.2], [0.2, 0.4], [0.4, 0.6], [0.6, 0.8], [0.8, 1.0]] (L189)",
+        "def print_portfolio_report.W=65 (L390)"
+      ],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": [
+        "InstrumentConfig.htf_candles=16 (L57)"
+      ]
+    },
+    "governance/promotion_manager.py": {
+      "behavioral": [],
+      "config_wired": true,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [
+        "def PromotionManager._execute_promotion.score_std_dev=0.0 (L389)",
+        "def PromotionManager._write_to_registry.W=60 (L585)",
+        "def PromotionManager._fail.W=60 (L618)"
+      ],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": []
+    },
+    "governance/script_census.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [
+        "def write_stubs.max_n=0 (L203)",
+        "def census_report.env_hits=0 (L248)",
+        "def census_report.main_hits=0 (L249)"
+      ],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": [
+        "<module>.THIN_MAX_NON_IMPORT_LOC=40 (L34)"
+      ]
+    },
+    "governance/script_seed.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [
+        "def apply_control_plane_links.linked=0 (L61)"
+      ],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": []
+    },
+    "governance/semantic_os.py": {
+      "behavioral": [
+        "<module>.SUMMARY_50_MAX=320 (L124)",
+        "<module>.SUMMARY_200_MAX=1400 (L125)"
+      ],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [
+        "<module>.SUMMARY_50_MAX=320 (L124)",
+        "<module>.SUMMARY_200_MAX=1400 (L125)"
+      ],
+      "is_goal_seeking": false,
+      "maturity": "HARD_CODED",
+      "structural": [
+        "<module>._DRIFT_WINDOW=30 (L224)"
+      ],
+      "unclassified": []
+    },
+    "governance/semantic_query.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": [
+        "<module>._CLASS_RANK={...numeric...} (L42)"
+      ]
+    },
+    "governance/shadow_promotion_gate.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": [
+        "<module>._DEFAULT_MIN_SHADOW_TRADES=30 (L49)"
+      ]
+    },
+    "governance/strategy_backtest.py": {
+      "behavioral": [
+        "<module>._WARMUP=60 (L50)"
+      ],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [
+        "<module>._WARMUP=60 (L50)"
+      ],
+      "is_goal_seeking": false,
+      "maturity": "HARD_CODED",
+      "structural": [
+        "StrategyMetrics.trade_count=0 (L58)",
+        "StrategyMetrics.win_count=0 (L59)",
+        "StrategyMetrics.loss_count=0 (L60)",
+        "StrategyMetrics.timeout_count=0 (L61)",
+        "StrategyMetrics.total_pnl_inr=0.0 (L62)",
+        "StrategyMetrics.gross_profit=0.0 (L63)",
+        "StrategyMetrics.gross_loss=0.0 (L64)",
+        "StrategyMetrics.max_drawdown=0.0 (L65)",
+        "StrategyMetrics.win_rate=0.0 (L66)",
+        "StrategyMetrics.profit_factor=0.0 (L67)",
+        "StrategyMetrics.expectancy_inr=0.0 (L68)",
+        "StrategyMetrics.score=0.0 (L69)"
+      ],
+      "unclassified": [
+        "<module>._USD_TO_INR=84.0 (L49)",
+        "<module>._MAX_FWD=40 (L51)"
+      ]
+    },
+    "journal/schema.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [
+        "TradeRecord.confidence=0.0 (L20)",
+        "TradeRecord.rr=0.0 (L21)",
+        "TradeRecord.zone=0.0 (L22)",
+        "TradeRecord.allocated_risk=0.0 (L25)",
+        "TradeRecord.portfolio_exposure_before=0.0 (L26)",
+        "TradeRecord.pnl=0.0 (L34)",
+        "TradeRecord.duration_candles=0 (L35)",
+        "TradeRecord.drawdown_at_entry=0.0 (L36)"
+      ],
+      "unclassified": []
+    },
+    "journal/trade_logger.py": {
+      "behavioral": [
+        "<module>.MAX_CORRUPTION_RATIO=0.1 (L28)"
+      ],
+      "config_wired": true,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [
+        "def TradeLogger.load_all.malformed=0 (L112)",
+        "def TradeLogger.load_all.valid=0 (L113)"
+      ],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_WIRED",
+      "structural": [],
+      "unclassified": []
+    },
+    "runtime/analyze_fusion_shadow.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [
+        "def analyze_log.total_records=0 (L72)",
+        "def analyze_log.fusion_records=0 (L73)",
+        "def analyze_log.shadow_records=0 (L74)",
+        "def analyze_log.missing_shadow_records=0 (L75)"
+      ],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": []
+    },
+    "runtime/backtest_bitnet.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [
+        "def run_backtest.accept_count=0 (L251)",
+        "def run_backtest.accepted_by_score=0 (L258)",
+        "def run_backtest.accepted_by_debug_fallback=0 (L259)",
+        "def run_backtest.accepted_by_override=0 (L260)"
+      ],
+      "function_constants": [
+        "def run_backtest.accept_count=0 (L251)",
+        "def run_backtest.reject_count=0 (L252)",
+        "def run_backtest.reason_counts={...numeric...} (L253)",
+        "def run_backtest.accepted_by_score=0 (L258)",
+        "def run_backtest.accepted_by_debug_fallback=0 (L259)",
+        "def run_backtest.accepted_by_override=0 (L260)",
+        "def run_backtest.adapter_reject_count=0 (L261)",
+        "def run_backtest.MAX_DEBUG_ROWS=10 (L267)",
+        "def run_backtest.PROGRESS_INTERVAL=1000 (L268)"
+      ],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": []
+    },
+    "runtime/backtest_v2.py": {
+      "behavioral": [],
+      "config_wired": true,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [
+        "def CapitalCurve.max_drawdown_pct.max_dd=0.0 (L528)",
+        "def CandleLoader.stream._candle_pos=0 (L890)",
+        "def MetricsEngine._max_dd_rr.eq=0.0 (L1737)",
+        "def MetricsEngine._max_dd_rr.peak=0.0 (L1737)",
+        "def MetricsEngine._max_dd_rr.dd=0.0 (L1737)",
+        "def MetricsEngine._streaks.mw=0 (L1745)",
+        "def MetricsEngine._streaks.ml=0 (L1745)",
+        "def MetricsEngine._streaks.cw=0 (L1745)",
+        "def MetricsEngine._streaks.cl=0 (L1745)",
+        "def MetricsEngine._streaks.cl=0 (L1747)",
+        "def MetricsEngine._streaks.cw=0 (L1748)",
+        "def BacktestRunner.run.candle_idx=0 (L2680)",
+        "def BacktestRunner.run.gap_resets=0 (L2683)",
+        "def BacktestRunner.run.last_risk_score=0.0 (L2686)",
+        "def BacktestRunner.run._drift_pause_remaining=0 (L2710)",
+        "def BacktestRunner.run._hard_drift_pauses=0 (L2711)",
+        "def BacktestRunner.run._engine_rejected_count=0 (L2777)",
+        "def BacktestRunner.run._htf_pos=0 (L2798)",
+        "def BacktestRunner.run._shadow_sweep_count=0 (L2802)",
+        "def BacktestRunner.run._shadow_expansion_count=0 (L2803)",
+        "def BacktestRunner.run._shadow_leak_count=0 (L2804)",
+        "def BacktestRunner.run._htf_pos=1 (L2827)",
+        "def BacktestRunner.run._strat_consensus_score=-1.0 (L3250)",
+        "def BacktestRunner.run._strat_consensus_dir=0 (L3251)",
+        "def BacktestRunner.run._bn_score_val=0.0 (L3354)"
+      ],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [
+        "TradePathStats.mfe_price=0.0 (L346)",
+        "TradePathStats.mae_price=0.0 (L347)",
+        "TradePathStats.bars_to_peak=0 (L348)",
+        "TradePathStats.bars_to_trough=0 (L349)",
+        "TradePathStats.bars_observed=0 (L350)",
+        "TradePathStats.mfe_rr=0.0 (L352)",
+        "TradePathStats.mae_rr=0.0 (L353)",
+        "TradeRecord.entry_price_fill=0.0 (L386)",
+        "TradeRecord.exit_price_fill=0.0 (L387)",
+        "TradeRecord.candle_open=0 (L391)",
+        "TradeRecord.candle_close=0 (L392)",
+        "TradeRecord.pnl_pips_raw=0.0 (L394)",
+        "TradeRecord.pnl_pips_net=0.0 (L395)",
+        "TradeRecord.pnl_rr_raw=0.0 (L396)",
+        "TradeRecord.pnl_rr_net=0.0 (L397)",
+        "TradeRecord.slippage_pips=0.0 (L398)",
+        "TradeRecord.spread_pips=0.0 (L399)",
+        "TradeRecord.capital_before=0.0 (L401)",
+        "TradeRecord.capital_after=0.0 (L402)",
+        "TradeRecord.position_size=0.0 (L403)",
+        "TradeRecord.risk_score=0.0 (L405)",
+        "TradeRecord.risk_pct=0.0 (L406)",
+        "TradeRecord.week_of_year=0 (L411)",
+        "TradeRecord.day_of_week=0 (L412)",
+        "TradeRecord.hour_of_day=0 (L413)",
+        "TradeRecord.live_atr=0.0 (L419)",
+        "TradeRecord.live_ema_fast=0.0 (L420)",
+        "TradeRecord.live_ema_slow=0.0 (L421)",
+        "TradeRecord.cached_retest_depth=0.0 (L422)",
+        "TradeRecord.cached_body_ratio=0.0 (L423)",
+        "TradeRecord.cached_disp_strength=0.0 (L424)",
+        "TradeRecord.bitnet_score_at_entry=0.0 (L431)",
+        "RejectionRecord.risk_score=0.0 (L469)",
+        "BacktestMetrics.total_candles=0 (L1381)",
+        "BacktestMetrics.gap_resets=0 (L1382)",
+        "BacktestMetrics.total_setups=0 (L1383)",
+        "BacktestMetrics.approved_trades=0 (L1384)",
+        "BacktestMetrics.rejected_trades=0 (L1385)",
+        "BacktestMetrics.wins=0 (L1386)",
+        "BacktestMetrics.losses=0 (L1387)",
+        "BacktestMetrics.tp1_hits=0 (L1388)",
+        "BacktestMetrics.tp2_hits=0 (L1389)",
+        "BacktestMetrics.total_pnl_rr_raw=0.0 (L1390)",
+        "BacktestMetrics.total_pnl_rr_net=0.0 (L1391)",
+        "BacktestMetrics.max_drawdown_rr=0.0 (L1392)",
+        "BacktestMetrics.max_drawdown_pct=0.0 (L1393)",
+        "BacktestMetrics.max_win_streak=0 (L1394)",
+        "BacktestMetrics.max_loss_streak=0 (L1395)",
+        "BacktestMetrics.avg_trade_duration=0.0 (L1396)",
+        "BacktestMetrics.hard_drift_pauses=0 (L1402)",
+        "BacktestMetrics.gross_win_rr=0.0 (L1405)",
+        "BacktestMetrics.gross_loss_rr=0.0 (L1406)",
+        "BacktestMetrics.profit_factor=0.0 (L1407)",
+        "BacktestMetrics.total_return_pct=0.0 (L1408)",
+        "BacktestMetrics.annualized_return_pct=0.0 (L1409)",
+        "BacktestMetrics.return_to_max_dd=0.0 (L1410)",
+        "BacktestMetrics.trades_per_month=0.0 (L1411)",
+        "BacktestMetrics.htf_candles_per_range=0 (L1419)"
+      ],
+      "unclassified": [
+        "<module>._ROI_DEFAULTS={...numeric...} (L127)",
+        "BacktestConfig.pip_size=0.0001 (L220)",
+        "MultiInstrumentRunner.INSTRUMENT_PIP={...numeric...} (L3885)"
+      ]
+    },
+    "runtime/bar_structure_snapshot.py": {
+      "behavioral": [],
+      "config_wired": true,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [
+        "def BarStructureEmitter._level_block.pdh_d=0.0 (L612)",
+        "def BarStructureEmitter._level_block.pdl_d=0.0 (L612)",
+        "def BarStructureEmitter._level_block.eqh_d=0.0 (L612)",
+        "def BarStructureEmitter._level_block.eql_d=0.0 (L612)"
+      ],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": []
+    },
+    "runtime/crt_fail_reason_counters.py": {
+      "behavioral": [],
+      "config_wired": false,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": [
+        "CRTFailReasonCounters.evaluations=0 (L38)",
+        "CRTFailReasonCounters.events_at_start=0 (L47)"
+      ]
+    },
+    "runtime/layer_trace.py": {
+      "behavioral": [],
+      "config_wired": true,
+      "externally_wired": [],
+      "function_behavioral": [],
+      "function_constants": [],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": [
+        "<module>.DEFAULT_FLUSH_EVERY=200 (L75)"
+      ]
+    },
+    "runtime/unified_replay_harness.py": {
+      "behavioral": [],
+      "config_wired": true,
+      "externally_wired": [],
+      "function_behavioral": [
+        "def _summarize_bitnet_results.accepted_by_score=0 (L115)",
+        "def _summarize_bitnet_results.accepted_by_fallback=0 (L116)",
+        "def _summarize_bitnet_results.accepted_by_override=0 (L117)"
+      ],
+      "function_constants": [
+        "def _summarize_bitnet_results.bitnet_reject=0 (L110)",
+        "def _summarize_bitnet_results.errors=0 (L111)",
+        "def _summarize_bitnet_results.execute=0 (L112)",
+        "def _summarize_bitnet_results.reject=0 (L113)",
+        "def _summarize_bitnet_results.adapter_reject=0 (L114)",
+        "def _summarize_bitnet_results.accepted_by_score=0 (L115)",
+        "def _summarize_bitnet_results.accepted_by_fallback=0 (L116)",
+        "def _summarize_bitnet_results.accepted_by_override=0 (L117)"
+      ],
+      "goal_seeking": [],
+      "hardcoded": [],
+      "is_goal_seeking": false,
+      "maturity": "CONFIG_DRIVEN",
+      "structural": [],
+      "unclassified": [
+        "<module>.INSTRUMENT_PIP={...numeric...} (L28)"
+      ]
+    }
+  },
+  "summary": {
+    "BEHAVIORAL": 74,
+    "GOAL_SEEKING": 14,
+    "STRUCTURAL": 134,
+    "UNCLASSIFIED": 77
+  }
+}

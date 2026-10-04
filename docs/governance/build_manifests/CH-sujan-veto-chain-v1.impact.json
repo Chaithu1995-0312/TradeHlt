@@ -1,0 +1,41 @@
+{
+  "change_id": "CH-sujan-veto-chain-v1",
+  "date_utc": "2026-08-27",
+  "objective": "Open P-SUJAN-01: implement the user-accepted nested veto chain as research-only SEM-031 geometry. Conjunction is the trading rule. SEM-023 remains a comparison score, not admission. SEM-022/024/025 are not rewritten. Romeo clock, displacement magnitude, and MC-SUJAN seal stay later (P-SUJAN-02).",
+  "change_classes": [
+    "SEMANTIC_REGISTRY_CHANGE"
+  ],
+  "change_class_rationale": "New non-frozen ontology node SEM-031 plus an isolated src/research/sujan_crt/ package. Frozen runtime sections untouched. No production config, no spine wire, no G001. Not DOCUMENTATION_ONLY (src/ + tests/). RESEARCH_ONLY is not a current change class.",
+  "affected_files": [
+    "docs/governance/build_manifests/CH-sujan-veto-chain-v1.impact.json",
+    "configs/formulas/market_ontology.yaml",
+    "docs/research/sujan_veto_chain_object.md",
+    "src/research/sujan_crt/__init__.py",
+    "src/research/sujan_crt/geometry.py",
+    "src/research/sujan_crt/vetoes.py",
+    "src/research/sujan_crt/score.py",
+    "tests/research/test_sujan_veto_chain.py",
+    "tests/research/test_sujan_crt_contract.py",
+    "tests/test_semantic_registry.py",
+    ".grok/SUJAN_ACCEPTED.md",
+    ".grok/PENDING.md",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": ["SEM-031"],
+  "required_checks_ack": [
+    "tests/test_semantic_registry.py",
+    "tests/test_feature_lineage.py",
+    "tests/test_semantic_grounding.py",
+    "tests/test_construction_protocol.py",
+    "tests/research/test_sujan_veto_chain.py",
+    "tests/research/test_sujan_crt_contract.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert SEM-031, sujan_crt package, spec, floor tests, this manifest. Leave SEM-022..025 and drafts/MC-SUJAN untouched.",
+  "authority_granted": "User 2026-08-27: Accepted nested Sujan picture, then Open code (P-SUJAN-01).",
+  "authority_NOT_granted": "No MC-SUJAN seal or run (P-SUJAN-02). No Romeo 1-3-5-9 clock. No displacement-magnitude cut. No SEM-023 replacement. No spine, config, G001, live.",
+  "production_behavior_changed": "NO"
+}

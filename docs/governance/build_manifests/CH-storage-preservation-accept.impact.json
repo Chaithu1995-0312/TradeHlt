@@ -1,0 +1,33 @@
+{
+  "change_id": "CH-storage-preservation-accept",
+  "date_utc": "2026-08-23",
+  "objective": "User freeze-acceptance of Phase 2: mark STORAGE_PRESERVATION_STATUS=CLOSED / FROZEN v1.0.0. Preservation obligations (not a physical store) bound in the Closure & Authority Index. Identity CLOSED is not reopened. Phase 3 remains NOT STARTED and may only start from: what physical architecture satisfies both frozen contracts without violating identity preservation.",
+  "change_classes": [
+    "DOCUMENTATION_ONLY"
+  ],
+  "change_class_rationale": "Acceptance stamp on an existing preservation specification plus navigation (closure index, CLAUDE.md thin table, knowledge-map, identity-contract Phase 2 pointer). No src/, configs/, scripts/, tests/, or models/ edit. No ontology node, no Semantic OS id, no FM-id, no F-id.",
+  "affected_files": [
+    "docs/governance/STORAGE_PRESERVATION_CONTRACT.md",
+    "docs/governance/CANONICAL_LAYER_IDENTITY_CONTRACT.md",
+    "docs/governance/closure_authority_index.json",
+    "docs/governance/build_manifests/CH-storage-preservation-accept.impact.json",
+    "docs/knowledge-map.md",
+    "CLAUDE.md",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/test_closure_authority_index.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert the acceptance stamp, closure-index STORAGE_PRESERVATION surface, CLAUDE.md row, and knowledge-map wording. Preservation spec v1.0.0 keys remain as written in CH-storage-preservation-contract. Identity freeze stays CLOSED.",
+  "authority_granted": "User 2026-08-23: accept Phase 2 as a valid freeze (CLOSED / FROZEN v1.0.0). Next legitimate question is Phase 3 physical architecture against both contracts. No Phase 3 implementation.",
+  "authority_NOT_granted": "No Parquet, DuckDB, writers, readers, migrations, replay engines, file layout, G001, promotion, ACTIVE_VERSION change, Semantic OS id, F-id, and no reopen of LAYER_IDENTITY_STATUS=CLOSED.",
+  "production_behavior_changed": "NO"
+}

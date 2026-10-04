@@ -1,0 +1,179 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tradelatest://oss_lab/oss_capability.schema.json",
+  "title": "OSSCapabilityRecord",
+  "description": "Machine-readable OSS capability registry entry. OSS projects are capability providers, NEVER authorities over market ontology, CRT, Fusion, Decision, Ultron, or production config unless explicitly certified (T4 forbidden by default).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "oss_id",
+    "name",
+    "repository",
+    "version",
+    "commit_or_tag",
+    "license",
+    "license_obligations",
+    "security_status",
+    "maintenance_status",
+    "purpose",
+    "capabilities",
+    "integration_role",
+    "trust_tier",
+    "allowed_surfaces",
+    "forbidden_surfaces",
+    "input_contract",
+    "output_contract",
+    "adapter",
+    "tests",
+    "certification_status",
+    "provenance",
+    "known_risks",
+    "decision",
+    "decision_reason",
+    "lifecycle_status"
+  ],
+  "properties": {
+    "oss_id": {
+      "type": "string",
+      "pattern": "^OSS-[A-Z0-9][A-Z0-9_-]+$",
+      "description": "Stable registry id (e.g. OSS-QLIB)."
+    },
+    "name": { "type": "string" },
+    "repository": { "type": "string", "description": "Upstream URL or local path." },
+    "version": { "type": "string" },
+    "commit_or_tag": { "type": "string" },
+    "license": { "type": "string" },
+    "license_obligations": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "security_status": {
+      "type": "string",
+      "enum": [
+        "NOT_ASSESSED",
+        "ASSESSED_OK",
+        "ASSESSED_RISK",
+        "BLOCKED",
+        "UNKNOWN"
+      ]
+    },
+    "maintenance_status": {
+      "type": "string",
+      "enum": [
+        "ACTIVE",
+        "SLOW",
+        "STALE",
+        "ARCHIVED",
+        "UNKNOWN"
+      ]
+    },
+    "purpose": { "type": "string" },
+    "capabilities": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "integration_role": {
+      "type": "string",
+      "enum": [
+        "REFERENCE_ONLY",
+        "DEV_TOOL",
+        "RESEARCH_ENGINE",
+        "RUNTIME_EXECUTION_ADAPTER",
+        "PRODUCTION_AUTHORITY"
+      ]
+    },
+    "trust_tier": {
+      "type": "string",
+      "enum": ["T0", "T1", "T2", "T3", "T4"],
+      "description": "T0=reference, T1=dev tool, T2=research, T3=runtime adapter, T4=production authority (default forbidden)."
+    },
+    "allowed_surfaces": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "forbidden_surfaces": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "input_contract": { "type": "string" },
+    "output_contract": { "type": "string" },
+    "adapter": {
+      "type": "string",
+      "description": "Repo-relative path to adapter package or NOT_BUILT."
+    },
+    "tests": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "certification_status": {
+      "type": "string",
+      "enum": [
+        "NOT_STARTED",
+        "LAB_ONLY",
+        "BENCHMARKED",
+        "CERTIFIED",
+        "FAILED",
+        "DEFERRED",
+        "REJECTED"
+      ]
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["discovered_utc", "discovered_by", "sources"],
+      "properties": {
+        "discovered_utc": { "type": "string" },
+        "discovered_by": { "type": "string" },
+        "sources": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": true
+    },
+    "known_risks": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "decision": {
+      "type": "string",
+      "enum": [
+        "DISCOVERED",
+        "ASSESSED",
+        "APPROVED_FOR_LAB",
+        "BENCHMARKED",
+        "CERTIFIED",
+        "APPROVED_FOR_INTEGRATION",
+        "PROMOTED",
+        "REJECTED",
+        "DEFERRED",
+        "RESEARCH_ONLY",
+        "ADAPTER_ONLY",
+        "REFERENCE_ONLY"
+      ]
+    },
+    "decision_reason": { "type": "string" },
+    "lifecycle_status": {
+      "type": "string",
+      "enum": [
+        "DISCOVERED",
+        "ASSESSED",
+        "APPROVED_FOR_LAB",
+        "BENCHMARKED",
+        "CERTIFIED",
+        "APPROVED_FOR_INTEGRATION",
+        "PROMOTED",
+        "REJECTED",
+        "DEFERRED",
+        "RESEARCH_ONLY",
+        "ADAPTER_ONLY",
+        "REFERENCE_ONLY"
+      ]
+    },
+    "notes": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

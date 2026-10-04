@@ -53,6 +53,25 @@ import os
 
 import numpy as np
 
+from bitnet.model_contract import (
+    BITNET_V3_FEATURE_DIM,
+    CANONICAL_FEATURE_DIM,
+    CANONICAL_MODEL_SCHEMA_VERSION,
+    assert_canonical_dim,
+    normalize_loaded,
+)
+
+try:
+    from features.feature_schema import FEATURE_ORDER_HASH as _CANONICAL_FOH
+except Exception:  # pragma: no cover
+    _CANONICAL_FOH = ""
+
+try:
+    from src.utils.integrity_events import emit_integrity_event  # noqa: F401
+except Exception:  # pragma: no cover
+    def emit_integrity_event(*_a, **_kw):  # type: ignore[no-redef]
+        return None
+
 
 class BitNetModel:
     """
@@ -61,7 +80,10 @@ class BitNetModel:
     Parameters
     ----------
     model_path : str
-        Path to JSON model file. Schema is auto-detected.
+        Path to JSON model file. Schema is auto-detected via
+        ``bitnet.model_contract.normalize_loaded``. Canonical bitnet_v3 models
+        have their ``feature_order_hash`` verified against the runtime
+        ``CANONICAL_FEATURES`` ordering; mismatches raise RuntimeError.
     """
 
     def __init__(self, model_path: str = "model.json"):
@@ -72,25 +94,86 @@ class BitNetModel:
         with open(model_path, "r") as f:
             self.model = json.load(f)
 
-        # Auto-detect schema
-        self.is_v4 = self.model.get("schema") == "bitnet_export_v1"
-        # Also treat any model with 'layers' (and no legacy 'layer1_w') as export schema
-        self._export_schema = self.is_v4 or (
-            "layers" in self.model and "layer1_w" not in self.model
+        # Canonicalize via model_contract. Raises on ambiguous models (e.g.
+        # new-shape layers with no schema_version) and emits BITNET_LEGACY_LOAD
+        # for legacy formats. Never silently reinterprets dimensions.
+        meta = normalize_loaded(self.model)
+        self.schema_version: str    = meta["schema_version"]
+        self.feature_dim: int       = meta["feature_dim"]
+        self.feature_order_hash: str = meta["feature_order_hash"]
+        self.feature_names: list    = meta["feature_names"]
+
+        # Existing schema branching for the forward pass — preserved.
+        self.is_v4 = self.schema_version == "bitnet_export_v1"
+        is_canonical_v3 = self.schema_version == CANONICAL_MODEL_SCHEMA_VERSION
+        self._export_schema = (
+            self.is_v4
+            or is_canonical_v3
+            or ("layers" in self.model and "layer1_w" not in self.model)
         )
 
-        if self.is_v4:
-            self.input_dim = self.model["input_dim"]
-        elif self._export_schema:
-            first_layer = self.model["layers"][0]
-            # Prefer explicit "in" key; fall back to inferring from weights shape
-            if "in" in first_layer:
-                self.input_dim = first_layer["in"]
+        # input_dim equals the contract-derived feature_dim. Preserved as an
+        # attribute for backward compatibility with callers (BitNetRunner).
+        self.input_dim = self.feature_dim
+
+        # SCHEMA-V4 (2026-07-22): a canonical v3 envelope cannot be served under a different
+        # canonical dimension. Fails closed HERE — at model load — rather than at module import,
+        # which used to take the whole spine down (see model_contract.assert_canonical_dim).
+        if is_canonical_v3 and self.feature_dim == BITNET_V3_FEATURE_DIM:
+            assert_canonical_dim()
+
+        # Phase 6 — runtime feature_order_hash verification for canonical v3
+        # models that declare the full canonical dimension.
+        if (
+            is_canonical_v3
+            and self.feature_dim == CANONICAL_FEATURE_DIM
+            and _CANONICAL_FOH
+            and self.feature_order_hash
+            and self.feature_order_hash != _CANONICAL_FOH
+        ):
+            emit_integrity_event(
+                "BITNET_FEATURE_ORDER_HASH_MISMATCH",
+                "CRITICAL",
+                "bitnet.inference",
+                {
+                    "model_path":              model_path,
+                    "model_feature_order_hash": self.feature_order_hash,
+                    "runtime_feature_order_hash": _CANONICAL_FOH,
+                    "feature_dim":             self.feature_dim,
+                },
+            )
+            raise RuntimeError(
+                "BitNet feature_order_hash mismatch: model and runtime feature "
+                "orderings differ. Refusing to run inference on semantically "
+                "corrupted features. Re-export the model against the current "
+                "CANONICAL_FEATURES."
+            )
+
+        # Verify inferred layer shape matches declared feature_dim.
+        # For new-shape layers, the first layer's input dim must equal
+        # self.feature_dim (which came from model_contract).
+        if self._export_schema and "layers" in self.model and self.model["layers"]:
+            first = self.model["layers"][0]
+            if "in" in first:
+                layer_in = int(first["in"])
             else:
-                self.input_dim = len(first_layer["weights"][0])
-        else:
-            # Legacy model.json schema — input dim is fixed at 6
-            self.input_dim = 6
+                weights = first.get("weights") or []
+                layer_in = len(weights[0]) if weights and weights[0] else self.feature_dim
+            if layer_in != self.feature_dim:
+                emit_integrity_event(
+                    "BITNET_LAYER_DIM_MISMATCH",
+                    "CRITICAL",
+                    "bitnet.inference",
+                    {
+                        "model_path":         model_path,
+                        "declared_feature_dim": self.feature_dim,
+                        "first_layer_in":     layer_in,
+                    },
+                )
+                raise RuntimeError(
+                    f"BitNet feature dimension mismatch: declared feature_dim="
+                    f"{self.feature_dim} but first layer expects {layer_in}."
+                )
 
     # ------------------------------------------------------------------
     # PUBLIC API — 24-vector inference (export schema)
@@ -122,6 +205,17 @@ class BitNetModel:
 
         # ── Assertion 1: shape ────────────────────────────────────────
         if x.shape != (self.input_dim,):
+            emit_integrity_event(
+                "BITNET_DIM_MISMATCH",
+                "CRITICAL",
+                "bitnet.inference",
+                {
+                    "expected_shape":   [self.input_dim],
+                    "received_shape":   list(x.shape),
+                    "schema_version":   self.schema_version,
+                    "feature_order_hash": self.feature_order_hash,
+                },
+            )
             raise ValueError(
                 f"BitNetModel.predict: expected shape ({self.input_dim},), got {x.shape}"
             )
@@ -233,14 +327,13 @@ def bitnet_score(features: dict) -> float:
     Input:  CRT features dict (canonical keys only)
     Output: confidence score [0, 1]
 
+    CONTRACT-A façade (Spec v1.2.1):
+      ≡ BitNetComposition.predict(features).confidence
+      recipe: enc_legacy6 + bb_legacy_mlp + conf head + ad_crt_gate
+
     Uses hard key access — CRASH on missing (production behavior).
+    Applies CRT serve aliases (FM-027/028 → legacy keys) when present.
     """
-    x = [
-        features["body_ratio"],
-        features["retest_depth"],
-        features["disp_strength"],
-        features["atr"],
-        features["candles_since_retest"],
-        float(features["double_sweep"]),
-    ]
-    return _get_bitnet().forward(x)
+    from bitnet.composition import get_default_composition
+
+    return float(get_default_composition().predict(features).confidence)
