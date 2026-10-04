@@ -1,11 +1,11 @@
-# REP shard — producer: feature_pipeline (CANONICAL_FEATURES, schema 6.0, 48 slots).
+# REP shard — producer: feature_pipeline (CANONICAL_FEATURES, schema 9.0, 79 slots).
 # A representation never defines meaning; it points to a concept in concept_contracts.yaml (I-2).
 # Every slot appears exactly once: in `representations`, `raw_observations`, or the shrink-only
 # `unmapped` ratchet (a slot leaves `unmapped` only by gaining a representation).
 
 schema: representation_registry/v1
 producer_id: feature_pipeline
-schema_version: "6.0"
+schema_version: "9.0"
 
 representations:
 
@@ -93,11 +93,155 @@ representations:
     divergence_ref: "MKT-C07 name"
     absence: "0 also when an input is undefined (I-7)"
 
+  # Schema 7.0 (2026-10-08, CH-feature-semantic-fixes-v7, F-117): the presence the *_distance
+  # slots below in `unmapped` lack (I-7). Each flag is decided by the finder its distance measures to.
+  order_block_present:
+    slot: 48
+    concept_id: MKT-Z03
+    encoding: presence_flag {0,1} (1 while an ACTIVE order block exists in the trailing smc_max_window)
+    parameterization: {k: "feature_pipeline.swing_window"}
+    absence: "n/a — this slot IS the presence for order_block_distance"
+  fvg_present:
+    slot: 49
+    concept_id: MKT-Z02
+    encoding: presence_flag {0,1} (1 while an unfilled FVG exists in the trailing smc_max_window)
+    parameterization: {}
+    absence: "n/a — this slot IS the presence for fvg_distance"
+  breaker_present:
+    slot: 50
+    concept_id: MKT-Z04
+    encoding: presence_flag {0,1} (1 while an un-retested breaker exists in the trailing smc_max_window)
+    parameterization: {k: "feature_pipeline.swing_window"}
+    absence: "n/a — this slot IS the presence for breaker_distance"
+  mitigation_block_present:
+    slot: 51
+    concept_id: MKT-Z05
+    encoding: presence_flag {0,1} (1 while a live mitigation block exists in the trailing smc_max_window)
+    parameterization: {k: "feature_pipeline.swing_window"}
+    absence: "n/a — this slot IS the presence for mitigation_block_distance"
+  eqh_present:
+    slot: 52
+    concept_id: MKT-L01
+    encoding: presence_flag {0,1} (1 while an UPPER equal-highs cluster exists)
+    parameterization: {founding: equal_cluster, k: "feature_pipeline.swing_window", tolerance_atr: 0.1}
+    absence: "n/a — this slot IS the presence for eqh_distance"
+  eql_present:
+    slot: 53
+    concept_id: MKT-L01
+    encoding: presence_flag {0,1} (1 while a LOWER equal-lows cluster exists)
+    parameterization: {founding: equal_cluster, k: "feature_pipeline.swing_window", tolerance_atr: 0.1}
+    absence: "n/a — this slot IS the presence for eql_distance"
+
+  # schema v8.0 (CH-candle-pattern-observations-v8, F-118): candle anatomy + candle patterns, slots 54-70
+  upper_wick_ratio:
+    slot: 54
+    concept_id: GP-08
+    encoding: share_of_range float [0,1]
+    parameterization: {part: UPPER_WICK}
+    absence: "0 on a zero-range bar"
+  lower_wick_ratio:
+    slot: 55
+    concept_id: GP-08
+    encoding: share_of_range float [0,1]
+    parameterization: {part: LOWER_WICK}
+    absence: "0 on a zero-range bar"
+  pin_lower:
+    slot: 56
+    concept_id: GP-09
+    encoding: presence_flag {0,1} (lower-wick pin bar)
+    parameterization: {pattern: pin, side: LOWER, size_gate_atr_k: "feature_pipeline.candle_patterns.size_gate_atr_k"}
+    absence: "0 when the size gate fails"
+  pin_upper:
+    slot: 57
+    concept_id: GP-09
+    encoding: presence_flag {0,1} (upper-wick pin bar)
+    parameterization: {pattern: pin, side: UPPER, size_gate_atr_k: "feature_pipeline.candle_patterns.size_gate_atr_k"}
+    absence: "0 when the size gate fails"
+  hammer:
+    slot: 58
+    concept_id: GP-09
+    encoding: presence_flag {0,1} (hammer = lower probe)
+    parameterization: {pattern: probe, side: LOWER, size_gate_atr_k: "feature_pipeline.candle_patterns.size_gate_atr_k", swing_lookback: "feature_pipeline.candle_patterns.swing_lookback"}
+    absence: "0 before swing_lookback prior bars"
+  shooting_star:
+    slot: 59
+    concept_id: GP-09
+    encoding: presence_flag {0,1} (shooting star = upper probe)
+    parameterization: {pattern: probe, side: UPPER, size_gate_atr_k: "feature_pipeline.candle_patterns.size_gate_atr_k", swing_lookback: "feature_pipeline.candle_patterns.swing_lookback"}
+    absence: "0 before swing_lookback prior bars"
+  doji_material:
+    slot: 60
+    concept_id: GP-09
+    encoding: presence_flag {0,1} (balanced doji on a material bar)
+    parameterization: {pattern: doji_material, side: NONE, size_gate_atr_k: "feature_pipeline.candle_patterns.size_gate_atr_k"}
+    absence: "0 when the size gate fails"
+  dragonfly_doji:
+    slot: 61
+    concept_id: GP-09
+    encoding: presence_flag {0,1} (dragonfly doji)
+    parameterization: {pattern: doji_dragonfly, side: LOWER, size_gate_atr_k: "feature_pipeline.candle_patterns.size_gate_atr_k"}
+    absence: "0 when the size gate fails"
+  gravestone_doji:
+    slot: 62
+    concept_id: GP-09
+    encoding: presence_flag {0,1} (gravestone doji)
+    parameterization: {pattern: doji_gravestone, side: UPPER, size_gate_atr_k: "feature_pipeline.candle_patterns.size_gate_atr_k"}
+    absence: "0 when the size gate fails"
+  engulfing_bull:
+    slot: 63
+    concept_id: GP-09
+    encoding: presence_flag {0,1} (bullish engulfing)
+    parameterization: {pattern: engulfing, side: LOWER}
+    absence: "0 on the first bar or after a gap"
+  engulfing_bear:
+    slot: 64
+    concept_id: GP-09
+    encoding: presence_flag {0,1} (bearish engulfing)
+    parameterization: {pattern: engulfing, side: UPPER}
+    absence: "0 on the first bar or after a gap"
+  inside_bar:
+    slot: 65
+    concept_id: GP-09
+    encoding: presence_flag {0,1} (inside bar)
+    parameterization: {pattern: inside_bar, side: NONE}
+    absence: "0 on the first bar or after a gap"
+  compression_ratio:
+    slot: 66
+    concept_id: GP-11
+    encoding: ratio float [0,10]
+    parameterization: {quantity: range}
+    absence: "1.0 on the first bar, after a gap, or after a zero-range bar"
+  rejection_intensity_signed:
+    slot: 67
+    concept_id: GP-10
+    encoding: signed share float [-1,1]
+    parameterization: {form: signed, size_gate_atr_k: "feature_pipeline.candle_patterns.size_gate_atr_k"}
+    absence: "0 when the size gate fails"
+  rejection_intensity_lower:
+    slot: 68
+    concept_id: GP-10
+    encoding: share float [0,1]
+    parameterization: {form: lower_excess, size_gate_atr_k: "feature_pipeline.candle_patterns.size_gate_atr_k"}
+    absence: "0 when the size gate fails"
+  engulfing_strength:
+    slot: 69
+    concept_id: GP-11
+    encoding: ratio float [0,3]
+    parameterization: {quantity: engulfing_body}
+    absence: "0 when the bar is not engulfing"
+  rejection_intensity_upper:
+    slot: 70
+    concept_id: GP-10
+    encoding: share float [0,1]
+    parameterization: {form: upper_excess, size_gate_atr_k: "feature_pipeline.candle_patterns.size_gate_atr_k"}
+    absence: "0 when the size gate fails"
+
 # L0 raw observations — not concepts of the meaning plane (CANONICAL_LAYER_IDENTITY_CONTRACT L0).
 raw_observations: [open, high, low, close, volume]
 
-# Shrink-only ratchet: slots with no slice-1 concept. Never add to this list; remove a slot when it
-# gains a representation above.
+# Shrink-only against tests/governance/test_representation_registry.py. A schema append with no
+# slice-1 concept is added here and to that pin together. A key leaves this list only by gaining
+# a representation above.
 unmapped:
   volume_ratio: "participation measurement — no slice-1 concept"
   ema_fast: "indicator measurement — no slice-1 concept"
@@ -131,3 +275,11 @@ unmapped:
   pdl_distance: "distance to MKT-L01{prior_day,LOWER}; presence missing (I-7)"
   eqh_distance: "distance to MKT-L01{equal_cluster,UPPER}; presence missing (I-7)"
   eql_distance: "distance to MKT-L01{equal_cluster,LOWER}; presence missing (I-7)"
+  morning_star: "card candle-geometry flag (FM-120); no slice-1 concept yet"
+  higher_low: "swing-sequence state (FM-121); distinct from the higher_high pierce"
+  lower_high: "swing-sequence state (FM-122); distinct from the lower_low pierce"
+  sideways: "swing-sequence state (FM-123); 0 until both sides are known"
+  rejection_bull_present: "live bullish rejection block (FM-124); no slice-1 concept"
+  rejection_bear_present: "live bearish rejection block (FM-125); no slice-1 concept"
+  rejection_bull_distance: "distance to the live bullish rejection block (FM-126); 0 when absent"
+  rejection_bear_distance: "distance to the live bearish rejection block (FM-127); 0 when absent"

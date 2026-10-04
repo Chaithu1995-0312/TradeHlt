@@ -30,8 +30,9 @@ _ACCEPTABLE_FM_LIFECYCLES = frozenset(
 
 # CRT Phase-2 slice — FM ids wired into crt_engine_v2 call sites.
 # FM-070 added 2026-07-31 (candles_since_retest_state — FM-065 collision resolution, CH-002 pattern).
+# FM-096 added 2026-10-08 (signed retrace, selected over FM-027 by setup.retrace_semantics).
 PHASE2_CRT_FM_IDS: frozenset[str] = frozenset(
-    {"FM-002", "FM-010", "FM-027", "FM-028", "FM-070"}
+    {"FM-002", "FM-010", "FM-027", "FM-028", "FM-070", "FM-096"}
 )
 
 # Phase-3a: crt_feature_builder geometry (transcriber; 0 live callers historically).
@@ -265,6 +266,7 @@ def bind_phase2_crt_callables() -> dict[str, Callable[..., float]]:
     # Registry identity proofs (STOP if FORMULA_REGISTRY drifts off canonical modules)
     assert_registry_identity("FM-002", _cm.candle_range)
     assert_registry_identity("FM-027", _dm.displacement_retrace)
+    assert_registry_identity("FM-096", _dm.displacement_retrace_signed)
     assert_registry_identity("FM-028", _dm.displacement_atr_ratio)
     assert_registry_identity("FM-070", _dm.candles_since_retest_state)
 
@@ -275,6 +277,7 @@ def bind_phase2_crt_callables() -> dict[str, Callable[..., float]]:
         "FM-027": resolve_fm_callable("FM-027"),
         "FM-028": resolve_fm_callable("FM-028"),
         "FM-070": resolve_fm_callable("FM-070"),
+        "FM-096": resolve_fm_callable("FM-096"),
     }
     return out
 

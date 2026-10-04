@@ -31,11 +31,14 @@ def fmt_ts(ts: str) -> str:
 
 # --- load corpus OHLC by timestamp ---
 by_ts = {}
-with open(CSV, encoding="utf-8", errors="replace") as f:
-    rdr = csv.reader(f)
-    header = next(rdr)
-    for r in rdr:
-        by_ts[r[0]] = r  # [ts, open, high, low, close, volume]
+sys.path.insert(0, str(ROOT / "src"))
+from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+
+_corpus = _corpus_load(CSV, "XAUUSD")
+rdr = csv.reader(_corpus.text.splitlines())
+header = next(rdr)
+for r in rdr:
+    by_ts[r[0]] = r  # [ts, open, high, low, close, volume]
 
 # --- enrich ---
 story_rows = []

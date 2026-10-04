@@ -31,7 +31,19 @@ from features import candle_math as _cm  # single source of truth for candle geo
 # Phase-2 Option A: FM id → registry/composition binding (identity-preserving; no auto-run required_fm).
 # FM-027/028 CRT emission identities (CH-002 / F-050) resolve through FORMULA_REGISTRY here.
 from features.fm_resolve import bind_phase2_crt_callables
-_FM_CRT: dict = bind_phase2_crt_callables()  # FM-002/010/027/028 callables
+_FM_CRT: dict = bind_phase2_crt_callables()  # FM-002/010/027/028/070/096 callables
+
+# CH-feature-semantic-fixes-v7 (2026-10-08): `setup.retrace_semantics` -> the FM id that fills
+# cached_features["displacement_retrace"]. Strict: an unknown value raises (no fallback).
+RETRACE_SEMANTICS: dict = {"legacy_kept_fraction": "FM-027", "signed_retrace": "FM-096"}
+
+
+def retrace_fm_for(semantics: str) -> str:
+    if semantics not in RETRACE_SEMANTICS:
+        raise ValueError(
+            f"setup.retrace_semantics={semantics!r} must be one of {tuple(RETRACE_SEMANTICS)}"
+        )
+    return RETRACE_SEMANTICS[semantics]
 from config_layer.retest_geometry import (  # noqa: E402  [STORY-83.11a] shared with the resolver
     FAIL_DEPTH_ABOVE_CEILING,
     FAIL_DEPTH_BELOW_MIN,
@@ -1020,6 +1032,11 @@ class StateMachine:
         self.config = config
         self.telemetry = telemetry
         self.log = logging.getLogger("CRT.StateMachine")
+        # CH-feature-semantic-fixes-v7 (2026-10-08): which identity fills cached_features
+        # ["displacement_retrace"] at RETEST. Strict (no default): "legacy_kept_fraction" = FM-027,
+        # byte-identical to before; "signed_retrace" = FM-096. Resolved once (hot loop).
+        from config_layer.production_config import get_prod_section
+        self._retrace_fm = retrace_fm_for(get_prod_section("setup")["retrace_semantics"])
         # Optional CRT baseline trace hooks (default None — zero behavior change).
         self.trace_hooks = None
         # Phase-Topology: instance graph (WHO-loaded when provided; else module seed).
@@ -1893,7 +1910,7 @@ class StateMachine:
         state.retest_candle       = candle
         state.retest_candle_index = state.current_candle_index  # [PATCH 6]
         # Phase-2: FM-027/FM-028 via FORMULA_REGISTRY (identity-preserving).
-        _retrace = _FM_CRT["FM-027"](
+        _retrace = _FM_CRT[self._retrace_fm](
             retest_close=float(candle.close),
             disp_open=float(disp.open),
             disp_close=float(disp.close),

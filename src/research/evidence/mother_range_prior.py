@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
-from data_ingestion.dataset_integrity import validate_dataset
+from research.evidence.asymmetry_contract import contract_corpus, corpus_fingerprint_prefix
 from research.evidence.run_close_out import finalize_run
 from research.evidence.asymmetry_contract import (
     CORPUS,
@@ -129,8 +129,8 @@ def verdict(train_c: dict, hold_c: dict) -> str:
     return "DIAGNOSTIC_FAIL"
 
 
-def fingerprint(rows: list[dict]) -> dict[str, Any]:
-    h = hashlib.sha256()
+def fingerprint(rows: list[dict], corpus) -> dict[str, Any]:
+    h = hashlib.sha256(corpus_fingerprint_prefix(corpus) + f"{CONTRACT_ID}|".encode())
     for r in rows:
         c = r["y_mfe_r"]
         v = f"{r['instrument']}|{r['decision_ts']}|{r['side']}|" + (
@@ -141,9 +141,11 @@ def fingerprint(rows: list[dict]) -> dict[str, Any]:
         "contract_id": CONTRACT_ID,
         "n": len(rows),
         "sha256": h.hexdigest(),
+        "dataset_id": corpus.dataset_id,
+        "corpus_sha256": corpus.sha256,
         "population_hash_inputs": [
+            "dataset_id", "corpus_sha256", "contract_id",
             "instrument", "entry_ts", "side", "y_mfe_r",
-            "corpus_path", "corpus_sha256", "contract_id",
         ],
     }
 
@@ -196,13 +198,13 @@ def measure(cols: dict[str, list], bars: list[Any]) -> dict[str, Any]:
 
 def run(out_dir: Path | None = None) -> dict[str, Any]:
     out_dir = out_dir or OUT_DEFAULT
-    validate_dataset(str(CORPUS))
+    corpus = contract_corpus()   # CH-corpus-ssot: the SSOT corpus
     cols = _load_cols(SURFACES["clean_labels"], None)
-    bars = load_bars(CORPUS)
+    bars = load_bars(corpus)
     report = measure(cols, bars)
     rows = unit_rows(cols, bars)
     out_dir.mkdir(parents=True, exist_ok=True)
-    fp = fingerprint(rows)
+    fp = fingerprint(rows, corpus)
     (out_dir / "population_fingerprint.json").write_text(
         json.dumps(fp, indent=2), encoding="utf-8"
     )

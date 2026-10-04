@@ -1,0 +1,756 @@
+{
+  "economic_claims_allowed": false,
+  "source_m15": "D:\\Tradelatest\\data\\mt5\\XAUUSD_W2026-07-06-to-2026-08-07.csv",
+  "corpus": {
+    "path": "D:\\Tradelatest\\userinvestigation\\xauusd_h4_20260706_20260807.csv",
+    "builder": "research.resample.resample(candles, 'H4')",
+    "grid": "00:00/04:00/08:00/12:00/16:00/20:00 broker clock",
+    "m15_rows": 2300,
+    "m15_first": "2026-07-06 01:00:00",
+    "m15_last": "2026-08-07 23:45:00",
+    "h4_rows": 149,
+    "h4_first": "2026-07-06 00:00:00",
+    "h4_last": "2026-08-07 16:00:00",
+    "dropped_partial_buckets": [
+      {
+        "timestamp": "2026-08-07 20:00:00",
+        "child_count": 16
+      }
+    ],
+    "child_count_min": 12,
+    "child_count_max": 16,
+    "buckets_under_16_children": 25,
+    "trading_days_m15": 25,
+    "trading_days_h4": 25
+  },
+  "pipeline": {
+    "rows_before_finalize": 149,
+    "rows_after_finalize": 71,
+    "warmup_dropped": 78,
+    "atr_period": 14,
+    "atr_period_unit": "14 H4 bars",
+    "smc_max_window": 100
+  },
+  "second_low": {
+    "lookback_trading_days": 20,
+    "defined_on_emitted_h4": 29,
+    "first_defined_emitted": "2026-08-03 00:00:00",
+    "first_defined_value_emitted": 3969.34,
+    "defined_on_pipeline_rows": 29,
+    "first_defined_pipeline": "2026-08-03 00:00:00",
+    "first_defined_pipeline_row": {
+      "second_low_20d": 3969.34,
+      "low": 4055.73,
+      "close": 4057.15,
+      "open": 4076.53
+    }
+  },
+  "parity": {
+    "daily_low_mismatch_days": [],
+    "second_low_mismatch_days": []
+  },
+  "presence": {
+    "fvg_edge": 60,
+    "fvg_distance_zero": 11,
+    "pdh_price": 71,
+    "pdl_price": 71,
+    "crt_state": 71,
+    "liquidity_sweep_nonzero_defined": 4,
+    "state_on_defined": {
+      "RANGE": 3,
+      "SWEEP": 2,
+      "EXPANSION": 24
+    }
+  },
+  "both_sides_40": {
+    "walked": {
+      "long": 70,
+      "short": 70,
+      "empty_future": 1
+    },
+    "mean_rr_gross": {
+      "long": -0.08657905714285714,
+      "short": -0.06331234285714286
+    },
+    "defined_walked": {
+      "long": 28,
+      "short": 28
+    },
+    "defined_mean_rr_gross": {
+      "long": 0.42640950000000005,
+      "short": -0.488638
+    },
+    "exit_kinds": {
+      "long": {
+        "SL_HIT": 54,
+        "TP_HIT": 14,
+        "SL_HIT_defined": 16,
+        "TP_HIT_defined": 10,
+        "TIMEOUT": 2,
+        "TIMEOUT_defined": 2
+      },
+      "short": {
+        "SL_HIT": 57,
+        "TP_HIT": 12,
+        "SL_HIT_defined": 25,
+        "TP_HIT_defined": 2,
+        "TIMEOUT": 1,
+        "TIMEOUT_defined": 1
+      }
+    },
+    "object": "superseded every-bar both-sides walk, entry=close, horizon=40 H4 bars, tp1_mult=1.0",
+    "economic_claims_allowed": false
+  },
+  "touch": {
+    "rule": "low < second_low_20d, direction long, fills open and close, walk remaining H4 bars, stop still ends",
+    "pipeline_defined": 29,
+    "pipeline_touches": 0,
+    "pipeline_closest_low_minus_second_low": 49.73999999999978,
+    "emitted_defined": 29,
+    "emitted_touches": 0,
+    "emitted_closest_low_minus_second_low": 49.73999999999978,
+    "touch_timestamps": []
+  },
+  "sign": {
+    "swing_r": 0.25,
+    "open": null,
+    "close": null,
+    "stages": {
+      "open": {
+        "defined": 29,
+        "reached_negative": 14,
+        "then_positive": 4,
+        "then_negative_again": 0
+      },
+      "close": {
+        "defined": 29,
+        "reached_negative": 16,
+        "then_positive": 6,
+        "then_negative_again": 0
+      }
+    }
+  },
+  "aug3": [
+    {
+      "timestamp": "2026-08-03 00:00:00",
+      "open": 4076.53,
+      "high": 4084.24,
+      "low": 4055.73,
+      "close": 4057.15,
+      "atr": 0.009066357277333736,
+      "atr_abs": 36.78357142773457,
+      "second_low_20d": 3969.34,
+      "fvg_distance": 0.03858502581715584,
+      "fvg_edge": 4055.73,
+      "pdh_distance": 0.9022307991981506,
+      "pdh_price": 4111.74,
+      "pdl_distance": 0.7550841569900513,
+      "pdl_price": 4020.93,
+      "liquidity_sweep": 0.0,
+      "crt_state": "RANGE",
+      "schema": {
+        "open": 4076.53,
+        "high": 4084.24,
+        "low": 4055.73,
+        "close": 4057.15,
+        "volume": 78518.0,
+        "volume_ratio": 0.686710218310669,
+        "double_sweep": 0.0,
+        "ema_fast": 4058.60498046875,
+        "ema_slow": 4060.10009765625,
+        "ema_spread": -164.90826416015625,
+        "trend_bias": -1.0,
+        "trend_strength_z": -0.19077727183561066,
+        "momentum_score": 1489.0213623046875,
+        "atr": 0.009066357277333736,
+        "volatility_ratio": 0.775074303150177,
+        "rsi_14": 56.71352617466893,
+        "macd_line": -0.5422246851253476,
+        "macd_signal": 1.4087714673775875,
+        "macd_hist_raw": -1.9509961525029351,
+        "macd_hist_z": -0.369574485049483,
+        "sweep_detected": 0.0,
+        "liquidity_sweep": 0.0,
+        "break_of_structure": 0.0,
+        "swing_high": 0.0,
+        "swing_low": 1.0,
+        "higher_high": 0.0,
+        "lower_low": 0.0,
+        "body_size": 19.38000000000011,
+        "candle_range": 28.509999999999764,
+        "body_ratio": 0.6797614693641663,
+        "volatility_regime": 2.0,
+        "session": 0.0,
+        "hour_of_day": 0.0,
+        "disp_strength": 0.5268656611442566,
+        "retest_depth": 0.03955516964197159,
+        "candles_since_sweep": 2.0,
+        "liquidity_distance": 0.2539176940917969,
+        "liquidity_pressure_score": 0.8807699084281921,
+        "volume_spike": 0.0,
+        "order_block_distance": 0.0,
+        "fvg_distance": 0.03858502581715584,
+        "breaker_distance": 0.0,
+        "mitigation_block_distance": 0.0,
+        "pdh_distance": 0.9022307991981506,
+        "pdl_distance": 0.7550841569900513,
+        "eqh_distance": 0.9240725636482239,
+        "eql_distance": 0.7550841569900513,
+        "change_of_character": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-08-03 04:00:00",
+      "open": 4057.16,
+      "high": 4071.89,
+      "low": 4047.37,
+      "close": 4063.93,
+      "atr": 0.007912995293736458,
+      "atr_abs": 32.1578589640744,
+      "second_low_20d": 3969.34,
+      "fvg_distance": 0.6254331469535828,
+      "fvg_edge": 4087.53,
+      "pdh_distance": 0.9027209877967834,
+      "pdh_price": 4111.74,
+      "pdl_distance": 0.8709868788719177,
+      "pdl_price": 4020.93,
+      "liquidity_sweep": 0.0,
+      "crt_state": "RANGE",
+      "schema": {
+        "open": 4057.16,
+        "high": 4071.89,
+        "low": 4047.37,
+        "close": 4063.93,
+        "volume": 83214.0,
+        "volume_ratio": 0.7299832272462508,
+        "double_sweep": 0.0,
+        "ema_fast": 4059.670166015625,
+        "ema_slow": 4060.4482421875,
+        "ema_spread": -98.32890319824219,
+        "trend_bias": -1.0,
+        "trend_strength_z": -0.08942806715252787,
+        "momentum_score": 856.8184204101562,
+        "atr": 0.007912995293736458,
+        "volatility_ratio": 0.7624885439872742,
+        "rsi_14": 49.41554338304638,
+        "macd_line": -0.1574185812878568,
+        "macd_signal": 1.0955334576444986,
+        "macd_hist_raw": -1.2529520389323554,
+        "macd_hist_z": -0.23622171658812863,
+        "sweep_detected": 0.0,
+        "liquidity_sweep": 0.0,
+        "break_of_structure": 0.0,
+        "swing_high": 0.0,
+        "swing_low": 0.0,
+        "higher_high": 0.0,
+        "lower_low": 0.0,
+        "body_size": 6.769999999999982,
+        "candle_range": 24.519999999999982,
+        "body_ratio": 0.27610114216804504,
+        "volatility_regime": 1.0,
+        "session": 0.0,
+        "hour_of_day": 4.0,
+        "disp_strength": 0.21052396297454834,
+        "retest_depth": 0.13246634602546692,
+        "candles_since_sweep": 3.0,
+        "liquidity_distance": 0.5012771487236023,
+        "liquidity_pressure_score": 0.7783036231994629,
+        "volume_spike": 0.0,
+        "order_block_distance": 0.0,
+        "fvg_distance": 0.6254331469535828,
+        "breaker_distance": 0.0,
+        "mitigation_block_distance": 0.0,
+        "pdh_distance": 0.9027209877967834,
+        "pdl_distance": 0.8709868788719177,
+        "eqh_distance": 0.9271724820137024,
+        "eql_distance": 0.8709868788719177,
+        "change_of_character": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-08-03 08:00:00",
+      "open": 4063.93,
+      "high": 4072.1,
+      "low": 4052.13,
+      "close": 4059.51,
+      "atr": 0.0076124598272144794,
+      "atr_abs": 30.902856793175452,
+      "second_low_20d": 3969.34,
+      "fvg_distance": 0.7195504903793335,
+      "fvg_edge": 4087.53,
+      "pdh_distance": 0.9341644048690796,
+      "pdh_price": 4111.74,
+      "pdl_distance": 0.8478423357009888,
+      "pdl_price": 4020.93,
+      "liquidity_sweep": 0.0,
+      "crt_state": "SWEEP",
+      "schema": {
+        "open": 4063.93,
+        "high": 4072.1,
+        "low": 4052.13,
+        "close": 4059.51,
+        "volume": 77134.0,
+        "volume_ratio": 0.6721987506623163,
+        "double_sweep": 0.0,
+        "ema_fast": 4059.637939453125,
+        "ema_slow": 4060.363037109375,
+        "ema_spread": -95.25142669677734,
+        "trend_bias": -1.0,
+        "trend_strength_z": -0.048094639033208306,
+        "momentum_score": -580.6270141601562,
+        "atr": 0.0076124598272144794,
+        "volatility_ratio": 0.6462185978889465,
+        "rsi_14": 46.624528599071944,
+        "macd_line": -0.20673096624386744,
+        "macd_signal": 0.8350805728668254,
+        "macd_hist_raw": -1.0418115391106928,
+        "macd_hist_z": -0.17158432231358345,
+        "sweep_detected": 0.0,
+        "liquidity_sweep": 0.0,
+        "break_of_structure": 0.0,
+        "swing_high": 1.0,
+        "swing_low": 0.0,
+        "higher_high": 0.0,
+        "lower_low": 0.0,
+        "body_size": 4.419999999999618,
+        "candle_range": 19.9699999999998,
+        "body_ratio": 0.22133199870586395,
+        "volatility_regime": 1.0,
+        "session": 1.0,
+        "hour_of_day": 8.0,
+        "disp_strength": 0.1430288404226303,
+        "retest_depth": 0.004140052478760481,
+        "candles_since_sweep": 4.0,
+        "liquidity_distance": 0.37860578298568726,
+        "liquidity_pressure_score": 0.8275358080863953,
+        "volume_spike": 0.0,
+        "order_block_distance": 0.0,
+        "fvg_distance": 0.7195504903793335,
+        "breaker_distance": 0.0,
+        "mitigation_block_distance": 0.0,
+        "pdh_distance": 0.9341644048690796,
+        "pdl_distance": 0.8478423357009888,
+        "eqh_distance": 0.6641762852668762,
+        "eql_distance": 0.8478423357009888,
+        "change_of_character": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-08-03 12:00:00",
+      "open": 4059.51,
+      "high": 4064.62,
+      "low": 4042.29,
+      "close": 4047.69,
+      "atr": 0.007172521203756332,
+      "atr_abs": 29.03214235123247,
+      "second_low_20d": 3969.34,
+      "fvg_distance": 0.8792089819908142,
+      "fvg_edge": 4087.53,
+      "pdh_distance": 0.976037323474884,
+      "pdh_price": 4111.74,
+      "pdl_distance": 0.7267181277275085,
+      "pdl_price": 4020.93,
+      "liquidity_sweep": 0.0,
+      "crt_state": "SWEEP",
+      "schema": {
+        "open": 4059.51,
+        "high": 4064.62,
+        "low": 4042.29,
+        "close": 4047.69,
+        "volume": 76041.0,
+        "volume_ratio": 0.6709647020206766,
+        "double_sweep": 0.0,
+        "ema_fast": 4057.24853515625,
+        "ema_slow": 4059.2109375,
+        "ema_spread": -273.6000671386719,
+        "trend_bias": -1.0,
+        "trend_strength_z": -0.040622188987961313,
+        "momentum_score": -1647.9560546875,
+        "atr": 0.007172521203756332,
+        "volatility_ratio": 0.769147515296936,
+        "rsi_14": 50.46857930945463,
+        "macd_line": -1.1859161001411849,
+        "macd_signal": 0.4308812382652233,
+        "macd_hist_raw": -1.6167973384064083,
+        "macd_hist_z": -0.22561080112651624,
+        "sweep_detected": 0.0,
+        "liquidity_sweep": 0.0,
+        "break_of_structure": 0.0,
+        "swing_high": 0.0,
+        "swing_low": 0.0,
+        "higher_high": 0.0,
+        "lower_low": 0.0,
+        "body_size": 11.820000000000164,
+        "candle_range": 22.329999999999927,
+        "body_ratio": 0.5293327569961548,
+        "volatility_regime": 0.0,
+        "session": 3.0,
+        "hour_of_day": 12.0,
+        "disp_strength": 0.4071349501609802,
+        "retest_depth": 0.32923975586891174,
+        "candles_since_sweep": 5.0,
+        "liquidity_distance": 0.004133349750190973,
+        "liquidity_pressure_score": 0.9979354739189148,
+        "volume_spike": 0.0,
+        "order_block_distance": 0.0,
+        "fvg_distance": 0.8792089819908142,
+        "breaker_distance": 0.0,
+        "mitigation_block_distance": 0.0,
+        "pdh_distance": 0.976037323474884,
+        "pdl_distance": 0.7267181277275085,
+        "eqh_distance": 0.8507742285728455,
+        "eql_distance": 0.7267181277275085,
+        "change_of_character": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-08-03 16:00:00",
+      "open": 4047.7,
+      "high": 4053.68,
+      "low": 4019.08,
+      "close": 4036.99,
+      "atr": 0.0070174275897443295,
+      "atr_abs": 28.32928500552196,
+      "second_low_20d": 3969.34,
+      "fvg_distance": 0.9451258182525635,
+      "fvg_edge": 4087.53,
+      "pdh_distance": 0.989838719367981,
+      "pdh_price": 4111.74,
+      "pdl_distance": 0.5130823254585266,
+      "pdl_price": 4020.93,
+      "liquidity_sweep": -1.0,
+      "crt_state": "RANGE",
+      "schema": {
+        "open": 4047.7,
+        "high": 4053.68,
+        "low": 4019.08,
+        "close": 4036.99,
+        "volume": 138473.0,
+        "volume_ratio": 1.1848448898200268,
+        "double_sweep": 0.0,
+        "ema_fast": 4053.19677734375,
+        "ema_slow": 4057.19091796875,
+        "ema_spread": -569.1744995117188,
+        "trend_bias": -1.0,
+        "trend_strength_z": -0.05255574522467693,
+        "momentum_score": -1524.7752685546875,
+        "atr": 0.0070174275897443295,
+        "volatility_ratio": 1.2213510274887085,
+        "rsi_14": 42.78371831630537,
+        "macd_line": -2.7931304802582417,
+        "macd_signal": -0.21392110543946974,
+        "macd_hist_raw": -2.579209374818772,
+        "macd_hist_z": -0.3500119944956171,
+        "sweep_detected": 1.0,
+        "liquidity_sweep": -1.0,
+        "break_of_structure": 0.0,
+        "swing_high": 0.0,
+        "swing_low": 0.0,
+        "higher_high": 0.0,
+        "lower_low": 1.0,
+        "body_size": 10.710000000000036,
+        "candle_range": 34.59999999999991,
+        "body_ratio": 0.3095375597476959,
+        "volatility_regime": 0.0,
+        "session": 2.0,
+        "hour_of_day": 16.0,
+        "disp_strength": 0.37805402278900146,
+        "retest_depth": 0.5720856189727783,
+        "candles_since_sweep": 0.0,
+        "liquidity_distance": 0.3819369375705719,
+        "liquidity_pressure_score": 0.8261585831642151,
+        "volume_spike": 1.0,
+        "order_block_distance": 0.0,
+        "fvg_distance": 0.9451258182525635,
+        "breaker_distance": 0.0,
+        "mitigation_block_distance": 0.0,
+        "pdh_distance": 0.989838719367981,
+        "pdl_distance": 0.5130823254585266,
+        "eqh_distance": 0.9312715530395508,
+        "eql_distance": 0.5130823254585266,
+        "change_of_character": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-08-03 20:00:00",
+      "open": 4036.97,
+      "high": 4058.22,
+      "low": 4029.73,
+      "close": 4055.28,
+      "atr": 0.007021886296570301,
+      "atr_abs": 28.47571506075561,
+      "second_low_20d": 3969.34,
+      "fvg_distance": 0.8118881583213806,
+      "fvg_edge": 4087.53,
+      "pdh_distance": 0.9627878069877625,
+      "pdh_price": 4111.74,
+      "pdl_distance": 0.8355634808540344,
+      "pdl_price": 4020.93,
+      "liquidity_sweep": 0.0,
+      "crt_state": "EXPANSION",
+      "schema": {
+        "open": 4036.97,
+        "high": 4058.22,
+        "low": 4029.73,
+        "close": 4055.28,
+        "volume": 51142.0,
+        "volume_ratio": 0.4407940015057431,
+        "double_sweep": 0.0,
+        "ema_fast": 4053.613525390625,
+        "ema_slow": 4057.01708984375,
+        "ema_spread": -484.7080078125,
+        "trend_bias": -1.0,
+        "trend_strength_z": 0.020987295164291903,
+        "momentum_score": 2604.713134765625,
+        "atr": 0.007021886296570301,
+        "volatility_ratio": 1.0005016326904297,
+        "rsi_14": 46.1944444408516,
+        "macd_line": -2.5614821401190966,
+        "macd_signal": -0.6834333123753952,
+        "macd_hist_raw": -1.8780488277437013,
+        "macd_hist_z": -0.18996354762673306,
+        "sweep_detected": 0.0,
+        "liquidity_sweep": 0.0,
+        "break_of_structure": 0.0,
+        "swing_high": 0.0,
+        "swing_low": 0.0,
+        "higher_high": 0.0,
+        "lower_low": 0.0,
+        "body_size": 18.3100000000004,
+        "candle_range": 28.48999999999978,
+        "body_ratio": 0.6426816582679749,
+        "volatility_regime": 0.0,
+        "session": 2.0,
+        "hour_of_day": 20.0,
+        "disp_strength": 0.6430040597915649,
+        "retest_depth": 0.05852266028523445,
+        "candles_since_sweep": 1.0,
+        "liquidity_distance": 0.2623288035392761,
+        "liquidity_pressure_score": 0.8770735859870911,
+        "volume_spike": 0.0,
+        "order_block_distance": 0.0,
+        "fvg_distance": 0.8118881583213806,
+        "breaker_distance": 0.0,
+        "mitigation_block_distance": 0.0,
+        "pdh_distance": 0.9627878069877625,
+        "pdl_distance": 0.8355634808540344,
+        "eqh_distance": 0.7686446309089661,
+        "eql_distance": 0.8355634808540344,
+        "change_of_character": 0.0
+      }
+    }
+  ],
+  "bar_1600": {
+    "kernel": {
+      "open": {
+        "outcome": "TP1_BE_STOP",
+        "rr_gross": 0.75,
+        "exit_kind": "SL_HIT",
+        "duration_candles": 6,
+        "reached_tp1": true
+      },
+      "close": {
+        "outcome": "TP1_BE_STOP",
+        "rr_gross": 0.75,
+        "exit_kind": "SL_HIT",
+        "duration_candles": 3,
+        "reached_tp1": true
+      }
+    },
+    "ranges": {
+      "open_ranges": [
+        {
+          "timestamp": "2026-08-03 16:00:00",
+          "low_r": -0.31237369973441353,
+          "high_r": 0.0,
+          "marks": [
+            {
+              "at": "open",
+              "price": 4047.7,
+              "mark_r": 0.0
+            },
+            {
+              "at": "close",
+              "price": 4036.99,
+              "mark_r": -0.31237369973441353
+            }
+          ]
+        },
+        {
+          "timestamp": "2026-08-03 20:00:00",
+          "low_r": -0.31295703063961267,
+          "high_r": 0.22108241307067844,
+          "marks": [
+            {
+              "at": "open",
+              "price": 4036.97,
+              "mark_r": -0.31295703063961267
+            },
+            {
+              "at": "close",
+              "price": 4055.28,
+              "mark_r": 0.22108241307067844
+            }
+          ]
+        },
+        {
+          "timestamp": "2026-08-04 00:00:00",
+          "low_r": -0.08924962849554484,
+          "high_r": 0.04520814515297817,
+          "marks": [
+            {
+              "at": "open",
+              "price": 4044.64,
+              "mark_r": -0.08924962849554484
+            },
+            {
+              "at": "close",
+              "price": 4049.25,
+              "mark_r": 0.04520814515297817
+            }
+          ]
+        },
+        {
+          "timestamp": "2026-08-04 04:00:00",
+          "low_r": 0.04491647970037198,
+          "high_r": 0.4701647095909278,
+          "marks": [
+            {
+              "at": "open",
+              "price": 4049.24,
+              "mark_r": 0.04491647970037198
+            },
+            {
+              "at": "close",
+              "price": 4063.82,
+              "mark_r": 0.4701647095909278
+            }
+          ]
+        },
+        {
+          "timestamp": "2026-08-04 08:00:00",
+          "low_r": 0.21524910401867398,
+          "high_r": 0.47074804049612695,
+          "marks": [
+            {
+              "at": "open",
+              "price": 4063.84,
+              "mark_r": 0.47074804049612695
+            },
+            {
+              "at": "close",
+              "price": 4055.08,
+              "mark_r": 0.21524910401867398
+            }
+          ]
+        },
+        {
+          "timestamp": "2026-08-04 12:00:00",
+          "low_r": 0.21524910401867398,
+          "high_r": 0.6775388463893938,
+          "marks": [
+            {
+              "at": "open",
+              "price": 4055.08,
+              "mark_r": 0.21524910401867398
+            },
+            {
+              "at": "close",
+              "price": 4070.93,
+              "mark_r": 0.6775388463893938
+            }
+          ]
+        },
+        {
+          "timestamp": "2026-08-04 16:00:00",
+          "low_r": 0.5000000000000067,
+          "high_r": 0.6775388463893938,
+          "marks": [
+            {
+              "at": "open",
+              "price": 4070.93,
+              "mark_r": 0.6775388463893938
+            },
+            {
+              "at": "stop",
+              "price": 4064.8429285005523,
+              "mark_r": 0.5000000000000067
+            }
+          ]
+        }
+      ],
+      "close_ranges": [
+        {
+          "timestamp": "2026-08-03 20:00:00",
+          "low_r": -0.0008483254712244362,
+          "high_r": 0.7757936434354702,
+          "marks": [
+            {
+              "at": "open",
+              "price": 4036.97,
+              "mark_r": -0.0008483254712244362
+            },
+            {
+              "at": "close",
+              "price": 4055.28,
+              "mark_r": 0.7757936434354702
+            }
+          ]
+        },
+        {
+          "timestamp": "2026-08-04 00:00:00",
+          "low_r": 0.3244844927436458,
+          "high_r": 0.5200235138610616,
+          "marks": [
+            {
+              "at": "open",
+              "price": 4044.64,
+              "mark_r": 0.3244844927436458
+            },
+            {
+              "at": "close",
+              "price": 4049.25,
+              "mark_r": 0.5200235138610616
+            }
+          ]
+        },
+        {
+          "timestamp": "2026-08-04 04:00:00",
+          "low_r": 0.49999999999999034,
+          "high_r": 0.5195993511254398,
+          "marks": [
+            {
+              "at": "open",
+              "price": 4049.24,
+              "mark_r": 0.5195993511254398
+            },
+            {
+              "at": "stop",
+              "price": 4048.7779285005518,
+              "mark_r": 0.49999999999999034
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "pdh_check": {
+    "timestamp": "2026-08-03 00:00:00",
+    "close": 4057.15,
+    "pdh_price": 4111.74,
+    "atr_abs": 36.78357142773457,
+    "gap_price": 54.58999999999969,
+    "gap_atr": 1.4840864516717154,
+    "tanh": 0.9022307926224996,
+    "stored_pdh_distance": 0.9022307991981506
+  },
+  "atr_check": {
+    "timestamp": "2026-08-03 00:00:00",
+    "atr": 0.009066357277333736,
+    "close": 4057.15,
+    "product": 36.78357142773457,
+    "atr_abs": 36.78357142773457,
+    "abs_diff": 0.0
+  },
+  "pnl_check": null
+}

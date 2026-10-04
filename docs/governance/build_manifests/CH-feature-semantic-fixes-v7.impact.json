@@ -1,0 +1,30 @@
+{
+  "change_id": "CH-feature-semantic-fixes-v7",
+  "date_utc": "2026-10-08",
+  "objective": "Fix four verified feature semantic defects the user chose to fix (all four, with the larger option on two): (1) FM-027 displacement_retrace returns the share of the displacement KEPT and abs()-folds a close beyond the displacement open back into [0,1], contradicting its own declared semantics -> new FM-096 displacement_retrace_signed selected by a strict setup.retrace_semantics key; (2) sweep slots activated on their conforming arm (feature_pipeline.sweep_semantics = e01_lifecycle, F-112); (3) session/hour_of_day and the CRT session filter moved to true UTC (session_timestamp_basis = utc_corrected, F-066; user chose feature AND filter); (4) SMC *_distance slots emit 0.0 both on a zone edge and when no zone exists -> six presence flags appended to the canonical vector (schema 6.0 -> 7.0, 48 -> 54).",
+  "change_classes": ["FEATURE_IDENTITY_CHANGE", "DATASET_SCHEMA_CHANGE", "DERIVED_METRIC_CHANGE", "MODEL_INPUT_CHANGE", "RUNTIME_DECISION_PATH_CHANGE", "PRODUCTION_CONFIG_CHANGE"],
+  "change_class_rationale": "New governed identities FM-096..FM-102 (FEATURE_IDENTITY_CHANGE); canonical vector grows 48 -> 54 (DATASET_SCHEMA_CHANGE, MODEL_INPUT_CHANGE); a new derived metric FM-096 (DERIVED_METRIC_CHANGE); the CRT trade intent (TP1 multiplier) and session trading filter move (RUNTIME_DECISION_PATH_CHANGE); active config keys activated and a new strict setup key declared on 13 configs (PRODUCTION_CONFIG_CHANGE).",
+  "affected_files": [
+    "src/features/derived_math.py", "src/features/registry/derived_registry.py", "src/features/fm_resolve.py",
+    "src/config_layer/crt_engine_v2.py", "src/config_layer/crt_gaussian_scorer.py",
+    "src/features/feature_pipeline.py", "src/features/feature_schema.py",
+    "src/features/smc/order_block.py", "src/features/smc/fvg.py", "src/features/smc/breaker.py", "src/features/smc/mitigation.py", "src/features/smc/levels.py",
+    "src/features/crt_feature_builder.py", "src/runtime/live_engine_hook.py", "src/runtime/bar_structure_snapshot.py",
+    "src/research/model_runners/schema_resolver.py", "src/research/clean_labels/builder.py",
+    "src/identity/tokens.py", "scripts/analysis/feature_dag_layers.py",
+    "configs/formulas/market_ontology.yaml", "configs/production/*.json (13 configs carrying setup)",
+    "docs/governance/feature-layer-freeze-pin-2026-07-20.json", "docs/governance/schema_version_registry.json", "docs/governance/STORAGE_PRESERVATION_CONTRACT.md",
+    "docs/current-findings.md", "CLAUDE.md", "tests/test_feature_semantic_fixes_v7.py", "tests (48 -> 54 dimension pins)"
+  ],
+  "affected_feature_ids": ["FM-027", "FM-096", "FM-097", "FM-098", "FM-099", "FM-100", "FM-101", "FM-102", "FM-052", "FM-090", "FM-091", "FM-092", "FM-093"],
+  "affected_models": "zone registry aligns by name (38-dim feature_order, live_engine._validate_feature_order) -> unaffected; gaussian/rr/rr_fusion/bitnet/tradenet already stale since F-076 (trained on <=39 dims) -> recorded, not retrained.",
+  "affected_production_config": "configs/production/v2_htfcrt_2026_08.json (ACTIVE): setup.retrace_semantics=signed_retrace, feature_pipeline.sweep_semantics=e01_lifecycle, feature_pipeline.session_timestamp_basis=utc_corrected. All other 12 setup-bearing configs declare retrace_semantics=legacy_kept_fraction (byte-identical behaviour). setup and feature_pipeline are non-params sections: params hash unchanged.",
+  "ontology_nodes_added": ["FM-096 displacement_retrace_signed", "FM-097 order_block_present", "FM-098 fvg_present", "FM-099 breaker_present", "FM-100 mitigation_block_present", "FM-101 eqh_present", "FM-102 eql_present"],
+  "required_checks_ack": ["tests/test_formula_registry.py", "tests/test_feature_lineage.py", "tests/test_geometry_census.py", "tests/test_gate2b_closure.py", "tests/test_feature_pipeline.py", "tests/test_active_models_registry.py", "tests/test_derived_math.py", "tests/test_feature_math_lint.py", "tests/test_current_findings.py", "tests/test_config_reachability.py", "tests/test_reachability_golden.py"],
+  "required_checks_note": "Plus tests/test_feature_layer_freeze.py, tests/governance/test_schema_version_registry.py, tests/test_feature_dag_layers.py, tests/test_semantic_registry.py and the new tests/test_feature_semantic_fixes_v7.py; then the green floor compared against the baseline captured before any edit (8 pre-existing failures).",
+  "unknowns": [],
+  "rollback_boundary": "Config-reversible: setup.retrace_semantics=legacy_kept_fraction, sweep_semantics=latest_unconsumed, session_timestamp_basis=broker_local. NOT config-reversible: the schema 7.0 bump (ontology slots 48-53 + feature_schema + identity tokens + freeze pin revert together).",
+  "authority_granted": "User 2026-10-08: 'fix semantic bugs in features'; AskUserQuestion: scope = all four; session = feature AND filter; SMC presence = into the vector; plan approved via ExitPlanMode.",
+  "authority_NOT_granted": "No retrain, no model promotion, no ACTIVE_VERSION change, no G001/economic claim, no CRT re-certification, no revalidation of the findings whose inputs moved (named only).",
+  "production_behavior_changed": "YES (BEHAVIOR_CHANGE_AUTHORIZED): CRT trade intent and session trading filter move; feature vector grows and 7 old slots move. Measured, not assumed: see the completion manifest."
+}

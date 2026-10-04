@@ -50,7 +50,8 @@ class BarFeatureFrame:
         from data_ingestion.ohlcv_schema import require_ohlcv_columns
         from features.feature_pipeline import FeaturePipeline
 
-        raw_df = pd.read_csv(csv_path)
+        from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+        raw_df = _corpus_load(csv_path, sequence_check=False).frame()
         raw_df.columns = [c.strip().lower() for c in raw_df.columns]
         if "timestamp" not in raw_df.columns:
             if "date" in raw_df.columns and "time" in raw_df.columns:

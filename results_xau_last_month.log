@@ -1,0 +1,175 @@
+[35m[2026-09-30T17:12:36Z] [FLOW:DATA_INGESTION] [INFO] Dataset integrity APPROVE (with warnings) for D:\Tradelatest\data\mt5\XAUUSD_W2026-07-06-to-2026-08-07.csv: 24 intra-session gap(s); 0 missing candle(s) (0.00%), largest 12 candle(s) -- within thresholds, reported only[0m
+17:12:36 [BT] [corpus_gate] WARN D:\Tradelatest\data\mt5\XAUUSD_W2026-07-06-to-2026-08-07.csv (XAUUSD): 24 intra-session gap(s); 0 missing candle(s) (0.00%), largest 12 candle(s) -- within thresholds, reported only
+2026-09-30 17:12:36 [WARNING] CRT.Backtest | [corpus_gate] WARN D:\Tradelatest\data\mt5\XAUUSD_W2026-07-06-to-2026-08-07.csv (XAUUSD): 24 intra-session gap(s); 0 missing candle(s) (0.00%), largest 12 candle(s) -- within thresholds, reported only
+17:12:36 [BT] [dataset_integrity] WARN D:\Tradelatest\data\mt5\XAUUSD_W2026-07-06-to-2026-08-07.csv (XAUUSD): 24 intra-session gap(s); 0 missing candle(s) (0.00%), largest 12 candle(s) -- within thresholds, reported only
+2026-09-30 17:12:36 [WARNING] CRT.Backtest | [dataset_integrity] WARN D:\Tradelatest\data\mt5\XAUUSD_W2026-07-06-to-2026-08-07.csv (XAUUSD): 24 intra-session gap(s); 0 missing candle(s) (0.00%), largest 12 candle(s) -- within thresholds, reported only
+2026-09-30 17:12:37 [INFO] CRT.CandleLoader | R3 admitted data\mt5\XAUUSD_W2026-07-06-to-2026-08-07.csv -> D:\Tradelatest\data\mt5\XAUUSD_W2026-07-06-to-2026-08-07.csv (dataset_id=XAUUSD_MT5_TVWINDOW_20260706_20260807; NOT AUTHORITATIVE / NOT APPROVED)
+[35m[2026-09-30T17:12:38Z] [FLOW:DATA_INGESTION] [INFO] Dataset integrity APPROVE (with warnings) for D:\Tradelatest\data\mt5\XAUUSD_W2026-07-06-to-2026-08-07.csv: 24 intra-session gap(s); 0 missing candle(s) (0.00%), largest 12 candle(s) -- within thresholds, reported only[0m
+17:12:38 [BT] [corpus_gate] WARN D:\Tradelatest\data\mt5\XAUUSD_W2026-07-06-to-2026-08-07.csv (XAUUSD): 24 intra-session gap(s); 0 missing candle(s) (0.00%), largest 12 candle(s) -- within thresholds, reported only
+2026-09-30 17:12:38 [WARNING] CRT.Backtest | [corpus_gate] WARN D:\Tradelatest\data\mt5\XAUUSD_W2026-07-06-to-2026-08-07.csv (XAUUSD): 24 intra-session gap(s); 0 missing candle(s) (0.00%), largest 12 candle(s) -- within thresholds, reported only
+17:12:38 [BT] [htf_clock] G1 OK: htf_candles_per_range=16 matches parent_crt.timeframe=H4 at 15-minute bars.
+2026-09-30 17:12:38 [INFO] CRT.Backtest | [htf_clock] G1 OK: htf_candles_per_range=16 matches parent_crt.timeframe=H4 at 15-minute bars.
+[94m[2026-09-30T17:12:39Z] [FLOW:FEATURE_PIPELINE] [WARNING] feature_pipeline.normalization_basis='atr_relative': binding FM-022 ema_spread / FM-023 momentum_score, both marked SUPERSEDED in the feature certification ledger (superseded by FM-030/FM-031). Measured decision-surface cost on XAUUSD: |ema_spread|>0.15 on 99.99 pct of bars, |tanh(momentum_score)|>0.999 on 99.81 pct of bars (C2, extends F-061). This is the ACTIVE default and no config was changed by this warning -- see market_ontology.yaml FM-022/FM-023 for the correction path.[0m
+[94m[2026-09-30T17:12:39Z] [FLOW:FEATURE_PIPELINE] [WARNING] feature_pipeline.session_timestamp_basis='broker_local': `session`/`hour_of_day` (FM-052) AND the crt_engine session-gating FILTER are both derived from the raw timestamp AS-IS. On MT5-sourced corpora (data/mt5/*.csv) that raw timestamp is broker-server time (EET/EEST, NY-DST-tracking), not UTC, though session_windows_utc's name and docstring claim UTC. F-066: measured 53.36 pct of XAUUSD bars carry the wrong session label under this basis (two independent cross-instrument tests confirm the offset). This is the ACTIVE default and no config was changed by this warning -- see docs/research/preregistration-blind-label-descriptive-fidelity.md and features/broker_clock.py for the correction path ('utc_corrected', which as of 2026-08-05 also gates CRTEngine's session filter, not just the FM-052 feature).[0m
+2026-09-30 17:13:23 [INFO] FeaturePipeline | finalize | rows_before=2300 rows_after=2222 drop=78 drop_pct=3.39%
+[94m[2026-09-30T17:13:23Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth retest_depth | zero_rate=44.82% nan_rate=0.00% min=0 max=0.999438 mean=0.2403[0m
+[94m[2026-09-30T17:13:23Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth disp_strength | zero_rate=0.09% nan_rate=0.00% min=0 max=3 mean=0.503551[0m
+[94m[2026-09-30T17:13:23Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth trend_bias | zero_rate=0.00% nan_rate=0.00% min=-1 max=1 mean=-0.0162016[0m
+[94m[2026-09-30T17:13:23Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth momentum_score | zero_rate=0.00% nan_rate=0.00% min=-22505.2 max=22882.6 mean=16.7285[0m
+[94m[2026-09-30T17:13:23Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth ema_spread | zero_rate=0.00% nan_rate=0.00% min=-7015.02 max=9662.99 mean=138.153[0m
+[94m[2026-09-30T17:13:23Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth atr | zero_rate=0.00% nan_rate=0.00% min=0.00076026 max=0.00550398 mean=0.00193061[0m
+[94m[2026-09-30T17:13:23Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth liquidity_distance | zero_rate=0.05% nan_rate=0.00% min=0 max=6.13561 mean=0.834269[0m
+[94m[2026-09-30T17:13:23Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth volume_spike | zero_rate=73.99% nan_rate=0.00% min=0 max=1 mean=0.260126[0m
+[94m[2026-09-30T17:13:28Z] [FLOW:FEATURE_PIPELINE] [WARNING] FeatureMonitor: 77/2222 rows flagged as drift in this batch (Z > 2.5 on retest_depth/body_ratio/disp_strength).[0m
+17:13:28 [BT] FeaturePipeline built: 2222 rows | first 3 ts keys: ['2026-07-06 20:30:00', '2026-07-06 20:45:00', '2026-07-06 21:00:00']
+2026-09-30 17:13:28 [INFO] CRT.Backtest | FeaturePipeline built: 2222 rows | first 3 ts keys: ['2026-07-06 20:30:00', '2026-07-06 20:45:00', '2026-07-06 21:00:00']
+2026-09-30 17:13:28 [WARNING] ModelRegistry | NoOpScorer active (no active gaussian registered) — gaussian gating disabled.
+[36m[2026-09-30T17:13:28Z] [FLOW:STRATEGY_ENGINE] [INFO] Production config version: v2_htfcrt_2026_08[0m
+17:13:28 [BT] StrategyOrchestrator initialised for XAUUSD
+2026-09-30 17:13:28 [INFO] CRT.Backtest | StrategyOrchestrator initialised for XAUUSD
+17:13:28 [BT] Production config version: v2_htfcrt_2026_08
+2026-09-30 17:13:28 [INFO] CRT.Backtest | Production config version: v2_htfcrt_2026_08
+2026-09-30 17:13:28 [INFO] utils.config_dumper | Full config dumped to: logs\config_dumps\XAUUSD_run_20260930_114328_config.json
+17:13:28 [BT] Full config dumped to: logs\config_dumps\XAUUSD_run_20260930_114328_config.json
+2026-09-30 17:13:28 [INFO] CRT.Backtest | Full config dumped to: logs\config_dumps\XAUUSD_run_20260930_114328_config.json
+2026-09-30 17:13:29 [INFO] StateContractLoader | State contracts loaded: states=12 schema=1.0 path=D:\Tradelatest\active_models.yaml
+17:13:29 [BT] ParentCRT feed wired | timeframe=H4 | gate=reject_on_mismatch
+2026-09-30 17:13:29 [INFO] CRT.Backtest | ParentCRT feed wired | timeframe=H4 | gate=reject_on_mismatch
+17:13:30 [BT] LayerTrace ENABLED (observation only) | run_id=lt_20260930_114329_XAUUSD | -> results\layer_trace\XAUUSD_layer_trace.jsonl
+2026-09-30 17:13:30 [INFO] CRT.Backtest | LayerTrace ENABLED (observation only) | run_id=lt_20260930_114329_XAUUSD | -> results\layer_trace\XAUUSD_layer_trace.jsonl
+[92m[2026-09-30T17:13:30Z] [FLOW:ENGINE_RUNNER] [INFO] EngineRunner: using HeuristicGaussianEngine (config: gaussian_impl=heuristic)[0m
+[92m[2026-09-30T17:13:30Z] [FLOW:ENGINE_RUNNER] [INFO] Production config version: v2_htfcrt_2026_08[0m
+2026-09-30 17:13:31 [INFO] LiveEngine | BitNetZoneGate: loaded 8 zones from D:\Tradelatest\models\zone_registry_v4_2026_07.json
+17:13:32 [BT] EngineRunner gate wired into backtest path (BACKTEST_ENGINE_GATE=1)
+2026-09-30 17:13:32 [INFO] CRT.Backtest | EngineRunner gate wired into backtest path (BACKTEST_ENGINE_GATE=1)
+17:13:32 [BT] Backtest v2 | XAUUSD | 2,300 candles | capital=100,000 | slip=ON | gap_reset=ON
+2026-09-30 17:13:32 [INFO] CRT.Backtest | Backtest v2 | XAUUSD | 2,300 candles | capital=100,000 | slip=ON | gap_reset=ON
+2026-09-30 17:13:32 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=EXPANSION obj=NONE ts=2026-07-06 04:00:00
+2026-09-30 17:13:32 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> DISTRIBUTION_C3 bias=SHORT htf=EXPANSION obj=ACHIEVED ts=2026-07-06 08:00:00
+2026-09-30 17:13:32 [INFO] CRT.ParentFeed | parent_crt H4 DISTRIBUTION_C3 -> RANGE_C1 bias=NONE htf=EXPANSION obj=NONE ts=2026-07-06 12:00:00
+2026-09-30 17:13:32 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=ACCUMULATION obj=NONE ts=2026-07-06 16:00:00
+17:13:32 [BT]   Engine init @ candle 78 | HTF=XAUUSD-HTF-000004
+2026-09-30 17:13:32 [INFO] CRT.Backtest |   Engine init @ candle 78 | HTF=XAUUSD-HTF-000004
+2026-09-30 17:13:32 [INFO] utils.sweep_trace_logger | Sweep trace opened: logs\execution\runs\20260930_171234\sweep_trace.jsonl
+2026-09-30 17:13:32 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> DISTRIBUTION_C3 bias=LONG htf=EXPANSION obj=ACHIEVED ts=2026-07-06 20:00:00
+2026-09-30 17:13:32 [INFO] CRT.ParentFeed | parent_crt H4 DISTRIBUTION_C3 -> RANGE_C1 bias=NONE htf=REVERSAL obj=NONE ts=2026-07-07 00:00:00
+2026-09-30 17:13:32 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=ACCUMULATION obj=NONE ts=2026-07-07 08:00:00
+2026-09-30 17:13:32 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> DISTRIBUTION_C3 bias=LONG htf=REVERSAL obj=ACHIEVED ts=2026-07-07 12:00:00
+2026-09-30 17:13:32 [INFO] CRT.ParentFeed | parent_crt H4 DISTRIBUTION_C3 -> RANGE_C1 bias=NONE htf=ACCUMULATION obj=NONE ts=2026-07-07 16:00:00
+2026-09-30 17:13:32 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=DISTRIBUTION obj=NONE ts=2026-07-08 04:00:00
+2026-09-30 17:13:32 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> DISTRIBUTION_C3 bias=SHORT htf=REVERSAL obj=ACHIEVED ts=2026-07-08 08:00:00
+2026-09-30 17:13:32 [INFO] CRT.ParentFeed | parent_crt H4 DISTRIBUTION_C3 -> RANGE_C1 bias=NONE htf=ACCUMULATION obj=NONE ts=2026-07-08 12:00:00
+2026-09-30 17:13:32 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=DISTRIBUTION obj=NONE ts=2026-07-08 16:00:00
+2026-09-30 17:13:32 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> DISTRIBUTION_C3 bias=LONG htf=ACCUMULATION obj=EXISTS ts=2026-07-08 20:00:00
+2026-09-30 17:13:32 [INFO] CRT.ParentFeed | parent_crt H4 DISTRIBUTION_C3 -> RANGE_C1 bias=NONE htf=ACCUMULATION obj=NONE ts=2026-07-09 00:00:00
+2026-09-30 17:13:33 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=ACCUMULATION obj=NONE ts=2026-07-09 12:00:00
+2026-09-30 17:13:33 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> RANGE_C1 bias=NONE htf=REVERSAL obj=NONE ts=2026-07-09 16:00:00
+2026-09-30 17:13:33 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=ACCUMULATION obj=NONE ts=2026-07-10 00:00:00
+2026-09-30 17:13:33 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> RANGE_C1 bias=NONE htf=DISTRIBUTION obj=NONE ts=2026-07-10 04:00:00
+2026-09-30 17:13:33 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=ACCUMULATION obj=NONE ts=2026-07-10 12:00:00
+2026-09-30 17:13:33 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> DISTRIBUTION_C3 bias=LONG htf=DISTRIBUTION obj=EXISTS ts=2026-07-10 16:00:00
+2026-09-30 17:13:33 [INFO] CRT.ParentFeed | parent_crt H4 DISTRIBUTION_C3 -> RANGE_C1 bias=NONE htf=EXPANSION obj=NONE ts=2026-07-10 20:00:00
+2026-09-30 17:13:33 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2026-07-13 01:00 → 2026-07-13 01:00)
+2026-09-30 17:13:33 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=ACCUMULATION obj=NONE ts=2026-07-13 08:00:00
+2026-09-30 17:13:33 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> RANGE_C1 bias=NONE htf=ACCUMULATION obj=NONE ts=2026-07-13 12:00:00
+2026-09-30 17:13:33 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=DISTRIBUTION obj=NONE ts=2026-07-14 00:00:00
+2026-09-30 17:13:33 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> RANGE_C1 bias=NONE htf=REVERSAL obj=NONE ts=2026-07-14 04:00:00
+2026-09-30 17:13:33 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=ACCUMULATION obj=NONE ts=2026-07-14 08:00:00
+2026-09-30 17:13:33 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> RANGE_C1 bias=NONE htf=REVERSAL obj=NONE ts=2026-07-14 12:00:00
+2026-09-30 17:13:34 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=REVERSAL obj=NONE ts=2026-07-15 04:00:00
+2026-09-30 17:13:34 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> DISTRIBUTION_C3 bias=SHORT htf=ACCUMULATION obj=ACHIEVED ts=2026-07-15 08:00:00
+2026-09-30 17:13:34 [INFO] CRT.ParentFeed | parent_crt H4 DISTRIBUTION_C3 -> RANGE_C1 bias=NONE htf=REVERSAL obj=NONE ts=2026-07-15 12:00:00
+2026-09-30 17:13:34 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=DISTRIBUTION obj=NONE ts=2026-07-15 16:00:00
+2026-09-30 17:13:34 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> RANGE_C1 bias=NONE htf=DISTRIBUTION obj=NONE ts=2026-07-15 20:00:00
+2026-09-30 17:13:34 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=ACCUMULATION obj=NONE ts=2026-07-16 08:00:00
+2026-09-30 17:13:34 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> RANGE_C1 bias=NONE htf=REVERSAL obj=NONE ts=2026-07-16 12:00:00
+2026-09-30 17:13:34 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=ACCUMULATION obj=NONE ts=2026-07-16 16:00:00
+2026-09-30 17:13:34 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> RANGE_C1 bias=NONE htf=ACCUMULATION obj=NONE ts=2026-07-16 20:00:00
+2026-09-30 17:13:34 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=DISTRIBUTION obj=NONE ts=2026-07-17 04:00:00
+2026-09-30 17:13:34 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> RANGE_C1 bias=NONE htf=ACCUMULATION obj=NONE ts=2026-07-17 08:00:00
+2026-09-30 17:13:34 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=REVERSAL obj=NONE ts=2026-07-17 16:00:00
+2026-09-30 17:13:34 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> DISTRIBUTION_C3 bias=LONG htf=ACCUMULATION obj=ACHIEVED ts=2026-07-17 20:00:00
+2026-09-30 17:13:34 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2026-07-20 01:00 → 2026-07-20 01:00)
+2026-09-30 17:13:34 [INFO] CRT.ParentFeed | parent_crt H4 DISTRIBUTION_C3 -> RANGE_C1 bias=NONE htf=DISTRIBUTION obj=NONE ts=2026-07-20 00:00:00
+2026-09-30 17:13:34 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=ACCUMULATION obj=NONE ts=2026-07-20 08:00:00
+2026-09-30 17:13:34 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> DISTRIBUTION_C3 bias=SHORT htf=DISTRIBUTION obj=EXISTS ts=2026-07-20 12:00:00
+2026-09-30 17:13:34 [INFO] CRT.ParentFeed | parent_crt H4 DISTRIBUTION_C3 -> RANGE_C1 bias=NONE htf=ACCUMULATION obj=NONE ts=2026-07-20 16:00:00
+2026-09-30 17:13:35 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=REVERSAL obj=NONE ts=2026-07-21 00:00:00
+2026-09-30 17:13:35 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> DISTRIBUTION_C3 bias=LONG htf=EXPANSION obj=ACHIEVED ts=2026-07-21 04:00:00
+2026-09-30 17:13:35 [INFO] CRT.ParentFeed | parent_crt H4 DISTRIBUTION_C3 -> RANGE_C1 bias=NONE htf=EXPANSION obj=NONE ts=2026-07-21 08:00:00
+2026-09-30 17:13:35 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=REVERSAL obj=NONE ts=2026-07-21 16:00:00
+2026-09-30 17:13:35 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> DISTRIBUTION_C3 bias=LONG htf=ACCUMULATION obj=ACHIEVED ts=2026-07-21 20:00:00
+2026-09-30 17:13:35 [INFO] CRT.ParentFeed | parent_crt H4 DISTRIBUTION_C3 -> RANGE_C1 bias=NONE htf=EXPANSION obj=NONE ts=2026-07-22 00:00:00
+2026-09-30 17:13:35 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=DISTRIBUTION obj=NONE ts=2026-07-22 12:00:00
+2026-09-30 17:13:35 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> DISTRIBUTION_C3 bias=LONG htf=REVERSAL obj=ACHIEVED ts=2026-07-22 16:00:00
+2026-09-30 17:13:35 [INFO] CRT.ParentFeed | parent_crt H4 DISTRIBUTION_C3 -> RANGE_C1 bias=NONE htf=ACCUMULATION obj=NONE ts=2026-07-22 20:00:00
+2026-09-30 17:13:35 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=DISTRIBUTION obj=NONE ts=2026-07-23 00:00:00
+2026-09-30 17:13:35 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> RANGE_C1 bias=NONE htf=DISTRIBUTION obj=NONE ts=2026-07-23 04:00:00
+2026-09-30 17:13:35 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=REVERSAL obj=NONE ts=2026-07-24 08:00:00
+2026-09-30 17:13:35 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> RANGE_C1 bias=NONE htf=ACCUMULATION obj=NONE ts=2026-07-24 12:00:00
+2026-09-30 17:13:35 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=REVERSAL obj=NONE ts=2026-07-24 16:00:00
+2026-09-30 17:13:35 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> RANGE_C1 bias=NONE htf=ACCUMULATION obj=NONE ts=2026-07-24 20:00:00
+2026-09-30 17:13:35 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2026-07-27 01:00 → 2026-07-27 01:00)
+2026-09-30 17:13:35 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=ACCUMULATION obj=NONE ts=2026-07-27 08:00:00
+2026-09-30 17:13:35 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> RANGE_C1 bias=NONE htf=REVERSAL obj=NONE ts=2026-07-27 12:00:00
+2026-09-30 17:13:36 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=DISTRIBUTION obj=NONE ts=2026-07-27 16:00:00
+2026-09-30 17:13:36 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> RANGE_C1 bias=NONE htf=ACCUMULATION obj=NONE ts=2026-07-27 20:00:00
+2026-09-30 17:13:36 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=DISTRIBUTION obj=NONE ts=2026-07-28 08:00:00
+2026-09-30 17:13:36 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> RANGE_C1 bias=NONE htf=REVERSAL obj=NONE ts=2026-07-28 12:00:00
+2026-09-30 17:13:36 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=DISTRIBUTION obj=NONE ts=2026-07-28 16:00:00
+2026-09-30 17:13:36 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> DISTRIBUTION_C3 bias=SHORT htf=ACCUMULATION obj=EXISTS ts=2026-07-28 20:00:00
+2026-09-30 17:13:36 [INFO] CRT.ParentFeed | parent_crt H4 DISTRIBUTION_C3 -> RANGE_C1 bias=NONE htf=ACCUMULATION obj=NONE ts=2026-07-29 00:00:00
+2026-09-30 17:13:36 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=DISTRIBUTION obj=NONE ts=2026-07-29 04:00:00
+2026-09-30 17:13:36 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> RANGE_C1 bias=NONE htf=ACCUMULATION obj=NONE ts=2026-07-29 08:00:00
+2026-09-30 17:13:36 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=DISTRIBUTION obj=NONE ts=2026-07-29 16:00:00
+2026-09-30 17:13:36 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> DISTRIBUTION_C3 bias=LONG htf=EXPANSION obj=ACHIEVED ts=2026-07-29 20:00:00
+2026-09-30 17:13:36 [INFO] CRT.ParentFeed | parent_crt H4 DISTRIBUTION_C3 -> RANGE_C1 bias=NONE htf=ACCUMULATION obj=NONE ts=2026-07-30 00:00:00
+2026-09-30 17:13:36 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=ACCUMULATION obj=NONE ts=2026-07-30 08:00:00
+2026-09-30 17:13:37 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> DISTRIBUTION_C3 bias=LONG htf=ACCUMULATION obj=EXISTS ts=2026-07-30 12:00:00
+2026-09-30 17:13:37 [INFO] CRT.ParentFeed | parent_crt H4 DISTRIBUTION_C3 -> RANGE_C1 bias=NONE htf=EXPANSION obj=NONE ts=2026-07-30 16:00:00
+2026-09-30 17:13:37 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=DISTRIBUTION obj=NONE ts=2026-07-31 16:00:00
+2026-09-30 17:13:37 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> DISTRIBUTION_C3 bias=LONG htf=ACCUMULATION obj=EXISTS ts=2026-07-31 20:00:00
+2026-09-30 17:13:37 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2026-08-03 01:00 → 2026-08-03 01:00)
+2026-09-30 17:13:37 [INFO] CRT.ParentFeed | parent_crt H4 DISTRIBUTION_C3 -> RANGE_C1 bias=NONE htf=EXPANSION obj=NONE ts=2026-08-03 00:00:00
+2026-09-30 17:13:37 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=ACCUMULATION obj=NONE ts=2026-08-03 04:00:00
+2026-09-30 17:13:37 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> RANGE_C1 bias=NONE htf=ACCUMULATION obj=NONE ts=2026-08-03 08:00:00
+2026-09-30 17:13:37 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=ACCUMULATION obj=NONE ts=2026-08-04 00:00:00
+2026-09-30 17:13:37 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> RANGE_C1 bias=NONE htf=ACCUMULATION obj=NONE ts=2026-08-04 04:00:00
+2026-09-30 17:13:37 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=ACCUMULATION obj=NONE ts=2026-08-04 08:00:00
+2026-09-30 17:13:37 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> RANGE_C1 bias=NONE htf=DISTRIBUTION obj=NONE ts=2026-08-04 12:00:00
+2026-09-30 17:13:37 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=ACCUMULATION obj=NONE ts=2026-08-04 20:00:00
+2026-09-30 17:13:37 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> RANGE_C1 bias=NONE htf=ACCUMULATION obj=NONE ts=2026-08-05 00:00:00
+2026-09-30 17:13:37 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=ACCUMULATION obj=NONE ts=2026-08-05 20:00:00
+2026-09-30 17:13:37 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> RANGE_C1 bias=NONE htf=EXPANSION obj=NONE ts=2026-08-06 00:00:00
+2026-09-30 17:13:37 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=ACCUMULATION obj=NONE ts=2026-08-06 04:00:00
+2026-09-30 17:13:37 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> RANGE_C1 bias=NONE htf=ACCUMULATION obj=NONE ts=2026-08-06 08:00:00
+2026-09-30 17:13:37 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=DISTRIBUTION obj=NONE ts=2026-08-06 12:00:00
+2026-09-30 17:13:38 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> DISTRIBUTION_C3 bias=SHORT htf=EXPANSION obj=ACHIEVED ts=2026-08-06 16:00:00
+2026-09-30 17:13:38 [INFO] CRT.ParentFeed | parent_crt H4 DISTRIBUTION_C3 -> RANGE_C1 bias=NONE htf=ACCUMULATION obj=NONE ts=2026-08-06 20:00:00
+2026-09-30 17:13:38 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=EXPANSION obj=NONE ts=2026-08-07 00:00:00
+2026-09-30 17:13:38 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> RANGE_C1 bias=NONE htf=REVERSAL obj=NONE ts=2026-08-07 04:00:00
+17:13:38 [BT] LayerTrace | rows=4447 | run_id=lt_20260930_114329_XAUUSD | results\layer_trace\XAUUSD_layer_trace.jsonl
+2026-09-30 17:13:38 [INFO] CRT.Backtest | LayerTrace | rows=4447 | run_id=lt_20260930_114329_XAUUSD | results\layer_trace\XAUUSD_layer_trace.jsonl
+17:13:38 [BT] Telemetry: results\xau_last_month_2026-09-30\run_20260930_114329_XAUUSD__20260706..20260807_v2_htfcrt_2026_08_7de09f62\XAUUSD_crt_telemetry.jsonl (193 records)
+2026-09-30 17:13:38 [INFO] CRT.Backtest | Telemetry: results\xau_last_month_2026-09-30\run_20260930_114329_XAUUSD__20260706..20260807_v2_htfcrt_2026_08_7de09f62\XAUUSD_crt_telemetry.jsonl (193 records)
+17:13:38 [BT] ───────────────────────────────────────────────────────
+2026-09-30 17:13:38 [INFO] CRT.Backtest | ───────────────────────────────────────────────────────
+17:13:38 [BT]   XAUUSD | 0 trades | WR=0.0% | AvgRR=0.00R | PnL(net)=+0.00R | MaxDD=0.0%
+2026-09-30 17:13:38 [INFO] CRT.Backtest |   XAUUSD | 0 trades | WR=0.0% | AvgRR=0.00R | PnL(net)=+0.00R | MaxDD=0.0%
+17:13:38 [BT] ───────────────────────────────────────────────────────
+2026-09-30 17:13:38 [INFO] CRT.Backtest | ───────────────────────────────────────────────────────
+17:13:38 [BT] Output:
+2026-09-30 17:13:38 [INFO] CRT.Backtest | Output:
+17:13:38 [BT]   identity        → results\xau_last_month_2026-09-30\run_20260930_114329_XAUUSD__20260706..20260807_v2_htfcrt_2026_08_7de09f62\run_identity.json
+2026-09-30 17:13:38 [INFO] CRT.Backtest |   identity        → results\xau_last_month_2026-09-30\run_20260930_114329_XAUUSD__20260706..20260807_v2_htfcrt_2026_08_7de09f62\run_identity.json
+17:13:38 [BT]   summary         → results\xau_last_month_2026-09-30\run_20260930_114329_XAUUSD__20260706..20260807_v2_htfcrt_2026_08_7de09f62\XAUUSD_summary.json
+2026-09-30 17:13:38 [INFO] CRT.Backtest |   summary         → results\xau_last_month_2026-09-30\run_20260930_114329_XAUUSD__20260706..20260807_v2_htfcrt_2026_08_7de09f62\XAUUSD_summary.json
+17:13:38 [BT]   events          → results\xau_last_month_2026-09-30\run_20260930_114329_XAUUSD__20260706..20260807_v2_htfcrt_2026_08_7de09f62\XAUUSD_events.jsonl
+2026-09-30 17:13:38 [INFO] CRT.Backtest |   events          → results\xau_last_month_2026-09-30\run_20260930_114329_XAUUSD__20260706..20260807_v2_htfcrt_2026_08_7de09f62\XAUUSD_events.jsonl
+17:13:38 [BT]   report          → results\xau_last_month_2026-09-30\run_20260930_114329_XAUUSD__20260706..20260807_v2_htfcrt_2026_08_7de09f62\XAUUSD_report.txt
+2026-09-30 17:13:38 [INFO] CRT.Backtest |   report          → results\xau_last_month_2026-09-30\run_20260930_114329_XAUUSD__20260706..20260807_v2_htfcrt_2026_08_7de09f62\XAUUSD_report.txt
+17:13:38 [BT]   manifest        → results\xau_last_month_2026-09-30\run_20260930_114329_XAUUSD__20260706..20260807_v2_htfcrt_2026_08_7de09f62\run_manifest.json
+2026-09-30 17:13:38 [INFO] CRT.Backtest |   manifest        → results\xau_last_month_2026-09-30\run_20260930_114329_XAUUSD__20260706..20260807_v2_htfcrt_2026_08_7de09f62\run_manifest.json
+2026-09-30 17:14:39 [INFO] TrainingTrigger | TrainingTrigger gates: cooldown=True samples_ok=True (count=1588096, delta=328609) drift_ok=False (events=0) → trigger=False
+[CRT DEBUG] disp_open=4054.46000 disp_close=4038.81000 retest=4058.50000 r=0.258
+[CRT DEBUG] disp_open=4053.23000 disp_close=4065.98000 retest=4052.57000 r=0.052

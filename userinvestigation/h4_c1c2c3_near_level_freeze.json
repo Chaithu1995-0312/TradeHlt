@@ -1,0 +1,13 @@
+{
+  "frozen_at": "2026-10-06T22:42:45",
+  "rule_file": "userinvestigation/h4_c1c2c3_near_level_frozen.py",
+  "rule_sha256": "bf8f9ec41e54c024a2e0fdea781ddb62f746abd5cc1383f645492e44d7a1419d",
+  "object": "UNVALIDATED proxy (drift log Record 8): calendar H4 C1/C2/C3, entry C2 close, stop C2 extreme, target C1 far side, C2 extreme within 0.5 x prior H4 ATR14 of PDH/PDL/WO",
+  "in_sample": "data/mt5/XAUUSD_M15.csv 2024-05-22..2026-05-21: near_any n=303 gross +0.1489R net +0.0962R (parity reproduced by the frozen file)",
+  "out_of_sample": "XAUUSD M15 from MT5, C2 start >= 2026-05-22 00:00 broker time, through the last closed bar at fetch time; run ONCE",
+  "warmup": "MT5 bars from 2026-04-20 for C1, PDH/PDL, ATR; trades before eval_start not scored",
+  "primary": "mean gross R of near_any trades (closed) in the eval window",
+  "verdict_rules": "n<30 INSUFFICIENT; gross<=0 FAIL; gross>0 and net>0 and random-draw share>=real <=0.10 PASS; else INCONCLUSIVE",
+  "power_note": "expected n ~55 (303 x 4.5/24 months); a +0.15R effect will not reach 95% significance at that n",
+  "economic_claims_allowed": false
+}

@@ -61,6 +61,7 @@ import pandas as pd
 import numpy as np
 
 from features.feature_schema import CANONICAL_FEATURES
+from features import candle_patterns as _cp
 from features.schema_validator import validate_features, validate_feature_values, validate_vector
 from features.feature_monitor import FeatureMonitor
 from data_ingestion.ohlcv_schema import require_ohlcv_columns, validate_ohlcv_frame
@@ -152,6 +153,10 @@ _FP_CFG_KEYS = (
     # for the OB/FVG/breaker/mitigation scanners (a performance/scope bound, not a registered
     # identity parameter — smaller values simply forget older, likely-stale zones sooner).
     "smc_max_window",
+    # Candle-pattern observations (CH-candle-pattern-observations-v8, schema v8.0): one nested
+    # block holding every threshold of FM-103..FM-119 (features.candle_patterns); each inner key
+    # is strict-read by CandlePatternParams.from_cfg.
+    "candle_patterns",
 )
 
 # Legal values for `feature_pipeline.normalization_basis`. Anything else is a config-authoring
@@ -860,6 +865,19 @@ class FeaturePipeline:
                 "bit-for-bit identical — column reference bug detected."
             )
 
+        # FM-121..123: swing-sequence states. Not the pierce columns above. Raw last-swing
+        # prices (NaN until the first confirmation) are the inputs; do not fill them first.
+        from features.structure_sequence import swing_sequence_states
+        _hl, _lh, _side = swing_sequence_states(
+            df["swing_high"].to_numpy(),
+            df["swing_low"].to_numpy(),
+            df["last_swing_high_price"].to_numpy(),
+            df["last_swing_low_price"].to_numpy(),
+        )
+        df["higher_low"] = _hl
+        df["lower_high"] = _lh
+        df["sideways"] = _side
+
         df["break_of_structure"] = np.where(
             df["close"] > ref_high,  1,
             np.where(df["close"] < ref_low, -1, 0)
@@ -980,6 +998,26 @@ class FeaturePipeline:
             (df["high"] - df["low"]) / (df["atr"] * df["close"]),
             1.0
         ).astype(np.float32)
+
+    def compute_candle_patterns(self) -> None:
+        """Schema v8.0 slots 54-70 plus morning_star at slot 71 (FM-103..FM-120).
+
+        All math lives in `features.candle_patterns` (the registered authority); this stage only
+        supplies its inputs: OHLC, the canonical price-unit ATR (FM-074 `atr_14_raw`, never the
+        close-relative `atr`), and the bar-contiguity mask from `timestamp` (two-bar patterns are
+        not formed across session/weekend gaps). Thresholds: `feature_pipeline.candle_patterns`.
+        """
+        df = self.df
+        params = _cp.CandlePatternParams.from_cfg(self._fp_cfg["candle_patterns"])
+        contiguous = _cp.contiguous_mask(pd.to_datetime(df["timestamp"]).to_numpy())
+        cols = _cp.compute_all(
+            df["open"].to_numpy(), df["high"].to_numpy(), df["low"].to_numpy(),
+            df["close"].to_numpy(), df["atr_14_raw"].to_numpy(), contiguous, params,
+        )
+        for name in _cp.PATTERN_COLUMNS:
+            df[name] = cols[name]
+        # FM-120 is computed with the pattern block and is not a member of PATTERN_COLUMNS.
+        df["morning_star"] = cols["morning_star"]
 
     def compute_canonical_ema_features(self) -> None:
         """Compute ema_fast, ema_slow, ema_spread, momentum_score.
@@ -1290,12 +1328,18 @@ class FeaturePipeline:
         """
         from config_layer.crt_engine_v2 import Candle
         from features.parent_candle import ParentCandleBuilder
-        from features.smc.breaker import breaker_distance
+        from features.smc.breaker import breaker_distance, breaker_present
         from features.smc.choch import change_of_character
-        from features.smc.fvg import fvg_distance
-        from features.smc.levels import eqh_eql_distance, pdh_pdl_distance
-        from features.smc.mitigation import mitigation_block_distance
-        from features.smc.order_block import order_block_distance
+        from features.smc.fvg import fvg_distance, fvg_present
+        from features.smc.levels import eqh_eql_distance, eqh_eql_present, pdh_pdl_distance
+        from features.smc.mitigation import mitigation_block_distance, mitigation_block_present
+        from features.smc.order_block import (
+            _find_break_events, order_block_distance, order_block_present,
+        )
+        from features.smc.rejection import (
+            rejection_bear_distance, rejection_bear_present,
+            rejection_bull_distance, rejection_bull_present,
+        )
 
         df = self.df
         n = len(df)
@@ -1320,6 +1364,21 @@ class FeaturePipeline:
         pdl_d = np.zeros(n, dtype=np.float32)
         eqh_d = np.zeros(n, dtype=np.float32)
         eql_d = np.zeros(n, dtype=np.float32)
+        # Schema v7.0 (CH-feature-semantic-fixes-v7): the *_distance slots emit 0.0 both at a zone
+        # edge and when NO zone exists; these flags say which (1 = an active zone/cluster exists).
+        # Decided by the SAME finder the distance measures to, so present==0 => distance==0.
+        ob_p = np.zeros(n, dtype=np.float32)
+        fvg_p = np.zeros(n, dtype=np.float32)
+        brk_p = np.zeros(n, dtype=np.float32)
+        mit_p = np.zeros(n, dtype=np.float32)
+        eqh_p = np.zeros(n, dtype=np.float32)
+        eql_p = np.zeros(n, dtype=np.float32)
+        # Schema v9.0 rejection block (FM-124..127). Zeros, not NaN: finalize() drops a
+        # canonical column that is NaN, and a missing block is a real zero.
+        rej_bull_p = np.zeros(n, dtype=np.float32)
+        rej_bear_p = np.zeros(n, dtype=np.float32)
+        rej_bull_d = np.zeros(n, dtype=np.float32)
+        rej_bear_d = np.zeros(n, dtype=np.float32)
 
         window: list = []
         d1_builder = ParentCandleBuilder("D1", keep=2)
@@ -1337,17 +1396,32 @@ class FeaturePipeline:
 
             atr_i = float(atr_abs[i]) if not np.isnan(atr_abs[i]) else 0.0
 
-            ob_d[i] = order_block_distance(window, k, atr_i)
+            # One break-event scan per bar shared by OB / breaker / mitigation (pure, so passing it
+            # back is identical to recomputing it -- pinned by tests/test_smc_break_event_memo.py).
+            ev = _find_break_events(window, k)
+            ob_d[i] = order_block_distance(window, k, atr_i, ev)
             fvg_d[i] = fvg_distance(window, atr_i)
-            brk_d[i] = breaker_distance(window, k, atr_i)
-            mit_d[i] = mitigation_block_distance(window, k, atr_i)
+            brk_d[i] = breaker_distance(window, k, atr_i, ev)
+            mit_d[i] = mitigation_block_distance(window, k, atr_i, ev)
+            ob_p[i] = order_block_present(window, k, ev)
+            fvg_p[i] = fvg_present(window)
+            brk_p[i] = breaker_present(window, k, ev)
+            mit_p[i] = mitigation_block_present(window, k, ev)
             pdh, pdl = pdh_pdl_distance(float(closes[i]), d1_builder.parent_history, atr_i)
             pdh_d[i] = pdh
             pdl_d[i] = pdl
             eqh, eql = eqh_eql_distance(window, k, atr_i)
             eqh_d[i] = eqh
             eql_d[i] = eql
+            eqh_p[i], eql_p[i] = eqh_eql_present(window, k, atr_i)
+            rej_bull_p[i] = rejection_bull_present(window, k)
+            rej_bear_p[i] = rejection_bear_present(window, k)
+            rej_bull_d[i] = rejection_bull_distance(window, k, atr_i)
+            rej_bear_d[i] = rejection_bear_distance(window, k, atr_i)
 
+        # One defragmenting copy (values unchanged): by here the frame has had >100 single-column
+        # inserts, and pandas warns on every further one (the 15 SMC columns below).
+        df = df.copy()
         df["order_block_distance"] = ob_d
         df["fvg_distance"] = fvg_d
         df["breaker_distance"] = brk_d
@@ -1356,6 +1430,16 @@ class FeaturePipeline:
         df["pdl_distance"] = pdl_d
         df["eqh_distance"] = eqh_d
         df["eql_distance"] = eql_d
+        df["order_block_present"] = ob_p
+        df["fvg_present"] = fvg_p
+        df["breaker_present"] = brk_p
+        df["mitigation_block_present"] = mit_p
+        df["eqh_present"] = eqh_p
+        df["eql_present"] = eql_p
+        df["rejection_bull_present"] = rej_bull_p
+        df["rejection_bear_present"] = rej_bear_p
+        df["rejection_bull_distance"] = rej_bull_d
+        df["rejection_bear_distance"] = rej_bear_d
 
         # change_of_character: vectorized, pure algebra over already-computed columns.
         df["change_of_character"] = [
@@ -1499,7 +1583,7 @@ class FeaturePipeline:
         -------
         df : pd.DataFrame
             Enriched, NaN-free DataFrame with all len(CANONICAL_FEATURES) canonical features
-            (48 under schema v6.0; dim fixed at v5.0, F-076).
+            (79 under schema v9.0).
         vectors : np.ndarray, shape (N, len(CANONICAL_FEATURES)), dtype float32
             Feature matrix in canonical CANONICAL_FEATURES order.
         """
@@ -1524,6 +1608,7 @@ class FeaturePipeline:
         self.promote_volume_spike()           # v3.0: index 37 (adaptive percentile)
         self.compute_canonical_session()
         self.compute_smc_features()           # v5.0: indices 39-47 (9 SMC primitives)
+        self.compute_candle_patterns()        # v8.0 slots 54-70; v9.0 morning_star at 71
 
         # Finalize and build vectors
         df = self.finalize()

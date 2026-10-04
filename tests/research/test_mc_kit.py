@@ -22,6 +22,12 @@ from typing import Any
 import pytest
 
 from research import mc_kit
+from data_ingestion.corpus_store import load as _corpus_load
+
+
+def _ssot(p):
+    """Identity-level SSOT corpus for a fixture CSV (fixtures are not admissible corpora)."""
+    return _corpus_load(p, sequence_check=False)
 from research.mc_kit import bars as kit_bars
 from research.mc_kit import stats as kit_stats
 from research.mc_kit import trade as kit_trade
@@ -194,14 +200,14 @@ def test_parse_ts_matches_original_for_t_and_space_separators() -> None:
 
 def test_load_bars_required_matches_original(csv_with_volume: Path) -> None:
     expected = _orig_load_bars_required(csv_with_volume)
-    actual = kit_bars.load_bars(csv_with_volume, _Bar, volume="required")
+    actual = kit_bars.load_bars(_ssot(csv_with_volume), _Bar, volume="required")
     assert actual == expected
     assert actual[0].index == 0 and actual[1].index == 1
 
 
 def test_load_bars_zero_default_matches_original(csv_with_volume: Path) -> None:
     expected = _orig_load_bars_zero_default(csv_with_volume)
-    actual = kit_bars.load_bars(csv_with_volume, _Bar, volume="zero_default")
+    actual = kit_bars.load_bars(_ssot(csv_with_volume), _Bar, volume="zero_default")
     assert actual == expected
 
 
@@ -209,12 +215,12 @@ def test_load_bars_required_raises_on_missing_volume(csv_missing_volume: Path) -
     with pytest.raises(ValueError):
         _orig_load_bars_required(csv_missing_volume)
     with pytest.raises(ValueError):
-        kit_bars.load_bars(csv_missing_volume, _Bar, volume="required")
+        kit_bars.load_bars(_ssot(csv_missing_volume), _Bar, volume="required")
 
 
 def test_load_bars_zero_default_defaults_missing_volume(csv_missing_volume: Path) -> None:
     expected = _orig_load_bars_zero_default(csv_missing_volume)
-    actual = kit_bars.load_bars(csv_missing_volume, _Bar, volume="zero_default")
+    actual = kit_bars.load_bars(_ssot(csv_missing_volume), _Bar, volume="zero_default")
     assert actual == expected == [_Bar(timestamp=datetime(2026, 1, 1), open=10.0, high=11.0,
                                         low=9.0, close=10.5, volume=0.0, index=0)]
 

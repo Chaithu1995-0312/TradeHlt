@@ -332,6 +332,23 @@ OVERLAYS: list[dict[str, Any]] = [
         ),
     },
     {
+        "path": "scripts/analysis/set2_consumer_scale_probe.py",
+        "category": "DIAGNOSTIC",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "LOGIC_IN_SCRIPT",
+        "ttl_days": 90,
+        "purpose": (
+            "OBSERVATION_ONLY probe (F-061/F-064/F-109, Set-2 consumer-scale program): runs a XAUUSD "
+            "M15 window through FeaturePipeline under both normalization_basis values and reports "
+            "regime / breakout / vol-score / kernel distributions; changes no config or code."
+        ),
+        "task_refs": ["F-061", "F-064", "F-109", "SITS"],
+        "notes": (
+            "wontfix:reason=before/after measurement instrument for the 2026-10-07 basis activation; "
+            "no extract until a second consumer needs it"
+        ),
+    },
+    {
         "path": "scripts/research/crt_range_rebuild_probe.py",
         "category": "DIAGNOSTIC",
         "lifecycle": "ACTIVE",

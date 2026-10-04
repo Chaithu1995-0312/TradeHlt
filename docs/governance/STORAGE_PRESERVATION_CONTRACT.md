@@ -203,6 +203,12 @@ slot:   + (fm_id, vector_index)
 
 > **CORRECTED 2026-09-18** (append-only per §6.2 rule 4, table row above left byte-identical — this contract is CLOSED / FROZEN v1.0.0, user-accepted 2026-08-23): FEATURE_CANONICAL's currently active family is `6.0` (F-107, names-only rename, `feature_dim` unchanged at 48); `5.0`/`4.0`/`3.0`/`2.0` are now archive. Tracking: `docs/governance/schema_version_registry.json` + `docs/governance/SCHEMA_EVOLUTION_CONTRACT.md`.
 
+> **CORRECTED 2026-10-08** (append-only per §6.2 rule 4, same contract status as above): FEATURE_CANONICAL's currently active family is `7.0` (CH-feature-semantic-fixes-v7: +6 SMC presence flags at slots 48-53, `feature_dim` 48 -> 54, slots 0-47 unchanged by position); `6.0`/`5.0`/`4.0`/`3.0`/`2.0` are now archive. Tracking: `docs/governance/schema_version_registry.json` + `docs/governance/SCHEMA_EVOLUTION_CONTRACT.md`.
+
+> **CORRECTED 2026-10-08 (v8)** (append-only per §6.2 rule 4, same contract status as above): FEATURE_CANONICAL's currently active family is `8.0` (CH-candle-pattern-observations-v8: +17 candle-pattern observations at slots 54-70, `feature_dim` 54 -> 71, slots 0-53 unchanged by position); `7.0`/`6.0`/`5.0`/`4.0`/`3.0`/`2.0` are now archive. Tracking: `docs/governance/schema_version_registry.json` + `docs/governance/SCHEMA_EVOLUTION_CONTRACT.md`.
+>
+> **CORRECTED 2026-10-08 (v9)** (append-only per §6.2 rule 4, same contract status as above): FEATURE_CANONICAL's currently active family is `9.0` (CH-card-identity-census-v9: +8 card identities at slots 71-78, `feature_dim` 71 -> 79, slots 0-70 unchanged by position); `8.0`/`7.0`/`6.0`/`5.0`/`4.0`/`3.0`/`2.0` are now archive. Tracking: `docs/governance/schema_version_registry.json` + `docs/governance/SCHEMA_EVOLUTION_CONTRACT.md`.
+
 **Must enforce**
 
 - `FEATURE_ORDER_HASH` validated on load against the stored name order, not against HEAD `CANONICAL_FEATURES`.

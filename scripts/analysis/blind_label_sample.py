@@ -50,7 +50,8 @@ from research.provenance import sha256_file as _sha256  # noqa: E402 — researc
 
 
 def _load_frame(csv_path: Path) -> tuple[pd.DataFrame, str, str]:
-    raw = pd.read_csv(csv_path)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    raw = _corpus_load(csv_path).frame()
     csv_sha = _sha256(csv_path)
 
     from config_layer.production_config import get_active_version, get_prod_section

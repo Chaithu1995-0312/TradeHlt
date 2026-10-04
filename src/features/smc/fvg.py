@@ -57,6 +57,12 @@ def find_active_fvg(window: "Sequence[Candle]") -> Optional[Zone]:
     return None
 
 
+def fvg_present(window: "Sequence[Candle]") -> float:
+    """FM-098 (schema v7.0): 1.0 if an unfilled FVG exists as of `window[-1]`, else 0.0
+    (fvg_distance reports "none" and "on the edge" identically as 0.0)."""
+    return 1.0 if find_active_fvg(window) is not None else 0.0
+
+
 def fvg_distance(window: "Sequence[Candle]", atr: float) -> float:
     """Signed, ATR-normalized, tanh-bounded distance from `window[-1].close` to the nearest
     active (unfilled) FVG's near edge. `0.0` if none exists."""

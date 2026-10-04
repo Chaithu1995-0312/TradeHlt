@@ -248,8 +248,18 @@ EXPECTED_ENGINES: set[str] = {"crt", "gaussian", "zone_gate", "rr"}
 
 ## 4. Feature Schema
 
-### 4.1 Canonical 48-dim vector — `src/features/feature_schema.py`
+### 4.1 Canonical 79-dim vector — `src/features/feature_schema.py`
 
+> **Schema v9.0 = 79 features** (2026-10-08, CH-card-identity-census-v9: 8 card identities
+> appended at 71-78 — `morning_star`, `higher_low`, `lower_high`, `sideways`, and the four
+> rejection-block present/distance slots. `wait_for_next_candle` (FM-128) and
+> `reward_risk_bracket` (FM-129) are identities with an empty vector. Slots 0-70 unchanged
+> by position). Before that:
+> **Schema v8.0 = 71 features** (2026-10-08, F-118 / CH-candle-pattern-observations-v8: 17
+> candle-pattern observations appended at 54-70 from `features/candle_patterns.py`; slots 0-53
+> unchanged by position). Before that:
+> **Schema v7.0 = 54 features** (2026-10-08, F-117 / CH-feature-semantic-fixes-v7: six SMC
+> presence flags appended at 48-53; slots 0-47 unchanged by position). Before that:
 > **Schema v6.0 = 48 features** (`SCHEMA_VERSION`, `CANONICAL_FEATURE_DIM`, source-verified
 > 2026-09-23). Corrected from a stale 39-name/v4.0 table below — this doc had drifted twice:
 > once to 38-dim/v3.0 (corrected 2026-08-07), then again past the v5.0 SMC addition (F-076,
@@ -262,10 +272,13 @@ EXPECTED_ENGINES: set[str] = {"crt", "gaussian", "zone_gate", "rr"}
 > sentinels for models storing an earlier layout.
 
 ```python
-CANONICAL_FEATURE_DIM = 48   # == len(CANONICAL_FEATURES); hard-asserted at import
-SCHEMA_VERSION = "6.0"       # v2.0=35; v3.0=38; v4.0=39 (MACD split + candle_range rename +
+CANONICAL_FEATURE_DIM = 79   # == len(CANONICAL_FEATURES); hard-asserted at import
+SCHEMA_VERSION = "9.0"       # v2.0=35; v3.0=38; v4.0=39 (MACD split + candle_range rename +
                               # FM-052 domain); v5.0=48 (+9 SMC primitives, F-076); v6.0=48
-                              # (NAMES ONLY — F-107, see indices 11 and 35 below)
+                              # (NAMES ONLY — F-107, see indices 11 and 35 below); v7.0=54
+                              # (+6 SMC presence flags, F-117, indices 48-53); v8.0=71
+                              # (+17 candle-pattern observations, F-118, indices 54-70);
+                              # v9.0=79 (+8 card identities, indices 71-78)
 
 CANONICAL_FEATURES: tuple[str, ...] = (
     "open", "high", "low", "close", "volume",             # 0-4
@@ -288,6 +301,19 @@ CANONICAL_FEATURES: tuple[str, ...] = (
     "order_block_distance", "fvg_distance", "breaker_distance",       # 39-41 (v5.0: SMC primitives, F-076)
     "mitigation_block_distance", "pdh_distance", "pdl_distance",      # 42-44 (v5.0: SMC primitives, F-076)
     "eqh_distance", "eql_distance", "change_of_character",            # 45-47 (v5.0: SMC primitives, F-076)
+    "order_block_present", "fvg_present", "breaker_present",          # 48-50 (v7.0: presence flags, F-117 — 1 = a zone exists;
+    "mitigation_block_present", "eqh_present", "eql_present",         # 51-53  the *_distance 0.0 is otherwise ambiguous)
+    "upper_wick_ratio", "lower_wick_ratio",                           # 54-55 (v8.0: candle-pattern observations, F-118 — wick shares of range)
+    "pin_lower", "pin_upper", "hammer", "shooting_star",              # 56-59 (flags; size gate = range >= k * ATR_abs, FM-074)
+    "doji_material", "dragonfly_doji", "gravestone_doji",             # 60-62 (flags)
+    "engulfing_bull", "engulfing_bear", "inside_bar",                 # 63-65 (two-bar flags; never across a session/weekend gap)
+    "compression_ratio", "rejection_intensity_signed",                # 66-67 (range/prev range clipped [0,10]; lower-minus-upper wick share)
+    "rejection_intensity_lower", "engulfing_strength",                # 68-69
+    "rejection_intensity_upper",                                       # 70
+    "morning_star",                                                    # 71 (v9.0: three-bar shape, FM-120)
+    "higher_low", "lower_high", "sideways",                           # 72-74 (v9.0: swing-sequence states, FM-121..123)
+    "rejection_bull_present", "rejection_bear_present",               # 75-76 (v9.0: live rejection block, FM-124..125)
+    "rejection_bull_distance", "rejection_bear_distance",             # 77-78 (v9.0: 0 when no block, FM-126..127)
 )
 
 FEATURE_SCHEMA: dict[str, type]   # name → type (float | int | str | bool | dict)

@@ -207,10 +207,17 @@ class CRTGaussianScorer:
         disp_move = abs(disp.close - disp.open)
         if disp_move == 0 or state.atr_abs == 0:
             return None
-        # CH-002 / F-050: emit FM-027 / FM-028 identities (match crt_engine_v2 cache)
+        # CH-002 / F-050: emit FM-027 / FM-028 identities (match crt_engine_v2 cache).
+        # CH-feature-semantic-fixes-v7: the retrace identity follows setup.retrace_semantics
+        # exactly as the engine cache does (FM-027 legacy | FM-096 signed).
         from features import derived_math as _dm
+        from config_layer.production_config import get_prod_section
+        from config_layer.crt_engine_v2 import retrace_fm_for
+        _retrace_fn = (_dm.displacement_retrace_signed
+                       if retrace_fm_for(get_prod_section("setup")["retrace_semantics"]) == "FM-096"
+                       else _dm.displacement_retrace)
         return {
-            "displacement_retrace": _dm.displacement_retrace(
+            "displacement_retrace": _retrace_fn(
                 retest_close=float(retest.close),
                 disp_open=float(disp.open),
                 disp_close=float(disp.close),

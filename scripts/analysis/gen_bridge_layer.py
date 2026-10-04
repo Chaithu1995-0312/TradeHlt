@@ -808,7 +808,8 @@ def measure_dtypes() -> dict:
         logging.disable(logging.CRITICAL)
         warnings.filterwarnings("ignore")
         from features.feature_pipeline import FeaturePipeline
-        df = pd.read_csv(src, nrows=400)
+        from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+        df = _corpus_load(src).frame(nrows=400)
         pipe = FeaturePipeline(df)
         enriched, vectors = pipe.run()
         logging.disable(logging.NOTSET)

@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import io
 import json
 import logging
 import math
@@ -1048,13 +1049,18 @@ class CandleLoader:
         # R3 Dataset Identity admission (CH-dataset-identity-r3-v1).
         # Bound XAUUSD M15: rewrite to Phase-1 candidate + hash/range (not APPROVED).
         # FORENSIC native HTF CSVs: reject. Unbound instruments: path passthrough.
+        # CH-corpus-ssot (2026-10-08): admission AND content come from the corpus SSOT
+        # (`corpus_store.load`) — the loader parses the SSOT's in-memory bytes, so the
+        # dataset_id / sha256 a run reports describe exactly what stream() yields.
+        from data_ingestion.corpus_store import CorpusStoreError, load as _load_corpus
         try:
-            admission = admit_csv_path(filepath, instrument)
-        except (DatasetAdmissionError, Phase1CandidateError) as exc:
+            admission = _load_corpus(filepath, instrument, sequence_check=False)
+        except (DatasetAdmissionError, Phase1CandidateError, CorpusStoreError) as exc:
             raise DatasetIntegrityError(
                 f"corpus admission failed (R3 fail-closed): {exc}"
             ) from exc
-        guarded = admission.filepath
+        self.corpus     = admission
+        guarded = admission.path
         self.filepath   = guarded
         self.instrument = instrument
         self.log        = logging.getLogger("CRT.CandleLoader")
@@ -1081,7 +1087,7 @@ class CandleLoader:
         return parse_ohlcv_timestamp(raw)
 
     def stream(self) -> Iterator[Candle]:
-        with open(self.filepath, newline="", encoding="utf-8-sig") as f:
+        with io.StringIO(self.corpus.text, newline="") as f:
             reader = csv.reader(f)
             headers = [h.strip() for h in next(reader)]
             # B1 (2026-07-24): delegate ALL header resolution to the schema SSOT. This one call
@@ -1174,8 +1180,7 @@ class CandleLoader:
                 _candle_pos += 1
 
     def count(self) -> int:
-        with open(self.filepath, "r", encoding="utf-8-sig") as f:
-            return sum(1 for _ in f) - 1
+        return len(self.corpus.text.splitlines()) - 1
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -2078,42 +2083,11 @@ def _corpus_range_from_csv(filepath: Optional[str]) -> Optional[tuple[str, str]]
     if not filepath:
         return None
     try:
-        with open(filepath, "r", encoding="utf-8-sig", newline="") as fh:
-            header = fh.readline()
-            if not header:
-                return None
-            cols = [c.strip().strip('"') for c in header.rstrip("\r\n").split(",")]
-            if "timestamp" not in cols:
-                return None
-            first = fh.readline().rstrip("\r\n")
-            if not first:
-                return None
-            # last non-empty line: scan backwards from EOF
-            fh.seek(0, 2)
-            pos = fh.tell()
-            last = ""
-            while pos > 0:
-                pos = max(0, pos - 4096)
-                fh.seek(pos)
-                chunk = fh.read(8192)
-                chunk = chunk.replace("\r\n", "\n")
-                lines = chunk.split("\n")
-                for ln in reversed(lines):
-                    if ln.strip() and "," in ln:
-                        last = ln.rstrip("\r\n")
-                        break
-                if last:
-                    break
-            if not last:
-                return None
-            def _cell(row: str, idx: int) -> Optional[str]:
-                cells = [c.strip() for c in row.split(",")]
-                return cells[idx] if len(cells) > idx else None
-            start = _cell(first, cols.index("timestamp"))
-            end = _cell(last, cols.index("timestamp"))
-            if not start or not end:
-                return None
-            return (start, end)
+        # CH-corpus-ssot (2026-10-08): the range is a property of the authoritative corpus.
+        from data_ingestion.corpus_store import load as _load_corpus
+
+        c = _load_corpus(filepath, sequence_check=False)
+        return (c.start, c.end) if c.start and c.end else None
     except Exception:  # noqa: BLE001 — fail-open: old unsuffixed folder on any problem
         return None
 
@@ -2620,13 +2594,17 @@ class BacktestRunner:
         # R3 Dataset Identity admission (fail-closed rewrite + hash/range for bound M15).
         if csv_path:
             try:
-                csv_path = admit_csv_path(
-                    csv_path, bt_config.instrument
-                ).filepath
-            except (DatasetAdmissionError, Phase1CandidateError) as exc:
+                # CH-corpus-ssot (2026-10-08): the run's ONE corpus. Features, the candle
+                # stream, row counts, ranges and every sidecar hash derive from this object.
+                from data_ingestion.corpus_store import CorpusStoreError, load as _load_corpus
+                self.corpus = _load_corpus(csv_path, bt_config.instrument, sequence_check=False)
+                csv_path = self.corpus.path
+            except (DatasetAdmissionError, Phase1CandidateError, CorpusStoreError) as exc:
                 raise DatasetIntegrityError(
                     f"corpus admission failed (R3 fail-closed): {exc}"
                 ) from exc
+        else:
+            self.corpus = None
         self.csv_path = csv_path
         self._overrides: dict = overrides or {}
 
@@ -2668,7 +2646,7 @@ class BacktestRunner:
                 from features.feature_pipeline import FeaturePipeline
                 require_reviewed_clock(self.csv_path,
                                        basis=_resolved_session_ts_basis())  # Phase 3
-                raw_df = pd.read_csv(self.csv_path)
+                raw_df = self.corpus.frame()   # CH-corpus-ssot: same bytes as the candle stream
                 # Normalise headers so FeaturePipeline always sees lowercase names
                 raw_df.columns = [c.strip().lower() for c in raw_df.columns]
                 # Merge split date+time columns into a single "timestamp" column
@@ -2983,14 +2961,9 @@ class BacktestRunner:
     def _layer_trace_corpus_rows(self) -> int:
         """Data rows in the corpus file (lines minus the header). -1 when there is no file or
         it cannot be read — a sentinel, so an unknown count never reads as an empty corpus."""
-        if not self.csv_path:
+        if not self.csv_path or getattr(self, "corpus", None) is None:
             return -1
-        try:
-            with open(self.csv_path, "rb") as fh:
-                lines = sum(1 for _ in fh)   # counts a final line with no trailing newline
-            return max(lines - 1, 0)
-        except Exception:  # noqa: BLE001
-            return -1
+        return self.corpus.n_rows   # CH-corpus-ssot
 
     @staticmethod
     def _layer_trace_code_sha() -> str:
@@ -5135,13 +5108,15 @@ def run_backtest(config: dict, csv_path: str) -> list:
     """
     # R3 Dataset Identity admission (fail-closed for bound corpora).
     symbol_hint = os.path.basename(csv_path).split("_")[0]
+    from data_ingestion.corpus_store import CorpusStoreError, load as _load_corpus
     try:
-        csv_path = admit_csv_path(csv_path, symbol_hint).filepath
-    except (DatasetAdmissionError, Phase1CandidateError) as exc:
+        _corpus = _load_corpus(csv_path, symbol_hint, sequence_check=False)   # CH-corpus-ssot
+        csv_path = _corpus.path
+    except (DatasetAdmissionError, Phase1CandidateError, CorpusStoreError) as exc:
         raise DatasetIntegrityError(
             f"corpus admission failed (R3 fail-closed): {exc}"
         ) from exc
-    raw_df  = pd.read_csv(csv_path)
+    raw_df  = _corpus.frame()
     pipeline = FeaturePipeline(raw_df)
     enriched_df, vectors = pipeline.run()
 

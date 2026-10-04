@@ -71,6 +71,15 @@ def find_active_breaker(
     return None
 
 
+def breaker_present(
+    window: "Sequence[Candle]", k: int,
+    break_events: Optional[list[tuple[int, bool]]] = None,
+) -> float:
+    """FM-099 (schema v7.0): 1.0 if an un-retested breaker exists as of `window[-1]`, else 0.0
+    (breaker_distance reports "none" and "on the edge" identically as 0.0)."""
+    return 1.0 if find_active_breaker(window, k, break_events) is not None else 0.0
+
+
 def breaker_distance(
     window: "Sequence[Candle]", k: int, atr: float,
     break_events: Optional[list[tuple[int, bool]]] = None,

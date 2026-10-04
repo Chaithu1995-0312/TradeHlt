@@ -13,9 +13,17 @@ from datetime import datetime
 from pathlib import Path
 from typing import Callable, Literal, Type, TypeVar
 
-import csv
+from data_ingestion.corpus_store import AdmittedCorpus, load as _ssot_load
 
 BarT = TypeVar("BarT")
+
+
+def as_corpus(source: "AdmittedCorpus | Path | str", instrument: str = "") -> AdmittedCorpus:
+    """The SSOT corpus for `source`: an AdmittedCorpus passes through; a path resolves via
+    `corpus_store.load` (identity + sequence check, process-cached -> same object)."""
+    if isinstance(source, AdmittedCorpus):
+        return source
+    return _ssot_load(source, instrument)
 
 
 def parse_ts_iso19(raw: str) -> datetime:
@@ -29,13 +37,17 @@ def parse_ts_iso19(raw: str) -> datetime:
 
 
 def load_bars(
-    path: Path,
+    source: "AdmittedCorpus | Path",
     bar_cls: Type[BarT],
     *,
     parse_ts: Callable[[str], datetime] = parse_ts_iso19,
     volume: Literal["required", "zero_default"] = "required",
 ) -> list[BarT]:
-    """Read a `timestamp,open,high,low,close,volume` CSV into `[bar_cls(...), ...]`, index-stamped.
+    """Turn the authoritative corpus into `[bar_cls(...), ...]`, index-stamped.
+
+    CH-corpus-ssot (2026-10-08): rows come from `data_ingestion.corpus_store.load` (the corpus
+    SSOT) — pass the `AdmittedCorpus` the driver already holds; a path is resolved through the
+    same SSOT. This helper never opens the CSV itself.
 
     `volume="required"` raises `KeyError` on a missing column (matches `mother_range.driver` /
     `evidence.mother_range_prior`); `"zero_default"` falls back to `0.0` (matches
@@ -43,7 +55,7 @@ def load_bars(
     `bar_cls` is called positionally-by-keyword with exactly the 7 fields every target `Bar`
     dataclass declares (`timestamp, open, high, low, close, volume, index`).
     """
-    rows = list(csv.DictReader(path.open(encoding="utf-8")))
+    rows = as_corpus(source).records()
     bars: list[BarT] = []
     for i, row in enumerate(rows):
         # Exact per-mode behavior, not a merged approximation: "required" raises KeyError on a

@@ -218,7 +218,11 @@ def build_config_pin(
     except Exception as exc:                                    # noqa: BLE001
         pin["config_hash"] = f"UNRESOLVED: {exc}"
     try:
-        pin["corpus_sha256"] = sha256_file(csv_path)
+        from data_ingestion.corpus_store import load as _corpus_load   # CH-corpus-ssot
+
+        _c = _corpus_load(csv_path, instrument, sequence_check=False)
+        pin["corpus_sha256"] = _c.sha256
+        pin["dataset_id"] = _c.dataset_id
     except Exception as exc:                                    # noqa: BLE001
         pin["corpus_sha256"] = f"UNRESOLVED: {exc}"
     # F-066: broker-server stamps. The legend MUST name the basis; 53.36% of XAUUSD

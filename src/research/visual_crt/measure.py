@@ -197,17 +197,21 @@ def run_contract(contract_path: str | Path, out_dir: str | Path) -> dict:
     out.mkdir(parents=True, exist_ok=True)
 
     corpus, declared_sha = _corpus_from_population(contract["population"])
-    actual_sha = hashlib.sha256(Path(corpus).read_bytes()).hexdigest()
+    # CH-corpus-ssot (2026-10-08): one authoritative corpus — admitted, sequence-checked and
+    # hashed once by corpus_store.load; bars and the reported sha come from that same object.
+    from data_ingestion.corpus_store import load as corpus_load
+    from data_ingestion.dataset_integrity import validate_dataset
+
+    admitted = corpus_load(corpus, "XAUUSD")
+    actual_sha = admitted.sha256
     if declared_sha and actual_sha != declared_sha:
         raise ValueError(
             f"measure: corpus sha256 mismatch — contract declares {declared_sha}, "
-            f"file is {actual_sha}. The population is a frozen dimension."
+            f"SSOT corpus is {actual_sha}. The population is a frozen dimension."
         )
 
-    from data_ingestion.dataset_integrity import validate_dataset
-
-    l3 = validate_dataset(corpus, bar_minutes=15, write_report=False, raise_on_fail=True)
-    bars = load_bars(corpus)
+    l3 = validate_dataset(admitted.path, bar_minutes=15, write_report=False, raise_on_fail=True)
+    bars = load_bars(admitted)
 
     cost_model, cost_prov = _bind_cost_model(contract)
     adverse_fill, fill_prov = _bind_adverse_fill(contract)
@@ -237,7 +241,7 @@ def run_contract(contract_path: str | Path, out_dir: str | Path) -> dict:
     metrics: dict = {
         "contract_id": contract_id,
         "sem_012_version": 2,
-        "corpus": {"path": corpus, "sha256": actual_sha, "bars": len(bars)},
+        "corpus": {"path": corpus, "sha256": actual_sha, "bars": len(bars), "dataset_id": admitted.dataset_id, "provenance": admitted.provenance()},
         "multiplicity": require(contract, "multiplicity", section_name="contract",
                                 consumer="run_contract"),
         "crit_2sided": CRIT_2SIDED,

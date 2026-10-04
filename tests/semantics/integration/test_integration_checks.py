@@ -224,8 +224,13 @@ def _c7_inputs(ohlc):
     ts = list(pd.date_range("2026-07-06", periods=len(ohlc), freq="15min").strftime("%Y-%m-%d %H:%M:%S"))
     o, h, l, c = (np.array(col, dtype=float) for col in zip(*ohlc))
     history = {"timestamp": ts, "open": o, "high": h, "low": l, "close": c}
+    # These fixtures were built to exercise the LEGACY slot divergences from MKT-E01 (re-fire on a
+    # swept level, UPPER-first two-sided encoding, ...). Since 2026-10-08 (F-117) the active config
+    # selects e01_lifecycle, under which those divergences no longer exist -- so pin the legacy arm
+    # instead of inheriting whatever the active config selects.
     s = causal_structure_series(h, l, c, np.ones(len(c)), k=int(cfg("feature_pipeline.swing_window")),
-                                double_sweep_window=int(cfg("feature_pipeline.double_sweep_window")))
+                                double_sweep_window=int(cfg("feature_pipeline.double_sweep_window")),
+                                sweep_semantics="latest_unconsumed")
     mom = momentum_bias(c, fast=cfg("feature_pipeline.ema_fast_span"), slow=cfg("feature_pipeline.ema_slow_span")).values
     sess = session(ts, basis=cfg("feature_pipeline.session_timestamp_basis"),
                    windows=cfg("feature_pipeline.session_windows_utc")).values

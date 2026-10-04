@@ -150,7 +150,8 @@ def _load(sym, limit):
     csv = _ROOT / "data" / f"{sym}_M15.csv"
     if not csv.exists():
         return None
-    df = pd.read_csv(csv)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    df = _corpus_load(csv).frame()
     df.columns = [c.strip().lower() for c in df.columns]
     return df.head(limit).copy() if limit else df
 

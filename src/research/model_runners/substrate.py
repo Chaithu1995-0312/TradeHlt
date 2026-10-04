@@ -80,8 +80,12 @@ def _normalize_ohlcv_columns(df: pd.DataFrame) -> pd.DataFrame:
 def load_ohlcv_csv(csv_path: Path) -> tuple[pd.DataFrame, str]:
     if not csv_path.is_file():
         raise FileNotFoundError(f"CSV not found: {csv_path}")
-    digest = sha256_file(csv_path)
-    df = pd.read_csv(csv_path)
+    # CH-corpus-ssot (2026-10-08): digest and frame from the same authoritative corpus object.
+    from data_ingestion.corpus_store import load as _corpus_load
+
+    _corpus = _corpus_load(csv_path, sequence_check=False)
+    digest = _corpus.sha256
+    df = _corpus.frame()
     df = _normalize_ohlcv_columns(df)
     df["timestamp"] = pd.to_datetime(df["timestamp"], utc=False)
     return df, digest

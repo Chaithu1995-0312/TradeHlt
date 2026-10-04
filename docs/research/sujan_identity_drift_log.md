@@ -10,6 +10,26 @@ It is not a playbook, not a `SEM-*`, not a measurement contract.
 
 ---
 
+## Record 8 — 2026-10-06 — Calendar H4 ParentCRTTrack C1/C2/C3 measured as an entry (proxy, bridge-requested)
+
+**Kind:** bridge-requested measurement of an UNVALIDATED proxy. **Not** a freeze. **Not** an identity certification.
+**Requested by:** human bridge, 2026-10-06: "test calendar H4 C1/C2/C3 as entry on xauusd".
+**Artifacts (untracked, userinvestigation/):** `h4_c1c2c3_entry_xauusd.jsonl`, `h4_c1c2c3_entry_xauusd_summary.json`.
+
+| Sujan concept (Record 7 / 2026-10-06 chat) | Proxy measured | Approved as identity? | Status |
+|---|---|---|---|
+| C1 range | calendar H4 broker-grid candle (`ParentCandleBuilder("H4")`) | N | UNVALIDATED |
+| C2 manipulation, closed inside C1 | `ParentCRTTrack` sweep (`structure.predicates.swept_high/low`); C2 closing beyond the far side skipped | N | UNVALIDATED |
+| entry "on bullish candle close" | arm A: C2 close; arm B: C3 close (`DISTRIBUTION_C3`) | N | UNVALIDATED (1H confirmation DROPPED) |
+| stop | C2 swept extreme, no buffer | N | UNVALIDATED (his stop rule UNKNOWN) |
+| target "range high" | C1 far side | N | UNVALIDATED |
+| HTF location (red line / PDH / PDL / weekly open) | none | — | DROPPED, not proxied |
+| HTF location (rerun 2026-10-06, bridge-requested) | PDH/PDL = previous broker date; red line = weekly open (first M15 open of ISO week, Record 7 already flags it as likely the WRONG object); "at" = level inside C2's swept wick (`touch`) or within 0.5 × prior H4 ATR14 of C2's extreme (`near`) | N | UNVALIDATED |
+
+Measurement Firewall: arm A n=663 gross +0.0755R (CI −0.057…+0.208), arm B n=221 gross −0.038R; key-level rerun `near_any` n=303 gross +0.149R (CI −0.018…+0.316), `touch_any` n=145 +0.068R (artifact `h4_c1c2c3_keylevel_xauusd_summary.json`). **Frozen out-of-sample (2026-10-06, rule sha256 `bf8f9ec4…`, `h4_c1c2c3_near_level_freeze.json`): MT5 2026-05-22..2026-10-06, `near_any` n=47 gross −0.214R CI[−0.565,+0.138], net −0.238R, random draws beat it 76% → verdict FAIL; all arm A n=118 −0.239R.** **1H-confirmation successor (frozen 2026-10-06, sha256 `075aaa99…`, `h4_c1c2c3_1h_confirm_freeze.json`; entry = first 1H close in trade direction inside C3, cancelled if the stop trades first): in-sample near+confirmed n=180 +0.074R (PASS by its rules, design-period number); reused May–Oct holdout n=27 −0.219R (INSUFFICIENT, n<30), all confirmed n=65 −0.080R (FAIL). Holdout was not independent.** Results attach to this proxy only and do **not** travel to "Sujan CRT". Identity: NOT YET FROZEN.
+
+---
+
 ## Record 7 — 2026-09-26 — Five mechanical proxies measured as "Sujan" without identity review (DRIFT)
 
 **Kind:** unapproved semantic replacements, recorded after the fact. **Not** a freeze. **Not** an identity certification.

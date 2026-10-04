@@ -110,7 +110,7 @@ class S02MeanReversion(BaseStrategy):
         is_inside_bar = bool(features.get("is_inside_bar", False))
 
         close = float(candle["close"])
-        atr = float(features.get("atr", 0.0))
+        atr = self._atr_price(features, close)
         if close <= 0.0 or atr <= 0.0:
             return self._no_trade("UNKNOWN")
 

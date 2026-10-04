@@ -1,0 +1,30 @@
+{
+  "id": "SECONDLOW-ARM-B-RECLAIM",
+  "declared_at": "2026-10-07",
+  "declared_before_result": true,
+  "status": "EXPLORATORY_POST_HOC",
+  "why_post_hoc": "Arm A (frozen live rule) results were already seen on this exact corpus; Arm B is chosen after seeing that only 18 of 36 Arm A trigger bars closed back at or above the level. This is NOT an independent test, there is no holdout, and no result here can grant authority.",
+  "parent": "userinvestigation/second_low_algo/second_low_algo.py (frozen, sha unchanged, not edited)",
+  "corpus": ["data/mt5/XAUUSD_M15.csv", "data/mt5/XAUUSD_M15_2026-04-20_to_2026-10-06.csv"],
+  "timeframe": "H4",
+  "arm_B_definition": {
+    "level": "second_low_20d, identical to Arm A",
+    "approach": "identical to Arm A: starts at the first bar with low < level; ends at the first bar with close >= level (the detector's re-arm bar)",
+    "entry": "LONG at the CLOSE of the reclaim bar (the first bar of the approach with close >= level). If the trigger bar itself closes at or above the level, entry bar == trigger bar and the trade is identical to Arm A.",
+    "stop_anchor": "approach extreme: minimum low over the bars from the trigger bar through the reclaim bar, minus 0.2 * atr_abs (the sweep_extreme analogue of crt_engine_v2.stop_price)",
+    "levels": "core.gate_intelligence.compute_crt_levels(entry, 1, approach_extreme_low, reclaim_bar_high, atr_abs, 0.2, 1.0, 2.0), atr_abs = atr * close of the reclaim bar (F-072 / FM-074)",
+    "walk": "research.oracle.multi_tp_walk defaults, max_forward = every bar left, same as Arm A",
+    "filters": "NONE. No at_or_above_pdl, no timeframe or condition selection. Single timeframe H4, single entry rule."
+  },
+  "cost": "research.costs.xau_measured_cost_model() (SEM-015), exit_kind from the walk, nights_held=0 (swap UNMEASURED, partial-exit leg not charged: declared gaps)",
+  "analysis_declared": [
+    "mean gross R, n, 95% CI (normal), win share over all approaches (primary)",
+    "same for net R",
+    "split: approaches where entry bar == trigger bar (identical to Arm A) vs reclaim later (the only genuinely new trades)",
+    "Arm A on the same 'reclaim later' approaches and the paired per-approach difference B minus A",
+    "no other cut, no parameter variation, run ONCE"
+  ],
+  "verdict_rule": "POSITIVE_DIAGNOSTIC only if the lower 95% bound of mean GROSS R over all approaches > 0; NEGATIVE_DIAGNOSTIC if the upper bound < 0; otherwise NULL_INSUFFICIENT. A POSITIVE would still grant no authority (post hoc, same corpus, no holdout).",
+  "prediction": "NULL_INSUFFICIENT. Expected |mean gross R| < 0.30 with a CI crossing zero (n<=36, per-trade sd ~1.2R). Only about 18 trades differ from Arm A so power to detect a real difference is near zero.",
+  "economic_claims_allowed": false
+}

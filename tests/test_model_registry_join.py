@@ -257,7 +257,7 @@ def test_required_feature_keys_are_canonical():
         unknown = m.required_feature_keys - canonical
         assert not unknown, (
             f"{model_id}: required_feature_keys contains non-canonical names {unknown} — "
-            "not in the live 48-dim v6.0 schema"
+            "not in the live 79-dim v9.0 schema"
         )
 
 

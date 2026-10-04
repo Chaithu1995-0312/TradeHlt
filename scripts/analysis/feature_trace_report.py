@@ -989,7 +989,8 @@ def main() -> int:
         return 1
 
     logger.info("Loading %s ...", csv_path)
-    raw = pd.read_csv(csv_path)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    raw = _corpus_load(csv_path).frame()
     csv_sha256 = _sha256(csv_path)
 
     from config_layer.production_config import get_active_version, get_prod_section

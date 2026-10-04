@@ -3,12 +3,21 @@
 > **Topic-visibility unit.** The canonical feature contract every engine consumes, the pipeline that
 > builds it candle-by-candle, and the drift monitor that watches it. (Promoted from a stub row.)
 >
-> Created: 2026-06-05 · Updated: 2026-10-03 · Status: living
+> Created: 2026-06-05 · Updated: 2026-10-08 · Status: living
 
 ## In plain language
 Every engine scores the same fixed, ordered list of numbers per candle — the **canonical feature
 vector**. Its order is frozen and hashed so a model trained on one ordering can never be silently fed
-another. The schema is currently **48-dimensional, schema v6.0** (dim fixed at v5.0: 39 pre-existing
+another. The schema is currently **79-dimensional, schema v9.0** (2026-10-08, CH-card-identity-census-v9:
+8 card identities appended at 71-78 — `morning_star`, `higher_low`, `lower_high`, `sideways`, and four
+rejection-block present/distance slots; `wait_for_next_candle` and the 1:3 bracket are identities off
+the vector; slots 0-70 unchanged). Before that it was **71-dimensional, schema v8.0** (2026-10-08, F-118: 17 candle-pattern
+observations appended at 54-70 — wick shares, pin bars, hammer / shooting star, doji variants,
+engulfing, inside bar, compression and rejection intensities, from `features/candle_patterns.py`;
+slots 0-53 unchanged). Before that it was **54-dimensional, schema v7.0** (2026-10-08, F-117: six SMC presence
+flags appended at 48-53 — `order_block_present` … `eql_present` — because each `*_distance` emits 0.0
+both on the zone edge and when no zone exists; slots 0-47 unchanged). Before that it was
+**48-dimensional, schema v6.0** (dim fixed at v5.0: 39 pre-existing
 features — the 35 v2.0 features, 3 v3.0 liquidity/volume features, and the v4.0 MACD-split/domain
 features — plus 9 v5.0 SMC primitives: order block, FVG, breaker, mitigation, PDH/PDL, EQH/EQL,
 CHoCH; v6.0 renamed two existing slots in place — `trend_strength`→`trend_strength_z`,
@@ -54,7 +63,7 @@ from a hard-coded loader assumption.
 
 ## Code covered
 - [`src/features/feature_schema.py:139`](../../src/features/feature_schema.py) — `CANONICAL_FEATURES` — **GENERATED, not literal, since 2026-09-16** (FEATURE-NAME-IDENTITY-BINDING Step 1): every `market_ontology.yaml` entry with a `lineage.vector_key` is placed at its declared `lineage.vector_index`, fail-closed on gaps/duplicates at import. Same 48 names, same order as the prior literal tuple (asserted equal; `SCHEMA_HASH`/`FEATURE_ORDER_HASH` unchanged). `F.FM_0NN` (`:445` area) and `feature_name(fm_id)` resolve a stable ontology id to its current name, so a future rename touches only the ontology.
-- [`src/features/feature_schema.py:166`](../../src/features/feature_schema.py) — `CANONICAL_FEATURE_DIM` — `48` (asserted == len(CANONICAL_FEATURES)); `SCHEMA_V2_FEATURE_DIM` `35` / `SCHEMA_V4_FEATURE_DIM` `39` are the back-compat sentinels.
+- [`src/features/feature_schema.py:169`](../../src/features/feature_schema.py) — `CANONICAL_FEATURE_DIM` — `71` since v8.0 (asserted == len(CANONICAL_FEATURES)); `SCHEMA_V2_FEATURE_DIM` `35` / `SCHEMA_V4_FEATURE_DIM` `39` / `SCHEMA_V6_FEATURE_DIM` `48` / `SCHEMA_V7_FEATURE_DIM` `54` are the back-compat sentinels.
 - [`src/features/feature_schema.py:248`](../../src/features/feature_schema.py) — `FEATURE_ORDER_HASH` — SHA-256[:16] of the order; the load-bearing schema hash.
 - [`src/features/feature_pipeline.py:465`](../../src/features/feature_pipeline.py) — `FeaturePipeline` — raw OHLCV → enriched df + `(N,48)` vectors; `run()` and the SMC step `compute_smc_features()` further down (line numbers moved +36 on 2026-10-03; source wins).
 - [`src/features/feature_pipeline.py:276`](../../src/features/feature_pipeline.py) — `resolve_sweep_semantics` — strict `feature_pipeline.sweep_semantics` (`latest_unconsumed` legacy FM-058/059/060/065 · `e01_lifecycle` FM-090..093); batch, causal twin and live FeatureStore all resolve it here.
@@ -148,3 +157,19 @@ the drift monitor is the (currently advisory) early-warning sensor — see F-008
   - **Unchanged:** no emitted value; retest meaning stays PROPOSED (OQ7).
 - **2026-10-03 — sweep slots conformed to the MKT-E01 contract behind a switch (F-112, `CH-e01-lifecycle-sweep-identity`), 48-dim vector and legacy values untouched.** The Semantic OS C7 comparators showed that `liquidity_sweep` / `sweep_detected` / `double_sweep` / `candles_since_sweep` test only the LATEST swing level and never consume it, while the contract sweeps any ACTIVE level once (SWEPT on a sweep, BROKEN on a close beyond). Registered conforming identities FM-090..093 (active:false) behind strict `feature_pipeline.sweep_semantics`; default `latest_unconsumed` is byte-identical (XAUUSD vector regression unchanged, params hash 7de09f62 unchanged). Under the non-promoted shadow `v2_htfcrt_e01lifecycle_shadow_2026_10` C7 shows 0 unexplained. In that mode `double_sweep` reads per-side events (MKT-C04 v2), so a bar sweeping both sides counts; the slot itself still encodes UPPER first (declared lossy encoding; 0 such bars on the month slice). Trade impact not measured (0 trades on the slice). Activation is a separate decision.
 - **2026-09-23 — DOC_DRIFT fix: this topic's own "In plain language" summary still said "schema v5.0" while every entry below it already documents the v6.0 rename (F-107).** Corrected to state the live schema is v6.0 (dim fixed at v5.0, F-076; v6.0 renamed two slots in place without changing the dim). Same-class fix applied to `docs/reference/schemas.md §4.1` (which had drifted further — a stale 39-name/v4.0 `CANONICAL_FEATURES` table missing all 9 SMC slots) and to five stale "38"/"39"/"v5.0" docstring references in `src/features/feature_pipeline.py`. No code path or config changed; `src/config_layer/crt_gaussian_scorer.py`'s two unconditional `print()` calls (unrelated defect, same investigation) were also routed through its existing `self._log.debug(...)` flow logger. §6.2 rule 2 DOC_DRIFT, auto-fix band (no registered conclusion changed).
+- **2026-10-08 — four feature semantic fixes, user-authorized (F-117, `CH-feature-semantic-fixes-v7`); schema 6.0 → 7.0, 48 → 54.**
+  - **Sweep slots:** the 2026-10-03 switch above is now ACTIVE (`sweep_semantics=e01_lifecycle`).
+  - **Session clock:** `session`/`hour_of_day` now come from true UTC (`session_timestamp_basis=utc_corrected`). The user chose to move the CRT session trading filter with it.
+  - **SMC presence:** six flags appended at 48-53 (`order_block_present`, `fvg_present`, `breaker_present`, `mitigation_block_present`, `eqh_present`, `eql_present`; FM-097..102). Each is decided by the same finder its `*_distance` measures to.
+  - **Not a vector slot:** FM-096 `displacement_retrace_signed` (a CRT episode quantity) replaces FM-027 via strict `setup.retrace_semantics`.
+  - **Measured on full XAUUSD:** 41/48 old slots bit-identical; `session` moves on 53.35% of bars; no bar has a flag 0 with a non-zero distance; 74 "zone on the edge" bars are now distinguishable from "no zone".
+  - **Freeze pin:** regenerated. The old keys reproduce the previous window SHA exactly, so the pipeline refactor (one shared break-event scan per bar) changed no value.
+- **2026-10-08 — candle-pattern observations into the vector (F-118, `CH-candle-pattern-observations-v8`); schema 7.0 → 8.0, 54 → 71.**
+  - **What:** 17 slots at 54-70 (FM-103..119) from `features/candle_patterns.py`, computed in `FeaturePipeline.compute_candle_patterns` after the SMC stage. Thresholds in `feature_pipeline.candle_patterns` (all 12 configs).
+  - **Definitions:** the corrected multi-LLM spec — canonical price-unit ATR (FM-074) for the size gate, inclusive comparisons, swing extreme excludes the current bar, no two-bar pattern across a gap, zero-range bars undefined.
+  - **Measured on full XAUUSD:** slots 0-53 bit-identical to v7; no non-finite values in 54-70; no inside/engulfing bar across a gap. Freeze pin: the 54-slot prefix reproduces the v7 pin exactly.
+  - **Consumers:** strategy feature dict `is_inside_bar` / `rejection_wick` now read these slots (were constant False / a price wick read as a flag).
+- **2026-10-08 — card identities into executable form (`CH-card-identity-census-v9`); schema 8.0 → 9.0, 71 → 79.**
+  - **Vector:** 8 slots at 71-78. `morning_star` (FM-120) is a three-bar shape. `higher_low` / `lower_high` / `sideways` (FM-121..123) are swing-sequence states, distinct from the one-bar `higher_high` / `lower_low` pierce. The four rejection slots (FM-124..127) are the live wick of a confirmed causal swing; distance is 0 when no block exists.
+  - **Off the vector:** `wait_for_next_candle` (FM-128) is a confirmation state rule. `reward_risk_bracket` (FM-129) is the card's 1:3 construction. The live `min_rr_ratio` stays 1.5.
+  - **Not an entry:** the new flags are observations. No G001, no retrain. Slots 0-70 keep their meaning.

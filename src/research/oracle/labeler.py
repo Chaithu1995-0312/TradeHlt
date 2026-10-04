@@ -403,7 +403,17 @@ def main(argv=None) -> int:
         return 2
     if args.limit_bars:
         matrix = matrix.head(args.limit_bars)
-    raw = pd.read_csv(Path(bm_manifest["corpus_path"]), parse_dates=["timestamp"])
+    # CH-corpus-ssot (2026-10-08): the labeler consumes the SAME authoritative corpus the bar
+    # matrix was built from — loaded through the SSOT and required to carry the matrix
+    # manifest's corpus_sha256 — instead of re-reading whatever file sits at that path.
+    from data_ingestion.corpus_store import load as corpus_load
+
+    corpus = corpus_load(bm_manifest["corpus_path"], bm_manifest.get("instrument", ""))
+    if bm_manifest.get("corpus_sha256") and corpus.sha256 != bm_manifest["corpus_sha256"]:
+        print(f"[FATAL] SSOT corpus {corpus.sha256} != bar-matrix corpus "
+              f"{bm_manifest['corpus_sha256']} -- labels would describe a different corpus")
+        return 2
+    raw = corpus.frame(parse_dates=["timestamp"])
     raw["_pos"] = range(len(raw))
 
     crt_cfg = get_prod_section("crt_engine")
@@ -429,14 +439,9 @@ def main(argv=None) -> int:
 
     # ── [Phase 3] label-lineage identity: dataset_hash (registered formula, single
     # authority — never re-inlined), one run_id per label invocation, and the UTC stamp.
-    from governance.run_identity import dataset_hash as _rh_dataset_hash
     _label_run_id = f"LABEL_{tag}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
     _label_generated_utc = datetime.now(timezone.utc).isoformat()
-    try:
-        _corpus_file = Path(bm_manifest["corpus_path"])
-        _ds_hash = _rh_dataset_hash(_corpus_file) if _corpus_file.exists() else "NO_CORPUS_FILE"
-    except Exception:  # noqa: BLE001 — lineage is provenance, never a label quantity
-        _ds_hash = "NO_CORPUS_FILE"
+    _ds_hash = corpus.sha256   # CH-corpus-ssot: identity of the bytes actually labelled
 
     labels, stats = label_corpus(
         matrix, raw,

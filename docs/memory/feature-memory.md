@@ -64,6 +64,7 @@ Index the canonical feature surface: schema identity, pipeline emission, geometr
 |---|---|
 | [`../topics/feature-schema.md`](../topics/feature-schema.md) | Topic index |
 | [`../reference/schemas.md`](../reference/schemas.md) | Schema shapes |
+| [`../reference/candle_theory/README.md`](../reference/candle_theory/README.md) | User candle-theory cards (01-13) mapped to slots/FM ids; vocabulary for chart review and live-chart reading (descriptive, not evidence) |
 | [`../governance/MARKET_ONTOLOGY_EVOLUTION_CONTRACT.md`](../governance/MARKET_ONTOLOGY_EVOLUTION_CONTRACT.md) | Ontology evolution |
 | [`engine-memory.md`](engine-memory.md) | Downstream consumers |
 | [`architecture-memory.md`](architecture-memory.md) | Layer placement |

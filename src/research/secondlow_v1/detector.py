@@ -37,7 +37,18 @@ class SecondLowEvent:
     close_disp_atr: float | None
 
 
+def _ssot(path: Path):
+    from data_ingestion.corpus_store import load as corpus_load
+
+    return corpus_load(path, "XAUUSD", sequence_check=False)
+
+
 def sha256_prefix(path: Path) -> str:
+    # CH-corpus-ssot (2026-10-08): a CSV corpus's identity comes from the SSOT; the xlsx
+    # regression fixture is not an MT5 corpus and keeps its own byte hash.
+    path = Path(path)
+    if path.suffix.lower() == ".csv":
+        return _ssot(path).sha256[:16]
     return hashlib.sha256(path.read_bytes()).hexdigest()[:16]
 
 
@@ -46,7 +57,7 @@ def load_ohlcv(path: Path | str) -> pd.DataFrame:
     if path.suffix.lower() in {".xlsx", ".xls"}:
         df = pd.read_excel(path)
     else:
-        df = pd.read_csv(path)
+        df = _ssot(path).frame()   # CH-corpus-ssot: the SSOT's bytes, no separate read
     df["timestamp"] = pd.to_datetime(df["timestamp"])
     df = df.set_index("timestamp").sort_index()
     df = df.rename(columns={c: c.lower() for c in df.columns})

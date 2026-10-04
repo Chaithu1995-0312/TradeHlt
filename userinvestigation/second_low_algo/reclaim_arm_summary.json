@@ -1,0 +1,80 @@
+{
+  "freeze": "SECONDLOW-ARM-B-RECLAIM",
+  "rows": 36,
+  "closed": 36,
+  "open": 0,
+  "all_gross": {
+    "n": 36,
+    "mean": -0.0556,
+    "ci95": [
+      -0.4151,
+      0.3039
+    ],
+    "win_share": 0.4444,
+    "sd": 1.1005
+  },
+  "all_net": {
+    "n": 36,
+    "mean": -0.065,
+    "ci95": [
+      -0.4248,
+      0.2948
+    ],
+    "win_share": 0.4444,
+    "sd": 1.1015
+  },
+  "identical_to_arm_A": {
+    "n": 18,
+    "mean": 0.125,
+    "ci95": [
+      -0.4228,
+      0.6728
+    ],
+    "win_share": 0.5,
+    "sd": 1.1859
+  },
+  "reclaim_later_gross": {
+    "n": 18,
+    "mean": -0.2361,
+    "ci95": [
+      -0.7023,
+      0.23
+    ],
+    "win_share": 0.3889,
+    "sd": 1.009
+  },
+  "reclaim_later_net": {
+    "n": 18,
+    "mean": -0.2425,
+    "ci95": [
+      -0.7081,
+      0.2231
+    ],
+    "win_share": 0.3889,
+    "sd": 1.0079
+  },
+  "arm_A_on_reclaim_later": {
+    "n": 18,
+    "mean": -0.1111,
+    "ci95": [
+      -0.6502,
+      0.428
+    ],
+    "win_share": 0.3889,
+    "sd": 1.167
+  },
+  "paired_B_minus_A_on_reclaim_later": {
+    "n": 18,
+    "mean": -0.125,
+    "ci95": [
+      -0.698,
+      0.448
+    ],
+    "win_share": 0.1667,
+    "sd": 1.2404
+  },
+  "median_risk_pct_of_price": 1.064,
+  "mean_bars_to_reclaim_when_later": 6.5,
+  "economic_claims_allowed": false,
+  "verdict": "NULL_INSUFFICIENT"
+}
