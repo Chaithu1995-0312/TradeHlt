@@ -340,6 +340,7 @@ def _simulate_cell_pair(records: list[dict], levels_fn, candle_idx: dict,
                 runner_stop_pricing=WALK_RUNNER_STOP_PRICING,
                 timeout_pricing=WALK_TIMEOUT_PRICING,
                 max_forward=max_candles,
+                entry_index=i,
             )
         except ValueError as exc:
             skipped.append({"key": key, "reason": str(exc)})

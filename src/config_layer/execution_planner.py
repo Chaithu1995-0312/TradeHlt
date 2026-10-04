@@ -90,6 +90,8 @@ REQUIRED_CONFIG_KEYS: tuple[str, ...] = (
     "precision_overrides",
     "default_account_balance",
     "reject_unknown_intent",
+    # LIQ_SWEEP intent identity (CH-planner-liq-sweep-direction, 2026-10-03); see LIQ_SWEEP_SEMANTICS.
+    "liq_sweep_semantics",
     # BREAKOUT-vs-REVERSAL intent boundary. Resolved per symbol from crt_engine by
     # planner_config_from_production so CRT engine and planner can never diverge.
     "breakout_disp_threshold",
@@ -100,6 +102,18 @@ REQUIRED_CONFIG_KEYS: tuple[str, ...] = (
     "gate_weight_structure",
     "gate_approval_threshold",
 )
+
+# LIQ_SWEEP intent identity (CH-planner-liq-sweep-direction, user-authorized 2026-10-03):
+#   legacy_unsigned       — LIQ_SWEEP if sweep_detected or double_sweep. Direction-blind, and the
+#                           MKT-C04 condition double_sweep alone can trigger it with no sweep on the
+#                           bar. Byte-identical to the pre-2026-10-03 classifier.
+#   e01_direction_aligned — LIQ_SWEEP iff a sweep EVENT is on the bar (signed liquidity_sweep != 0)
+#                           AND its implied bias equals selected_direction (MKT-E01 rule:
+#                           UPPER swept (+1) -> SHORT, LOWER swept (-1) -> LONG). double_sweep no
+#                           longer triggers the intent; its GateIntelligence score bonus is untouched.
+# The signed slot encodes a bar that swept both sides as UPPER (+1, FM-058/FM-090), so such a bar
+# qualifies only for SHORT here.
+LIQ_SWEEP_SEMANTICS: tuple[str, ...] = ("legacy_unsigned", "e01_direction_aligned")
 
 # EPIC-84 (user rule 2026-09-28: no defaults, no fallbacks): the former module-level
 # DEFAULT_CONFIG (merged UNDER every config, so a missing key silently took a code value) is
@@ -163,6 +177,12 @@ class ExecutionPlannerV1_2:
         require_all(config, REQUIRED_CONFIG_KEYS,
                     section_name="execution_planner", consumer="ExecutionPlannerV1_2")
         self.config: dict[str, Any] = dict(config)
+        self._liq_sweep_semantics = str(self.config["liq_sweep_semantics"])
+        if self._liq_sweep_semantics not in LIQ_SWEEP_SEMANTICS:
+            raise ValueError(
+                f"liq_sweep_semantics must be one of {LIQ_SWEEP_SEMANTICS}, "
+                f"got {self._liq_sweep_semantics!r}"
+            )
 
     # ── Public entry point ────────────────────────────────────────────────────
 
@@ -317,7 +337,10 @@ class ExecutionPlannerV1_2:
 
     def _validate_features(self, features: dict[str, Any]) -> list[str]:
         """Return list of missing required feature keys."""
-        return [k for k in _REQUIRED_FEATURE_KEYS if k not in features]
+        required = _REQUIRED_FEATURE_KEYS
+        if self._liq_sweep_semantics == "e01_direction_aligned":
+            required = required + ("liquidity_sweep",)  # signed MKT-E01 slot; no default
+        return [k for k in required if k not in features]
 
     def _validate_prices(self, features: dict[str, Any]) -> str | None:
         """
@@ -347,7 +370,9 @@ class ExecutionPlannerV1_2:
         Derive trade intent from features and engine direction.
 
         Priority order:
-            1. LIQ_SWEEP  — sweep_detected or double_sweep
+            1. LIQ_SWEEP  — legacy_unsigned: sweep_detected or double_sweep;
+                            e01_direction_aligned: a sweep event whose implied bias == direction
+                            (see LIQ_SWEEP_SEMANTICS)
             2. PULLBACK   — retest_depth in [0.3, 0.7], recent, positive momentum
             3. BREAKOUT   — strong body + strong displacement
             4. REVERSAL     — counter-trend (EMA against direction)
@@ -386,7 +411,12 @@ class ExecutionPlannerV1_2:
         ema_fast = float(features.get("ema_fast", 0.0))
         ema_slow = float(features.get("ema_slow", 0.0))
 
-        if sweep_detected or double_sweep:
+        if self._liq_sweep_semantics == "e01_direction_aligned":
+            ls = int(features["liquidity_sweep"])
+            implied_bias = -1 if ls > 0 else (1 if ls < 0 else 0)  # MKT-E01: UPPER -> SHORT
+            if implied_bias != 0 and implied_bias == direction:
+                return "LIQ_SWEEP", "sweep event aligned with direction"
+        elif sweep_detected or double_sweep:
             return "LIQ_SWEEP", "sweep detected"
 
         if (

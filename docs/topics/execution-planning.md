@@ -3,7 +3,7 @@
 > **Topic-visibility unit.** How an accepted decision becomes a concrete trade plan (entry, and
 > the scaffolding for SL/TP/RR/TTL). The step between "yes, trade" and "here's the order."
 >
-> Created: 2026-06-01 · Updated: 2026-09-16 · Status: living
+> Created: 2026-06-01 · Updated: 2026-10-03 · Status: living
 
 ## In plain language
 Once the decision engine says "execute," the **execution planner** turns that decision into a
@@ -59,3 +59,45 @@ Spine step 4 of 5: `… → DecisionEngine → ExecutionPlannerV1_2 → UltronRi
 - **Findings:** `2026-06-03` the execution-planner **replay experiment** ([`execution-planner-replay-bnbusdt-2026-06-03.md`](../analysis/execution-planner-replay-bnbusdt-2026-06-03.md)) split the RETEST→EXECUTION edge: it is **SELECTION** (~+0.145R), not SL/TP structure (~+0.031R). The structure SL/TP is **risk-shaping** (WR 43%→57%, maxDD 6.0R→3.0R on selected) rather than an expectancy source, and does **not** rescue rejected candidates. Reinforces F-002; F-010 stays open (live planner/Ultron layer still unexercised). The experiment is fed by new additive `RETEST_REPLAY` telemetry from `crt_engine_v2.py` (schemas.md §9.4).
 - **2026-09-03 — spine citation pass:** named 2 previously unreferenced spine paths under Code covered (path existence on the GCMC spine join; not a behavior claim, not G001, not a file:line citation. Source still wins.).
 - **2026-09-16 — the planner had no with-trend label (CH-intent-schema-alignment).** `REVERSAL` tested only the counter-trend half of EMA-vs-direction, so every with-trend entry that was not a sweep, pullback or breakout fell through to `UNKNOWN` and was rejected: **40.70% of XAUUSD M15 bars for LONG, 31.97% for SHORT**. Traced instance: 2024-08-21 22:15 LONG, `ema_fast` 2512.907 > `ema_slow` 2510.742. Fixed by adding `CONTINUATION` (`ttl_continuation_sec` = 180, equal to `ttl_unknown_sec` for parity). Re-measured with the real classifier: `UNKNOWN` → **0.004%** (2 bars, exact EMA ties), `CONTINUATION` equals the old `UNKNOWN` minus the new, and no other label moved. **Classifier-only, by user decision:** the gate scores `CONTINUATION` at `0.0`, which measured **0.0%** approval, so on this corpus these entries are still rejected — now as `reject_gate` with an honest label. That is a measurement, not a guarantee: the three non-intent gate weights sum to 0.65 > the 0.55 threshold, and production never emits `volume_ma20` (F-065 H7). Giving `CONTINUATION` a gate score would change decisions (sign-only momentum confirmation ≈37% approval, upper bound ≈66%); copying `REVERSAL`'s `1 − min(1, |momentum_score|)` would inherit F-061 saturation. Pinned by `test_continuation_gate_score_is_deliberately_zero`. **Risk worth knowing:** three test fixtures — two here, one in `test_sl_tp_comparator.py` — had used a with-trend entry as their canonical "no pattern" case, i.e. the tests encoded the hole. Live rail only: a transitive AST import closure shows `runtime.backtest_v2` never reaches the planner, gate or comparator. Full write-up: [`trade-intent-caller-census-2026-09-16.md`](../analysis/trade-intent-caller-census-2026-09-16.md) §10.
+- **2026-10-03 — LIQ_SWEEP was direction-blind (CH-planner-liq-sweep-direction).** The intent fired on the unsigned `sweep_detected`, or on the MKT-C04 condition `double_sweep` with no sweep on the bar, and never compared the swept side's implied bias with `selected_direction`. The entry was still priced "beyond the sweep wick" of the side the direction assumes. New strict key `execution_planner.liq_sweep_semantics`:
+  - `legacy_unsigned` keeps the old rule, byte-identical. It is declared on all 13 live configs, including the active one.
+  - `e01_direction_aligned`: LIQ_SWEEP iff signed `liquidity_sweep` ≠ 0 and its implied bias (UPPER → SHORT, LOWER → LONG) equals the trade direction. It needs the signed slot (`reject_invalid` without it).
+
+  Live-faithful A/B, XAUUSD M15, every bar × both directions:
+  - Approvals go 209 → 185 (active features) and 198 → 185 (e01 features).
+  - Approved LIQ_SWEEP drops to exactly the direction-aligned subset (93 → 44, 81 → 40). The rest re-label to BREAKOUT, PULLBACK, REVERSAL or CONTINUATION.
+
+  What is not touched: the gate's `double_sweep` +0.5 bonus (on the live rail it is still *necessary* for any LIQ_SWEEP approval), gate arithmetic, and PULLBACK/OQ7. Activation is a separate decision. Details: [`e01-lifecycle-downstream-consumers-2026-10-03.md`](../analysis/e01-lifecycle-downstream-consumers-2026-10-03.md) §B1-F.
+- **2026-10-03 — Step C, what the gate's `double_sweep` bonus means (read-only, §B1-C).**
+  - The bonus descends from the engine's never-executed `double_confirmed` (the opposite side was swept,
+    then the current sweep).
+  - Under `e01_direction_aligned`, C04 equals that ordered reading on every bar except bar-local
+    two-sided ones.
+  - No decision-time candidate shows a stable outcome effect on the RESEARCH_PROXY object: every one
+    flips sign from train to holdout.
+  - Removing the bonus leaves 0 live LIQ_SWEEP approvals.
+  - Open decision: MKT-C04 `decide_in: step_D_double_sweep_role`.
+
+  **Observation, not acted on:** `execution_planner.ttl_liq_sweep_sec` = 300 s is shorter than one M15
+  bar. The LIQ_SWEEP LIMIT order therefore expires inside the next bar, and its fill cannot be observed
+  from M15 OHLC; only lower-timeframe data or broker fill telemetry could settle it.
+- **2026-10-03 — Step D, gate scoring/authority census (read-only, §B1-D).** GateIntelligence declares
+  four factors but runs on two on the live rail: `0.35·intent + 0.25·structure`, ceiling 0.60 against a
+  0.55 threshold.
+  - **vol is 0:** close-relative `atr` (F-109).
+  - **liquidity is 0:** the volume half lacks `volume_ma20` (F-065). The sweep-extent half has no
+    producer in any commit, and its nested-window formula is ≤ 0 by construction.
+  - Both have been dead since the first commit and are masked by unit fixtures that supply
+    production-absent inputs.
+  - Supplying every declared input raises approvals 209 → 13,057 (62×) and spreads authority across
+    all four components.
+  - The weights and threshold have no calibration record and no G001 (the backtest never reaches the
+    planner, F-103).
+  - Decision space only; no code or config changed.
+  - **Outcome follow-up, same day (§B1-E), RESEARCH_PROXY:** each dormant component tested
+    separately.
+    - None shows stable information: vol and volume are negative in train and ≈ 0 in holdout; the
+      repair scenarios flip sign.
+    - The full repair approves 62× more calls at about the base rate (−0.096 vs −0.080 R gross).
+    - The live gate's own 209 approvals are −0.130 R.
+    - Registered as F-113.

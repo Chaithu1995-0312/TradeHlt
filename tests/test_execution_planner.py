@@ -626,6 +626,77 @@ def test_reject_result_has_trace():
     assert "trace" in r
 
 
+# ── LIQ_SWEEP intent identity (CH-planner-liq-sweep-direction, 2026-10-03) ────
+# MKT-E01: UPPER swept (liquidity_sweep = +1) implies SHORT; LOWER swept (-1) implies LONG.
+
+def _aligned_planner() -> ExecutionPlannerV1_2:
+    return _planner(liq_sweep_semantics="e01_direction_aligned")
+
+
+@pytest.mark.parametrize("ls,direction", [(-1, 1), (1, -1)])
+def test_e01_aligned_sweep_is_liq_sweep(ls, direction):
+    f = _base_features(sweep_detected=True, liquidity_sweep=ls)
+    intent, _ = _aligned_planner()._derive_intent(f, _engine(direction))
+    assert intent == "LIQ_SWEEP"
+
+
+@pytest.mark.parametrize("ls,direction", [(1, 1), (-1, -1)])
+def test_e01_opposed_sweep_is_not_liq_sweep(ls, direction):
+    f = _base_features(sweep_detected=True, double_sweep=True, liquidity_sweep=ls)
+    intent, _ = _aligned_planner()._derive_intent(f, _engine(direction))
+    assert intent != "LIQ_SWEEP"
+
+
+@pytest.mark.parametrize("direction", [1, -1])
+def test_e01_double_sweep_without_event_is_not_liq_sweep(direction):
+    """MKT-C04 is a CONDITION; with no sweep event on the bar it no longer triggers the intent."""
+    f = _base_features(sweep_detected=False, double_sweep=True, liquidity_sweep=0)
+    intent, _ = _aligned_planner()._derive_intent(f, _engine(direction))
+    assert intent != "LIQ_SWEEP"
+
+
+def test_e01_mode_requires_signed_sweep_slot():
+    f = _base_features(sweep_detected=True)  # no liquidity_sweep
+    r = _aligned_planner().plan(_engine(1), f, _context())
+    assert r["decision"] == "reject_invalid"
+    assert "liquidity_sweep" in r["trace"]["error"]
+    # legacy does not need the signed slot
+    assert _planner().plan(_engine(1), f, _context())["decision"] != "reject_invalid"
+
+
+def test_liq_sweep_semantics_rejects_unknown_value():
+    with pytest.raises(ValueError):
+        _planner(liq_sweep_semantics="aligned")
+
+
+def test_legacy_unsigned_matches_pre_change_classifier_exhaustively():
+    """legacy_unsigned reproduces the pre-2026-10-03 rule on every sweep-input combination."""
+    p = _planner()
+    for sd in (False, True):
+        for ds in (False, True):
+            for ls in (-1, 0, 1):
+                for d in (1, -1):
+                    f = _base_features(sweep_detected=sd, double_sweep=ds, liquidity_sweep=ls,
+                                       body_ratio=0.3, disp_strength=1.0)
+                    intent, _ = p._derive_intent(f, _engine(d))
+                    assert (intent == "LIQ_SWEEP") == (sd or ds), (sd, ds, ls, d, intent)
+
+
+def test_live_configs_declare_legacy_unsigned():
+    """Activation of e01_direction_aligned is a separate user decision (pinned here)."""
+    import json
+    from pathlib import Path
+    prod = Path(__file__).resolve().parents[1] / "configs" / "production"
+    active = (prod / "ACTIVE_VERSION").read_text(encoding="utf-8").strip()
+    declared = {}
+    for p in prod.glob("*.json"):
+        ep = json.loads(p.read_text(encoding="utf-8")).get("execution_planner", {})
+        if "ttl_continuation_sec" in ep:
+            declared[p.stem] = ep.get("liq_sweep_semantics")
+    assert active in declared
+    assert set(declared.values()) == {"legacy_unsigned"}, declared
+
+
 # ── Runner ────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":

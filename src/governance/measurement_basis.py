@@ -52,7 +52,9 @@ from identity.tokens import COST_MODEL_IDS, FILL_MODEL_IDS, WALK_KERNELS
 TIE_BREAK_PRODUCTION = "production"
 TIE_BREAK_OPTIMISTIC = "optimistic"
 TIE_BREAK_CLOSE_ONLY = "close_only_no_tiebreak"
-TIE_BREAKS = frozenset({TIE_BREAK_PRODUCTION, TIE_BREAK_OPTIMISTIC, TIE_BREAK_CLOSE_ONLY})
+TIE_BREAK_OBSERVABLE = "observable_only"   # no intrabar order inferred; branches reported
+TIE_BREAKS = frozenset({TIE_BREAK_PRODUCTION, TIE_BREAK_OPTIMISTIC, TIE_BREAK_CLOSE_ONLY,
+                        TIE_BREAK_OBSERVABLE})
 
 REF_LEVEL_DISPLACEMENT_EXTREME = "displacement_extreme"   # engine: state.displacement_candle
 REF_LEVEL_SIGNAL_BAR_EXTREME = "signal_bar_extreme"       # live/adapter/labeler disp_bar arm

@@ -74,7 +74,7 @@ def _walk(bars, policy=None, **kw):
     kw.setdefault("tp1", 101.0)
     kw.setdefault("tp2", 102.0)
     return multi_tp_walk(100.0, "long", 99.0, kw.pop("tp1"), kw.pop("tp2"), bars,
-                         stop_policy=policy, atr=1.0, **kw)
+                         stop_policy=policy, atr=1.0, entry_index=0, **kw)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -210,7 +210,7 @@ def test_policy_requiring_atr_refuses_to_run_without_it():
     bars = _random_paths(1)[0]
     with pytest.raises(ValueError, match="requires a positive atr"):
         multi_tp_walk(100.0, "long", 99.0, 101.0, 102.0, bars,
-                      stop_policy=RatchetATR(2.0), atr=None)
+                      stop_policy=RatchetATR(2.0), atr=None, entry_index=0)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -342,7 +342,7 @@ def _trail_exit(direction: str, trail_fraction):
     return multi_tp_walk(
         entry=entry, direction=direction, sl=sl, tp1=tp1, tp2=tp2,
         future=_bars(rows), partial_fraction=0.5, trail_fraction=trail_fraction,
-        max_forward=10,
+        max_forward=10, entry_index=0,
     )
 
 

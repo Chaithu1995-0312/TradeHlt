@@ -82,7 +82,9 @@ class TestAxisVocabularies:
         assert AXIS_VOCAB["fill_model_id"] is FILL_MODEL_IDS
 
     def test_tie_break_has_three_members(self):
-        assert TIE_BREAKS == {TIE_BREAK_PRODUCTION, TIE_BREAK_OPTIMISTIC, TIE_BREAK_CLOSE_ONLY}
+        # Name kept for history; `observable_only` (no intrabar order inferred) is the 4th.
+        assert TIE_BREAKS == {TIE_BREAK_PRODUCTION, TIE_BREAK_OPTIMISTIC, TIE_BREAK_CLOSE_ONLY,
+                              "observable_only"}
 
     def test_reference_level_has_four_members(self):
         assert REFERENCE_LEVELS == {

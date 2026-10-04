@@ -58,6 +58,46 @@ replay correctness > explainability > telemetry continuity > advisory-AI >
 
 ---
 📝 SESSION LOG ENTRY
+Date: 2026-10-04 11:01
+Topic: Append the forward_tester explanation to the multitpwalk analysis page
+Decision/Output: Added lines 5-8 to userinvestigation/multitpwalk_analysis.jsonl and rewrote the HTML textarea from that file. Line 6 is the sent reply naming src/bitnet/forward_tester.py and src/llm_research/forward_tester.py. No source or config edit.
+Belief Update / ROI / Goal: Goal: keep the investigation page equal to the sent answers. Belief: the forward_tester explanation now lives on the same JSONL the page reads. Knowledge ROI: high. Action: open the page for the two-file explanation.
+Open Questions: which of the two files is the subject.
+Next Step: user names the path if one of them is the subject.
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-04 10:55
+Topic: What forward_tester.py is
+Decision/Output: Two files share the name. src/bitnet/forward_tester.py is a temporal train/test check on BitNet zones (passed / degraded / insufficient_test_data, 70/30, retention floor 0.60, min 20 test trades). src/llm_research/forward_tester.py is a 3-mode CSV walk (BASELINE / POLICY / HYBRID) over the last 30% of rows. Its planner.plan call passes one argument; plan requires three, and the except sets pnl to 0. Neither is multi_tp_walk. No source edit.
+Belief Update / ROI / Goal: Goal: know which forward tester is being asked about. Belief: both are research holdout checkers, and the LLM one books zero PnL on the current planner signature. Knowledge ROI: high. Action: name the path before treating either as the walk kernel.
+Open Questions: which of the two files the user meant.
+Next Step: user names the path if one of them is the subject.
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-04 10:27
+Topic: Multitpwalk analysis page over the sent CPU-contract reply
+Decision/Output: Wrote userinvestigation/multitpwalk_analysis.jsonl and the sibling HTML. Line 2 is the 2026-10-03 23:55 reply, byte-copied from the sent message. The page fetches that JSONL. No source or config edit.
+Belief Update / ROI / Goal: Goal: keep the CPU walk contract readable outside the chat. Belief: the golden matrix stays the sent text, stored as the JSONL line. Knowledge ROI: high. Action: read the analysis from the page; do not retype it.
+Open Questions: port scope still undecided.
+Next Step: user reads the page. No kernel until asked.
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-03 23:55
+Topic: Frozen multi_tp_walk contract, authority chain, and CPU golden matrix
+Decision/Output: No code, no new test, no GPU port. Golden rows come from tests/research/test_multi_tp_walk_parity.py. Pinned: clean stop STOPPED rr_gross -1; R ladder at tp1_mult 1.0/1.5/0.8/1.2 gives TP1_TP2 1.5/1.75/1.4/1.6 and TP1_BE_STOP 0.75/1.125/0.6/0.9; timeout-before-TP1 TIMEOUT rr 0.2 duration 40; inverted stop and lookahead raise ValueError. Step C kwargs select the ledger_blend arm (0.75 at mult 1.0), not engine_pnl (0.50). Timeout-after-TP1 appears on the short-mirror fixture as observed TIMEOUT rr 1.5; the test asserts cross-side equality only. No test stores a TP2-and-stop same-bar candle. Empty future is a source branch (TIMEOUT, rr 0, duration 0) with no test. SEM-017 mathematical_definition trail-stop R (partial only) disagrees with the formula field and the kernel default; Step C follows the default.
+Belief Update / ROI / Goal: Goal: accelerate the existing walk object only after its meaning is pinned. Belief: the CPU kernel's meaning for the Step C kwargs row is the parity-test ladder plus the clean-stop and pre-TP1 timeout rows. A GPU port that matches mean R without those rows would be accelerating an interpretation. Knowledge ROI: high. Action: treat this matrix as the golden contract; do not write a kernel until asked.
+Open Questions: whether a later port must cover the full function (optimistic, engine_pnl, adverse fill, partial_fraction 0, trail_fraction None) or only the Step C kwargs row. Deterministic TP2/stop same-bar candle remains unpinned.
+Next Step: user decides the port scope. No implementation until asked.
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-03 23:30
+Topic: Source reconstruction of multi_tp_walk and the Step C invocation
+Decision/Output: No code change. multi_tp_walk and labeler are clean in the working tree. Step C scratch script calls the existing function once per sweep bar (A 7542, B 5033, outcome_rows equal population_rows) with explicit partial_fraction=0.5 and max_forward=40; every other walk kwarg is the function default. Cost and the block bootstrap are outside the function. Gross r is the bootstrapped series. SEM-017's trail-stop R sentence (partial only) disagrees with its formula field and with the kernel default ledger_blend; shown, not resolved.
+Belief Update / ROI / Goal: Goal: know which exit object Step C measured before any GPU port. Belief: Step C exercised the existing kernel; it did not add a walk algorithm. The 132 figure in the slice artifact is an X0 flag count, not a walk population. Knowledge ROI: high. Action: use the reconstruction as the contract text; do not retune kwargs.
+Open Questions: none for the walk contract. GPU port still undecided.
+Next Step: user uses the canonical wording; no implementation until asked.
+---
+📝 SESSION LOG ENTRY
 Date: 2026-10-03 04:00
 Topic: Semantic OS integration on the R1-C trade slice — C5/C6 exercised, 0 unexplained on a second corpus
 Decision/Output: USER "Approved". Recorded MKT-E12 divergence (count HTF clock anchored at the loaded file's first row; v2). Integration run results/semantic_os_integration/20261002T205937Z on data/mt5/XAUUSD_W2024-11-13-to-2025-02-25-r11536.csv (sha a28b409a, 6,559 bars, v2_htfcrt_2026_08 7de09f62): replay gate PASS (1,114 events); AGREE 903 / EXPECTED 30 / UNEXPLAINED 0 / NOT_CHECKABLE 169; D-levels D1 23 / D2 24 / D4 11. C5 on both trades: entry = retest close AGREE, entry bar one later EXPECTED (approval_bar_legacy), stop = displacement extreme - 0.2 ATR AGREE, targets 1.5R / 2R AGREE. C6: STOP at bar 74 and TARGET_FINAL at bar 6495, engine and contract replay identical. C4: TRS-03 26 EXPECTED (body retrace divergence), MKT-E11 2 EXPECTED (post-flip). Spec §16 R1-C result paragraph. Semantics 223 passed / 2 skipped; floor 7 known reds. Code sha f2e44ae + uncommitted tree. Not committed.
@@ -226,4 +266,292 @@ Decision/Output: check_governance_invariants.py --all = 8 failed / 843 passed. 7
 Belief Update / ROI / Goal: Belief: rotate_session_log.py silently overwrites an archive whose date range repeats. That is a real data-loss hazard, avoided here; not fixed (out of scope).
 Open Questions: fix the rotator collision (separate task); activation; commit.
 Next Step: user decision.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-03 (IST ~19:40)
+Topic: Semantic OS chain committed (27ed1c9, --no-verify by user decision); completion re-check
+Decision/Output: User chose one chain commit, then --no-verify (floor at its 7 known pre-existing reds). Staged 64 explicit paths: integration run 1 + R1-A/B/C, C7, Step 6, FM-094/095, F-112 evidence, manifests, waivers, log archives. Excluded settings.local.json, ic-003 regen, 10-01 plan files, report.json, results_xau_*.log, scratch_run_logs/, and another session's rotator edits. Not pushed. Completion re-check on the clean tree: CH-e01-lifecycle-retest-identity COMPLETE; CH-e01-lifecycle-sweep-identity BLOCKED on the SITS floor. Its declared scripts require tests/test_script_registry.py, which is red: grandfather pin vs stubs drift, where the chain's 2 stub lines (semantic_os_integration.py, semantic_os_trade_window.py) are in stubs but not the pin, alongside ~10 pre-existing; plus an unclassified ratchet. Correction to the external review: 6 identities, 5 vector values (FM-094 is an internal column).
+Belief Update / ROI / Goal: Goal: a clean ownership boundary before activation. Belief: achieved for the retest change; Step 6 is blocked by script-registration hygiene the chain inherited, not by semantics. Knowledge ROI: medium. Action: propose removing the 2 stub lines (overlay registration already exists), pending user OK.
+Open Questions: 2 stub lines; activation; findings revalidation (separate, later).
+Next Step: user decision.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-03 (IST evening)
+Topic: E01 downstream consumer #1, GateIntelligence + planner intent: read-only semantic census + live-faithful re-run
+Decision/Output: Registry-floor red parked as hygiene debt (user). Census of every sweep input on ExecutionPlannerV1_2/GateIntelligence (the live rail only). Rows 1-3 CONFIRMED DEFECT:
+- LIQ_SWEEP is direction-blind against MKT-E01 implied_bias.
+- C04 double_sweep is used as a "confirmation" bonus and as an event trigger.
+Row 4 (PULLBACK reads FM-021 EMA-distance as a retrace fraction) needs USER AUTHORIZATION (OQ7). Row 5: the _liquidity_score sweep-extent half is an 8th detector on inputs with no producer, so it is constant 0; SEM-004 understated this.
+Live-faithful re-run on XAUUSD M15, 47,197 bars x 2 directions, both arms:
+- vol and liquidity are 0 on every call, so final = 0.35*intent + 0.25*structure.
+- A live LIQ_SWEEP approval needs sweep AND double_sweep, so C04 is necessary.
+- 49/93 (active) and 41/81 (e01) approved LIQ_SWEEPs oppose the implied bias.
+- Approvals are 209 -> 198 (-5%). B1's 2,077 -> 1,382 (-33%) came from its volume_ma20 injection: CORRECTED in docs/analysis/e01-lifecycle-downstream-consumers-2026-10-03.md (new section B1-L).
+Recorded: MKT-E01 x2 and MKT-C04 x1 divergence rows (concept_contracts.yaml), SEM-004 extended. No code or config changed. validate_all [], 262 semantic/citation tests pass, both concepts GROUNDED.
+Belief Update / ROI / Goal: Goal: E01 truth reaching decisions with its meaning intact. Belief: the first consumer's sweep semantics are wrong on direction and on C04 meaning, and on the live rail C04 is the gating input. E01 itself barely moves live approvals (-5%), so the consumer is the binding defect, not the producer. Knowledge ROI: high, because it corrected a prior diagnostic's magnitude 10x. Action: the consumer fix is next, not more producer work.
+Open Questions:
+- Production direction comes from EngineRunner, so the real mismatch rate is UNVERIFIED.
+- What a "confirmed sweep" means (replace or drop the C04 bonus).
+- PULLBACK depth meaning (OQ7).
+Next Step: user decides the planner/gate fix scope (an authorized behaviour-change turn under the construction protocol); then the next consumer, the CRT decision path.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-03 (IST evening, 2)
+Topic: CH-planner-liq-sweep-direction — user-authorized atomic fix of census rows 1 and 3 (LIQ_SWEEP direction/event), step A+B
+Decision/Output: New strict execution_planner.liq_sweep_semantics in REQUIRED_CONFIG_KEYS (EPIC-84 no-defaults):
+- legacy_unsigned = old rule, declared on all 13 live configs incl. ACTIVE v2_htfcrt_2026_08 (hash-neutral; same config set as ttl_continuation_sec).
+- e01_direction_aligned = LIQ_SWEEP iff signed liquidity_sweep != 0 and implied bias (UPPER->SHORT, LOWER->LONG) == selected_direction. Requires the signed slot (reject_invalid otherwise); double_sweep no longer triggers the intent.
+Gate C04 bonus, gate arithmetic and PULLBACK untouched.
+Tests: +10 in test_execution_planner.py (aligned/opposed/ds-only/missing-slot/invalid value/exhaustive legacy parity/live-config pin).
+Reachability golden regenerated (+1 READ_AND_USED, the new key). Impact manifest APPROVED; completion manifest written.
+Live-faithful A/B (XAUUSD M15, every bar x both directions):
+- legacy reproduces the census exactly (209/93, 198/81);
+- aligned: approvals 209->185 (active feats) and 198->185 (e01 feats), approved LIQ_SWEEP exactly the aligned subset (44, 40). The rest re-label (A: CONTINUATION 4,887 / REVERSAL 2,984 / PULLBACK 1,984 / BREAKOUT 480).
+Recorded in the e01 doc §B1-F, topic execution-planning.md, and the MKT-E01 divergence row. Unrelated red test_behavior_census::test_external_injection_not_overreported: EPIC-84 class, not in GREEN_FLOOR.
+Belief Update / ROI / Goal: Goal: E01 meaning reaches decisions intact. Belief: the classifier half is fixed and matches the contract one-for-one. The gate half still makes C04 necessary for every live sweep approval, so 44 aligned approvals still pass only through a mis-meant bonus. Knowledge ROI: high (exact contract parity, clean atomic attribution). Action: decide activation; then step C (meaning of a "confirmed sweep").
+Open Questions: activate e01_direction_aligned on ACTIVE (user); production direction mix (EngineRunner) UNVERIFIED; C04 role (step C/D).
+Next Step: user decision on activation; then step C investigation.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-03 (IST night)
+Topic: Step C — what the gate's double_sweep bonus means (read-only lineage + full-corpus information test); activation held by user
+Decision/Output: User held activation (legacy_unsigned stays). E-001 correction: census row 2's "same-side confirmation" intent was my ungrounded inference, now CORRECTED in the MKT-C04 row and doc B1-L.
+Lineage: the bonus descends from the engine's SweepEvent.double_confirmed (prev sweep opposite side; crt_engine_v2.py:965-968), never executed (constant False). Every reader applies a bonus. FM-060's registered wording is "trap/whipsaw" (a caution). No v2 concept owns the ordered meaning.
+Measurement (OBSERVATION_ONLY; RESEARCH_PROXY outcome: signal-bar close, compute_crt_levels(atr_abs), multi_tp_walk; 70/30 time split; 480-bar block bootstrap; XAUUSD 47,197 bars):
+- population 7,542 / 5,033 bars, one row per bar;
+- X0 C04 == X1w ordered-within-W on 1,655/1,655 (active) and 740 + 38 bar-local two-sided (e01);
+- X0, X1w and X1e all flip sign train -> holdout, all-sample CIs cross 0;
+- X2 (E04 next bar) +1R is mechanical lookahead;
+- X3 (no bonus) = 0 live approvals.
+Recorded: doc §B1-C, MKT-C04 corrected row + open decision (decide_in step_D_double_sweep_role), topic note incl. the TTL observation (300 s < one M15 bar). No code or config change.
+Belief Update / ROI / Goal: Goal: give double_sweep a meaning earned by evidence. Belief: under the direction fix, C04 already equals the historical ordered meaning, so the (a)/(b) conflict is mostly definitional. But NO decision-time variant carries stable outcome information; the bonus works as a gate, not as information. Knowledge ROI: high (removed a false premise; showed meaning choice cannot be settled by information value). Action: Step D is a design decision, not a measurement.
+Open Questions: Step D role of the bonus (user); whether a sweep-reversal approval should exist on the live rail at all if its sole enabling input is non-informative; FM-060 wording.
+Next Step: user decides Step D; then activation re-evaluation; then the CRT decision path.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-03 (IST night, 2)
+Topic: Step D — GateIntelligence scoring/authority census (read-only): why a 4-factor gate runs on 2
+Decision/Output: Source + git history:
+- vol = 0 because canonical atr has been close-relative since 5897209f (F-109; the 'absolute' basis exists, never activated).
+- liquidity = 0, two causes from birth: (1) volume_ma20 never in the planner's production input (first live hook and today's LiveRailFeeder/build_features); (2) lowest_low/highest_high have no producer in any src commit, AND the nested-window formula is <= 0 by construction (docstring needs an undefined disjoint window).
+- Unit fixtures (abs atr, volume_ma20, nested ll/hh) mask both.
+- Weights/threshold: bulk-commit origin, no calibration, no G001 (F-103).
+Decision-space census (XAUUSD 47,197 bars x 2 dir, read-only):
+- S0 live 209 approvals (intent and structure both necessary on 209/209); S3 nested inputs = no change.
+- S1 vol abs 4,675; S2 volume_ma20 2,077 (= B1); S4 disjoint extent 501.
+- S5 all declared 13,057 (62x), authority spread over 4 components; aligned S5 9,981.
+Recorded:
+- doc §B1-D;
+- SEM-004 extended (structural zero);
+- KNOWN_ILLUSIONS #3 CORRECTED (keys now read; two read-but-inert);
+- topic note.
+No code or config change; activation and double_sweep untouched.
+Belief Update / ROI / Goal: Goal: an authorization gate whose authority is earned. Belief: the single-sweep-feature authority is an artifact of two components that never received their declared inputs, not a design. The threshold 0.55 was set against a 4-factor sum production never had (live ceiling 0.60). The gate as a whole has no outcome evidence. Knowledge ROI: high (explains Steps A-C's pathology at the root). Action: the decision is about the gate, not double_sweep.
+Open Questions: register as an F-id (Findings Mandate) — user; whether to repair inputs (S1/S2/S4) vs recalibrate vs evaluate the gate on outcomes first; disjoint-window convention for sweep extent (an 8th sweep detector; MKT-E01 says use sweep_extreme).
+Next Step: user decides direction (likely: outcome-evaluate the gate scenarios on the RESEARCH_PROXY object before repairing anything).
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-03 (IST night, 3)
+Topic: F-113 registered + read-only outcome test of each dormant GateIntelligence component
+Decision/Output: Registered F-113 (ARCH, Certain), keeping fact / cause / consequence / UNKNOWN / not-established separate. Written to:
+- docs/current-findings.md and the CLAUDE.md index row;
+- the research_family_registry exclusion (F-111/F-112 precedent);
+- findings export + context recompiled.
+Outcome test (RESEARCH_PROXY: signal-bar close, live per-intent SL/TP via compute_crt_levels(atr_abs), multi_tp_walk; 94,394 calls / 60,096 eligible; 70/30 time split; 480-bar block bootstrap):
+- S1 vol-abs, S2 volume and all combos: delta vs live flips sign train -> holdout;
+- S3H disjoint-window extent (HYPOTHESIS) is same-sign but every CI crosses 0 and it adds only 292 calls: INSUFFICIENT;
+- component information: vol and volume NEGATIVE in train (CIs exclude 0), ~0 in holdout;
+- full repair: 13,047 approvals at -0.096R, about the base rate -0.080R; live gate 209 approvals at -0.130R.
+Recorded in doc §B1-E (with a disclosed warm-up edge, 6 approvals), the F-113 update and the topic note. Floor unchanged (7 known reds). No code or config change.
+Belief Update / ROI / Goal: Goal: earned authority for live-rail entry authorization. Belief: neither the live 2-factor gate nor any repair of its dormant inputs shows outcome information on this object. Repairing would multiply approvals at base-rate expectancy. Knowledge ROI: high: closes "just wire the inputs" before it was tried. Action: stop treating GateIntelligence repair as the path; the open question is what should authorize a live entry.
+Open Questions: what, if anything, should authorize a live-rail entry (the gate has no demonstrated value in any configuration measured); activation of e01_direction_aligned is moot for value but still a semantics correction; double_sweep role (step_D) unchanged.
+Next Step: user decision.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-04
+Topic: XAUUSD M15 volume lineage census — live MT5 terminal vs research corpus vs live rail → GateIntelligence (read-only)
+Decision/Output: Read-only MT5 probes (.venv MetaTrader5 5.0.6180; no login, no symbol_select).
+- Sept 2026 [broker-labelled]: 2,014 bars, all on the 15-min grid, 22 days opening 01:00.
+- tick_volume non-zero 2,014/2,014 (median 6,728); real_volume 0/2,014.
+- Full corpus re-fetch: 47,275/47,275 timestamps, OHLC exact, volume == tick_volume on all bars (F-099 binding 17/17 -> full); real_volume never.
+- Monthly tick_volume median trends up 3–5x mid-2025 -> 2026-09 (not a step at the corpus end).
+Path (source-traced):
+- live rail has NO MT5 bar source (MT5_CANDLES -> no port); only TickDB paper spec (sum_size), its volume UNVERIFIED;
+- volume and canonical volume_ratio reach the planner dict; the gate reads non-canonical volume_ma20 (absent) and ignores volume_ratio (present) => volume half 0.
+Recorded: new point-in-time doc docs/analysis/xauusd-m15-volume-lineage-census-2026-10-04.md + an F-099 Update line. No code or config change.
+Belief Update / ROI / Goal: Goal: know whether volume can carry any live meaning. Belief: research volume = MT5 tick_volume, exactly and fully; real volume does not exist for this symbol; live-rail volume semantics are unestablished (no MT5 port, TickDB unverified); the gate's volume half is a wiring miss on a quantity that already exists canonically. Knowledge ROI: medium-high (closes the data side; separates data absence from consumer wiring). Action: any volume-based live decision first needs a defined live bar source.
+Open Questions: TickDB XAUUSD volume semantics (needs a recorded paper capture); whether the live rail should get an MT5 candle port; level non-stationarity for any absolute volume threshold.
+Next Step: user decision.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-04
+Topic: Inventory of every explicit UNKNOWN in the semantic layer (read-only)
+Decision/Output: Scratch gatherer over concept_contracts, market_ontology, structure_profiles, market_shapes, representation_registry/* and semantic_os/*.
+- Concepts: 58 total, 54 ACCEPTED, 4 PROPOSED/UNDEFINED (GP-07, MKT-Z06 [OQ7], MKT-E03 choch, MKT-C02, which waits on E03); proposed param MKT-E02 consumption once_per_level.
+- Open decision: MKT-C04 step_D_double_sweep_role.
+- Spec-deferred: zone FILLED, parent C1/C2/C3 mapping, M15 objective/targets, L3 v2.0.0, ontology scope v2, CRTState.EXPIRED stage vs termination.
+- Ontology knowledge_status: UNKNOWN 6 (UNK-002..007), OBSERVED 4, CHARACTERIZED 23, MATHEMATICALLY_DEFINED 13, FORMULA_DERIVED 3, VALIDATED 1.
+- structure_profiles: founding UNKNOWN on 6 profiles, walk UNKNOWN on 7.
+- 43 unmapped representations; 2 UNVERIFIED divergence evidences.
+Designed absence encodings (UNDEFINED/UNKNOWN as values) separated from knowledge gaps. No edits to semantic files.
+Belief Update / ROI / Goal: Goal: one map of what the meaning plane does not yet know. Belief: the gaps cluster in three places: OQ7 retest semantics (blocks 3 concepts + retest_depth), structure/CHoCH (E03 -> C02), and execution-lifecycle identity (L3 v2.0.0 -> 6 unmapped CRT states). Several of this session's discoveries live only in prose, not as UNKNOWN_* nodes. Knowledge ROI: medium (navigation). Action: user picks which cluster to resolve or register.
+Open Questions: whether to register this session's undefined behaviours as UNKNOWN_* nodes (§6.6): live-rail entry authorization, double_sweep meaning, sweep-extent window, TickDB volume.
+Next Step: user decision.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-04
+Topic: Is MT5 tick volume part of the canonical research dataset? Classify B1-E's volume arm
+Decision/Output: Verified at source:
+- raw `volume` IS canonical (FM-089, source, active, vector slot 4), FM-062 volume_ratio slot 5, FM-063 volume_spike slot 38 (CANONICAL_FEATURES checked);
+- CORPUS_AUTHORITY declares volume_semantic TICK_VOLUME; BC-4 still blocks OHLCV closure (TICK_VOLUME_APPROXIMATE);
+- volume_ma20 is NOT canonical;
+- no record of a deliberate exclusion, only a deferred wiring fix (SEM-004, F-065);
+- the gate's volume half == 0.5*min(1, volume_ratio/2) exactly (2,922 bars, max abs diff 0.0).
+=> B1-E S2 = counterfactual WIRING of canonical FM-062 (not synthetic data); S1 = counterfactual configuration; S3H = synthetic hypothesis input. Correction to the user's premise: the 48-vector does contain volume (and its ratio); what's missing is the gate's wiring.
+Recorded: B1-E input-surface table + F-113 clarification; findings re-exported; tests pass. No code/config change, no re-run.
+Belief Update / ROI / Goal: Goal: label evidence by what the dataset actually possesses. Belief: B1-E's volume result is evidence about a real canonical feature (tick-volume ratio) through the gate's formula, conditional on tick volume ~ participation (BC-4 open). It is not a synthetic-input result. Knowledge ROI: medium (prevents mislabeling evidence in either direction). Action: none required; any re-run would be a separately authorized experiment.
+Open Questions: whether the gate should read FM-062 directly (wiring decision, deferred by SEM-004); BC-4 closure.
+Next Step: user decision.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-04
+Topic: Is volume_ratio intended / permitted as a GateIntelligence decision input? (BC-4 + ownership, read-only)
+Decision/Output: Four authorities read at source:
+(1) Code intent: the gate docstring declares a "volume spike" input (vol/vm20 saturating at 2x); canonical equivalents FM-062 (exact) / FM-063 (discrete).
+(2) Ontology: FM-062/FM-063 consumed_by [UNKNOWN], so no registered consumer.
+(3) Meaning plane v2: NO participation concept; volume_ratio unmapped ("participation measurement — no slice-1 concept"), so no contract permits or forbids decision use.
+(4) MIAR: "Should the setup pass decision gates?" owner = decision_fusion; planner/execution_intent are secondary consumers that "must not redefine the question"; execution_intent non-goal "never rescore market features". GateIntelligence (inside the planner) rescores market features and approves/rejects: an UNRECORDED TruthConflict (execution_intent's SEMANTIC_DRIFT reason does not name it).
+BC-4: OHLCV layer still BLOCKED (BC-1,3,4,5); volume is TICK_VOLUME_APPROXIMATE; it blocks APPROVED/R3b/G001 certification, not research use; FM-089 says never read it as executed volume.
+No edits to MIAR / contracts / code.
+Belief Update / ROI / Goal: Goal: decide volume's role by authority, not field names. Belief: "should the gate consume volume_ratio" is mis-located. Under MIAR the planner should not own market-feature approval at all, and the meaning plane has no participation concept to contract the use. Wiring volume into GateIntelligence would deepen an ownership violation. Knowledge ROI: high (re-frames the decision one level up). Action: the user resolves the TruthConflict (gate ownership) before any input decision.
+Open Questions: who owns live-rail approval (decision_fusion vs planner gate); whether to define a participation concept (v2) before any volume decision use.
+Next Step: user decision.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-04
+Topic: GateIntelligence ownership trace — Code → MIAR → Ontology → Execution (read-only)
+Decision/Output: Single construction/call site: execution_planner.py:277-278 inside ExecutionPlannerV1_2.plan.
+Production caller live_engine_hook.process:1110, on the paper live rail only (F-073; the backtest never reaches it, F-103). Order:
+- EngineRunner (fusion → DecisionEngine → RegimeGovernor) → planner;
+- reject_engine unless decision==execute (:219-223) → intent → GateIntelligence;
+- reject_gate → no plan, Ultron "skipped: planner_did_not_execute" → orchestrator NO_ORDER / _may_submit false;
+- execute → compute_crt_levels → UltronRiskGate → order only on Ultron approve.
+The gate score is consumed nowhere downstream (logging/collector only).
+=> it is a terminal VETO on already semantically-approved signals, re-scoring market features. Necessary, never sufficient: a setup re-qualification acting as an execution-permission veto. It is not market interpretation, not a risk gate, not final approval.
+Owners: MIAR "Should the setup pass decision gates?" = decision_fusion (planner secondary, "must not redefine"); execution_intent non-goal "never rescore market features". Ontology v2: DEX-04 approval rail planner_ultron mapped only at UltronRiskGate.evaluate; the planner verdict is unrepresented (neither mapped nor unmapped) and reject_gate is absent from terminal_reason_map. Semantic OS v1: BD-008/CN-006 planner = geometry after semantic GO; alternatives_rejected "let the ExecutionPlanner self-approve". CN-002 Trade Approval = Ultron economic final yes/no.
+TruthConflicts:
+- TC-1 code vs MIAR (planner redefines the decision_fusion question, rescoring market features);
+- TC-2 code vs Semantic OS v1 BD-008/CN-006 (a planner-side veto the boundary contract does not list, and the rejected planner-approval alternative in partial form);
+- TC-3 is a representation gap (gate verdict has no v2 representation / reason code), not a conflict.
+Side: forward_tester.py:151 calls plan() with 1 of 3 args (TypeError swallowed, pnl=0, so the gate never runs there); MIAR names the ExecutionPlanner co-owner of the SL/TP/RR plan, but the planner sets none (live hook compute_crt_levels does).
+No edits.
+Belief Update / ROI / Goal: Goal: locate GateIntelligence's authority honestly. Belief: it is an unowned second semantic veto between decision_fusion's GO and Ultron. Three authorities (MIAR, Semantic OS v1, ontology v2) each assign the planner a non-approving role, and none represents the gate verdict. Knowledge ROI: high (turns "fix the gate inputs" into an ownership decision). Action: the user resolves TC-1/TC-2; no new owner inferred.
+Open Questions: TC-1/TC-2 resolution (user); whether to record TC-1/2/3 in MIAR / concept_contracts / F-113.
+Next Step: user decision.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-04
+Topic: Historical introduction of GateIntelligence + the planner veto — evidence-only chronology and authorization search (read-only)
+Decision/Output: Introduced 2026-05-15 in bulk commit eb64269b / b34d6a8c ("stable before rename", 191 files, no design note); no earlier trace in git or in the 5 pre-git backup zips.
+Before it, 5897209f (2026-04-30): the planner computed entry/SL/TP/RR/TTL/size and vetoed via reject_engine / reject_unknown_intent / reject_rr (min_rr_ratio); v2_multi_2026_04 had 0 gate keys.
+The intro commit: rewrote the planner to "pure intent classifier + gate … delegates signal approval to GateIntelligence", removed reject_rr and SL/TP/RR, added the gate config section and mechanical tests. The only stated purpose is the file docstring ("Pure signal gate for ExecutionPlanner … deterministic multi-factor approval gate").
+No contemporaneous session-log entry. All docs mentioning it date >= 2026-06-18, descriptive or reconstruction:
+- FULL_BUILD_SPECIFICATION (2026-06-24) Story 2.3 says "4 weights + threshold with no documented design intent", decision needed; STORY-2.3 still `pending`;
+- model-design-intent.md (2026-08-09, self-declared reconstruction) "Essential? … gate no".
+Promotions: the 7 v2_multi_2026_04 PROMOTED records predate the gate; the 05-14 attempt FAILED; the 2026-08-15 v2_htfcrt manual-write PROMOTED notes contain 0 gate/planner mentions.
+Findings: F-108/F-109/F-113 measure it and explicitly grant no authority. F-109 found the gate section was not even loaded on the Engine rail until 2026-09-25.
+Explicit authorization record for the planner-side veto: NONE FOUND in the repo.
+Belief Update / ROI / Goal: Goal: know whether the veto was ever authorized. Belief: no repo evidence authorizes it. It arrived unannounced in a bulk snapshot that replaced the planner's own RR veto, and the one governance artifact that addressed it (Story 2.3) recorded "no documented design intent" and was never decided. Knowledge ROI: high (TC-1/TC-2 now have provenance: unauthorized, not merely drifted). Action: user decision; Story 2.3 is the existing open vehicle.
+Open Questions: authorization outside the repo (chat or design history before git tracking) — UNVERIFIED.
+Next Step: user decision.
+---
+
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-04
+Topic: observable_only intrabar tie-break (research walkers) — OHLC touches, not touch order
+Decision/Output: Opt-in tie_break="observable_only" in multi_tp_walk, reference_walk (independent twin), forward_walk; state-machine-legal forks only (OPEN: SL+TP1, SL+TP2; TP1: trail+TP2); TP1+TP2 / TP1+trail not forks. OracleOutcome/Outcome gain defaulted ambiguous/rr_band(/n_branches/rr_gross_basis); rr_gross on ambiguous rows = compat_min_branch scalar, rr_band authoritative. measurement_basis.TIE_BREAKS += observable_only. Production default byte-identical; crt_engine_v2/backtest_v2 untouched. Tests: tests/research/test_observable_intrabar_order.py (20).
+Belief Update / ROI / Goal: Goal: stop manufacturing intrabar order in research. Belief: later single touches never exclude a dead branch, so ambiguity is not retroactively resolved. Knowledge ROI: medium. Action: report; docs (SEM-017/topic) not yet synced.
+Open Questions: labeler/ledger consumers of exit_kind="AMBIGUOUS"; SEM-017 + topic doc sync; production rail unchangeable without redesign.
+Next Step: user review; then decide doc sync and labeler opt-in.
+---
+
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-04
+Topic: Entry bar never evaluated for SL/TP1/TP2 — proving test
+Decision/Output: No src change (already true). Added test_entry_bar_is_never_walked (5 walker x tie_break arms): entry bar passed in -> ValueError lookahead; bars after entry only -> entry bar range cannot exit the trade. 25/25 green.
+Belief Update / ROI / Goal: Goal: no same-bar-as-entry exits. Belief: guard holds in forward_walk always; multi_tp_walk/reference_walk only when entry_index is passed. Knowledge ROI: low (confirmation). Action: none.
+Open Questions: should multi_tp_walk/reference_walk require entry_index (guard is caller-dependent when None)?
+Next Step: user decision on making entry_index mandatory.
+---
+
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-04
+Topic: entry_index now required in multi_tp_walk / reference_walk
+Decision/Output: entry_index keyword-only with no default + explicit None -> ValueError in both walkers; callers fixed: scripts/research/execution_planner_replay.py (entry_index=i), tests/research/test_stop_policy.py (3 sites, bars index from 1 -> 0). New test_entry_index_is_required. tests/research + tests/semantics + measurement_basis + identity_chain: 1483 passed, 6 failed — all 6 unrelated (schema v6.0 rename candles_since_sweep, clean_labels bad_features, ERP/IC governance JSON).
+Belief Update / ROI / Goal: Goal: no exit evaluated on the entry bar. Belief: guard is now unconditional at the API, but still skipped for bars lacking `.index`. Knowledge ROI: low. Action: none.
+Open Questions: require `.index` on every forward bar too?
+Next Step: user decision on the `.index` hole.
+---
+
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-04
+Topic: Forward bars must carry .index in multi_tp_walk / reference_walk
+Decision/Output: Lookahead guard now fails closed on a bar with no `.index` (4 guard sites, `bidx is None or ...`), matching forward_walk. Production callers already supply .index (labeler/exit_sweep Bar, replay _WalkBar, position/outcome). New test_forward_bar_without_index_is_rejected (2 tie-breaks). Suite: 1485 passed, same 6 unrelated failures as before.
+Belief Update / ROI / Goal: Goal: no exit ever evaluated on the entry bar. Belief: the entry-bar guard is now unconditional in all three walkers. Knowledge ROI: low. Action: none.
+Open Questions: none.
+Next Step: user review / commit decision.
+---
+
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-05
+Topic: Current branch details for semanticos_impl
+Decision/Output: HEAD 27ed1c9 (2026-10-03 18:09 +0530), 6 commits ahead of grokbotchanges ea69a60, no upstream. Working tree dirty: 1 staged add, 41 unstaged files (3196+/94-), plus untracked plans/logs/tests. Three stashes exist on other branches.
+Belief Update / ROI / Goal: none
+Open Questions: none
+Next Step: none — report only
+---
+
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-05
+Topic: Commit semanticos_impl working tree and push with --no-verify
+Decision/Output: User asked to push all current-branch changes and to use git commit --no-verify (core.hooksPath=hooks). Staging tracked edits plus untracked code, tests, manifests, plans, skills, and userinvestigation pages. Leaving run logs untracked: report.json, results_xau_*.log, scratch_run_logs/.
+Belief Update / ROI / Goal: none
+Open Questions: none
+Next Step: git commit --no-verify then git push -u origin semanticos_impl
 ---

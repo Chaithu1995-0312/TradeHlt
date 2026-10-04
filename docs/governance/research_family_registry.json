@@ -135,6 +135,10 @@
       "reason": "Architecture — feature-producer conformance to the MKT-E01/MKT-L01 semantic contract (which levels a sweep slot tests and whether they are consumed); a fact about the measuring instrument, not a market-object research claim."
     },
     {
+      "claim": "F-113",
+      "reason": "Architecture — decision-gate construction (which GateIntelligence components ever receive their declared inputs on the live rail); a fact about the approval instrument, not a market-object research claim."
+    },
+    {
       "claim": "F-008",
       "reason": "Governance/risk — drift detected but not acted on; instrument behaviour, not a market object."
     },

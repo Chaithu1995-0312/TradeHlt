@@ -100,6 +100,7 @@
     "ttl_liq_sweep_sec": 300,
     "risk_percent": 0.5,
     "reject_unknown_intent": true,
+    "liq_sweep_semantics": "legacy_unsigned",
     "partial_tp_breakeven_enabled": true,
     "partial_tp_fraction": 0.5,
     "precision_default": 8,

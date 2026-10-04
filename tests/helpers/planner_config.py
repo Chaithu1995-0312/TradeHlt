@@ -20,6 +20,9 @@ LEGACY_PLANNER_VALUES_2026_09_28 = {
     "precision_overrides": {"XAUUSD": 2, "BTCUSDT": 2, "ETHUSDT": 2},
     "default_account_balance": 10_000.0,
     "reject_unknown_intent": True,
+    # Added 2026-10-03 (CH-planner-liq-sweep-direction); not part of the former DEFAULT_CONFIG.
+    # legacy_unsigned is the pre-existing classifier behaviour.
+    "liq_sweep_semantics": "legacy_unsigned",
     "breakout_disp_threshold": 1.5,
     "gate_weight_intent": 0.35,
     "gate_weight_vol": 0.20,

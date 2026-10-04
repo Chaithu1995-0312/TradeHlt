@@ -95,6 +95,9 @@ Inputs and coverage:
 | intent PULLBACK / BREAKOUT | 5,534 / 2,392 | 5,492 / 2,544 |
 
 - **Approval flips:** 1,146 approved → rejected and 451 rejected → approved, net −695 (−33%).
+  **CORRECTED 2026-10-03 (see B1-L):** these approval counts are not live-faithful. The harness added
+  `volume_ma20 = volume / volume_ratio`, which the live rail never carries. Live-faithful approvals are
+  209 → 198 (−5%).
 - **Intent and score:** intent score changed on 19,818 calls; maximum |Δ final score| = 0.40.
 - **Mechanism, read from the flip examples:** a LIQ_SWEEP intent scores 0.5·sweep + 0.5·double_sweep.
   When the lifecycle consumes a level, `double_sweep` (intent 1.0 → 0.5) or `sweep_detected`
@@ -104,6 +107,364 @@ Inputs and coverage:
     the backtest never imports the planner.
   - F-109 found its gate hostile to CRT entries on XAUUSD.
   - These are per-bar hypothetical calls, not trades.
+
+### B1-L. Live-faithful re-run + semantic census of the planner/gate (2026-10-03)
+Why it was re-run:
+- B1's `pfeats` (Appendix, `consumers_ab.py`) injected `volume_ma20`.
+- The live rail carries exactly the 48 canonical keys (`LiveRailFeeder._ensure_features` →
+  `feature_pipeline.build_features:403`, "EXACTLY those keys") and never `volume_ma20` (SEM-004 / F-065).
+- Its `lowest_low_20/5` and `highest_high_20/5` have no producer anywhere in `src/`.
+
+Instrument:
+- Same corpus (`data/mt5/XAUUSD_M15.csv`, 47,275 rows → 47,197 frame rows), active config
+  `v2_htfcrt_2026_08`, both `sweep_semantics` arms, every bar × {LONG, SHORT}.
+- Mode `live` = canonical keys + `volume`. Mode `b1` = the same plus the B1 `volume_ma20` injection.
+- Mode `b1` reproduces B1 exactly (2,077 / 1,382), which validates the instrument.
+- Scratch script `gate_semantic_census.py` (session scratchpad, not tracked); OBSERVATION_ONLY.
+
+| | A live | B live | A b1 (=B1) | B b1 (=B1) |
+|---|---:|---:|---:|---:|
+| `execute` (approved) | **209** | **198** | 2,077 | 1,382 |
+| approved LIQ_SWEEP / BREAKOUT / PULLBACK | 93 / 116 / 0 | 81 / 117 / 0 | 1,440 / 530 / 107 | 695 / 553 / 134 |
+| calls with `vol_score` ≠ 0 | 0 | 0 | 0 | 0 |
+| calls with `liquidity_score` ≠ 0 | 0 | 0 | 94,390 | 94,388 |
+| LIQ_SWEEP from `double_sweep` alone (no sweep on the bar) | 2,794 (0 approved) | 1,870 (0 approved) | 2,794 | 1,870 |
+| LIQ_SWEEP with event: implied bias aligned / opposed | 7,542 / 7,542 | 5,033 / 5,033 | same | same |
+| approved LIQ_SWEEP: aligned / opposed | 44 / **49** | 40 / **41** | 745 / 695 | 331 / 364 |
+
+How to read it:
+- **Live arithmetic, from source and confirmed by the counts.** With vol ≡ 0 (F-109
+  `legacy_relative`) and liquidity ≡ 0, the score is `final = 0.35·intent + 0.25·structure`.
+  Clearing 0.55 needs intent ≥ 0.857.
+  - LIQ_SWEEP intent is 0, 0.5 or 1.0, so a live LIQ_SWEEP approval requires `sweep_detected` AND
+    `double_sweep`.
+  - So the MKT-C04 condition is **necessary** for every live sweep approval.
+  - PULLBACK never clears 0.55 live.
+- **Direction-blind.** A bar with a sweep event becomes LIQ_SWEEP for **both** directions, which is
+  why aligned equals opposed.
+  - Among gate approvals, the opposed side is the majority: 49 of 93 (active) and 41 of 81 (e01).
+  - These are per-bar hypothetical calls with the direction forced both ways. In production the
+    direction comes from EngineRunner, so the live mismatch rate is **UNVERIFIED**.
+- **E01 impact on the live rail is small.** Approvals fall 209 → 198 (−5%), not −33%. The B1
+  magnitude came from the injected volume half.
+
+Semantic census (matrix):
+
+| # | Consumer site | Expected input | Actual input | Closure (§6.8) |
+|---|---|---|---|---|
+| 1 | `_derive_intent` LIQ_SWEEP (`execution_planner.py:389`) + `_compute_entry` (`:441-447`) | MKT-E01 event on the bar with `implied_bias` == direction | Unsigned `sweep_detected` or `double_sweep`; direction never compared; signed `liquidity_sweep` unused | CONFIRMED DEFECT (MKT-E01 rule) |
+| 2 | `_intent_score` LIQ_SWEEP (`gate_intelligence.py:245-246`) | ~~Same-side confirmation~~ **CORRECTED 2026-10-03 (B1-C):** an ordered opposite-side-then-current sweep (engine `double_confirmed` lineage) | C04 two-sided condition used as a +0.5 bonus | Narrowed to a §6.2 TruthConflict, open (see B1-C) |
+| 3 | `double_sweep` alone triggers LIQ_SWEEP | Event on the bar | Condition over W = 5 bars; the entry wick is not a sweep wick | CONFIRMED DEFECT (event vs condition) |
+| 4 | PULLBACK (`execution_planner.py:392-397`, `gate_intelligence.py:239-243`) | Retrace fraction of the displacement leg; recency of the same-side founding sweep | FM-021 = \|close−ema_fast\|/ATR (distance from the EMA, not a fraction); FM-065 counts from either side | USER AUTHORIZATION REQUIRED (retest semantics PROPOSED, OQ7) |
+| 5 | `_liquidity_score` sweep-extent half (`gate_intelligence.py:298-311`) | MKT-E01 `sweep_extreme` (R1-A) | 8th independent detector on inputs with no producer → constant 0 | DOCUMENTATION GAP (SEM-004 extended) + STALE / LEGACY ARTIFACT |
+
+Divergence rows recorded:
+- Rows 1 and 5 on MKT-E01; rows 2 and 3 on MKT-C04 (`concept_contracts.yaml`).
+- SEM-004 `observed_behaviour` is extended.
+- No code changed. A fix is a separate, authorized live-rail behaviour change.
+
+### B1-F. Direction/event fix: A/B (CH-planner-liq-sweep-direction, 2026-10-03)
+The user authorized rows 1 and 3 only, as an atomic change:
+- New strict key `execution_planner.liq_sweep_semantics`.
+  - `legacy_unsigned` is the old rule. It is declared on all 13 live configs, including the active one.
+  - `e01_direction_aligned`: LIQ_SWEEP iff signed `liquidity_sweep` ≠ 0 and implied bias ==
+    `selected_direction`.
+- Not touched: row 2 (the gate's C04 bonus), gate arithmetic, row 4 (PULLBACK / OQ7) and row 5.
+
+Instrument:
+- Same corpus and live-faithful features as B1-L, plus the signed `liquidity_sweep`, which the live
+  rail carries.
+- Both planner settings run on the same calls.
+- Scratch `liq_direction_ab.py`; OBSERVATION_ONLY.
+
+| | A legacy | A aligned | B legacy | B aligned |
+|---|---:|---:|---:|---:|
+| `execute` (approved) | 209 | **185** | 198 | **185** |
+| approved LIQ_SWEEP / BREAKOUT / PULLBACK | 93 / 116 / 0 | 44 / 139 / 2 | 81 / 117 / 0 | 40 / 143 / 2 |
+| LIQ_SWEEP intents | 17,878 | 7,542 | 11,936 | 5,033 |
+
+Read-out:
+- **Legacy reproduces B1-L exactly**: 209 / 93 and 198 / 81.
+- **Aligned matches the contract.** The LIQ_SWEEP intent count equals B1-L's direction-aligned count
+  exactly (7,542 and 5,033), and approved LIQ_SWEEP equals B1-L's aligned approvals (44 and 40).
+  Every opposed-bias and double_sweep-only call left the label.
+- **Where the relabelled calls went (A):** CONTINUATION 4,887, REVERSAL 2,984, PULLBACK 1,984,
+  BREAKOUT 480. One call became an exact EMA tie (UNKNOWN).
+- **Approval flips (A):**
+  - 46 approved → rejected: BREAKOUT 30, PULLBACK 9, CONTINUATION 7.
+  - 22 rejected → approved: BREAKOUT 20, PULLBACK 2. A bar that loses its LIQ_SWEEP label can
+    qualify under the next intent.
+- **Approval flips (B):** 38 approved → rejected, 25 rejected → approved.
+- **Net effect:** approvals −11.5% (A) and −6.6% (B).
+- **Scope:**
+  - These are per-bar hypothetical calls with the direction forced both ways, not trades. In
+    production EngineRunner supplies one direction, so the production effect is UNVERIFIED.
+  - Live rail only (F-073 / F-103).
+- **Not activated.** Every config keeps `legacy_unsigned`; a test pins this
+  (`test_live_configs_declare_legacy_unsigned`).
+
+### B1-C. What the gate's `double_sweep` bonus means (Step C, 2026-10-03, read-only)
+**Correction (E-001).** B1-L row 2 assumed the consumer meant "same-side confirmation". That was an
+ungrounded inference, now marked `CORRECTED`.
+
+**Lineage, verified at source.**
+- The bonus arrived in the initial bulk commit `5897209f` (2026-04-30) with no design note.
+- The term is the engine's `SweepEvent.double_confirmed` (`crt_engine_v2.py:965-968`): the previous
+  sweep was the **opposite** side, an ordered two-sided sequence that ends in the current sweep
+  (`active_models.yaml:301`).
+- It is structurally always False, so it has never executed (MKT-E01 divergence, DEPRECATED).
+- Every reader applies it as a bonus: engine `score_sweep` +0.4 (`:2087`), risk +0.10 (`:2387`),
+  `engines/scoring_engine.py` 0.7 → 1.0, `s10_trap` +0.10, and this gate +0.5.
+- What the gate actually receives is FM-060/FM-092: an unordered condition whose registered
+  interpretation is *"trap / whipsaw … neither side is in control"*, worded as a caution.
+- No Ontology v2 concept owns the ordered meaning. MKT-E04 is the only same-side confirmation concept,
+  and no consumer ever meant it. No active trained artifact gives evidence for either meaning (BitNet
+  reads the engine's constant-False flag and is off).
+
+**Measurement.**
+- Population: every bar where `e01_direction_aligned` labels LIQ_SWEEP. That is one row per bar,
+  because the signed slot fixes the direction: 7,542 bars (active features) and 5,033 (e01 features).
+  These equal B1-F exactly.
+- Outcome contract, `outcome_type: RESEARCH_PROXY`:
+  - entry at the signal-bar close (**not** the live 300 s LIMIT, which M15 cannot observe);
+  - SL/TP from `compute_crt_levels(atr_abs)` with the live-hook arguments (sl_atr_buffer 0.2,
+    tp1_liq_sweep 1.2, tp2 2.0);
+  - `multi_tp_walk` (partial 0.5, trail 0.5, 40 bars);
+  - gross R primary.
+  - Comparative information test only; not valid for live execution or fill claims.
+- Statistics:
+  - Train = first 70% of bars (through 2025-10-14 11:15), holdout = the rest.
+  - Moving-block bootstrap over bar index (480-bar blocks, all rows of a bar together, 2,000
+    resamples, seed 20261003).
+  - Effect = mean R(flag = 1) − mean R(flag = 0).
+- Script: scratch `double_sweep_meaning.py`; OBSERVATION_ONLY.
+
+| Candidate | Live approvals A / B | A train → holdout effect (R) | B train → holdout effect (R) | Stable? |
+|---|---:|---|---|---|
+| X0 current C04 | 44 / 40 | +0.043 [−0.031, +0.120] → −0.101 [−0.214, +0.017] | +0.124 [+0.037, +0.216] → −0.090 [−0.254, +0.076] | no, sign flips |
+| X1w ordered, within W | 44 / 36 | identical to X0 | +0.121 [+0.034, +0.211] → −0.070 [−0.241, +0.108] | no, sign flips |
+| X1e engine-literal (previous event opposite, any distance) | 70 / 73 | +0.016 → −0.028 | +0.065 → −0.033 | no, sign flips |
+| X2 MKT-E04 impulse on bar i+1 (**diagnostic, lookahead**) | 58 / 43 | +1.07 → +1.01 | +1.13 → +1.17 | stable but **mechanical** |
+| X3 no bonus | **0 / 0** | n/a | n/a | n/a |
+
+What this shows:
+- **Under the aligned consumer, C04 already is the ordered meaning.**
+  - A rolling C04 that includes a current-bar sweep can only be 1 if the opposite side was swept in
+    the previous W − 1 bars.
+  - Active features: X0 ≡ X1w on 1,655/1,655 bars. e01 features: 740 shared bars, and the other 38 are
+    all bar-local two-sided bars.
+  - So the (a)/(b) TruthConflict matters only when the sweep isn't on the bar, which the direction fix
+    already removes. What stays open is the registered "caution" wording vs the bonus polarity.
+- **No decision-time candidate carries stable information about this outcome.** Every one flips sign
+  from train to holdout, and every all-sample CI crosses zero:
+  - X0: A +0.003 [−0.060, +0.064]; B +0.061 [−0.021, +0.141].
+  - X1e: A +0.004; B +0.037.
+  - The one positive train CI (B, +0.12) reverses in holdout.
+- **X2's +1R is not evidence.** Bar i + 1 is the first bar of the walk, so "the next bar moved away from
+  the sweep" partly *is* the outcome. It is not available at decision time.
+- **Removing the bonus (X3) makes LIQ_SWEEP unapprovable** on the live rail: the 0.35·0.5 + 0.25
+  ceiling of 0.425 is below 0.55. So the bonus is functioning as a gate, not as information.
+- Population baseline, gross R: −0.005 (A) and −0.057 (B). With SEM-015 measured cost: −0.121 and
+  −0.187.
+
+**Status.**
+- Recorded as an open MKT-C04 divergence (`decide_in: step_D_double_sweep_role`).
+- No meaning chosen, and no code or config changed.
+- Not done: C04 change, activation, a new "same-side confirmation", moving to E04, removing the bonus,
+  OQ7.
+- Diagnostic, no G001.
+
+### B1-D. GateIntelligence scoring/authority census (Step D, 2026-10-03, read-only)
+Question: why does a gate that declares four factors run on two, leaving an unresolved sweep feature
+as the de facto authorization?
+
+**What the declared gate is.** `gate_intelligence.py:148-212`, active config weights
+0.35 / 0.20 / 0.20 / 0.25, threshold 0.55:
+
+| Component | Weight | Declared inputs | Status on the live rail |
+|---|---:|---|---|
+| intent | 0.35 | per intent (see B1-L / B1-C) | live; REVERSAL ≈ 0 (F-061 saturation), CONTINUATION 0 by design |
+| vol | 0.20 | `high − low` ÷ `atr` | **0 on 100% of calls** |
+| liquidity | 0.20 | ½ volume spike (`volume_ma20`) + ½ sweep extent (`lowest_low_20/5`, `highest_high_20/5`) | **0 on 100% of calls** |
+| structure | 0.25 | EMA alignment + `disp_strength / 3` | live (non-zero on 99.9%); dimensionally sound (FM-020 is in ATR multiples) |
+
+**Why vol is 0: dead from birth.**
+- Canonical `atr` has been close-relative since the first commit (`atr_14_raw / close`,
+  `feature_pipeline.py:384-386` @`5897209f`).
+- The tent function divides a dollar range by that ratio (r ≈ 10³), so it clamps to 0.
+- F-109 added `gate_vol_atr_basis` (default `legacy_relative`); `absolute` exists but has never been
+  activated.
+
+**Why liquidity is 0: two independent causes, both from birth.**
+- **Volume half.** `volume_ma20` exists only as a non-canonical pipeline column. The planner's
+  production input never carried it: not the first committed `live_engine_hook._build_engine_input`
+  (`5897209f`), and not today's `LiveRailFeeder` → `build_features` (exactly the 48 canonical keys).
+  This is F-065 H7 / SEM-004.
+- **Sweep-extent half.** It is dead **twice**:
+  - (i) No producer of `lowest_low_*` / `highest_high_*` exists in any commit of `src/` (git history).
+  - (ii) The formula `(lowest_low_20 − lowest_low_5)/atr` (LONG) is ≤ 0 whenever both windows trail to
+    the current bar, because the 5-bar window is inside the 20-bar one. Measured: with nested inputs
+    supplied (S3), liquidity is still 0 on every call.
+  - The docstring's "positive = sweep below the 20-bar low" needs a 20-bar window that **excludes** the
+    last 5 bars, a convention nothing defines.
+
+**Why the tests never caught it.**
+- Both unit suites (`test_gate_intelligence.py`, `test_execution_planner.py`) feed fixtures with
+  absolute-unit `atr` (2.0 on close 100), `volume_ma20` and `lowest_low_*` values that production never
+  supplies.
+- Those fixtures are nested-consistent (e.g. ll20 = 96 < ll5 = 98.5), so even they never exercise a
+  positive sweep extent.
+- The two dead components contribute in tests and nowhere else: the same test-encodes-the-hole pattern
+  as F-108.
+
+**Authority of the numbers.**
+- The weights and threshold arrived in the initial bulk commit with no calibration record.
+- The gate has never been outcome-evaluated: the backtest never imports the planner (F-103), and it
+  has no G001.
+- `config-reachability-report` lists all four weights as READ_AND_USED. That is true syntactically, but
+  vol and liquidity multiply a constant 0: read ≠ governed (the F-056 lesson).
+- `KNOWN_ILLUSIONS.md` #3 ("keys dead") is stale. CORRECTED in place.
+
+**Measurement.** Decision space only, OBSERVATION_ONLY:
+- XAUUSD M15, 47,275 rows → 47,197 frame bars × {LONG, SHORT}; active config and features.
+- Each scenario adds exactly one set of the gate's own declared inputs. Scratch
+  `gate_authority_census.py`.
+- "Necessary" = approval drops below 0.55 if that component's contribution is removed.
+
+| Scenario | Approvals | BREAKOUT / LIQ_SWEEP / PULLBACK | Components necessary for approvals |
+|---|---:|---|---|
+| S0 live (legacy_unsigned) | **209** | 116 / 93 / 0 | intent 209/209, structure 209/209 |
+| S0 live (e01_direction_aligned) | 185 | 139 / 44 / 2 | intent 185, structure 185 |
+| S1 + vol basis `absolute` | 4,675 | 636 / 2,027 / 2,011 | vol 4,466 |
+| S2 + `volume_ma20` (= B1's injection) | 2,077 | 530 / 1,440 / 107 | liquidity 1,868 |
+| S3 + extent inputs, nested windows | 209 | identical to S0 | liquidity never non-zero |
+| S4 + extent inputs, disjoint windows | 501 | 169 / 305 / 27 | liquidity 292 |
+| S5 all declared inputs (S1 + S2 + S4) | **13,057** | 1,841 / 7,661 / 3,511 | intent 13,033, vol 10,207, structure 9,113, liquidity 8,382 |
+| S5 + e01_direction_aligned | 9,981 | 2,207 / 2,571 / 5,149 | intent 9,957, vol 7,539, structure 6,787, liquidity 4,975 |
+
+What this shows:
+- **The single-factor authority is an artifact of missing inputs, not a design choice.** Live, the gate
+  is `0.35·intent + 0.25·structure ≥ 0.55`. That needs intent ≥ 0.857, which only a BREAKOUT, or a
+  LIQ_SWEEP with `double_sweep`, can reach.
+  - With every declared input present, approvals rise **62×** (209 → 13,057).
+  - Authority then spreads across all four components, and PULLBACK becomes the largest aligned class.
+- **The threshold was set against a four-factor sum that has never existed in production.** The live
+  ceiling is 0.60, so 0.55 sits 0.05 below it.
+- **Volume caveat.** XAUUSD `volume` is tick volume (F-099, TICK_VOLUME_APPROXIMATE), so the volume half
+  would measure tick activity even if wired.
+- Decision space only: none of these counts says whether the approvals would be good trades.
+
+**Closures (§6.8).**
+- vol = 0: CONFIRMED DEFECT, already F-109; the fix exists behind a key, so activation is USER
+  AUTHORIZATION REQUIRED.
+- Volume half: F-065 H7, USER AUTHORIZATION REQUIRED.
+- Sweep-extent half: CONFIRMED DEFECT (no producer; the nested reading is zero by construction) plus
+  TEST / CONTRACT GAP (window convention undefined).
+- Weights and threshold: INSUFFICIENT EVIDENCE for their values; authority unearned (§6.5).
+- Unit fixtures supplying production-absent inputs: TEST / CONTRACT GAP.
+- `KNOWN_ILLUSIONS` #3: DOCUMENTATION GAP, corrected.
+- No code or config changed. `e01_direction_aligned` is not activated, and `double_sweep` is not removed.
+
+### B1-E. Do the dormant gate components carry outcome information? (F-113 follow-up, 2026-10-03, read-only)
+Each dormant component is tested **separately**, then in combination, before any repair (user
+direction).
+
+Components and scenarios:
+- **S1** `gate_vol_atr_basis = absolute`.
+- **S2** `volume_ma20`, the pipeline's own column. XAUUSD volume is tick volume (F-099).
+- **S3H** sweep extent with disjoint windows (the 20 bars before the last 5, vs the last 5).
+  **HYPOTHESIS only**: this is the dead formula's docstring reading, not a known-correct definition.
+- Combinations: S12, S13H, S23H, S123H.
+
+Outcome contract `RESEARCH_PROXY`:
+- entry at the signal-bar close;
+- SL/TP from `compute_crt_levels(atr_abs)` with the live hook's per-intent `tp1_atr_multiplier_<intent>`
+  (BREAKOUT 1.5 / PULLBACK 0.8 / LIQ_SWEEP 1.2 / REVERSAL 1.0), `tp2` 2.0, `sl_atr_buffer` 0.2;
+- `multi_tp_walk` (partial 0.5, trail 0.5, 40 bars);
+- gross R primary, SEM-015 net secondary;
+- comparative information only, not valid for live execution or fill claims.
+
+Population and statistics:
+- 94,394 bar × direction calls; 60,096 are eligible (intents with declared TP multipliers).
+  CONTINUATION has none, so the live hook would reject its 13 S123H approvals.
+- Train = bars before 2025-10-14 11:15 (70%); holdout = the rest.
+- Moving-block bootstrap over bar index (480-bar blocks; both directions of a bar move together;
+  2,000 resamples).
+- Eligible base rate: −0.080 R gross.
+- Scratch `gate_component_outcome.py`.
+
+**T1/T2: does adding the component improve the approved set?** Δ = mean R(approved) − mean R(S0
+approved).
+
+| Scenario | Approved (all) | Mean R approved (all) | Δ vs S0, train | Δ vs S0, holdout | Sign stable? |
+|---|---:|---|---|---|---|
+| S0 live | 209 | −0.130 [−0.292, +0.026] | — | — | — |
+| S1 vol abs | 4,675 | −0.054 [−0.084, −0.028] | +0.116 [−0.050, +0.269] | −0.024 [−0.308, +0.236] | no |
+| S2 volume | 2,077 | −0.052 [−0.104, −0.001] | +0.151 [−0.026, +0.312] | −0.106 [−0.420, +0.151] | no |
+| S3H extent (hyp.) | 501 | −0.022 [−0.115, +0.078] | +0.118 [−0.031, +0.264] | +0.088 [−0.137, +0.292] | yes, but every CI crosses 0 |
+| S12 | 10,963 | −0.092 [−0.115, −0.068] | +0.080 | −0.065 | no |
+| S13H | 6,335 | −0.063 [−0.089, −0.038] | +0.102 | −0.017 | no |
+| S23H | 2,849 | −0.059 [−0.099, −0.017] | +0.125 | −0.064 | no |
+| S123H (all declared) | 13,047 | −0.096 [−0.115, −0.077] | +0.075 | −0.066 | no |
+
+**T3: is a component informative on its own (threshold-free, eligible calls)?** Effect = mean R(high)
+− mean R(low).
+
+| Component | Train | Holdout | All |
+|---|---|---|---|
+| vol (S1 score, median split) | −0.024 [−0.042, −0.007] | +0.004 [−0.025, +0.034] | −0.016 |
+| volume half (S2 score, median split) | −0.043 [−0.067, −0.019] | +0.005 [−0.026, +0.036] | −0.029 |
+| sweep extent (S3H, > 0) | −0.020 [−0.048, +0.008] | +0.023 [−0.018, +0.067] | −0.008 |
+
+What this shows:
+- **No dormant component shows stable outcome information on this object.**
+  - vol and volume score *negatively* in train (higher score → worse R; the CIs exclude 0), then
+    ≈ 0 in holdout.
+  - Every Δ-vs-live except S3H flips sign from train to holdout.
+- **S3H is the only same-sign case,** and it is not a candidate:
+  - every CI crosses 0;
+  - it adds only 292 calls;
+  - its window convention is a hypothesis.
+  - **Status: INSUFFICIENT, not a lead.**
+- **Repairing the inputs would mainly add volume at about the base rate.** The full repair approves
+  13,047 calls at −0.096 R gross (−0.252 net), indistinguishable from the eligible base rate of −0.080.
+  The approved set gets 62× larger without getting better.
+- **The live gate itself shows no edge on this object either.** S0's 209 approvals: −0.130 R gross,
+  train −0.178 → holdout −0.013. The point estimate sits below the eligible base rate. That is a
+  comparison of point estimates only; no paired test was run.
+
+**Input-surface classification (added 2026-10-04, after a dataset-lineage check).** How each scenario
+relates to what the canonical research dataset actually has:
+
+| Scenario | Data used | In the canonical 48-dim vector? | Classification |
+|---|---|---|---|
+| S1 | canonical `atr` (FM-041) × `close` = FM-074, selected by an existing config key | yes (FM-041 slot; FM-074 is a registered transform) | counterfactual **configuration** of canonical data |
+| S2 | `volume_ma20` = SMA(volume, `volume_ma_window`) | raw `volume` **is** canonical (FM-089, slot 4; MT5 `tick_volume`, `volume_semantic: TICK_VOLUME`); `volume_ratio` **is** canonical (FM-062, slot 5); `volume_ma20` is **not** canonical | counterfactual **wiring** of a canonical feature. The gate's volume half equals `0.5·min(1, volume_ratio/2)` **exactly** (verified on 2,922 XAUUSD bars, max abs diff 0.0, no zero-volume or zero-mean rows). So S2 tested FM-062 through the gate's formula, delivered under a key no producer sends. It is not synthetic data. |
+| S3H | `lowest_low_*` / `highest_high_*` with disjoint windows | no; no FM identity, no producer in any commit | counterfactual **synthetic input**: a hypothesis-defined construction the dataset does not possess |
+
+Consequences:
+- **Correct wording for the volume half.** "Volume is missing" is wrong. The canonical dataset carries
+  MT5 tick volume (FM-089) and its ratio (FM-062). What is missing is the **wiring**: the gate reads the
+  non-canonical `volume_ma20`, which no producer delivers, instead of FM-062, which is in the same dict.
+- **No record of a deliberate exclusion.** The only recorded decision is to *defer* the wiring fix
+  (SEM-004 `validation_rules`, F-065).
+- **FM-089's semantics are not certified.** `TICK_VOLUME_APPROXIMATE` (F-099/F-100); OHLCV closure
+  still lists BC-4 as a blocker (`CORPUS_AUTHORITY.md`). Any S2 conclusion is conditional on reading
+  tick volume as participation.
+
+**Instrument note (disclosed).**
+- S0 / S1 / S2 / S3H approval counts equal the B1-D census exactly (209 / 4,675 / 2,077 / 501).
+- S123H totals 13,060 here (13,047 eligible + 13 CONTINUATION) vs 13,057 in B1-D. The difference is a
+  warm-up edge in both scratch instruments.
+  - On the first ~25 bars `highest_high_20` is absent while `highest_high_5` exists. The gate defaults
+    the missing key to 0.0, so the SHORT extent saturates.
+  - The two scripts use different `min_periods`.
+  - 6 approvals fall in that window, all in train, which is negligible for these statistics.
+
+**Status.**
+- Diagnostic; no G001; no economic claim.
+- No component earns repair authority (§6.5).
+- No code or config changed.
 
 ### B2. EngineRunner fusion gate (the backtest's post-commit veto)
 Setup:
@@ -160,7 +521,9 @@ UNVERIFIED per finding:
 Diagnostic evidence only. The producer fix:
 - leaves C1–C6 identical and clears every E01/C04 UNEXPLAINED row;
 - reaches the CRT TP1-intent path (prior doc);
-- materially changes the live-rail planner's intent and gate decisions;
+- materially changes the live-rail planner's intent labels (LIQ_SWEEP 17,878 → 11,936). Its effect on
+  live-faithful gate approvals is small, 209 → 198. CORRECTED 2026-10-03 from "materially changes …
+  gate decisions": the −33% was an artifact of the `volume_ma20` injection, see B1-L;
 - is invisible to the backtest fusion gate, because that gate never reaches its score checks.
 
 Two Step 6 gaps are now recorded: the undeclared transitive `retest_depth` change, and an untested

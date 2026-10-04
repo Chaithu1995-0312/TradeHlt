@@ -85,8 +85,14 @@ def forward_walk(
     trail_mult: float = 0.5,
     exit_model: str = "intrabar_fixed",
     adverse_fill: "AdverseFill | None" = None,
+    tie_break: str = "production",
 ) -> Outcome:
     """Forward-walk `future` bars; return a measured Outcome.
+
+    `tie_break="observable_only"` (opt-in, intrabar_fixed only): a bar touching both the
+    stop and the target is NOT ordered -- the walk returns an `ambiguous` Outcome carrying
+    both branches (`rr_band`), because OHLC cannot say which came first. A later bar never
+    removes that ambiguity. Default "production" is the historical SL-first path, unchanged.
 
     Exit geometry is intrabar high/low touch with a conservative SL-before-TP tie-break
     in BOTH modes (matches `CRTEngine._intrabar_trigger_price` / the governed spine truth).
@@ -119,6 +125,11 @@ def forward_walk(
         raise ValueError(f"forward_walk: bad direction '{direction}'")
     if exit_model not in ("intrabar_fixed", "trailing", "close_only"):
         raise ValueError(f"forward_walk: bad exit_model '{exit_model}'")
+    if tie_break not in ("production", "observable_only"):
+        raise ValueError(f"forward_walk: bad tie_break '{tie_break}'")
+    observable = tie_break == "observable_only"
+    if observable and exit_model != "intrabar_fixed":
+        raise ValueError("forward_walk: tie_break='observable_only' requires exit_model='intrabar_fixed'")
 
     if direction == "long":
         sl = entry - risk_distance
@@ -183,6 +194,18 @@ def forward_walk(
             mae = unrealized_lo
         if tp_hit and time_to_tp is None:
             time_to_tp = duration
+
+        if observable and sl_hit and tp_hit:
+            # Competing touches: order unobservable. Report both branches; invent no winner.
+            fill = _stop_fill_price(bar, trail_stop, direction, adverse_fill)
+            rr_sl = ((fill - entry) if direction == "long" else (entry - fill)) / risk_distance
+            rr_tp = reward_distance / risk_distance
+            lo_rr, hi_rr = min(rr_sl, rr_tp), max(rr_sl, rr_tp)
+            sl_is_min = rr_sl <= rr_tp
+            base = _result(signal, "SL_HIT" if sl_is_min else "TP_HIT", lo_rr, mfe, mae,
+                           duration, time_to_tp, duration if sl_is_min else None, risk_distance)
+            return dataclasses.replace(base, ambiguous=True,
+                                       rr_band=(round(lo_rr, 4), round(hi_rr, 4)))
 
         if sl_hit:
             # If the trail has moved past TP, price crossed TP first — honour TP.

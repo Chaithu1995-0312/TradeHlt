@@ -1488,6 +1488,12 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 - Reversal:      — Does not close the BC-4b residual (`docs/governance/CORPUS_AUTHORITY.md:108`) the way a `CONFIRMED` verdict would; the closure report's own interpretation table (prereg section 7) reserves closure for `CONFIRMED`. Does not reverse F-098 (BC-2) — this probe CONSUMES that result (the tick window `[T, T+15m)` is only well-defined because F-098 proved T is the bar open) rather than re-deriving it. Does not touch `producer_family_match` (BC-2's `UNVERIFIED_NO_RECORDED_TERMINAL`) for terminal identity in general, though `artifact_binding=BOUND` narrows it for the volume COLUMN specifically.
 - Owner:         claude
 - Note:          **THREE BUGS FOUND AND FIXED DURING CAPTURE, before any verdict was scored — all in the capture layer, none in the frozen scoring rules.** (1) Test 1's freshness `age` check compared TRUE wall clock (`datetime.now(UTC)`) against nominal broker-labeled bar timestamps (F-066: MT5 epochs are broker-server seconds mislabeled UTC) -- at the measured UTC+3 skew every bar looked ~3h in the future, so `age<0` excluded all 4 bars on the first capture attempt (0/4 scored). Fixed by comparing against `fetched_at` (same nominal clock basis as the bar timestamps), not true wall clock. (2) Test 2's `copy_rates_range` call was missing its required `timeframe` positional argument (`mt5.TIMEFRAME_M15`) -- silently returned `None` for all 20 samples on the first attempt, easily misread as "history unavailable" (a direct read-only probe confirmed history DOES reach back to 2024-05-22, ruling that out before touching the code). (3) Test 2's sample-target generation used raw `step * i` arithmetic that produced fractional-second timestamps never aligned to the M15 lattice (19/20 landed off-lattice); fixed with an explicit lattice-snap (`epoch -= epoch % 900`) before both the fetch and the match. Each fix was diagnosed with a direct, isolated read-only probe rather than guessed at. **SCOPE:** `TICK_VOLUME_APPROXIMATE` is real, structured evidence (a consistent ~0.6% directional gap across 4 independent bars, not noise) and a genuine advance -- `H_REAL` rejected and `artifact_binding` BOUND at 100% over the full 2-year corpus are both decisive -- but it is NOT the `CONFIRMED` verdict the pre-registration reserved for full closure, and is reported as such rather than rounded up. BC-4 stays a blocker in `OHLCV_CLOSURE_STATUS`. BC-4a (schema enforcement: wiring the already-defined `volume_semantic` enum via the currently-dead `SCHEMA_PATH`, adding `is_synthetic`, writing SEED-OHLCV-19) is a separate, still-open half of the same program. No APPROVED, no R3b, no G001, no dataset-record edit, no fetcher rewrite.
+- Update (2026-10-04, read-only lineage census, [`docs/analysis/xauusd-m15-volume-lineage-census-2026-10-04.md`](analysis/xauusd-m15-volume-lineage-census-2026-10-04.md)):
+  - `artifact_binding` extended from 17/17 sampled bars to the **full corpus**: re-fetched from the live terminal, 47,275/47,275 timestamps match, OHLC is exact, and `volume == tick_volume` on every bar, `== real_volume` on none.
+  - Sept 2026 from the terminal: `tick_volume` non-zero on 2,014/2,014, `real_volume` 0 on 2,014/2,014; every bar on the 15-min grid, 01:00 broker session open.
+  - The monthly median level trends up about 3–5× from mid-2025 to 2026-09 (6,728). It is a trend, not a step at the corpus end, which matters for absolute thresholds and not for ratios.
+  - The live rail has no MT5 bar source (`MT5_CANDLES` builds no port), and the configured TickDB source's volume semantics are UNVERIFIED.
+  - Verdict unchanged: `TICK_VOLUME_APPROXIMATE`.
 
 
 ---
@@ -1680,6 +1686,65 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
 - Reversal:      "liquidity_sweep / sweep_detected / double_sweep mean the market swept liquidity at a swing level" -> "they mean pierce-and-close-back of the LATEST swing level only, re-firing on consumed levels and blind to older resting ones; the contract meaning is available as FM-090..093 behind a switch, not yet active"
 - Owner:         claude
 - Note:          **Behaviour impact (UPDATED 2026-10-03, diagnostic only):** on the month slice the active and shadow backtests are identical (279 CRT events, 0 trades: no setup reached RETEST, where `crt_engine_v2` reads `sweep_detected` to pick the TP1 intent). **Full-corpus ACTIVE vs E01-lifecycle shadow comparison completed** (`docs/analysis/e01-lifecycle-shadow-impact-2026-10-03.md`): 47,275 XAUUSD M15 bars, May 2024–May 2026. Observed: CRT event stream identical; 3 trades in each run with identical entries and outcomes; 24 retests evaluated; TP1 intent changed on 2 of them — one changed an actual planned TP1 (reversal -> pullback, ×1.0 -> ×0.8; the trade stopped identically), the other changed intent category (liq_sweep -> breakout) but stayed rejected (OFF_SESSION); no accept/reject change; avg_planned_rr 1.333 -> 1.267. Interpretation: the lifecycle change reaches the CRT TP1-intent path but did not alter the trade ledger in this corpus. Limitations: only 3 trades; `gate_intelligence` sweep scoring not compared; trained-model consumption not evaluated; `RETEST_REPLAY.tp1_mult` telemetry records the base multiplier, not the intent-specific one. Status: diagnostic evidence only — no activation, system-wide-risk or economic conclusion, and not a revalidation of any downstream finding. **C1–C7 + downstream consumers (2026-10-03, diagnostic only):** `docs/analysis/e01-lifecycle-downstream-consumers-2026-10-03.md`, full corpus. Semantic OS C1–C6 identical between arms (replay gate PASS, 7,113 events; C5/C6 checkable on the 3 trades); C7 E01 UNEXPLAINED 12,424 -> 0 and C04 -> all 1,713 AGREE. Input shift: sweep_detected changes on 13.0% of bars, double_sweep 5.0%, candles_since_sweep 71.4%, and **FM-021 retest_depth on 17.4%** — a transitive change (retest_flag reads liquidity_sweep) that Step 6 did not declare. Live-rail planner + gate (per bar × direction, hypothetical): approvals 2,077 -> 1,382 (−33%; 1,146 lost, 451 gained), LIQ_SWEEP intents 17,878 -> 11,936. Backtest fusion gate: 0 decision/veto flips, 48 score changes — non-informative, because every call stops at the adapter session check or at `feature_cluster_similarity_invalid`, which the backtest bypasses, so the score checks are never reached. Inert artifacts (rr_fusion, BitNet, TradeNet) not reachable on the active config. **E-001 correction (same turn):** the Step 6 change surface is five slots, not four, and its parity tests covered four; live `retest_depth` comes from the feeder's rolling-window pipeline, so e01-mode live/batch parity for FM-021 is UNVERIFIED. CORRECTED 2026-10-03: "rolling-window pipeline … UNVERIFIED" -> "the feeder keeps every bar (full-history pipeline, last row); parity measured equal at every prefix; gap closed by FM-094/095 registration (CH-e01-lifecycle-retest-identity)". Findings to name for revalidation on activation are listed in that doc (named, not revalidated). Activation is a separate user decision; it would also shift the inputs of every trained artifact that reads these slots (ZoneGate, RR, TradeNet — all already inert, quarantined or unwired on the active config) and trigger the deferred findings-revalidation intent. **E-001 corrections made the same turn:** an earlier claim of 6, then 3, two-sided sweep bars was a classifier mislabel; under the contract there are 0 on this slice, and the recorded MKT-E01 two-sided divergence's evidence now says so (the representation limit itself stands: a two-sided bar is encoded UPPER only, also under FM-090). An earlier claim that "no trained model needs a two-sided field" was an overclaim: the census only shows no retained artifact was trained with one. Pre-existing pin drift (active_config, feature_schema.py) declared in the freeze-pin waiver, not absorbed. Authority: architecture/governance only.
+---
+
+### F-113 · The live GateIntelligence has never operated as the four-factor gate its code and config declare — volatility and liquidity are inert from the first commit, making it a two-factor gate in which `double_sweep` holds disproportionate authority
+- Type:          ARCHITECTURE
+- Family:        — (decision-gate construction, not a market object; see docs/governance/research_family_registry.json)
+- Contract:      UNKNOWN
+- Status:        VALIDATED
+- Confidence:    Certain
+- Validated:     2026-10-03
+- Revalidate-by: 2026-12-31
+- Evidence:      [`docs/analysis/e01-lifecycle-downstream-consumers-2026-10-03.md`](analysis/e01-lifecycle-downstream-consumers-2026-10-03.md) §B1-D (sections B1-L/B1-F/B1-C give the chain).
+  **Observed fact.** On live-faithful features (the 48 canonical keys `LiveRailFeeder` → `feature_pipeline.build_features` carries), XAUUSD M15, 47,197 bars × {LONG, SHORT}, active config `v2_htfcrt_2026_08`:
+  - `vol_score` is non-zero on 0% of gated calls;
+  - `liquidity_score` is non-zero on 0%;
+  - intent is non-zero on 27.4%; structure on 99.9%;
+  - intent and structure are each necessary for 209/209 approvals.
+  **Cause, from source and git history.**
+  - (1) vol: canonical `atr` has been close-relative since commit `5897209f` (`atr_14_raw / close`), so `(high − low)/atr` ≈ 10³ and the tent function clamps to 0 (F-109). The `absolute` basis exists and has never been activated.
+  - (2) liquidity, volume half: `volume_ma20` has never been in the planner's production input (F-065 H7 / SEM-004).
+  - (3) liquidity, sweep-extent half: `lowest_low_*` / `highest_high_*` have no producer in any `src/` commit. Its formula `(lowest_low_20 − lowest_low_5)/atr` is also ≤ 0 by construction when both windows trail to the current bar; measured, it stays 0 with such inputs supplied.
+  - (4) Both unit suites feed production-absent inputs (absolute `atr`, `volume_ma20`, nested `lowest_low_*`), so the dead components score only in tests.
+  **Consequence.** The live gate is `0.35·intent + 0.25·structure ≥ 0.55`: ceiling 0.60, intent ≥ 0.857 required. Only a BREAKOUT, or a LIQ_SWEEP with `double_sweep` (+0.5), can approve. Step C found `double_sweep` carries no stable outcome information, so it holds de facto authorization without demonstrated value.
+  **Decision-space counterfactual.** Approvals when each declared input exists:
+
+  | Scenario | Approvals |
+  |---|---:|
+  | live | 209 |
+  | + dollar ATR | 4,675 |
+  | + `volume_ma20` | 2,077 |
+  | + extent inputs, nested windows | 209 |
+  | + extent inputs, disjoint windows | 501 |
+  | all declared inputs | 13,057 (62×) |
+
+  The dormant inputs therefore carry large *latent* authority.
+- Supersedes:    —
+- Reversal:      "GateIntelligence is a multi-factor (intent / volatility / liquidity / structure) approval gate" -> "in production it has only ever scored intent and structure. The volatility and liquidity weights are read (config-reachability READ_AND_USED) but multiply a constant 0; read ≠ governed (F-056)." `docs/operations/KNOWN_ILLUSIONS.md` #3 ("gate keys dead") CORRECTED in the same turn: the keys are read, and two are inert.
+- Owner:         claude
+- Note:          **Forensic, not a strategy conclusion.**
+  - **UNKNOWN:** whether repairing vol and/or liquidity improves decisions.
+  - **NOT established:** that the original four-factor design, its weights (0.35 / 0.20 / 0.20 / 0.25) or its threshold (0.55) are economically valid. They arrived in the initial bulk commit with no calibration record, and the gate has never been outcome-evaluated (the backtest never reaches the planner, F-103). It has no G001.
+  - **NOT a known-correct formula:** the disjoint-window reading of the sweep extent (20 bars excluding the last 5) is a HYPOTHESIS. A dead formula is not a known-correct one, and MKT-E01 R1-A names `sweep_extreme` as the one displacement reference.
+  - XAUUSD `volume` is tick volume (F-099).
+  - Live rail only (F-073 / F-103).
+  - No code or config changed; no repair authorised.
+  - Next step, user decision 2026-10-03: a read-only outcome test of each dormant component separately on the RESEARCH_PROXY object, before any repair.
+- Update (2026-10-03, read-only outcome test, e01 consumers doc §B1-E):
+  - Setup: 94,394 calls, 60,096 eligible; time 70/30 split; 480-bar block bootstrap.
+  - **No dormant component shows stable outcome information on the RESEARCH_PROXY object** (signal-bar close entry, live SL/TP construction, `multi_tp_walk`):
+    - vol and volume score negatively in train (higher → worse R) and ≈ 0 in holdout;
+    - every repair scenario's Δ vs the live gate flips sign train → holdout, except the hypothesis-only disjoint-window extent (+0.118 / +0.088, every CI crosses 0, 292 added calls), which is INSUFFICIENT;
+    - the full repair approves 13,047 calls at −0.096 R gross, ≈ the eligible base rate −0.080.
+  - The live gate's 209 approvals are −0.130 R gross (point estimate below base).
+  - Repair authority not earned (§6.5). The decision question moves from "which inputs to wire" to "what, if anything, should authorize a live-rail entry".
+- Clarification (2026-10-04, dataset lineage, §B1-E "Input-surface classification"): the volume half is not "missing data".
+  - Raw MT5 tick volume **is** canonical (FM-089, vector slot 4, `volume_semantic: TICK_VOLUME`), and so is its ratio FM-062 `volume_ratio` (slot 5).
+  - The gate reads the non-canonical `volume_ma20` instead. Its volume half equals `0.5·min(1, volume_ratio/2)` exactly (2,922 bars, max abs diff 0.0).
+  - So B1-E's S2 is a counterfactual **wiring** of canonical FM-062, not a synthetic input. Only S3H (disjoint-window sweep extent) is a synthetic, hypothesis-defined input.
+  - No record of a deliberate exclusion was found; only a deferred fix (SEM-004, F-065).
+  - FM-089's semantics stay `TICK_VOLUME_APPROXIMATE` with BC-4 open (F-099/F-100), so S2 conclusions are conditional on reading tick volume as participation.
 ---
 
 

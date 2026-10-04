@@ -62,7 +62,8 @@
 | **Keys** | `gate_weight_intent`, `gate_weight_vol`, `gate_weight_liquidity`, `gate_weight_structure`, `gate_approval_threshold: 0.55` |
 | **Documentation** | Absent from CONFIG_REFERENCE.md and ARCHITECTURE.md §6.2 |
 | **Reality** | No consumer in spine (EngineRunner → FusionEngine → DecisionEngine → ExecutionPlanner → UltronRiskGate). **However:** gate_intelligence module IS wired via ExecutionPlanner delegation (corrected 2026-06-06 from H-Dead to D-Execution for the module itself). These specific keys remain dead. |
-| **Class** | H-Dead (keys only — module is active via different path) |
+| **CORRECTED 2026-10-03** | The keys are no longer dead. Since EPIC-84 / F-109, `planner_config_from_production` merges the whole `gate_intelligence` section into the planner (`execution_planner.py`), so all five keys are read on the live rail. The illusion is now different. `gate_weight_vol` and `gate_weight_liquidity` are read but multiply a component that is constant 0 on production features: vol through the close-relative `atr` (F-109), and liquidity because its inputs are never emitted and its sweep-extent formula is ≤ 0 under nested windows. So read ≠ governed (F-056 lesson). Evidence: [`e01-lifecycle-downstream-consumers-2026-10-03.md`](../analysis/e01-lifecycle-downstream-consumers-2026-10-03.md) §B1-D. |
+| **Class** | H-Dead (keys only — module is active via different path) — SUPERSEDED 2026-10-03: two of the five keys are read but inert (see CORRECTED row) |
 | **Confidence** | HIGH (85%) |
 | **Action** | Wire as pre-fusion gate or delete keys |
 | **Risk** | Medium — a multi-weight gate with approval threshold 0.55 designed to filter signals is bypassed |

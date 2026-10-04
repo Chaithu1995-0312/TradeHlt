@@ -1,0 +1,29 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "venv/Scripts/python.exe -c \"import sys,json,os;d=json.load(sys.stdin);f=(d.get('tool_response') or {}).get('filePath') or (d.get('tool_input') or {}).get('file_path') or '';sys.exit(0) if not (f.endswith('.py') and os.path.exists(f)) else compile(open(f,encoding='utf-8').read(),f,'exec')\" 2>&1 | tail -5",
+            "timeout": 15,
+            "statusMessage": "Syntax check"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '--- WORKTREE PREFLIGHT ---'; git rev-parse --abbrev-ref HEAD; git status --porcelain 2>/dev/null | head -40; echo '--- STASHES ---'; git stash list | head -5; echo '--- PY (expect D:\\Tradelatest\\venv) ---'; venv/Scripts/python.exe -c 'import sys; print(sys.prefix)'",
+            "timeout": 30,
+            "statusMessage": "Worktree preflight"
+          }
+        ]
+      }
+    ]
+  }
+}

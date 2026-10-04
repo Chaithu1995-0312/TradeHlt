@@ -34,12 +34,135 @@ from research.oracle.multi_tp_walk import (
     OUT_TP1_TP2,
     RUNNER_ENGINE_PNL,
     RUNNER_LEDGER_BLEND,
+    EXIT_KIND_AMBIGUOUS,
+    RR_BASIS_ACTUAL,
+    RR_BASIS_COMPAT_MIN_BRANCH,
+    TIE_BREAK_OBSERVABLE,
     TIE_BREAK_OPTIMISTIC,
     TIE_BREAK_PRODUCTION,
     TIMEOUT_MARK_TO_CLOSE,
     OracleOutcome,
     _stop_fill_price,
 )
+
+
+def _reference_observable(entry, direction, sl, tp1, tp2, future, *, partial_fraction,
+                          trail_fraction, runner_stop_pricing, timeout_pricing, max_forward,
+                          adverse_fill, entry_index) -> OracleOutcome:
+    """Naive observable_only twin: enumerate every legal path, price legs independently.
+
+    Deliberately NOT sharing `_legal_branches` with the fast kernel: the fork rules are
+    re-stated inline from the price geometry so a mistake in one cannot hide in the other.
+    """
+    is_long = direction == "long"
+    d = 1.0 if is_long else -1.0
+    risk = abs(entry - sl)
+    f = float(partial_fraction)
+    tp1_active = f > 0.0
+    trail_level = float(sl) if trail_fraction is None else entry + trail_fraction * (tp1 - entry)
+    bars = list(future)[:max_forward]
+
+    def touches(bar, level_stop):
+        hi, lo = float(bar.high), float(bar.low)
+        if is_long:
+            return lo <= level_stop, hi >= tp1, hi >= tp2
+        return hi >= level_stop, lo <= tp1, lo <= tp2
+
+    paths = []  # (event, bar_i, reached_tp1, stop_level)
+
+    def explore(i, state, stop_level):
+        # state: "OPEN" | "TP1". Returns nothing; appends terminal paths.
+        for j in range(i, len(bars)):
+            bar = bars[j]
+            if entry_index is not None:
+                bidx = getattr(bar, "index", None)
+                if bidx is None or int(bidx) <= int(entry_index):   # missing .index fails closed
+                    raise ValueError(
+                        f"reference_walk lookahead: bar index {bidx} <= entry_index {entry_index}"
+                    )
+            s, t1, t2 = touches(bar, stop_level)
+            # Legal continuations of this bar.
+            options = []
+            if state == "OPEN":
+                if s:
+                    options.append("STOP")
+                if t2:
+                    options.append("TP2")        # crossing TP2 means TP1 was crossed first
+                elif tp1_active and t1:
+                    options.append("TP1")
+            else:
+                if s:
+                    options.append("STOP")
+                if t2:
+                    options.append("TP2")
+            if not options:
+                continue
+            for opt in options:
+                if opt == "STOP":
+                    paths.append(("STOP", j, state == "TP1", stop_level))
+                elif opt == "TP2":
+                    paths.append(("TP2", j, tp1_active, stop_level))
+                else:  # TP1 transition: the armed trail is not tested on this bar
+                    explore(j + 1, "TP1", trail_level if trail_fraction is not None else stop_level)
+            return
+        paths.append(("TIMEOUT", len(bars) - 1, state == "TP1", stop_level))
+
+    explore(0, "OPEN", float(sl))
+
+    priced = []
+    for event, bi, reached, stop_level in paths:
+        mfe = mae = 0.0
+        for k in range(bi + 1):
+            hi, lo = float(bars[k].high), float(bars[k].low)
+            mfe = max(mfe, (hi - entry) if is_long else (entry - lo))
+            mae = min(mae, (lo - entry) if is_long else (entry - hi))
+        gapped = False
+        if event == "STOP":
+            fill, gapped = _stop_fill_price(bars[bi], stop_level, is_long, adverse_fill)
+            if reached:
+                p_leg = tp1
+                r_leg = entry if runner_stop_pricing == RUNNER_ENGINE_PNL else fill
+                outcome, kind = OUT_TP1_BE_STOP, "SL_HIT"
+            else:
+                p_leg = r_leg = fill
+                outcome, kind = OUT_STOPPED, "SL_HIT"
+        elif event == "TP2":
+            p_leg, r_leg = (tp1, tp2) if tp1_active else (tp2, tp2)
+            outcome, kind = OUT_TP1_TP2, "TP_HIT"
+        else:
+            outcome, kind = OUT_TIMEOUT, "TIMEOUT"
+            if not bars:
+                p_leg = r_leg = entry
+            else:
+                lc = float(bars[-1].close)
+                if reached:
+                    p_leg = tp1
+                    r_leg = lc if timeout_pricing == TIMEOUT_MARK_TO_CLOSE else stop_level
+                else:
+                    p_leg = r_leg = lc
+        rr = (f * d * (p_leg - entry) + (1.0 - f) * d * (r_leg - entry)) / risk
+        priced.append(dict(
+            outcome=outcome, kind=kind, rr=round(float(rr), 6),
+            px=round(float(f * p_leg + (1.0 - f) * r_leg), 8), dur=bi + 1 if bars else 0,
+            tp1=reached, mfe=mfe, mae=mae, gapped=gapped,
+        ))
+
+    distinct = {(p["outcome"], p["rr"]) for p in priced}
+    compat = min(priced, key=lambda p: p["rr"])
+    amb = len(distinct) > 1
+    kinds = {p["kind"] for p in priced}
+    return OracleOutcome(
+        outcome=compat["outcome"], rr_gross=compat["rr"], exit_price=compat["px"],
+        duration_candles=compat["dur"], reached_tp1=compat["tp1"],
+        bars_to_tp1=None,  # not independently derived by this twin; callers must not compare
+        mfe=round(float(compat["mfe"]), 8), mae=round(float(compat["mae"]), 8),
+        risk_distance=float(risk),
+        exit_kind=compat["kind"] if len(kinds) == 1 else EXIT_KIND_AMBIGUOUS,
+        gapped_stop=compat["gapped"], ambiguous=amb,
+        rr_band=(min(p["rr"] for p in priced), max(p["rr"] for p in priced)) if amb else None,
+        n_branches=len(distinct),
+        rr_gross_basis=RR_BASIS_COMPAT_MIN_BRANCH if amb else RR_BASIS_ACTUAL,
+    )
 
 
 def reference_walk(
@@ -57,9 +180,18 @@ def reference_walk(
     timeout_pricing: str = TIMEOUT_MARK_TO_CLOSE,
     max_forward: int = 40,
     adverse_fill=None,
-    entry_index: "int | None" = None,
+    entry_index: int,
 ) -> OracleOutcome:
     """Same contract as `multi_tp_walk`, computed by summing two independent legs."""
+    if entry_index is None:
+        raise ValueError("reference_walk: entry_index is required (entry-bar exclusion guard)")
+    if tie_break == TIE_BREAK_OBSERVABLE:
+        return _reference_observable(
+            entry, direction, sl, tp1, tp2, future, partial_fraction=partial_fraction,
+            trail_fraction=trail_fraction, runner_stop_pricing=runner_stop_pricing,
+            timeout_pricing=timeout_pricing, max_forward=max_forward,
+            adverse_fill=adverse_fill, entry_index=entry_index,
+        )
     is_long = direction == "long"
     d = 1.0 if is_long else -1.0
     risk = abs(entry - sl)
@@ -85,7 +217,7 @@ def reference_walk(
         bar = bars[i]
         if entry_index is not None:
             bidx = getattr(bar, "index", None)
-            if bidx is not None and int(bidx) <= int(entry_index):
+            if bidx is None or int(bidx) <= int(entry_index):   # missing .index fails closed
                 raise ValueError(
                     f"reference_walk lookahead: bar index {bidx} <= entry_index {entry_index}"
                 )

@@ -135,7 +135,13 @@
       "Bash(git diff *)",
       "Bash(python mermaid_boxes.py)",
       "Bash(venv/Scripts/python.exe -c ' *)",
-      "Bash(git config *)"
+      "Bash(git config *)",
+      "Bash(venv/Scripts/python.exe -m pytest --co -q)",
+      "Bash(venv/Scripts/python.exe -m pytest tests/test_execution_planner_replay.py -v)",
+      "Bash(venv/Scripts/python.exe -m pytest --ignore=tests/test_execution_planner_replay.py -q)",
+      "Bash(grep -E \"\\\\.\\(md|json|yaml\\)$\")",
+      "Bash(awk '/short test summary info/{f=1} f' pytest_full_results.log)",
+      "Bash(sed -E 's/^\\(FAILED|ERROR\\) [^ ]+ - //')"
     ]
   },
   "hooks": {

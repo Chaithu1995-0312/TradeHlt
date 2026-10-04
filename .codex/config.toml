@@ -1,0 +1,10 @@
+[mcp_servers.duckdb]
+command = "D:/Tradelatest/venv/Scripts/uvx.exe"
+args = [
+    "--with",
+    "mcp<2",
+    "mcp-server-duckdb",
+    "--db-path",
+    "D:/Tradelatest/data/corpus.duckdb",
+    "--readonly",
+]

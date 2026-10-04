@@ -41,8 +41,9 @@ TWO DECLARED BASIS AMBIGUITIES
 
 NO LOOKAHEAD
 ------------
-`future` must contain only bars strictly after the entry bar. When `entry_index` is given
-every bar's `.index` is asserted greater than it, mirroring `forward_walk`'s guard.
+`future` must contain only bars strictly after the entry bar. `entry_index` is REQUIRED
+(no default) and every bar's `.index` is asserted greater than it, so no exit can ever be
+evaluated on the entry bar, mirroring `forward_walk`'s guard.
 """
 
 from __future__ import annotations
@@ -54,7 +55,16 @@ from research.oracle.stop_policy import StopState, tighten_only
 
 TIE_BREAK_PRODUCTION = "production"
 TIE_BREAK_OPTIMISTIC = "optimistic"
-_TIE_BREAKS = (TIE_BREAK_PRODUCTION, TIE_BREAK_OPTIMISTIC)
+# Opt-in (default stays production). OHLC proves a level was TOUCHED in a bar, never the
+# ORDER of competing touches, so this mode forks only on state-machine-legal competing
+# touches and reports every branch instead of inventing a winner.
+TIE_BREAK_OBSERVABLE = "observable_only"
+_TIE_BREAKS = (TIE_BREAK_PRODUCTION, TIE_BREAK_OPTIMISTIC, TIE_BREAK_OBSERVABLE)
+
+# `rr_gross_basis` values: what the scalar `rr_gross` MEANS on this row.
+RR_BASIS_ACTUAL = "actual"
+RR_BASIS_COMPAT_MIN_BRANCH = "compat_min_branch"
+EXIT_KIND_AMBIGUOUS = "AMBIGUOUS"
 
 RUNNER_LEDGER_BLEND = "ledger_blend"
 RUNNER_ENGINE_PNL = "engine_pnl"
@@ -90,6 +100,15 @@ class OracleOutcome:
     risk_distance: float
     exit_kind: str               # SL_HIT | TP_HIT | TIMEOUT — for the cost model
     gapped_stop: bool            # the triggering bar opened beyond the stop (SEM-016)
+    # --- observable_only fields (defaults reproduce the historical single-path outcome) ---
+    # When `ambiguous` is True the OHLC evidence permits several outcomes: `rr_band` is the
+    # AUTHORITATIVE (min, max) possible R, and `rr_gross` is NOT the observed R -- it is a
+    # conservative COMPATIBILITY scalar (`rr_gross_basis == "compat_min_branch"`) kept only
+    # so single-R consumers keep working. Never read it as "the trade lost X".
+    ambiguous: bool = False
+    rr_band: "tuple[float, float] | None" = None
+    n_branches: int = 1
+    rr_gross_basis: str = RR_BASIS_ACTUAL
 
 
 def _stop_fill_price(bar, stop: float, is_long: bool, adverse) -> "tuple[float, bool]":
@@ -136,7 +155,7 @@ def multi_tp_walk(
     timeout_pricing: str = TIMEOUT_MARK_TO_CLOSE,
     max_forward: int = 40,
     adverse_fill=None,
-    entry_index: "int | None" = None,
+    entry_index: int,
     stop_policy=None,
     atr: "float | None" = None,
     same_bar_update: bool = False,
@@ -160,7 +179,8 @@ def multi_tp_walk(
         timeout_pricing: how an unresolved position is marked at the horizon.
         max_forward: horizon in bars.
         adverse_fill: SEM-016 `AdverseFill`-shaped object, or None for a perfect stop fill.
-        entry_index: when given, every bar's `.index` must exceed it (no-lookahead guard).
+        entry_index: REQUIRED. Every bar's `.index` must exceed it (no-lookahead guard):
+            SL / TP1 / TP2 are never evaluated on the entry bar.
         stop_policy: SEM-019 causal stop policy, or None for no modification beyond the
             TP1 trail. Consulted BEFORE the current bar is read, so the stop applied to
             bar i depends only on bars strictly before i. Its output is clamped by
@@ -181,6 +201,8 @@ def multi_tp_walk(
     """
     if direction not in ("long", "short"):
         raise ValueError(f"multi_tp_walk: bad direction {direction!r}")
+    if entry_index is None:
+        raise ValueError("multi_tp_walk: entry_index is required (entry-bar exclusion guard)")
     if tie_break not in _TIE_BREAKS:
         raise ValueError(f"multi_tp_walk: bad tie_break {tie_break!r}, expected one of {_TIE_BREAKS}")
     if runner_stop_pricing not in _RUNNER_PRICING:
@@ -210,6 +232,21 @@ def multi_tp_walk(
                 f"multi_tp_walk: stop_policy {stop_policy.name!r} "
                 f"requires a positive atr, got {atr!r}"
             )
+
+    if tie_break == TIE_BREAK_OBSERVABLE:
+        if stop_policy is not None or same_bar_update:
+            # A stop policy moves the stop per branch from path state; combining that with
+            # branching is a separate semantic. Fail loudly rather than half-support it.
+            raise ValueError(
+                "multi_tp_walk: tie_break='observable_only' does not support stop_policy / "
+                "same_bar_update"
+            )
+        return _walk_observable(
+            entry, is_long, sl, tp1, tp2, bars_in=list(future)[:max_forward],
+            partial_fraction=partial_fraction, trail_fraction=trail_fraction,
+            runner_stop_pricing=runner_stop_pricing, timeout_pricing=timeout_pricing,
+            adverse_fill=adverse_fill, entry_index=entry_index, risk=risk,
+        )
 
     d = 1.0 if is_long else -1.0
     f = float(partial_fraction)
@@ -266,7 +303,7 @@ def multi_tp_walk(
     for i, bar in enumerate(bars):
         if entry_index is not None:
             bidx = getattr(bar, "index", None)
-            if bidx is not None and int(bidx) <= int(entry_index):
+            if bidx is None or int(bidx) <= int(entry_index):   # missing .index fails closed
                 raise ValueError(
                     f"multi_tp_walk lookahead: bar index {bidx} <= entry_index {entry_index}"
                 )
@@ -354,6 +391,158 @@ def multi_tp_walk(
     runner_px = last_close if timeout_pricing == TIMEOUT_MARK_TO_CLOSE else sl_cur
     px = f * tp1 + (1.0 - f) * runner_px
     return _finish(OUT_TIMEOUT, px, d * (px - entry) / risk, "TIMEOUT")
+
+
+EV_STOP, EV_TP1, EV_TP2, EV_STAY = "STOP", "TP1", "TP2", "STAY"
+
+
+def _legal_branches(status_tp1: bool, tp1_active: bool, sl_touch: bool,
+                    tp1_touch: bool, tp2_touch: bool) -> "list[str]":
+    """State-machine-legal ALTERNATIVE outcomes of one bar (observable_only).
+
+    More than one entry means OHLC cannot order the touches. Only these forks exist:
+        OPEN: SL+TP1 -> {STOP, TP1}      OPEN: SL+TP2 -> {STOP, TP2 (TP1 crossed first)}
+        TP1 : SL(trail)+TP2 -> {STOP, TP2}
+    Never forks: TP1+TP2 (price must cross TP1 to reach TP2 -> deterministic), TP1 + the
+    trail it arms (the new trail is not tested on its own transition bar), and a trail
+    while OPEN (it does not exist yet). Never enumerates permutations of touched levels.
+    """
+    if status_tp1:
+        if tp2_touch:
+            return [EV_STOP, EV_TP2] if sl_touch else [EV_TP2]
+        return [EV_STOP] if sl_touch else [EV_STAY]
+    if tp2_touch:
+        return [EV_STOP, EV_TP2] if sl_touch else [EV_TP2]
+    if tp1_active and tp1_touch:
+        return [EV_STOP, EV_TP1] if sl_touch else [EV_TP1]
+    return [EV_STOP] if sl_touch else [EV_STAY]
+
+
+def _walk_observable(entry, is_long, sl, tp1, tp2, *, bars_in, partial_fraction,
+                     trail_fraction, runner_stop_pricing, timeout_pricing, adverse_fill,
+                     entry_index, risk) -> OracleOutcome:
+    """Branch-set walk: never infers the order of competing intrabar touches.
+
+    A fork always has at most ONE surviving (non-terminal) branch -- the competing
+    alternative either ends the trade (STOP / TP2) or is the live TP1 state -- so the
+    walker keeps one live state plus the list of terminal branch results. A later
+    single-level touch advances the live branch only; it can never exclude a terminal
+    branch (the trade might already have ended on the ambiguous bar), so ambiguity is
+    never retroactively removed. Pricing of each branch reuses the production formulas.
+    """
+    d = 1.0 if is_long else -1.0
+    f = float(partial_fraction)
+    tp1_active = f > 0.0
+    trail_level = None if trail_fraction is None else entry + trail_fraction * (tp1 - entry)
+
+    results: "list[dict]" = []
+    live = {"tp1": False, "sl": float(sl), "bars_to_tp1": None}
+    mfe = 0.0
+    mae = 0.0
+    last_i = -1
+
+    def _rec(outcome, px, rr, kind, i, *, tp1_reached, b2tp1, gapped=False):
+        results.append(dict(
+            outcome=outcome, rr=round(float(rr), 6), px=round(float(px), 8), kind=kind,
+            dur=i + 1, tp1=tp1_reached, b2tp1=b2tp1, mfe=mfe, mae=mae, gapped=gapped,
+        ))
+
+    def _stop(bar, i, tp1_state, sl_level, b2tp1):
+        fill, gp = _stop_fill_price(bar, sl_level, is_long, adverse_fill)
+        if not tp1_state:
+            _rec(OUT_STOPPED, fill, d * (fill - entry) / risk, "SL_HIT", i,
+                 tp1_reached=False, b2tp1=None, gapped=gp)
+            return
+        if runner_stop_pricing == RUNNER_ENGINE_PNL:
+            rr = f * d * (tp1 - entry) / risk
+            px = f * tp1 + (1.0 - f) * entry
+        else:
+            px = f * tp1 + (1.0 - f) * fill
+            rr = d * (px - entry) / risk
+        _rec(OUT_TP1_BE_STOP, px, rr, "SL_HIT", i, tp1_reached=True, b2tp1=b2tp1, gapped=gp)
+
+    def _tp2(i, tp1_state, b2tp1):
+        if tp1_active:
+            px = f * tp1 + (1.0 - f) * tp2
+            _rec(OUT_TP1_TP2, px, d * (px - entry) / risk, "TP_HIT", i,
+                 tp1_reached=True, b2tp1=b2tp1 if tp1_state else i + 1)
+        else:
+            _rec(OUT_TP1_TP2, tp2, d * (tp2 - entry) / risk, "TP_HIT", i,
+                 tp1_reached=False, b2tp1=None)
+
+    for i, bar in enumerate(bars_in):
+        if entry_index is not None:
+            bidx = getattr(bar, "index", None)
+            if bidx is None or int(bidx) <= int(entry_index):   # missing .index fails closed
+                raise ValueError(
+                    f"multi_tp_walk lookahead: bar index {bidx} <= entry_index {entry_index}"
+                )
+        hi, lo = float(bar.high), float(bar.low)
+        last_i = i
+        fav = (hi - entry) if is_long else (entry - lo)
+        adv = (lo - entry) if is_long else (entry - hi)
+        mfe = max(mfe, fav)
+        mae = min(mae, adv)
+
+        sl_touch = (lo <= live["sl"]) if is_long else (hi >= live["sl"])
+        tp1_touch = (hi >= tp1) if is_long else (lo <= tp1)
+        tp2_touch = (hi >= tp2) if is_long else (lo <= tp2)
+        evs = _legal_branches(live["tp1"], tp1_active, sl_touch, tp1_touch, tp2_touch)
+
+        survivor = None
+        for ev in evs:
+            if ev == EV_STOP:
+                _stop(bar, i, live["tp1"], live["sl"], live["bars_to_tp1"])
+            elif ev == EV_TP2:
+                _tp2(i, live["tp1"], live["bars_to_tp1"])
+            elif ev == EV_TP1:
+                # Transition only; the trail it arms is not tested on this bar.
+                survivor = {"tp1": True, "bars_to_tp1": i + 1,
+                            "sl": live["sl"] if trail_level is None else trail_level}
+            else:
+                survivor = live
+        if survivor is None:
+            live = None
+            break
+        live = survivor
+
+    if live is not None:
+        # Window ended with a branch still open -> existing timeout semantics.
+        if not bars_in:
+            _rec(OUT_TIMEOUT, entry, 0.0, "TIMEOUT", -1, tp1_reached=False, b2tp1=None)
+        else:
+            lc = float(bars_in[-1].close)
+            if not live["tp1"]:
+                _rec(OUT_TIMEOUT, lc, d * (lc - entry) / risk, "TIMEOUT", last_i,
+                     tp1_reached=False, b2tp1=None)
+            else:
+                runner_px = lc if timeout_pricing == TIMEOUT_MARK_TO_CLOSE else live["sl"]
+                px = f * tp1 + (1.0 - f) * runner_px
+                _rec(OUT_TIMEOUT, px, d * (px - entry) / risk, "TIMEOUT", last_i,
+                     tp1_reached=True, b2tp1=live["bars_to_tp1"])
+
+    # Distinct branch outcomes only (identical outcome+R from different paths is one fact).
+    distinct = {(r["outcome"], r["rr"]) for r in results}
+    compat = min(results, key=lambda r: r["rr"])
+    ambiguous = len(distinct) > 1
+    kinds = {r["kind"] for r in results}
+    return OracleOutcome(
+        outcome=compat["outcome"],
+        rr_gross=compat["rr"],
+        exit_price=compat["px"],
+        duration_candles=compat["dur"],
+        reached_tp1=compat["tp1"],
+        bars_to_tp1=compat["b2tp1"],
+        mfe=round(float(compat["mfe"]), 8),
+        mae=round(float(compat["mae"]), 8),
+        risk_distance=float(risk),
+        exit_kind=(compat["kind"] if len(kinds) == 1 else EXIT_KIND_AMBIGUOUS),
+        gapped_stop=compat["gapped"],
+        ambiguous=ambiguous,
+        rr_band=(min(r["rr"] for r in results), max(r["rr"] for r in results)) if ambiguous else None,
+        n_branches=len(distinct),
+        rr_gross_basis=RR_BASIS_COMPAT_MIN_BRANCH if ambiguous else RR_BASIS_ACTUAL,
+    )
 
 
 def _apply_policy(policy, current_stop, entry, is_long, initial_stop, tp1, tp2,

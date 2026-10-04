@@ -73,6 +73,11 @@ class Outcome:
     time_to_tp: int | None     # bars to first TP touch (None if never reached)
     time_to_failure: int | None  # bars until SL hit, i.e. survival time (None if not SL_HIT)
     reached_1r: bool           # MFE >= 1R before exit — the continuation-probability primitive
+    # forward_walk(tie_break="observable_only") only. When `ambiguous`, `rr_band` is the
+    # AUTHORITATIVE possible-R interval and `rr_achieved` is a conservative compatibility
+    # scalar (the min branch), NOT the observed R. Defaults = historical single-path outcome.
+    ambiguous: bool = False
+    rr_band: "tuple[float, float] | None" = None
 
 
 @dataclass(frozen=True)

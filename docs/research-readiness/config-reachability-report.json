@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-03T09:38:22+00:00",
+  "generated_at": "2026-10-03T14:10:26+00:00",
   "active_version": "v2_htfcrt_2026_08",
   "crtconfig_field_count": 53,
   "section_loaded_via_get_prod_section": {
@@ -852,7 +852,7 @@
     ]
   },
   "summary": {
-    "READ_AND_USED": 417,
+    "READ_AND_USED": 418,
     "METADATA": 8,
     "READ_BUT_INERT": 31,
     "SHADOW_ONLY": 21,
@@ -1399,6 +1399,15 @@
       "evidence": [
         "scripts/analysis/trade_intent_ownership_shadow.py",
         "scripts/research/live_path_replay.py",
+        "src/config_layer/execution_planner.py"
+      ],
+      "note": ""
+    },
+    {
+      "section": "execution_planner",
+      "key": "liq_sweep_semantics",
+      "verdict": "READ_AND_USED",
+      "evidence": [
         "src/config_layer/execution_planner.py"
       ],
       "note": ""

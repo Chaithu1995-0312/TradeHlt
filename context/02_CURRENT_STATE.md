@@ -9,32 +9,32 @@
 
 ## Runtime truth (Tier 0)
 
-- **ACTIVE_VERSION:** `v2_multi_2026_04`  (branch-scoped — see CLAUDE.md §4.0)
-- **git branch:** `patch`
+- **ACTIVE_VERSION:** `v2_htfcrt_2026_08`  (branch-scoped — see CLAUDE.md §4.0)
+- **git branch:** `semanticos_impl`
 
 
 ## Recent SESSION LOG (last 5)
 
-- **2026-06-13** — Program 1 FROZEN as complete — KILLED in governance; documentation-only closure
-  - next: hand back — Program 1 frozen as complete; await user's deliberate Program-2 decision (or closure of the research effort).
-- **2026-06-15** — Multi-LLM Memory & Transfer System + first-class User role (Track-3 follow-on) — built + verified
-  - next: Per HANDOFF.md → Gemini confirms STORY-1.1 + gaps before DeepSeek plans Epic 1; or owner directs Claude to start STORY-1.1 directly.
-- **2026-06-15** — Full-suite delta resolved + designed Claude pre-implementation checklist (read-only synthesis)
-  - next: Owner: approve writing the checklist into ROLE_CLAUDE.md; and/or start Track-1 STORY-1.1 (fix LLM connectivity fallback contract) via the workflow.
-- **2026-06-15** — Track-1 Epic-1 STORY-1.1 — LLM-connectivity fail-open contract fixed (0.5 → 1.0)
-  - next: Continue Epic 1 with a confirmed-failing story (gaussian_impl_switch or dual_gate), or run the full suite to refresh the baseline; HANDOFF → Gemini.
-- **2026-06-15** — Incorporated the external "Jarvis" ChatGPT workflow pack into the multi_llm/ layer (frozen-map, docs-only)
-  - next: On user approval, `git add multi_llm/ docs/architecture/trigger-vocabulary.md CLAUDE.md` + commit; optionally add the frozen-name guard test; otherwise resume Epic-1 STORY flow (HANDOFF still → Gemini for the next real story).
+- **2026-10-03 (IST evening)** — E01 downstream consumer #1, GateIntelligence + planner intent: read-only semantic census + live-faithful re-run
+  - next: user decides the planner/gate fix scope (an authorized behaviour-change turn under the construction protocol); then the next consumer, the CRT decision path.
+- **2026-10-03 (IST evening, 2)** — CH-planner-liq-sweep-direction — user-authorized atomic fix of census rows 1 and 3 (LIQ_SWEEP direction/event), step A+B
+  - next: user decision on activation; then step C investigation.
+- **2026-10-03 (IST night)** — Step C — what the gate's double_sweep bonus means (read-only lineage + full-corpus information test); activation held by user
+  - next: user decides Step D; then activation re-evaluation; then the CRT decision path.
+- **2026-10-03 (IST night, 2)** — Step D — GateIntelligence scoring/authority census (read-only): why a 4-factor gate runs on 2
+  - next: user decides direction (likely: outcome-evaluate the gate scenarios on the RESEARCH_PROXY object before repairing anything).
+- **2026-10-03 (IST night, 3)** — F-113 registered + read-only outcome test of each dormant GateIntelligence component
+  - next: user decision.
 
 ## NEXT_10_STEPS (from multi_llm/build_queue.jsonl)
 
-- `STORY-1.2` (Epic 1) Fix Dual Gate Engine Runner · conf 70%
-- `STORY-1.3` (Epic 1) Fix RR Fusion Scoring · conf 65%
-- `STORY-1.4` (Epic 1) Fix Gaussian Implementation Switch · conf 80%
-- `STORY-1.5` (Epic 1) Fix Replay Memory Engine Failures · conf 90%
-- `STORY-1.6` (Epic 1) Fix Feature Schema Registry Test · conf 95%
 - `STORY-2.1` (Epic 2) Wire `capital_management` into UltronRiskGate · conf 85%
 - `STORY-2.2` (Epic 2) Remove `data_ingestion` Config Section · conf 95%
 - `STORY-2.3` (Epic 2) Wire or Remove `gate_intelligence` · conf 60%
 - `STORY-2.4` (Epic 2) Verify StrategyOrchestrator Invocation · conf 75%
 - `STORY-2.5` (Epic 2) Wire `regime_fusion_weights` into FusionEngine · conf 70%
+- `STORY-3.1` (Epic 3) Registry Schema + Python Module · conf 90%
+- `STORY-3.2` (Epic 3) Seed Registry from Codebase · conf 85%
+- `STORY-3.3` (Epic 3) CLI Query Tool · conf 90%
+- `STORY-3.4` (Epic 3) Registry Report Generator · conf 85%
+- `STORY-3.5` (Epic 3) Findings Applier Module · conf 75%
