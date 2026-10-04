@@ -566,7 +566,7 @@ Belief Update / ROI / Goal: none
 Open Questions: none
 Next Step: none
 ---
----
+
 ---
 📝 SESSION LOG ENTRY
 Date: 2026-10-04
@@ -592,4 +592,13 @@ Topic: Noted semanticos_impl branch details
 Decision/Output: origin/semanticos_impl = d397067 (8 commits above merge-base ea69a60 with grokbotchanges; checked with ls-remote). grokbotchanges has moved on to 23f15d6. The user's local uncommitted files are not on GitHub, so this session cannot see them. No code changes.
 Open Questions: Will semanticos_impl need grokbotchanges merged in (it is now at 23f15d6)?
 Next Step: Wait for the user's task on semanticos_impl.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-05
+Topic: EXPANSION dwell claim checked; resolver TTL off-by-one fixed
+Decision/Output: Claim "58-bar dwell vs TTL 495 is a defect; add retrace/extension to htf_protect_states" rejected. htf_protect_states lists states, not reset rules; ResetLogic.should_reset already skips the retrace/1.618 resets after an HTF flip in EXPANSION/RETEST; 495 is a P99 cap. Real defect fixed: CRTStateResolver._check_expired used >= (expired one bar / hour-mark early); now > to match crt_engine_v2 _ttl_exceeded and the "TTL exceeded" spec. New tests/test_crt_state_resolver_ttl_boundary.py (5 tests; the 2 boundary tests fail on the pre-fix code). Merged origin/semanticos_impl into claude/new-session-30eght first. Resolver suites: 112 pass, 1 fail (test_funnel_sweep_to_displacement_bypasses_pipeline_flag, which also fails without this fix). Walker .index enforcement (multi_tp_walk/reference_walk) is already in 1101777; tests/research/test_observable_intrabar_order.py 28 pass. No config change, no rehash.
+Open Questions: Where did the 58-bar figure come from (unpushed run log)? test_funnel_sweep_to_displacement_bypasses_pipeline_flag is red on the base; is it one of the known 6?
+Next Step: To check the dwell number, push the run log and count EXPANSION exits by cause (RETEST / TTL / gap / retrace / extension).
 ---

@@ -2326,10 +2326,12 @@ class CRTStateResolver:
         max_candles = thresholds["max_expansion_age_candles"]
         max_hours = thresholds["max_expansion_age_hours"]
 
+        # Strict ">" (TTL *exceeded*) — engine parity with crt_engine_v2 Phase 3b
+        # `_ttl_exceeded` (age > max). ">=" expired one bar / hour-mark early.
         # Check candle-based TTL
         if max_candles > 0:
             age = self._memory.candle_index - self._memory.expansion_entry_index
-            if age >= max_candles:
+            if age > max_candles:
                 return True
 
         # Check hour-based TTL (if timestamp available)
@@ -2337,7 +2339,7 @@ class CRTStateResolver:
             try:
                 delta = timestamp - self._memory.expansion_entry_ts
                 hours = delta.total_seconds() / 3600
-                if hours >= max_hours:
+                if hours > max_hours:
                     return True
             except (TypeError, AttributeError):
                 pass  # cannot compute — skip hour check
