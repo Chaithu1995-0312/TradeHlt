@@ -139,8 +139,8 @@ class S06Scalping(BaseStrategy):
 
         body_ratio = float(features.get("body_ratio", 0.0))
         volume_ratio = float(features.get("volume_ratio", 1.0))
-        atr = float(features.get("atr", 0.0))
         close = float(candle["close"])
+        atr = self._atr_price(features, close)
 
         if close <= 0.0 or atr <= 0.0:
             return self._no_trade("RANGING")

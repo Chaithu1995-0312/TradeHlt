@@ -24,16 +24,27 @@ def load_prereg() -> dict[str, Any]:
     return json.loads(PREREG_JSON.read_text(encoding="utf-8"))
 
 
-def resolve_ohlcv(candidates: list[str] | None = None) -> Path:
-    cands = candidates or [
-        "data/mt5/XAUUSD_M15.csv",
-        "data/XAUUSD_M15.csv",
-    ]
+def resolve_ohlcv(candidates: list[str] | None = None):
+    """The ONE authoritative corpus for this program (CH-corpus-ssot, 2026-10-08).
+
+    Every candidate is resolved through `corpus_store.load`; they must all resolve to the SAME
+    corpus (same sha256). The former first-existing-file fallback could silently switch to a
+    different physical CSV (data/XAUUSD_M15.csv, 2,116 rows) when the canonical one was absent.
+    Returns an `AdmittedCorpus`."""
+    from data_ingestion.corpus_store import load as corpus_load
+
+    cands = candidates or ["data/mt5/XAUUSD_M15.csv"]
+    resolved = []
     for rel in cands:
         p = _ROOT / rel
         if p.exists():
-            return p
-    raise FileNotFoundError(f"No OHLCV found among {cands}")
+            resolved.append(corpus_load(p, "XAUUSD"))
+    if not resolved:
+        raise FileNotFoundError(f"No OHLCV found among {cands}")
+    shas = {c.sha256 for c in resolved}
+    if len(shas) != 1:
+        raise ValueError(f"ohlcv candidates resolve to {len(shas)} different corpora: {sorted(shas)}")
+    return resolved[0]
 
 
 def sha256_file(path: Path) -> str:

@@ -143,11 +143,16 @@ class StrategyBacktester:
         Returns {strategy_id: StrategyMetrics} for every strategy class
         registered in _STRATEGY_CLASSES.
         """
+        # CH-corpus-ssot (2026-10-08): candles from the authoritative corpus (corpus_store.load),
+        # the same admitted, hashed bytes every other consumer of this corpus sees.
+        from data_ingestion.corpus_store import load as corpus_load
+
         try:
-            df = pd.read_csv(csv_path, parse_dates=["timestamp"])
+            self.corpus = corpus_load(csv_path)
         except (FileNotFoundError, OSError) as exc:
             logger.warning("StrategyBacktester: cannot open %s: %s", csv_path, exc)
             return {}
+        df = self.corpus.frame(parse_dates=["timestamp"])
         if len(df) < self._warmup + self._max_fwd + 10:
             logger.warning(
                 "StrategyBacktester: CSV too short (%d rows) for %s — skipping.",
@@ -311,8 +316,12 @@ class StrategyBacktester:
             "momentum_score":   _f("momentum_score"),
             "bb_upper":         _f("bb_upper"),
             "bb_lower":         _f("bb_lower"),
-            "rejection_wick":   _b("upper_wick"),
-            "is_inside_bar":    False,
+            # Schema v8.0 (CH-candle-pattern-observations-v8): real producers replace the old
+            # "upper wick non-zero" proxy and the constant False. rejection_wick = any registered
+            # wick-rejection observation (FM-105..108); is_inside_bar = FM-114.
+            "rejection_wick":   (_b("pin_lower") or _b("pin_upper")
+                                 or _b("hammer") or _b("shooting_star")),
+            "is_inside_bar":    _b("inside_bar"),
             "ema_fast":         _f("ema_fast"),
             "ema_slow":         _f("ema_slow"),
             "ema_spread":       _f("ema_spread"),

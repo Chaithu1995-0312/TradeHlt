@@ -1,0 +1,175 @@
+==== 06-10-2026 23:26:40.13 
+2026-10-06 23:26:42 [INFO] config_layer.production_config | Active production config: v2_htfcrt_2026_08
+[94m[2026-10-06T23:26:42Z] [FLOW:FEATURE_PIPELINE] [WARNING] feature_pipeline.normalization_basis='atr_relative': binding FM-022 ema_spread / FM-023 momentum_score, both marked SUPERSEDED in the feature certification ledger (superseded by FM-030/FM-031). Measured decision-surface cost on XAUUSD: |ema_spread|>0.15 on 99.99 pct of bars, |tanh(momentum_score)|>0.999 on 99.81 pct of bars (C2, extends F-061). This is the ACTIVE default and no config was changed by this warning -- see market_ontology.yaml FM-022/FM-023 for the correction path.[0m
+[94m[2026-10-06T23:26:42Z] [FLOW:FEATURE_PIPELINE] [WARNING] feature_pipeline.session_timestamp_basis='broker_local': `session`/`hour_of_day` (FM-052) AND the crt_engine session-gating FILTER are both derived from the raw timestamp AS-IS. On MT5-sourced corpora (data/mt5/*.csv) that raw timestamp is broker-server time (EET/EEST, NY-DST-tracking), not UTC, though session_windows_utc's name and docstring claim UTC. F-066: measured 53.36 pct of XAUUSD bars carry the wrong session label under this basis (two independent cross-instrument tests confirm the offset). This is the ACTIVE default and no config was changed by this warning -- see docs/research/preregistration-blind-label-descriptive-fidelity.md and features/broker_clock.py for the correction path ('utc_corrected', which as of 2026-08-05 also gates CRTEngine's session filter, not just the FM-052 feature).[0m
+2026-10-06 23:26:43 [INFO] FeaturePipeline | finalize | rows_before=253 rows_after=175 drop=78 drop_pct=30.83%
+[94m[2026-10-06T23:26:43Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth retest_depth | zero_rate=41.71% nan_rate=0.00% min=0 max=0.979641 mean=0.239486[0m
+[94m[2026-10-06T23:26:43Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth disp_strength | zero_rate=0.00% nan_rate=0.00% min=0.00381961 max=2.9405 mean=0.498218[0m
+[94m[2026-10-06T23:26:43Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth trend_bias | zero_rate=0.00% nan_rate=0.00% min=-1 max=1 mean=-0.588571[0m
+[94m[2026-10-06T23:26:43Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth momentum_score | zero_rate=0.00% nan_rate=0.00% min=-13170.9 max=6241.41 mean=-273.032[0m
+[94m[2026-10-06T23:26:43Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth ema_spread | zero_rate=0.00% nan_rate=0.00% min=-7651.7 max=1949.26 mean=-1698.8[0m
+[94m[2026-10-06T23:26:43Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth atr | zero_rate=0.00% nan_rate=0.00% min=0.00656033 max=0.0112307 mean=0.0085785[0m
+[94m[2026-10-06T23:26:43Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth liquidity_distance | zero_rate=0.00% nan_rate=0.00% min=0.00741357 max=3.57055 mean=0.771025[0m
+[94m[2026-10-06T23:26:43Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth volume_spike | zero_rate=73.71% nan_rate=0.00% min=0 max=1 mean=0.262857[0m
+[94m[2026-10-06T23:26:43Z] [FLOW:FEATURE_PIPELINE] [WARNING] FeatureMonitor: 10/175 rows flagged as drift in this batch (Z > 2.5 on retest_depth/body_ratio/disp_strength).[0m
+{
+ "run_at": "2026-10-06T23:26:43",
+ "data_last_bar": "2026-10-06 20:30:00",
+ "rows": 3865,
+ "timeframe": "H4",
+ "condition": "at_or_above_pdl",
+ "forward_start": "2026-10-07",
+ "triggers": 0,
+ "candidates": 0,
+ "open": 0,
+ "closed": {
+  "n": 0
+ },
+ "economic_claims_allowed": false
+}
+exit 0 
+==== 07-10-2026 10:40:06.13 
+2026-10-07 10:40:12 [INFO] config_layer.production_config | Active production config: v2_htfcrt_2026_08
+[94m[2026-10-07T10:40:52Z] [FLOW:FEATURE_PIPELINE] [WARNING] feature_pipeline.normalization_basis='atr_relative': binding FM-022 ema_spread / FM-023 momentum_score, both marked SUPERSEDED in the feature certification ledger (superseded by FM-030/FM-031). Measured decision-surface cost on XAUUSD: |ema_spread|>0.15 on 99.99 pct of bars, |tanh(momentum_score)|>0.999 on 99.81 pct of bars (C2, extends F-061). This is the ACTIVE default and no config was changed by this warning -- see market_ontology.yaml FM-022/FM-023 for the correction path.[0m
+[94m[2026-10-07T10:40:52Z] [FLOW:FEATURE_PIPELINE] [WARNING] feature_pipeline.session_timestamp_basis='broker_local': `session`/`hour_of_day` (FM-052) AND the crt_engine session-gating FILTER are both derived from the raw timestamp AS-IS. On MT5-sourced corpora (data/mt5/*.csv) that raw timestamp is broker-server time (EET/EEST, NY-DST-tracking), not UTC, though session_windows_utc's name and docstring claim UTC. F-066: measured 53.36 pct of XAUUSD bars carry the wrong session label under this basis (two independent cross-instrument tests confirm the offset). This is the ACTIVE default and no config was changed by this warning -- see docs/research/preregistration-blind-label-descriptive-fidelity.md and features/broker_clock.py for the correction path ('utc_corrected', which as of 2026-08-05 also gates CRTEngine's session filter, not just the FM-052 feature).[0m
+2026-10-07 10:40:54 [INFO] FeaturePipeline | finalize | rows_before=251 rows_after=173 drop=78 drop_pct=31.08%
+[94m[2026-10-07T10:40:54Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth retest_depth | zero_rate=42.20% nan_rate=0.00% min=0 max=0.979641 mean=0.23374[0m
+[94m[2026-10-07T10:40:54Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth disp_strength | zero_rate=0.00% nan_rate=0.00% min=0.00381961 max=2.9405 mean=0.500219[0m
+[94m[2026-10-07T10:40:54Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth trend_bias | zero_rate=0.00% nan_rate=0.00% min=-1 max=1 mean=-0.606936[0m
+[94m[2026-10-07T10:40:54Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth momentum_score | zero_rate=0.00% nan_rate=0.00% min=-13170.9 max=6241.41 mean=-262.857[0m
+[94m[2026-10-07T10:40:54Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth ema_spread | zero_rate=0.00% nan_rate=0.00% min=-7651.7 max=1883.31 mean=-1737.99[0m
+[94m[2026-10-07T10:40:54Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth atr | zero_rate=0.00% nan_rate=0.00% min=0.00656033 max=0.0112307 mean=0.00857961[0m
+[94m[2026-10-07T10:40:54Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth liquidity_distance | zero_rate=0.00% nan_rate=0.00% min=0.00741357 max=3.57055 mean=0.776286[0m
+[94m[2026-10-07T10:40:54Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth volume_spike | zero_rate=73.99% nan_rate=0.00% min=0 max=1 mean=0.260116[0m
+[94m[2026-10-07T10:40:54Z] [FLOW:FEATURE_PIPELINE] [WARNING] FeatureMonitor: 10/173 rows flagged as drift in this batch (Z > 2.5 on retest_depth/body_ratio/disp_strength).[0m
+{
+ "run_at": "2026-10-07T10:40:54",
+ "data_last_bar": "2026-10-06 21:00:00",
+ "rows": 3843,
+ "timeframe": "H4",
+ "condition": "at_or_above_pdl",
+ "forward_start": "2026-10-07",
+ "triggers": 0,
+ "candidates": 0,
+ "open": 0,
+ "closed": {
+  "n": 0
+ },
+ "economic_claims_allowed": false
+}
+exit 0 
+==== 07-10-2026 14:40:01.22 
+2026-10-07 14:40:10 [INFO] config_layer.production_config | Active production config: v2_htfcrt_2026_08
+[94m[2026-10-07T14:40:12Z] [FLOW:FEATURE_PIPELINE] [WARNING] feature_pipeline.session_timestamp_basis='broker_local': `session`/`hour_of_day` (FM-052) AND the crt_engine session-gating FILTER are both derived from the raw timestamp AS-IS. On MT5-sourced corpora (data/mt5/*.csv) that raw timestamp is broker-server time (EET/EEST, NY-DST-tracking), not UTC, though session_windows_utc's name and docstring claim UTC. F-066: measured 53.36 pct of XAUUSD bars carry the wrong session label under this basis (two independent cross-instrument tests confirm the offset). This is the ACTIVE default and no config was changed by this warning -- see docs/research/preregistration-blind-label-descriptive-fidelity.md and features/broker_clock.py for the correction path ('utc_corrected', which as of 2026-08-05 also gates CRTEngine's session filter, not just the FM-052 feature).[0m
+2026-10-07 14:40:15 [INFO] FeaturePipeline | finalize | rows_before=254 rows_after=176 drop=78 drop_pct=30.71%
+[94m[2026-10-07T14:40:15Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth retest_depth | zero_rate=41.48% nan_rate=0.00% min=0 max=0.979641 mean=0.234505[0m
+[94m[2026-10-07T14:40:15Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth disp_strength | zero_rate=0.00% nan_rate=0.00% min=0.00381961 max=2.9405 mean=0.499123[0m
+[94m[2026-10-07T14:40:15Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth trend_bias | zero_rate=0.00% nan_rate=0.00% min=-1 max=1 mean=-0.613636[0m
+[94m[2026-10-07T14:40:15Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth momentum_score | zero_rate=0.00% nan_rate=0.00% min=-2.94026 max=1.38895 mean=-0.0655291[0m
+[94m[2026-10-07T14:40:15Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth ema_spread | zero_rate=0.00% nan_rate=0.00% min=-1.77411 max=0.420585 mean=-0.402026[0m
+[94m[2026-10-07T14:40:15Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth atr | zero_rate=0.00% nan_rate=0.00% min=0.00656033 max=0.0112307 mean=0.00856081[0m
+[94m[2026-10-07T14:40:15Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth liquidity_distance | zero_rate=0.00% nan_rate=0.00% min=0.00741357 max=3.57055 mean=0.769293[0m
+[94m[2026-10-07T14:40:15Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth volume_spike | zero_rate=74.43% nan_rate=0.00% min=0 max=1 mean=0.255682[0m
+[94m[2026-10-07T14:40:15Z] [FLOW:FEATURE_PIPELINE] [WARNING] FeatureMonitor: 10/176 rows flagged as drift in this batch (Z > 2.5 on retest_depth/body_ratio/disp_strength).[0m
+{
+ "run_at": "2026-10-07T14:40:16",
+ "data_last_bar": "2026-10-07 08:15:00",
+ "rows": 3884,
+ "timeframe": "H4",
+ "condition": "at_or_above_pdl",
+ "forward_start": "2026-10-07",
+ "triggers": 0,
+ "candidates": 0,
+ "open": 0,
+ "closed": {
+  "n": 0
+ },
+ "economic_claims_allowed": false
+}
+exit 0 
+==== 07-10-2026 22:40:00.95 
+2026-10-07 22:40:02 [INFO] config_layer.production_config | Active production config: v2_htfcrt_2026_08
+[94m[2026-10-07T22:40:08Z] [FLOW:FEATURE_PIPELINE] [WARNING] feature_pipeline.session_timestamp_basis='broker_local': `session`/`hour_of_day` (FM-052) AND the crt_engine session-gating FILTER are both derived from the raw timestamp AS-IS. On MT5-sourced corpora (data/mt5/*.csv) that raw timestamp is broker-server time (EET/EEST, NY-DST-tracking), not UTC, though session_windows_utc's name and docstring claim UTC. F-066: measured 53.36 pct of XAUUSD bars carry the wrong session label under this basis (two independent cross-instrument tests confirm the offset). This is the ACTIVE default and no config was changed by this warning -- see docs/research/preregistration-blind-label-descriptive-fidelity.md and features/broker_clock.py for the correction path ('utc_corrected', which as of 2026-08-05 also gates CRTEngine's session filter, not just the FM-052 feature).[0m
+2026-10-07 22:40:09 [INFO] FeaturePipeline | finalize | rows_before=255 rows_after=177 drop=78 drop_pct=30.59%
+[94m[2026-10-07T22:40:09Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth retest_depth | zero_rate=41.24% nan_rate=0.00% min=0 max=0.979641 mean=0.237476[0m
+[94m[2026-10-07T22:40:09Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth disp_strength | zero_rate=0.00% nan_rate=0.00% min=0.00381961 max=2.9405 mean=0.498553[0m
+[94m[2026-10-07T22:40:09Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth trend_bias | zero_rate=0.00% nan_rate=0.00% min=-1 max=1 mean=-0.615819[0m
+[94m[2026-10-07T22:40:09Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth momentum_score | zero_rate=0.00% nan_rate=0.00% min=-2.94026 max=1.38895 mean=-0.0674052[0m
+[94m[2026-10-07T22:40:09Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth ema_spread | zero_rate=0.00% nan_rate=0.00% min=-1.77411 max=0.420585 mean=-0.401285[0m
+[94m[2026-10-07T22:40:09Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth atr | zero_rate=0.00% nan_rate=0.00% min=0.00656033 max=0.0112307 mean=0.008552[0m
+[94m[2026-10-07T22:40:09Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth liquidity_distance | zero_rate=0.00% nan_rate=0.00% min=0.00741357 max=3.57055 mean=0.765058[0m
+[94m[2026-10-07T22:40:09Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth volume_spike | zero_rate=74.58% nan_rate=0.00% min=0 max=1 mean=0.254237[0m
+[94m[2026-10-07T22:40:09Z] [FLOW:FEATURE_PIPELINE] [WARNING] FeatureMonitor: 10/177 rows flagged as drift in this batch (Z > 2.5 on retest_depth/body_ratio/disp_strength).[0m
+{
+ "run_at": "2026-10-07T22:40:09",
+ "data_last_bar": "2026-10-07 12:15:00",
+ "rows": 3900,
+ "timeframe": "H4",
+ "condition": "at_or_above_pdl",
+ "forward_start": "2026-10-07",
+ "triggers": 0,
+ "candidates": 0,
+ "open": 0,
+ "closed": {
+  "n": 0
+ },
+ "economic_claims_allowed": false
+}
+exit 0 
+==== 08-10-2026  2:40:02.03 
+2026-10-08 02:40:03 [INFO] config_layer.production_config | Active production config: v2_htfcrt_2026_08
+[94m[2026-10-08T02:40:03Z] [FLOW:FEATURE_PIPELINE] [WARNING] feature_pipeline.session_timestamp_basis='broker_local': `session`/`hour_of_day` (FM-052) AND the crt_engine session-gating FILTER are both derived from the raw timestamp AS-IS. On MT5-sourced corpora (data/mt5/*.csv) that raw timestamp is broker-server time (EET/EEST, NY-DST-tracking), not UTC, though session_windows_utc's name and docstring claim UTC. F-066: measured 53.36 pct of XAUUSD bars carry the wrong session label under this basis (two independent cross-instrument tests confirm the offset). This is the ACTIVE default and no config was changed by this warning -- see docs/research/preregistration-blind-label-descriptive-fidelity.md and features/broker_clock.py for the correction path ('utc_corrected', which as of 2026-08-05 also gates CRTEngine's session filter, not just the FM-052 feature).[0m
+2026-10-08 02:40:04 [INFO] FeaturePipeline | finalize | rows_before=257 rows_after=179 drop=78 drop_pct=30.35%
+[94m[2026-10-08T02:40:04Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth retest_depth | zero_rate=41.34% nan_rate=0.00% min=0 max=0.979641 mean=0.2385[0m
+[94m[2026-10-08T02:40:04Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth disp_strength | zero_rate=0.00% nan_rate=0.00% min=0.00381961 max=2.9405 mean=0.503795[0m
+[94m[2026-10-08T02:40:04Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth trend_bias | zero_rate=0.00% nan_rate=0.00% min=-1 max=1 mean=-0.620112[0m
+[94m[2026-10-08T02:40:04Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth momentum_score | zero_rate=0.00% nan_rate=0.00% min=-2.94026 max=1.38895 mean=-0.069196[0m
+[94m[2026-10-08T02:40:04Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth ema_spread | zero_rate=0.00% nan_rate=0.00% min=-1.77411 max=0.420585 mean=-0.402077[0m
+[94m[2026-10-08T02:40:04Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth atr | zero_rate=0.00% nan_rate=0.00% min=0.00656033 max=0.0112307 mean=0.00853843[0m
+[94m[2026-10-08T02:40:04Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth liquidity_distance | zero_rate=0.00% nan_rate=0.00% min=0.00741357 max=3.57055 mean=0.760595[0m
+[94m[2026-10-08T02:40:04Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth volume_spike | zero_rate=73.74% nan_rate=0.00% min=0 max=1 mean=0.26257[0m
+[94m[2026-10-08T02:40:04Z] [FLOW:FEATURE_PIPELINE] [WARNING] FeatureMonitor: 10/179 rows flagged as drift in this batch (Z > 2.5 on retest_depth/body_ratio/disp_strength).[0m
+{
+ "run_at": "2026-10-08T02:40:04",
+ "data_last_bar": "2026-10-07 23:30:00",
+ "rows": 3945,
+ "timeframe": "H4",
+ "condition": "at_or_above_pdl",
+ "forward_start": "2026-10-07",
+ "triggers": 1,
+ "candidates": 0,
+ "open": 0,
+ "closed": {
+  "n": 0
+ },
+ "economic_claims_allowed": false
+}
+exit 0 
+==== 08-10-2026 10:40:00.96 
+2026-10-08 10:40:02 [INFO] config_layer.production_config | Active production config: v2_htfcrt_2026_08
+2026-10-08 10:40:14 [INFO] FeaturePipeline | finalize | rows_before=260 rows_after=182 drop=78 drop_pct=30.00%
+[94m[2026-10-08T10:40:14Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth retest_depth | zero_rate=54.40% nan_rate=0.00% min=0 max=0.979641 mean=0.18218[0m
+[94m[2026-10-08T10:40:14Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth disp_strength | zero_rate=0.00% nan_rate=0.00% min=0.00381961 max=2.9405 mean=0.499195[0m
+[94m[2026-10-08T10:40:14Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth trend_bias | zero_rate=0.00% nan_rate=0.00% min=-1 max=1 mean=-0.626374[0m
+[94m[2026-10-08T10:40:14Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth momentum_score | zero_rate=0.00% nan_rate=0.00% min=-2.94026 max=1.38895 mean=-0.0635962[0m
+[94m[2026-10-08T10:40:14Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth ema_spread | zero_rate=0.00% nan_rate=0.00% min=-1.77411 max=0.420585 mean=-0.40345[0m
+[94m[2026-10-08T10:40:14Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth atr | zero_rate=0.00% nan_rate=0.00% min=0.00656033 max=0.0112307 mean=0.0085166[0m
+[94m[2026-10-08T10:40:14Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth liquidity_distance | zero_rate=0.00% nan_rate=0.00% min=0.00741357 max=3.57055 mean=0.758044[0m
+[94m[2026-10-08T10:40:14Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth volume_spike | zero_rate=74.18% nan_rate=0.00% min=0 max=1 mean=0.258242[0m
+[94m[2026-10-08T10:40:14Z] [FLOW:FEATURE_PIPELINE] [WARNING] FeatureMonitor: 8/182 rows flagged as drift in this batch (Z > 2.5 on retest_depth/body_ratio/disp_strength).[0m
+{
+ "run_at": "2026-10-08T10:40:14",
+ "data_last_bar": "2026-10-08 07:45:00",
+ "rows": 3974,
+ "timeframe": "H4",
+ "condition": "at_or_above_pdl",
+ "forward_start": "2026-10-07",
+ "triggers": 1,
+ "candidates": 0,
+ "open": 0,
+ "closed": {
+  "n": 0
+ },
+ "economic_claims_allowed": false
+}
+exit 0 

@@ -96,7 +96,7 @@ from features.parent_candle import ParentCandleBuilder
 from features.smc.breaker import breaker_distance, find_active_breaker
 from features.smc.choch import change_of_character
 from features.smc.fvg import find_active_fvg, fvg_distance
-from features.smc.levels import eqh_eql_distance, pdh_pdl_distance
+from features.smc.levels import eqh_eql_distance, eqh_eql_present, pdh_pdl_distance
 from features.smc.mitigation import find_active_mitigation_block, mitigation_block_distance
 from features.smc.order_block import (
     _find_break_events,
@@ -214,13 +214,12 @@ class SnapshotConfig:
 
 
 def corpus_sha256(path: "Path | str") -> str:
-    """SHA-256 of the corpus file, so a record can never be silently re-attributed to a
-    different corpus. Streamed — the XAUUSD M15 CSV is tens of MB."""
-    h = hashlib.sha256()
-    with Path(path).open("rb") as fh:
-        for chunk in iter(lambda: fh.read(1 << 20), b""):
-            h.update(chunk)
-    return h.hexdigest()
+    """SHA-256 of the corpus, so a record can never be silently re-attributed to a different
+    corpus. CH-corpus-ssot (2026-10-08): taken from the corpus SSOT (`corpus_store.load`), the
+    same object the run's CandleLoader consumed — never a separate file read."""
+    from data_ingestion.corpus_store import corpus_sha256 as _ssot_sha256
+
+    return _ssot_sha256(path)
 
 
 def _state_name(state: Any) -> Optional[str]:
@@ -732,10 +731,18 @@ class BarStructureEmitter:
         hist = self._d1.parent_history
         if empty:
             pdh_d = pdl_d = eqh_d = eql_d = 0.0
+            eqh_p = eql_p = 0.0
             prev_day = None
         else:
             pdh_d, pdl_d = pdh_pdl_distance(close, hist, atr_abs)
             eqh_d, eql_d = eqh_eql_distance(
+                self._window,
+                self._k,
+                atr_abs,
+                tolerance_atr=self.cfg.eqh_eql_tolerance_atr,
+                max_swings=self.cfg.eqh_eql_max_swings,
+            )
+            eqh_p, eql_p = eqh_eql_present(
                 self._window,
                 self._k,
                 atr_abs,
@@ -751,13 +758,13 @@ class BarStructureEmitter:
         out["pdl_price"] = float(prev_day.low) if prev_day is not None else None
         out["pdl_distance"] = float(pdl_d)
         out["pdh_pdl_day_ts"] = prev_day.timestamp.isoformat() if prev_day is not None else None
-        # EQH/EQL presence is INFERRED from a non-zero distance: `eqh_eql_distance` returns
-        # exactly 0.0 when no cluster exists (`levels.py:66-67`), matching the *_distance
-        # convention. Not re-deriving the cluster here keeps this module a pure consumer of the
-        # canonical detector rather than a second implementation of it.
-        out["eqh_present"] = bool(eqh_d != 0.0)
+        # EQH/EQL presence comes from the canonical finder (levels.eqh_eql_present, FM-101/102).
+        # CORRECTED 2026-10-08 (CH-feature-semantic-fixes-v7): it was inferred from a non-zero
+        # distance, but eqh_eql_distance also returns 0.0 when price sits ON the cluster level, so
+        # "on the level" was recorded as "no cluster".
+        out["eqh_present"] = bool(eqh_p)
         out["eqh_distance"] = float(eqh_d)
-        out["eql_present"] = bool(eql_d != 0.0)
+        out["eql_present"] = bool(eql_p)
         out["eql_distance"] = float(eql_d)
         return out
 

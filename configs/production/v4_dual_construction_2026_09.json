@@ -1,5 +1,5 @@
 {
-  "setup": {"target_policy": "fixed_r", "trade_ttl_candles": null, "decider": "engine", "entry_semantics": "approval_bar_legacy", "retest_stop_guard": false},
+  "setup": {"target_policy": "fixed_r", "trade_ttl_candles": null, "decider": "engine", "entry_semantics": "approval_bar_legacy", "retest_stop_guard": false, "retrace_semantics": "legacy_kept_fraction"},
   "version": "v4_dual_construction_2026_09",
   "config_id": "v4_dual_construction_2026_09_registered",
   "created_at": "2026-08-29T00:00:00+00:00",
@@ -566,7 +566,25 @@
     "session_timestamp_basis": "broker_local",
     "sweep_semantics": "latest_unconsumed",
     "_comment_smc_max_window": "CH-htfcrt-parent-candle-smc-v1 (2026-08-15). Trailing-candle-buffer bound for compute_smc_features's OB/FVG/breaker/mitigation scanners -- a performance/scope bound, not a registered identity parameter. Reuses swing_window above for the causal swing half-window k (no duplicate key).",
-    "smc_max_window": 100
+    "smc_max_window": 100,
+    "candle_patterns": {
+      "_comment": "CH-candle-pattern-observations-v8 (2026-10-08): thresholds of FM-103..FM-119 (features.candle_patterns). Research hypotheses from the corrected candle-pattern spec; ATR = FM-074 atr_absolute (price units).",
+      "size_gate_atr_k": 0.5,
+      "swing_lookback": 5,
+      "pin_wick_min": 0.6,
+      "pin_body_max": 0.25,
+      "pin_opposite_wick_max": 0.15,
+      "probe_wick_body_multiple": 2.0,
+      "probe_opposite_wick_max": 0.1,
+      "doji_body_max": 0.1,
+      "doji_wick_asymmetry_max": 0.2,
+      "doji_extreme_body_max": 0.05,
+      "doji_extreme_wick_min": 0.75,
+      "engulfing_strength_cap": 3.0,
+      "compression_ratio_cap": 10.0,
+      "morning_star_body_min": 0.6,
+      "morning_star_mid_max": 0.25
+    }
   },
   "notes": "CH-v4-dual-construction-crt-trace-2026-08-30 (user-authorized). REGISTERED, NOT ACTIVATED -- ACTIVE_VERSION stays v2_htfcrt_2026_08. Adds crt_construction_trace: a per-bar JOIN of the engine (crt_engine_v2.py, execution authority) CRT state against the ontology (configs/formulas/market_crt_states.yaml + features/crt_state_resolver.py, declarative MEANING layer) CRT state, plus the engine pre-existing CRTBaselineTraceHooks gate-level threshold detail for that bar (runtime/crt_baseline_trace.py -- already decision-neutral by its own pre-existing contract, previously reachable only from one-off analysis scripts). Answers where/why F-069 (88.16% one-off agreement) and F-086 (RANGE dwell gap 21,745 vs 35,159) diverge, per bar, as a queryable stream rather than a research program. OBSERVATION ONLY: crt_construction_trace.enabled defaults false; the resolver call and gate read both happen AFTER process_candle returns; injection is HARD-PINNED to none (module docstring RISK 1) so the resolver never sees the engine answer it is being compared against. params UNCHANGED from v3_unified_market_structure_2026_09 / v2_htfcrt_2026_08 (config_hash identical 7de09f62..., no rehash). The new section is top-level and therefore hash-neutral. Canonical feature vector UNTOUCHED (48 dims, SCHEMA_HASH f52bf5d3f2ae6ddb75e8a35e9c323e07) -- this is an out-of-vector sidecar exactly like bar_structure_snapshot. Introduces NO new market quantity (module docstring AUTHORITY section) -- both constructions it joins already exist and are independently authoritative within their own declared scope; a SEM id for the JOIN itself is deliberately left unregistered pending Semantic OS allocation, before any downstream program cites this stream as evidence. AUTHORITY: none. context_attribution unchanged from v3, still empty. REGISTRATION PATH: hand-written config + a single REGISTERED line appended to configs/promotion_log.jsonl, same as v3 (PromotionManager.promote_* would silently strip non-_METADATA_KEYS sections -- see v3/v2_htfcrt_2026_08 notes for the documented trap). CORRECTED 2026-09-27 (STORY-83.1 D2, user decision): 'REGISTERED' -> NOT REGISTERED. The REGISTERED line described above was never appended -- configs/promotion_log.jsonl has no v4_dual_construction_2026_09 entry (only L16 v3_unified_market_structure_2026_09 and L17 v4_crt_sot_2026_08). Status: NOT REGISTERED, NOT ACTIVATED.",
   "schema_version": "1.3",

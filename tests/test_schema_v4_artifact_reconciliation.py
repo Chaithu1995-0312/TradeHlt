@@ -47,8 +47,8 @@ def test_schema_is_v4():
     file's B6 reconciliation covers were never undone. Do not read this test as "the live
     schema is v4"; read it as "v4's changes are still present in whatever the live schema is."
     """
-    assert SCHEMA_VERSION == "6.0"   # F-107 in-place rename; v4 facts still hold
-    assert CANONICAL_FEATURE_DIM == 48 == len(CANONICAL_FEATURE_ORDER)
+    assert SCHEMA_VERSION == "9.0"   # F-107 in-place rename (v6.0) + v7.0 presence flags + v8.0 candle patterns + v9.0 card identities (all additive); v4 facts still hold
+    assert CANONICAL_FEATURE_DIM == 79 == len(CANONICAL_FEATURE_ORDER)
     assert {"macd_hist_raw", "macd_hist_z", "candle_range"} <= set(CANONICAL_FEATURE_ORDER)
     assert not ({"macd_hist", "wick_size"} & set(CANONICAL_FEATURE_ORDER)), (
         "v3 names must be gone from the canonical vector — they survive only as read-side aliases"

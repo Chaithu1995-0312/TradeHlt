@@ -198,11 +198,18 @@ def causal_structure_series(
         liq_dist[i] = d
         liq_press[i] = float(_FM_CAUSAL["FM-026"](d))
 
+    # FM-121..123 on the raw NaN last-price arrays, before the 0-fill of the underscore internals.
+    from features.structure_sequence import swing_sequence_states
+    seq_hl, seq_lh, seq_side = swing_sequence_states(sh, sl, last_h, last_l)
+
     return {
         "swing_high": sh.astype(np.float64),
         "swing_low": sl.astype(np.float64),
         "higher_high": higher_high.astype(np.float64),
         "lower_low": lower_low.astype(np.float64),
+        "higher_low": seq_hl.astype(np.float64),
+        "lower_high": seq_lh.astype(np.float64),
+        "sideways": seq_side.astype(np.float64),
         "break_of_structure": bos.astype(np.float64),
         "liquidity_sweep": sweep.astype(np.float64),
         "sweep_detected": sweep_detected.astype(np.float64),

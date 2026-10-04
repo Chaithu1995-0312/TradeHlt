@@ -104,7 +104,8 @@ def main() -> int:
     wc, wg, wz, wr = w["crt"], w["gaussian"], w["feature_cluster_similarity"], w["rr"]
 
     # Raw closes -> forward returns (raw row order; warmup is the first 78 rows).
-    raw = pd.read_csv(CSV)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    raw = _corpus_load(CSV).frame()
     close = raw["close"].to_numpy(dtype=float)
     ts_to_idx = {
         pd.to_datetime(t).isoformat(): i for i, t in enumerate(raw["timestamp"])

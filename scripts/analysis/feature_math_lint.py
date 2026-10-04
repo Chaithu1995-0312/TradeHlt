@@ -105,6 +105,14 @@ _ALLOWLISTED_FILES = {
     # causal twin == live FeatureStore, exact int8) and tests/test_level_lifecycle.py (== the
     # semantics-layer walker). FeatureStore only transports its output (d.update).
     "features/level_lifecycle.py",
+    # CH-candle-pattern-observations-v8 (2026-10-08): the registered authority for FM-103..FM-119
+    # (scalar identities + the pipeline's vectorized mirror, parity-bound by
+    # tests/test_candle_patterns.py). FeaturePipeline.compute_candle_patterns only transports.
+    "features/candle_patterns.py",
+    # CH-card-identity-census-v9 (2026-10-08): the registered authority for FM-121..FM-123
+    # (swing-sequence states). The pipeline and causal_structure only transport the arrays.
+    # Parity: tests/test_card_identities.py and the fc1a higher_low/lower_high/sideways columns.
+    "features/structure_sequence.py",
 }
 _ALLOWLISTED_PREFIXES = ("features/registry/", "structure/")
 

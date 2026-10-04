@@ -1,5 +1,5 @@
 {
-  "setup": {"target_policy": "fixed_r", "trade_ttl_candles": null, "decider": "engine", "entry_semantics": "approval_bar_legacy", "retest_stop_guard": false},
+  "setup": {"target_policy": "fixed_r", "trade_ttl_candles": null, "decider": "engine", "entry_semantics": "approval_bar_legacy", "retest_stop_guard": false, "retrace_semantics": "legacy_kept_fraction"},
   "version": "v4_crt_sot_2026_08",
   "config_id": "v4_crt_sot_2026_08_registered",
   "created_at": "2026-08-31T13:42:55.334563+00:00",
@@ -609,7 +609,25 @@
     "session_timestamp_basis": "broker_local",
     "sweep_semantics": "latest_unconsumed",
     "_comment_smc_max_window": "CH-htfcrt-parent-candle-smc-v1 (2026-08-15). Trailing-candle-buffer bound for compute_smc_features's OB/FVG/breaker/mitigation scanners -- a performance/scope bound, not a registered identity parameter. Reuses swing_window above for the causal swing half-window k (no duplicate key).",
-    "smc_max_window": 100
+    "smc_max_window": 100,
+    "candle_patterns": {
+      "_comment": "CH-candle-pattern-observations-v8 (2026-10-08): thresholds of FM-103..FM-119 (features.candle_patterns). Research hypotheses from the corrected candle-pattern spec; ATR = FM-074 atr_absolute (price units).",
+      "size_gate_atr_k": 0.5,
+      "swing_lookback": 5,
+      "pin_wick_min": 0.6,
+      "pin_body_max": 0.25,
+      "pin_opposite_wick_max": 0.15,
+      "probe_wick_body_multiple": 2.0,
+      "probe_opposite_wick_max": 0.1,
+      "doji_body_max": 0.1,
+      "doji_wick_asymmetry_max": 0.2,
+      "doji_extreme_body_max": 0.05,
+      "doji_extreme_wick_min": 0.75,
+      "engulfing_strength_cap": 3.0,
+      "compression_ratio_cap": 10.0,
+      "morning_star_body_min": 0.6,
+      "morning_star_mid_max": 0.25
+    }
   },
   "notes": "CH-crt-sot-2026-08-31 (Phase G). REGISTERED, NOT PROMOTED and NOT ACTIVATED -- ACTIVE_VERSION remains v2_htfcrt_2026_08 and was not written. Declares all 47 scalar-required CRTConfig fields explicitly in `params` (Phase A-E census + parity proof), replacing the 5-key params / 45-key crt_engine split-brain. `crt_engine` is left intact (§6.2 rule 4: never delete truth) and is now fully redundant since params wins on every shared key. Base is the ACTIVE config (v2_htfcrt_2026_08), NOT PromotionManager's v1_multi_2026_03 fallback -- that path was measured to drop 11 top-level sections (parent_crt, feature_pipeline, dataset_integrity, model_runners, regime_governor, convergence_controller, acceptance_controller, live_integration, perp_funding_data, uat, _comment_parent_crt) and silently revert 10 more (crt_engine 45->29 keys among them) -- confirmed by direct measurement, and independently corroborated by _promote_v4_bnb_cutover.py's own documented reason for bypassing PromotionManager. ConfigValidator was NOT run and is NOT claimed: XAUUSD's ~4 executions across 47,275 bars cannot clear config_validator.min_trades_per_instrument=10, so score/score_std_dev stay null, matching the v3_unified_market_structure_2026_09 precedent. Parity proof (byte-identical XAUUSD ledger vs the active config) is Phase G2, run separately after this file is written.",
   "schema_version": "1.3",

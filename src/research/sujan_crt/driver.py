@@ -12,7 +12,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from data_ingestion.dataset_integrity import validate_dataset
+from data_ingestion.corpus_store import AdmittedCorpus, load as corpus_load
 from research.contracts import Signal
 from research.costs import xau_measured_cost_model
 from research.indicators import atr as research_atr
@@ -20,7 +20,6 @@ from research.mc_kit.bars import load_bars as _kit_load_bars, parse_ts_iso19 as 
 from research.mc_kit.stats import trade_stats as _stats
 from research.mc_kit.trade import exit_kind as _exit_kind, walk_horizon
 from research.measurement.forward_walk import AdverseFill
-from research.provenance import sha256_file as _sha256
 from research.sujan_crt.geometry import Bar, VetoParams
 from research.sujan_crt.vetoes import SujanCandidate, detect_funnel_entries
 
@@ -49,8 +48,8 @@ PARAMS = VetoParams(
 _XAU_COST = xau_measured_cost_model()
 
 
-def load_bars(path: Path) -> list[Bar]:
-    return _kit_load_bars(path, Bar, parse_ts=_parse_ts, volume="zero_default")
+def load_bars(source: "AdmittedCorpus | Path") -> list[Bar]:
+    return _kit_load_bars(source, Bar, parse_ts=_parse_ts, volume="zero_default")
 
 
 def _atr_series(bars: list[Bar]) -> list[float]:
@@ -135,8 +134,8 @@ def run(
     *,
     instrument: str = "XAUUSD",
 ) -> dict[str, Any]:
-    validate_dataset(str(corpus), instrument=instrument, bar_minutes=15, write_report=False)
-    bars = load_bars(corpus)
+    admitted = corpus_load(corpus, instrument)   # SSOT: identity + sequence check + bytes
+    bars = load_bars(admitted)
     n_bars = len(bars)
     boundary = int(n_bars * 0.75)
     embargo = HORIZON_BARS
@@ -284,8 +283,10 @@ def run(
     return {
         "contract_id": CONTRACT_ID,
         "sem_id": SEM_ID,
-        "corpus": str(corpus).replace("\\", "/"),
-        "corpus_sha256": _sha256(corpus),
+        "corpus": Path(admitted.path).as_posix(),
+        "corpus_sha256": admitted.sha256,
+        "dataset_id": admitted.dataset_id,
+        "corpus_provenance": admitted.provenance(),
         "n_bars": n_bars,
         "boundary_index": boundary,
         "boundary_timestamp": bars[boundary].timestamp.isoformat(sep=" ") if bars else None,

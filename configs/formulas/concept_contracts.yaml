@@ -145,6 +145,81 @@ concepts:
       - {surface: "feature_pipeline retest_flag (src/features/feature_pipeline.py compute_canonical_structure_features)", current: "internal ATR band after a recent sweep; FM-061 (legacy sweep input) / FM-094 (MKT-E01 sweep input, sweep_semantics e01_lifecycle). CORRECTED 2026-10-03: was 'no FM id'", contract: "no definition yet", disposition: RECORDED}
     version: 1
 
+  # ── Candle anatomy & candle patterns (CH-candle-pattern-observations-v8, 2026-10-08, F-118) ──
+  # Single-bar and two-bar shapes from the user's candle-theory cards (docs/reference/candle_theory/),
+  # defined by the corrected spec the user adopted 2026-10-08. Geometry only: no direction, no signal.
+
+  GP-08:
+    canonical_name: wick_share
+    layer: GEOMETRY
+    kind: MEASUREMENT
+    status: ACCEPTED
+    definition: "The share of the bar's range taken by one wick."
+    identity: {reference: bar, timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization: {part: {domain: [UPPER_WICK, LOWER_WICK], identity_bearing: true}}
+    inputs: []
+    rule: "UPPER_WICK: (high - max(open, close)) / (high - low) ; LOWER_WICK: (min(open, close) - low) / (high - low). With the body share they sum to 1 (FM-103/104)."
+    units: {unit: share_of_range, normalization_basis: "bar range high - low", missing_rule: "zero-range bar: 0 (undefined; the size gate is false there)"}
+    absence: "Never absent once a bar exists."
+    authority: {evidence: [REPO, USER_DECISION], sources: [src/features/candle_patterns.py, configs/formulas/market_ontology.yaml], lineage: [FM-103, FM-104]}
+    divergences: []
+    version: 1
+
+  GP-09:
+    canonical_name: candle_pattern
+    layer: GEOMETRY
+    kind: PRIMITIVE
+    status: ACCEPTED
+    definition: "A named candle shape: a single-bar wick/body pattern on a material-range bar, or a two-bar body/range relation between consecutive bars."
+    identity: {reference: bar, timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization:
+      pattern: {domain: [pin, probe, doji_material, doji_dragonfly, doji_gravestone, engulfing, inside_bar], identity_bearing: true}
+      side: {domain: [UPPER, LOWER, NONE], identity_bearing: true}
+      size_gate_atr_k: {domain: float, identity_bearing: true, default_ref: feature_pipeline.candle_patterns.size_gate_atr_k}
+      swing_lookback: {domain: int, identity_bearing: true, default_ref: feature_pipeline.candle_patterns.swing_lookback}
+    inputs: [GP-08]
+    rule: "features.candle_patterns (FM-105..FM-114). Single-bar patterns require range >= size_gate_atr_k * ATR_abs (FM-074). probe = hammer (LOWER: low <= min of the prior swing_lookback lows, current bar excluded) / shooting star (UPPER, mirror). engulfing side: LOWER = bullish (body covers a bearish previous body upward), UPPER = bearish. Two-bar patterns require the previous row to be the immediately preceding bar. Comparisons inclusive."
+    units: {domain: bool}
+    absence: "Before swing_lookback prior bars (probe) or on the first bar / after a gap (two-bar): false."
+    authority: {evidence: [REPO, USER_DECISION], sources: [src/features/candle_patterns.py, configs/formulas/market_ontology.yaml], lineage: [FM-105, FM-106, FM-107, FM-108, FM-109, FM-110, FM-111, FM-112, FM-113, FM-114]}
+    divergences: []
+    version: 1
+
+  GP-10:
+    canonical_name: rejection_intensity
+    layer: GEOMETRY
+    kind: MEASUREMENT
+    status: ACCEPTED
+    definition: "How strongly a material-range bar's wick geometry rejects one side."
+    identity: {reference: bar, timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization:
+      form: {domain: [signed, lower_excess, upper_excess], identity_bearing: true}
+      size_gate_atr_k: {domain: float, identity_bearing: true, default_ref: feature_pipeline.candle_patterns.size_gate_atr_k}
+    inputs: [GP-08]
+    rule: "signed: clip(lower share - upper share, -1, 1); lower_excess: clip(lower share - body share, 0, 1); upper_excess: clip(upper share - body share, 0, 1). 0 when the size gate fails (FM-116, FM-117, FM-119)."
+    units: {unit: share_of_range, normalization_basis: "bar range high - low", missing_rule: "non-material bar: 0"}
+    absence: "Never absent once ATR is defined; 0 during ATR warmup."
+    authority: {evidence: [REPO, USER_DECISION], sources: [src/features/candle_patterns.py], lineage: [FM-116, FM-117, FM-119]}
+    divergences: []
+    version: 1
+
+  GP-11:
+    canonical_name: relative_bar_size
+    layer: GEOMETRY
+    kind: MEASUREMENT
+    status: ACCEPTED
+    definition: "The bar's size relative to the immediately preceding bar."
+    identity: {reference: bar, timeframe: bar, clock: bar_close, availability_rule: bar_close}
+    parameterization:
+      quantity: {domain: [range, engulfing_body], identity_bearing: true}
+    inputs: [GP-09]
+    rule: "range: (high - low) / previous (high - low), clipped [0, compression_ratio_cap] (FM-115); engulfing_body: body / previous body on an engulfing bar, capped at engulfing_strength_cap, else 0 (FM-118)."
+    units: {unit: ratio, normalization_basis: "previous bar's range or body", missing_rule: "range: 1.0 when the previous range is 0 or across a gap; engulfing_body: 0 when not engulfing"}
+    absence: "First bar / after a gap: neutral value."
+    authority: {evidence: [REPO, USER_DECISION], sources: [src/features/candle_patterns.py], lineage: [FM-115, FM-118]}
+    divergences: []
+    version: 1
+
   # ═══════════════════════════════ MARKET — LEVELS ═══════════════════════════════
 
   MKT-L01:

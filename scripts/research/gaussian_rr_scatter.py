@@ -66,7 +66,8 @@ def main():
 
     # 1. Load data
     print(f"\n[1] Loading data: {CSV_PATH}")
-    df = pd.read_csv(CSV_PATH, parse_dates=["timestamp"])
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    df = _corpus_load(CSV_PATH).frame(parse_dates=["timestamp"])
     print(f"    Rows available: {len(df):,}")
 
     # Take last N bars

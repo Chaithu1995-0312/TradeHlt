@@ -59,7 +59,8 @@ def _load_corpus(symbol: str, limit: int) -> pd.DataFrame:
     csv = _ROOT / "data" / f"{symbol}_M15.csv"
     if not csv.exists():
         raise FileNotFoundError(csv)
-    df = pd.read_csv(csv)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    df = _corpus_load(csv).frame()
     df.columns = [c.strip().lower() for c in df.columns]
     if limit:
         df = df.head(limit).copy()

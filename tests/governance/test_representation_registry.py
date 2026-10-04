@@ -22,6 +22,9 @@ _FEATURE_UNMAPPED = (
     "candles_since_sweep", "liquidity_distance", "liquidity_pressure_score", "volume_spike",
     "order_block_distance", "fvg_distance", "breaker_distance", "mitigation_block_distance",
     "pdh_distance", "pdl_distance", "eqh_distance", "eql_distance",
+    "morning_star", "higher_low", "lower_high", "sideways",
+    "rejection_bull_present", "rejection_bear_present",
+    "rejection_bull_distance", "rejection_bear_distance",
 )
 _CRT_UNMAPPED = (
     "CRTState.EXECUTION", "CRTState.RESOLUTION", "CRTState.EXPIRED",

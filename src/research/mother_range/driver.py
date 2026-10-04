@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from data_ingestion.dataset_integrity import validate_dataset
+from data_ingestion.corpus_store import AdmittedCorpus, load as corpus_load
 from research.contracts import Signal
 from research.costs import xau_measured_cost_model
 from research.mc_kit.bars import load_bars as _kit_load_bars, parse_ts_iso19 as _parse_ts
@@ -23,7 +23,8 @@ SEM_ID = "SEM-026"
 HORIZON_BARS = 40
 HOLDOUT_START = datetime(2025, 12, 24, 19, 15, 0)
 CORPUS = Path("data/mt5/XAUUSD_M15.csv")
-CORPUS_SHA = "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56"
+# CH-corpus-ssot (2026-10-08): the corpus identity is no longer a module constant — `run()`
+# takes dataset_id / sha256 from the AdmittedCorpus it actually consumed (corpus_store.load).
 
 # research-framework consolidation Phase 3 (2026-09-14): the byte-identical duplicate of this
 # ComponentCostModel literal in sujan_crt/driver.py is now research.costs.xau_measured_cost_model()
@@ -31,8 +32,8 @@ CORPUS_SHA = "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56"
 _XAU_COST = xau_measured_cost_model()
 
 
-def load_bars(path: Path) -> list[Bar]:
-    return _kit_load_bars(path, Bar, parse_ts=_parse_ts, volume="required")
+def load_bars(source: "AdmittedCorpus | Path") -> list[Bar]:
+    return _kit_load_bars(source, Bar, parse_ts=_parse_ts, volume="required")
 
 
 def _signal(entry: InsideCloseEntry, instrument: str) -> Signal:
@@ -65,8 +66,8 @@ def run(
     instrument: str = "XAUUSD",
     holdout_start: datetime = HOLDOUT_START,
 ) -> dict[str, Any]:
-    validate_dataset(str(corpus), instrument=instrument, bar_minutes=15, write_report=False)
-    bars = load_bars(corpus)
+    admitted = corpus_load(corpus, instrument)   # SSOT: identity + sequence check + bytes
+    bars = load_bars(admitted)
     detected = detect_inside_close_entries(bars)
     adverse = AdverseFill(stop_slippage=0.09, model_gaps=True)
 
@@ -151,8 +152,10 @@ def run(
     return {
         "contract_id": CONTRACT_ID,
         "sem_id": SEM_ID,
-        "corpus": str(corpus).replace("\\", "/"),
-        "corpus_sha256": CORPUS_SHA,
+        "corpus": Path(admitted.path).as_posix(),
+        "corpus_sha256": admitted.sha256,
+        "dataset_id": admitted.dataset_id,
+        "corpus_provenance": admitted.provenance(),
         "holdout_start": holdout_start.isoformat(sep=" "),
         "detected": len(detected),
         "suppressed_one_open": suppressed,

@@ -434,3 +434,211 @@ def read(
         dataset_id=manifest.get("dataset_id"),
         parquet_path=str(ppath),
     )
+
+
+# ─────────────────────────────────────────────────────────────────────────────────────────────
+# CORPUS SSOT — the single authoritative in-memory corpus for an execution
+# (CH-corpus-ssot, 2026-10-08).
+#
+# One admitted corpus, read ONCE: `load()` admits the requested path (dataset identity via
+# `dataset_registry.admit_csv_path`, optional sequence validation via `corpus_gate.admit_corpus`),
+# reads the admitted file's bytes into memory a single time, hashes THOSE bytes, checks them
+# against the bound record (sha256, rows, time range), and returns an immutable `AdmittedCorpus`.
+# Every consumer parses that same object (`records()`, `frame()`, `text`) — no consumer reopens
+# the CSV, and every artifact takes `dataset_id` / `sha256` from the object, so the identity a
+# run reports is by construction the identity of the exact bytes it consumed.
+#
+# Process cache: the same admitted file (same size + mtime) returns the SAME object, so all
+# consumers inside one execution share one corpus.
+#
+# Substitution rule (closes the silent legacy rewrite hazard): a request that the registry
+# rewrites to a different physical file is honoured only when the requested file is absent, is
+# the same file, or is a path the bound record DECLARES (`forensic_paths`). An undeclared,
+# existing, different file (e.g. a newer fetch named XAUUSD_M15_<range>.csv) raises instead of
+# silently becoming the canonical corpus.
+# ─────────────────────────────────────────────────────────────────────────────────────────────
+
+import csv as _csv
+import io as _io
+from functools import cached_property as _cached_property
+
+
+class CorpusSubstitutionError(CorpusStoreError):
+    """The registry would silently serve a different physical file than the one requested."""
+
+
+@dataclass(frozen=True, eq=False)
+class AdmittedCorpus:
+    """The authoritative corpus of one execution: identity + the exact bytes consumed."""
+
+    dataset_id: Optional[str]
+    bound: bool
+    sha256: str
+    path: str               # admitted physical file the bytes came from
+    requested_path: str     # what the caller asked for
+    rewritten: bool         # registry resolved the request to a different (declared) path
+    instrument: str
+    timeframe: str
+    n_rows: int
+    start: str              # first timestamp cell, as written in the file
+    end: str                # last timestamp cell, as written in the file
+    sequence_checked: bool  # True when corpus_gate.admit_corpus validated sequence/integrity
+    data: bytes = field(repr=False)
+    admission_decision: str = "IDENTITY_ONLY"   # corpus_gate decision (APPROVE/WARN) when sequence-checked
+
+    @_cached_property
+    def text(self) -> str:
+        return self.data.decode("utf-8-sig")
+
+    @_cached_property
+    def _records(self) -> tuple:
+        return tuple(_csv.DictReader(_io.StringIO(self.text, newline="")))
+
+    def records(self) -> list:
+        """Rows as csv.DictReader dicts (string cells, exactly as in the file)."""
+        return list(self._records)
+
+    def frame(self, **read_csv_kwargs):
+        """A fresh pandas DataFrame parsed from the admitted bytes (kwargs -> pd.read_csv)."""
+        import pandas as pd
+
+        return pd.read_csv(_io.BytesIO(self.data), **read_csv_kwargs)
+
+    def provenance(self) -> dict:
+        """The identity block every artifact derived from this corpus should carry."""
+        return {
+            "dataset_id": self.dataset_id,
+            "corpus_sha256": self.sha256,
+            "corpus_path": Path(self.path).as_posix(),
+            "requested_path": Path(self.requested_path).as_posix(),
+            "rewritten": self.rewritten,
+            "bound": self.bound,
+            "instrument": self.instrument,
+            "timeframe": self.timeframe,
+            "n_rows": self.n_rows,
+            "start": self.start,
+            "end": self.end,
+            "sequence_checked": self.sequence_checked,
+            "admission_decision": self.admission_decision,
+            "authority": "data_ingestion.corpus_store.load",
+        }
+
+
+_SSOT_CACHE: dict = {}
+
+
+def _norm_ts(s: str) -> str:
+    return s.strip().replace("T", " ")
+
+
+def _declared_aliases(dataset_id: str) -> set:
+    from data_ingestion.dataset_registry import _REPO_ROOT, load_bound_datasets
+
+    rec = load_bound_datasets(repo_root=_REPO_ROOT).get(dataset_id) or {}
+    return {str((_REPO_ROOT / p).resolve()) for p in (rec.get("forensic_paths") or [])}
+
+
+def _bound_record(dataset_id: str) -> dict:
+    from data_ingestion.dataset_registry import _REPO_ROOT, load_bound_datasets
+
+    return load_bound_datasets(repo_root=_REPO_ROOT).get(dataset_id) or {}
+
+
+def load(
+    path: "str | Path",
+    instrument: str = "",
+    timeframe: str = "M15",
+    *,
+    sequence_check: bool = True,
+    plausibility: bool = False,
+) -> AdmittedCorpus:
+    """Return THE authoritative corpus for `path` (see the block comment above).
+
+    sequence_check=True runs corpus_gate.admit_corpus (identity + sequence/integrity, REJECT
+    raises); False admits identity only (dataset_registry.admit_csv_path), the level the
+    backtest CandleLoader has always used — its run-level preflight does the sequence check.
+    """
+    from data_ingestion.dataset_registry import admit_csv_path
+
+    requested = str(path)
+    try:
+        adm = admit_csv_path(requested, instrument)
+    except Phase1CandidateError as exc:
+        raise DatasetAdmissionError(str(exc)) from exc
+    admitted = Path(adm.filepath)
+    req = Path(requested)
+    if adm.rewritten and req.exists() and req.resolve() != admitted.resolve():
+        if adm.dataset_id is None or str(req.resolve()) not in _declared_aliases(adm.dataset_id):
+            raise CorpusSubstitutionError(
+                f"corpus substitution refused: {requested} exists but the registry would serve "
+                f"{admitted} ({adm.dataset_id}) instead. Request the dataset's own path, or "
+                "declare this file in its dataset record."
+            )
+
+    if adm.rewritten:
+        logger.warning("corpus SSOT: %s resolved to declared %s (%s)", requested, admitted, adm.dataset_id)
+
+    from dataclasses import replace as _replace
+
+    def _view(c: AdmittedCorpus) -> AdmittedCorpus:
+        """Same bytes/identity; per-request fields reflect THIS request."""
+        if c.requested_path == requested and c.rewritten == bool(adm.rewritten):
+            return c
+        return _replace(c, requested_path=requested, rewritten=bool(adm.rewritten))
+
+    st = admitted.stat()
+    key = (str(admitted.resolve()), st.st_size, st.st_mtime_ns)
+    hit = _SSOT_CACHE.get(key)
+    if hit is not None and (hit.sequence_checked or not sequence_check) and not plausibility:
+        return _view(hit)
+
+    decision = "IDENTITY_ONLY"
+    if sequence_check or plausibility:
+        decision = admit_corpus(
+            requested, instrument, write_report=False, check_plausibility=plausibility
+        ).decision
+        sequence_check = True
+        if hit is not None:   # same bytes already in memory: only the check level is upgraded
+            if not hit.sequence_checked:
+                hit = _replace(hit, sequence_checked=True, admission_decision=decision)
+                _SSOT_CACHE[key] = hit
+            return _view(hit)
+
+    data = admitted.read_bytes()
+    sha = hashlib.sha256(data).hexdigest()
+    text = data.decode("utf-8-sig")
+    lines = [ln for ln in text.splitlines() if ln.strip()]
+    if not lines:
+        raise CorpusStoreError(f"admitted corpus is empty: {admitted}")
+    header = [h.strip().strip('"').lower() for h in lines[0].split(",")]
+    ts_col = header.index("timestamp") if "timestamp" in header else 0
+    n_rows = len(lines) - 1
+    start = lines[1].split(",")[ts_col].strip() if n_rows else ""
+    end = lines[-1].split(",")[ts_col].strip() if n_rows else ""
+
+    if adm.bound and adm.dataset_id:
+        art = _bound_record(adm.dataset_id).get("canonical_artifact") or {}
+        if art.get("sha256") and art["sha256"] != sha:
+            raise CorpusStoreError(
+                f"{adm.dataset_id}: bytes read hash {sha[:16]}.. != registered {art['sha256'][:16]}.."
+            )
+        if art.get("rows") is not None and int(art["rows"]) != n_rows:
+            raise CorpusStoreError(f"{adm.dataset_id}: {n_rows} rows read != registered {art['rows']}")
+        for k, v in (("start", start), ("end", end)):
+            if art.get(k) and _norm_ts(art[k]) != _norm_ts(v):
+                raise CorpusStoreError(f"{adm.dataset_id}: {k} {v!r} != registered {art[k]!r}")
+
+    corpus = AdmittedCorpus(
+        dataset_id=adm.dataset_id, bound=adm.bound, sha256=sha, path=str(admitted),
+        requested_path=requested, rewritten=bool(adm.rewritten),
+        instrument=instrument or (adm.dataset_id or ""), timeframe=timeframe,
+        n_rows=n_rows, start=start, end=end, sequence_checked=sequence_check, data=data,
+        admission_decision=decision,
+    )
+    _SSOT_CACHE[key] = corpus
+    return corpus
+
+
+def corpus_sha256(path: "str | Path", instrument: str = "") -> str:
+    """sha256 of the authoritative corpus for `path` (SSOT; never a separate file read)."""
+    return load(path, instrument, sequence_check=False).sha256

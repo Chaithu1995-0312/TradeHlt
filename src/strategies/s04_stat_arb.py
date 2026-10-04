@@ -100,6 +100,7 @@ class S04StatArb(BaseStrategy):
         ema_slow = float(features.get("ema_slow", 0.0))
         atr = float(features.get("atr", 0.0))
         close = float(candle["close"])
+        atr_px = self._atr_price(features, close)   # price-unit ATR for SL; z-score keeps relative `atr`
 
         if close <= 0.0 or atr <= 0.0 or ema_fast <= 0.0 or ema_slow <= 0.0:
             return self._no_trade("UNKNOWN")
@@ -151,10 +152,10 @@ class S04StatArb(BaseStrategy):
         regime = "RANGING"
 
         if signal == "BUY":
-            sl = close - atr * sl_mult
+            sl = close - atr_px * sl_mult
             tp = close + (close - sl) * tp_rr
         else:
-            sl = close + atr * sl_mult
+            sl = close + atr_px * sl_mult
             tp = close - (sl - close) * tp_rr
 
         sl_pips = self._sl_pips(close, sl)

@@ -70,7 +70,9 @@ def _materialize_month_window_csv(data_path: str, months: int, output_dir: str) 
     if months <= 0:
         raise ValueError(f"months must be > 0, got {months}")
 
-    df = pd.read_csv(data_path)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    parent = _corpus_load(data_path, sequence_check=False)
+    df = parent.frame()
     ts = _resolve_timestamp_series(df)
     if ts.isna().all():
         raise ValueError("Timestamp parse failed for all rows; cannot apply month filter.")
@@ -84,6 +86,15 @@ def _materialize_month_window_csv(data_path: str, months: int, output_dir: str) 
     stem = Path(data_path).stem
     out_path = out_dir / f"{stem}_last_{months}m.csv"
     out_df.to_csv(out_path, index=False)
+    # CH-corpus-ssot: a month window is a DERIVED corpus. Its parent identity is written next to
+    # it so every artifact built on the window can name the authoritative corpus it came from.
+    import json as _json
+
+    (out_path.with_suffix(".parent.json")).write_text(_json.dumps({
+        "derived_from": parent.provenance(),
+        "rule": f"last {months} month(s) by timestamp, cutoff {cutoff}",
+        "rows": int(len(out_df)),
+    }, indent=2, default=str), encoding="utf-8")
     return str(out_path)
 
 

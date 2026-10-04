@@ -40,7 +40,11 @@ def piped() -> pd.DataFrame:
     """Run the canonical pipeline stages that produce the derived metrics, with a positive
     atr_14_raw (so ATR>0 everywhere → no NaN-warmup rows) and retest_flag=1 (activates retest_depth)."""
     df = _battery()
-    fp = FeaturePipeline(df)
+    # 2026-10-07: the active config now selects atr_absolute; these tests compare against the LEGACY
+    # scalars (dm.ema_spread / dm.momentum_score), so pin that arm explicitly. The corrected-arm
+    # scalar parity lives in tests/test_fm030_031_normalization_basis.py.
+    from config_layer.production_config import get_prod_section
+    fp = FeaturePipeline(df, cfg={**get_prod_section("feature_pipeline"), "normalization_basis": "atr_relative"})
     fp.compute_canonical_price_features()          # body_size, wick_size, body_ratio
     fp.df["atr_14_raw"] = (fp.df["high"] - fp.df["low"]).clip(lower=0.5)  # positive absolute ATR proxy
     fp.compute_canonical_volatility_features()     # atr, volatility_ratio

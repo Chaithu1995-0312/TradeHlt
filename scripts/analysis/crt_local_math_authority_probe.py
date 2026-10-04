@@ -24,7 +24,8 @@ from features.feature_pipeline import FeaturePipeline  # noqa: E402
 
 def main() -> int:
     csv = _ROOT / "data" / "mt5" / "XAUUSD_M15.csv"
-    df = pd.read_csv(csv)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    df = _corpus_load(csv).frame()
     df.columns = [c.lower() for c in df.columns]
     if "timestamp" not in df.columns:
         df = df.rename(columns={df.columns[0]: "timestamp"})

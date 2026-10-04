@@ -1,5 +1,5 @@
 {
-  "setup": {"target_policy": "fixed_r", "trade_ttl_candles": null, "decider": "engine", "entry_semantics": "approval_bar_legacy", "retest_stop_guard": false},
+  "setup": {"target_policy": "fixed_r", "trade_ttl_candles": null, "decider": "engine", "entry_semantics": "approval_bar_legacy", "retest_stop_guard": false, "retrace_semantics": "legacy_kept_fraction"},
   "version": "v3_unified_market_structure_2026_09",
   "config_id": "v3_unified_market_structure_2026_09_registered",
   "created_at": "2026-08-29T00:00:00+00:00",
@@ -566,7 +566,25 @@
     "session_timestamp_basis": "broker_local",
     "sweep_semantics": "latest_unconsumed",
     "_comment_smc_max_window": "CH-htfcrt-parent-candle-smc-v1 (2026-08-15). Trailing-candle-buffer bound for compute_smc_features's OB/FVG/breaker/mitigation scanners -- a performance/scope bound, not a registered identity parameter. Reuses swing_window above for the causal swing half-window k (no duplicate key).",
-    "smc_max_window": 100
+    "smc_max_window": 100,
+    "candle_patterns": {
+      "_comment": "CH-candle-pattern-observations-v8 (2026-10-08): thresholds of FM-103..FM-119 (features.candle_patterns). Research hypotheses from the corrected candle-pattern spec; ATR = FM-074 atr_absolute (price units).",
+      "size_gate_atr_k": 0.5,
+      "swing_lookback": 5,
+      "pin_wick_min": 0.6,
+      "pin_body_max": 0.25,
+      "pin_opposite_wick_max": 0.15,
+      "probe_wick_body_multiple": 2.0,
+      "probe_opposite_wick_max": 0.1,
+      "doji_body_max": 0.1,
+      "doji_wick_asymmetry_max": 0.2,
+      "doji_extreme_body_max": 0.05,
+      "doji_extreme_wick_min": 0.75,
+      "engulfing_strength_cap": 3.0,
+      "compression_ratio_cap": 10.0,
+      "morning_star_body_min": 0.6,
+      "morning_star_mid_max": 0.25
+    }
   },
   "notes": "CH-v3-unified-market-structure-v1 (2026-08-29, user-authorized). REGISTERED, NOT ACTIVATED -- ACTIVE_VERSION stays v2_htfcrt_2026_08. Adds a per-bar BarStructureSnapshot sidecar that records CRT state (ENGINE-authoritative), parent-CRT state, HTFState, ObjectiveStatus, and the full SMC Zone geometry (FVG / order block / breaker / mitigation / PDH-PDL / EQH-EQL / CHoCH) that features.smc already computes on every bar and discards at the *_distance tanh collapse. OBSERVATION ONLY: no new value reaches any decision path -- bar_structure_snapshot.enabled defaults false, emission happens AFTER CRTEngine.process_candle returns, and decision-neutrality is PROVEN by a byte-identical-ledger test (emit ON vs OFF), not asserted. params UNCHANGED from v2_htfcrt_2026_08 / v2_multi_2026_04 (config_hash identical 7de09f62..., no rehash). All three new sections are top-level and therefore hash-neutral (config_hash covers `params` only, production_config.py:89-92). Canonical feature vector UNTOUCHED: still 48 dims, SCHEMA_HASH f52bf5d3f2ae6ddb75e8a35e9c323e07, FEATURE_ORDER_HASH 160c96c52b198a16 -- the snapshot is an out-of-vector sidecar, so tests/test_feature_layer_freeze.py's XAUUSD vector_sha256 pin is unaffected and no model family is re-staled. REGISTRATION PATH: NOT via PromotionManager.promote_* (its _write_to_registry overlays only the 9 _METADATA_KEYS onto the v1_multi_2026_03 base and would silently strip parent_crt / feature_pipeline / backtest -- the same trap documented in v2_htfcrt_2026_08's own notes). Hand-written config + a single REGISTERED line appended to configs/promotion_log.jsonl. Deliberately NOT a PROMOTED line: config_integrity.active_version_is_governed is the only event-value consumer and only inspects the version named by ACTIVE_VERSION, so writing PROMOTED for a never-activated version would be a false governance record. AUTHORITY: none. context_attribution.promoted_families is empty and stays empty until MC-CTXATTR-XAUUSD-M15-V1 produces holdout evidence; per CLAUDE.md 6.5 an observation earns tunability, never authority. Activation would require its own governed decision (freeze-pin re-certification, ConfigValidator, ACTIVE_VERSION flip) and is explicitly NOT granted here.",
   "schema_version": "1.3",

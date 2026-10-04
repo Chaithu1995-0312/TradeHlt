@@ -1,5 +1,5 @@
 {
-  "setup": {"target_policy": "fixed_r", "trade_ttl_candles": null, "decider": "engine", "entry_semantics": "approval_bar_legacy", "retest_stop_guard": false},
+  "setup": {"target_policy": "fixed_r", "trade_ttl_candles": null, "decider": "engine", "entry_semantics": "approval_bar_legacy", "retest_stop_guard": false, "retrace_semantics": "signed_retrace", "_comment_retrace_semantics": "2026-10-08 CH-feature-semantic-fixes-v7 (user-authorized): cached_features.displacement_retrace at RETEST = FM-096 signed retracement (0 held, 1 back to the displacement open, >1 failed) instead of FM-027 (share kept, abs-folded past the open). Feeds trade intent (pullback band 0.3-0.7 -> TP1 multiplier). Rollback: legacy_kept_fraction."},
   "version": "v2_htfcrt_2026_08",
   "config_id": "v2_htfcrt_2026_08_promote",
   "created_at": "2026-08-15T00:00:00+00:00",
@@ -102,7 +102,8 @@
     "gate_weight_structure": 0.25,
     "gate_approval_threshold": 0.55,
     "_comment_gate_vol_atr_basis": "F-109 (2026-09-25, user-approved key). Basis of the ATR that GateIntelligence._vol_score divides the dollar bar range by. legacy_relative = canonical close-relative atr as passed (vol_score is structurally 0 on the Engine rail; byte-identical to before). absolute = FM-074 atr*close. Switching to absolute is a separate decision.",
-    "gate_vol_atr_basis": "legacy_relative"
+    "_comment_gate_vol_atr_basis_activation": "2026-10-07 ACTIVATED: legacy_relative -> absolute (user-approved, Set-2 consumer-scale program; before/after in results/set2_consumer_scale/*). _vol_score was 0.0 on 100% of bars under legacy_relative; under absolute it is non-zero on ~99% (p50 ~0.76). Live paper-rail approval/sizing behavior changes (F-113 ceiling). Rollback: set back to legacy_relative.",
+    "gate_vol_atr_basis": "absolute"
   },
   "ultron_risk_gate": {
     "disabled": false,
@@ -674,12 +675,33 @@
     "_comment_swing": "PHASE B (2026-07-19) TUNABLE STRUCTURAL, HIGHEST BLAST RADIUS. swing_window sets BOTH the pivot half-window (rolling width 2k+1) AND the FC1-A causal publication delay (available_at = t+k) -- it determines WHEN a feature becomes knowable, not just how it is sized. It defines lookback on FM-045/046, and 6 governance/certification scripts record it as a provenance fact. Changing it invalidates every artifact certified against the old value and requires re-certification, not just a re-run.",
     "swing_window": 2,
     "_comment_normalization_basis": "FM-030/031 IDENTITY SELECTOR (2026-07-22, program FM-030-031-DIMENSIONAL-MIX-MIGRATION). Not a period -- it chooses WHICH registered identity ema_spread/momentum_score emit. 'atr_relative' = FM-022/FM-023, numerator / atr; because atr is close-relative (atr_14_raw/close) and the numerator is absolute price, the emitted value scales with price level (legacy == corrected * close). This is the DEFAULT and is byte-identical to the pre-2026-07-22 pipeline -- the XAUUSD freeze-pin vector SHA is its parity proof. 'atr_absolute' = FM-030/FM-031, numerator / (atr * close), scale-invariant. F-061 measured the legacy arm's decision-surface cost on crypto (detect_regime ~constant 'trend', breakout score pinned at 1.0, tanh(momentum) saturated); the corrected arm is measured via configs/production/v2_multi_dimfix_shadow_2026_07.json and carries NO production authority (CLAUDE.md 6.5).",
-    "normalization_basis": "atr_relative",
+    "_comment_normalization_basis_activation": "2026-10-07 ACTIVATED: atr_relative -> atr_absolute (user-approved, Set-2 consumer-scale program). ema_spread/momentum_score now emit FM-030/031 in the same vector slots (values REPLACED, schema/48-dim unchanged). Before (XAUUSD month windows): tanh saturated 99.95-100%, detect_regime trend 100%, breakout pinned 100%, kernel std 0.0003; after: 0.2%, ~50%, ~7%, 0.029. Freeze-pin vector SHA re-certified. Rollback: set back to atr_relative.",
+    "normalization_basis": "atr_absolute",
     "_comment_session_timestamp_basis": "F-066 (2026-08-01, blind-label investigation). Selects which clock hour_of_day/session (FM-052) derive from. 'broker_local' = the DEFAULT, byte-identical to every pipeline run before this key existed: uses the raw timestamp column as-is. For this MT5-sourced corpus that raw timestamp is actually broker-server time (EET/EEST, tracking America/New_York DST), NOT UTC, despite session_windows_utc's name -- measured 53.36 pct of XAUUSD bars carry the wrong session label under this basis (two independent cross-instrument tests: BTCUSDT cross-correlation, NFP-release alignment; see docs/research/preregistration-blind-label-descriptive-fidelity.md). 'utc_corrected' = derives from features/broker_clock.py's true-UTC conversion, making session/hour_of_day match what session_windows_utc already claims. This key stays 'broker_local' here; flipping to 'utc_corrected' is a separate, explicitly-gated decision (feature-vector SHA changes on ~53 pct of bars, freeze-pin re-certification required) -- NOT made by this config edit.",
-    "session_timestamp_basis": "broker_local",
-    "sweep_semantics": "latest_unconsumed",
+    "_comment_session_timestamp_basis_activation": "2026-10-08 ACTIVATED: broker_local -> utc_corrected (user-authorized, CH-feature-semantic-fixes-v7; user chose FEATURE AND FILTER). session/hour_of_day (FM-052) now come from true UTC (features/broker_clock.py, NY-DST-aware) AND the CRT session trading filter (crt_engine_v2._session_name_at, static session_windows read as UTC as CRTConfig declares) moves with it, so the engine trades the hours the config names in UTC (2-3 h earlier in broker time than before). Freeze-pin re-certified. Rollback: broker_local.",
+    "session_timestamp_basis": "utc_corrected",
+    "_comment_sweep_semantics_activation": "2026-10-08 ACTIVATED: latest_unconsumed -> e01_lifecycle (user-authorized, CH-feature-semantic-fixes-v7). liquidity_sweep/sweep_detected/double_sweep/candles_since_sweep (and FM-021 retest_depth via its sweep mask) now follow the MKT-E01 lifecycle (FM-090..095, F-112): any ACTIVE level, consumed once SWEPT or BROKEN. Freeze-pin re-certified. Rollback: latest_unconsumed.",
+    "sweep_semantics": "e01_lifecycle",
     "_comment_smc_max_window": "CH-htfcrt-parent-candle-smc-v1 (2026-08-15). Trailing-candle-buffer bound for compute_smc_features's OB/FVG/breaker/mitigation scanners -- a performance/scope bound, not a registered identity parameter. Reuses swing_window above for the causal swing half-window k (no duplicate key).",
-    "smc_max_window": 100
+    "smc_max_window": 100,
+    "candle_patterns": {
+      "_comment": "CH-candle-pattern-observations-v8 (2026-10-08): thresholds of FM-103..FM-119 (features.candle_patterns). Research hypotheses from the corrected candle-pattern spec; ATR = FM-074 atr_absolute (price units).",
+      "size_gate_atr_k": 0.5,
+      "swing_lookback": 5,
+      "pin_wick_min": 0.6,
+      "pin_body_max": 0.25,
+      "pin_opposite_wick_max": 0.15,
+      "probe_wick_body_multiple": 2.0,
+      "probe_opposite_wick_max": 0.1,
+      "doji_body_max": 0.1,
+      "doji_wick_asymmetry_max": 0.2,
+      "doji_extreme_body_max": 0.05,
+      "doji_extreme_wick_min": 0.75,
+      "engulfing_strength_cap": 3.0,
+      "compression_ratio_cap": 10.0,
+      "morning_star_body_min": 0.6,
+      "morning_star_mid_max": 0.25
+    }
   },
   "notes": "CH-htfcrt-parent-candle-smc-v1 (2026-08-15, user-authorized). Real calendar-true HTF parent candles (H4/D1/W1/MN1) + 3-candle parent-timeframe CRT (RANGE_C1/MANIPULATION_C2/DISTRIBUTION_C3, disjoint sub-graph) + 9 SMC primitives (order block, FVG, breaker, mitigation block, PDH/PDL, EQH/EQL, change-of-character) as canonical vector features (39->48, schema v5.0). parent_crt.enabled=true (arm ON per user decision) -- the M15 EXECUTION-gate bias check in crt_engine_v2.process_candle is live IN CODE. CH-parent-crt-caller-wire (2026-08-16): BacktestRunner now constructs runtime.parent_crt_feed.ParentCRTFeed and threads feed.bias into process_candle (pushed on every child bar including warmup). Live still has no process_candle loop (F-073). Research/analysis process_candle call sites still default parent_state=None. params UNCHANGED from v2_multi_2026_04 (config_hash identical, no rehash needed). MODEL-ARTIFACT STATUS: zone_gate/rr_fusion/gaussian/bitnet/tradenet are ALL trained on <=39-dim schemas and were ALREADY degrading (zone_gate: pre-existing feature_order drift, KeyError on legacy macd_hist name, fail-closed BLOCK) before this program -- verified via direct integration test that this promotion does not make it worse (BLOCK/refuse-load, never silent truncate, identical failure mode to today). Retraining all 6 model families is a separate, explicitly deferred, compute-bound activity; per user decision (\"Promote now, gates inert\"), this promotion does not block on that retrain. PROMOTION PATH: NOT via PromotionManager.promote_* (would silently strip parent_crt and every other new top-level section by overlaying only _METADATA_KEYS onto the v1_multi_2026_03 base). ConfigValidator.validate() was ATTEMPTED first (the real governance gate, not bypassed for convenience) and found REJECTing with hard_failure 'F-057 product gate: CRTConfig mode UNKNOWN' -- confirmed via a control run that this rejection is PRE-EXISTING and unrelated to this program: the unchanged, currently-active v2_multi_2026_04 params produce the IDENTICAL rejection today, because ConfigValidator does not stamp CRTConfig with an allowed construction-provenance mode before calling BacktestRunner. This is a real, separate defect worth its own governed fix, not patched here. Promoted via the governed manual-write shape (matching scripts/maintenance/_promote_v4_bnb_cutover.py's own precedent for when PromotionManager.promote_* cannot carry a full-config change): write config, flip ACTIVE_VERSION, append PROMOTED log entry with params_fingerprint freshness anchor, verify via PromotionManager.load_version + config_integrity.audit. User confirmed this exact write+flip explicitly before it was executed.\n2026-09-19: capital_management + portfolio/backtest sized to INR 1L capital / INR 10k per trade (user). Live MT5 lots unchanged.\n2026-09-19b: clarified INR sizing — capital 1L; per_trade_investment_inr=10000 (investment/notional). Risk caps restored separate from investment. Live lots unchanged.",
   "schema_version": "1.3",

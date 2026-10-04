@@ -90,11 +90,16 @@ def _quiet_producers() -> None:
 
 
 def run_certification(corpus_path: Path, store_root: Path) -> dict[str, Any]:
-    corpus_path = Path(corpus_path)
-    corpus_bytes = corpus_path.read_bytes()
-    corpus_sha = sha256_bytes(corpus_bytes)
-    text = corpus_bytes.decode("utf-8")
-    rows = list(csv.DictReader(text.splitlines()))
+    # CH-corpus-ssot (2026-10-08): bytes + identity from the corpus SSOT (corpus_store.load);
+    # the L0 snapshot stores exactly the bytes the SSOT admitted and hashed.
+    from data_ingestion.corpus_store import load as corpus_load
+
+    corpus = corpus_load(corpus_path)
+    corpus_path = Path(corpus.path)
+    corpus_bytes = corpus.data
+    corpus_sha = corpus.sha256
+    assert sha256_bytes(corpus_bytes) == corpus_sha
+    rows = corpus.records()
     store = IdentityStore(store_root)
     snaps_l0 = {"corpus": corpus_bytes}
     _progress(f"cert start rows={len(rows)} corpus_sha256={corpus_sha[:16]} store={store_root}")

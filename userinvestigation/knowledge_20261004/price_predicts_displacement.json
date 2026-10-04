@@ -1,0 +1,14 @@
+{
+  "n_bars": 2222,
+  "n_displacement": 22,
+  "gate_body_atr": 1.2,
+  "gate_range_atr": 1.5,
+  "displacement_meeting_gate": 12,
+  "recall": 0.5455,
+  "false_positives": 133,
+  "fpr": 6.0455,
+  "disp_min_body_atr": 0.094,
+  "others_p99_body_atr": 2.1724,
+  "separation_gap_atr": -2.0784,
+  "verdict": "overlap"
+}

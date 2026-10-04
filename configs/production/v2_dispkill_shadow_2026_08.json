@@ -1,5 +1,5 @@
 {
-  "setup": {"target_policy": "fixed_r", "trade_ttl_candles": null, "decider": "engine", "entry_semantics": "approval_bar_legacy", "retest_stop_guard": false},
+  "setup": {"target_policy": "fixed_r", "trade_ttl_candles": null, "decider": "engine", "entry_semantics": "approval_bar_legacy", "retest_stop_guard": false, "retrace_semantics": "legacy_kept_fraction"},
   "version": "v2_dispkill_shadow_2026_08",
   "config_id": "v2_htfcrt_2026_08_promote",
   "created_at": "2026-08-15T00:00:00+00:00",
@@ -570,7 +570,25 @@
     "session_timestamp_basis": "broker_local",
     "sweep_semantics": "latest_unconsumed",
     "_comment_smc_max_window": "CH-htfcrt-parent-candle-smc-v1 (2026-08-15). Trailing-candle-buffer bound for compute_smc_features's OB/FVG/breaker/mitigation scanners -- a performance/scope bound, not a registered identity parameter. Reuses swing_window above for the causal swing half-window k (no duplicate key).",
-    "smc_max_window": 100
+    "smc_max_window": 100,
+    "candle_patterns": {
+      "_comment": "CH-candle-pattern-observations-v8 (2026-10-08): thresholds of FM-103..FM-119 (features.candle_patterns). Research hypotheses from the corrected candle-pattern spec; ATR = FM-074 atr_absolute (price units).",
+      "size_gate_atr_k": 0.5,
+      "swing_lookback": 5,
+      "pin_wick_min": 0.6,
+      "pin_body_max": 0.25,
+      "pin_opposite_wick_max": 0.15,
+      "probe_wick_body_multiple": 2.0,
+      "probe_opposite_wick_max": 0.1,
+      "doji_body_max": 0.1,
+      "doji_wick_asymmetry_max": 0.2,
+      "doji_extreme_body_max": 0.05,
+      "doji_extreme_wick_min": 0.75,
+      "engulfing_strength_cap": 3.0,
+      "compression_ratio_cap": 10.0,
+      "morning_star_body_min": 0.6,
+      "morning_star_mid_max": 0.25
+    }
   },
   "notes": "CH-htfcrt-parent-candle-smc-v1 (2026-08-15, user-authorized). Real calendar-true HTF parent candles (H4/D1/W1/MN1) + 3-candle parent-timeframe CRT (RANGE_C1/MANIPULATION_C2/DISTRIBUTION_C3, disjoint sub-graph) + 9 SMC primitives (order block, FVG, breaker, mitigation block, PDH/PDL, EQH/EQL, change-of-character) as canonical vector features (39->48, schema v5.0). parent_crt.enabled=true (arm ON per user decision) -- the M15 EXECUTION-gate bias check in crt_engine_v2.process_candle is live IN CODE. CH-parent-crt-caller-wire (2026-08-16): BacktestRunner now constructs runtime.parent_crt_feed.ParentCRTFeed and threads feed.bias into process_candle (pushed on every child bar including warmup). Live still has no process_candle loop (F-073). Research/analysis process_candle call sites still default parent_state=None. params UNCHANGED from v2_multi_2026_04 (config_hash identical, no rehash needed). MODEL-ARTIFACT STATUS: zone_gate/rr_fusion/gaussian/bitnet/tradenet are ALL trained on <=39-dim schemas and were ALREADY degrading (zone_gate: pre-existing feature_order drift, KeyError on legacy macd_hist name, fail-closed BLOCK) before this program -- verified via direct integration test that this promotion does not make it worse (BLOCK/refuse-load, never silent truncate, identical failure mode to today). Retraining all 6 model families is a separate, explicitly deferred, compute-bound activity; per user decision (\"Promote now, gates inert\"), this promotion does not block on that retrain. PROMOTION PATH: NOT via PromotionManager.promote_* (would silently strip parent_crt and every other new top-level section by overlaying only _METADATA_KEYS onto the v1_multi_2026_03 base). ConfigValidator.validate() was ATTEMPTED first (the real governance gate, not bypassed for convenience) and found REJECTing with hard_failure 'F-057 product gate: CRTConfig mode UNKNOWN' -- confirmed via a control run that this rejection is PRE-EXISTING and unrelated to this program: the unchanged, currently-active v2_multi_2026_04 params produce the IDENTICAL rejection today, because ConfigValidator does not stamp CRTConfig with an allowed construction-provenance mode before calling BacktestRunner. This is a real, separate defect worth its own governed fix, not patched here. Promoted via the governed manual-write shape (matching scripts/maintenance/_promote_v4_bnb_cutover.py's own precedent for when PromotionManager.promote_* cannot carry a full-config change): write config, flip ACTIVE_VERSION, append PROMOTED log entry with params_fingerprint freshness anchor, verify via PromotionManager.load_version + config_integrity.audit. User confirmed this exact write+flip explicitly before it was executed.",
   "schema_version": "1.3",

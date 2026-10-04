@@ -139,6 +139,18 @@
       "reason": "Architecture — decision-gate construction (which GateIntelligence components ever receive their declared inputs on the live rail); a fact about the approval instrument, not a market-object research claim."
     },
     {
+      "claim": "F-114",
+      "reason": "Architecture — activation of the unit-corrected feature/gate basis on the active config (consumer unit contract); a fact about the measuring and approval instrument, not a market-object research claim."
+    },
+    {
+      "claim": "F-115",
+      "reason": "Architecture — strategy-layer ATR unit (close-relative vs price distance) and lot rounding; a fact about the sizing/stop-placement instrument, not a market-object research claim."
+    },
+    {
+      "claim": "F-116",
+      "reason": "Architecture — strategy consumers (S5/S6) reading a different dtype/scale than the feature they load; consumer-contract defect, not a market-object research claim."
+    },
+    {
       "claim": "F-008",
       "reason": "Governance/risk — drift detected but not acted on; instrument behaviour, not a market object."
     },

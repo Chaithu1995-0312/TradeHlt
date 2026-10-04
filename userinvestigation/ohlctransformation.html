@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OHLC transformation</title>
+<style>
+  :root { --bg:#f4f1ea; --ink:#1c1915; --muted:#5c564c; --line:#ddd6c8; --user:#fff; --agent:#eef3f4; --accent:#8c3a2f; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.45 "Segoe UI", Candara, sans-serif; }
+  header, main { max-width:54rem; margin:0 auto; padding:1.25rem; }
+  header { border-bottom:1px solid var(--line); }
+  h1 { font-size:1.4rem; margin:0 0 .35rem; }
+  .meta, #status { color:var(--muted); margin:0; }
+  #status { margin-top:.4rem; }
+  article { margin:1rem 0; padding:.75rem .9rem .9rem; border:1px solid var(--line); border-radius:8px; background:var(--agent); }
+  article.user { background:var(--user); }
+  .who { font-size:.75rem; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); margin-bottom:.35rem; }
+  article.user .who { color:var(--accent); }
+  pre { margin:0; white-space:pre-wrap; word-wrap:break-word; font:15px/1.45 Consolas, "Cascadia Mono", monospace; }
+</style>
+</head>
+<body>
+<header>
+  <h1>OHLC transformation</h1>
+  <p class="meta">2026-10-07. This page does not store the messages. It reads <code>ohlctransformation.jsonl</code> in this folder.</p>
+  <p id="status">Reading ohlctransformation.jsonl…</p>
+</header>
+<main id="log"></main>
+<textarea id="jsonl-fallback" hidden>
+{&quot;n&quot;: 1, &quot;role&quot;: &quot;user&quot;, &quot;ts&quot;: null, &quot;text&quot;: &quot;ok you dont know how to decode seems\n\nask me questions about codebase and lets decode both fetch consumers of ohlc and prodcuers of entry tp sl&quot;}
+{&quot;n&quot;: 2, &quot;role&quot;: &quot;assistant&quot;, &quot;ts&quot;: null, &quot;text&quot;: &quot;I&#x27;ll ground the questions in what the code actually shows. First I&#x27;ll find who fetches OHLC and who produces entry/SL/TP.&quot;}
+{&quot;n&quot;: 3, &quot;role&quot;: &quot;assistant&quot;, &quot;ts&quot;: null, &quot;text&quot;: &quot;I found the pieces and a few things worth asking about. These came from grep only. I haven&#x27;t traced call graphs yet, so they&#x27;re not claims.\n\n- **OHLC fetchers:** there are at least seven separate fetch paths:\n  - `src/inout/mt5_candle_fetcher.py`\n  - `src/data_ingestion/historical_fetcher.py`\n  - `scripts/data/fetch_and_verify_mt5.py`\n  - the hummingbot and alphavantage fetchers\n  - `mt5_analytics/`\n  - the second-low script&#x27;s own inline `fetch_mt5`, which doesn&#x27;t reuse any of them\n- **Entry/SL/TP:** `crt_engine_v2.build_trade` (`:2562`) and `core.gate_intelligence.compute_crt_levels` (`:24`) both produce stop and target levels. The second docstring says it \&quot;mirrors crt_engine_v2 lines 1162-1201\&quot;, so it&#x27;s a copy of the first. Callers are `live_engine_hook.py:1155` and `research/.../execution_plan.py:287`.&quot;}
+{&quot;n&quot;: 4, &quot;role&quot;: &quot;user&quot;, &quot;ts&quot;: null, &quot;text&quot;: &quot;Questions answered:\n1. For &#x27;consumers of OHLC fetch&#x27;, which boundary do you mean? -&gt; \&quot;trasnformation of ohlc then\&quot;\n2. In your mental model, who owns the final entry, SL and TP of a trade? -&gt; \&quot;Not sure, trace it\&quot;\n3. Is the duplication between compute_crt_levels and crt_engine_v2.build_trade intended? -&gt; \&quot;Accidental drift risk\&quot;\n4. How should I deliver the decode? -&gt; \&quot;Chat first, doc later\\\&quot;&quot;}
+{&quot;n&quot;: 5, &quot;role&quot;: &quot;assistant&quot;, &quot;ts&quot;: null, &quot;text&quot;: &quot;You said to start from the transformation of OHLC and to trace every writer of SL/TP, so I&#x27;ll read both sides now. I&#x27;ll compare `compute_crt_levels` against `build_trade` line by line.&quot;}
+{&quot;n&quot;: 6, &quot;role&quot;: &quot;assistant&quot;, &quot;ts&quot;: null, &quot;text&quot;: &quot;`stop_price` and `compute_crt_levels` don&#x27;t compute the same stop. I&#x27;ll come back to that. First I&#x27;ll trace the OHLC transformation side, meaning who turns raw candles into something else.&quot;}
+{&quot;n&quot;: 7, &quot;role&quot;: &quot;assistant&quot;, &quot;ts&quot;: null, &quot;text&quot;: &quot;`resample` drops the trailing partial bucket, so I want to test whether this affects the second-low live run. The live task fires 10 minutes after each H4 close, when the forming M15 bar is dropped.&quot;}
+{&quot;n&quot;: 8, &quot;role&quot;: &quot;assistant&quot;, &quot;ts&quot;: null, &quot;text&quot;: &quot;Here is the decode so far, chat-only as you asked. I read the source for the SL/TP side, and the OHLC side is only partly traced.\n\n## A. Producers of entry / SL / TP\n\n| # | Producer | Where | How it sets the levels |\n|---|---|---|---|\n| 1 | `build_trade` + `stop_price` | `crt_engine_v2.py:2562`, `:2474` | Entry is the RETEST candle close. SL is the **displacement candle** extreme (or the sweep candle extreme under `sl_anchor=\&quot;sweep_extreme\&quot;`) -/+ `sl_atr_buffer*atr_abs`. TP1 uses a per-intent multiplier derived from the cached features, TP2 uses `tp2_atr_multiplier`, and `structural_tp2` can set TP2 to the range edge. It rejects an inverted SL and a TP2 that is inverted or too close. |\n| 2 | `compute_crt_levels` | `core/gate_intelligence.py:24` | SL is the **caller&#x27;s `low`/`high`** -/+ buffer*atr, with no anchor logic and no guards. Callers: `live_engine_hook.py:1155`, `research/.../execution_plan.py:287`, and `second_low_algo.py:133`. |\n| 3 | Other writers | `strategies/s02..s10`, `research/mother_range/*`, `exit_grid`, `opportunity_bands` and similar | The grep shows these files mention SL/TP assignments. I haven&#x27;t read them, so whether each is a producer or a consumer is UNVERIFIED. |\n\n**Drift question: are `compute_crt_levels` and `build_trade` meant to be the same formula?** They are not the same formula, and I wouldn&#x27;t call the difference accidental.\n- **The inputs differ.** The live hook passes the current bar&#x27;s `low`, while `build_trade` anchors to the displacement candle&#x27;s low. Per F-103, live has no CRT state machine, so it has no displacement candle to anchor to. That makes the divergence structural. Section 6.8 verdict: COMPATIBILITY ARTIFACT, not a defect.\n- **The docs are wrong in two places.** `compute_crt_levels` says it \&quot;mirrors crt_engine_v2 lines 1162-1201 exactly\&quot;, but those lines are stale and the mirror isn&#x27;t exact. `build_trade` says its stop arithmetic is \&quot;one authority, no second copy\&quot;, but `compute_crt_levels` is a second copy. Verdict on both: DOCUMENTATION GAP.\n- **Guard difference.** `compute_crt_levels` has no inverted-SL guard (it uses `abs(entry - sl)`), and `build_trade` rejects that case. The live hook only checks that the SL is non-zero. Whether live can actually hit an inverted stop is UNVERIFIED.\n\n## B. OHLC transformation (partial)\n\n- **Higher-timeframe builders:** there are at least four, in `research/resample.py:127`, `runtime/backtest_v2.py` (`HTFBuilder`, `:1188`), `features/parent_candle.py:62` (`ParentCandleBuilder`), and `features/calendar_periods.py`. Whether they agree on bucket edges is UNVERIFIED.\n- **Feature pipeline callers:** `FeaturePipeline(` is called from 22 files, including the backtest, live rail feeder, model trainers and many research drivers.\n\n**New finding on the second-low live run (checked on the CSV path):** `resample` drops the trailing partial bucket, and `fetch_mt5` drops the forming M15 bar.\n- With the last M15 bar at 19:45, the last emitted H4 bar is the one that closed at 16:00. The bar that just closed at 20:00 is withheld.\n- The live task runs 10 minutes after each H4 close, so every run sees an H4 bar that is one bar (4 hours) stale. A trigger shows up about 4 hours late, while the entry price is still that bar&#x27;s close.\n- Paper results stay comparable to the backtest, but they are not an executable real-time fill. I recorded this in memory. I haven&#x27;t run it on actual MT5 output.&quot;}
+{&quot;n&quot;: 9, &quot;role&quot;: &quot;user&quot;, &quot;ts&quot;: null, &quot;text&quot;: &quot;Questions answered:\n1. Should the live second-low run act on the bar that just closed (real-time), or is evaluating it one H4 bar later acceptable for the paper test? -&gt; \&quot;ignore toolsha and refreeze must be real time\&quot;\n2. Which transformation do you want decoded next? -&gt; \&quot;Four HTF builders\\\&quot;&quot;}
+{&quot;n&quot;: 10, &quot;role&quot;: &quot;assistant&quot;, &quot;ts&quot;: null, &quot;text&quot;: &quot;Both answers are clear: real-time is required, and you&#x27;ve authorised ignoring the SHA pin and re-freezing. I&#x27;ll fix the live path in a way that leaves the backtest unchanged, prove that, then re-freeze. The HTF-builder comparison comes after.&quot;}
+{&quot;n&quot;: 11, &quot;role&quot;: &quot;assistant&quot;, &quot;ts&quot;: null, &quot;text&quot;: &quot;Now the proofs. First, the backtest output must be byte-identical to the existing files. That run goes to a scratch directory and takes a while, so it runs in the background while I test the live fix itself.&quot;}
+{&quot;n&quot;: 12, &quot;role&quot;: &quot;user&quot;, &quot;ts&quot;: null, &quot;text&quot;: &quot;followusrinvestigation folder schema update raw conversation into jsnol and create new html naming ohlctransformation.html and it should read jsonl&quot;}
+{&quot;n&quot;: 13, &quot;role&quot;: &quot;assistant&quot;, &quot;ts&quot;: null, &quot;text&quot;: &quot;The tail logic passes every check except one, and that one failure is my test&#x27;s expectation, not the code. I&#x27;ll confirm that below. For the new request, I&#x27;ll check how the existing HTML reads its JSONL. Confirmed: no 00:00 M15 bar exists in the corpus (the day opens at 01:00 broker time), so that test case equals the 23:45 slice and the code is right.&quot;}
+</textarea>
+<script>
+const FILE = "ohlctransformation.jsonl";
+const status = document.getElementById("status");
+const log = document.getElementById("log");
+
+function render(raw, how) {
+  log.replaceChildren();
+  const lines = raw.split(/\r?\n/).filter(function (s) { return s.trim(); });
+  lines.forEach(function (line) {
+    const row = JSON.parse(line);
+    const art = document.createElement("article");
+    art.className = row.role === "user" ? "user" : "assistant";
+    const who = document.createElement("div");
+    who.className = "who";
+    who.textContent = row.role + (row.ts ? " · " + row.ts : "");
+    const pre = document.createElement("pre");
+    pre.textContent = row.text;
+    art.append(who, pre);
+    log.append(art);
+  });
+  status.textContent = how + " — " + lines.length + " messages.";
+}
+
+fetch(FILE).then(function (res) {
+  if (!res.ok) throw new Error(String(res.status));
+  return res.text();
+}).then(function (raw) {
+  render(raw, "Read " + FILE);
+}).catch(function () {
+  const raw = document.getElementById("jsonl-fallback").value;
+  render(raw, "Opened as a local file, so the browser did not allow a read of " + FILE + ". Showing the copy written into this page at the same time as that file");
+});
+</script>
+</body>
+</html>

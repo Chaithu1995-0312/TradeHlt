@@ -1,0 +1,125 @@
+{
+  "schema": "market_movement_census/v1",
+  "generated_for": "XAUUSD M15 one-month stabilization run",
+  "run_id": "run_20260930_123522",
+  "corpus": {
+    "path": "D:\\Tradelatest\\data\\mt5\\XAUUSD_W2026-07-06-to-2026-08-07.csv",
+    "sha256": "dcaf88a76b927d530924be4dc1f8dda4fcba431725099a8db4f1dfd806e8a78b",
+    "start": "2026-07-06T20:30:00",
+    "end": "2026-08-07T23:45:00"
+  },
+  "identity": {
+    "config_version": "v2_htfcrt_2026_08",
+    "config_hash": "7de09f6233b712f0136fc1bf1d2a51322b5b7c65395c75b035d0f96db689d613",
+    "feature_schema_version": "6.0",
+    "feature_schema_hash": "d40e7c7d5b624ef6d27670255ad95a35"
+  },
+  "bars_total": 2222,
+  "bars_warmup_excluded": 78,
+  "units_note": "Movement is recorded in BOTH price units and ATR-relative units. features['atr'] is RELATIVE (atr/close); atr_abs is the price-unit ATR the gates actually use.",
+  "stages": [
+    {
+      "stage": 0,
+      "id": "RAW_BAR",
+      "what": "Raw OHLCV bar as admitted",
+      "formula": "none (source data)",
+      "input": "data/mt5/XAUUSD_W2026-07-06-to-2026-08-07.csv",
+      "units": "price (USD/oz), volume=tick_volume",
+      "timestamp_basis": "broker_local",
+      "population": 2222,
+      "pct_of_corpus": 100.0,
+      "next_gate_removes": "warmup bars that cannot seed ATR/EMA/range",
+      "evidence": "bar_structure rows phase=LIVE"
+    },
+    {
+      "stage": 1,
+      "id": "SWEEP",
+      "what": "Liquidity taken beyond active range, closed back inside",
+      "formula": "_swept_high: high>h_ref AND close<h_ref ; _swept_low: low<l_ref AND close>l_ref",
+      "input": "crt_range_h_ref, crt_range_l_ref (frozen M15 structural envelope)",
+      "units": "price comparison",
+      "population": 72,
+      "pct_of_corpus": 3.2403,
+      "next_gate_removes": "no qualifying displacement candle within max_sweep_age_candles=20",
+      "evidence": "crt_action=SWEEP_DETECTED"
+    },
+    {
+      "stage": 2,
+      "id": "DISPLACEMENT",
+      "what": "Impulse candle confirming the sweep",
+      "formula": "|close-open|>=1.2*ATR_abs ; candle_range>=1.5*ATR_abs ; body_ratio>=0.65",
+      "input": "raw OHLC of bar, atr_abs (price units)",
+      "units": "ATR multiples",
+      "population": 13,
+      "pct_of_corpus": 0.5851,
+      "next_gate_removes": "close does not extend beyond displacement_close by >=0.3*ATR",
+      "evidence": "crt_action=DISPLACEMENT_CONFIRMED"
+    },
+    {
+      "stage": 3,
+      "id": "EXPANSION",
+      "what": "Post-displacement extension",
+      "formula": "close extends past displacement_close AND |close-disp_close|>=0.3*ATR_abs",
+      "input": "displacement_candle.close, atr_abs",
+      "units": "ATR multiples",
+      "population": 4,
+      "pct_of_corpus": 0.18,
+      "next_gate_removes": "price never retraces into the retest depth band before a RESET/TTL",
+      "evidence": "crt_action=EXPANSION_CONFIRMED"
+    },
+    {
+      "stage": 4,
+      "id": "RETEST",
+      "what": "Retrace into the swept edge within the depth band",
+      "formula": "retest_geometry.evaluate_retest_geometry: 0.1*ATR <= depth_abs <= max(0.15*range_size, 0.3*ATR) and FM-028 ratio <= 2.0",
+      "input": "close, h_ref, l_ref, atr_abs, displacement range",
+      "units": "price / ATR",
+      "population": 2,
+      "pct_of_corpus": 0.09,
+      "next_gate_removes": "soft-confirmation manifold, score>=0.45, zone, parent bias, objective, SESSION",
+      "evidence": "crt_action=RETEST_CONFIRMED"
+    },
+    {
+      "stage": 5,
+      "id": "FILTERED_OUT",
+      "what": "Retest locked but a gate rejected it",
+      "formula": "session_name NOT IN allowed_sessions[london,new_york,overlap]",
+      "input": "candle timestamp, crt_engine.session_windows (LONDON 07:00-10:00, NEWYORK 13:00-16:00)",
+      "units": "wall-clock hour, broker-local",
+      "population": 2,
+      "pct_of_corpus": 0.09,
+      "next_gate_removes": "n/a - terminal rejection",
+      "evidence": "crt_action=FILTER_REJECTED, reason=off_session:OFF_SESSION"
+    },
+    {
+      "stage": 6,
+      "id": "TRADE_OPENED",
+      "what": "Trade opened",
+      "formula": "build_trade + try_retest_to_execution",
+      "input": "score>=0.45, all gates passed",
+      "units": "lots / R",
+      "population": 0,
+      "pct_of_corpus": 0.0,
+      "next_gate_removes": "n/a",
+      "evidence": "crt_trade_open=true"
+    }
+  ],
+  "reset_attribution": {
+    "HTF_WINDOW": 99,
+    "RETRACE_50PCT": 6,
+    "SESSION_GAP": 4,
+    "OFF_SESSION": 2,
+    "EXTENSION_FIB": 1
+  },
+  "measurement_gaps": [
+    {
+      "id": "GAP-001",
+      "severity": "REAL",
+      "finding": "Session-gap RESETs are invisible in the per-bar census.",
+      "evidence": "events file records 4 RESET with reason 'Session gap detected: 2955min > 120min' at engine_candle_index 460, 920, 1380, 1840; bar_structure records crt_action=NONE at all four.",
+      "cause": "backtest_v2.py:3666 gap_det.check() + :3688 engine.sm.reset_to_range() run BEFORE process_candle (:3710); bar_structure.emit() (:3741) reads result/action from that later call. The gap reset is therefore structurally unrepresentable per-bar.",
+      "impact": "Any consumer reconstructing state from bar_structure alone will miss all gap resets and over-count SWEEP/DISPLACEMENT continuity across session boundaries.",
+      "fix_class": "MEASUREMENT (add a gap flag field to the snapshot) - NOT a trading-logic change."
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "corpus_rows": 2222,
+  "second_low_defined": 460,
+  "touch_rule": "low < second_low_20d",
+  "direction": "long",
+  "fills": [
+    "open",
+    "close"
+  ],
+  "max_forward": "bars remaining in the month, not 40",
+  "stop_still_ends_the_walk": true,
+  "touch_bars": 0,
+  "trade_rows": 0,
+  "closest_low_minus_second_low": 49.73999999999978,
+  "economic_claims_allowed": false,
+  "prior_both_sides_file": "userinvestigation/second_low_join_20260706.jsonl"
+}

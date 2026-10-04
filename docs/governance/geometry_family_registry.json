@@ -1,7 +1,7 @@
 {
  "_doc": "F-049 Gate-2B FAMILY + IMPLEMENTATION_VARIANT registries (derived from the adjudication artifact).",
  "family_count": 24,
- "variant_count": 82,
+ "variant_count": 87,
  "families": {
   "FAM-12-F2-RANGE": {
    "family_id": "FAM-12-F2-RANGE",
@@ -48,7 +48,14 @@
     "GEO-D-ffc903aa56",
     "GEO-D-956d5d89a3",
     "GEO-D-b9508dc26e",
-    "GEO-D-a4c94fbb85"
+    "GEO-D-a4c94fbb85",
+    "GEO-D-f6b13177ac",
+    "GEO-D-e62396aea0",
+    "GEO-D-b0cb4f72af",
+    "GEO-D-60a1494cd0",
+    "GEO-D-a9eae8952c",
+    "GEO-D-1703bdaaa1",
+    "GEO-D-b57b38ac3b"
    ],
    "variants": {
     "V-window-mean": [
@@ -113,6 +120,15 @@
     ],
     "V-orphan": [
      "GEO-D-a4c94fbb85"
+    ],
+    "V-candle-patterns-vectorized": [
+     "GEO-D-f6b13177ac",
+     "GEO-D-e62396aea0",
+     "GEO-D-b0cb4f72af",
+     "GEO-D-60a1494cd0",
+     "GEO-D-a9eae8952c",
+     "GEO-D-1703bdaaa1",
+     "GEO-D-b57b38ac3b"
     ]
    }
   },
@@ -233,7 +249,10 @@
     "GEO-D-dd9a79df47",
     "GEO-D-3ca89e4db5",
     "GEO-D-6c74e7e2cb",
-    "GEO-D-ed66212642"
+    "GEO-D-ed66212642",
+    "GEO-D-ca40a8cbbf",
+    "GEO-D-53ccd7a7cf",
+    "GEO-D-1ef05d6ce8"
    ],
    "variants": {
     "V-exact": [
@@ -285,6 +304,11 @@
     ],
     "V-window-mean": [
      "GEO-D-6c74e7e2cb"
+    ],
+    "V-candle-patterns-vectorized": [
+     "GEO-D-ca40a8cbbf",
+     "GEO-D-53ccd7a7cf",
+     "GEO-D-1ef05d6ce8"
     ]
    }
   },
@@ -299,7 +323,9 @@
     "GEO-D-fc87e2cf8c",
     "GEO-D-bdee65943f",
     "GEO-D-bf7906c402",
-    "GEO-D-1adaad7a9c"
+    "GEO-D-1adaad7a9c",
+    "GEO-D-00261c7560",
+    "GEO-D-e963f41fde"
    ],
    "variants": {
     "V-exact": [
@@ -320,6 +346,10 @@
     ],
     "V-orphan": [
      "GEO-D-1adaad7a9c"
+    ],
+    "V-candle-patterns-vectorized": [
+     "GEO-D-00261c7560",
+     "GEO-D-e963f41fde"
     ]
    }
   },
@@ -334,7 +364,9 @@
     "GEO-D-d51dd588c2",
     "GEO-D-ad056e5059",
     "GEO-D-e9aefac917",
-    "GEO-D-9b060e0c0d"
+    "GEO-D-9b060e0c0d",
+    "GEO-D-d9e78489b4",
+    "GEO-D-ff2c2a3144"
    ],
    "variants": {
     "V-exact": [
@@ -355,6 +387,10 @@
     ],
     "V-orphan": [
      "GEO-D-9b060e0c0d"
+    ],
+    "V-candle-patterns-vectorized": [
+     "GEO-D-d9e78489b4",
+     "GEO-D-ff2c2a3144"
     ]
    }
   },
@@ -410,7 +446,8 @@
     "GEO-D-ee943c55cb",
     "GEO-D-bbc94343d5",
     "GEO-D-ce54387905",
-    "GEO-D-c177cbd057"
+    "GEO-D-c177cbd057",
+    "GEO-D-8fccc19fba"
    ],
    "variants": {
     "V-guard0": [
@@ -461,6 +498,9 @@
     ],
     "V-guard0-vectorized": [
      "GEO-D-1afb089255"
+    ],
+    "V-candle-patterns-vectorized": [
+     "GEO-D-8fccc19fba"
     ]
    }
   },

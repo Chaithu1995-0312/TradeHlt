@@ -77,7 +77,8 @@ def collect_crt_zone_joint_labels(
     """
     Align CRT post-candle state with mapper best_zone_id on every post-init bar.
     """
-    raw = pd.read_csv(csv_path)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    raw = _corpus_load(csv_path, sequence_check=False).frame()
     raw.columns = [c.strip().lower() for c in raw.columns]
     if "timestamp" not in raw.columns:
         if "date" in raw.columns and "time" in raw.columns:

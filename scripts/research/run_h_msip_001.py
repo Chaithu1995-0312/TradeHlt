@@ -177,7 +177,8 @@ def build_panel() -> tuple[list[BarRec], dict[str, Any], dict[str, Any]]:
     if sha != CORPUS_SHA:
         raise SystemExit(f"corpus sha mismatch: {sha} != {CORPUS_SHA}")
 
-    df = pd.read_csv(corpus)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    df = _corpus_load(corpus).frame()
     df.columns = [c.lower() for c in df.columns]
     if "timestamp" not in df.columns:
         df = df.rename(columns={df.columns[0]: "timestamp"})

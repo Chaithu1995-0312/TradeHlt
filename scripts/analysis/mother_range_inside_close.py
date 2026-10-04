@@ -289,7 +289,8 @@ def main() -> int:
         print(f"ERROR: csv not found: {csv_path}", file=sys.stderr)
         return 1
 
-    raw = pd.read_csv(csv_path)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    raw = _corpus_load(csv_path).frame()
     raw["ts"] = pd.to_datetime(raw["timestamp"])
     raw["row"] = np.arange(len(raw))       # 0-based CSV data-row index (the traceability anchor)
 

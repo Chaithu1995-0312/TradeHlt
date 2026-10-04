@@ -105,10 +105,11 @@ def collect_xauusd_trade_opened_features(
 
     Returns up to ``max_samples`` TRADE_OPENED feature snapshots (ts-aligned).
     """
-    from data_ingestion.xauusd_phase1_candidate import guard_xauusd_csv_path
+    from data_ingestion.corpus_store import load as corpus_load   # CH-corpus-ssot
 
-    guarded = str(guard_xauusd_csv_path(csv_path, "XAUUSD"))
-    raw = pd.read_csv(guarded)
+    corpus = corpus_load(csv_path, "XAUUSD", sequence_check=False)
+    guarded = corpus.path
+    raw = corpus.frame()
     raw.columns = [c.strip().lower() for c in raw.columns]
     if "timestamp" not in raw.columns:
         if "date" in raw.columns and "time" in raw.columns:

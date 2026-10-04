@@ -148,6 +148,30 @@ def test_fvg_golden_bullish_detection():
     assert zone.formed_at_index == 1
 
 
+def test_fvg_gap_does_not_read_candle_color():
+    # Card 11 draws three candles of one color. The gap test is prev.high < next.low.
+    # Candle 0 is bearish, candle 1 is a small bull, candle 2 continues up.
+    bars = [
+        _c(_day(0), 102, 103, 99, 100, 0),
+        _c(_day(1), 100, 102, 99.5, 101, 1),
+        _c(_day(2), 106, 109, 105, 108, 2),
+    ]
+    zone = find_active_fvg(bars)
+    assert zone is not None and zone.bullish is True
+    assert zone.low == 103 and zone.high == 105 and zone.formed_at_index == 1
+
+
+def test_fvg_bearish_gap():
+    bars = [
+        _c(_day(0), 100, 103, 99, 102, 0),
+        _c(_day(1), 102, 103, 98, 100, 1),
+        _c(_day(2), 96, 97, 93, 94, 2),    # prev.low 99 > next.high 97
+    ]
+    zone = find_active_fvg(bars)
+    assert zone is not None and zone.bullish is False
+    assert zone.low == 97 and zone.high == 99 and zone.formed_at_index == 1
+
+
 def test_fvg_distance_zero_when_no_gap():
     bars = [_c(_day(i), 100, 101, 99, 100.5, i) for i in range(5)]
     assert fvg_distance(bars, atr=1.0) == 0.0

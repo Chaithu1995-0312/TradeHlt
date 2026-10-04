@@ -41,6 +41,7 @@ import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "src"))  # CH-corpus-ssot: data_ingestion.corpus_store
 SRC_CSV = ROOT / "data" / "mt5" / "XAUUSD_M15.csv"
 OUT_DIR = ROOT / "results" / "research" / "high_acceptance"
 OUT_PARQUET_RAW = OUT_DIR / "xauusd_m15.parquet"
@@ -61,7 +62,8 @@ LONGEST_RUNS_TOP_K = 10
 
 
 def load_raw() -> pd.DataFrame:
-    df = pd.read_csv(SRC_CSV, parse_dates=["timestamp"])
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    df = _corpus_load(SRC_CSV).frame(parse_dates=["timestamp"])
     df = df.sort_values("timestamp").reset_index(drop=True)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     df.to_parquet(OUT_PARQUET_RAW, engine="pyarrow", index=False)

@@ -1,0 +1,115 @@
+{
+  "corpus": [
+    "data/mt5/XAUUSD_M15.csv",
+    "data/mt5/XAUUSD_M15_2026-04-20_to_2026-10-06.csv"
+  ],
+  "rows": 56215,
+  "first": "2024-05-22 01:00:00",
+  "last": "2026-10-06 19:45:00",
+  "per_timeframe": {
+    "M15": {
+      "n": 65,
+      "mean_rr_gross": -0.1654,
+      "ci95": [
+        -0.4301,
+        0.0994
+      ],
+      "win_share": 0.3846,
+      "median": -1.0,
+      "worst": -1.0,
+      "best": 1.5
+    },
+    "H1": {
+      "n": 57,
+      "mean_rr_gross": -0.057,
+      "ci95": [
+        -0.3346,
+        0.2205
+      ],
+      "win_share": 0.4561,
+      "median": -1.0,
+      "worst": -1.0,
+      "best": 1.5
+    },
+    "H4": {
+      "n": 36,
+      "mean_rr_gross": 0.0069,
+      "ci95": [
+        -0.3739,
+        0.3877
+      ],
+      "win_share": 0.4444,
+      "median": -1.0,
+      "worst": -1.0,
+      "best": 1.5
+    }
+  },
+  "chosen_timeframe": "H4",
+  "condition_stats_on_chosen_tf": {
+    "fvg_active": {
+      "n": 36,
+      "mean_rr_gross": 0.0069,
+      "ci95": [
+        -0.3739,
+        0.3877
+      ],
+      "win_share": 0.4444,
+      "median": -1.0,
+      "worst": -1.0,
+      "best": 1.5
+    },
+    "fvg_none": {
+      "n": 0
+    },
+    "below_pdl": {
+      "n": 19,
+      "mean_rr_gross": -0.1974,
+      "ci95": [
+        -0.6939,
+        0.2991
+      ],
+      "win_share": 0.3684,
+      "median": -1.0,
+      "worst": -1.0,
+      "best": 1.5
+    },
+    "at_or_above_pdl": {
+      "n": 17,
+      "mean_rr_gross": 0.2353,
+      "ci95": [
+        -0.3461,
+        0.8167
+      ],
+      "win_share": 0.5294,
+      "median": 0.75,
+      "worst": -1.0,
+      "best": 1.5
+    },
+    "sellside_sweep": {
+      "n": 5,
+      "mean_rr_gross": -0.65,
+      "ci95": [
+        -1.336,
+        0.036
+      ],
+      "win_share": 0.2,
+      "median": -1.0,
+      "worst": -1.0,
+      "best": 0.75
+    },
+    "no_sellside_sweep": {
+      "n": 31,
+      "mean_rr_gross": 0.1129,
+      "ci95": [
+        -0.3066,
+        0.5324
+      ],
+      "win_share": 0.4839,
+      "median": -1.0,
+      "worst": -1.0,
+      "best": 1.5
+    }
+  },
+  "chosen_condition": "at_or_above_pdl",
+  "economic_claims_allowed": false
+}

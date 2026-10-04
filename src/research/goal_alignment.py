@@ -40,7 +40,8 @@ def corpus_span_months(csv_path: str) -> float:
     """Wall-clock span of an OHLCV CSV's timestamp column, in months (~30.437
     days). Floors at one bar's worth of months so a degenerate 0/1-row corpus
     never divides trades_per_month by zero."""
-    df = pd.read_csv(csv_path)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    df = _corpus_load(csv_path, sequence_check=False).frame()
     ts_col = next((c for c in df.columns if str(c).strip().lower() in
                    ("timestamp", "datetime", "date time", "open time")), None)
     if ts_col is None:

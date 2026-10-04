@@ -69,7 +69,7 @@ if str(_SRC) not in sys.path:
 
 from config_layer.crt_engine_v2 import Candle, ExecutionEngine  # noqa: E402
 from config_layer.production_config import get_prod_section  # noqa: E402
-from data_ingestion.corpus_gate import admit_corpus  # noqa: E402
+from data_ingestion.corpus_store import load as corpus_load  # noqa: E402
 from features.crt_state_resolver import build_htf_id_timeline, create_resolver  # noqa: E402
 from features.feature_pipeline import FeaturePipeline  # noqa: E402
 from features.feature_schema import (  # noqa: E402
@@ -381,23 +381,13 @@ def build_bar_matrix(
     # `write_report=False` is mandatory -- the fingerprint slot is {symbol}_{tf}.json, so
     # data/mt5/XAUUSD_M15.csv and the forensic data/XAUUSD_M15.csv COLLIDE on one report
     # (corpus_gate.py docstring); the admission is carried in this run's manifest instead.
-    adm = admit_corpus(csv_path, instrument, write_report=False)
-    csv_path = Path(adm.filepath)
-
-    # Declared-vs-recomputed, the dataset_registry.py:139 pattern. The gate's hash and this
-    # manifest's hash must describe the same bytes, or the artifact is unattributable.
-    corpus_sha256 = _sha256(csv_path)
-    # The gate reports `sha256:<hex>`; this manifest has always stored bare hex. Compare
-    # the digests, not the labels -- and keep the bare form so the field stays joinable to
-    # the trace streams' own `corpus_sha256`.
-    declared = (adm.file_hash or "").split(":")[-1]
-    if declared and declared != corpus_sha256:
-        raise RuntimeError(
-            f"build_bar_matrix: admission file_hash {adm.file_hash} != recomputed "
-            f"{corpus_sha256} for {csv_path}"
-        )
-
-    raw = pd.read_csv(csv_path, parse_dates=["timestamp"])
+    # CH-corpus-ssot (2026-10-08): admission + plausibility + the bytes themselves come from
+    # the corpus SSOT (corpus_store.load). The hash is computed once, over the exact bytes this
+    # matrix is built from — no recompute-and-compare, no second read.
+    corpus = corpus_load(csv_path, instrument, plausibility=True)
+    csv_path = Path(corpus.path)
+    corpus_sha256 = corpus.sha256
+    raw = corpus.frame(parse_dates=["timestamp"])
     if limit:
         raw = raw.head(limit)
     raw = raw.reset_index(drop=True)
@@ -590,12 +580,13 @@ def build_bar_matrix(
         # dataset_id, no hash verification -- the run is unattributable and must be
         # reported as such rather than silently trusted.
         "admission": {
-            "dataset_id": adm.dataset_id,
-            "bound": adm.bound,
-            "rewritten": adm.rewritten,
-            "decision": adm.decision,
-            "plausibility": adm.plausibility,
+            "dataset_id": corpus.dataset_id,
+            "bound": corpus.bound,
+            "rewritten": corpus.rewritten,
+            "decision": "ADMITTED",   # corpus_store.load raises on REJECT / failed plausibility
+            "plausibility": "checked",
         },
+        "corpus_provenance": corpus.provenance(),
         "rows_raw": n_raw,
         "rows_emitted": n_rows,
         "warmup_dropped": n_raw - n_rows,

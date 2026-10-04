@@ -1,5 +1,5 @@
 {
-  "setup": {"target_policy": "fixed_r", "trade_ttl_candles": null, "decider": "engine", "entry_semantics": "approval_bar_legacy", "retest_stop_guard": false},
+  "setup": {"target_policy": "fixed_r", "trade_ttl_candles": null, "decider": "engine", "entry_semantics": "approval_bar_legacy", "retest_stop_guard": false, "retrace_semantics": "legacy_kept_fraction"},
   "version": "v2_multi_2026_04",
   "config_id": "v2_multi_2026_04_candidate_1",
   "created_at": "2026-05-06T19:34:01.007073+00:00",
@@ -534,7 +534,25 @@
     "normalization_basis": "atr_relative",
     "_comment_session_timestamp_basis": "F-066 (2026-08-01). Selects which clock hour_of_day/session (FM-052) derive from. 'broker_local' = DEFAULT, byte-identical to every pipeline run before this key existed. See configs/production/v2_multi_2026_04.json's fuller comment for the evidence; unchanged here.",
     "session_timestamp_basis": "broker_local",
-    "sweep_semantics": "latest_unconsumed"
+    "sweep_semantics": "latest_unconsumed",
+    "candle_patterns": {
+      "_comment": "CH-candle-pattern-observations-v8 (2026-10-08): thresholds of FM-103..FM-119 (features.candle_patterns). Research hypotheses from the corrected candle-pattern spec; ATR = FM-074 atr_absolute (price units).",
+      "size_gate_atr_k": 0.5,
+      "swing_lookback": 5,
+      "pin_wick_min": 0.6,
+      "pin_body_max": 0.25,
+      "pin_opposite_wick_max": 0.15,
+      "probe_wick_body_multiple": 2.0,
+      "probe_opposite_wick_max": 0.1,
+      "doji_body_max": 0.1,
+      "doji_wick_asymmetry_max": 0.2,
+      "doji_extreme_body_max": 0.05,
+      "doji_extreme_wick_min": 0.75,
+      "engulfing_strength_cap": 3.0,
+      "compression_ratio_cap": 10.0,
+      "morning_star_body_min": 0.6,
+      "morning_star_mid_max": 0.25
+    }
   },
   "notes": "April tuner run, 3-month window",
   "schema_version": "1.3",
