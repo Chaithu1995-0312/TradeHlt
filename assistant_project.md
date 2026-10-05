@@ -602,3 +602,12 @@ Decision/Output: Claim "58-bar dwell vs TTL 495 is a defect; add retrace/extensi
 Open Questions: Where did the 58-bar figure come from (unpushed run log)? test_funnel_sweep_to_displacement_bypasses_pipeline_flag is red on the base; is it one of the known 6?
 Next Step: To check the dwell number, push the run log and count EXPANSION exits by cause (RETEST / TTL / gap / retrace / extension).
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-05
+Topic: CRT engine state-by-state formulas; correction of the earlier funnel artifact
+Decision/Output: Read-only walkthrough from crt_engine_v2.py, candle_math.py, derived_math.py, retest_geometry.py, structure/predicates.py and active config v2_htfcrt_2026_08 (per-instrument overrides not checked). ATR = simple mean of last 14 true ranges (absolute price units, not Wilder, not the close-relative FM-041). body_ratio = |close-open|/(high-low), 0 if range <= 0. Retest ceiling = max(0.15*range, 0.3*ATR) with a 0.1*ATR floor; soft_conf_max_candles = 3; expansion distance = 0.3*ATR; S = G^0.7 * C^0.3, approve at S >= 0.3. CORRECTED: the earlier artifact said soft_conf 5 bars, expansion 0.2*ATR, retest ceiling "tighter of", soft confirmation as a RETEST entry condition, and carried funnel rates (3.7%, 85.8%) plus "~0.5-0.7 retests/month" computed from MC-CTXATTR n_units, which are resolver state-occupancy bar x direction rows, not engine transitions (F-069); those figures are UNVERIFIED and were removed. Artifact republished as version 2 (same URL). No src/ or config change.
+Open Questions: Which entry_semantics (legacy approval-bar vs resting_order) and sl_anchor the active XAUUSD run uses; true engine RETEST count per month needs an engine run, not the resolver rows.
+Next Step: If wanted, run the engine on one month of XAUUSD and count RETEST transitions from the event log.
+---
