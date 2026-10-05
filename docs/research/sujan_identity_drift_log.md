@@ -10,6 +10,42 @@ It is not a playbook, not a `SEM-*`, not a measurement contract.
 
 ---
 
+## Record 8 — 2026-10-05 — Sujan Theory 2 (HTF location → LTF range → manipulation → trigger → target): rule extract, NOT frozen
+
+**Kind:** identity extract of a SECOND Sujan theory. **Not** a freeze, **not** a `SEM-*`, **not** a measurement contract.
+**Lane:** semantic certification.
+**Named by:** human bridge, 2026-10-05: "Consider as Sujan 2nd theory."
+**Source:** a "CRT Model Master Specification" the bridge relayed from another LLM's chat (Level 4: bridged reading), plus the bridge's own rulings in this session (marked APPROVED). The relayed answers also said "Yours … not Sujan's". The bridge's direct instruction ("Sujan 2nd theory") governs, and that conflict is recorded here rather than resolved.
+**Separation:** Theory 2 is its own object. It is NOT an edit of Theory 1 (SEM-031 / SEM-033 / Record 7), and no Theory 1 result (F-095 or the Record 7 proxies) transfers to it, in either direction. One visible difference: Theory 1's C2 manipulation "closed inside first range" (Record 7, 21:29–21:36), while Theory 2's Type A manipulation closes BELOW the range low (rule 4a).
+
+| # | Rule | Statement | Status |
+|---|---|---|---|
+| 1 | Location first | Trade reactions at an HTF location, never a pattern alone. No HTF FVG / OB / Rejection Block ⇒ no setup. | Relayed (Level 4), not reviewed |
+| 2 | Timeframe pairs | Location TF > execution TF: 1Mo→1D, 1W→4H, 1D→1H, 4H→15M. | Relayed, not reviewed |
+| 3a | FVG | Standard 3-candle wick gap. Bullish: c1.high < c3.low, zone [c1.high, c3.low]. Bearish mirror. | APPROVED (bridge, 2026-10-05) |
+| 3b | FVG fill | An FVG that price has traded into at all no longer counts. | APPROVED (reading pending confirmation) |
+| 3c | Order block | Bullish OB: a "thick" bearish candle that sweeps the low of ≥1 preceding candle; sweeping ≥2 consecutive candles = stronger. Bearish mirror NOT stated. OB zone extent NOT stated. | Relayed; mirror + zone UNKNOWN |
+| 3d | Rejection Block | Mentioned only. | UNKNOWN |
+| 4 | CRT range | Range high/low = the range candle's high/low (NAS100 example: the 4H OB candle). Forms at/around the HTF location. | Relayed, not reviewed |
+| 4a | Manipulation Type A | Thick bearish candle sweeps the range low and closes BELOW it. | Relayed answer, not reviewed |
+| 4b | Manipulation Type B | Candle with a long lower wick sweeps the range low and closes back inside. | Relayed, not reviewed |
+| 5 | Middle rule | The HTF level may sit anywhere inside the range (top/middle/bottom); the manipulation must happen "at/into" it. Codeable form UNKNOWN (zone merely inside the range vs. manipulation candle must touch the zone). | AMBIGUOUS |
+| 6 | Trigger | A candle closes above the manipulation candle's HIGH (short: below its LOW). Entry = that close; the first SL/TP check is the next bar. | APPROVED (bridge, 2026-10-05) |
+| 6a | Trigger timing | "The immediate bullish close above": the next candle only, or the first such close whenever it comes? No time limit stated. | MULTIPLE INTERPRETATIONS |
+| 6b | Invalidation | A new low below the manipulation low before the trigger cancels the setup. The relayed answer says "implied by the stop placement", i.e. inferred, not stated. | INFERRED, needs confirmation |
+| 7 | Stop loss | Manipulation candle extreme ∓ one spread (XAUUSD measured 0.09 USD/oz, F-082). | APPROVED (bridge, 2026-10-05) |
+| 8 | Target | The opposite side of the CRT range. | Relayed, not reviewed |
+| 9 | "Thick" | Visual/discretionary; no definition. Candidates relayed (body > 50% of range; body > 1.5× ATR14). | UNKNOWN; no proxy approved |
+| 10 | Multiple sweeps raise target probability | Claim. | HYPOTHESIS, not a rule |
+| 11 | Ignore | C2 chart annotations, blue lines, generic CRT/ICT terminology. | Relayed |
+
+```text
+Mechanical proxy?   Only rules 3a, 6, 7 (bridge-approved 2026-10-05). Everything else: N.
+Status:             NOT YET FROZEN. No detector, SEM-*, or MC-* until 5, 6a, 6b and 9 are decided.
+```
+
+---
+
 ## Record 7 — 2026-09-26 — Five mechanical proxies measured as "Sujan" without identity review (DRIFT)
 
 **Kind:** unapproved semantic replacements, recorded after the fact. **Not** a freeze. **Not** an identity certification.

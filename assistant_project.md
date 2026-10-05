@@ -599,3 +599,14 @@ Belief Update / ROI / Goal: Goal: freeze one codeable CRT object. Belief: 3 of ~
 Open Questions: source; Type A close inside vs below; HTF level at extreme vs anywhere in range; trigger max wait + invalidation; thick = hand-marked or proxy.
 Next Step: on answers, write the frozen object + MC contract, then detector.
 ---
+
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-05
+Topic: Sujan Theory 2 rule extract recorded (drift log Record 8), not frozen
+Decision/Output: Bridge instruction: "Consider as Sujan 2nd theory" (overrides the relayed text saying "not Sujan's"; conflict recorded, not resolved). Added Record 8 to docs/research/sujan_identity_drift_log.md: 11-rule table with per-rule status. APPROVED: FVG 3-candle wick gap + partial fill invalidates; trigger = close beyond manipulation candle high/low, exit checks from next bar; SL = manipulation extreme -/+ one spread (0.09 USD/oz XAUUSD). Open: middle rule codeable form (AMBIGUOUS), trigger timing next-candle vs first close (MULTIPLE), invalidation (INFERRED by the relaying LLM), "thick" (UNKNOWN), OB mirror/zone, Rejection Block. Theory 2 kept separate from Theory 1 (SEM-031/033, Record 7; Type A closes below range vs Theory 1 C2 closes inside). tests/research/test_sujan_manipulation.py + test_doc_citations green.
+Belief Update / ROI / Goal: Goal: a codeable, frozen Theory 2. Belief: 3 rules approved, 4 blockers left. Knowledge ROI: medium. Action: get the 4 decisions.
+Open Questions: middle rule (zone inside range vs manipulation touches zone); trigger next-candle-only vs first close; confirm invalidation; thick proxy.
+Next Step: on answers, freeze (bridge), SEM node + MC contract, then detector.
+---
