@@ -12,7 +12,7 @@ python scripts/analysis/generate_script_matrix.py
 Authority: **inventory only** (no promote power). Thin-wrapper purity is **not**
 CI-enforced in v1 — rows track `logic_in_script` / `implementation_status` only.
 
-**Records:** 498
+**Records:** 499
 
 | ID | Category | Lifecycle | Impl status | Path | Purpose |
 |---|---|---|---|---|---|
@@ -514,6 +514,7 @@ CI-enforced in v1 — rows track `logic_in_script` / `implementation_status` onl
 | `SCR-496` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/config_fallback_census.py` | AST census of every site in src/ where a value can come from a code literal i... |
 | `SCR-497` | GOVERNANCE | ACTIVE | EXTRACTED_TO_SRC | `scripts/governance/semantic_os_integration.py` | Semantic OS integration run: runs the real backtest twice on one XAUUSD corpu... |
 | `SCR-498` | GOVERNANCE | ACTIVE | EXTRACTED_TO_SRC | `scripts/governance/semantic_os_trade_window.py` | R1-C: from a plain full-corpus XAUUSD backtest (engine trades CSV + events.js... |
+| `SCR-499` | DATA | ACTIVE | LOGIC_IN_SCRIPT | `scripts/data/mt5_history_probe.py` | Program 12 Step 2a: read-only MT5 history-availability probe. Per symbol x ti... |
 
 ---
 

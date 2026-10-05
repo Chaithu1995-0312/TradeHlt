@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | **DRAFT — design, not sealed.** Nothing has run. No measurement contract is sealed. |
+| Status | **DRAFT — §12 defaults APPROVED 2026-10-05 with amendments (§14); not sealed.** Nothing has run. No measurement contract is sealed. Gate: no ladder code until the Step 2a probe table is in hand (§15). |
 | Date | 2026-10-05 |
 | Ordered by | User (architectural order, 2026-10-05) |
 | Authority | Research only. Grants no production authority (CLAUDE.md §6.5). No active-config edit. |
@@ -209,8 +209,84 @@ No D1 regime classifier exists for this purpose. The existing pieces are `Regime
 
 ## 13. Governance checklist before any run
 
+- [ ] **Freeze this pre-registration** (amendment 3, §14): the ladder levels, controls, CI method, random seeds (the 100 seed values listed explicitly), effective-n method and decision rule are written here, the file's git commit hash and UTC timestamp are recorded in the contract, and the file is not edited afterwards. A later change is a new, dated amendment section that does not apply to results already produced.
 - [ ] Seal a measurement contract (`MC-*` instance, id assigned at sealing) with §6 metrics, controls, verdict rule and §12 defaults. No result is read before sealing (F-083).
 - [ ] Research config clone written and its diff vs active recorded. The active config is untouched.
 - [ ] `scripts/research/timeframe_ladder.py` SITS-registered. Green floor run.
 - [ ] Data path, row count, first/last timestamp echoed at run start (CLAUDE.md §1.5 preflight).
 - [ ] Results go to `docs/current-findings.md` the same turn (new F-id), with INSUFFICIENT stated as such.
+
+---
+
+## 14. Approved decisions and amendments (user, 2026-10-05)
+
+**Approved as written in §12:**
+- D1 calendar range clock for H4.
+- Fusion gate off. Follow-up: H4 fusion models are a **separate program**, not a fix to this one.
+- 1.5×ATR stop floor in the research walker only. An engine change is a separate decision if the ladder shows edge.
+- Heat cap wins: max 4 concurrent at 0.5%. The cap is not raised.
+- Step 3 loosens only the binding gate at fixed levels.
+- D1 regime gate: one fixed rule, **frozen before it is measured**.
+- US500 and NAS100 dropped from the ladder (no data, no cost model). The probe still lists them, because a probe is cheap; entry still needs §14.3.
+
+### 14.1 Pass-rule amendments
+1. **Long and short reported separately, both required.** The pre-registration requires a LONG-only and a SHORT-only E[R] row (each vs its own passive drift), not just the pooled pair. Long passes and short fails → declared directional gold beta: a valid outcome, but a different product.
+2. **Effective n after overlap correction.** Trades are clustered by **setup**: one sweep→displacement episode, keyed by the sweep bar. Trades whose holding windows overlap also share a cluster.
+   - CIs and p-values use a **cluster bootstrap** that resamples whole clusters.
+   - The power floor (n ≥ 30) applies to the **number of clusters**, not raw trades.
+   - Correction on method, not on intent: BH-FDR and Holm operate on p-values, not on n. Effective n enters through those p-values, which come from the cluster bootstrap. Both raw n and effective n are reported in every row.
+3. **Freeze before run.** See §13, first item.
+
+### 14.2 Seeds and CI method (frozen at sealing)
+- Random-entry control: seeds `20261005 + i` for i = 0..99.
+- Bootstrap: 10,000 cluster resamples, percentile 95% CI, bootstrap seed 20261005.
+
+### 14.3 Non-gold cost models (amendment)
+An instrument enters the ladder only with a declared cost model, in this order of preference:
+1. **Measured:** broker spread and commission from MT5 tick data and symbol facts. This uses the existing `research.mt5_cost_calibration` path that produced F-082 for XAUUSD.
+2. **Placeholder:** if only OHLC exists, cost = 2× XAUUSD's measured cost expressed as a fraction of ATR. It is labelled PLACEHOLDER in every output row.
+3. Neither available → the instrument does not enter. XAUUSD's model is never applied to another instrument.
+
+---
+
+## 15. Step 2a — MT5 history probe and fetch spec
+
+**Gate.** The probe output decides whether the program runs. If the broker serves only about 2 years of H4 gold, the ladder is not built on it. Instead: fetch from another source (Dukascopy, HistData or Polygon), or pivot (order, 2026-10-05).
+
+### 15.1 Probe (built)
+`scripts/data/mt5_history_probe.py` (SITS-registered). It is read-only and writes a JSON report only. It runs on the Windows machine with the terminal logged in:
+
+```text
+venv\Scripts\python.exe scripts\data\mt5_history_probe.py
+```
+
+**Default symbols, in priority order:** XAUUSD, XAGUSD, BTCUSD, EURUSD, GBPUSD, USDJPY, AUDUSD, US500, NAS100. Broker renames such as `XAUUSD.m`, `GOLD` or `USTEC` are resolved automatically. **Default timeframes:** H1, H4, D1. Add `--tf M15` for the archive check.
+
+**Per series** it reports:
+- resolved broker symbol;
+- earliest and latest bar (broker-server time);
+- bar count and years covered;
+- **`cap`**: the count hit the terminal's *Max bars in chart* setting, so history is **truncated by the terminal, not by the broker**. If YES, raise Tools → Options → Charts → Max bars in chart and re-run;
+- duplicate timestamps;
+- gaps by missing-bar run length (1, 2–4, 5–24, >24, weekend runs counted separately) and the 5 largest non-weekend gaps.
+
+**Per symbol** it reports digits, point, current spread, contract size, ticks in the last 3 days (input to §14.3 option 1), and the broker-minus-UTC offset. The offset is valid only while the market is open.
+
+### 15.2 Fetch (after the probe; existing code)
+`src/inout/mt5_candle_fetcher.MT5CandleFetcher` already supports H1/H4/D1. No new fetch code is needed.
+- **Depth targets:** D1 ≥ 10 years, H4 ≥ 5 years, H1 ≥ 2 years. M15 is archive only.
+- **Output:** `data/mt5/{SYMBOL}_{TF}.csv`, same schema as `XAUUSD_M15.csv` (OHLCV only).
+
+### 15.3 Timestamp basis — the one open conflict
+The order asks for UTC timestamps. The existing corpus and the existing fetcher store **broker-server time labelled as UTC** (F-066: wrong session label on 53.36% of XAUUSD bars). Two consequences:
+- New UTC files would not line up with `XAUUSD_M15.csv`.
+- Converting moves the H4 grid off the broker grid that matches TradingView (F-080 phase 0).
+
+**Default:** store bars **as served (broker time)** and declare the basis in a sidecar `{SYMBOL}_{TF}.meta.json`, with the broker-minus-UTC offset from the probe. Convert with `features.broker_clock` only where a clock matters: the verification window below, and any future session logic. Sessions are off for H4/D1 (§12). Override if pure-UTC files are preferred; then the M15 archive must be converted too, so the corpus has one basis.
+
+### 15.4 Post-fetch verification (per file)
+- No duplicate timestamps.
+- Bars only inside the instrument's trading week: Sunday 21:00 → Friday 22:00 UTC, translated to broker time using the probe offset. Crypto (BTCUSD) is exempt.
+- No non-weekend gap longer than 4 bars inside a session, other than listed holidays.
+- Row count equals the probe count for the same range.
+- The first/last timestamp and row count are echoed at load (CLAUDE.md §1.5).

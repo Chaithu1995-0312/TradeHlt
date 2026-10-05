@@ -641,3 +641,13 @@ Belief Update / ROI / Goal: Goal: test whether the CRT footprint carries edge ab
 Open Questions: How much native XAUUSD H4/H1/D1 history does the broker serve; US500/NAS100 data source; user sign-off on the section 12 defaults.
 Next Step: User approves defaults -> fetch native history -> seal the measurement contract -> build scripts/research/timeframe_ladder.py.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-05
+Topic: Program 12 Step 2a — MT5 history probe built; approved defaults and amendments recorded
+Decision/Output: User approved the section 12 defaults with amendments (long/short reported separately, effective n via setup-cluster bootstrap, freeze before run, non-gold cost-model rule). Recorded as doc sections 14-15. Built scripts/data/mt5_history_probe.py (read-only; per symbol x TF: earliest/latest bar, count, Max-bars truncation flag, gap histogram; per symbol: spread/contract facts, tick count, broker offset). It cannot run here (Linux, no MT5); verified against a fake MT5 module, which caught a symbol-resolution order bug (GOLD prefix beat XAUUSD.m), fixed. SITS-registered with a purpose overlay; test_script_registry has the same 2 pre-existing grandfather failures before and after (new path no longer listed). Clarified that BH-FDR uses p-values, so effective n enters via the cluster bootstrap. Flagged one open conflict: the order asks for UTC files, but the corpus and fetcher are broker time (F-066); default = store broker time plus a sidecar with the offset.
+Belief Update / ROI / Goal: Goal: decide if the H4 program is runnable. Belief: broker history depth (and the terminal Max-bars cap) is now the gating unknown. Knowledge ROI: high. Action: user runs the probe on Windows and posts the table.
+Open Questions: Broker history depth per symbol/TF; UTC vs broker-time storage.
+Next Step: User runs scripts\data\mt5_history_probe.py and posts the table; then decide symbols and depth, fetch, seal the contract, build the ladder.
+---

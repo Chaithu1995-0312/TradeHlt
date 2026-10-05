@@ -878,6 +878,23 @@ OVERLAYS: list[dict[str, Any]] = [
             "quantity. production_behavior_changed: NO."
         ),
     },
+    {
+        "path": "scripts/data/mt5_history_probe.py",
+        "category": "DATA",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "LOGIC_IN_SCRIPT",
+        "purpose": (
+            "Program 12 Step 2a: read-only MT5 history-availability probe. Per symbol x "
+            "timeframe: resolved broker symbol, earliest/latest bar (broker-server time), bar "
+            "count, Max-bars truncation flag, gap histogram; per symbol: digits, point, spread, "
+            "contract size, recent tick count, broker clock offset. Writes a JSON report only."
+        ),
+        "task_refs": ["Program-12"],
+        "notes": (
+            "wontfix:reason=one-shot external-data probe; runs only on Windows with a "
+            "MetaTrader 5 terminal. Writes no market data. production_behavior_changed: NO."
+        ),
+    },
 ]
 
 
