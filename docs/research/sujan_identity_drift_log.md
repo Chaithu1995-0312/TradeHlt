@@ -10,6 +10,62 @@ It is not a playbook, not a `SEM-*`, not a measurement contract.
 
 ---
 
+## Record 9 — 2026-10-05 — Sujan Theory 2: design extracted from the bridge's teaching transcript (refines Record 8)
+
+**Kind:** identity extract. Refines Record 8, which stays as written. **Not** a freeze.
+**Source:** the bridge relayed a long teaching chat with another LLM (Level 4) and asked to "ignore noise, extract the design". Only items the bridge **confirmed in that chat** ("Got it… clear now", "Exactly… resolves", "completely clear") or wrote in their own words are kept. That LLM's own chart reads (AUDCHF 0.5820–0.5830, USDJPY 156.756 as an entry, USDCHF "close back inside") are noise and are excluded; the bridge rejected one of them outright ("You're right — I misread…").
+
+### Architecture (bridge: "the engine always works the same; we need to see it through the right lens")
+
+```text
+HTF key location (FVG | Order Block | Rejection Block)   ← WHERE. Never an entry by itself.
+  → CRT range = HIGH/LOW of one candle                     (confirmed: "4H candle → its HIGH & LOW = CRT range")
+  → execution TF below it: watch the range extreme
+  → manipulation at the range extreme (Type A | Type B)   ← must complete (close) first
+  → trigger: a candle closes beyond the manipulation candle
+  → target: the opposite side of the CRT range
+```
+
+### Rules confirmed in the transcript (status changes vs Record 8)
+
+| # | Rule | Evidence in transcript | Status |
+|---|---|---|---|
+| R1 | No HTF key level ⇒ no CRT. Location says WHERE, the LTF reaction says WHEN. | repeated, bridge-affirmed | CONFIRMED (bridge, relayed) |
+| R2 | Location TF > execution TF (1Mo→1D, 1W→4H, 1D→1H, 4H→15M). | "Yes, buddy — completely clear" | CONFIRMED |
+| R3 | CRT range = the high and low of a single candle (NAS100: the 4H OB candle, executed on 15M). It is **not** built from LTF swing points. | "Ahh, yes — that clears my first question completely" | CONFIRMED (supersedes Record 8 row 4's "forms at/around") |
+| R4 | OB (bullish): a thick bearish-bodied candle that sweeps the low of the **immediately preceding, adjacent** candle(s). ≥1 swept = valid OB; 2, 3, … consecutive swept = stronger (a **quality** variable, never a requirement). In the 2-candle example the black line = the low of the swept candles. | "Got it, buddy. Clear now." / "Exactly, buddy." | CONFIRMED |
+| R5 | The thick bearish down-close (Type A) is the **shakeout/manipulation**, not the entry. It must close completely; the long comes only after. | bridge words: "It's a complete close of thick bearish down-close candle. Bullish entry after this." | CONFIRMED |
+| R6 | Type B: a thick lower wick takes the previous low and closes back inside the CRT range. | "These images resolve the two doubts" | CONFIRMED |
+| R7 | Trigger = a candle **closes** above the manipulation candle (a wick crossing it is not enough). Record 8 rule 6: above its HIGH. Bridge words for Type B: "**Any** bullish candle closed above that thick wick is a trigger." | bridge words | CONFIRMED. Resolves Record 8 row 6a toward "the first such close, not only the next candle" (still pending the bridge's explicit yes) |
+| R8 | Target = the opposite side of the CRT range. | repeated, affirmed | CONFIRMED |
+| R9 | Chart "C2" labels follow different rules and are **not** used to define this model. | bridge correction in the transcript | CONFIRMED (excludes the C2 definition the other LLM "locked" earlier) |
+
+### Still open (not resolved by the transcript)
+
+| Item | Why it stays open |
+|---|---|
+| Which candle is the CRT range candle, and on which TF | Shown only by example: NAS100 = the 4H OB candle itself. In the Weekly-FVG example the range is drawn on 4H with no candle rule, and the bridge was going to redraw it without the FVG. The general rule is unstated. |
+| Middle rule | The Weekly-FVG example had the CRT low on the FVG boundary; the bridge also said the key level can be "in the middle". "Must touch" vs "anywhere inside the range" is still AMBIGUOUS. |
+| Type A close location | The other LLM asked (does the thick candle have to close below the old low?) and was never answered in the transcript; Record 8 row 4a remains a relayed answer only. |
+| OB zone and the red key line | The red line (e.g. 157.414, 156.756) marks the "key level from the OB"; which price of the OB candle it is (open, body, low) is unstated. |
+| Bearish OB | The mirror (a thick bullish candle sweeping the preceding highs) is never stated. |
+| "Thick" | Still visual; no proxy approved. |
+| Rejection Block | Named only. |
+| Model #1's FVG | The handwritten Model #1 lists "displacement → FVG → entry"; the FVG's role in entry was asked and never answered. Later examples run without it. |
+| Invalidation (new low before trigger) | Inferred by the relaying LLM, never stated. |
+
+### Observations kept as HYPOTHESES (never rules)
+
+- More preceding candles swept ⇒ higher chance of reaching the target (bridge observation; "a probability/quality variable until tested").
+- An OB with a left-side sweep and an immediate right-side bullish close acts as a "magnet": price returns to the red key level and then continues.
+
+```text
+Mechanical proxy?   Approved: FVG (Record 8, 3a/3b), trigger above manipulation HIGH (6), stop = manipulation extreme ∓ spread (7).
+Status:             NOT YET FROZEN.
+```
+
+---
+
 ## Record 8 — 2026-10-05 — Sujan Theory 2 (HTF location → LTF range → manipulation → trigger → target): rule extract, NOT frozen
 
 **Kind:** identity extract of a SECOND Sujan theory. **Not** a freeze, **not** a `SEM-*`, **not** a measurement contract.

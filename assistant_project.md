@@ -610,3 +610,14 @@ Belief Update / ROI / Goal: Goal: a codeable, frozen Theory 2. Belief: 3 rules a
 Open Questions: middle rule (zone inside range vs manipulation touches zone); trigger next-candle-only vs first close; confirm invalidation; thick proxy.
 Next Step: on answers, freeze (bridge), SEM node + MC contract, then detector.
 ---
+
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-05
+Topic: Sujan Theory 2 design extracted from relayed teaching transcript (drift log Record 9)
+Decision/Output: Kept only bridge-confirmed items / bridge's own words; excluded the other LLM's chart reads (AUDCHF/USDJPY/USDCHF level picks). CONFIRMED: no HTF level => no CRT; location TF > execution TF; CRT range = high/low of ONE candle (NAS100: the 4H OB candle, executed on 15M), not LTF swings; OB = thick bearish candle sweeping low of >=1 immediately preceding adjacent candle(s), more = quality not requirement; Type A = shakeout, must fully close, entry only after; Type B = thick lower wick takes prior low, closes back inside; trigger = CLOSE above manipulation candle ("any bullish candle closed above"), with Record 8's HIGH ruling; target = opposite range side; chart C2 labels excluded. OPEN: which candle/TF is the range candle in general, middle rule, Type A close location, OB key-line price, bearish OB, thick, Rejection Block, Model #1 FVG role, invalidation. Hypotheses: more sweeps => higher target odds; OB magnet/retest.
+Belief Update / ROI / Goal: Goal: freeze Theory 2. Belief: core skeleton now confirmed; range-candle selection is the main blocker for code. Knowledge ROI: high (removed ~half the ambiguity). Action: ask the remaining open items.
+Open Questions: see Record 9 "Still open".
+Next Step: bridge answers -> freeze -> SEM node + MC contract -> detector.
+---
