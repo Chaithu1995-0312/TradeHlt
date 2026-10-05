@@ -631,3 +631,13 @@ Belief Update / ROI / Goal: Goal: understand resolver/engine parity. Belief: the
 Open Questions: Which HTF window size do the parity runs actually pass to the resolver?
 Next Step: Trace the callers of the resolver's htf_id and window size before any parity re-run.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-05
+Topic: Program 12 design — M15 retired, timeframe ladder (D1 regime / H4 structure / H1 trigger), DRAFT doc
+Decision/Output: Wrote docs/research/preregistration-program-12-timeframe-ladder.md (DRAFT, nothing run, no contract sealed). Key design facts from source: (1) gap_reset_minutes=120 would reset every H4/D1 bar (bar interval > 120 min) — must be raised for the ladder; (2) M15 session windows pass only 3 of 6 H4 bar slots by clock position; (3) HTFBuilder already supports htf_clock_basis=calendar — proposed D1 clock for H4 structure; (4) this clone has no market data, so the run happens where XAUUSD_M15.csv lives; (5) the 2-year corpus gives ~3k H4 bars and the M15 ledger is n=3 (F-097), so H4 E[R] will almost certainly be INSUFFICIENT — recommend native long H4/H1/D1 history from MT5 first; (6) 0.5% x 5 concurrent = 2.5% exceeds the 2% heat cap. Step 6 trace: backtest.htf_candles_per_range moved 4 -> 16 on 2026-09-09 (63562ab); committed parity reports ran window=4 (correct at the time); F-069 re-measurement (68.69%) is dated 2026-09-10, one day later — candidate explanation, unmeasured; five scripts and the resolver's seed path still use the YAML 4. CORRECTED again in the doc: the order's "0.02% RETEST / 0.5-0.7 trades per month" row is my retracted number; other figures in the order marked UNVERIFIED.
+Belief Update / ROI / Goal: Goal: test whether the CRT footprint carries edge above M15 noise. Belief: the engine is portable to H4 by config alone, but 2 years of data cannot answer the E[R] question; data depth is the binding constraint. Knowledge ROI: high (gap-reset and session-slot defects would have silently voided an H4 run). Action: get long native history before building the script.
+Open Questions: How much native XAUUSD H4/H1/D1 history does the broker serve; US500/NAS100 data source; user sign-off on the section 12 defaults.
+Next Step: User approves defaults -> fetch native history -> seal the measurement contract -> build scripts/research/timeframe_ladder.py.
+---
