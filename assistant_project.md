@@ -588,3 +588,14 @@ Belief Update / ROI / Goal: Goal: freeze one CRT object before coding. Belief: s
 Open Questions: source (Sujan vs other); Type A close location; middle-location rule; approve/reject 3 defaults.
 Next Step: on answers, record drift-log entry / new frozen object, then MC contract, then detector.
 ---
+
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-05
+Topic: User approved 3 CRT-spec rulings (SL, trigger, FVG)
+Decision/Output: APPROVED by user (human bridge): (1) SL = manipulation candle extreme -/+ one spread (XAUUSD measured spread 0.09 USD/oz, F-082); (2) trigger = close beyond manipulation candle HIGH (long) / LOW (short), entry at that close, first exit check next bar; (3) FVG = standard 3-candle wick gap, an FVG traded into at all (partial fill) is invalid (reading pending user confirmation). Not yet written to any identity doc: source of the spec (Sujan vs other teacher) unresolved, so not recorded in sujan_identity_drift_log.md.
+Belief Update / ROI / Goal: Goal: freeze one codeable CRT object. Belief: 3 of ~8 blanks closed. Knowledge ROI: medium. Action: wait for source, Type A close location, middle rule, trigger expiry/invalidation, "thick".
+Open Questions: source; Type A close inside vs below; HTF level at extreme vs anywhere in range; trigger max wait + invalidation; thick = hand-marked or proxy.
+Next Step: on answers, write the frozen object + MC contract, then detector.
+---
