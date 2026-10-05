@@ -611,3 +611,13 @@ Decision/Output: Read-only walkthrough from crt_engine_v2.py, candle_math.py, de
 Open Questions: Which entry_semantics (legacy approval-bar vs resting_order) and sl_anchor the active XAUUSD run uses; true engine RETEST count per month needs an engine run, not the resolver rows.
 Next Step: If wanted, run the engine on one month of XAUUSD and count RETEST transitions from the event log.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-05
+Topic: Feature-schema state derivation (CRTStateResolver + FeatureStateEncoder), read-only
+Decision/Output: Explained the resolver pipeline: encoder (integer value -> declared state), lifecycle resets, funnel order, YAML predicate loop, sticky dwell and transition validity. The gates share the engine thresholds, and the retest geometry reuses the engine's own function. atr_abs = vector atr * close. EXECUTION and RESOLUTION cannot fire on real vectors. Two doc drifts noted (39-dim docstring; atr_multiplier_min 1.5 comment in market_crt_states.yaml), not fixed. No code or config change.
+Belief Update / ROI / Goal: Goal: understand state derivation parity. Belief: resolver/engine divergence is construction-level (F-069), not threshold-level. Knowledge ROI: medium. Action: none.
+Open Questions: Whether to fix the two doc drifts; the 88.16% vs 68.69% parity gap is still unattributed.
+Next Step: User choice: fix the doc drift, or run engine vs resolver on one month of XAUUSD and compare per-bar states.
+---
