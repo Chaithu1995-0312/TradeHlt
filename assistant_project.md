@@ -577,3 +577,14 @@ Belief Update / ROI / Goal: Goal: find an entry the CRT spine can actually monet
 Open Questions: none blocking. Swap unmeasured (long-horizon net optimistic).
 Next Step: venv\Scripts\python.exe scripts\research\state_entry_walk.py --csv data\mt5\XAUUSD_M15.csv ; register F-114 with the result (positive or null).
 ---
+
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-05
+Topic: Review of user-pasted "CRT Model Master Specification" against recorded Sujan identity
+Decision/Output: Review only, no code/ontology change. Checked against SUJAN_CRT_IDENTITY_EXTRACTION_SYSTEM.md, SEM-033 (docs/research/sujan_manipulation_object.md, frozen 2026-08-28: manipulation = later candle purges range high/low AND closes back inside; range = parent wick-to-wick; no thresholds) and sujan_identity_drift_log.md. Flagged: source identity unknown (target = opposite range side and black/blue lines / NAS100 OB not in Sujan sources -> either drift or a new object); Type A may contradict SEM-033 close-inside rule; "thick" undefined (needs supplied candles or approved proxy); OB definition only covers the bullish case; "middle" location rule ambiguous vs extreme sweep; trigger lacks max-wait/invalidation/Type-B self-trigger; multiple-sweeps note is hypothesis not rule; 1M vs 1Mo naming; Rejection Block UNKNOWN. Proposed UNVALIDATED defaults: SL beyond manipulation extreme + spread; trigger = close above manipulation candle HIGH; FVG = standard 3-candle wick gap. Execution note: fill at trigger close, first exit check next bar (F-110).
+Belief Update / ROI / Goal: Goal: freeze one CRT object before coding. Belief: summary is not yet codeable; identity source must be settled first. Knowledge ROI: medium (prevents another SEM-031-style mutation). Action: wait for user answers.
+Open Questions: source (Sujan vs other); Type A close location; middle-location rule; approve/reject 3 defaults.
+Next Step: on answers, record drift-log entry / new frozen object, then MC contract, then detector.
+---
