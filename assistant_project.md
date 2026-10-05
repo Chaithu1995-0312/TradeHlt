@@ -621,3 +621,13 @@ Belief Update / ROI / Goal: Goal: understand state derivation parity. Belief: re
 Open Questions: Whether to fix the two doc drifts; the 88.16% vs 68.69% parity gap is still unattributed.
 Next Step: User choice: fix the doc drift, or run engine vs resolver on one month of XAUUSD and compare per-bar states.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-05
+Topic: Resolver state-by-state formulas extracted from feature_pipeline, ontology, YAML and resolver source (read-only)
+Decision/Output: Documented how each feature feeding the resolver is computed and each state's gates, with active values (swing_window 2, retest_lookback 10, band 1.0, disp mult 0.6, EMA 9/21, 0.1/0.15/0.3 retest geometry, TTL 495/124h). Flagged four inconsistencies: HTF window 4 (resolver default) vs 16 (active backtest), stale build_htf_id_timeline docstring, non-strict pipeline sweep vs strict resolver sweep, EMA 9/21 vs engine 2/5. No code or config change.
+Belief Update / ROI / Goal: Goal: understand resolver/engine parity. Belief: the 4-vs-16 HTF window is a candidate driver of the F-069 parity gap, unmeasured. Knowledge ROI: medium-high. Action: none.
+Open Questions: Which HTF window size do the parity runs actually pass to the resolver?
+Next Step: Trace the callers of the resolver's htf_id and window size before any parity re-run.
+---
