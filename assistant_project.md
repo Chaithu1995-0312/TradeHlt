@@ -566,3 +566,14 @@ Belief Update / ROI / Goal: none
 Open Questions: none
 Next Step: none
 ---
+
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-05
+Topic: CRT state-transition entry study (MC-STATEENTRY-XAUUSD-M15-V1) — instrument built, real run pending
+Decision/Output: User asked which CRT state entry points show positive multi_tp_walk R, ignoring intrabar, with N future candles. Source: the engine opens trades at ONE place (RETEST -> soft confirmation -> EXECUTION, crt_engine_v2.py:4299-4333; entry = retest close, approved one bar later, F-110). Built src/research/state_entry/{extract,walk,evaluate}.py + scripts/research/state_entry_walk.py (SITS SCR-499) + sealed contract MC-STATEENTRY-XAUUSD-M15-V1 + tests/research/test_state_entry_walk.py (16 green). Entry kinds: ENTER_SWEEP/SHADOW_PENDING/DISPLACEMENT/EXPANSION/RETEST, EXECUTION_LEGACY (backtest parity), EXECUTION_AT_APPROVAL, REJECTED_AT_CONFIRMATION. Arms: close_only PRIMARY (user decision; bars collapsed to close, stop fills at the close beyond it), sl_first REFERENCE. Horizons 4..480. 70/30 chrono split + 96-bar embargo, BH-FDR q=0.10, long_only (short cells) + 100-seed hour-matched random_entry controls. Contract AMENDED before any real-corpus R: long_only clause vacuous for long cells (forcing a long unit long reproduces it) — caught writing the floor. Synthetic smoke only (corpus not in cloud clone): parity holds — EXECUTION_LEGACY sl_first = STOPPED/4 bars/-1.0R vs ledger STOPPED/4 candles; close_only books -1.62R on the same trade. Synthetic funnel SWEEP 860 -> DISP 95 -> EXP 40 -> RETEST 5 -> TRADE 1. Paper-rail plan DROPPED for now (user). Pre-existing reds reported, not fixed: test_measurement_contract (MC-VCRT V1/V2/VCRTPRIOR schema violations), test_script_registry grandfather x2.
+Belief Update / ROI / Goal: Goal: find an entry the CRT spine can actually monetise. Belief: unchanged until the real run — prior is null (F-086/F-106/F-081/F-084); RETEST/EXECUTION cells will almost surely be INSUFFICIENT on 47k bars (F-110: 3 trades), so the powered test is on SWEEP/DISPLACEMENT/EXPANSION events. Knowledge ROI: medium (first test of engine transition EVENTS vs occupancy). Action: run on the Windows corpus.
+Open Questions: none blocking. Swap unmeasured (long-horizon net optimistic).
+Next Step: venv\Scripts\python.exe scripts\research\state_entry_walk.py --csv data\mt5\XAUUSD_M15.csv ; register F-114 with the result (positive or null).
+---

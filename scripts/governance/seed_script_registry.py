@@ -782,6 +782,35 @@ OVERLAYS: list[dict[str, Any]] = [
         ),
     },
 
+    # MC-STATEENTRY-XAUUSD-M15-V1 (2026-10-05): CRT engine transition events as entries.
+    {
+        "path": "scripts/research/state_entry_walk.py",
+        "category": "RESEARCH_RUNNER",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "EXTRACTED_TO_SRC",
+        "logic_in_script": False,
+        "dest_modules": [
+            "src/research/state_entry/extract.py",
+            "src/research/state_entry/walk.py",
+            "src/research/state_entry/evaluate.py",
+        ],
+        "purpose": (
+            "Measures every CRT ENGINE state-transition event (SWEEP, SHADOW_PENDING, "
+            "DISPLACEMENT, EXPANSION, RETEST, the traded EXECUTION and the refused "
+            "confirmations) as a hypothetical entry under multi_tp_walk (SEM-017) over "
+            "4..480 forward bars, close-only exits primary and SL-first reference, with a "
+            "70/30 chronological split, BH-FDR and long_only/random_entry controls. Reads "
+            "one unmodified ACTIVE-config backtest's events.jsonl, joined to the corpus by "
+            "timestamp."
+        ),
+        "task_refs": ["MC-STATEENTRY-XAUUSD-M15-V1", "SEM-017", "SITS"],
+        "tests": ["tests/research/test_state_entry_walk.py"],
+        "notes": (
+            "Thin wrapper (PR-6 pattern). Diagnostic only: economic_claims_allowed false, "
+            "no promotion, no G001, no ACTIVE_VERSION change (CLAUDE.md 6.5)."
+        ),
+    },
+
     # STORY-12.3: asset-coverage census + PRIMARY seed (P0, no src/ edit).
     {
         "path": "scripts/analysis/asset_writer_census.py",
