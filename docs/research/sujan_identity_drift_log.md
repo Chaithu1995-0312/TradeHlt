@@ -10,6 +10,97 @@ It is not a playbook, not a `SEM-*`, not a measurement contract.
 
 ---
 
+## Record 11 — 2026-10-06 — Sujan Theory 2: bridge chart rulings + bridge audit adopted; ready for a sealed test
+
+**Kind:** identity extract plus labelled proxies. Records 8–10 stand as written. **Not** a freeze of the visual concepts; the proxies below are approved for **measurement only**.
+**Naming:** the bridge's audit proposed renaming the model (from "Sujan Theory 2" to "user CRT"). The bridge then ruled: "sujan is fine keep as designed by you". The name stays "Sujan Theory 2"; the bridge's "my own knowledge" origin is recorded in Record 10.
+
+### New bridge statements (GBPCHF 1m charts + circled AUDCHF read)
+
+- "Crt h & low kinda key level undali … deenlo madhyalo vachindi key level": the HTF key level must lie **inside** the CRT range; here it sits in the middle.
+- "Like this, big bearish bar violently takes liquidity of **recent low or range low**": the swept level can be a recent low inside the range, not only the range low.
+- "Green ribbon down below … 1D FVG acts as a key level. In 1 hr Ltf, marking crt range high & low (black lines)". "forget blue line".
+- The bridge circled this AUDCHF read: range high 0.58826 (target), HTF key location 0.57558 inside the range, range low 0.57317 swept, closed back inside.
+- Analyst reading of GBPCHF, shown to the bridge and neither confirmed nor rejected: CRT range 1.09953 / 1.09832; key level 1.09874 (pink) in the middle; the recent low 1.09878 taken by the big bearish bar down to 1.09858, through the key level.
+
+### Rulings (bridge audit 2026-10-06, adopted)
+
+| Item | Ruling | Status |
+|---|---|---|
+| Trigger | candle CLOSES above the manipulation candle HIGH (short: below its LOW) | CONFIRMED. "Close back inside" = non-model **control** |
+| Key touch | the manipulation must reach the HTF key-level zone; the zone lies anywhere inside the range | CONFIRMED. "Only inside the range" = control |
+| Timing | any later candle; the setup cancels on a new extreme beyond the manipulation candle, or if the target is hit first | CONFIRMED. "Next candle only" = control |
+| TF pairs | 1W→4H, 1D→1H, 4H→15M | CONFIRMED (1W→4H from the bridge's weekly-FVG/4H example) |
+| TF pair 15M→1M | proposed in the audit from the GBPCHF 1m screenshot; the bridge's words for that chart were "1D FVG … 1 hr Ltf" | NOT CONFIRMED; optional extra |
+| CRT range | two forms: (a) high/low of one location-TF candle (NAS100); (b) range on the execution chart around the key level (GBPCHF, AUDCHF) | CONFIRMED (both) |
+
+### Proxies (labelled; approved for measurement only; each linked to its concept)
+
+| Concept | Proxy | Variants |
+|---|---|---|
+| Range form (b), "black lines by eye" | the nearest confirmed swing high above and swing low below the key level, before the manipulation (pivot, k=2 bars each side, usable only once confirmed) | — |
+| "Recent low" | lowest low of the last N execution bars inside the range | N = 20 primary; 10, 40 robustness |
+| "Thick / violent" | body ≥ X·ATR14 (price units); body/ATR recorded on every candidate | X ∈ {0.5 (default), 1.0, 1.5} |
+| OB zone (for "touch") | the zone the manipulation must intersect | full candle (wick to wick) · body |
+| Bearish OB | mirror of the bullish rule (a bullish candle taking the high of ≥1 preceding bearish candle) | never stated; proxy |
+
+### Still open (does not block a sealed research test)
+
+Rejection Block definition · a full bearish chart walk-through to confirm the mirror · whether 15M→1M is a real pair · the exact GBPCHF line assignment above.
+
+```text
+Status: identity NOT YET FROZEN (visual concepts). Measurement object defined:
+next = MC-SUJANT2-XAUUSD-V1, sealed before code results, then src/research/sujan_t2/.
+Live automation: OUT until a variant passes the sealed test (F-073).
+```
+
+---
+
+## Record 10 — 2026-10-05 — Sujan Theory 2 from the bridge's OWN words (refines Records 8–9)
+
+**Kind:** identity extract. Records 8–9 stand as written. **Not** a freeze.
+**Source:** the bridge's own messages from the teaching chat, relayed verbatim 2026-10-05. Every AI turn is excluded: its summaries, level picks, the AUDCHF/USDJPY/USDCHF reads. This is the highest-authority source on disk for Theory 2. The bridge calls it "my own knowledge … my model"; it is named Theory 2 on the bridge's instruction. **Stated end goal:** a live algorithm that places trades in the bridge's broker account, once the model is "perfect".
+
+### Bridge's own statements (quoted)
+
+| # | Quote (abridged) | Rule it states |
+|---|---|---|
+| Q1 | "down thick close bearish candle … shaking out the old low (dumb money) … then, bullish close above down thick bearish candle. Tats an bullish entry (pale blue line). … range high & low marked with black lines alongside, a htf key level (redline) on downside. This is an entire system. Target is opp. Range" | Type A + trigger + range + key level below + target |
+| Q2 | "It's a complete close of thick bearish downclose candle. Bullish entry after this." | manipulation must close first |
+| Q3 | "C2 on charts. Plz don't consider … tat C2 has different rules" · "plz don't call C2, or with other names … I'm showing you entire system" | no C2 / no other labels |
+| Q4 | "Whenever there is a key level on HTF whether it's a FVG, order block, rejection block. All these acts as a key level. Without HTF key levels, no crt forms" | location prerequisite |
+| Q5 | "weekly fvg, we treat as a location to trade the CRT model above it … range in 4 hr ltf … two black lines (crt high & crt low) … red line (tats a entry trigger) … tat candle only takes the liquidity of existing previous low & closes back inside crt range tats manipulation" | Type B; on this chart red = entry trigger |
+| Q6 | "manipulations happen in two phases … down thick close bearish candle … other … thick bullish wick sweeps the old low (liquidation). Any bullish candle closed above tat thick wick tats a trigger & opposite side is the target" | two manipulation types; trigger |
+| Q7 | "Bullish candle closed above manipulation candle. Tats an entry." | trigger |
+| Q8 | "For buy crt trade to happen it must exists near HTF location. Tat thick bearish bodied candle swept the previous **bullish** candle low defines as a order block … must sweep the previous candle low atleast 1 candle. If two more candles tats big one" · "Preceding candle must sweep" | OB definition |
+| Q9 | "15 min. How range forms exactly near 4 hr order block … if low purges with thick bearish down close candle … I ll be alert for bullish entry targeting opposite range" · "It's a 4 hr candle high & low" | range = a 4H candle, executed on 15M |
+| Q10 | "htf location window must be higher time frame than execution time frames … 1 D … then ltf executions would be on 1 hr" | TF hierarchy (only 1D→1H stated in words) |
+| Q11 | "1D htf orderblock swept preceding 2 candles … marking red line (key level) … low black line for preceding 2 candles sweep … 1+ more sweeps, it increases probability of hitting targets" | OB strength (hypothesis) |
+| Q12 | "if there is an immediate close of right candle bullish candle then, odds are high … left side sweep & right bullish close … tat red line acts as a magnet for retest" | OB quality (hypothesis) |
+| Q13 | "1D … 157.414 (htf location) … thick candle sweeps preceding candles … comes down to 1 hr ltf, there is a thick down close candle sweeps low & **immediate** bullish up candle & closed **inside range** near 1D order block … engine always works same, we need to see with right lens" | Type A trigger = next candle, closing back inside |
+| Q14 | "wait how price reacts at htf orderblock … if it **touches htf pd array & closes back inside range**, then, it's a buy trigger" | a third trigger wording; manipulation must touch the zone |
+
+### What changes vs Records 8–9
+
+1. **Middle rule.** Q14 ("touches htf pd array") and Q8/Q9 ("near HTF location", "range forms exactly near 4 hr order block") point to: the manipulation must **touch** the HTF zone. Record 9's AMBIGUOUS leans to "touch"; the bridge still needs to confirm it.
+2. **Type A.** Q13 says the thick candle sweeps the low and the next candle "closed inside range". That implies the thick candle itself closes **outside** (below) the range. This supports Record 8 row 4a.
+3. **Trigger: three wordings that disagree.**
+   - Q7/Q1: close above the manipulation candle (bridge ruling: above its HIGH).
+   - Q13: the **immediate** next bullish candle closes **back inside the range**.
+   - Q14: price **touches the PD array and closes back inside the range**.
+   - Q6 adds "**any** bullish candle closed above".
+   - Unresolved: "next candle only" vs "any later candle", and "above the manipulation high" vs "back inside the range". These are different conditions whenever the manipulation high sits below the range low.
+4. **OB.** The swept preceding candle is **bullish** (Q8). This is new.
+5. **Line colours are not consistent and are never rules.** Red = HTF key level (Q1, Q11) but red = entry trigger (Q5). Pale blue = entry (Q1). Black = range or swept low.
+6. **Range candle.** Q9: the range is a **4H candle's** high/low, watched on 15M, near a 4H OB. Q5/Q13: the range is drawn on the execution chart (4H under a weekly FVG; 1H under a 1D OB). Whether the range candle is the location candle, a candle one TF above execution, or something else stays OPEN.
+7. **The other LLM's "HTF C2 manipulation-complete" rule is dropped.** The bridge used the label once, defined it, then withdrew it (Q3).
+
+```text
+Status: NOT YET FROZEN. Blocking: trigger (point 3) and range candle (point 6).
+```
+
+---
+
 ## Record 9 — 2026-10-05 — Sujan Theory 2: design extracted from the bridge's teaching transcript (refines Record 8)
 
 **Kind:** identity extract. Refines Record 8, which stays as written. **Not** a freeze.

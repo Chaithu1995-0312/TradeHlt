@@ -621,3 +621,14 @@ Belief Update / ROI / Goal: Goal: freeze Theory 2. Belief: core skeleton now con
 Open Questions: see Record 9 "Still open".
 Next Step: bridge answers -> freeze -> SEM node + MC contract -> detector.
 ---
+
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-06
+Topic: Sujan Theory 2 — Records 10+11 committed (bridge's own words, chart rulings, audit adopted)
+Decision/Output: Record 10 = bridge's own words from the teaching chat (14 quotes). Record 11 = GBPCHF/AUDCHF rulings ("key level inside CRT range, e.g. middle"; "big bearish bar takes recent low or range low"; blue line dropped) + bridge audit adopted: trigger = close beyond manipulation candle HIGH/LOW (close-back-inside = control); manipulation must touch key zone (inside-only = control); any later candle w/ cancel on new extreme or target-first (next-only = control); TF pairs 1W->4H, 1D->1H, 4H->15M (15M->1M NOT confirmed — bridge's words for that chart were 1D/1H); range forms (a) one location-TF candle, (b) execution-chart range. Proxies approved for measurement only: swing-enclosed range (k=2), recent low N=20 (10/40), thick body>=X*ATR14 X in {0.5,1.0,1.5}, OB zone wick|body, bearish OB mirror. Name kept "Sujan Theory 2" per bridge ("sujan is fine keep as designed by you").
+Belief Update / ROI / Goal: Goal: a sealed test of Theory 2. Belief: object now measurable; visual identity still not frozen. Knowledge ROI: high. Action: seal MC-SUJANT2-XAUUSD-V1, then build src/research/sujan_t2/.
+Open Questions: Rejection Block; bearish walk-through; 15M->1M; exact GBPCHF line assignment.
+Next Step: seal contract, build detector + tests.
+---
