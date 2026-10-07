@@ -306,6 +306,22 @@ Written by `PromotionManager._execute_promotion()` on every successful promote.
 
 ---
 
+## `rr_optimal_exit` — Post-Entry Max-TP Labeller (hindsight, training only)
+
+Consumed by `src/config_layer/rr/rr_optimal_exit.py::OptimalExitLabeler`.
+
+| Key                     | Type  | Default      | Purpose                                                        |
+| ----------------------- | ----- | ------------ | -------------------------------------------------------------- |
+| `max_forward_bars`      | int   | `32`         | Bars scanned after entry (32 × M15 = 8h)                       |
+| `fee_pct_per_side`      | float | `0.0005`     | Commission per leg, fraction of notional                       |
+| `slippage_pct_per_side` | float | `0.0001`     | Slippage per leg, fraction of notional                         |
+| `spread_pct`            | float | `0.0002`     | Spread paid once per round trip                                |
+| `sl_range_buffer_frac`  | float | `0.1`        | SL buffer beyond entry range, fraction of range height         |
+| `min_net_return_pct`    | float | `0.0`        | Net profit at max TP must exceed `investment × this`           |
+| `same_bar_policy`       | str   | `"sl_first"` | `sl_first` (pessimistic) or `tp_first` when a bar hits both    |
+
+---
+
 ## `feature_monitor` — Drift Detector
 
 | Key             | Type  | Default | Purpose                                   |

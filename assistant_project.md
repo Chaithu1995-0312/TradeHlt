@@ -1115,3 +1115,29 @@ Open Questions: None.
 Next Step: When new modules are added, update Section 3 cross-reference matrix
   in lockstep — it is the single chokepoint where module paths appear.
 ---
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-07
+Topic: Post-entry max-TP labeller with entry-range SL and round-trip profit gate
+Decision/Output:
+  - NEW src/config_layer/rr/rr_optimal_exit.py — OptimalExitLabeler (hindsight,
+    training/analysis only; never wired into BacktestRunner/EngineRunner).
+    * SL = opposite side of entry range ± sl_range_buffer_frac × range height.
+    * Scans bars (entry_idx, entry_idx+max_forward_bars]; TP = MFE before SL hit.
+      Same-bar SL+new-extreme resolved by same_bar_policy (sl_first default).
+    * Round trip: entry (fee+slip)×inv + spread×inv, exit (fee+slip)×qty×exit.
+      Closed-form tp_min: LONG E(1+c+s+m)/(1-c), SHORT E(1-c-s-m)/(1+c).
+    * APPROVE only if net_profit(tp_max) > investment × min_net_return_pct.
+    * Returns decision/metrics/hard_failures/warnings (EXAMPLE_SERVICE shape);
+      metrics: sl, tp_max, tp_min_required, rr, net_profit, net_return_pct,
+      net_loss_at_sl, bars_to_tp, sl_hit_bar, bars_scanned.
+  - NEW config section `rr_optimal_exit` (params hash unaffected — verified).
+  - docs/CONFIG_REFERENCE.md section added.
+  - tests/test_rr_optimal_exit.py: 14 pass; suite delta = +14 pass, same 12
+    pre-existing failures.
+Open Questions: "Min profit > investment" interpreted as net profit after
+  round-trip costs > investment × min_net_return_pct (default 0 = break-even
+  floor). Set to 1.0 if a literal 100% return is intended.
+Next Step: Feed tp_max/rr labels into rr_dataset_builder as an alternative RR
+  target, or add a CLI in scripts/analysis/ over trades CSV.
+---

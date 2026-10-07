@@ -274,6 +274,15 @@
     "gap_reset_minutes": 120,
     "event_flush_every": 100
   },
+  "rr_optimal_exit": {
+    "max_forward_bars": 32,
+    "fee_pct_per_side": 0.0005,
+    "slippage_pct_per_side": 0.0001,
+    "spread_pct": 0.0002,
+    "sl_range_buffer_frac": 0.1,
+    "min_net_return_pct": 0.0,
+    "same_bar_policy": "sl_first"
+  },
   "feature_monitor": {
     "window_size": 500,
     "hard_drift_z": 3.0,
