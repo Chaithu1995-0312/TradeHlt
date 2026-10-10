@@ -345,6 +345,15 @@ class CapitalCurve:
 # [G1] SLIPPAGE MODEL
 # ─────────────────────────────────────────────────────────────────
 
+def signed_half_spread(direction: Direction, spread_half: float) -> float:
+    """
+    Half-spread in the sign that is adverse on ENTRY for `direction`.
+    LONG pays the ask (+), SHORT sells the bid (-). The exit uses the opposite
+    sign: exit_fill = exit_raw + x_slip - signed_half_spread(...).
+    """
+    return spread_half if direction == Direction.LONG else -spread_half
+
+
 class SlippageModel:
     """
     Simulates realistic fill price offset.
@@ -376,9 +385,11 @@ class SlippageModel:
         """
         e_slip = self.entry_slip(atr, direction)
         x_slip = self.exit_slip(atr, direction)
-        # [G2] Spread: buyer pays ask (entry), seller receives bid (exit)
-        entry_fill = entry_raw + e_slip + spread_half
-        exit_fill  = exit_raw  + x_slip - spread_half
+        # [G2] Spread, adverse for either direction: a long buys the ask and sells
+        # the bid; a short sells the bid and buys back the ask.
+        spread_signed = signed_half_spread(direction, spread_half)
+        entry_fill = entry_raw + e_slip + spread_signed
+        exit_fill  = exit_raw  + x_slip - spread_signed
         total_slip = abs(e_slip) + abs(x_slip)
         spread_cost = 2 * spread_half   # round-trip spread cost in price units
         return entry_fill, exit_fill, total_slip, spread_cost
@@ -720,7 +731,8 @@ class TradeJournal:
         )
         feature_map = {name: feature_vector[i] for i, name in enumerate(CANONICAL_FEATURES)}
         e_slip = self.slip.entry_slip(atr, trade.direction)
-        entry_fill = trade.entry_price + e_slip + spread_half
+        spread_signed = signed_half_spread(trade.direction, spread_half)
+        entry_fill = trade.entry_price + e_slip + spread_signed
 
         # [FIX-SL] Dynamic SL: if slippage eats into the SL distance so that
         # abs(entry_fill - sl_price) < 20% ATR (matching sl_atr_buffer in CRT
@@ -791,7 +803,8 @@ class TradeJournal:
 
         # [G1+G2] Realistic exit fill
         x_slip = self.slip.exit_slip(atr, direction)
-        exit_fill = exit_price_raw + x_slip - spread_half
+        spread_signed = signed_half_spread(direction, spread_half)
+        exit_fill = exit_price_raw + x_slip - spread_signed
 
         rec.exit_price_fill = exit_fill
         rec.exit_reason     = exit_reason
@@ -812,7 +825,7 @@ class TradeJournal:
         rec.pnl_rr_net = (price_move_net / self.pip_size) / risk_pips if risk_pips > 0 else 0.0
 
         # Cost breakdown
-        rec.slippage_pips = abs(rec.entry_price_fill - rec.entry_price_raw - spread_half) / self.pip_size \
+        rec.slippage_pips = abs(rec.entry_price_fill - rec.entry_price_raw - spread_signed) / self.pip_size \
                             + abs(x_slip) / self.pip_size
         rec.spread_pips   = (spread_half * 2) / self.pip_size
 

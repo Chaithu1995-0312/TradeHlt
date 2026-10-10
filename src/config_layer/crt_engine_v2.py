@@ -1138,7 +1138,8 @@ class ExecutionEngine:
         return "CRT-" + hashlib.md5(raw.encode("utf-8")).hexdigest()[:16]
 
     def build_trade(
-        self, state: EngineState, risk_engine: Optional[UltronRiskEngine] = None
+        self, state: EngineState, risk_engine: Optional[UltronRiskEngine] = None,
+        entry_price: Optional[float] = None,
     ) -> Optional[Trade]:
         if state.active_range is None or state.sweep_event is None:
             self.log.error("Cannot build trade: missing range or sweep.")
@@ -1148,7 +1149,9 @@ class ExecutionEngine:
         direction = state.direction
 
         atr = state.atr
-        entry = state.retest_candle.close
+        # Entry is the price known when the decision is made (confirming-bar close);
+        # falls back to the retest-bar close only for callers that pass no price.
+        entry = entry_price if entry_price is not None else state.retest_candle.close
 
         # ── SL anchored to displacement candle extreme ────────────────────────
         # The displacement candle is the structural event that created the move.
@@ -1536,7 +1539,9 @@ class CRTEngine:
 
                 # ── Range position filter (kept from binary gate) ──
                 rng = self.state.active_range
-                entry_price = self.state.retest_candle.close
+                # No lookahead: the decision uses the confirming bar in full, so the
+                # entry is that bar's close, not the earlier retest-bar close.
+                entry_price = candle.close
                 mid = (rng.h_ref + rng.l_ref) / 2
                 if self.state.direction == Direction.LONG and entry_price > mid:
                     self.ev_log.record("FILTER_REJECTED", candle, reason="Not in discount zone")
@@ -1554,7 +1559,9 @@ class CRTEngine:
                         self.state.risk_score.score_override = final_S
 
                     self.sm.try_retest_to_execution(self.state, candle, self.ev_log)
-                    trade = self.executor.build_trade(self.state, self.risk)
+                    trade = self.executor.build_trade(
+                        self.state, self.risk, entry_price=entry_price
+                    )
 
                     if trade:
                         self.executor.open_trade(trade, candle.timestamp)

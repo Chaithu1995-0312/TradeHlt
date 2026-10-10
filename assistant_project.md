@@ -1273,3 +1273,17 @@ Decision/Output: |
 Open Questions: Fix F2 (spread sign) and re-validate? Test F1 (enter at confirmation-bar close)? Fix F4 scale? Pick a loser day next?
 Next Step: User prioritises F1-F4 fixes; validation numbers after F2 supersede the +0.037R approval.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-10
+Topic: Fix F2 (short spread sign) and F1 (entry lookahead); corrected baseline
+Decision/Output: |
+  backtest_v2.py: signed_half_spread (adverse for both directions). crt_engine_v2.py: build_trade(entry_price=...),
+  entry = confirming-bar close. 11 new tests; suite 12 failed (same pre-existing) / 913 passed.
+  Corrected results: M15 9 trades net +0.68R (exp +0.08R, SE 0.34); H1 htf24 12 trades net -0.05R (exp -0.004R).
+  Validator M15: REJECT on trade count (9 < 10); expectancy +0.085R passes. Earlier +0.037R APPROVE superseded.
+  results/fix_spread_lookahead/REPORT.md.
+Open Questions: Next-bar-open entry instead of confirming close? F3 (TP2/runner), F4 (feature scale) still open.
+Next Step: Freeze this baseline and run the outcome-conditioned direction policies A-D (pilot, low power).
+---
