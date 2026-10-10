@@ -1317,3 +1317,19 @@ Decision/Output: |
 Open Questions: Run the same weekly rules across all ~104 weeks (and more instruments) for a real test?
 Next Step: User decides on extending beyond one month; nothing promoted.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-10
+Topic: Hour-by-hour feature-schema trace of a week (XAUUSD H1, 2025-07-21..25): signs in LONG vs SELL ranges
+Decision/Output: |
+  scripts/analysis/week_feature_trace.py (+4 tests); results/week_feature_trace_2025_07_21/{REPORT.md,tables.md,trace.csv}.
+  Ranges (hindsight): LONG = open -> Wed 07-23 03:00 peak (3438.82), SELL = after -> Fri.
+  Level features (trend_bias, ema_spread, macd_line): 100% positive in LONG, 77-79% negative in SELL; rsi mean 66.6 vs 33.8.
+  They lag: trend_bias flipped Wed 18:00, after 36% of the 113.8-pt fall. momentum_score/macd_hist/trend_strength inconsistent.
+  Causal next-bar hit: trend_bias 60% (68/114, p=0.05, 10 features, autocorrelated) -> not evidence.
+  Truncation test: volatility_regime (11/21), swing_high, swing_low, break_of_structure, lower_low are NON-CAUSAL
+  (full-file rank; centred +-2 swing window, feature_pipeline.py:274, 311-312). F4 scale still present (signs valid).
+Open Questions: Fix non-causal features (volatility_regime, centred swings)? Trace a second week / a SELL-only week?
+Next Step: User decides on fixing the non-causal features before any feature-based study.
+---
