@@ -1,0 +1,573 @@
+{
+ "rows": [
+  {
+   "ts": "2025-05-21T20:00:00",
+   "o": 3303.15,
+   "h": 3316.39,
+   "l": 3302.82,
+   "c": 3316.38,
+   "vol": 9811.0,
+   "state": "RANGE",
+   "atr": 12.1343,
+   "action": "NONE",
+   "htf": "XAUUSD-HTF-000246",
+   "rng_h": 3320.55,
+   "rng_l": 3285.51,
+   "ema_f": 3312.6672,
+   "ema_s": 3309.7169
+  },
+  {
+   "ts": "2025-05-21T21:00:00",
+   "o": 3316.38,
+   "h": 3316.43,
+   "l": 3312.03,
+   "c": 3314.41,
+   "vol": 6646.0,
+   "state": "RANGE",
+   "atr": 11.9486,
+   "action": "NONE",
+   "htf": "XAUUSD-HTF-000246",
+   "rng_h": 3320.55,
+   "rng_l": 3285.51,
+   "ema_f": 3313.8291,
+   "ema_s": 3311.2812
+  },
+  {
+   "ts": "2025-05-21T22:00:00",
+   "o": 3314.38,
+   "h": 3324.86,
+   "l": 3314.38,
+   "c": 3318.33,
+   "vol": 7292.0,
+   "state": "SWEEP",
+   "atr": 11.1821,
+   "action": "SWEEP_DETECTED",
+   "htf": "XAUUSD-HTF-000246",
+   "rng_h": 3320.55,
+   "rng_l": 3285.51,
+   "ema_f": 3316.8297,
+   "ema_s": 3313.6308
+  },
+  {
+   "ts": "2025-05-21T23:00:00",
+   "o": 3318.33,
+   "h": 3319.85,
+   "l": 3313.22,
+   "c": 3315.11,
+   "vol": 3309.0,
+   "state": "SWEEP",
+   "atr": 10.9657,
+   "action": "NONE",
+   "htf": "XAUUSD-HTF-000246",
+   "rng_h": 3320.55,
+   "rng_l": 3285.51,
+   "ema_f": 3315.6832,
+   "ema_s": 3314.1239
+  },
+  {
+   "ts": "2025-05-22T01:00:00",
+   "o": 3314.74,
+   "h": 3321.15,
+   "l": 3314.74,
+   "c": 3318.04,
+   "vol": 3392.0,
+   "state": "SWEEP",
+   "atr": 10.545,
+   "action": "NONE",
+   "htf": "XAUUSD-HTF-000246",
+   "rng_h": 3320.55,
+   "rng_l": 3285.51,
+   "ema_f": 3317.2544,
+   "ema_s": 3315.4293
+  },
+  {
+   "ts": "2025-05-22T02:00:00",
+   "o": 3318.04,
+   "h": 3324.26,
+   "l": 3317.39,
+   "c": 3320.1,
+   "vol": 4055.0,
+   "state": "SWEEP",
+   "atr": 10.4436,
+   "action": "NONE",
+   "htf": "XAUUSD-HTF-000246",
+   "rng_h": 3320.55,
+   "rng_l": 3285.51,
+   "ema_f": 3319.1515,
+   "ema_s": 3316.9862
+  },
+  {
+   "ts": "2025-05-22T03:00:00",
+   "o": 3320.1,
+   "h": 3326.17,
+   "l": 3319.47,
+   "c": 3323.82,
+   "vol": 5683.0,
+   "state": "SWEEP",
+   "atr": 10.46,
+   "action": "NONE",
+   "htf": "XAUUSD-HTF-000246",
+   "rng_h": 3320.55,
+   "rng_l": 3285.51,
+   "ema_f": 3322.2638,
+   "ema_s": 3319.2641
+  },
+  {
+   "ts": "2025-05-22T04:00:00",
+   "o": 3323.82,
+   "h": 3342.92,
+   "l": 3320.37,
+   "c": 3338.17,
+   "vol": 11093.0,
+   "state": "SWEEP",
+   "atr": 11.3793,
+   "action": "NONE",
+   "htf": "XAUUSD-HTF-000246",
+   "rng_h": 3320.55,
+   "rng_l": 3285.51,
+   "ema_f": 3332.8679,
+   "ema_s": 3325.5661
+  },
+  {
+   "ts": "2025-05-22T05:00:00",
+   "o": 3338.13,
+   "h": 3344.72,
+   "l": 3336.58,
+   "c": 3341.17,
+   "vol": 7609.0,
+   "state": "SWEEP",
+   "atr": 11.2593,
+   "action": "NONE",
+   "htf": "XAUUSD-HTF-000246",
+   "rng_h": 3320.55,
+   "rng_l": 3285.51,
+   "ema_f": 3338.4026,
+   "ema_s": 3330.7674
+  },
+  {
+   "ts": "2025-05-22T06:00:00",
+   "o": 3341.17,
+   "h": 3345.43,
+   "l": 3334.97,
+   "c": 3335.43,
+   "vol": 6092.0,
+   "state": "SWEEP",
+   "atr": 10.4407,
+   "action": "NONE",
+   "htf": "XAUUSD-HTF-000246",
+   "rng_h": 3320.55,
+   "rng_l": 3285.51,
+   "ema_f": 3336.4209,
+   "ema_s": 3332.3216
+  },
+  {
+   "ts": "2025-05-22T07:00:00",
+   "o": 3335.43,
+   "h": 3339.13,
+   "l": 3332.78,
+   "c": 3338.55,
+   "vol": 4656.0,
+   "state": "SWEEP",
+   "atr": 9.8829,
+   "action": "NONE",
+   "htf": "XAUUSD-HTF-000246",
+   "rng_h": 3320.55,
+   "rng_l": 3285.51,
+   "ema_f": 3337.8403,
+   "ema_s": 3334.3977
+  },
+  {
+   "ts": "2025-05-22T08:00:00",
+   "o": 3338.5,
+   "h": 3339.56,
+   "l": 3326.36,
+   "c": 3332.38,
+   "vol": 5753.0,
+   "state": "SWEEP",
+   "atr": 9.9436,
+   "action": "NONE",
+   "htf": "XAUUSD-HTF-000246",
+   "rng_h": 3320.55,
+   "rng_l": 3285.51,
+   "ema_f": 3334.2001,
+   "ema_s": 3333.7252
+  },
+  {
+   "ts": "2025-05-22T09:00:00",
+   "o": 3332.36,
+   "h": 3335.63,
+   "l": 3325.37,
+   "c": 3326.42,
+   "vol": 9366.0,
+   "state": "SWEEP",
+   "atr": 9.8479,
+   "action": "NONE",
+   "htf": "XAUUSD-HTF-000246",
+   "rng_h": 3320.55,
+   "rng_l": 3285.51,
+   "ema_f": 3329.0134,
+   "ema_s": 3331.2901
+  },
+  {
+   "ts": "2025-05-22T10:00:00",
+   "o": 3326.49,
+   "h": 3331.17,
+   "l": 3322.62,
+   "c": 3327.66,
+   "vol": 9042.0,
+   "state": "SWEEP",
+   "atr": 9.6121,
+   "action": "NONE",
+   "htf": "XAUUSD-HTF-000246",
+   "rng_h": 3320.55,
+   "rng_l": 3285.51,
+   "ema_f": 3328.1111,
+   "ema_s": 3330.0801
+  },
+  {
+   "ts": "2025-05-22T11:00:00",
+   "o": 3327.65,
+   "h": 3329.9,
+   "l": 3310.24,
+   "c": 3311.24,
+   "vol": 10771.0,
+   "state": "DISPLACEMENT",
+   "atr": 10.0471,
+   "action": "DISPLACEMENT_CONFIRMED",
+   "htf": "XAUUSD-HTF-000246",
+   "rng_h": 3320.55,
+   "rng_l": 3285.51,
+   "ema_f": 3316.8637,
+   "ema_s": 3323.8
+  },
+  {
+   "ts": "2025-05-22T12:00:00",
+   "o": 3311.24,
+   "h": 3313.89,
+   "l": 3304.21,
+   "c": 3304.82,
+   "vol": 9261.0,
+   "state": "EXPANSION",
+   "atr": 10.4243,
+   "action": "EXPANSION_CONFIRMED",
+   "htf": "XAUUSD-HTF-000246",
+   "rng_h": 3320.55,
+   "rng_l": 3285.51,
+   "ema_f": 3308.8346,
+   "ema_s": 3317.4734
+  },
+  {
+   "ts": "2025-05-22T13:00:00",
+   "o": 3304.82,
+   "h": 3307.48,
+   "l": 3288.54,
+   "c": 3289.68,
+   "vol": 10154.0,
+   "state": "EXPANSION",
+   "atr": 11.0286,
+   "action": "NONE",
+   "htf": "XAUUSD-HTF-000247",
+   "rng_h": 3320.55,
+   "rng_l": 3285.51,
+   "ema_f": 3296.0649,
+   "ema_s": 3308.2089
+  },
+  {
+   "ts": "2025-05-22T14:00:00",
+   "o": 3289.66,
+   "h": 3314.75,
+   "l": 3283.03,
+   "c": 3314.59,
+   "vol": 11622.0,
+   "state": "RETEST",
+   "atr": 12.8207,
+   "action": "RETEST_CONFIRMED",
+   "htf": "XAUUSD-HTF-000247",
+   "rng_h": 3320.55,
+   "rng_l": 3285.51,
+   "ema_f": 3308.415,
+   "ema_s": 3310.3359
+  },
+  {
+   "ts": "2025-05-22T15:00:00",
+   "o": 3314.23,
+   "h": 3314.56,
+   "l": 3300.96,
+   "c": 3304.13,
+   "vol": 12611.0,
+   "state": "EXECUTION",
+   "atr": 13.3364,
+   "action": "TRADE_OPENED",
+   "htf": "XAUUSD-HTF-000247",
+   "rng_h": 3320.55,
+   "rng_l": 3285.51,
+   "ema_f": 3304.6061,
+   "ema_s": 3306.8882
+  },
+  {
+   "ts": "2025-05-22T16:00:00",
+   "o": 3304.13,
+   "h": 3315.8,
+   "l": 3286.98,
+   "c": 3287.78,
+   "vol": 14246.0,
+   "state": "RANGE",
+   "atr": 14.9043,
+   "action": "TRADE_TP1",
+   "htf": "XAUUSD-HTF-000247",
+   "rng_h": 3320.55,
+   "rng_l": 3285.51,
+   "ema_f": 3293.3887,
+   "ema_s": 3300.5188
+  },
+  {
+   "ts": "2025-05-22T17:00:00",
+   "o": 3287.78,
+   "h": 3304.57,
+   "l": 3279.2,
+   "c": 3297.09,
+   "vol": 13665.0,
+   "state": "RANGE",
+   "atr": 16.2379,
+   "action": "RESET",
+   "htf": "XAUUSD-HTF-000247",
+   "rng_h": 3345.43,
+   "rng_l": 3279.2,
+   "ema_f": 3295.8562,
+   "ema_s": 3299.3759
+  },
+  {
+   "ts": "2025-05-22T18:00:00",
+   "o": 3297.09,
+   "h": 3298.78,
+   "l": 3281.56,
+   "c": 3294.72,
+   "vol": 11518.0,
+   "state": "RANGE",
+   "atr": 15.8571,
+   "action": "NONE",
+   "htf": "XAUUSD-HTF-000247",
+   "rng_h": 3345.43,
+   "rng_l": 3279.2,
+   "ema_f": 3295.0987,
+   "ema_s": 3297.8239
+  }
+ ],
+ "logs": [
+  [
+   "2025-05-21T22:00:00",
+   "CRT.EventLog",
+   "EVENT | SWEEP | idx=5907 None\u2192None | None"
+  ],
+  [
+   "2025-05-21T22:00:00",
+   "CRT.StateMachine",
+   "STATE: RANGE \u2192 SWEEP | Sweep @ 3324.86000 idx=5907"
+  ],
+  [
+   "2025-05-21T22:00:00",
+   "CRT.EventLog",
+   "EVENT | STATE_TRANSITION | idx=5907 RANGE\u2192SWEEP | Sweep @ 3324.86000 idx=5907"
+  ],
+  [
+   "2025-05-21T23:00:00",
+   "CRT.StateMachine",
+   "Displacement REJECTED: move=3.22000 < threshold"
+  ],
+  [
+   "2025-05-22T01:00:00",
+   "CRT.StateMachine",
+   "Displacement REJECTED: move=3.30000 < threshold"
+  ],
+  [
+   "2025-05-22T02:00:00",
+   "CRT.StateMachine",
+   "Displacement REJECTED: move=2.06000 < threshold"
+  ],
+  [
+   "2025-05-22T03:00:00",
+   "CRT.StateMachine",
+   "Displacement REJECTED: move=3.72000 < threshold"
+  ],
+  [
+   "2025-05-22T04:00:00",
+   "CRT.StateMachine",
+   "Displacement REJECTED: body_ratio=0.636 < 0.7"
+  ],
+  [
+   "2025-05-22T05:00:00",
+   "CRT.StateMachine",
+   "Displacement REJECTED: move=3.04000 < threshold"
+  ],
+  [
+   "2025-05-22T06:00:00",
+   "CRT.StateMachine",
+   "Displacement REJECTED: move=5.74000 < threshold"
+  ],
+  [
+   "2025-05-22T07:00:00",
+   "CRT.StateMachine",
+   "Displacement REJECTED: move=3.12000 < threshold"
+  ],
+  [
+   "2025-05-22T08:00:00",
+   "CRT.StateMachine",
+   "Displacement REJECTED: move=6.12000 < threshold"
+  ],
+  [
+   "2025-05-22T09:00:00",
+   "CRT.StateMachine",
+   "Displacement REJECTED: move=5.94000 < threshold"
+  ],
+  [
+   "2025-05-22T10:00:00",
+   "CRT.StateMachine",
+   "Displacement REJECTED: move=1.17000 < threshold"
+  ],
+  [
+   "2025-05-22T11:00:00",
+   "CRT.StateMachine",
+   "STATE: SWEEP \u2192 DISPLACEMENT | Displacement | body_ratio=0.835 wick=19.66000"
+  ],
+  [
+   "2025-05-22T11:00:00",
+   "CRT.EventLog",
+   "EVENT | STATE_TRANSITION | idx=5919 SWEEP\u2192DISPLACEMENT | Displacement | body_ratio=0.835 wick=19.66000"
+  ],
+  [
+   "2025-05-22T12:00:00",
+   "CRT.StateMachine",
+   "STATE: DISPLACEMENT \u2192 EXPANSION | Bearish expansion | close=3304.82000 disp_close=3311.24000"
+  ],
+  [
+   "2025-05-22T12:00:00",
+   "CRT.EventLog",
+   "EVENT | STATE_TRANSITION | idx=5920 DISPLACEMENT\u2192EXPANSION | Bearish expansion | close=3304.82000 disp_close=3311.24000"
+  ],
+  [
+   "2025-05-22T13:00:00",
+   "CRT.Orchestrator",
+   "EXPANSION STATE ACTIVE | idx=5921"
+  ],
+  [
+   "2025-05-22T13:00:00",
+   "CRT.StateMachine",
+   "Retest REJECTED: depth_abs=30.87000 > adaptive_ceiling=8.76000 (static=8.76000 atr=5.51429)"
+  ],
+  [
+   "2025-05-22T14:00:00",
+   "CRT.Orchestrator",
+   "EXPANSION STATE ACTIVE | idx=5922"
+  ],
+  [
+   "2025-05-22T14:00:00",
+   "CRT.StateMachine",
+   "[FSUL] cached feature schema check skipped: validate_features() got an unexpected keyword argument 'context'"
+  ],
+  [
+   "2025-05-22T14:00:00",
+   "CRT.StateMachine",
+   "STATE: EXPANSION \u2192 RETEST | Retest | depth_abs=5.96000 ceiling=8.76000"
+  ],
+  [
+   "2025-05-22T14:00:00",
+   "CRT.EventLog",
+   "EVENT | STATE_TRANSITION | idx=5922 EXPANSION\u2192RETEST | Retest | depth_abs=5.96000 ceiling=8.76000"
+  ],
+  [
+   "2025-05-22T14:00:00",
+   "CRT.EventLog",
+   "EVENT | BEGIN_SOFT_CONF | idx=5922 None\u2192None | Retest locked \u2014 evaluating soft confirmation manifold"
+  ],
+  [
+   "2025-05-22T15:00:00",
+   "CRT.UltronRisk",
+   "DecayFactor | elapsed=1 \u03bb=0.1 factor=0.9048"
+  ],
+  [
+   "2025-05-22T15:00:00",
+   "CRT.UltronRisk",
+   "RiskScore | sweep=0.477 breakout=0.663 retest=0.320 time=0.800 decay=0.905 FINAL=0.504"
+  ],
+  [
+   "2025-05-22T15:00:00",
+   "CRT.UltronRisk",
+   "SoftConf | C=0.428 body=1.00 mom=0.17 dist=0.03 disp=0.82"
+  ],
+  [
+   "2025-05-22T15:00:00",
+   "CRT.UltronRisk",
+   "FusionScore | S=0.479 = G=0.504^0.7 \u00d7 C=0.428^0.3"
+  ],
+  [
+   "2025-05-22T15:00:00",
+   "CRT.UltronRisk",
+   "APPROVED TIER 2 | S=0.479"
+  ],
+  [
+   "2025-05-22T15:00:00",
+   "CRT.StateMachine",
+   "STATE: RETEST \u2192 EXECUTION | Risk approved \u2192 entering execution"
+  ],
+  [
+   "2025-05-22T15:00:00",
+   "CRT.EventLog",
+   "EVENT | STATE_TRANSITION | idx=5923 RETEST\u2192EXECUTION | Risk approved \u2192 entering execution"
+  ],
+  [
+   "2025-05-22T15:00:00",
+   "CRT.Execution",
+   "Trade built | CRT-0007 | Dir=SHORT Entry=3314.59000 SL=3332.56729 TP1=3296.61271 TP2=3278.63543 RR=1.00 risk_pct=0.005"
+  ],
+  [
+   "2025-05-22T15:00:00",
+   "CRT.Execution",
+   "Trade OPENED | CRT-0007 @ 2025-05-22 15:00:00"
+  ],
+  [
+   "2025-05-22T15:00:00",
+   "CRT.EventLog",
+   "EVENT | TRADE_OPENED | idx=5923 None\u2192None | None"
+  ],
+  [
+   "2025-05-22T16:00:00",
+   "CRT.Execution",
+   "Trade TP1 HIT | CRT-0007 | partial_pnl=8.98864 SL\u2192BE=3314.59000"
+  ],
+  [
+   "2025-05-22T16:00:00",
+   "CRT.EventLog",
+   "EVENT | TRADE_TP1 | idx=5924 None\u2192None | Trade CRT-0007 closed: TP1"
+  ],
+  [
+   "2025-05-22T16:00:00",
+   "CRT.StateMachine",
+   "STATE: EXECUTION \u2192 RESOLUTION | Trade closed: TP1"
+  ],
+  [
+   "2025-05-22T16:00:00",
+   "CRT.EventLog",
+   "EVENT | STATE_TRANSITION | idx=5924 EXECUTION\u2192RESOLUTION | Trade closed: TP1"
+  ],
+  [
+   "2025-05-22T16:00:00",
+   "CRT.StateMachine",
+   "RESET \u2192 RANGE | Post-resolution reset"
+  ],
+  [
+   "2025-05-22T16:00:00",
+   "CRT.EventLog",
+   "EVENT | RESET | idx=5924 RESOLUTION\u2192RANGE | Post-resolution reset"
+  ],
+  [
+   "2025-05-22T17:00:00",
+   "CRT.StateMachine",
+   "RESET \u2192 RANGE | HTF changed: XAUUSD-HTF-000246 \u2192 XAUUSD-HTF-000247"
+  ],
+  [
+   "2025-05-22T17:00:00",
+   "CRT.EventLog",
+   "EVENT | RESET | idx=5925 RANGE\u2192RANGE | HTF changed: XAUUSD-HTF-000246 \u2192 XAUUSD-HTF-000247"
+  ]
+ ]
+}

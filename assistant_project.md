@@ -1256,3 +1256,20 @@ Decision/Output: |
 Open Questions: Add new keys to inactive v2_multi_2026_04.json? Refresh validation_summary + promote?
 Next Step: User decides on v2 keys and any promotion path.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-10
+Topic: Feature-schema trade story — XAUUSD H1 2025-05-22, CRT-0007 (+1.03R)
+Decision/Output: |
+  results/trade_story_2025_05_22/STORY.md (+ engine_trace.json): bar-by-bar chain with thresholds, values
+  and verdicts; G/C/S score arithmetic (G 0.504, C 0.428, S 0.479, tier 2); SL/TP/size/R arithmetic;
+  all 35 CANONICAL_FEATURES with values + engine audit columns. Day chosen for narrative clarity (a winner).
+  Monitor findings (verified in code): F1 one-bar lookahead on confirmation (entry = retest close, decision
+  uses the confirming bar); F2 spread sign wrong for SHORTs (est. H1 +2.35R -> +1.70R; M15 +0.18R -> -1.48R,
+  expectancy +0.02 -> -0.15R); F3 TP2 unreachable (RESOLUTION at TP1); F4 ema_spread/momentum_score ~250x scale;
+  F5 volatility_regime full-file rank; F6 session encoding mismatch; F7 duplicate names/formulas; F8 EMA double
+  update; F9 tiered risk_pct ignored; F10 event log unsorted. No code/config/test changes.
+Open Questions: Fix F2 (spread sign) and re-validate? Test F1 (enter at confirmation-bar close)? Fix F4 scale? Pick a loser day next?
+Next Step: User prioritises F1-F4 fixes; validation numbers after F2 supersede the +0.037R approval.
+---
