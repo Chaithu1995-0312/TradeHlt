@@ -1333,3 +1333,18 @@ Decision/Output: |
 Open Questions: Fix non-causal features (volatility_regime, centred swings)? Trace a second week / a SELL-only week?
 Next Step: User decides on fixing the non-causal features before any feature-based study.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-10
+Topic: Second feature trace — one-directional week 2024-11-11..15 (SELL), generalization check
+Decision/Output: |
+  Week chosen by a price-only rule + seeded draw (Random(42) over 16 candidates): net -123.8 (83% of range), 5/5 days down.
+  Hypotheses written before tracing: H1 level features match >=75% CONFIRMED (trend_bias/ema_spread 91%, macd_line 99%);
+  H2 rsi<50 CONFIRMED (37.8); H3 fast/z-scored features unreliable CONFIRMED (momentum 54%, macd_hist 40%, trend_strength 50%);
+  H4 lag NOT TESTABLE (features already correct sign at the open; no turn); H5 next-bar ~55-60% NOT REPLICATED (52-53%, p 0.57-0.71;
+  week A 60% was noise); H6 non-causal set CONFIRMED (volatility_regime 21/21, swing_high/low, lower_low, swing-derived sweep flags).
+  Script extended: stats.json, --compare; 4 more tests (suite 12 pre-existing failures only). results/week_feature_trace_2024_11_11/REPORT.md.
+Open Questions: Add an up-week for the LONG side? Fix volatility_regime and centred swings before any feature study?
+Next Step: User decides.
+---

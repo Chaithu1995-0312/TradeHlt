@@ -15,6 +15,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import json
 import math
 import sys
 from pathlib import Path
@@ -119,6 +120,66 @@ def causality_check(csv_path: str, full: pd.DataFrame, cuts: list, tail: int = 3
     return diffs
 
 
+def week_direction(w: pd.DataFrame) -> int:
+    """+1 if the week closed above its open, -1 otherwise."""
+    return 1 if w["close"].iloc[-1] > w["open"].iloc[0] else -1
+
+
+def whole_week_agreement(w: pd.DataFrame, feat: str, centre: float) -> float:
+    """Share of bars (non-zero sign) whose feature sign equals the week's direction."""
+    s = np.sign(w[feat] - centre)
+    nz = s != 0
+    return float(((s == week_direction(w)) & nz).sum() / max(1, nz.sum()))
+
+
+def first_agreement(w: pd.DataFrame, feat: str, centre: float) -> dict:
+    """First bar from which the feature sign agrees with the week's direction for the rest of
+    the week (zeros skipped), and how much of the week's net move was already made by then."""
+    d = week_direction(w)
+    s = np.sign(w[feat] - centre).to_numpy()
+    first = None
+    for i in range(len(s) - 1, -1, -1):
+        if s[i] != 0 and s[i] != d:
+            first = i + 1
+            break
+    else:
+        first = 0
+    if first >= len(s):
+        return {"bar": None, "moved_frac": None}
+    net = (w["close"].iloc[-1] - w["open"].iloc[0]) * d
+    made = (w["close"].iloc[first] - w["open"].iloc[0]) * d if first > 0 else 0.0
+    return {"bar": int(first), "moved_frac": float(made / net) if net else None}
+
+
+def longest_counter_run(w: pd.DataFrame, feat: str, centre: float) -> int:
+    """Longest run of consecutive bars whose feature sign is opposite to the week's direction."""
+    d, best, cur = week_direction(w), 0, 0
+    for v in np.sign(w[feat] - centre):
+        cur = cur + 1 if (v != 0 and v != d) else 0
+        best = max(best, cur)
+    return best
+
+
+def compare_dirs(dir_a: str, dir_b: str) -> str:
+    """
+    Side-by-side generalisation table. A is a mixed (LONG-then-SELL) week, B a one-directional
+    week; whole-week direction is only meaningful for B, so A is compared per hindsight range
+    and B on its dominant range (the whole week). Counter-run = longest run of bars whose sign
+    opposes the dominant direction.
+    """
+    sa = json.loads((Path(dir_a) / "stats.json").read_text(encoding="utf-8"))
+    sb = json.loads((Path(dir_b) / "stats.json").read_text(encoding="utf-8"))
+    dom = "SELL" if sb["week_dir"] < 0 else "LONG"
+    lines = [f"| Feature | A ({sa['label']}) LONG range matches (+) | A SELL range matches (−) | B ({sb['label']}) {dom} week matches | B longest counter-run (bars) | A next-bar hit | B next-bar hit |",
+             "|---|---|---|---|---|---|---|"]
+    for f in SIGNED:
+        a, b = sa["features"][f], sb["features"][f]
+        lines.append(f"| {f} | {a['range']['LONG']['agree']:.0%} | {a['range']['SELL']['agree']:.0%} | {b['range'][dom]['agree']:.0%} | "
+                     f"{b['longest_counter_run']} | {a['next']['hit']}/{a['next']['n']} ({a['next']['rate']:.0%}, p={a['next']['p']:.2f}) | "
+                     f"{b['next']['hit']}/{b['next']['n']} ({b['next']['rate']:.0%}, p={b['next']['p']:.2f}) |")
+    return "\n".join(lines)
+
+
 def flips(w: pd.DataFrame, feat: str, centre: float) -> list[tuple[str, str]]:
     s = np.sign(w[feat] - centre)
     res, prev = [], None
@@ -133,11 +194,17 @@ def flips(w: pd.DataFrame, feat: str, centre: float) -> list[tuple[str, str]]:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--csv", required=True)
-    ap.add_argument("--start", required=True)
-    ap.add_argument("--end", required=True)
-    ap.add_argument("--out", required=True)
+    ap.add_argument("--csv")
+    ap.add_argument("--start")
+    ap.add_argument("--end")
+    ap.add_argument("--out")
+    ap.add_argument("--compare", nargs=2, metavar=("DIR_A", "DIR_B"), help="print a two-week comparison from stats.json files")
     a = ap.parse_args()
+    if a.compare:
+        print(compare_dirs(*a.compare))
+        return
+    if not (a.csv and a.start and a.end and a.out):
+        ap.error("--csv, --start, --end and --out are required unless --compare is used")
     df = load_features(a.csv)
     w = week_slice(df, a.start, a.end)
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
@@ -184,6 +251,19 @@ def main() -> None:
         fl = flips(w, f, c)
         md.append(f"- `{f}`: {len(fl)} flips — " + ", ".join(f"{t} {d}" for t, d in fl[:14]) + (" …" if len(fl) > 14 else ""))
     md.append(f"\nPeak bar: {peak_ts.strftime('%a %H:%M')}.\n")
+    stats_json = {
+        "label": f"{a.start}..{a.end}", "week_dir": week_direction(w),
+        "net_move": float(w["close"].iloc[-1] - w["open"].iloc[0]),
+        "features": {f: {
+            "week_agree": whole_week_agreement(w, f, c),
+            "first_agree": first_agreement(w, f, c),
+            "longest_counter_run": longest_counter_run(w, f, c),
+            "mean": float(w[f].mean()),
+            "next": stats[f]["next"],
+            "range": {k: stats[f][k] for k in ("LONG", "SELL")},
+        } for f, c in SIGNED.items()},
+    }
+    (out / "stats.json").write_text(json.dumps(stats_json, indent=1), encoding="utf-8")
     cuts = list(w["timestamp"].iloc[[10, 25, 40, 55, 70, 85, 100]])
     cz = causality_check(a.csv, df, cuts)
     tot = cz.pop("_total")
