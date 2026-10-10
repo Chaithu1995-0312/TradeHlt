@@ -1163,3 +1163,17 @@ Decision/Output: |
 Open Questions: Run htf=24 together with the EXECUTION-protected patch so trades can reach SL/TP?
 Next Step: User decision.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-10
+Topic: XAUUSD H1, htf=24 + EXECUTION protected from HTF-rollover reset (runtime patch)
+Decision/Output: |
+  Same 13 entries as the htf=24 run; exits now real: TP1 x6, STOPPED x3,
+  GAP_RESET_CLOSE x3, RESET_CLOSE x1. WR 53.8%, net +2.35R, DD 3.0%, avg 15.8 bars,
+  TP2 never hit. Expectancy +0.18R/trade, SE 0.25R, t=0.74, rough 95% CI -0.35..+0.71R
+  -> consistent with zero edge. Deterministic; unpatched control == section 7.
+  REPORT.md section 8. No src/configs change; not promotable.
+Open Questions: Validate on the M15 corpus before considering the engine change permanent?
+Next Step: User uploads M15 data, or decides to stop here.
+---

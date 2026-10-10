@@ -101,3 +101,25 @@ Funnel: 455 RANGE→SWEEP, 185 →DISPLACEMENT, 66 →EXPANSION, 14 →RETEST, 1
 What did change: 24-bar ranges let setups get through (13 trades against 2), so the bottleneck moved from range length to the exit logic.
 
 Caveats: 13 trades is just above the validator's hard gate of 10, and the run is not promotable. A re-run is identical (deterministic). Section 6's protected-EXECUTION patch was **not** combined with htf=24; that run would be the first one in which trades can reach their stops and targets.
+
+## 8. Hypothesis: 24-bar ranges + EXECUTION protected from HTF-rollover resets (monkeypatched, hypothetical)
+Combines section 7 (`--htf 24`) with the section 6 runtime patch (HTF-rollover resets ignored in `EXECUTION`; nothing in `src/` or `configs/` edited). Output: `htf24_exec_protected/`. The patch script is a scratchpad file, not in the repo. The entries are the same 13 setups as section 7. Only the exits differ.
+
+| | §7: htf=24 | §8: htf=24 + EXECUTION protected |
+|---|---|---|
+| Trades | 13 | 13 |
+| Exits | RESET_CLOSE ×12, GAP ×1 (all 1 bar) | **TP1 ×6, STOPPED ×3, GAP_RESET_CLOSE ×3, RESET_CLOSE ×1** |
+| Win rate | 38.5% | 53.8% |
+| Net P&L | +1.87R | **+2.35R** (raw +2.68R, cost drag 0.33R) |
+| Expectancy / trade | +0.14R | +0.18R |
+| Max DD | 1.4% (1.37R) | 3.0% (3.07R) |
+| Max win / loss streak | 4 / 6 | 4 / 4 |
+| Avg duration | 1 candle | 15.8 candles |
+| TP1 / TP2 | 0 / 0 | 6 (46%) / 0 |
+
+- **First run where trades could play out.** Six hit TP1 (about +0.85R to +1.03R net each), three hit the stop (about −0.98R to −1.03R), three were closed by a weekend or session-gap reset (−0.18R, −0.53R, −0.51R), and one by a reset after one bar.
+- **TP2 was never reached.**
+- **Statistical weight is low.** Mean +0.18R per trade, standard deviation 0.88R, standard error 0.25R, t ≈ 0.74. A rough 95% interval for expectancy is −0.35R to +0.71R, which includes zero. Thirteen trades over about two years cannot establish an edge, and the count is only just above the validator's hard gate of 10.
+- **Pockets:** New York 4/4 wins (+3.86R) and off-session 29% wins (−1.86R). With 4 and 7 trades these are noise, and cutting by session after seeing this would be overfitting.
+- Controls: a re-run is identical (deterministic), and the unpatched run through the same script reproduces §7 exactly.
+- Not promotable: no `ConfigValidator` run, and the engine change exists only as a monkeypatch. Whether to make it permanent is a separate decision that needs validation on the M15 data the config was built for.
