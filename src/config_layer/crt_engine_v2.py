@@ -1322,8 +1322,8 @@ class ResetLogic:
             return False, ""
 
         if current_htf_id != state.active_range.htf_candle_id:
-            if state.current_state in [CRTState.EXPANSION, CRTState.RETEST]:
-                return False, ""  # DO NOT INTERRUPT ACTIVE SETUP
+            if state.current_state in [CRTState.EXPANSION, CRTState.RETEST, CRTState.EXECUTION]:
+                return False, ""  # DO NOT INTERRUPT ACTIVE SETUP OR OPEN TRADE
             return True, f"HTF changed: {state.active_range.htf_candle_id} → {current_htf_id}"
 
         price = current_candle.close

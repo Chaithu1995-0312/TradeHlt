@@ -1221,3 +1221,21 @@ Decision/Output: |
 Open Questions: Fix EXECUTION-in-HTF-reset as a bug + ConfigValidator, or leave as is?
 Next Step: User decides.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-10
+Topic: Fix close-on-rollover (EXECUTION) in ResetLogic.should_reset + validation
+Decision/Output: |
+  src/config_layer/crt_engine_v2.py:1325 now protects CRTState.EXECUTION from "HTF changed"
+  resets (one token). New tests/test_reset_logic_execution.py (10 tests; only the EXECUTION case
+  fails without the fix). Full suite 12 failed/891 passed vs 12/881 before (same 12 pre-existing
+  failures: probability_engine x11, control_plane_doc_alignment x1).
+  Plain-CLI runs equal the runtime-patch runs exactly (M15 10 trades +0.18R; H1 htf24 13 trades +2.35R).
+  ConfigValidator validate-prod (M15): APPROVE before AND after; expectancy -0.867R -> +0.037R,
+  DD 11.6% -> 3.0%, score 0.378 -> 0.500, 12 trades both. Pre-fix APPROVE with -0.87R shows the
+  gates are weak (min_expectancy is soft). In-sample; edge not established.
+  results/validation_exec_fix/REPORT.md. No config change/rehash/promotion.
+Open Questions: Re-validate + rehash + promote? Make expectancy a hard gate? validation_summary in prod config is stale.
+Next Step: User decides on gate tightening and any promotion path.
+---
