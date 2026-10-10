@@ -1,0 +1,295 @@
+{
+  "csv": "/home/user/TradeHlt/data/XAUUSD_M15_2025-07.csv",
+  "raw_bars": 2100,
+  "batch_rows_after_warmup": 1886,
+  "store_failures": 0,
+  "per_feature": [
+    {
+      "feature": "open",
+      "batch_nan_rows": 0,
+      "live_value_on_batch_nan_rows_nonnan": 0,
+      "mismatch_rows": 0,
+      "mismatch_frac": 0.0,
+      "max_abs_diff": 0.0
+    },
+    {
+      "feature": "high",
+      "batch_nan_rows": 0,
+      "live_value_on_batch_nan_rows_nonnan": 0,
+      "mismatch_rows": 0,
+      "mismatch_frac": 0.0,
+      "max_abs_diff": 0.0
+    },
+    {
+      "feature": "low",
+      "batch_nan_rows": 0,
+      "live_value_on_batch_nan_rows_nonnan": 0,
+      "mismatch_rows": 0,
+      "mismatch_frac": 0.0,
+      "max_abs_diff": 0.0
+    },
+    {
+      "feature": "close",
+      "batch_nan_rows": 0,
+      "live_value_on_batch_nan_rows_nonnan": 0,
+      "mismatch_rows": 0,
+      "mismatch_frac": 0.0,
+      "max_abs_diff": 0.0
+    },
+    {
+      "feature": "volume",
+      "batch_nan_rows": 0,
+      "live_value_on_batch_nan_rows_nonnan": 0,
+      "mismatch_rows": 0,
+      "mismatch_frac": 0.0,
+      "max_abs_diff": 0.0
+    },
+    {
+      "feature": "volume_ratio",
+      "batch_nan_rows": 0,
+      "live_value_on_batch_nan_rows_nonnan": 0,
+      "mismatch_rows": 0,
+      "mismatch_frac": 0.0,
+      "max_abs_diff": 0.0
+    },
+    {
+      "feature": "double_sweep",
+      "batch_nan_rows": 0,
+      "live_value_on_batch_nan_rows_nonnan": 0,
+      "mismatch_rows": 260,
+      "mismatch_frac": 0.1379,
+      "max_abs_diff": 1.0
+    },
+    {
+      "feature": "ema_fast",
+      "batch_nan_rows": 0,
+      "live_value_on_batch_nan_rows_nonnan": 0,
+      "mismatch_rows": 0,
+      "mismatch_frac": 0.0,
+      "max_abs_diff": 0.0
+    },
+    {
+      "feature": "ema_slow",
+      "batch_nan_rows": 0,
+      "live_value_on_batch_nan_rows_nonnan": 0,
+      "mismatch_rows": 0,
+      "mismatch_frac": 0.0,
+      "max_abs_diff": 0.0
+    },
+    {
+      "feature": "ema_spread",
+      "batch_nan_rows": 0,
+      "live_value_on_batch_nan_rows_nonnan": 0,
+      "mismatch_rows": 0,
+      "mismatch_frac": 0.0,
+      "max_abs_diff": 0.0
+    },
+    {
+      "feature": "trend_bias",
+      "batch_nan_rows": 0,
+      "live_value_on_batch_nan_rows_nonnan": 0,
+      "mismatch_rows": 0,
+      "mismatch_frac": 0.0,
+      "max_abs_diff": 0.0
+    },
+    {
+      "feature": "trend_strength",
+      "batch_nan_rows": 0,
+      "live_value_on_batch_nan_rows_nonnan": 0,
+      "mismatch_rows": 0,
+      "mismatch_frac": 0.0,
+      "max_abs_diff": 0.0
+    },
+    {
+      "feature": "momentum_score",
+      "batch_nan_rows": 0,
+      "live_value_on_batch_nan_rows_nonnan": 0,
+      "mismatch_rows": 0,
+      "mismatch_frac": 0.0,
+      "max_abs_diff": 0.0
+    },
+    {
+      "feature": "atr",
+      "batch_nan_rows": 0,
+      "live_value_on_batch_nan_rows_nonnan": 0,
+      "mismatch_rows": 0,
+      "mismatch_frac": 0.0,
+      "max_abs_diff": 0.0
+    },
+    {
+      "feature": "volatility_ratio",
+      "batch_nan_rows": 0,
+      "live_value_on_batch_nan_rows_nonnan": 0,
+      "mismatch_rows": 0,
+      "mismatch_frac": 0.0,
+      "max_abs_diff": 0.0
+    },
+    {
+      "feature": "rsi_14",
+      "batch_nan_rows": 0,
+      "live_value_on_batch_nan_rows_nonnan": 0,
+      "mismatch_rows": 0,
+      "mismatch_frac": 0.0,
+      "max_abs_diff": 0.0
+    },
+    {
+      "feature": "macd_line",
+      "batch_nan_rows": 0,
+      "live_value_on_batch_nan_rows_nonnan": 0,
+      "mismatch_rows": 0,
+      "mismatch_frac": 0.0,
+      "max_abs_diff": 0.0
+    },
+    {
+      "feature": "macd_signal",
+      "batch_nan_rows": 0,
+      "live_value_on_batch_nan_rows_nonnan": 0,
+      "mismatch_rows": 0,
+      "mismatch_frac": 0.0,
+      "max_abs_diff": 0.0
+    },
+    {
+      "feature": "macd_hist",
+      "batch_nan_rows": 0,
+      "live_value_on_batch_nan_rows_nonnan": 0,
+      "mismatch_rows": 0,
+      "mismatch_frac": 0.0,
+      "max_abs_diff": 0.0
+    },
+    {
+      "feature": "sweep_detected",
+      "batch_nan_rows": 0,
+      "live_value_on_batch_nan_rows_nonnan": 0,
+      "mismatch_rows": 0,
+      "mismatch_frac": 0.0,
+      "max_abs_diff": 0.0
+    },
+    {
+      "feature": "liquidity_sweep",
+      "batch_nan_rows": 0,
+      "live_value_on_batch_nan_rows_nonnan": 0,
+      "mismatch_rows": 0,
+      "mismatch_frac": 0.0,
+      "max_abs_diff": 0.0
+    },
+    {
+      "feature": "break_of_structure",
+      "batch_nan_rows": 0,
+      "live_value_on_batch_nan_rows_nonnan": 0,
+      "mismatch_rows": 0,
+      "mismatch_frac": 0.0,
+      "max_abs_diff": 0.0
+    },
+    {
+      "feature": "swing_high",
+      "batch_nan_rows": 0,
+      "live_value_on_batch_nan_rows_nonnan": 0,
+      "mismatch_rows": 0,
+      "mismatch_frac": 0.0,
+      "max_abs_diff": 0.0
+    },
+    {
+      "feature": "swing_low",
+      "batch_nan_rows": 0,
+      "live_value_on_batch_nan_rows_nonnan": 0,
+      "mismatch_rows": 0,
+      "mismatch_frac": 0.0,
+      "max_abs_diff": 0.0
+    },
+    {
+      "feature": "higher_high",
+      "batch_nan_rows": 0,
+      "live_value_on_batch_nan_rows_nonnan": 0,
+      "mismatch_rows": 0,
+      "mismatch_frac": 0.0,
+      "max_abs_diff": 0.0
+    },
+    {
+      "feature": "lower_low",
+      "batch_nan_rows": 0,
+      "live_value_on_batch_nan_rows_nonnan": 0,
+      "mismatch_rows": 0,
+      "mismatch_frac": 0.0,
+      "max_abs_diff": 0.0
+    },
+    {
+      "feature": "body_size",
+      "batch_nan_rows": 0,
+      "live_value_on_batch_nan_rows_nonnan": 0,
+      "mismatch_rows": 0,
+      "mismatch_frac": 0.0,
+      "max_abs_diff": 0.0
+    },
+    {
+      "feature": "wick_size",
+      "batch_nan_rows": 0,
+      "live_value_on_batch_nan_rows_nonnan": 0,
+      "mismatch_rows": 1884,
+      "mismatch_frac": 0.9989,
+      "max_abs_diff": 38.179999999999836
+    },
+    {
+      "feature": "body_ratio",
+      "batch_nan_rows": 0,
+      "live_value_on_batch_nan_rows_nonnan": 0,
+      "mismatch_rows": 1884,
+      "mismatch_frac": 0.9989,
+      "max_abs_diff": 431.0023094321077
+    },
+    {
+      "feature": "volatility_regime",
+      "batch_nan_rows": 0,
+      "live_value_on_batch_nan_rows_nonnan": 0,
+      "mismatch_rows": 0,
+      "mismatch_frac": 0.0,
+      "max_abs_diff": 0.0
+    },
+    {
+      "feature": "session",
+      "batch_nan_rows": 0,
+      "live_value_on_batch_nan_rows_nonnan": 0,
+      "mismatch_rows": 0,
+      "mismatch_frac": 0.0,
+      "max_abs_diff": NaN
+    },
+    {
+      "feature": "hour_of_day",
+      "batch_nan_rows": 0,
+      "live_value_on_batch_nan_rows_nonnan": 0,
+      "mismatch_rows": 0,
+      "mismatch_frac": 0.0,
+      "max_abs_diff": 0.0
+    },
+    {
+      "feature": "disp_strength",
+      "batch_nan_rows": 0,
+      "live_value_on_batch_nan_rows_nonnan": 0,
+      "mismatch_rows": 0,
+      "mismatch_frac": 0.0,
+      "max_abs_diff": 0.0
+    },
+    {
+      "feature": "retest_depth",
+      "batch_nan_rows": 0,
+      "live_value_on_batch_nan_rows_nonnan": 0,
+      "mismatch_rows": 0,
+      "mismatch_frac": 0.0,
+      "max_abs_diff": 0.0
+    },
+    {
+      "feature": "candles_since_retest",
+      "batch_nan_rows": 0,
+      "live_value_on_batch_nan_rows_nonnan": 0,
+      "mismatch_rows": 0,
+      "mismatch_frac": 0.0,
+      "max_abs_diff": 0.0
+    }
+  ],
+  "rr_dataset_builder_rows_surviving_pipeline": {
+    "50": 0,
+    "120": 0,
+    "250": 36,
+    "350": 136,
+    "600": 386
+  }
+}

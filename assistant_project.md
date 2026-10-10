@@ -1424,3 +1424,12 @@ Open Questions: (a) timeframe-local A vs fully time-defined feature set; then fr
   full model/dataset inventory, rebuild, retrain once, versioned baselines.
 Next Step: User decides the semantics; training/live parity trace is next and does not depend on that choice.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-10
+Topic: Read-only training/live parity trace
+Decision/Output: results/training_live_parity/REPORT.md + parity.json; scripts/analysis/training_live_parity.py + test. 12 Gaussian + 5 TradeNet models are 32/33-dim vs 35 schema (loader rejects all 12). Idealised-live parity: 32/35 identical; wick_size, body_ratio (formula), double_sweep (window 10 vs 5) differ. No in-repo trade_data producer; LiveEngine imports nonexistent functions; no feature-definition hash exists.
+Open Questions: live trade_data producer; training timeframe of models; canonical training path (P5 vs train_pipeline).
+Next Step: contract review of the mismatches, then freeze definition hash (still blocked).
+---
