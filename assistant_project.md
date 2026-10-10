@@ -1348,3 +1348,20 @@ Decision/Output: |
 Open Questions: Add an up-week for the LONG side? Fix volatility_regime and centred swings before any feature study?
 Next Step: User decides.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-10
+Topic: Causal volatility_regime (trailing 200-bar ATR percentile) — spec, code-path check, implementation
+Decision/Output: |
+  Inspected: trace -> FeaturePipeline.run() (src/features/feature_pipeline.py, same as BacktestRunner/training);
+  defect was full-file rank(pct=True) (old line 274); live path does not compute the feature.
+  Spec: W=200 (module const), reference = prior 200 bars, current bar EXCLUDED, mid-rank ties, NaN until full valid
+  window (first 214 bars dropped; +136 rows vs old), NaN/inf anywhere in window -> NaN (no fill), edges 0.33/0.66, int8 after finalize.
+  trailing_atr_percentile() + 10 tests; suite 12 failed (same) / 944 passed. Truncation test: volatility_regime 0/21 diffs in both weeks.
+  Backtests identical to frozen baseline except the column. Old vs new label agreement only 41.6% (H1) / 44.9% (M15):
+  different feature; models/baselines trained on old values are stale (not retrained). Docs SCHEMAS.md §4.1 updated.
+  results/volatility_regime_fix/REPORT.md.
+Open Questions: Time-based window instead of 200 bars? Retrain / re-capture baseline? Fix centred swings next?
+Next Step: User decides on retraining and the swing-feature fix.
+---

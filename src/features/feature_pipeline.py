@@ -24,8 +24,9 @@ Batch usage
 Edge Cases:
     - Zero volume (Forex): volume_ratio is set to 1.0 when volume_ma20 == 0.
     - Flat market (ATR ≈ 0): bb_position has a 1e-9 denominator guard.
-    - Warmup NaNs: finalize() drops all NaN rows. With ma_200 the warmup is ≥ 200
-      bars; callers must ensure sufficient history.
+    - Warmup NaNs: finalize() drops all NaN rows. volatility_regime needs ATR(14) plus a
+      full VOL_REGIME_WINDOW (200) bars of prior ATR, so the first 214 bars are dropped;
+      callers must ensure sufficient history.
 
 Failure Modes:
     - Feature drift: pipeline is stateless. If market regime shifts, retrain.
@@ -51,6 +52,12 @@ logger = get_flow_logger("FEATURE_PIPELINE")
 
 SWING_WINDOW = 2  # ±2 candles for swing detection
 
+# volatility_regime = trailing percentile of ATR(14) against the PRIOR VOL_REGIME_WINDOW bars
+# (current bar excluded, mid-rank ties, undefined until a full valid window exists).
+VOL_REGIME_WINDOW = 200
+VOL_REGIME_LOW_PCT = 0.33    # percentile < 0.33  -> regime 0 (low)
+VOL_REGIME_HIGH_PCT = 0.66   # percentile < 0.66  -> regime 1 (mid), else regime 2 (high)
+
 # Columns subject to rolling z-score normalization (MUST NOT include
 # categoricals, RSI, volume_ratio, or placeholder scalars)
 NORMALIZE_COLS = [
@@ -65,6 +72,33 @@ NORMALIZE_COLS = [
 # ─────────────────────────────────────────────────────────────────────────────
 # STANDALONE FUNCTIONS (canonical pipeline contract)
 # ─────────────────────────────────────────────────────────────────────────────
+
+def trailing_atr_percentile(values, window: int = VOL_REGIME_WINDOW) -> np.ndarray:
+    """
+    Causal percentile rank of each value against the `window` values BEFORE it.
+
+    - Reference for bar t is values[t-window : t]; bar t itself does not participate.
+    - Ties use mid-rank: (count(ref < v) + 0.5 * count(ref == v)) / window, so the
+      result lies in [0, 1] and v equal to every reference value gives exactly 0.5.
+    - NaN / +-inf are missing. The result is NaN when v is missing or ANY value in the
+      reference window is missing, and for the first `window` bars (no full history).
+      Missing values are never filled with a neutral class.
+    - Depends only on the last window+1 values, so a streaming caller can reproduce it.
+    """
+    v = np.asarray(values, dtype=float).copy()
+    v[~np.isfinite(v)] = np.nan
+    n = len(v)
+    out = np.full(n, np.nan)
+    if n <= window:
+        return out
+    ref = np.lib.stride_tricks.sliding_window_view(v, window)[:-1]   # ref[i] = v[i : i+window]
+    cur = v[window:]
+    less = (ref < cur[:, None]).sum(axis=1)
+    equal = (ref == cur[:, None]).sum(axis=1)
+    valid = ~np.isnan(ref).any(axis=1) & ~np.isnan(cur)
+    out[window:] = np.where(valid, (less + 0.5 * equal) / window, np.nan)
+    return out
+
 
 def build_features(row: "pd.Series") -> dict:
     """
@@ -271,13 +305,14 @@ class FeaturePipeline:
     def compute_volatility_regime(self) -> None:
         df = self.df
 
-        atr_pct = df["atr_14"].rank(pct=True, method="average")
-
-        df["volatility_regime"] = np.select(
-            [atr_pct < 0.33, atr_pct < 0.66],
-            [0, 1],
-            default=2
-        ).astype(np.int8)
+        # Causal: percentile against the prior VOL_REGIME_WINDOW bars only (the earlier
+        # full-file rank(pct=True) let future bars decide a bar's regime). NaN until a full
+        # window exists; finalize() drops those rows and casts the column back to int8.
+        pct = trailing_atr_percentile(df["atr_14"].to_numpy(), VOL_REGIME_WINDOW)
+        df["volatility_regime"] = np.where(
+            np.isnan(pct), np.nan,
+            np.where(pct < VOL_REGIME_LOW_PCT, 0.0, np.where(pct < VOL_REGIME_HIGH_PCT, 1.0, 2.0)),
+        )
 
         self.df = df
 
@@ -500,6 +535,7 @@ class FeaturePipeline:
         df = self.df
         df = df.replace([np.inf, -np.inf], np.nan)
         df = df.dropna(subset=list(CANONICAL_FEATURES)).reset_index(drop=True)
+        df["volatility_regime"] = df["volatility_regime"].astype(np.int8)
         self.df = df
         return df
 

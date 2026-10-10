@@ -185,6 +185,10 @@ FEATURE_SCHEMA: dict[str, type]   # name → type (float | int | str | bool | di
 
 Changes to `CANONICAL_FEATURES` or `FEATURE_SCHEMA` **break backward compatibility** — baseline must be re-captured.
 
+Value-definition changes with the same names (the schema hash is unchanged, but trained models and stored baselines no longer match the data) should be recorded here:
+
+- **`volatility_regime`** (`feature_pipeline.py: trailing_atr_percentile`): causal percentile of ATR(14) against the **prior 200 bars** (current bar excluded, mid-rank ties, `NaN` until a full valid window exists so the first 214 bars are dropped, missing/inf in the reference window → `NaN`); classes `0/1/2` at percentile `<0.33 / <0.66 / else`. Before 2026-10 it was a full-file `rank(pct=True)` and used future bars.
+
 ### 4.2 SchemaObject wrapper
 
 ```python
