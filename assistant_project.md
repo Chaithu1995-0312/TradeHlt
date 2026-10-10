@@ -1149,3 +1149,17 @@ Decision/Output: |
 Open Questions: M15 corpus rerun? H1-native htf-per-range (e.g. 24) as a new config candidate?
 Next Step: User picks M15 rerun or H1-native config hypothesis.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-10
+Topic: XAUUSD H1 backtest with htf=24 (daily ranges), single pre-chosen value
+Decision/Output: |
+  python src/runtime/backtest_v2.py ... --htf 24 -> 13 trades (9S/4L), WR 38.5%,
+  net +1.87R (raw +2.20R), DD 1.4%. Deterministic. No src/configs change.
+  All 13 trades closed after 1 candle by resets (12 HTF rollover, 1 retrace/gap);
+  0 stop/TP hits -> same EXECUTION-not-protected flaw as the htf=4 run, so the
+  P&L is one-bar noise, not a strategy result. Added as REPORT.md section 7.
+Open Questions: Run htf=24 together with the EXECUTION-protected patch so trades can reach SL/TP?
+Next Step: User decision.
+---

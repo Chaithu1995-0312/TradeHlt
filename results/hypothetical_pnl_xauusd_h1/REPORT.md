@@ -80,3 +80,24 @@ Change: at runtime, `ResetLogic.should_reset` ignores an "HTF changed" reset whi
 - Once allowed to run, both shorts were stopped out (2024-07-17 16:00, 2025-07-22 15:00). The baseline's +0.10R on trade 1 came from the early forced close, not from the setup.
 - Controls: a re-run is identical (deterministic), and the unpatched run via the same script reproduces the baseline exactly.
 - Two trades prove nothing in either direction, and the count is still below the validator's hard gate of 10. This does not justify changing `crt_engine_v2.py`.
+
+## 7. Hypothesis: 24-bar ranges (`--htf 24`, daily ranges on H1) — single pre-chosen value, not tuned
+Command: `python src/runtime/backtest_v2.py --csv data/XAUUSD_H1.csv --instrument XAUUSD --htf 24 --output results/hypothetical_pnl_xauusd_h1/htf24`. Everything else is at production defaults. Output: `htf24/`.
+
+| | htf=4 (baseline) | htf=24 |
+|---|---|---|
+| Trades | 2 | **13** (9 SHORT, 4 LONG) |
+| Win rate | 50% | 38.5% |
+| Net P&L | −0.29R | +1.87R (raw +2.20R, cost drag 0.33R) |
+| Max DD | 0.4% | 1.4% (1.37R) |
+| Max loss streak | 1 | 6 |
+| TP1 / TP2 / stop hits | 0 / 0 / 0 | 0 / 0 / 0 |
+| Avg trade duration | 1 candle | 1 candle |
+
+Funnel: 455 RANGE→SWEEP, 185 →DISPLACEMENT, 66 →EXPANSION, 14 →RETEST, 14 →EXECUTION, 13 trades opened. Resets: 481 HTF rollovers, 146 retrace, 121 session gap, 46 sweep expired, 3 extension.
+
+**Do not read the +1.87R as a result.** Every one of the 13 trades was force-closed after exactly one candle: 12 by an HTF rollover, 1 by a retrace reset (`RESET_CLOSE` ×12, `GAP_RESET_CLOSE` ×1). The cause is the one in section 6: the HTF rollover reset is not suppressed in `EXECUTION` (`crt_engine_v2.py:1324-1327`). No stop, TP1 or TP2 was ever reached. The P&L is the sum of one-bar price changes after entry. By session, 7 of the 13 trades opened off-session (0% wins, −1.67R) and 4 opened in New York (100% wins, +3.80R). At these counts that split is noise.
+
+What did change: 24-bar ranges let setups get through (13 trades against 2), so the bottleneck moved from range length to the exit logic.
+
+Caveats: 13 trades is just above the validator's hard gate of 10, and the run is not promotable. A re-run is identical (deterministic). Section 6's protected-EXECUTION patch was **not** combined with htf=24; that run would be the first one in which trades can reach their stops and targets.

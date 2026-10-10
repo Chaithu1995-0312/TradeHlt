@@ -1,0 +1,129 @@
+{
+  "instrument": "XAUUSD",
+  "total_candles": 11828,
+  "gap_resets": 121,
+  "total_setups": 13,
+  "approved_trades": 13,
+  "rejected_trades": 0,
+  "approval_rate": 1.0,
+  "win_rate": 0.3846,
+  "avg_rr_net": 0.1442,
+  "total_pnl_rr_raw": 2.2011,
+  "total_pnl_rr_net": 1.8746,
+  "max_drawdown_rr": 1.3657,
+  "max_drawdown_pct": 0.0136,
+  "max_win_streak": 4,
+  "max_loss_streak": 6,
+  "tp1_hits": 0,
+  "tp2_hits": 0,
+  "avg_trade_duration": 1.0,
+  "rejection_reasons": {},
+  "state_distribution": {
+    "RANGE": 6472,
+    "SWEEP": 4326,
+    "DISPLACEMENT": 390,
+    "EXPANSION": 583,
+    "RETEST": 14,
+    "EXECUTION": 13
+  },
+  "monthly_pnl": {
+    "2024-07": 0.3643,
+    "2024-10": 1.0218,
+    "2024-12": 0.076,
+    "2025-02": 0.8847,
+    "2025-04": -0.4604,
+    "2025-05": 1.3541,
+    "2025-06": -0.1064,
+    "2025-07": -0.288,
+    "2025-10": -0.5483,
+    "2025-12": -0.0858,
+    "2026-04": -0.3372
+  },
+  "capital_curve": {
+    "initial_capital": 100000.0,
+    "final_capital": 101866.81,
+    "total_return_pct": 0.0187,
+    "max_drawdown_pct": 0.0136,
+    "current_drawdown_pct": 0.0136,
+    "peak_capital": 103270.06,
+    "equity_curve_len": 14
+  },
+  "distribution": {
+    "session_breakdown": {
+      "NEWYORK": {
+        "trades": 4,
+        "win_rate": 1.0,
+        "pnl_rr": 3.8014,
+        "avg_rr": 0.9503
+      },
+      "LONDON": {
+        "trades": 2,
+        "win_rate": 0.5,
+        "pnl_rr": -0.2612,
+        "avg_rr": -0.1306
+      },
+      "OFF_SESSION": {
+        "trades": 7,
+        "win_rate": 0.0,
+        "pnl_rr": -1.6655,
+        "avg_rr": -0.2379
+      }
+    },
+    "day_of_week_breakdown": {
+      "Friday": {
+        "trades": 2,
+        "win_rate": 0.5,
+        "pnl_rr": 0.1876
+      },
+      "Tuesday": {
+        "trades": 3,
+        "win_rate": 0.6667,
+        "pnl_rr": 0.8806
+      },
+      "Wednesday": {
+        "trades": 4,
+        "win_rate": 0.25,
+        "pnl_rr": 0.2676
+      },
+      "Thursday": {
+        "trades": 4,
+        "win_rate": 0.25,
+        "pnl_rr": 0.5388
+      }
+    },
+    "best_hour_utc": 15,
+    "worst_hour_utc": 19,
+    "rolling_win_rate": [
+      0.5,
+      0.4,
+      0.3,
+      0.2
+    ],
+    "loss_clustering_score": 0.2967,
+    "score_outcome_corr": 0.0079,
+    "best_trade": {
+      "id": "CRT-0007",
+      "rr": 1.5306973117436455,
+      "session": "NEWYORK",
+      "opened_at": "2025-05-22T15:00:00"
+    },
+    "worst_trade": {
+      "id": "CRT-0011",
+      "rr": -0.5482851318910659,
+      "session": "OFF_SESSION",
+      "opened_at": "2025-10-02T19:00:00"
+    },
+    "cost_analysis": {
+      "total_slippage_pips": 1186.73,
+      "total_spread_pips": 858.98,
+      "avg_cost_per_trade": 157.36,
+      "raw_vs_net_pnl_rr_delta": 0.3265
+    },
+    "feature_drift": {
+      "n_samples": 13,
+      "n_total": 13,
+      "n_drift_detected": 0,
+      "status": "insufficient_data (need 30)"
+    }
+  }
+}
