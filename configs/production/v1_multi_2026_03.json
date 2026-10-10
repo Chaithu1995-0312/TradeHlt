@@ -246,9 +246,11 @@
   },
   "config_validator": {
     "min_trades_per_instrument": 10,
+    "min_trades_per_month": 4,
+    "month_window_max_days": 35,
     "max_drawdown_pct": 0.35,
     "min_win_rate": 0.35,
-    "min_expectancy": -0.5,
+    "min_expectancy": 0.0,
     "score_threshold": 0.15,
     "max_score_std_dev": 0.30,
     "trade_count_target": 50,

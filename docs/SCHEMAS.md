@@ -243,11 +243,13 @@ ValidationReport = {
 ```python
 # From configs/production/v1_multi_2026_03.json → "config_validator":
 {
-    "min_trades_per_instrument": 10,            # HARD
+    "min_trades_per_instrument": 10,            # HARD (full window)
+    "min_trades_per_month":      4,             # HARD (window="month")
+    "month_window_max_days":     35,            # month-window CSV span cap
     "max_drawdown_pct":          35.0,          # HARD
     "score_threshold":           0.15,          # HARD (min fitness)
     "min_win_rate":              0.35,          # SOFT
-    "min_expectancy":           -0.5,           # SOFT (R multiples)
+    "min_expectancy":            0.0,           # HARD (net R per trade)
     "max_score_std_dev":         0.2,           # SOFT (cross-instrument consistency)
     "trade_count_target":        100,
     "fitness_weights": {

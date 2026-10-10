@@ -1239,3 +1239,20 @@ Decision/Output: |
 Open Questions: Re-validate + rehash + promote? Make expectancy a hard gate? validation_summary in prod config is stale.
 Next Step: User decides on gate tightening and any promotion path.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-10
+Topic: Validator gate tightening (expectancy hard gate 0.0R; month window min 4 trades)
+Decision/Output: |
+  User chose: expectancy HARD gate at 0.0R; month-scoped min trades = 4 (new key, full-window 10 kept).
+  config_validator section (v1_multi_2026_03.json): min_expectancy -0.5 -> 0.0 (hard), added
+  min_trades_per_month=4, month_window_max_days=35. config_validator.py: window="full"|"month",
+  CSV span guard for month window, CLI --window. Docs + CLAUDE.md §11 updated. 11 new tests;
+  suite 12 failed (same pre-existing 12) / 902 passed. params hash unchanged, config loads.
+  M15 validate-prod: old engine REJECT (-0.867R); fixed engine APPROVE (+0.037R, 12 trades);
+  July-2025 month window REJECT (2 trades < 4); month flag on 2-yr file REJECT (span 730d).
+  results/validation_gate_tightening/REPORT.md.
+Open Questions: Add new keys to inactive v2_multi_2026_04.json? Refresh validation_summary + promote?
+Next Step: User decides on v2 keys and any promotion path.
+---

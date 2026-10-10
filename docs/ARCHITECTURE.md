@@ -152,8 +152,9 @@ auto_tuner_multi.py → checkpoint_multi.json
 ConfigValidator.validate(params, csv_paths, config_id)
   • Per-instrument BacktestRunner over each CSV
   • Computes fitness from weighted metrics (fitness_weights)
-  • HARD gates: min_trades_per_instrument, max_drawdown_pct, score_threshold
-  • SOFT gates: min_win_rate, min_expectancy, max_score_std_dev
+  • HARD gates: min_trades_per_instrument (min_trades_per_month for window="month"),
+                max_drawdown_pct, min_expectancy, score_threshold
+  • SOFT gates: min_win_rate, max_score_std_dev
   • Returns ValidationReport{decision, metrics, per_instrument, hard_failures, warnings}
   │
   ▼ (only if decision == "APPROVE")

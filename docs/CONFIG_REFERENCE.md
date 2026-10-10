@@ -242,10 +242,12 @@ Consumed by `src/config_layer/config_validator.py`.
 
 | Key                           | Type  | Default / Meaning                                       |
 | ----------------------------- | ----- | ------------------------------------------------------- |
-| `min_trades_per_instrument`   | int   | `10` — HARD gate                                        |
+| `min_trades_per_instrument`   | int   | `10` — HARD gate (full-span validation)                 |
+| `min_trades_per_month`        | int   | `4` — HARD gate when validating with `window="month"`   |
+| `month_window_max_days`       | int   | `35` — a `window="month"` CSV spanning more is rejected |
 | `max_drawdown_pct`            | float | `0.35` — HARD gate (fraction, not percent)              |
 | `min_win_rate`                | float | `0.35` — SOFT warning                                   |
-| `min_expectancy`              | float | `-0.5` — SOFT warning (R-multiples)                     |
+| `min_expectancy`              | float | `0.0` — HARD gate (net R per trade; was SOFT `-0.5`)    |
 | `score_threshold`             | float | `0.15` — HARD gate (min fitness)                        |
 | `max_score_std_dev`           | float | `0.30` — SOFT warning (cross-instrument consistency)    |
 | `trade_count_target`          | int   | `50`                                                    |

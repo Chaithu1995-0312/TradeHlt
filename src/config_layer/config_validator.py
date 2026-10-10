@@ -16,7 +16,7 @@ Quality Gates (Phase 5):
   1. Min trade count per instrument   (HARD gate)
   2. Max drawdown per instrument      (HARD gate)
   3. Min win rate                     (SOFT warning)
-  4. Min expectancy                   (SOFT warning)
+  4. Min expectancy (net R / trade)   (HARD gate)
   5. Cross-instrument score std_dev   (SOFT warning -- consistency)
 
 Usage:
@@ -78,6 +78,8 @@ def _validator_require(cfg: dict, key: str) -> object:
 _VALIDATOR_CFG = _load_validator_cfg()
 
 _GATE_MIN_TRADES_PER_INSTRUMENT: int   = int(_validator_require(_VALIDATOR_CFG, "min_trades_per_instrument"))
+_GATE_MIN_TRADES_PER_MONTH:      int   = int(_validator_require(_VALIDATOR_CFG, "min_trades_per_month"))
+_MONTH_WINDOW_MAX_DAYS:          int   = int(_validator_require(_VALIDATOR_CFG, "month_window_max_days"))
 _GATE_MAX_DRAWDOWN_PCT:          float = float(_validator_require(_VALIDATOR_CFG, "max_drawdown_pct"))
 _GATE_MIN_WIN_RATE:              float = float(_validator_require(_VALIDATOR_CFG, "min_win_rate"))
 _GATE_MIN_EXPECTANCY:            float = float(_validator_require(_VALIDATOR_CFG, "min_expectancy"))
@@ -222,10 +224,28 @@ def _aggregate_metrics(per_instrument: dict) -> dict:
     }
 
 
+_VALID_WINDOWS = ("full", "month")
+
+
+def _csv_span_days(csv_path: str) -> float:
+    """Calendar span (days) between the first and last candle timestamp of a CSV."""
+    from runtime.backtest_v2 import CandleLoader
+    loader = CandleLoader(str(csv_path))
+    first = last = None
+    for c in loader.stream():
+        if first is None:
+            first = c.timestamp
+        last = c.timestamp
+    if first is None:
+        return 0.0
+    return (last - first).total_seconds() / 86400.0
+
+
 def _run_quality_gates(
     per_instrument: dict,
     metrics: dict,
     params: dict,
+    window: str = "full",
 ) -> tuple[str, list[str], list[str]]:
     """
     Apply quality gates.
@@ -236,7 +256,15 @@ def _run_quality_gates(
       decision: "APPROVE" | "REJECT"
       hard_failures: reasons for hard rejection
       warnings: soft-gate warnings
+
+    window : "full" uses min_trades_per_instrument; "month" (CSVs spanning
+             about one month) uses min_trades_per_month.
     """
+    if window not in _VALID_WINDOWS:
+        raise ValueError(f"window must be one of {_VALID_WINDOWS}, got '{window}'.")
+    min_trades = (
+        _GATE_MIN_TRADES_PER_MONTH if window == "month" else _GATE_MIN_TRADES_PER_INSTRUMENT
+    )
     hard_failures: list[str] = []
     warnings:      list[str] = []
 
@@ -247,9 +275,15 @@ def _run_quality_gates(
             continue
 
         tc = res.get("trades", 0)
-        if tc < _GATE_MIN_TRADES_PER_INSTRUMENT:
+        if tc < min_trades:
             hard_failures.append(
-                f"{inst}: only {tc} trade(s) -- minimum is {_GATE_MIN_TRADES_PER_INSTRUMENT}."
+                f"{inst}: only {tc} trade(s) -- minimum is {min_trades} ({window} window)."
+            )
+
+        exp = res.get("expectancy_rr", 0.0)
+        if exp < _GATE_MIN_EXPECTANCY:
+            hard_failures.append(
+                f"{inst}: expectancy {exp:.3f}R below hard minimum {_GATE_MIN_EXPECTANCY}R."
             )
 
         dd = res.get("max_drawdown", 1.0)
@@ -270,13 +304,10 @@ def _run_quality_gates(
         if res.get("error"):
             continue
         wr  = res.get("win_rate", 0.0)
-        exp = res.get("expectancy_rr", 0.0)
         tc  = res.get("trades", 0)
 
         if wr < _GATE_MIN_WIN_RATE:
             warnings.append(f"{inst}: low win rate ({wr:.1%}).")
-        if exp < _GATE_MIN_EXPECTANCY:
-            warnings.append(f"{inst}: low expectancy ({exp:.3f}R).")
         if tc < _TRADE_COUNT_TARGET:
             warnings.append(
                 f"{inst}: low trade count ({tc}) -- sample may be marginal."
@@ -313,6 +344,7 @@ class ConfigValidator:
         config_id: str = "unnamed",
         use_llm: bool = False,
         warmup_candles: int = 30,
+        window: str = "full",
     ) -> dict:
         """
         Validate a params dict against all provided instrument CSVs.
@@ -329,6 +361,9 @@ class ConfigValidator:
             Reserved for future LLM gate integration (currently unused).
         warmup_candles : int
             Warmup candles for each backtest run.
+        window : str
+            "full" (default) or "month". "month" applies min_trades_per_month
+            and hard-fails any CSV spanning more than month_window_max_days.
 
         Returns
         -------
@@ -346,11 +381,25 @@ class ConfigValidator:
               "warnings":           [str, ...],
             }
         """
+        if window not in _VALID_WINDOWS:
+            raise ValueError(f"window must be one of {_VALID_WINDOWS}, got '{window}'.")
         if not csv_paths:
             return ConfigValidator._reject(
                 config_id, params,
                 hard_failures=["No CSV paths provided -- nothing to validate."],
             )
+        if window == "month":
+            for inst, csv_path in csv_paths.items():
+                if Path(csv_path).exists():
+                    span = _csv_span_days(csv_path)
+                    if span > _MONTH_WINDOW_MAX_DAYS:
+                        return ConfigValidator._reject(
+                            config_id, params,
+                            hard_failures=[
+                                f"{inst}: month window declared but CSV spans {span:.0f} days "
+                                f"(max {_MONTH_WINDOW_MAX_DAYS}) -- use window='full'."
+                            ],
+                        )
 
         # Build CRTConfig from params (unknown keys silently ignored)
         try:
@@ -395,7 +444,7 @@ class ConfigValidator:
 
         # -- Quality gates --------------------------------------------
         decision, hard_failures, warnings = _run_quality_gates(
-            per_instrument, metrics, params
+            per_instrument, metrics, params, window=window
         )
 
         # -- Print summary --------------------------------------------
@@ -435,6 +484,7 @@ class ConfigValidator:
     def validate_production(
         version: Optional[str] = None,
         csv_paths: Optional[dict] = None,
+        window: str = "full",
     ) -> dict:
         """
         Validate the currently-active production config.
@@ -465,6 +515,7 @@ class ConfigValidator:
             params=params,
             csv_paths=csv_paths,
             config_id=f"prod_validation_{target_version}",
+            window=window,
         )
 
     # -- Private helpers ----------------------------------------------
@@ -524,6 +575,8 @@ if __name__ == "__main__":
     vp.add_argument("--data-dir", default="data", help="Directory with instrument CSVs")
     vp.add_argument("--version", default=None, help="Override production version")
     vp.add_argument("--output", default=None, help="Write report JSON to path")
+    vp.add_argument("--window", choices=_VALID_WINDOWS, default="full",
+                    help="'month' = CSVs span ~1 month (min_trades_per_month applies)")
 
     # validate-params
     vpf = sub.add_parser("validate-params", help="Validate a params JSON file")
@@ -531,6 +584,7 @@ if __name__ == "__main__":
     vpf.add_argument("--data-dir", default="data")
     vpf.add_argument("--config-id", default="cli_validation")
     vpf.add_argument("--output", default=None)
+    vpf.add_argument("--window", choices=_VALID_WINDOWS, default="full")
 
     args = ap.parse_args()
 
@@ -540,7 +594,7 @@ if __name__ == "__main__":
             print(f"\nNo CSVs found in {args.data_dir}. Provide instrument CSVs.\n")
             sys.exit(1)
         report = ConfigValidator.validate_production(
-            version=args.version, csv_paths=csv_paths
+            version=args.version, csv_paths=csv_paths, window=args.window
         )
     elif args.cmd == "validate-params":
         with open(args.params) as f:
@@ -550,7 +604,8 @@ if __name__ == "__main__":
             print(f"\nNo CSVs found in {args.data_dir}. Provide instrument CSVs.\n")
             sys.exit(1)
         report = ConfigValidator.validate(
-            params=params, csv_paths=csv_paths, config_id=args.config_id
+            params=params, csv_paths=csv_paths, config_id=args.config_id,
+            window=args.window,
         )
     else:
         ap.print_help()

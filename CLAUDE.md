@@ -176,8 +176,8 @@ This keeps discussion grounded and skips re-explaining structure.
 ### Phase 1 — Runtime Correctness
 - **`config_validator.py`** fully implemented (`ConfigValidator` class).
   - `validate(params, csv_paths, config_id)` runs per-instrument backtest via `BacktestRunner`, computes fitness score, applies hard+soft quality gates, returns structured `ValidationReport`.
-  - Hard gates: min trade count (10), max drawdown (35%), min fitness score (0.15).
-  - Soft gates: win rate < 35%, expectancy < -0.5R, high cross-instrument variance.
+  - Hard gates: min trade count (10; 4 for `window="month"`), max drawdown (35%), min expectancy (0.0R net per trade), min fitness score (0.15).
+  - Soft gates: win rate < 35%, high cross-instrument variance.
   - **CLI:** `python config_validator.py validate-prod --data-dir data/`
 - `promotion_manager.py` already wired to `ConfigValidator.validate()` — unblocked.
 - `live_engine_hook.py` already implements `EngineRunner` API contract with correct session normalization, drift detection, and `UltronRiskGate` integration.
