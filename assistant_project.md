@@ -1115,3 +1115,20 @@ Open Questions: None.
 Next Step: When new modules are added, update Section 3 cross-reference matrix
   in lockstep — it is the single chokepoint where module paths appear.
 ---
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-10
+Topic: Hypothetical P&L — CRT spine on XAUUSD H1 (2024-05-22 → 2026-05-21)
+Decision/Output: |
+  User chose: unchanged CRT spine rules; uploaded corpus was XAUUSD H1 (not M15);
+  user chose a full 2-yr H1 run. Ran src/runtime/backtest_v2.py with production
+  backtest config (htf=4, spread 0.0002, slip 0.1xATR seed 42, 1% risk).
+  Result: 2 trades / 11,828 bars, WR 50%, net -0.29R, DD 0.4%; no-slip -0.23R.
+  Both trades RESET_CLOSE after 1 candle. Funnel: 930 sweeps -> 58 displacement
+  -> 2 execution; 2,948 HTF-rollover resets (htf=4 on H1 = H4 ranges).
+  May 23-29 2024 slice: 0 trades. Deterministic on re-run; backtest tests 9 passed.
+  Report: results/hypothetical_pnl_xauusd_h1/REPORT.md. No src/ or configs/ changes.
+Open Questions: Run the M15 corpus (native timeframe)? Or define an H1-native
+  htf-per-range (e.g. 24) as a new config candidate?
+Next Step: User decides between the M15 rerun and the H1-native config hypothesis.
+---
