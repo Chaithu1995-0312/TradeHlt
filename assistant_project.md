@@ -1302,3 +1302,18 @@ Decision/Output: |
 Open Questions: Gather more instruments/history for a real test? Define windows structurally? F3/F4 first?
 Next Step: User decides data expansion before any further policy testing; nothing promoted.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-10
+Topic: Weekly BUY/SELL sequential test for July 2025 (weekly start -> weekly end), outcome-conditioned
+Decision/Output: |
+  User chose: weekly hold, outcome-conditioned (forced direction); month = July 2025.
+  scripts/analysis/weekly_sequence_policy.py + 13 tests. 5 weekly trades/sequence at open of first bar ->
+  close of last bar, corrected costs, 1R = mean daily range (14d). Month: +0.66,+0.47,-0.31,-0.30,-0.88R (BUY raw).
+  A (win-stay/lose-shift) == weekly momentum after week 1: BUY BUY SELL SELL, weeks 2-5 +1.22R; C reversal -1.46R;
+  D1 -1.15R; D2 +0.90R; E +1.23/-1.48R. Persistence 3/4 (sign test p=0.62). No policy selected; no power.
+  results/weekly_sequence_2025_07/{REPORT.md,ledger.csv,summary.json}. No src/config change.
+Open Questions: Run the same weekly rules across all ~104 weeks (and more instruments) for a real test?
+Next Step: User decides on extending beyond one month; nothing promoted.
+---
