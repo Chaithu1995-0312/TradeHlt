@@ -32,8 +32,10 @@ Failure Modes:
     - Feature drift: pipeline is stateless. If market regime shifts, retrain.
     - Lookahead bias: swing reference prices use .shift(1) so current-bar data
       never influences the same bar's BOS/sweep decision.
-    - Swing detection uses center=True rolling — valid for historical backtesting.
-      For live inference, replace with a trailing-only swing detector.
+    - Swing detection is causal by default (structure_mode="causal_v2"): a swing at bar s is
+      confirmed at bar s+SWING_CONFIRM_BARS and only usable from the following bar. The old
+      centred detector is kept as structure_mode="centred_v1", a NON-CAUSAL research reference
+      (it flags a swing before it can be known); never use it for training or live inference.
 """
 
 import math
@@ -51,6 +53,13 @@ from utils.logging_config import get_flow_logger
 logger = get_flow_logger("FEATURE_PIPELINE")
 
 SWING_WINDOW = 2  # ±2 candles for swing detection
+
+# Structure (swing/BOS/sweep) definitions. "causal_v2" is the default; "centred_v1" is the
+# earlier centred-window implementation kept only as a non-causal research reference.
+STRUCTURE_MODE_CAUSAL = "causal_v2"
+STRUCTURE_MODE_CENTRED = "centred_v1"
+STRUCTURE_MODES = (STRUCTURE_MODE_CAUSAL, STRUCTURE_MODE_CENTRED)
+SWING_CONFIRM_BARS = SWING_WINDOW   # a swing at bar s needs bars s+1..s+SWING_WINDOW to close
 
 # volatility_regime = trailing percentile of ATR(14) against the PRIOR VOL_REGIME_WINDOW bars
 # (current bar excluded, mid-rank ties, undefined until a full valid window exists).
@@ -177,7 +186,22 @@ class FeaturePipeline:
     the same pipeline instance is reused (e.g. incremental live data ingestion).
     """
 
-    def __init__(self, df: pd.DataFrame, monitor: Optional[FeatureMonitor] = None):
+    def __init__(
+        self,
+        df: pd.DataFrame,
+        monitor: Optional[FeatureMonitor] = None,
+        structure_mode: str = STRUCTURE_MODE_CAUSAL,
+    ):
+        if structure_mode not in STRUCTURE_MODES:
+            raise ValueError(
+                f"FeaturePipeline: structure_mode must be one of {STRUCTURE_MODES}, got '{structure_mode}'."
+            )
+        if structure_mode == STRUCTURE_MODE_CENTRED:
+            logger.warning(
+                "FeaturePipeline: structure_mode='centred_v1' is NON-CAUSAL (swings are flagged "
+                "before they can be known). Research reference only - do not train or trade on it."
+            )
+        self.structure_mode = structure_mode
         self.df = df.copy()
         # Drift monitor: injected or created fresh (window_size=500 default).
         # Pass an existing monitor to accumulate statistics across multiple run() calls.
@@ -338,11 +362,15 @@ class FeaturePipeline:
     # ------------------------------------------------------------------
     # STRUCTURE + LIQUIDITY  (swing detection, BOS, trap logic)
     # ------------------------------------------------------------------
-    def compute_structure_liquidity(self) -> None:
+    def _swings_centred_v1(self) -> None:
+        """
+        NON-CAUSAL research reference (the original implementation, unchanged).
+        The centred window flags a swing at bar s using bars s+1..s+SWING_WINDOW, and the
+        1-bar shift of the reference then lets bar t see a swing that needs bar t+1.
+        """
         df = self.df
         w = 2 * SWING_WINDOW + 1
 
-        # ── Swing highs / lows ────────────────────────────────────────
         roll_high = df["high"].rolling(w, center=True, min_periods=w).max()
         roll_low  = df["low"].rolling(w, center=True, min_periods=w).min()
 
@@ -352,8 +380,52 @@ class FeaturePipeline:
         df["last_swing_high_price"] = df["high"].where(df["swing_high"] == 1).ffill()
         df["last_swing_low_price"]  = df["low"].where(df["swing_low"]  == 1).ffill()
 
+    def _swings_causal_v2(self) -> None:
+        """
+        Causal swings with explicit event time vs confirmation time.
+
+        A swing high at bar s is the same event as before (high_s is the maximum of bars
+        s-SWING_WINDOW .. s+SWING_WINDOW) but it becomes known only when bar
+        c = s + SWING_CONFIRM_BARS closes. Columns on row c:
+          swing_high / swing_low        1 on the CONFIRMATION row (canonical feature)
+          swing_*_event_ts              timestamp of the swing bar s (NaT elsewhere)
+          swing_*_confirm_ts            timestamp of row c, the first moment it is known
+          last_swing_*_price / _event_ts / _confirm_ts   as-of values, forward-filled
+        Only trailing windows are used, so no value on row t depends on rows after t.
+        """
+        df = self.df
+        w = 2 * SWING_WINDOW + 1
+        k = SWING_CONFIRM_BARS
+        ts = df["timestamp"]
+
+        roll_high = df["high"].rolling(w, min_periods=w).max()    # trailing window ending at t
+        roll_low  = df["low"].rolling(w, min_periods=w).min()
+        flag_high = df["high"].shift(k) == roll_high
+        flag_low  = df["low"].shift(k)  == roll_low
+
+        for side, flag, price in (("high", flag_high, df["high"].shift(k)), ("low", flag_low, df["low"].shift(k))):
+            df[f"swing_{side}"] = flag.astype(np.int8)
+            df[f"swing_{side}_event_ts"]   = ts.shift(k).where(flag)
+            df[f"swing_{side}_confirm_ts"] = ts.where(flag)
+            df[f"last_swing_{side}_price"]      = price.where(flag).ffill()
+            df[f"last_swing_{side}_event_ts"]   = df[f"swing_{side}_event_ts"].ffill()
+            df[f"last_swing_{side}_confirm_ts"] = df[f"swing_{side}_confirm_ts"].ffill()
+
+    def compute_structure_liquidity(self) -> None:
+        if self.structure_mode == STRUCTURE_MODE_CENTRED:
+            self._swings_centred_v1()
+        else:
+            self._swings_causal_v2()
+        df = self.df
+
+        # Reference levels as known at the END OF THE PREVIOUS bar (shift(1)): a swing
+        # confirmed on bar t does not feed bar t's own BOS / sweep decision.
         ref_high = df["last_swing_high_price"].shift(1)
         ref_low  = df["last_swing_low_price"].shift(1)
+        if self.structure_mode == STRUCTURE_MODE_CAUSAL:
+            for side in ("high", "low"):
+                df[f"ref_swing_{side}_event_ts"]   = df[f"last_swing_{side}_event_ts"].shift(1)
+                df[f"ref_swing_{side}_confirm_ts"] = df[f"last_swing_{side}_confirm_ts"].shift(1)
 
         df["higher_high"] = (df["high"] > ref_high).astype(np.int8)
         df["lower_low"]   = (df["low"]  < ref_low).astype(np.int8)

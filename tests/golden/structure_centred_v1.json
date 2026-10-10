@@ -1,0 +1,44 @@
+{
+ "rows": 486,
+ "first_ts": "2024-01-03 05:30:00",
+ "swing_high": {
+  "sha256": "05447276f9b1e1f763099831c60fb57963acf3ac14efa0bea692878bdddaa261",
+  "sum": 84.0
+ },
+ "swing_low": {
+  "sha256": "5ea9a789cf847a3515416d158a448cbe6f42cde52ae761e19ca9161b0e1d284d",
+  "sum": 82.0
+ },
+ "higher_high": {
+  "sha256": "0a99fa607400b3b26ae50d34b303caef456f74a1025cc37b0216359dcd1f5172",
+  "sum": 81.0
+ },
+ "lower_low": {
+  "sha256": "a87b502acc409b42adb3ba9780ca478dc0f35f73117f7d03be0f637aaf79ef33",
+  "sum": 71.0
+ },
+ "break_of_structure": {
+  "sha256": "32633a44297134d06bdc077a72d2d7ea7de15251301b603bb150a84952bbe4b5",
+  "sum": 7.0
+ },
+ "liquidity_sweep": {
+  "sha256": "0931adbd94df610fa325d0fbfdb24962a4046ce7f2d925f20c91338635f29a8b",
+  "sum": 8.0
+ },
+ "sweep_detected": {
+  "sha256": "a50f36ebd5f07276685e34435f0860712eaf8dfec1b1a76a9ee4db10283c2c1a",
+  "sum": 112.0
+ },
+ "double_sweep": {
+  "sha256": "0d8ee7283f67084b427fd34878ca26e01296bb0abed4a0684f5467524b786ee4",
+  "sum": 64.0
+ },
+ "retest_depth": {
+  "sha256": "4d3382b83810ce7bdb7b12ba68334f6c77637b0f1b4c44cca8624bd7de542040",
+  "sum": 31.104557037353516
+ },
+ "candles_since_retest": {
+  "sha256": "90b15edcae61f815ad7dd0189589c43881b1d8455364224d2c300d9d644e821b",
+  "sum": 1726.0
+ }
+}

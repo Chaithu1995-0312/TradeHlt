@@ -1365,3 +1365,20 @@ Decision/Output: |
 Open Questions: Time-based window instead of 200 bars? Retrain / re-capture baseline? Fix centred swings next?
 Next Step: User decides on retraining and the swing-feature fix.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-10
+Topic: Causal swing/structure features (step 1 of agreed sequence); centred version kept as research reference
+Decision/Output: |
+  feature_pipeline.py: structure_mode "causal_v2" (default) vs "centred_v1" (verbatim original, non-causal, warns).
+  Swing at s confirmed at s+2 via trailing windows; swing_high/low flag the CONFIRMATION row; event_ts/confirm_ts stored
+  separately (+ last_*/ref_* columns); reference for bar t = latest swing confirmed <= t-1; derived flags unchanged.
+  13 new tests (future-mutation on all 35 canonical features, truncation incl. tail, centred still leaks, golden preservation,
+  event/confirm timestamps). Real H1 truncation (6 cuts, all rows): no feature differs; both traced weeks: none (was 6).
+  Suite 12 failed (same) / 957 passed. Backtests identical (decisions don't use these features) - NOT validation.
+  Causal signals more frequent (BOS +41%, higher_high +42%). Models/baselines stale; nothing retrained.
+  results/swing_causal_fix/REPORT.md; docs/SCHEMAS.md updated.
+Open Questions: Steps 2-5: volatility window (bars vs time), feature-definition version/hash, retrain once, live parity trace.
+Next Step: Step 2 comparison of bar-based vs time-based volatility window on the same data (no retraining yet).
+---
