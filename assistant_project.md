@@ -1206,3 +1206,18 @@ Decision/Output: |
 Open Questions: Treat EXECUTION-in-HTF-reset as a bug to fix + re-validate, or leave as is?
 Next Step: User decides; any engine change needs ConfigValidator before trust.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-10
+Topic: One-month slices (July 2025) for XAUUSD H1 and M15
+Decision/Output: |
+  Month choice: 2025-07, the only month with entries on both timeframes in earlier runs
+  (disclosed: chosen for trade availability, not blind). M15 (htf=4): 2 trades, production
+  -5.01R (reset-close overshoot -5.23R on CRT-0001), protected +0.64R (stop -0.38R, TP1 +1.02R).
+  H1 (htf=24): 0 trades in both variants (0 retests; cold-start shifts range boundaries).
+  Deterministic; unpatched controls == plain runs. results/hypothetical_pnl_xauusd_2025_07/REPORT.md.
+  No src/configs change; no statistical content (0-2 trades).
+Open Questions: Fix EXECUTION-in-HTF-reset as a bug + ConfigValidator, or leave as is?
+Next Step: User decides.
+---

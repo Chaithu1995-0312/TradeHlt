@@ -1,0 +1,53 @@
+═════════════════════════════════════════════════════════════════
+  CRT ENGINE BACKTEST v2 — XAUUSD
+═════════════════════════════════════════════════════════════════
+
+── COVERAGE ──────────────────────────────────────────────────
+  Total candles:                    2,100
+  Session gap resets:                   4
+  Total setups:                         2
+  Approved / Rejected:             2 / 0    
+  Approval rate:                   100.0%
+
+── PERFORMANCE (NET of costs) ────────────────────────────────
+  Win rate:                         50.0%
+  Avg RR (net):                      0.32R
+  Total PnL raw/net:            +0.03R /  +0.64R
+  Cost drag:                        -0.61R
+  TP1 / TP2 hit rate:          50.0% / 0.0%
+
+── RISK ──────────────────────────────────────────────────────
+  Max drawdown (R):                  0.38R
+  Max drawdown (% equity):           0.4%
+  Max win / loss streak:          1 / 1   
+  Avg trade duration:                 8.0 candles
+
+── CAPITAL CURVE ─────────────────────────────────────────────
+  Starting capital:               100,000
+  Final capital:                  100,637
+  Total return:                      0.6%
+
+── TRADE COSTS ───────────────────────────────────────────────
+  Total slippage:                    64.0 pips
+  Total spread:                     133.1 pips
+  Avg cost per trade:                98.5 pips
+  Raw vs Net PnL delta:             -0.61R
+
+── SESSION BREAKDOWN ─────────────────────────────────────────
+  NEWYORK         1 trades  WR=0%  PnL= -0.38R
+  OFF_SESSION     1 trades  WR=100%  PnL= +1.02R
+
+── DAY OF WEEK ───────────────────────────────────────────────
+  Wednesday       1 trades  WR=0%  PnL= -0.38R
+  Monday          1 trades  WR=100%  PnL= +1.02R
+
+── SIGNAL QUALITY ────────────────────────────────────────────
+  Score→outcome correlation:        0.000  (>0.2 = score predictive)
+  Loss clustering score:            0.000  (<0.3 = well dispersed)
+
+── REJECTION BREAKDOWN ───────────────────────────────────────
+
+── MONTHLY PnL ───────────────────────────────────────────────
+  2025-07  +0.64R  
+
+═════════════════════════════════════════════════════════════════

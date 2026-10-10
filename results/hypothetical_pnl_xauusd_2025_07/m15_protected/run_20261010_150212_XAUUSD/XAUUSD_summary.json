@@ -1,0 +1,98 @@
+{
+  "instrument": "XAUUSD",
+  "total_candles": 2100,
+  "gap_resets": 4,
+  "total_setups": 2,
+  "approved_trades": 2,
+  "rejected_trades": 0,
+  "approval_rate": 1.0,
+  "win_rate": 0.5,
+  "avg_rr_net": 0.3203,
+  "total_pnl_rr_raw": 0.0294,
+  "total_pnl_rr_net": 0.6405,
+  "max_drawdown_rr": 0.3793,
+  "max_drawdown_pct": 0.0038,
+  "max_win_streak": 1,
+  "max_loss_streak": 1,
+  "tp1_hits": 1,
+  "tp2_hits": 0,
+  "avg_trade_duration": 8.0,
+  "rejection_reasons": {},
+  "state_distribution": {
+    "RANGE": 1655,
+    "SWEEP": 379,
+    "DISPLACEMENT": 11,
+    "EXPANSION": 7,
+    "RETEST": 2,
+    "EXECUTION": 16
+  },
+  "monthly_pnl": {
+    "2025-07": 0.6405
+  },
+  "capital_curve": {
+    "initial_capital": 100000.0,
+    "final_capital": 100636.66,
+    "total_return_pct": 0.0064,
+    "max_drawdown_pct": 0.0038,
+    "current_drawdown_pct": 0.0,
+    "peak_capital": 100636.66,
+    "equity_curve_len": 3
+  },
+  "distribution": {
+    "session_breakdown": {
+      "NEWYORK": {
+        "trades": 1,
+        "win_rate": 0.0,
+        "pnl_rr": -0.3793,
+        "avg_rr": -0.3793
+      },
+      "OFF_SESSION": {
+        "trades": 1,
+        "win_rate": 1.0,
+        "pnl_rr": 1.0198,
+        "avg_rr": 1.0198
+      }
+    },
+    "day_of_week_breakdown": {
+      "Wednesday": {
+        "trades": 1,
+        "win_rate": 0.0,
+        "pnl_rr": -0.3793
+      },
+      "Monday": {
+        "trades": 1,
+        "win_rate": 1.0,
+        "pnl_rr": 1.0198
+      }
+    },
+    "best_hour_utc": 11,
+    "worst_hour_utc": 15,
+    "rolling_win_rate": [],
+    "loss_clustering_score": 0.0,
+    "score_outcome_corr": 0.0,
+    "best_trade": {
+      "id": "CRT-0002",
+      "rr": 1.0198155646184646,
+      "session": "OFF_SESSION",
+      "opened_at": "2025-07-14T11:30:00"
+    },
+    "worst_trade": {
+      "id": "CRT-0001",
+      "rr": -0.37928259426259286,
+      "session": "NEWYORK",
+      "opened_at": "2025-07-09T15:45:00"
+    },
+    "cost_analysis": {
+      "total_slippage_pips": 63.95,
+      "total_spread_pips": 133.13,
+      "avg_cost_per_trade": 98.54,
+      "raw_vs_net_pnl_rr_delta": -0.6112
+    },
+    "feature_drift": {
+      "n_samples": 2,
+      "n_total": 2,
+      "n_drift_detected": 0,
+      "status": "insufficient_data (need 30)"
+    }
+  }
+}

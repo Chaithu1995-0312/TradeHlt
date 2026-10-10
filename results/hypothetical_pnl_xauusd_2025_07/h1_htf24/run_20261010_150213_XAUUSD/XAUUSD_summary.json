@@ -1,0 +1,45 @@
+{
+  "instrument": "XAUUSD",
+  "total_candles": 525,
+  "gap_resets": 4,
+  "total_setups": 0,
+  "approved_trades": 0,
+  "rejected_trades": 0,
+  "approval_rate": 0.0,
+  "win_rate": 0.0,
+  "avg_rr_net": 0.0,
+  "total_pnl_rr_raw": 0.0,
+  "total_pnl_rr_net": 0.0,
+  "max_drawdown_rr": 0.0,
+  "max_drawdown_pct": 0.0,
+  "max_win_streak": 0,
+  "max_loss_streak": 0,
+  "tp1_hits": 0,
+  "tp2_hits": 0,
+  "avg_trade_duration": 0.0,
+  "rejection_reasons": {},
+  "state_distribution": {
+    "RANGE": 297,
+    "SWEEP": 168,
+    "DISPLACEMENT": 16,
+    "EXPANSION": 14
+  },
+  "monthly_pnl": {},
+  "capital_curve": {
+    "initial_capital": 100000.0,
+    "final_capital": 100000.0,
+    "total_return_pct": 0.0,
+    "max_drawdown_pct": 0.0,
+    "current_drawdown_pct": 0.0,
+    "peak_capital": 100000.0,
+    "equity_curve_len": 1
+  },
+  "distribution": {
+    "feature_drift": {
+      "n_samples": 0,
+      "n_total": 0,
+      "n_drift_detected": 0,
+      "status": "insufficient_data (need 30)"
+    }
+  }
+}

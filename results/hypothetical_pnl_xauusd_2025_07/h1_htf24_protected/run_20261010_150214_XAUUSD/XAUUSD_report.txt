@@ -1,0 +1,48 @@
+═════════════════════════════════════════════════════════════════
+  CRT ENGINE BACKTEST v2 — XAUUSD
+═════════════════════════════════════════════════════════════════
+
+── COVERAGE ──────────────────────────────────────────────────
+  Total candles:                      525
+  Session gap resets:                   4
+  Total setups:                         0
+  Approved / Rejected:             0 / 0    
+  Approval rate:                     0.0%
+
+── PERFORMANCE (NET of costs) ────────────────────────────────
+  Win rate:                          0.0%
+  Avg RR (net):                      0.00R
+  Total PnL raw/net:            +0.00R /  +0.00R
+  Cost drag:                        +0.00R
+  TP1 / TP2 hit rate:          0.0% / 0.0%
+
+── RISK ──────────────────────────────────────────────────────
+  Max drawdown (R):                  0.00R
+  Max drawdown (% equity):           0.0%
+  Max win / loss streak:          0 / 0   
+  Avg trade duration:                 0.0 candles
+
+── CAPITAL CURVE ─────────────────────────────────────────────
+  Starting capital:               100,000
+  Final capital:                  100,000
+  Total return:                      0.0%
+
+── TRADE COSTS ───────────────────────────────────────────────
+  Total slippage:                     0.0 pips
+  Total spread:                       0.0 pips
+  Avg cost per trade:                 0.0 pips
+  Raw vs Net PnL delta:             +0.00R
+
+── SESSION BREAKDOWN ─────────────────────────────────────────
+
+── DAY OF WEEK ───────────────────────────────────────────────
+
+── SIGNAL QUALITY ────────────────────────────────────────────
+  Score→outcome correlation:        0.000  (>0.2 = score predictive)
+  Loss clustering score:            0.000  (<0.3 = well dispersed)
+
+── REJECTION BREAKDOWN ───────────────────────────────────────
+
+── MONTHLY PnL ───────────────────────────────────────────────
+
+═════════════════════════════════════════════════════════════════
