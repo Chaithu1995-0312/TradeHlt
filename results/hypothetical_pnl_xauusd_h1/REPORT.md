@@ -63,3 +63,20 @@ Determinism: a re-run with seed 42 produced identical summary metrics. `pytest t
 ## 5. Possible next steps (each is a separate hypothesis; none was run)
 1. Run the same config on the M15 corpus the observation report used (its native timeframe).
 2. If H1 is the target, pick an htf-per-range that matches the timeframe (e.g. 24 → daily ranges). Set the value up front, not by sweeping, and treat it as a new config that needs `ConfigValidator` before it is trusted.
+
+## 6. Experiment: protect EXECUTION from HTF-rollover reset (monkeypatched, hypothetical)
+Change: at runtime, `ResetLogic.should_reset` ignores an "HTF changed" reset while the state is `EXECUTION`. No file in `src/` or `configs/` was edited. Output: `exp_execution_protected/`. The patch script is a scratchpad file, not in the repo.
+
+| | Baseline | EXECUTION protected |
+|---|---|---|
+| Trades | 2 | 2 (same entries) |
+| Exits | RESET_CLOSE ×2 (1 bar) | **STOPPED ×2** (8 and 10 bars) |
+| Win rate | 50% | 0% |
+| Net P&L | −0.29R | **−1.98R** |
+| Max DD | 0.4% | 2.0% |
+| TP1 / TP2 | 0 / 0 | 0 / 0 |
+
+- Trade count did not change. The bottleneck is upstream (930 sweeps → 58 displacements → 2 entries), not the reset after entry.
+- Once allowed to run, both shorts were stopped out (2024-07-17 16:00, 2025-07-22 15:00). The baseline's +0.10R on trade 1 came from the early forced close, not from the setup.
+- Controls: a re-run is identical (deterministic), and the unpatched run via the same script reproduces the baseline exactly.
+- Two trades prove nothing in either direction, and the count is still below the validator's hard gate of 10. This does not justify changing `crt_engine_v2.py`.

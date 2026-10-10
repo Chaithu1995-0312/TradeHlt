@@ -1,0 +1,99 @@
+{
+  "instrument": "XAUUSD",
+  "total_candles": 11828,
+  "gap_resets": 121,
+  "total_setups": 2,
+  "approved_trades": 2,
+  "rejected_trades": 0,
+  "approval_rate": 1.0,
+  "win_rate": 0.0,
+  "avg_rr_net": -0.9897,
+  "total_pnl_rr_raw": -1.985,
+  "total_pnl_rr_net": -1.9795,
+  "max_drawdown_rr": 1.9795,
+  "max_drawdown_pct": 0.0197,
+  "max_win_streak": 0,
+  "max_loss_streak": 2,
+  "tp1_hits": 0,
+  "tp2_hits": 0,
+  "avg_trade_duration": 9.0,
+  "rejection_reasons": {},
+  "state_distribution": {
+    "RANGE": 9728,
+    "SWEEP": 1966,
+    "DISPLACEMENT": 73,
+    "EXPANSION": 11,
+    "RETEST": 2,
+    "EXECUTION": 18
+  },
+  "monthly_pnl": {
+    "2024-07": -0.9959,
+    "2025-07": -0.9836
+  },
+  "capital_curve": {
+    "initial_capital": 100000.0,
+    "final_capital": 98030.31,
+    "total_return_pct": -0.0197,
+    "max_drawdown_pct": 0.0197,
+    "current_drawdown_pct": 0.0197,
+    "peak_capital": 100000.0,
+    "equity_curve_len": 3
+  },
+  "distribution": {
+    "session_breakdown": {
+      "LONDON": {
+        "trades": 1,
+        "win_rate": 0.0,
+        "pnl_rr": -0.9959,
+        "avg_rr": -0.9959
+      },
+      "OFF_SESSION": {
+        "trades": 1,
+        "win_rate": 0.0,
+        "pnl_rr": -0.9836,
+        "avg_rr": -0.9836
+      }
+    },
+    "day_of_week_breakdown": {
+      "Wednesday": {
+        "trades": 1,
+        "win_rate": 0.0,
+        "pnl_rr": -0.9959
+      },
+      "Tuesday": {
+        "trades": 1,
+        "win_rate": 0.0,
+        "pnl_rr": -0.9836
+      }
+    },
+    "best_hour_utc": 5,
+    "worst_hour_utc": 8,
+    "rolling_win_rate": [],
+    "loss_clustering_score": 0.0,
+    "score_outcome_corr": 0.0,
+    "best_trade": {
+      "id": "CRT-0002",
+      "rr": -0.9836190264973448,
+      "session": "OFF_SESSION",
+      "opened_at": "2025-07-22T05:00:00"
+    },
+    "worst_trade": {
+      "id": "CRT-0001",
+      "rr": -0.9958675141015775,
+      "session": "LONDON",
+      "opened_at": "2024-07-17T08:00:00"
+    },
+    "cost_analysis": {
+      "total_slippage_pips": 110.11,
+      "total_spread_pips": 117.81,
+      "avg_cost_per_trade": 113.96,
+      "raw_vs_net_pnl_rr_delta": -0.0055
+    },
+    "feature_drift": {
+      "n_samples": 2,
+      "n_total": 2,
+      "n_drift_detected": 0,
+      "status": "insufficient_data (need 30)"
+    }
+  }
+}

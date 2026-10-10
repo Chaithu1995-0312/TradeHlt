@@ -1132,3 +1132,20 @@ Open Questions: Run the M15 corpus (native timeframe)? Or define an H1-native
   htf-per-range (e.g. 24) as a new config candidate?
 Next Step: User decides between the M15 rerun and the H1-native config hypothesis.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-10
+Topic: Trace of the 2 XAUUSD H1 trades + EXECUTION-protected experiment
+Decision/Output: |
+  Trace: both trades went sweep -> displacement -> expansion -> retest ->
+  execution, then were force-closed 1 bar after entry (RESET_CLOSE) because
+  ResetLogic.should_reset (crt_engine_v2.py:1324-1327) exempts EXPANSION/RETEST
+  but not EXECUTION from HTF rollover.
+  Experiment (runtime monkeypatch only, no src/configs change): protecting
+  EXECUTION left the trade count at 2; both then STOPPED, net -1.98R, DD 2.0%.
+  Deterministic; unpatched control == baseline. Added as REPORT.md section 6.
+  Bottleneck is upstream (930 sweeps -> 58 displacement -> 2 entries).
+Open Questions: M15 corpus rerun? H1-native htf-per-range (e.g. 24) as a new config candidate?
+Next Step: User picks M15 rerun or H1-native config hypothesis.
+---
