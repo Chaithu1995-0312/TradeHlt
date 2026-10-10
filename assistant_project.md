@@ -1287,3 +1287,18 @@ Decision/Output: |
 Open Questions: Next-bar-open entry instead of confirming close? F3 (TP2/runner), F4 (feature scale) still open.
 Next Step: Freeze this baseline and run the outcome-conditioned direction policies A-D (pilot, low power).
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-10
+Topic: Outcome-conditioned direction policies A-D (direction selection), pilot on corrected baseline
+Decision/Output: |
+  Frozen corrected baselines (M15 9 opps, H1 htf24 12 opps; sha256 in results/outcome_policy_pilot/frozen).
+  scripts/analysis/outcome_policy_pilot.py: policies A/B/C/D, windows open/middle/close, metrics, dev vs hold-out
+  (cutoff 2025-05-22), pre-registered selection (floor 3 dev trades, beat D). Selected M15->A, H1->C.
+  Hold-out: M15 A +0.886R (n=3) vs D +0.872R (n=4); H1 C +0.276R (n=3, CI -2.5..+3.1) vs D -0.326R (n=7).
+  Fisher p 0.40-1.00 on prev-outcome x direction tables. Conclusion: no detectable information; pilot has no power
+  (cells 0-10 trades; need ~70-140). Forced direction not run. results/outcome_policy_pilot/REPORT.md.
+Open Questions: Gather more instruments/history for a real test? Define windows structurally? F3/F4 first?
+Next Step: User decides data expansion before any further policy testing; nothing promoted.
+---
