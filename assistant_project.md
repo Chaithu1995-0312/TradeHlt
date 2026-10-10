@@ -1382,3 +1382,23 @@ Decision/Output: |
 Open Questions: Steps 2-5: volatility window (bars vs time), feature-definition version/hash, retrain once, live parity trace.
 Next Step: Step 2 comparison of bar-based vs time-based volatility window on the same data (no retraining yet).
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-10
+Topic: Step 2 - volatility window comparison (bar-based vs time-based), identical data, comparison only
+Decision/Output: |
+  Authorized: compare A (prior 200 bars), B (H1, prior 9 elapsed calendar days), C (M15, prior 2 elapsed days); no retraining,
+  no config change, no contract freeze, no trading metrics. Rules frozen in code before running (same ATR(14), strictly-prior
+  observations, mid-rank ties, 0.33/0.66 edges, NaN never imputed; time rules: calendar time, closures not filled, window start
+  >= first bar, N_MIN=100 bars, all ATR finite).
+  Results: causal for all (prefix/mutation 0 fails on 6 cuts per TF, replay identical). Coverage: H1 A 98.2% / B 98.1%;
+  M15 A 99.6% / C 76.8% (C NaN on every Monday + 9.5% of Tuesday: weekend empties a 2-day window, cannot reach N_MIN=100).
+  9 calendar days != 200 H1 bars (159 bars vs 12.7 calendar days). Agreement A-B 89.0% (kappa 0.83), A-C 92.9% (0.89).
+  Semantics: doubling the current candle flips 16-20% of labels vs 62% for a candle-range strawman -> ATR context preserved,
+  not immune. Recommendation (not applied): prefer A; B viable; C not as specified; same-horizon-across-TF needs a new
+  trading-time candidate D. Inventory: 12 gaussian_p5 models (scaler mean/std for volatility_regime), 5 tradenet .pth stale.
+  scripts/analysis/volatility_window_comparison.py + 12 tests; results/volatility_window_comparison/{REPORT.md,metrics.json}.
+Open Questions: (a) fixed observations vs trading-time horizon; (b) one horizon for H1 and M15?; (c) then freeze feature-definition version/hash.
+Next Step: User selects window semantics; only then freeze the contract, rebuild datasets, retrain once.
+---
