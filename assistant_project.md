@@ -1402,3 +1402,25 @@ Decision/Output: |
 Open Questions: (a) fixed observations vs trading-time horizon; (b) one horizon for H1 and M15?; (c) then freeze feature-definition version/hash.
 Next Step: User selects window semantics; only then freeze the contract, rebuild datasets, retrain once.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-10
+Topic: Candidate D (shared observation horizon: H1 200 bars, M15 800 bars) vs unchanged reference A - comparison only
+Decision/Output: |
+  Authorized: controlled comparison only; A stays reference; contract unfrozen; no rebuild/retrain/recalibration/production change.
+  protocol v2 (scripts/analysis/volatility_horizon_comparison.py, reuses v1; 5 tests): D == A on H1 (asserted); all causal
+  (0 prefix/mutation fails, replay identical, A hashes identical to v1). M15: D warm-up 814 vs 214 bars (valid 98.3% vs 99.6%),
+  A-D agreement 75.1% (kappa 0.63), smoother (flip 8.4% vs 10.0%) but slower to surges (61.5% vs 71.9% high at event).
+  D's window spans the same wall-clock time as H1's 200 bars (ratio 1.00 vs 0.20 for A). Cross-timeframe label agreement:
+  A 43.9% (kappa 0.16) -> D 53.4% (0.30); diagnostic M15 ATR(56) 86.7% (0.80): ATR(14) horizon (14 h vs 3.5 h) is the main source
+  of cross-timeframe inconsistency; ATR-based atr/volatility_ratio/disp_strength/ema_spread/momentum_score are timeframe-local too.
+  Neither A nor D matches the retired full-file label (44.9%): existing models stale either way.
+  Deviation recorded: closure rule counts M15 daily break but not H1's; added descriptive long-closure + retired-label metrics.
+  Recommendation (not applied): keep A unless cross-timeframe reuse is required; D is a half-measure; full consistency needs
+  time-defined ATR + reference (separate pre-registered comparison, schema-level decision).
+  results/volatility_horizon_comparison/{REPORT.md,metrics.json}.
+Open Questions: (a) timeframe-local A vs fully time-defined feature set; then freeze feature-definition version/hash, parity trace,
+  full model/dataset inventory, rebuild, retrain once, versioned baselines.
+Next Step: User decides the semantics; training/live parity trace is next and does not depend on that choice.
+---
