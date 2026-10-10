@@ -1191,3 +1191,18 @@ Decision/Output: |
 Open Questions: None pending; awaiting M15 corpus upload.
 Next Step: Run the fixed-rule config on M15 data once uploaded; avoid selecting parameters from this sample.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-10
+Topic: Native-timeframe XAUUSD M15 run (production config) + EXECUTION-protected variant
+Decision/Output: |
+  Corpus matches observation report (450 bars May 23-29 2024). Baseline: 10 trades, all
+  RESET_CLOSE after 1 bar, net -13.17R, DD 13.5%; two trades (-7.89R, -5.39R) dominate because
+  the reset exit prices at bar close beyond the stop. Protected variant (runtime patch):
+  same 10 entries, TP1 x5 / STOPPED x5, net +0.18R, expectancy +0.02R (SE 0.31), DD 2.4%.
+  May 23-29 slice: 0 trades. Deterministic; unpatched control == baseline.
+  results/hypothetical_pnl_xauusd_m15/REPORT.md. No src/configs change; not promotable.
+Open Questions: Treat EXECUTION-in-HTF-reset as a bug to fix + re-validate, or leave as is?
+Next Step: User decides; any engine change needs ConfigValidator before trust.
+---
