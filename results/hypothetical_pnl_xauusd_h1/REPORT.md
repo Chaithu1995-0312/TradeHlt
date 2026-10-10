@@ -123,3 +123,24 @@ Combines section 7 (`--htf 24`) with the section 6 runtime patch (HTF-rollover r
 - **Pockets:** New York 4/4 wins (+3.86R) and off-session 29% wins (−1.86R). With 4 and 7 trades these are noise, and cutting by session after seeing this would be overfitting.
 - Controls: a re-run is identical (deterministic), and the unpatched run through the same script reproduces §7 exactly.
 - Not promotable: no `ConfigValidator` run, and the engine change exists only as a monkeypatch. Whether to make it permanent is a separate decision that needs validation on the M15 data the config was built for.
+
+## 9. One-number sensitivity: range length 24 → 12 (EXECUTION protected, monkeypatched, hypothetical)
+Only `--htf` changed (24 → 12, i.e. half-day ranges). Output: `htf12_exec_protected/`. This is a sensitivity probe, not a candidate config, and nothing was selected from it.
+
+| | htf=24 (§8) | htf=12 | Change |
+|---|---|---|---|
+| Trades | 13 | **7** | −6 |
+| Win rate | 53.8% | 28.6% | −25.2 pts |
+| Exits | TP1 6, stop 3, gap 3, reset 1 | TP1 1, stop 3, reset 2, gap 1 | |
+| Net P&L | +2.35R | **−2.05R** | −4.40R |
+| Raw P&L | +2.68R | −1.61R | |
+| Expectancy / trade | +0.18R (SE 0.25R) | −0.29R (SE 0.30R) | −0.47R |
+| Max DD | 3.07R (3.0%) | 2.67R (2.7%) | |
+| RETEST → EXECUTION | 14 → 14 | 7 → 7 | halved |
+| HTF rollover resets | 481 | 951 | ≈ doubled |
+
+How the arithmetic moved: halving the range doubles the rollovers (each one resets the setup tracker). Fewer setups reach the retest (14 → 7), so there are fewer trades. Net R = sum of per-trade R, so with 7 trades of mixed outcomes it is −2.05R instead of +2.35R. Cost drag is about 0.4R in both runs.
+
+The entries barely overlap: 1 entry is common to both runs, 12 appear only at htf=24 and 6 only at htf=12. A single number reshuffled which setups exist at all.
+
+Interpretation: both results sit within about one standard error of zero or inside the interval that includes zero (§8: −0.35R to +0.71R). The sign flip from changing one number is itself evidence of fragility at this sample size. It is not a finding that 24 is better than 12, and picking 24 because it scored higher here would be tuning on noise. Re-run determinism holds (identical).

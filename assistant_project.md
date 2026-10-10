@@ -1177,3 +1177,17 @@ Decision/Output: |
 Open Questions: Validate on the M15 corpus before considering the engine change permanent?
 Next Step: User uploads M15 data, or decides to stop here.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-10
+Topic: One-number sensitivity — htf 24 -> 12 (EXECUTION protected, runtime patch)
+Decision/Output: |
+  htf=12: 7 trades (vs 13), WR 28.6% (vs 53.8%), net -2.05R (vs +2.35R),
+  expectancy -0.29R (SE 0.30), DD 2.7%. HTF rollovers 481 -> 951; RETEST->EXECUTION 14 -> 7.
+  Only 1 entry common to both runs (12 only at 24, 6 only at 12). Deterministic.
+  Conclusion: sign flip from one number = fragility at n<15, not evidence that 24 beats 12.
+  REPORT.md section 9. No src/configs change.
+Open Questions: None pending; awaiting M15 corpus upload.
+Next Step: Run the fixed-rule config on M15 data once uploaded; avoid selecting parameters from this sample.
+---
