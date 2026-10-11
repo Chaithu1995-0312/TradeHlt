@@ -1487,3 +1487,12 @@ Decision/Output: results/pnp_incremental_test/ (spec, manifest, freeze, matched 
 Open Questions: macd_hist event-vs-control underperformance (persistence confound?) needs a new pre-registered holdout.
 Next Step: only if a relationship survives a fresh holdout, define the frozen execution experiment.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-11
+Topic: Summary of evidence and findings (parity, Gaussian, transition research, PNP)
+Decision/Output: Summary delivered in chat; no code or data changes.
+Open Questions: larger trade corpus; live trade_data producer; fresh holdout for macd_hist cells.
+Next Step: user decides which thread to pursue.
+---
