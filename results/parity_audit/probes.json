@@ -1,0 +1,294 @@
+{
+  "P1_schema_sources": {
+    "CANONICAL_FEATURES": 35,
+    "dataset_builder_order_equal": true,
+    "model_export_order_equal": true,
+    "model_export_schema_version": "v5",
+    "module_SCHEMA_VERSION": "1.0",
+    "SchemaObject_version": "2.0",
+    "SCHEMA_HASH_names_only_md5": "f80ca4bdcea15f1b38413abc3ba51343",
+    "SchemaObject_checksum_md5_json": "f9b806ea0ca042aafb1d9bbd91b3d0fe",
+    "hashes_comparable": false,
+    "extra_validate_vector_implementations": [
+      "features/feature_schema.py::validate_vector (raises ValueError)",
+      "features/schema_validator.py::validate_vector (raises AssertionError)"
+    ]
+  },
+  "P2_gaussian_inventory": [
+    {
+      "file": "gaussian_p5_20260405T155721.json",
+      "n_features": 32,
+      "checksum": "bffbe5c1",
+      "load": "rejected:ValueError",
+      "missing": [
+        "volume",
+        "volume_ratio",
+        "double_sweep"
+      ],
+      "timeframe_recorded": false
+    },
+    {
+      "file": "gaussian_p5_20260405T155823.json",
+      "n_features": 32,
+      "checksum": "bffbe5c1",
+      "load": "rejected:ValueError",
+      "missing": [
+        "volume",
+        "volume_ratio",
+        "double_sweep"
+      ],
+      "timeframe_recorded": false
+    },
+    {
+      "file": "gaussian_p5_20260405T175730.json",
+      "n_features": 32,
+      "checksum": "bffbe5c1",
+      "load": "rejected:ValueError",
+      "missing": [
+        "volume",
+        "volume_ratio",
+        "double_sweep"
+      ],
+      "timeframe_recorded": false
+    },
+    {
+      "file": "gaussian_p5_20260405T180807.json",
+      "n_features": 32,
+      "checksum": "bffbe5c1",
+      "load": "rejected:ValueError",
+      "missing": [
+        "volume",
+        "volume_ratio",
+        "double_sweep"
+      ],
+      "timeframe_recorded": false
+    },
+    {
+      "file": "gaussian_p5_20260405T202752.json",
+      "n_features": 32,
+      "checksum": "bffbe5c1",
+      "load": "rejected:ValueError",
+      "missing": [
+        "volume",
+        "volume_ratio",
+        "double_sweep"
+      ],
+      "timeframe_recorded": false
+    },
+    {
+      "file": "gaussian_p5_20260405T202838.json",
+      "n_features": 32,
+      "checksum": "bffbe5c1",
+      "load": "rejected:ValueError",
+      "missing": [
+        "volume",
+        "volume_ratio",
+        "double_sweep"
+      ],
+      "timeframe_recorded": false
+    },
+    {
+      "file": "gaussian_p5_20260405T203532.json",
+      "n_features": 32,
+      "checksum": "bffbe5c1",
+      "load": "rejected:ValueError",
+      "missing": [
+        "volume",
+        "volume_ratio",
+        "double_sweep"
+      ],
+      "timeframe_recorded": false
+    },
+    {
+      "file": "gaussian_p5_20260405T204109.json",
+      "n_features": 32,
+      "checksum": "bffbe5c1",
+      "load": "rejected:ValueError",
+      "missing": [
+        "volume",
+        "volume_ratio",
+        "double_sweep"
+      ],
+      "timeframe_recorded": false
+    },
+    {
+      "file": "gaussian_p5_20260405T211410.json",
+      "n_features": 32,
+      "checksum": "bffbe5c1",
+      "load": "rejected:ValueError",
+      "missing": [
+        "volume",
+        "volume_ratio",
+        "double_sweep"
+      ],
+      "timeframe_recorded": false
+    },
+    {
+      "file": "gaussian_p5_20260405T213057.json",
+      "n_features": 32,
+      "checksum": "bffbe5c1",
+      "load": "rejected:ValueError",
+      "missing": [
+        "volume",
+        "volume_ratio",
+        "double_sweep"
+      ],
+      "timeframe_recorded": false
+    },
+    {
+      "file": "gaussian_p5_20260405T224338.json",
+      "n_features": 32,
+      "checksum": "bffbe5c1",
+      "load": "rejected:ValueError",
+      "missing": [
+        "volume",
+        "volume_ratio",
+        "double_sweep"
+      ],
+      "timeframe_recorded": false
+    },
+    {
+      "file": "gaussian_p5_20260406T005252.json",
+      "n_features": 33,
+      "checksum": "36ff0665",
+      "load": "rejected:ValueError",
+      "missing": [
+        "volume_ratio",
+        "double_sweep"
+      ],
+      "timeframe_recorded": false
+    },
+    {
+      "file": "gaussian_xau_m15_causal_n9_20261011.json",
+      "n_features": 35,
+      "checksum": "f9b806ea",
+      "load": "loads",
+      "missing": [],
+      "timeframe_recorded": true
+    }
+  ],
+  "P3_tradenet_inventory": {
+    "checkpoints": [
+      {
+        "file": "tradenet_p5_20260405T204109.pth",
+        "first_layer_inputs": 32,
+        "expected_inputs": 35
+      },
+      {
+        "file": "tradenet_p5_20260405T211455.pth",
+        "first_layer_inputs": 32,
+        "expected_inputs": 35
+      },
+      {
+        "file": "tradenet_p5_20260405T213213.pth",
+        "first_layer_inputs": 32,
+        "expected_inputs": 35
+      },
+      {
+        "file": "tradenet_p5_20260405T224424.pth",
+        "first_layer_inputs": 32,
+        "expected_inputs": 35
+      },
+      {
+        "file": "tradenet_p5_20260406T005347.pth",
+        "first_layer_inputs": 33,
+        "expected_inputs": 35
+      }
+    ],
+    "torch_installed": false,
+    "note": "loader (trainer.load_model) has no schema check and uses torch.load without weights_only; not executable here (no torch)"
+  },
+  "P4_live_path": {
+    "build_feature_vector": "ImportError: cannot import name 'build_feature_vector' from 'features.dataset_builder' (/home/user/TradeHlt/src/features/dataset_builder.py)",
+    "validate_feature_vector": "ImportError: cannot import name 'validate_feature_vector' from 'features.dataset_builder' (/home/user/TradeHlt/src/features/dataset_builder.py)",
+    "LiveEngineHook": "ImportError: cannot import name 'LiveEngineHook' from 'runtime.live_engine_hook' (/home/user/TradeHlt/src/runtime/live_engine_hook.py)",
+    "trade_data_producers_in_repo": [
+      "src/runtime/live_engine_hook.py",
+      "src/engines/live_engine.py"
+    ]
+  },
+  "P5_formulas_one_candle(O100,H104,L98,C102)": {
+    "pipeline/CRT Candle/manual_backtest": {
+      "body_size": 2.0,
+      "wick_size": 6.0,
+      "body_ratio": 0.3333333333333333
+    },
+    "live_engine_hook": {
+      "wick_size": 4.0,
+      "body_ratio": 0.5
+    },
+    "bitnet_feature_builder(no callers)": {
+      "wick_size": 4.0,
+      "body_ratio": 0.5
+    }
+  },
+  "P6_double_sweep(+1,6x0,-1)": {
+    "FeatureStore_deque10": 1,
+    "pipeline_window5": 0
+  },
+  "P7_session": {
+    "pipeline(hour<8:0,<16:1,else:2)": [
+      0,
+      1,
+      2
+    ],
+    "feature_schema.SESSION_MAP": {
+      "london": 0.0,
+      "newyork": 1.0,
+      "asian": 2.0,
+      "overlap": 3.0
+    },
+    "hook_normalize_output_examples": [
+      0,
+      1,
+      2
+    ],
+    "hook_strings": [
+      "asia",
+      "london",
+      "new_york"
+    ]
+  },
+  "P8_consumer_on_live_built_dict": {
+    "session_type": "str",
+    "extract_feature_vector": "ValueError: could not convert string to float: 'london'",
+    "MLGaussianEngine.compute": {
+      "score": 0.5,
+      "reason": "ml_gaussian_fallback"
+    },
+    "MLGaussianEngine.compute_numeric_session": {
+      "score": 0.5,
+      "reason": "ml_gaussian",
+      "meta": {
+        "expected_rr": 0.0,
+        "confidence": 1.0,
+        "model_version": "xau_m15_causal_n9_20261011"
+      }
+    }
+  },
+  "P9_registry_readers": {
+    "current": {
+      "heuristic_reader_active": "xau_m15_causal_n9_20261011",
+      "mu": 0.0,
+      "sigma": 1.0
+    },
+    "pre_change_backup": {
+      "heuristic_reader_active": "v1",
+      "mu": 0.0,
+      "sigma": 1.0
+    },
+    "model_registry.get_active_gaussian()": "xau_m15_causal_n9_20261011",
+    "v1.json": {
+      "version": "v1",
+      "schema": "gaussian_params_v1",
+      "mu": 0.0,
+      "sigma": 1.0,
+      "metrics": {
+        "corr_expected_rr": 0.2,
+        "calibration_error": 0.08
+      },
+      "note": "Stub artifact \u2014 v1 Gaussian parameters. Replace with trained model file."
+    },
+    "production_gaussian_impl": "heuristic"
+  }
+}

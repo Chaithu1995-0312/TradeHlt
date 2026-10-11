@@ -1496,3 +1496,12 @@ Decision/Output: Summary delivered in chat; no code or data changes.
 Open Questions: larger trade corpus; live trade_data producer; fresh holdout for macd_hist cells.
 Next Step: user decides which thread to pursue.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-11
+Topic: Read-only training/live parity and runtime-authority audit
+Decision/Output: results/parity_audit/ (AUDIT_REPORT.md, probes.json, audit.json), scripts/analysis/parity_audit_probes.py. 11 failures F1-F11; remediation R1-R8; decisions D1-D3. Corrections: earlier parity probe missed session str-vs-int; v1.json is an existing stub, not missing. body_ratio/wick_size differ hook vs pipeline/CRT engine (decision-affecting).
+Open Questions: D1 registry rollback; D2 src approval; D3 authoritative body_ratio.
+Next Step: user decisions, then R1-R2 additive implementation.
+---
