@@ -1,0 +1,91 @@
+{
+  "commands": [
+    "python scripts/analysis/pnp_incremental_test.py --csv data/XAUUSD_M15.csv --stage discovery --out results/pnp_incremental_test",
+    "python scripts/analysis/pnp_incremental_test.py --csv data/XAUUSD_M15.csv --stage holdout --out results/pnp_incremental_test"
+  ],
+  "corpus": {
+    "file": "data/XAUUSD_M15.csv",
+    "sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+    "matches_census": true,
+    "range": [
+      "2024-05-24 08:30:00",
+      "2026-05-21 23:45:00"
+    ],
+    "eligible_bars_census": 47061
+  },
+  "events": {
+    "file": "results/pnp_bar_census_full/events.csv",
+    "sha256": "6bcb3312740d41c1686f627ed240e88bdf8db8a256d52a70393035bb84764491",
+    "census_spec_sha256": "b921284d0bf19fc75e0d6b99862aaf64f5b56ca4618ae777a1bf42dc79934ab3",
+    "census_git_commit": "27da98756d64b75a45ab36f347869414d0641250"
+  },
+  "schema": {
+    "feature_count": 35,
+    "checksum": "f9b806ea0ca042aafb1d9bbd91b3d0fe",
+    "version": "2.0",
+    "names_only_hash": "f80ca4bdcea15f1b38413abc3ba51343",
+    "ordered_features": [
+      "open",
+      "high",
+      "low",
+      "close",
+      "volume",
+      "volume_ratio",
+      "double_sweep",
+      "ema_fast",
+      "ema_slow",
+      "ema_spread",
+      "trend_bias",
+      "trend_strength",
+      "momentum_score",
+      "atr",
+      "volatility_ratio",
+      "rsi_14",
+      "macd_line",
+      "macd_signal",
+      "macd_hist",
+      "sweep_detected",
+      "liquidity_sweep",
+      "break_of_structure",
+      "swing_high",
+      "swing_low",
+      "higher_high",
+      "lower_low",
+      "body_size",
+      "wick_size",
+      "body_ratio",
+      "volatility_regime",
+      "session",
+      "hour_of_day",
+      "disp_strength",
+      "retest_depth",
+      "candles_since_retest"
+    ]
+  },
+  "code": {
+    "script": "scripts/analysis/pnp_incremental_test.py",
+    "script_sha256": "f4deef1011a9a2be40544bca3c540224f4c288c4d5f8a97e2e206c9b9b463b72",
+    "feature_pipeline_sha256": "0e6eb2c600e34ea561a9ec87a203f530cbb978a1760ea0da936d9c66cd24da24",
+    "detector_script": "scripts/analysis/pnp_bar_census.py",
+    "detector_sha256": "40730d91c42f2d1752cea7f9af29d3a9b9d92af39b520e931b3155ee0c352323"
+  },
+  "configuration": {
+    "spec_sha256": "a6e733b1e52ea4d7b45877cfc6665aa510edcfb32da431de6837f1662f9f1f03",
+    "production_config_sha256": "59a4b1863c52842d28c8a79de79d7a2f01563d5ecfd0d2ab12f3b26676bd9a09",
+    "production_config_modified": false
+  },
+  "freeze": {
+    "discovery_summary_sha256": "116526c8bab08feb71c3568381f3e1f4ddc6f0ea018c6ed339c3605938e83ae2",
+    "spec_sha256": "a6e733b1e52ea4d7b45877cfc6665aa510edcfb32da431de6837f1662f9f1f03",
+    "frozen_before_holdout": true,
+    "git_commit": "3a4b01316c0d7afbcdcee491dacb8f510c914d4d"
+  },
+  "git_commit_at_run": "3a4b01316c0d7afbcdcee491dacb8f510c914d4d",
+  "outputs": {
+    "summary.csv": "5151dba27c6637f1a97d4bc6b10ed99da79ddf6473ae8201f1d8fa13d82646c9",
+    "matched_events.csv": "e48020dab982f18e1fcab462a310f66456dd008fa08720831f35507b363f6023",
+    "matched_controls.csv": "22a48b5323f89fd9388ea52d9650e015c9cf611d8d132b121d410545b961d1cb",
+    "stability_primary.csv": "153c83b1c79e32899e9585799bb987ba7a8981656da35ff59313158e305af5ce",
+    "h1_context_baseline.json": "01b358427c3e689ed30d6884f1581a3a70fab1fd68d5365dfa69aa0485796a9f"
+  }
+}

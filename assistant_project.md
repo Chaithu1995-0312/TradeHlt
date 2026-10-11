@@ -1478,3 +1478,12 @@ Decision/Output: results/pnp_bar_census_2025_07 and results/pnp_bar_census_full 
 Open Questions: context-conditioned comparison; other instruments.
 Next Step: matched-control test of incremental information; trade-near outcome definition.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-11
+Topic: PNP incremental-information test (matched controls, frozen discovery -> holdout)
+Decision/Output: results/pnp_incremental_test/ (spec, manifest, freeze, matched events/controls, summary, balance, evidence_record, REPORT), scripts/analysis/pnp_incremental_test.py, 5 tests. Discovery: 1/48 q<0.05; holdout: 0/48 q<0.05 (min q 0.072). Same-sign 31/48, effect correlation -0.02. H1 OOS R2 ~0. Status: unsupported in scope, not promoted.
+Open Questions: macd_hist event-vs-control underperformance (persistence confound?) needs a new pre-registered holdout.
+Next Step: only if a relationship survives a fresh holdout, define the frozen execution experiment.
+---

@@ -1,0 +1,6 @@
+{
+  "discovery_summary_sha256": "116526c8bab08feb71c3568381f3e1f4ddc6f0ea018c6ed339c3605938e83ae2",
+  "spec_sha256": "a6e733b1e52ea4d7b45877cfc6665aa510edcfb32da431de6837f1662f9f1f03",
+  "frozen_before_holdout": true,
+  "git_commit": "3a4b01316c0d7afbcdcee491dacb8f510c914d4d"
+}

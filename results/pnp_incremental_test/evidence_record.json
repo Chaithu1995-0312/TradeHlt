@@ -1,0 +1,41 @@
+{
+  "experiment": "PNP incremental information test (XAUUSD M15)",
+  "status": "unsupported_in_tested_scope",
+  "promotion_status": "NOT_PROMOTED",
+  "production_changes": "none (src/, configs/, models/ untouched)",
+  "hypotheses": {
+    "H1_context_baseline": {
+      "result": "context explains almost none of forward movement out of sample",
+      "oos_r2_by_horizon": {
+        "1": 0.0002487681974937539,
+        "4": 0.0006759257738246927,
+        "8": 0.0015320469253859992,
+        "16": -0.0005510469585212618
+      }
+    },
+    "H2_transition_increment": {
+      "discovery_tests": 48,
+      "discovery_bh_q_lt_0.05": 1,
+      "discovery_bh_q_lt_0.10": 9,
+      "holdout_bh_q_lt_0.05": 0,
+      "holdout_min_bh_q": 0.0719820044988752
+    },
+    "H3_stability": {
+      "same_sign_cells": 31,
+      "cells": 48,
+      "discovery_q_lt_0.10_same_sign_in_holdout": 7,
+      "discovery_holdout_effect_correlation": -0.016940533536166747,
+      "cells_meeting_promotion_rule": 0
+    }
+  },
+  "limitations": [
+    "one instrument, one timeframe, one corpus",
+    "controls are matched on observed context; unobserved confounders may remain (rsi_14 prior_ret_16 residual SMD up to 0.50)",
+    "events per family are modest after matching (21 to 330 pairs per cell)",
+    "forward windows overlap; inference clusters by day but cannot remove serial dependence entirely",
+    "returns are price movements without costs, slippage, stops or targets",
+    "discovery month 2025-07 was used in earlier unrelated trace work and lies in the discovery period",
+    "trend_bias and ema_spread are identical events and counted once"
+  ],
+  "next_experiment": "frozen execution experiment (entry, stop, target, slippage, costs) to be specified separately; it is only worth running if a price-movement relationship survives the holdout, which it did not"
+}

@@ -1,0 +1,72 @@
+{
+  "bootstrap_seed": 42,
+  "context_covariates": {
+    "exact": [
+      "htf_state",
+      "volatility_regime",
+      "session",
+      "hour_of_day",
+      "feature_sign_at_t (control has the same current sign as the event's final phase)"
+    ],
+    "htf_state": "sign(EMA20 - EMA50) of completed H4 closes (4h buckets starting 00,04,..; available when bucket end <= t close); ewm adjust=False; 0 before 50 buckets",
+    "nearest_neighbour_standardised": [
+      "prior_ret_16 (1e4*ln(close[t]/close[t-16]))",
+      "prior_ret_64",
+      "volatility_ratio"
+    ],
+    "standardisation": "SD of each covariate over the eligible bars of the same period (context only; no outcomes)"
+  },
+  "control_pool": "eligible bars of the same period: finite features, 16-bar forward outcome available, not within +/-16 bars of any event of the same feature (either pattern), same exact strata",
+  "events": "exact events from results/pnp_bar_census_full/events.csv (detector, thresholds, refractory and timestamps unchanged); trend_bias and ema_spread events are identical and are analysed once as family 'ema_spread'",
+  "families": {
+    "features": [
+      "ema_spread",
+      "macd_line",
+      "momentum_score",
+      "macd_hist",
+      "trend_strength",
+      "rsi_14"
+    ],
+    "note": "PNP and NPN are distinct families; tests = 6 features x 2 patterns x 4 horizons = 48 per period",
+    "patterns": [
+      "PNP",
+      "NPN"
+    ]
+  },
+  "hypotheses": {
+    "H1": "context-only linear model of raw forward return (htf dummies, volatility regime dummies, hour dummies, prior_ret_16, prior_ret_64, volatility_ratio) fitted on discovery bars, out-of-sample R^2 on holdout bars",
+    "H2": "paired difference d = aligned(event) - aligned(control); day-cluster bootstrap (4000) CI and p; also pooled OLS of aligned return on context + event indicator with day-clustered SE (primary matching only)",
+    "H3": "same sign and holdout BH q < 0.05 in the chronological holdout after the discovery freeze"
+  },
+  "matching": {
+    "primary": "1:1 nearest neighbour, per-covariate caliper 0.5 SD, no replacement, greedy in event time order",
+    "sensitivity": {
+      "caliper_025": "caliper 0.25 SD",
+      "hour_relaxed": "session + 4-hour bucket instead of exact hour",
+      "k3_replace": "up to 3 nearest controls with replacement (mean of controls)",
+      "non_overlap": "primary pairs, events thinned to >= 16 bars apart"
+    },
+    "unmatched": "events without a control in caliper are dropped and counted"
+  },
+  "multiple_testing": "Benjamini-Hochberg across the 48 family x direction x horizon tests, separately in discovery and holdout",
+  "observation_landmark": "bar close of the confirmation bar t; every covariate uses bars <= t",
+  "outcome": {
+    "alignment": "multiplied by the event's final-phase sign (+1 PNP, -1 NPN); the matched control inherits the event's sign",
+    "formula": "10000 * ln(close[t+k] / close[t]) bps, k in {1,4,8,16}",
+    "missing": "pair dropped for the horizon if timestamp[t+k]-timestamp[t] != 15min*k for event or control; events/controls need the 16-bar outcome so every horizon uses the same sample",
+    "overlap": "forward windows of nearby events overlap; inference clusters by calendar day of the observation bar"
+  },
+  "periods": {
+    "discovery": [
+      "2024-05-24",
+      "2025-07-31"
+    ],
+    "freeze": "stage=discovery writes discovery_freeze.json (sha256 of discovery summary and spec); stage=holdout refuses to run without a matching freeze",
+    "holdout": [
+      "2025-08-01",
+      "2026-05-21"
+    ]
+  },
+  "promotion_rule": "NONE promotable from this experiment. Support requires discovery BH q<0.05 AND holdout same sign AND holdout BH q<0.05 AND holdout CI excluding 0 AND >=3 of 4 sensitivities same sign in both periods. Anything else = inconclusive/unsupported in scope. No production change either way.",
+  "purpose": "Does a confirmed P->N->P (or N->P->N) transition add information about forward price movement beyond matched market context?"
+}
