@@ -1,0 +1,50 @@
+{
+ "trend_bias": {
+  "trend_bias": 1.0,
+  "ema_spread": 1.0,
+  "macd_line": 0.934,
+  "momentum_score": 0.527,
+  "macd_hist": 0.567,
+  "trend_strength": 0.726
+ },
+ "ema_spread": {
+  "trend_bias": 1.0,
+  "ema_spread": 1.0,
+  "macd_line": 0.934,
+  "momentum_score": 0.527,
+  "macd_hist": 0.567,
+  "trend_strength": 0.726
+ },
+ "macd_line": {
+  "trend_bias": 0.934,
+  "ema_spread": 0.934,
+  "macd_line": 1.0,
+  "momentum_score": 0.519,
+  "macd_hist": 0.505,
+  "trend_strength": 0.7
+ },
+ "momentum_score": {
+  "trend_bias": 0.527,
+  "ema_spread": 0.527,
+  "macd_line": 0.519,
+  "momentum_score": 1.0,
+  "macd_hist": 0.547,
+  "trend_strength": 0.501
+ },
+ "macd_hist": {
+  "trend_bias": 0.567,
+  "ema_spread": 0.567,
+  "macd_line": 0.505,
+  "momentum_score": 0.547,
+  "macd_hist": 1.0,
+  "trend_strength": 0.572
+ },
+ "trend_strength": {
+  "trend_bias": 0.726,
+  "ema_spread": 0.726,
+  "macd_line": 0.7,
+  "momentum_score": 0.501,
+  "macd_hist": 0.572,
+  "trend_strength": 1.0
+ }
+}

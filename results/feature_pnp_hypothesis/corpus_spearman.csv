@@ -1,0 +1,7 @@
+,trend_bias,ema_spread,macd_line,momentum_score,macd_hist,trend_strength
+trend_bias,1.0,0.86,0.828,0.07,0.173,0.536
+ema_spread,0.86,1.0,0.951,0.086,0.205,0.626
+macd_line,0.828,0.951,1.0,0.058,0.054,0.555
+momentum_score,0.07,0.086,0.058,1.0,0.153,0.023
+macd_hist,0.173,0.205,0.054,0.153,1.0,0.239
+trend_strength,0.536,0.626,0.555,0.023,0.239,1.0

@@ -1,0 +1,29 @@
+{
+ "trades_sha256": "78cdeceb0a28061d9c4d52a3d82aa3bc507f1d24760afd508259ce18cfce6c40",
+ "ohlcv_sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+ "spec_sha256": "78a28670a7263c62315ddcf214de7198fbf879f6eb31795bab44c6991058498e",
+ "durations": {
+  "CRT-0001": 3,
+  "CRT-0002": 1,
+  "CRT-0003": 20,
+  "CRT-0004": 1,
+  "CRT-0005": 2,
+  "CRT-0006": 15,
+  "CRT-0007": 4,
+  "CRT-0008": 8,
+  "CRT-0009": 74
+ },
+ "profitable_ids": [
+  "CRT-0003",
+  "CRT-0006",
+  "CRT-0007",
+  "CRT-0008",
+  "CRT-0009"
+ ],
+ "losing_ids": [
+  "CRT-0001",
+  "CRT-0002",
+  "CRT-0004",
+  "CRT-0005"
+ ]
+}

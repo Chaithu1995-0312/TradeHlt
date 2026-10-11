@@ -1460,3 +1460,12 @@ Decision/Output: results/feature_transition_research/ (spec, manifest, 1,680 row
 Open Questions: larger trade corpus; whether stops are close-evaluated (CRT-0005); TP1 ending trades below 1R.
 Next Step: rerun unchanged on a larger corpus.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-11
+Topic: Phase-anchored P->N->P hypothesis on six primary + rsi_14 features
+Decision/Output: results/feature_pnp_hypothesis/ (spec, per-trade table, summary, correlations, REPORT). Sequence seen in 2/9 trades (both profitable, long durations); all 4 losing trades last <=3 bars so duration confounds the comparison. ema_spread/macd_line/trend_bias rho 0.83-0.95 (one family). macd_hist_z, trend_strength_z, fvg_distance are not canonical names.
+Open Questions: larger trade corpus; duration-matched design.
+Next Step: rerun on a larger corpus with duration matching and holdout.
+---

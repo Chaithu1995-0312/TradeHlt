@@ -1,0 +1,32 @@
+{
+  "features": {
+    "primary": [
+      "trend_bias",
+      "ema_spread",
+      "macd_line",
+      "momentum_score",
+      "macd_hist",
+      "trend_strength"
+    ],
+    "secondary": [
+      "rsi_14"
+    ],
+    "name_mapping": "macd_hist_z, trend_strength_z and fvg_distance are not in CANONICAL_FEATURES; macd_hist and trend_strength are used; fvg_distance is not tested",
+    "rsi_14_sign": "sign(rsi_14 - 50)"
+  },
+  "representations": [
+    "raw",
+    "direction_aligned (value x +1 LONG, x -1 SHORT)"
+  ],
+  "sequence": {
+    "span": "bars [entry-11 .. exit]",
+    "min_run_len": 2,
+    "P1": "cleaned run (+) whose start <= entry bar and sign at entry bar and bar before are +",
+    "N": "next cleaned run (-) starting after the entry bar (adverse phase)",
+    "P2": "next cleaned run (+) starting at or before the exit bar (recovery)",
+    "causality": "P1 is entry-time; N and P2 use bars after entry, so the full sequence is descriptive/exit research, never an entry rule"
+  },
+  "split_by_direction": true,
+  "groups": "profitable = pnl_rr_net > 0; losing otherwise",
+  "adverse_bar": "bar of maximum adverse excursion in entry+1..exit (exit bar for STOPPED)"
+}
