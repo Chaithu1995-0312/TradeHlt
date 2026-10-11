@@ -1,0 +1,15 @@
+month,feature,pattern,events
+2025-07,ema_spread,NPN,13
+2025-07,ema_spread,PNP,11
+2025-07,macd_hist,NPN,22
+2025-07,macd_hist,PNP,26
+2025-07,macd_line,NPN,7
+2025-07,macd_line,PNP,6
+2025-07,momentum_score,NPN,47
+2025-07,momentum_score,PNP,45
+2025-07,rsi_14,NPN,23
+2025-07,rsi_14,PNP,23
+2025-07,trend_bias,NPN,13
+2025-07,trend_bias,PNP,11
+2025-07,trend_strength,NPN,7
+2025-07,trend_strength,PNP,5

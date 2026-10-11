@@ -1,0 +1,40 @@
+{
+  "discovery_month_default": "2025-07 (chosen in advance by availability of data/XAUUSD_M15_2025-07.csv; the month was used in earlier unrelated trace work, disclosed)",
+  "eligible_bar": "bar inside the scope whose 7 feature values are finite (pipeline warm-up already removed)",
+  "episode_groups": "events from any features within +/-4 bars are grouped into one cross-feature episode group",
+  "feature_sign": "sign(x); rsi_14 uses sign(rsi_14 - 50); zero values are skipped (state unchanged)",
+  "features": [
+    "trend_bias",
+    "ema_spread",
+    "macd_line",
+    "momentum_score",
+    "macd_hist",
+    "trend_strength",
+    "rsi_14"
+  ],
+  "forward_return": "10000 * ln(close[t+k] / close[t]) in bps, dropped if timestamp[t+k]-timestamp[t] != 15min*k; aligned = sign_of_final_phase * return",
+  "gap_rule": "detector state resets on any gap > 15 minutes between consecutive bars (weekend, daily break, data holes)",
+  "horizons_bars": [
+    1,
+    4,
+    8,
+    16
+  ],
+  "multiple_testing": "Benjamini-Hochberg over feature x pattern x horizon",
+  "name_mapping": "macd_hist_z, trend_strength_z, fvg_distance are not canonical features; macd_hist, trend_strength used",
+  "null": "random-timing null: 5000 draws of the same number of eligible bars with the observed final-phase signs shuffled; two-sided p of mean aligned return",
+  "patterns": {
+    "NPN": "mirror: - run, + run, - run (the short-aligned counterpart)",
+    "PNP": "confirmed + run (>=2 bars), then - run (2..10 bars), then + run; event on the bar the final + run reaches 2 bars"
+  },
+  "phase_limits": {
+    "max_confirm_span_bars_from_middle_start": 12,
+    "max_middle_run": 10,
+    "min_run": 2
+  },
+  "refractory_bars": 8,
+  "refractory_note": "events of the same feature/pattern within 8 bars of the previous event are one episode and are not counted again",
+  "scopes": "month = discovery only; full = discovery month, pre-discovery months and chronological holdout (bars after the discovery month)",
+  "seed": 42,
+  "time_structure": "calendar day, hour of day, minute of hour, M15 bar position (0..95); chi-square vs exposure (eligible bars share), Monte-Carlo p (5000)"
+}

@@ -1469,3 +1469,12 @@ Decision/Output: results/feature_pnp_hypothesis/ (spec, per-trade table, summary
 Open Questions: larger trade corpus; duration-matched design.
 Next Step: rerun on a larger corpus with duration matching and holdout.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-11
+Topic: Bar-first P->N->P census (frozen causal detector), month then full corpus
+Decision/Output: results/pnp_bar_census_2025_07 and results/pnp_bar_census_full (spec hash identical), scripts/analysis/pnp_bar_census.py, 7 detector tests. July 2025: 259 events / 109 groups; full: 5,949 / 2,572. trend_bias == ema_spread events. Hour-of-day structure significant (13/14 cells); forward returns vs random-timing null: 3/56 nominal p<0.05, min BH q 0.49.
+Open Questions: context-conditioned comparison; other instruments.
+Next Step: matched-control test of incremental information; trade-near outcome definition.
+---

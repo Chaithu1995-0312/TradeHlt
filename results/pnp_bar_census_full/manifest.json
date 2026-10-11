@@ -1,0 +1,29 @@
+{
+  "command": "python scripts/analysis/pnp_bar_census.py --csv data/XAUUSD_M15.csv --scope full --month 2025-07 --out results/pnp_bar_census_full",
+  "git_commit": "27da98756d64b75a45ab36f347869414d0641250",
+  "ohlcv_sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+  "spec_sha256": "b921284d0bf19fc75e0d6b99862aaf64f5b56ca4618ae777a1bf42dc79934ab3",
+  "pipeline_sha256": "0e6eb2c600e34ea561a9ec87a203f530cbb978a1760ea0da936d9c66cd24da24",
+  "schema": {
+    "count": 35,
+    "checksum": "f9b806ea0ca042aafb1d9bbd91b3d0fe",
+    "version": "2.0"
+  },
+  "scope": "full",
+  "month": "2025-07",
+  "eligible_bars": 47061,
+  "events_total": 5949,
+  "episode_groups": 2572,
+  "gap_resets": 514,
+  "unconditional_mean_return_bps": {
+    "1": 0.11288136821730423,
+    "4": 0.4036198980115746,
+    "8": 0.7267035860319437,
+    "16": 1.0720446464760098
+  },
+  "global_min_bh_q": 0.4927014597080584,
+  "range": [
+    "2024-05-24 08:30:00",
+    "2026-05-21 23:45:00"
+  ]
+}
