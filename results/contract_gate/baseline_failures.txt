@@ -1,0 +1,12 @@
+FAILED tests/inout/test_probability_engine.py::TestApproachB::test_fit_with_sufficient_data
+FAILED tests/inout/test_probability_engine.py::TestApproachB::test_high_score_signal_has_higher_tp_prob
+FAILED tests/inout/test_probability_engine.py::TestApproachB::test_predict_after_fit_returns_schema
+FAILED tests/inout/test_probability_engine.py::TestApproachB::test_probabilities_in_valid_range
+FAILED tests/inout/test_probability_engine.py::TestApproachB::test_save_and_load
+FAILED tests/inout/test_probability_engine.py::TestApproachD::test_blend_weight_in_result
+FAILED tests/inout/test_probability_engine.py::TestApproachD::test_hybrid_active_with_sufficient_records
+FAILED tests/inout/test_probability_engine.py::TestApproachD::test_save_and_load_propagates_to_b
+FAILED tests/inout/test_probability_engine.py::TestProbabilityEngine::test_approach_d_uses_hybrid_with_large_data
+FAILED tests/inout/test_probability_engine.py::TestProbabilityEngine::test_save_and_load_b
+FAILED tests/inout/test_probability_engine.py::TestProbabilityEngine::test_train_from_records
+FAILED tests/test_control_plane_doc_alignment.py::test_agents_path_alignment

@@ -1,0 +1,897 @@
+{
+  "nodes": [
+    {
+      "id": "src/features/feature_schema.py",
+      "role": "schema_authority",
+      "tree": "S"
+    },
+    {
+      "id": "src/features/dataset_builder.py",
+      "role": "schema_authority",
+      "tree": "S"
+    },
+    {
+      "id": "src/features/schema_validator.py",
+      "role": "duplicate_validator",
+      "tree": "S"
+    },
+    {
+      "id": "src/features/feature_contract.py",
+      "role": "contract_authority",
+      "tree": "S"
+    },
+    {
+      "id": "model_export_format.json",
+      "role": "external_mirror",
+      "tree": "D"
+    },
+    {
+      "id": "src/features/feature_pipeline.py",
+      "role": "producer_canonical",
+      "tree": "A"
+    },
+    {
+      "id": "src/runtime/backtest_v2.py",
+      "role": "consumer_producer",
+      "tree": "A"
+    },
+    {
+      "id": "src/config_layer/crt_engine_v2.py",
+      "role": "duplicate_producer+consumer",
+      "tree": "A"
+    },
+    {
+      "id": "scripts/backtest/manual_backtest.py",
+      "role": "duplicate_producer+consumer",
+      "tree": "A"
+    },
+    {
+      "id": "src/config_layer/rr/rr_dataset_builder.py",
+      "role": "producer_variant",
+      "tree": "C"
+    },
+    {
+      "id": "src/features/dataset_validator.py",
+      "role": "consumer",
+      "tree": "C"
+    },
+    {
+      "id": "src/runtime/live_engine_hook.py",
+      "role": "producer_variant",
+      "tree": "B"
+    },
+    {
+      "id": "src/core/feature_store.py",
+      "role": "producer_variant",
+      "tree": "B"
+    },
+    {
+      "id": "src/core/engine_runner.py",
+      "role": "decision_consumer",
+      "tree": "S"
+    },
+    {
+      "id": "src/engines/live_engine.py",
+      "role": "consumer",
+      "tree": "B"
+    },
+    {
+      "id": "src/agent/modes/pipeline_mode.py",
+      "role": "consumer",
+      "tree": "B"
+    },
+    {
+      "id": "src/agent/modes/copilot_mode.py",
+      "role": "consumer_external_input",
+      "tree": "B"
+    },
+    {
+      "id": "src/llm_research/forward_tester.py",
+      "role": "consumer",
+      "tree": "B"
+    },
+    {
+      "id": "src/scanner/scanner.py",
+      "role": "consumer_injected_provider",
+      "tree": "B"
+    },
+    {
+      "id": "src/features/feature_builder.py",
+      "role": "producer_variant",
+      "tree": "B"
+    },
+    {
+      "id": "src/engines/adapter_engine.py",
+      "role": "consumer",
+      "tree": "B"
+    },
+    {
+      "id": "src/core/fusion_engine.py",
+      "role": "consumer",
+      "tree": "B"
+    },
+    {
+      "id": "src/config_layer/execution_planner.py",
+      "role": "consumer",
+      "tree": "B"
+    },
+    {
+      "id": "src/config_layer/crt_gaussian_scorer.py",
+      "role": "consumer",
+      "tree": "B"
+    },
+    {
+      "id": "scripts/training/phase5_calibration.py",
+      "role": "training_path_P5",
+      "tree": "C"
+    },
+    {
+      "id": "src/training/train_pipeline.py",
+      "role": "training_path_TP",
+      "tree": "C"
+    },
+    {
+      "id": "src/training/trainer.py",
+      "role": "loader_saver",
+      "tree": "C"
+    },
+    {
+      "id": "src/core/model_registry.py",
+      "role": "registry_writer",
+      "tree": "C"
+    },
+    {
+      "id": "src/engines/ml_gaussian_engine.py",
+      "role": "inference_adapter",
+      "tree": "C"
+    },
+    {
+      "id": "src/engines/heuristic_gaussian_engine.py",
+      "role": "registry_reader_heuristic",
+      "tree": "C"
+    },
+    {
+      "id": "src/engines/gaussian_engine.py",
+      "role": "consumer",
+      "tree": "C"
+    },
+    {
+      "id": "scripts/training/gaussian_from_backtest.py",
+      "role": "training_path_experimental",
+      "tree": "C"
+    },
+    {
+      "id": "src/runtime/baseline_capture.py",
+      "role": "consumer",
+      "tree": "C"
+    },
+    {
+      "id": "src/features/bitnet_feature_builder.py",
+      "role": "producer_variant_unused",
+      "tree": "D"
+    },
+    {
+      "id": "src/bitnet/search_engine.py",
+      "role": "consumer",
+      "tree": "D"
+    },
+    {
+      "id": "src/bitnet/bitnet_runner.py",
+      "role": "consumer",
+      "tree": "D"
+    },
+    {
+      "id": "src/bitnet/bitnet_inference.py",
+      "role": "consumer",
+      "tree": "D"
+    },
+    {
+      "id": "src/engines/zone_gate_engine.py",
+      "role": "consumer",
+      "tree": "D"
+    },
+    {
+      "id": "tools/cpp/cpp_runner.cpp",
+      "role": "external_runtime",
+      "tree": "D"
+    },
+    {
+      "id": "src/inout/runner.py",
+      "role": "parallel_independent",
+      "tree": "D"
+    },
+    {
+      "id": "scripts/analysis/* (research consumers)",
+      "role": "research_consumers",
+      "tree": "A"
+    },
+    {
+      "id": "MISSING:trade_data_producer",
+      "role": "missing_producer",
+      "tree": "B"
+    },
+    {
+      "id": "UNVERIFIED:external_callers",
+      "role": "unverified_external",
+      "tree": "D"
+    },
+    {
+      "id": "ARTIFACTS:gaussian_p5_* (12)",
+      "role": "model_artifacts",
+      "tree": "C"
+    },
+    {
+      "id": "ARTIFACTS:gaussian_xau_m15_causal_n9_20261011",
+      "role": "model_artifact_experimental",
+      "tree": "C"
+    },
+    {
+      "id": "ARTIFACTS:v1.json / import_fix_v1 stubs",
+      "role": "registry_stub_artifacts",
+      "tree": "C"
+    },
+    {
+      "id": "ARTIFACTS:tradenet_p5_* (5)",
+      "role": "model_artifacts",
+      "tree": "D"
+    },
+    {
+      "id": "CONFIG:configs/production/v1_multi_2026_03.json",
+      "role": "config",
+      "tree": "S"
+    },
+    {
+      "id": "REGISTRY:models/gaussian_registry.json",
+      "role": "registry_file",
+      "tree": "C"
+    }
+  ],
+  "edges": [
+    {
+      "src": "scripts/training/gaussian_from_backtest.py",
+      "dst": "src/features/dataset_builder.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "scripts/training/gaussian_from_backtest.py:27 from features.dataset_builder import GAUSSIAN_FEATURE_SCHEMA"
+    },
+    {
+      "src": "scripts/training/gaussian_from_backtest.py",
+      "dst": "src/features/feature_pipeline.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "scripts/training/gaussian_from_backtest.py:28 from features import feature_pipeline"
+    },
+    {
+      "src": "scripts/training/gaussian_from_backtest.py",
+      "dst": "src/training/trainer.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "scripts/training/gaussian_from_backtest.py:29 from training import trainer"
+    },
+    {
+      "src": "scripts/training/gaussian_from_backtest.py",
+      "dst": "src/core/model_registry.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "scripts/training/gaussian_from_backtest.py:102 from core import model_registry"
+    },
+    {
+      "src": "scripts/training/phase5_calibration.py",
+      "dst": "src/features/feature_schema.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "scripts/training/phase5_calibration.py:48 from features.feature_schema import GAUSSIAN_SCHEMA"
+    },
+    {
+      "src": "scripts/training/phase5_calibration.py",
+      "dst": "src/features/dataset_builder.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "scripts/training/phase5_calibration.py:53 from features.dataset_builder import extract_feature_vector"
+    },
+    {
+      "src": "scripts/training/phase5_calibration.py",
+      "dst": "src/training/trainer.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "scripts/training/phase5_calibration.py:105 from training.trainer import GaussianNBModel"
+    },
+    {
+      "src": "scripts/training/phase5_calibration.py",
+      "dst": "src/core/model_registry.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "scripts/training/phase5_calibration.py:112 from core.model_registry import register_gaussian"
+    },
+    {
+      "src": "src/agent/modes/copilot_mode.py",
+      "dst": "src/core/engine_runner.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/agent/modes/copilot_mode.py:36 from core.engine_runner import EngineRunner"
+    },
+    {
+      "src": "src/agent/modes/copilot_mode.py",
+      "dst": "src/core/fusion_engine.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/agent/modes/copilot_mode.py:61 from core.fusion_engine import FusionEngine"
+    },
+    {
+      "src": "src/agent/modes/copilot_mode.py",
+      "dst": "src/config_layer/execution_planner.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/agent/modes/copilot_mode.py:87 from config_layer.execution_planner import ExecutionPlannerV1_2"
+    },
+    {
+      "src": "src/agent/modes/pipeline_mode.py",
+      "dst": "src/runtime/backtest_v2.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/agent/modes/pipeline_mode.py:136 from runtime.backtest_v2 import BacktestRunner"
+    },
+    {
+      "src": "src/agent/modes/pipeline_mode.py",
+      "dst": "src/runtime/live_engine_hook.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/agent/modes/pipeline_mode.py:160 from runtime.live_engine_hook import LiveEngineHook"
+    },
+    {
+      "src": "src/bitnet/bitnet_runner.py",
+      "dst": "src/bitnet/bitnet_inference.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/bitnet/bitnet_runner.py:8 from bitnet.bitnet_inference import BitNetModel"
+    },
+    {
+      "src": "src/bitnet/bitnet_runner.py",
+      "dst": "src/features/feature_schema.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/bitnet/bitnet_runner.py:9 from features.feature_schema import CANONICAL_FEATURES"
+    },
+    {
+      "src": "src/bitnet/search_engine.py",
+      "dst": "src/features/dataset_builder.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/bitnet/search_engine.py:28 from features.dataset_builder import extract_feature_vector"
+    },
+    {
+      "src": "src/bitnet/search_engine.py",
+      "dst": "src/features/feature_schema.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/bitnet/search_engine.py:29 from features.feature_schema import CANONICAL_FEATURE_DIM"
+    },
+    {
+      "src": "src/config_layer/crt_engine_v2.py",
+      "dst": "src/bitnet/bitnet_inference.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/config_layer/crt_engine_v2.py:20 from bitnet.bitnet_inference import bitnet_score"
+    },
+    {
+      "src": "src/config_layer/crt_engine_v2.py",
+      "dst": "src/features/feature_schema.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/config_layer/crt_engine_v2.py:28 from features.feature_schema import CANONICAL_FEATURES"
+    },
+    {
+      "src": "src/config_layer/crt_engine_v2.py",
+      "dst": "src/features/schema_validator.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/config_layer/crt_engine_v2.py:29 from features.schema_validator import validate_features"
+    },
+    {
+      "src": "src/config_layer/rr/rr_dataset_builder.py",
+      "dst": "src/features/feature_pipeline.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/config_layer/rr/rr_dataset_builder.py:28 from features.feature_pipeline import FeaturePipeline"
+    },
+    {
+      "src": "src/config_layer/rr/rr_dataset_builder.py",
+      "dst": "src/features/feature_schema.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/config_layer/rr/rr_dataset_builder.py:29 from features.feature_schema import CANONICAL_FEATURES"
+    },
+    {
+      "src": "src/config_layer/rr/rr_dataset_builder.py",
+      "dst": "src/features/schema_validator.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/config_layer/rr/rr_dataset_builder.py:30 from features.schema_validator import validate_features"
+    },
+    {
+      "src": "src/core/engine_runner.py",
+      "dst": "src/engines/adapter_engine.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/core/engine_runner.py:21 from engines.adapter_engine import TrapValidatorEngine"
+    },
+    {
+      "src": "src/core/engine_runner.py",
+      "dst": "src/engines/heuristic_gaussian_engine.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/core/engine_runner.py:23 from engines.heuristic_gaussian_engine import HeuristicGaussianEngine"
+    },
+    {
+      "src": "src/core/engine_runner.py",
+      "dst": "src/engines/ml_gaussian_engine.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/core/engine_runner.py:24 from engines.ml_gaussian_engine import MLGaussianEngine"
+    },
+    {
+      "src": "src/core/engine_runner.py",
+      "dst": "src/engines/zone_gate_engine.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/core/engine_runner.py:25 from engines.zone_gate_engine import run_zone_gate_engine"
+    },
+    {
+      "src": "src/core/engine_runner.py",
+      "dst": "src/core/fusion_engine.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/core/engine_runner.py:27 from core.fusion_engine import FusionEngine"
+    },
+    {
+      "src": "src/core/engine_runner.py",
+      "dst": "src/engines/live_engine.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/core/engine_runner.py:33 from engines.live_engine import get_zone_gate"
+    },
+    {
+      "src": "src/core/feature_store.py",
+      "dst": "src/features/feature_schema.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/core/feature_store.py:13 from features.feature_schema import CANONICAL_FEATURES"
+    },
+    {
+      "src": "src/core/feature_store.py",
+      "dst": "src/features/schema_validator.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/core/feature_store.py:14 from features.schema_validator import validate_features"
+    },
+    {
+      "src": "src/core/model_registry.py",
+      "dst": "src/features/feature_schema.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/core/model_registry.py:31 from features.feature_schema import schema_for_model"
+    },
+    {
+      "src": "src/core/model_registry.py",
+      "dst": "src/features/feature_contract.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/core/model_registry.py:32 from features.feature_contract import contract_hash"
+    },
+    {
+      "src": "src/engines/gaussian_engine.py",
+      "dst": "src/engines/heuristic_gaussian_engine.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/engines/gaussian_engine.py:16 from engines.heuristic_gaussian_engine import HeuristicGaussianEngine"
+    },
+    {
+      "src": "src/engines/heuristic_gaussian_engine.py",
+      "dst": "src/features/feature_schema.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/engines/heuristic_gaussian_engine.py:23 from features.feature_schema import CANONICAL_FEATURES"
+    },
+    {
+      "src": "src/engines/live_engine.py",
+      "dst": "src/features/dataset_builder.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/engines/live_engine.py:881 from features.dataset_builder import validate_feature_vector"
+    },
+    {
+      "src": "src/engines/live_engine.py",
+      "dst": "src/bitnet/search_engine.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/engines/live_engine.py:122 from bitnet.search_engine import load_zone_registry"
+    },
+    {
+      "src": "src/engines/ml_gaussian_engine.py",
+      "dst": "src/core/model_registry.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/engines/ml_gaussian_engine.py:52 from core.model_registry import GaussianModelRegistry"
+    },
+    {
+      "src": "src/engines/ml_gaussian_engine.py",
+      "dst": "src/training/trainer.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/engines/ml_gaussian_engine.py:53 from training.trainer import load_gaussian_model"
+    },
+    {
+      "src": "src/engines/ml_gaussian_engine.py",
+      "dst": "src/features/dataset_builder.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/engines/ml_gaussian_engine.py:114 from features.dataset_builder import extract_feature_vector"
+    },
+    {
+      "src": "src/engines/zone_gate_engine.py",
+      "dst": "src/features/feature_schema.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/engines/zone_gate_engine.py:20 from features.feature_schema import CANONICAL_FEATURE_ORDER"
+    },
+    {
+      "src": "src/features/bitnet_feature_builder.py",
+      "dst": "src/features/feature_schema.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/features/bitnet_feature_builder.py:11 from features.feature_schema import CANONICAL_FEATURES"
+    },
+    {
+      "src": "src/features/dataset_builder.py",
+      "dst": "src/features/feature_schema.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/features/dataset_builder.py:5 from features.feature_schema import FEATURE_SCHEMA"
+    },
+    {
+      "src": "src/features/dataset_validator.py",
+      "dst": "src/features/feature_schema.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/features/dataset_validator.py:29 from features.feature_schema import CANONICAL_FEATURES"
+    },
+    {
+      "src": "src/features/dataset_validator.py",
+      "dst": "src/features/feature_builder.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/features/dataset_validator.py:31 from features.feature_builder import feature_dict_to_vector"
+    },
+    {
+      "src": "src/features/feature_builder.py",
+      "dst": "src/features/dataset_builder.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/features/feature_builder.py:34 from features.dataset_builder import extract_feature_vector"
+    },
+    {
+      "src": "src/features/feature_contract.py",
+      "dst": "src/features/feature_schema.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/features/feature_contract.py:35 from features.feature_schema import CANONICAL_FEATURES"
+    },
+    {
+      "src": "src/features/feature_pipeline.py",
+      "dst": "src/features/feature_schema.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/features/feature_pipeline.py:48 from features.feature_schema import CANONICAL_FEATURES"
+    },
+    {
+      "src": "src/features/feature_pipeline.py",
+      "dst": "src/features/schema_validator.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/features/feature_pipeline.py:49 from features.schema_validator import validate_features"
+    },
+    {
+      "src": "src/features/feature_schema.py",
+      "dst": "src/features/schema_validator.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/features/feature_schema.py:304 from features.schema_validator import validate_features"
+    },
+    {
+      "src": "src/llm_research/forward_tester.py",
+      "dst": "src/core/engine_runner.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/llm_research/forward_tester.py:103 from src.core.engine_runner import EngineRunner"
+    },
+    {
+      "src": "src/llm_research/forward_tester.py",
+      "dst": "src/config_layer/execution_planner.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/llm_research/forward_tester.py:104 from src.config_layer.execution_planner import ExecutionPlannerV1_2"
+    },
+    {
+      "src": "src/runtime/backtest_v2.py",
+      "dst": "src/features/feature_schema.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/runtime/backtest_v2.py:40 from features.feature_schema import CANONICAL_FEATURES"
+    },
+    {
+      "src": "src/runtime/backtest_v2.py",
+      "dst": "src/config_layer/crt_engine_v2.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/runtime/backtest_v2.py:60 from config_layer.crt_engine_v2 import Candle"
+    },
+    {
+      "src": "src/runtime/backtest_v2.py",
+      "dst": "src/features/feature_pipeline.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/runtime/backtest_v2.py:45 from features.feature_pipeline import FeaturePipeline"
+    },
+    {
+      "src": "src/runtime/backtest_v2.py",
+      "dst": "src/bitnet/bitnet_inference.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/runtime/backtest_v2.py:50 from bitnet.bitnet_inference import BitNetModel"
+    },
+    {
+      "src": "src/runtime/backtest_v2.py",
+      "dst": "src/core/engine_runner.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/runtime/backtest_v2.py:55 from core.engine_runner import EngineRunner"
+    },
+    {
+      "src": "src/runtime/baseline_capture.py",
+      "dst": "src/features/feature_schema.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/runtime/baseline_capture.py:24 from features.feature_schema import CANONICAL_FEATURE_DIM"
+    },
+    {
+      "src": "src/runtime/baseline_capture.py",
+      "dst": "src/core/model_registry.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/runtime/baseline_capture.py:30 from core.model_registry import get_active"
+    },
+    {
+      "src": "src/runtime/live_engine_hook.py",
+      "dst": "src/core/engine_runner.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/runtime/live_engine_hook.py:13 from core.engine_runner import EngineRunner"
+    },
+    {
+      "src": "src/runtime/live_engine_hook.py",
+      "dst": "src/engines/live_engine.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/runtime/live_engine_hook.py:14 from engines.live_engine import LiveEngine"
+    },
+    {
+      "src": "src/runtime/live_engine_hook.py",
+      "dst": "src/config_layer/execution_planner.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/runtime/live_engine_hook.py:15 from config_layer.execution_planner import ExecutionPlannerV1_2"
+    },
+    {
+      "src": "src/runtime/live_engine_hook.py",
+      "dst": "src/core/feature_store.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/runtime/live_engine_hook.py:29 from core.feature_store import FeatureStore"
+    },
+    {
+      "src": "src/training/train_pipeline.py",
+      "dst": "src/features/dataset_validator.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/training/train_pipeline.py:38 from features.dataset_validator import MIN_RECORDS_TO_TRAIN"
+    },
+    {
+      "src": "src/training/train_pipeline.py",
+      "dst": "src/features/dataset_builder.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/training/train_pipeline.py:73 from features.dataset_builder import extract_feature_vector"
+    },
+    {
+      "src": "src/training/train_pipeline.py",
+      "dst": "src/config_layer/rr/rr_dataset_builder.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/training/train_pipeline.py:269 from config_layer.rr.rr_dataset_builder import build_dataset"
+    },
+    {
+      "src": "src/training/train_pipeline.py",
+      "dst": "src/training/trainer.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/training/train_pipeline.py:270 from training.trainer import train_gaussian"
+    },
+    {
+      "src": "src/training/train_pipeline.py",
+      "dst": "src/core/model_registry.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/training/train_pipeline.py:273 from core.model_registry import register_gaussian"
+    },
+    {
+      "src": "src/training/train_pipeline.py",
+      "dst": "src/features/feature_schema.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/training/train_pipeline.py:274 from features.feature_schema import GAUSSIAN_SCHEMA"
+    },
+    {
+      "src": "src/training/trainer.py",
+      "dst": "src/features/feature_schema.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/training/trainer.py:25 from features.feature_schema import GAUSSIAN_SCHEMA"
+    },
+    {
+      "src": "src/training/trainer.py",
+      "dst": "src/features/feature_contract.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/training/trainer.py:33 from features.feature_contract import contract_identity"
+    },
+    {
+      "src": "src/training/trainer.py",
+      "dst": "src/features/dataset_builder.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/training/trainer.py:309 from features.dataset_builder import rr_to_class"
+    },
+    {
+      "src": "src/config_layer/rr/rr_dataset_builder.py",
+      "dst": "src/runtime/backtest_v2.py",
+      "kind": "references FeaturePipeline",
+      "established_by": "ast",
+      "evidence": "src/config_layer/rr/rr_dataset_builder.py:28"
+    },
+    {
+      "src": "src/core/fusion_engine.py",
+      "dst": "src/features/feature_pipeline.py",
+      "kind": "references build_feature_vector",
+      "established_by": "ast",
+      "evidence": "src/core/fusion_engine.py:90"
+    },
+    {
+      "src": "src/engines/live_engine.py",
+      "dst": "src/features/feature_pipeline.py",
+      "kind": "references build_feature_vector",
+      "established_by": "ast",
+      "evidence": "src/engines/live_engine.py:622"
+    },
+    {
+      "src": "src/agent/modes/copilot_mode.py",
+      "dst": "src/runtime/backtest_v2.py",
+      "kind": "references EngineRunner",
+      "established_by": "ast",
+      "evidence": "src/agent/modes/copilot_mode.py:36"
+    },
+    {
+      "src": "src/llm_research/forward_tester.py",
+      "dst": "src/runtime/backtest_v2.py",
+      "kind": "references EngineRunner",
+      "established_by": "ast",
+      "evidence": "src/llm_research/forward_tester.py:103"
+    },
+    {
+      "src": "src/runtime/live_engine_hook.py",
+      "dst": "src/runtime/backtest_v2.py",
+      "kind": "references EngineRunner",
+      "established_by": "ast",
+      "evidence": "src/runtime/live_engine_hook.py:13"
+    },
+    {
+      "src": "src/core/fusion_engine.py",
+      "dst": "src/features/feature_builder.py",
+      "kind": "bare import feature_builder",
+      "established_by": "ast",
+      "evidence": "src/core/fusion_engine.py:90 from feature_builder import build_feature_vector, feature_dict_to_vector, N_FEATURES",
+      "runtime_resolves": false,
+      "resolution_note": "True: importable with src on sys.path; None: not importable here but the file edits sys.path (not simulated); False: not importable and no sys.path edit"
+    },
+    {
+      "src": "scripts/analysis/* (research consumers)",
+      "dst": "src/features/feature_pipeline.py",
+      "kind": "references FeaturePipeline",
+      "established_by": "ast",
+      "evidence": "11 files, e.g. ['scripts/analysis/consumer_graph.py', 'scripts/analysis/feature_pnp_hypothesis.py', 'scripts/analysis/feature_transition_research.py']"
+    },
+    {
+      "src": "MISSING:trade_data_producer",
+      "dst": "src/runtime/live_engine_hook.py",
+      "kind": "feeds trade_data",
+      "established_by": "absence",
+      "evidence": "repo-wide search for 'trade_data' finds only ['src/engines/live_engine.py', 'src/runtime/live_engine_hook.py']; no caller of HookedLiveEngine.process outside the module"
+    },
+    {
+      "src": "UNVERIFIED:external_callers",
+      "dst": "src/runtime/live_engine_hook.py",
+      "kind": "may call",
+      "established_by": "none",
+      "evidence": "no in-repo caller; external deployment not inspectable"
+    },
+    {
+      "src": "CONFIG:configs/production/v1_multi_2026_03.json",
+      "dst": "src/core/engine_runner.py",
+      "kind": "selects gaussian_impl='heuristic'",
+      "established_by": "config",
+      "evidence": "configs/production/v1_multi_2026_03.json engine_runner.gaussian_impl; engine_runner.py:263-281"
+    },
+    {
+      "src": "ARTIFACTS:gaussian_p5_* (12)",
+      "dst": "src/training/trainer.py",
+      "kind": "read by",
+      "established_by": "ast+file",
+      "evidence": "src/training/trainer.py reads the artifact/registry path (see loader code)"
+    },
+    {
+      "src": "ARTIFACTS:gaussian_xau_m15_causal_n9_20261011",
+      "dst": "src/training/trainer.py",
+      "kind": "read by",
+      "established_by": "ast+file",
+      "evidence": "src/training/trainer.py reads the artifact/registry path (see loader code)"
+    },
+    {
+      "src": "ARTIFACTS:tradenet_p5_* (5)",
+      "dst": "src/training/trainer.py",
+      "kind": "read by",
+      "established_by": "ast+file",
+      "evidence": "src/training/trainer.py reads the artifact/registry path (see loader code)"
+    },
+    {
+      "src": "ARTIFACTS:v1.json / import_fix_v1 stubs",
+      "dst": "src/engines/heuristic_gaussian_engine.py",
+      "kind": "read by",
+      "established_by": "ast+file",
+      "evidence": "src/engines/heuristic_gaussian_engine.py reads the artifact/registry path (see loader code)"
+    },
+    {
+      "src": "REGISTRY:models/gaussian_registry.json",
+      "dst": "src/core/model_registry.py",
+      "kind": "read by",
+      "established_by": "ast+file",
+      "evidence": "src/core/model_registry.py reads the artifact/registry path (see loader code)"
+    },
+    {
+      "src": "REGISTRY:models/gaussian_registry.json",
+      "dst": "src/engines/heuristic_gaussian_engine.py",
+      "kind": "read by",
+      "established_by": "ast+file",
+      "evidence": "src/engines/heuristic_gaussian_engine.py reads the artifact/registry path (see loader code)"
+    },
+    {
+      "src": "REGISTRY:models/gaussian_registry.json",
+      "dst": "src/engines/ml_gaussian_engine.py",
+      "kind": "read by",
+      "established_by": "ast+file",
+      "evidence": "src/engines/ml_gaussian_engine.py reads the artifact/registry path (see loader code)"
+    },
+    {
+      "src": "tools/cpp/cpp_runner.cpp",
+      "dst": "model_export_format.json",
+      "kind": "mirrors feature order (comment only)",
+      "established_by": "static_text",
+      "evidence": "tools/cpp/cpp_runner.cpp:11 comment; FEATURE_ORDER parsed and compared"
+    },
+    {
+      "src": "src/features/schema_validator.py",
+      "dst": "src/features/feature_schema.py",
+      "kind": "duplicates validate_vector",
+      "established_by": "ast",
+      "evidence": "src/features/schema_validator.py:63 vs src/features/feature_schema.py:266"
+    }
+  ]
+}

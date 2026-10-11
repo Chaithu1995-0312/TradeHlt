@@ -1514,3 +1514,12 @@ Decision/Output: results/consumer_graph/ (consumer_registry.json, dependency_gra
 Open Questions: D1-D3; unverified branches (external callers, C++ execution, TradeNet loading).
 Next Step: approve src changes and choose authoritative body_ratio; implement branch by branch with tests.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-11
+Topic: D3 + narrow D2 - feature-definition contract (body_ratio) and fail-closed loader/registry gates
+Decision/Output: D3: body_ratio = body_size/(high-low), 0.0 when range<=0, float32 batch (matches pipeline, CRT Candle, manual_backtest; thresholds were calibrated on it). New src/features/feature_contract.py (contract_hash incl. AST digests); trainer.save/load stamp+verify hash (allow_legacy audit-only); model_registry.register/promote gate (force cannot bypass). Tests: test_feature_contract (10 pass, 3 strict xfail pin hook/BitNet mismatch), test_model_contract_gate (10), active-artifact test updated, 2 registry tests given contract fixtures. Consumer graph regenerated: C3b unverified->mismatched; S1,S2 new verified; no other status changed. Full suite: same 12 known failures, 0 new.
+Open Questions: B1 hook conformance (next branch), registry D1 rollback, TradeNet loader gate (D2), double_sweep/session specs.
+Next Step: Branch B1: conform the live hook anatomy to the contract behind the strict-xfail tests.
+---

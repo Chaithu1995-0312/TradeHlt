@@ -1,0 +1,28 @@
+id,tree,before,after,change
+A1,A,verified,verified,"identity/evidence updated, status unchanged"
+A2,A,verified,verified,unchanged
+A3,A,verified,verified,"identity/evidence updated, status unchanged"
+A4,A,unverified,unverified,"identity/evidence updated, status unchanged"
+A5,A,verified,verified,unchanged
+B1,B,mismatched,mismatched,"identity/evidence updated, status unchanged"
+B2,B,broken,broken,unchanged
+B3,B,broken,broken,unchanged
+B4,B,broken,broken,unchanged
+B5,B,unverified,unverified,unchanged
+B6,B,broken,broken,unchanged
+B8,B,unverified,unverified,unchanged
+B7,B,unverified,unverified,unchanged
+C1,C,unverified,unverified,unchanged
+C2,C,mismatched,mismatched,unchanged
+C3,C,mismatched,mismatched,"identity/evidence updated, status unchanged"
+C3b,C,unverified,mismatched,STATUS CHANGED
+C4,C,mismatched,mismatched,"identity/evidence updated, status unchanged"
+C5,C,verified,verified,unchanged
+D1,D,mismatched,mismatched,"identity/evidence updated, status unchanged"
+D2,D,mismatched,mismatched,unchanged
+D3,D,unverified,unverified,unchanged
+D4,D,unverified,unverified,unchanged
+D5,D,unverified,unverified,unchanged
+D6,D,unverified,unverified,unchanged
+S1,S,-,verified,new branch
+S2,S,-,verified,new branch

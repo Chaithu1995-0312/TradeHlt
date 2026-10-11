@@ -29,6 +29,7 @@ from training.evaluator import EvalResult
 
 # PATCH v3: schema enforcement on model load
 from features.feature_schema import schema_for_model, SCHEMA_VERSION
+from features.feature_contract import contract_hash as _current_contract_hash
 
 # PATCH v3: schema version enforcement on model load
 
@@ -381,6 +382,9 @@ class GaussianModelRegistry:
             },
             "trained_at": metrics.get("trained_at", time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())),
             "active":     False,
+            # Feature-definition contract identity, read from the artifact itself (single source).
+            # None means a legacy artifact: it cannot be promoted (see promote_gaussian).
+            "feature_contract_hash": self._artifact_contract_hash(model_file),
         }
         reg[version] = entry
         self._save(reg)
@@ -390,6 +394,13 @@ class GaussianModelRegistry:
             f"cal={entry['metrics']['calibration_error']:.4f}"
         )
         return entry
+
+    def _artifact_contract_hash(self, model_file: str):
+        """feature_contract_hash stored in the model artifact, or None (missing file, unreadable, or legacy)."""
+        try:
+            return json.loads((self.dir / model_file).read_text(encoding="utf-8")).get("feature_contract_hash")
+        except Exception:
+            return None
 
     def promote_gaussian(
         self,
@@ -424,6 +435,20 @@ class GaussianModelRegistry:
                     f"Gaussian promotion BLOCKED (PATCH v3 schema mismatch): {version} "
                     f"was trained with schema version '{entry_schema_version}' but "
                     f"current schema is '{expected_schema_version}'. Re-train before promoting."
+                )
+                log.error(reason)
+                return False, reason
+
+            # Feature-contract gate (fail-closed; NOT bypassed by force): both the registry entry and the artifact
+            # file must carry the current feature_contract_hash.
+            want = _current_contract_hash()
+            entry_hash = reg[version].get("feature_contract_hash")
+            file_hash = self._artifact_contract_hash(reg[version].get("model_file", f"{version}.json"))
+            if entry_hash != want or file_hash != want:
+                reason = (
+                    f"Gaussian promotion BLOCKED (feature contract): {version} entry={str(entry_hash)[:12]} "
+                    f"artifact={str(file_hash)[:12]} current={want[:12]}. Legacy or incompatible artifacts are ineligible; "
+                    f"retrain against the current feature contract."
                 )
                 log.error(reason)
                 return False, reason

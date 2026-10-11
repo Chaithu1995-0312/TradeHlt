@@ -1,0 +1,310 @@
+{
+  "contract_hash": "8cf0dfe71ea4f25dc7ece0f5d5a145b93a8e8fda47ddea5a30241338472272e3",
+  "contract": {
+    "contract_version": "1.0",
+    "ordered_features": [
+      "open",
+      "high",
+      "low",
+      "close",
+      "volume",
+      "volume_ratio",
+      "double_sweep",
+      "ema_fast",
+      "ema_slow",
+      "ema_spread",
+      "trend_bias",
+      "trend_strength",
+      "momentum_score",
+      "atr",
+      "volatility_ratio",
+      "rsi_14",
+      "macd_line",
+      "macd_signal",
+      "macd_hist",
+      "sweep_detected",
+      "liquidity_sweep",
+      "break_of_structure",
+      "swing_high",
+      "swing_low",
+      "higher_high",
+      "lower_low",
+      "body_size",
+      "wick_size",
+      "body_ratio",
+      "volatility_regime",
+      "session",
+      "hour_of_day",
+      "disp_strength",
+      "retest_depth",
+      "candles_since_retest"
+    ],
+    "features": [
+      {
+        "index": 0,
+        "name": "open",
+        "definition_status": "raw_input",
+        "spec": null,
+        "implementation_digest": "input_column"
+      },
+      {
+        "index": 1,
+        "name": "high",
+        "definition_status": "raw_input",
+        "spec": null,
+        "implementation_digest": "input_column"
+      },
+      {
+        "index": 2,
+        "name": "low",
+        "definition_status": "raw_input",
+        "spec": null,
+        "implementation_digest": "input_column"
+      },
+      {
+        "index": 3,
+        "name": "close",
+        "definition_status": "raw_input",
+        "spec": null,
+        "implementation_digest": "input_column"
+      },
+      {
+        "index": 4,
+        "name": "volume",
+        "definition_status": "implementation_digest",
+        "spec": null,
+        "implementation_digest": "6eee99158cf1b881d40f41d580fc062752f5a4d1c377943bc16b627bd44461ad"
+      },
+      {
+        "index": 5,
+        "name": "volume_ratio",
+        "definition_status": "implementation_digest",
+        "spec": null,
+        "implementation_digest": "36fabedc7ee1d041fda368bc6872a27c358b5eda6f3912ebdc997e71c76b85ae"
+      },
+      {
+        "index": 6,
+        "name": "double_sweep",
+        "definition_status": "implementation_digest",
+        "spec": null,
+        "implementation_digest": "cf5934cc05d09a7dcd954a96c8673e16f4a7ab87156acc5a934016617454b3a6"
+      },
+      {
+        "index": 7,
+        "name": "ema_fast",
+        "definition_status": "implementation_digest",
+        "spec": null,
+        "implementation_digest": "8745b7e37bdce43d53adee6020ea79afb5133d7b001e1b791043261fa4ec2da8"
+      },
+      {
+        "index": 8,
+        "name": "ema_slow",
+        "definition_status": "implementation_digest",
+        "spec": null,
+        "implementation_digest": "8745b7e37bdce43d53adee6020ea79afb5133d7b001e1b791043261fa4ec2da8"
+      },
+      {
+        "index": 9,
+        "name": "ema_spread",
+        "definition_status": "implementation_digest",
+        "spec": null,
+        "implementation_digest": "8745b7e37bdce43d53adee6020ea79afb5133d7b001e1b791043261fa4ec2da8"
+      },
+      {
+        "index": 10,
+        "name": "trend_bias",
+        "definition_status": "implementation_digest",
+        "spec": null,
+        "implementation_digest": "7021117005938fd9de6fcf8397256d8ccba4ad79e8def678f283629a64373612"
+      },
+      {
+        "index": 11,
+        "name": "trend_strength",
+        "definition_status": "implementation_digest",
+        "spec": null,
+        "implementation_digest": "b648ef81bba6488dcc5a30d430ca93cfe94dec8615fa6937285be39906506eca"
+      },
+      {
+        "index": 12,
+        "name": "momentum_score",
+        "definition_status": "implementation_digest",
+        "spec": null,
+        "implementation_digest": "8745b7e37bdce43d53adee6020ea79afb5133d7b001e1b791043261fa4ec2da8"
+      },
+      {
+        "index": 13,
+        "name": "atr",
+        "definition_status": "implementation_digest",
+        "spec": null,
+        "implementation_digest": "f3e46eba3f66543256f9d119ca40aa17c899b5884fc54b3fbe2629693d39bdeb"
+      },
+      {
+        "index": 14,
+        "name": "volatility_ratio",
+        "definition_status": "implementation_digest",
+        "spec": null,
+        "implementation_digest": "f3e46eba3f66543256f9d119ca40aa17c899b5884fc54b3fbe2629693d39bdeb"
+      },
+      {
+        "index": 15,
+        "name": "rsi_14",
+        "definition_status": "implementation_digest",
+        "spec": null,
+        "implementation_digest": "ce05430dd20737bed08d382008630224eb2572beaa26b3c5d5b935b0d1c237fb"
+      },
+      {
+        "index": 16,
+        "name": "macd_line",
+        "definition_status": "implementation_digest",
+        "spec": null,
+        "implementation_digest": "ce05430dd20737bed08d382008630224eb2572beaa26b3c5d5b935b0d1c237fb"
+      },
+      {
+        "index": 17,
+        "name": "macd_signal",
+        "definition_status": "implementation_digest",
+        "spec": null,
+        "implementation_digest": "ce05430dd20737bed08d382008630224eb2572beaa26b3c5d5b935b0d1c237fb"
+      },
+      {
+        "index": 18,
+        "name": "macd_hist",
+        "definition_status": "implementation_digest",
+        "spec": null,
+        "implementation_digest": "ce05430dd20737bed08d382008630224eb2572beaa26b3c5d5b935b0d1c237fb"
+      },
+      {
+        "index": 19,
+        "name": "sweep_detected",
+        "definition_status": "implementation_digest",
+        "spec": null,
+        "implementation_digest": "cf5934cc05d09a7dcd954a96c8673e16f4a7ab87156acc5a934016617454b3a6"
+      },
+      {
+        "index": 20,
+        "name": "liquidity_sweep",
+        "definition_status": "implementation_digest",
+        "spec": null,
+        "implementation_digest": "a0004397d99b02530cd78e8a89c9d52ab61b37a2c56047c8b8253f36261d1cf5"
+      },
+      {
+        "index": 21,
+        "name": "break_of_structure",
+        "definition_status": "implementation_digest",
+        "spec": null,
+        "implementation_digest": "a0004397d99b02530cd78e8a89c9d52ab61b37a2c56047c8b8253f36261d1cf5"
+      },
+      {
+        "index": 22,
+        "name": "swing_high",
+        "definition_status": "implementation_digest",
+        "spec": null,
+        "implementation_digest": "98944cd6c6568f96456c241d0585f1b9812aa17cbbc5096cf5c5d2f221ce7b55"
+      },
+      {
+        "index": 23,
+        "name": "swing_low",
+        "definition_status": "implementation_digest",
+        "spec": null,
+        "implementation_digest": "98944cd6c6568f96456c241d0585f1b9812aa17cbbc5096cf5c5d2f221ce7b55"
+      },
+      {
+        "index": 24,
+        "name": "higher_high",
+        "definition_status": "implementation_digest",
+        "spec": null,
+        "implementation_digest": "a0004397d99b02530cd78e8a89c9d52ab61b37a2c56047c8b8253f36261d1cf5"
+      },
+      {
+        "index": 25,
+        "name": "lower_low",
+        "definition_status": "implementation_digest",
+        "spec": null,
+        "implementation_digest": "a0004397d99b02530cd78e8a89c9d52ab61b37a2c56047c8b8253f36261d1cf5"
+      },
+      {
+        "index": 26,
+        "name": "body_size",
+        "definition_status": "formal",
+        "spec": {
+          "formula": "abs(close - open)",
+          "dtype_batch": "float64",
+          "missing_value_policy": "inputs must be finite; non-finite inputs are an error for the caller, never zero-filled"
+        },
+        "implementation_digest": "44c43254c9fc4a66c7e9c70279f723c0c1a13a17fd7863812d6362a0d20b53a5"
+      },
+      {
+        "index": 27,
+        "name": "wick_size",
+        "definition_status": "formal",
+        "spec": {
+          "formula": "high - low",
+          "note": "Historical name. It is the full candle range, NOT the shadow length. The name is kept for compatibility; implementations that subtract the body (high - low - body) do not satisfy this contract.",
+          "dtype_batch": "float64",
+          "missing_value_policy": "inputs must be finite; non-finite inputs are an error for the caller, never zero-filled"
+        },
+        "implementation_digest": "44c43254c9fc4a66c7e9c70279f723c0c1a13a17fd7863812d6362a0d20b53a5"
+      },
+      {
+        "index": 28,
+        "name": "body_ratio",
+        "definition_status": "formal",
+        "spec": {
+          "formula": "body_size / wick_size",
+          "zero_range_behavior": "0.0 when wick_size (high - low) <= 0",
+          "range": "[0.0, 1.0] for valid candles (low <= open, close <= high)",
+          "dtype_batch": "float32",
+          "dtype_note": "the batch pipeline casts to float32; consumers compare with relative tolerance 1e-6",
+          "missing_value_policy": "inputs must be finite; non-finite inputs are an error for the caller, never zero-filled",
+          "authority": "matches FeaturePipeline.compute_canonical_price_features, config_layer.crt_engine_v2.Candle and scripts/backtest/manual_backtest.py; body_ratio_min thresholds (0.65 to 0.70) in the production config were calibrated on this definition."
+        },
+        "implementation_digest": "44c43254c9fc4a66c7e9c70279f723c0c1a13a17fd7863812d6362a0d20b53a5"
+      },
+      {
+        "index": 29,
+        "name": "volatility_regime",
+        "definition_status": "implementation_digest",
+        "spec": null,
+        "implementation_digest": "fac40967614430013b60aa73fe25920f3ce05f6d0b6955cf3d4e799b883137e2"
+      },
+      {
+        "index": 30,
+        "name": "session",
+        "definition_status": "implementation_digest",
+        "spec": null,
+        "implementation_digest": "ac91a62c9e996d1f6c4b0b08dd89a88bfa25d46a4427fab680690554b4a3cc00"
+      },
+      {
+        "index": 31,
+        "name": "hour_of_day",
+        "definition_status": "implementation_digest",
+        "spec": null,
+        "implementation_digest": "67ee3bc5feb20f0c808f1de02a5b8e4299c1af3d9dd60e5a66ef603e390385ce"
+      },
+      {
+        "index": 32,
+        "name": "disp_strength",
+        "definition_status": "implementation_digest",
+        "spec": null,
+        "implementation_digest": "e531f2d7ec64b951baeab519af21d7c4be00a2d6780e7849b3b188c6fd4ed216"
+      },
+      {
+        "index": 33,
+        "name": "retest_depth",
+        "definition_status": "implementation_digest",
+        "spec": null,
+        "implementation_digest": "e531f2d7ec64b951baeab519af21d7c4be00a2d6780e7849b3b188c6fd4ed216"
+      },
+      {
+        "index": 34,
+        "name": "candles_since_retest",
+        "definition_status": "implementation_digest",
+        "spec": null,
+        "implementation_digest": "e531f2d7ec64b951baeab519af21d7c4be00a2d6780e7849b3b188c6fd4ed216"
+      }
+    ],
+    "pipeline_remaining_code_digest": "920923a6d40df5f1051e3b083660a1b5eafbd752f561404b57506c7277de8652",
+    "schema_hash_names_only": "f80ca4bdcea15f1b38413abc3ba51343",
+    "scope_note": "Only body_size, wick_size and body_ratio are formally specified so far; all other features are identified by the digest of their defining code, which detects change but does not yet state meaning."
+  }
+}

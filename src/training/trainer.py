@@ -30,6 +30,7 @@ from features.feature_schema import (
     SCHEMA_VERSION,
     CANONICAL_FEATURES,
 )
+from features.feature_contract import contract_identity, contract_status_of, verify_bundle_contract
 #assert_schema_version()
 N_FEATURES = TRADENET_SCHEMA.n_features           # 35 — TradeNet input size (CANONICAL_FEATURE_DIM)
 GAUSSIAN_N_FEATURES = GAUSSIAN_SCHEMA.n_features  # 35 — GaussianNBModel input size (CANONICAL_FEATURE_DIM)
@@ -388,6 +389,10 @@ def save_gaussian_model(
         "schema_version": GAUSSIAN_SCHEMA.version,  # PATCH v3: version check on load
         "schema_checksum": GAUSSIAN_SCHEMA.checksum,  # PATCH v3: tamper / drift detection
     }
+    # Feature-definition contract identity: stamped only when the artifact really uses the canonical feature list,
+    # so an artifact with any other schema can never claim compatibility with the contract.
+    if list(bundle["feature_schema"]) == list(GAUSSIAN_SCHEMA.feature_names):
+        bundle.update(contract_identity())
     path.write_text(json.dumps(bundle, indent=2))
     log.info(f"Gaussian model saved → {path}")
     return path
@@ -395,12 +400,18 @@ def save_gaussian_model(
 
 def load_gaussian_model(
     name: str,
+    allow_legacy: bool = False,
 ) -> tuple[GaussianNBModel, StandardScaler, dict]:
     """
     Load a Gaussian model bundle from models/<name>.
 
     FIX 2 (hard schema check): raises ValueError if saved feature_schema
     does not match current GAUSSIAN_FEATURE_SCHEMA.
+
+    Fail-closed contract gate: the bundle must carry the current feature_contract_hash
+    (features.feature_contract); otherwise ContractMismatchError (a ValueError) is raised.
+    `allow_legacy=True` skips only the missing-hash case, for audits; it never accepts a
+    wrong hash, and the returned metadata then has contract_status == "legacy_unverified".
 
     Returns (model, scaler, metadata_dict)
     """
@@ -424,10 +435,21 @@ def load_gaussian_model(
             f"use the matching model version."
         )
 
+    if bundle.get("feature_contract_hash") is None and allow_legacy:
+        pass  # audit-only path; reported as legacy_unverified below
+    else:
+        verify_bundle_contract(bundle, label=f"model '{name}'")
+
     model  = GaussianNBModel.from_dict(bundle["model"])
     scaler = StandardScaler.from_dict(bundle["scaler"])
+    n_expected = len(GAUSSIAN_FEATURE_SCHEMA)
+    if model.n_features != n_expected or scaler.n_features != n_expected:
+        raise ValueError(
+            f"model '{name}': n_features model={model.n_features} scaler={scaler.n_features} != canonical {n_expected}"
+        )
     meta   = bundle.get("metrics", {})
     meta["feature_schema"] = saved_schema
+    meta["contract_status"] = contract_status_of(bundle)
 
     log.info(f"Gaussian model loaded ← {path}")
     return model, scaler, meta

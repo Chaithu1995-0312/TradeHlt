@@ -345,6 +345,142 @@ def exec_evidence(batch: pd.DataFrame):
     return ev
 
 
+def contract_evidence(batch: pd.DataFrame) -> dict:
+    """Executed evidence for the feature-definition contract and the fail-closed gates."""
+    import tempfile
+    from features import feature_contract as fc
+    from training import trainer
+    from core.model_registry import GaussianModelRegistry
+    out = {"contract_hash": fc.contract_hash(), "contract_version": fc.CONTRACT_VERSION,
+           "formal_features": [f["name"] for f in fc.build_contract()["features"] if f["definition_status"] == "formal"]}
+    # parity of each anatomy implementation with the contract reference, on real bars + zero-range cases
+    rows = batch.to_dict("records")
+    o = np.array([r["open"] for r in rows]); h = np.array([r["high"] for r in rows]); l = np.array([r["low"] for r in rows]); c = np.array([r["close"] for r in rows])
+    ref = {"body_size": fc.ref_body_size(o, h, l, c), "wick_size": fc.ref_wick_size(o, h, l, c), "body_ratio": fc.ref_body_ratio(o, h, l, c)}
+    def cmp(vals, name):
+        return "identical" if np.allclose(np.asarray(vals, float), ref[name], rtol=1e-5, atol=1e-6) else "value_mismatch"
+    par = {"pipeline": {k: cmp(batch[k].to_numpy(float), k) for k in ref}}
+    from config_layer.crt_engine_v2 import Candle
+    sig = inspect.signature(Candle).parameters
+    cds = [Candle(**{k: v for k, v in dict(timestamp=r["timestamp"], open=r["open"], high=r["high"], low=r["low"], close=r["close"], volume=r["volume"]).items() if k in sig}) for r in rows]
+    par["crt_candle"] = {"body_size": cmp([x.body_size for x in cds], "body_size"), "wick_size": cmp([x.wick_size for x in cds], "wick_size"), "body_ratio": cmp([x.body_ratio for x in cds], "body_ratio")}
+    msrc = (ROOT / "scripts/backtest/manual_backtest.py").read_text(); ns = {}
+    for fnode in ast.parse(msrc).body:
+        if isinstance(fnode, ast.FunctionDef) and fnode.name in ("body_ratio", "wick_size"):
+            exec(ast.get_source_segment(msrc, fnode), ns)
+    par["manual_backtest"] = {"wick_size": cmp([ns["wick_size"](*q) for q in zip(o, h, l, c)], "wick_size"), "body_ratio": cmp([ns["body_ratio"](*q) for q in zip(o, h, l, c)], "body_ratio"),
+                              "body_size": "unverified (no function)"}
+    from runtime.live_engine_hook import _build_ohlcv_and_auxiliary
+    ha = [_build_ohlcv_and_auxiliary(dict(open=a, high=b, low=d, close=e, volume=1.0))[1] for a, b, d, e in zip(o, h, l, c)]
+    par["live_hook"] = {"wick_size": cmp([x["wick_size"] for x in ha], "wick_size"), "body_ratio": cmp([x["body_ratio"] for x in ha], "body_ratio"),
+                        "body_size": cmp([x["body_size"] for x in ha], "body_size")}
+    from features.bitnet_feature_builder import build_bitnet_features
+    bf = [build_bitnet_features({}, dict(open=a, high=b, low=d, close=e, volume=1.0), {}) for a, b, d, e in zip(o, h, l, c)]
+    par["bitnet_feature_builder"] = {k: cmp([x[k] for x in bf], k) for k in ref}
+    out["anatomy_parity_vs_contract"] = par
+    out["zero_range_reference"] = fc.ref_body_ratio(5.0, 5.0, 5.0, 5.0)
+    # loader gate on repository artifacts
+    res = []
+    for pth in sorted(glob.glob(str(ROOT / "models/gaussian_*.json"))):
+        n = Path(pth).name
+        if "registry" in n:
+            continue
+        r = {"file": n}
+        for legacy in (False, True):
+            try:
+                _, _, m = trainer.load_gaussian_model(n, allow_legacy=legacy); r[f"allow_legacy={legacy}"] = "loads:" + m.get("contract_status", "?")
+            except Exception as e:
+                r[f"allow_legacy={legacy}"] = f"rejected:{type(e).__name__}"
+        res.append(r)
+    out["loader_on_repo_artifacts"] = res
+    # gates end-to-end in a temp directory
+    saved_dir = trainer.MODELS_DIR
+    with tempfile.TemporaryDirectory() as td:
+        td = Path(td); trainer.MODELS_DIR = td
+        try:
+            rng = np.random.default_rng(0)
+            X = rng.normal(size=(60, len(CF))).tolist(); y = rng.normal(0.3, 1.2, 60).tolist()
+            m_, s_, mt = trainer.train_gaussian(X, y)
+            trainer.save_gaussian_model(m_, s_, mt, name="good.json")
+            (td / "legacy.json").write_text(json.dumps({"feature_schema": CF}))
+            loads_good = trainer.load_gaussian_model("good.json")[2]["contract_status"]
+            reg = GaussianModelRegistry(models_dir=td)
+            reg.register_gaussian("good", "good.json", CF, {}); reg.register_gaussian("legacy", "legacy.json", CF, {})
+            p_legacy = reg.promote_gaussian("legacy", force=True)
+            p_good = reg.promote_gaussian("good", force=True)
+        finally:
+            trainer.MODELS_DIR = saved_dir
+    out["gate_end_to_end_tmpdir"] = {"good_artifact_load": loads_good, "legacy_promote_force_true": list(p_legacy), "good_promote": list(p_good)}
+    # live registry state and ML adapter
+    from core.model_registry import get_active_gaussian
+    from engines.ml_gaussian_engine import MLGaussianEngine
+    eng = MLGaussianEngine({}); numeric = {k: 0.0 for k in CF}
+    out["ml_adapter_on_active_registry"] = {"active": get_active_gaussian(), "compute": eng.compute(numeric), "load_failed": eng._load_failed}
+    return out
+
+
+def apply_contract_overlay(B, ev, cev, path_ok):
+    """Re-evaluate branches with contract evidence. Each change is independent; nothing is inherited from another branch."""
+    by = {b["id"]: b for b in B}
+    ident = f"feature_contract_hash {cev['contract_hash'][:12]}... (formal: {cev['formal_features']})"
+    par = cev["anatomy_parity_vs_contract"]
+    def all_ident(d, keys):
+        return all(d.get(k) == "identical" for k in keys)
+    # A3 CRT Candle
+    ok = all_ident(par["crt_candle"], ("body_size", "wick_size", "body_ratio"))
+    by["A3"].update(contract_identity=f"parity target = {ident}; implementation itself carries no hash",
+                    parity_evidence=f"vs CONTRACT reference on {len(ev['live_hook_featurestore'])} real bars: {par['crt_candle']}; tests/test_feature_contract.py::test_crt_candle_matches_contract",
+                    status="verified" if ok else "mismatched")
+    # A4 manual_backtest
+    by["A4"].update(contract_identity=f"parity target = {ident}",
+                    parity_evidence=f"vs CONTRACT reference: {par['manual_backtest']}; other locally computed features have no parity test",
+                    status="unverified")
+    # A1 pipeline identity
+    by["A1"].update(contract_identity=f"{ident}; per-feature implementation digests of FeaturePipeline; pipeline parity with contract: {par['pipeline']}")
+    # B1 hook
+    bad = {k: v for k, v in par["live_hook"].items() if v != "identical"}
+    by["B1"].update(contract_identity=f"expects {ident}; the hook does not read, stamp or check the contract",
+                    status="mismatched",
+                    parity_evidence=by["B1"]["parity_evidence"] + f"; vs CONTRACT: {par['live_hook']} (non-compliant: {sorted(bad)}); strict-xfail tests pin this")
+    by["D1"].update(contract_identity=f"expects {ident}; unused builder, not stamped",
+                    parity_evidence=by["D1"]["parity_evidence"] + f"; anatomy vs CONTRACT: {par['bitnet_feature_builder']}")
+    # C3 stale p5 artifacts
+    p5 = [r for r in cev["loader_on_repo_artifacts"] if r["file"].startswith("gaussian_p5_")]
+    by["C3"].update(contract_identity="artifacts carry no feature_contract_hash and 32/33-feature schemas",
+                    parity_evidence=f"loader default and allow_legacy both reject {sum(1 for r in p5 if r['allow_legacy=False'].startswith('rejected') and r['allow_legacy=True'].startswith('rejected'))}/{len(p5)} p5 files (schema check precedes contract check)",
+                    status="mismatched")
+    # C3b experimental artifact
+    x = [r for r in cev["loader_on_repo_artifacts"] if r["file"].startswith("gaussian_xau_")]
+    rej = bool(x) and x[0]["allow_legacy=False"].startswith("rejected")
+    by["C3b"].update(contract_identity="35 ordered features, schema checksum ok, own feature_definition_hash (pre-contract scheme) but NO feature_contract_hash",
+                     parity_evidence=f"default loader: {x[0]['allow_legacy=False'] if x else 'n/a'}; allow_legacy: {x[0]['allow_legacy=True'] if x else 'n/a'}",
+                     status="mismatched" if rej else "unverified")
+    # C4 adapter
+    ma = cev["ml_adapter_on_active_registry"]
+    by["C4"].update(parity_evidence=by["C4"]["parity_evidence"] + f"; with the active registry entry (legacy artifact) the adapter now cannot load the model: {ma}",
+                    status="mismatched")
+    # new gate branches
+    g = cev["gate_end_to_end_tmpdir"]
+    loader_ok = g["good_artifact_load"] == "verified" and all(r["allow_legacy=False"].startswith("rejected") for r in cev["loader_on_repo_artifacts"] if "xau" in r["file"] or "p5" in r["file"])
+    B.append(dict(id="S1", tree="S", producer="src/features/feature_contract.py (contract_hash, verify_bundle_contract)", consumer="src/training/trainer.py::load_gaussian_model / save_gaussian_model",
+                  transformation="save stamps feature_contract_hash only when the artifact uses the canonical feature list; load rejects missing/wrong hash and wrong dimensions",
+                  contract_identity=ident, dependency_path=path_ok([("src/training/trainer.py", "src/features/feature_contract.py")]),
+                  parity_evidence=f"executed: good artifact load {g['good_artifact_load']}; repository artifacts: {[(r['file'][-18:], r['allow_legacy=False']) for r in cev['loader_on_repo_artifacts']][:3]}...; tests/test_model_contract_gate.py (10 tests)",
+                  status="verified" if loader_ok else "broken", does_not_imply="C4, B1, D2, D3: no consumer of the loader or of the contract is verified by this branch",
+                  required_tests=["tests/test_model_contract_gate.py", "tests/test_gaussian_active_artifact.py"], acceptance="legacy/mismatched artifacts rejected by default; allow_legacy never accepts a wrong hash"))
+    reg_ok = (not g["legacy_promote_force_true"][0]) and g["good_promote"][0]
+    B.append(dict(id="S2", tree="S", producer="src/features/feature_contract.py", consumer="src/core/model_registry.py::GaussianModelRegistry.register_gaussian/promote_gaussian",
+                  transformation="registry stores the artifact's contract hash; promotion requires entry and artifact hash == current, not bypassed by force",
+                  contract_identity=ident, dependency_path=path_ok([("src/core/model_registry.py", "src/features/feature_contract.py")]),
+                  parity_evidence=f"executed in a temp dir: legacy promote(force=True) -> {g['legacy_promote_force_true']}; contract artifact promote -> {g['good_promote']}; tests/test_model_contract_gate.py",
+                  status="verified" if reg_ok else "broken", does_not_imply="C5 (heuristic reader) and C4 are unchanged; existing entries in models/gaussian_registry.json were not modified",
+                  required_tests=["tests/test_model_contract_gate.py", "tests/test_model_registry.py"], acceptance="no legacy or incompatible artifact can become active through promote_gaussian"))
+    for b in B:
+        if "path_complete" not in b or b["id"] in ("S1", "S2"):
+            b["path_complete"] = all(p["present"] for p in b["dependency_path"]) if b["dependency_path"] else None
+    return B
+
+
 # ---------------------------------------------------------------------------------------------------------
 # 3. Catalogue (curated roles; every edge and status below is derived or checked)
 # ---------------------------------------------------------------------------------------------------------
@@ -354,6 +490,7 @@ NODES = {
     "src/features/feature_schema.py": ("schema_authority", "S"),
     "src/features/dataset_builder.py": ("schema_authority", "S"),
     "src/features/schema_validator.py": ("duplicate_validator", "S"),
+    "src/features/feature_contract.py": ("contract_authority", "S"),
     "model_export_format.json": ("external_mirror", "D"),
     # A
     "src/features/feature_pipeline.py": ("producer_canonical", "A"),
@@ -642,6 +779,10 @@ def main():
     for b in B:
         b["path_complete"] = all(p["present"] for p in b["dependency_path"]) if b["dependency_path"] else None
 
+    cev = contract_evidence(batch)
+    B = apply_contract_overlay(B, ev, cev, path_ok)
+    ev['contract'] = cev
+
     # ---- outputs ----
     git = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, cwd=ROOT).stdout.strip()
     reg = {
@@ -650,7 +791,9 @@ def main():
         "contract_state": {
             "feature_count": len(CF), "ordered_features": CF, "SCHEMA_HASH_names_only": fs.SCHEMA_HASH, "SchemaObject_checksum": fs.GAUSSIAN_SCHEMA.checksum,
             "versions": {"module_SCHEMA_VERSION": fs.SCHEMA_VERSION, "SchemaObject": fs.GAUSSIAN_SCHEMA.version, "model_export_format": json.loads((ROOT / "model_export_format.json").read_text())["schema_version"]},
-            "feature_definition_contract_exists": False,
+            "feature_definition_contract_exists": True,
+            "feature_definition_contract_scope": "3 formal features (body_size, wick_size, body_ratio); other features identified by implementation digest only",
+            "feature_contract_hash": cev["contract_hash"],
             "feature_pipeline_sha256": hashlib.sha256((ROOT / "src/features/feature_pipeline.py").read_bytes()).hexdigest(),
             "production_config_sha256": hashlib.sha256((ROOT / "configs/production/v1_multi_2026_03.json").read_bytes()).hexdigest()},
         "trees": TREES,

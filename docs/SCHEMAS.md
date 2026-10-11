@@ -447,3 +447,18 @@ No Pydantic, no Zod, no class-validator. Validation is enforced by:
 | Promotion preconditions                                        | `governance/promotion_manager.py`                      | `report["decision"] == "APPROVE"` + hash verify |
 | Backtest warmup / data sufficiency                             | `runtime/backtest_v2.py`                               | `warmup_candles` parameter, raises if insufficient |
 | TTL / RR / kill-switch thresholds                              | `core/ultron_risk_gate.py`                             | Hard checks in `evaluate()`          |
+
+---
+
+## 12. Feature-definition contract (`src/features/feature_contract.py`)
+
+One feature meaning; many consumers. The contract states what a canonical feature means and derives a verifiable identity (`contract_hash`).
+
+| Item | Rule |
+|---|---|
+| Formal specs | `body_size = abs(close - open)`; `wick_size = high - low` (full range, historical name); `body_ratio = body_size / wick_size`, **0.0 when `wick_size <= 0`**, float32 in the batch pipeline. Inputs must be finite; non-finite inputs are the caller's error and are never zero-filled. |
+| Other features | identified by a digest of the normalised AST (comments, docstrings, formatting removed) of the `FeaturePipeline` method that assigns them, plus a digest of the remaining pipeline code (constants, module functions, orchestration). Detects change; does not yet state meaning. |
+| Identity | `contract_hash` = sha256 of contract version, ordered names, formal specs and digests. Distinct from `SCHEMA_HASH` (names only) and `SchemaObject.checksum`. |
+| Artifacts | `save_gaussian_model` stamps `feature_contract_hash` and `feature_contract_version` (only for the canonical feature list). `load_gaussian_model` rejects a missing or different hash (`ContractMismatchError`, a `ValueError`); `allow_legacy=True` accepts only a *missing* hash, for audits, and labels it `legacy_unverified`. |
+| Registry | `register_gaussian` stores the artifact's hash; `promote_gaussian` requires the entry and the artifact to carry the current hash and is **not** bypassed by `force`. Rolling back to a legacy entry therefore cannot use `promote_gaussian`; restore a saved registry file instead. |
+| Parity | `tests/test_feature_contract.py` proves the pipeline, `crt_engine_v2.Candle` and `manual_backtest.py` follow the formal specs; strict-xfail tests pin the known non-compliant branches (live hook, BitNet builder). |

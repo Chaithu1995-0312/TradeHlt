@@ -1,0 +1,152 @@
+flowchart LR
+  subgraph A["A: Batch / backtest"]
+    n5["src/features/feature_pipeline.py"]
+    n6["src/runtime/backtest_v2.py"]
+    n7["src/config_layer/crt_engine_v2.py"]
+    n8["scripts/backtest/manual_backtest.py"]
+    n40["scripts/analysis/* (research consumers)"]
+  end
+  subgraph B["B: Live / streaming"]
+    n11["src/runtime/live_engine_hook.py"]
+    n12["src/core/feature_store.py"]
+    n14["src/engines/live_engine.py"]
+    n15["src/agent/modes/pipeline_mode.py"]
+    n16["src/agent/modes/copilot_mode.py"]
+    n17["src/llm_research/forward_tester.py"]
+    n18["src/scanner/scanner.py"]
+    n19["src/features/feature_builder.py"]
+    n20["src/engines/adapter_engine.py"]
+    n21["src/core/fusion_engine.py"]
+    n22["src/config_layer/execution_planner.py"]
+    n23["src/config_layer/crt_gaussian_scorer.py"]
+    n41["MISSING:trade_data_producer"]
+  end
+  subgraph C["C: ML / Gaussian"]
+    n9["src/config_layer/rr/rr_dataset_builder.py"]
+    n10["src/features/dataset_validator.py"]
+    n24["scripts/training/phase5_calibration.py"]
+    n25["src/training/train_pipeline.py"]
+    n26["src/training/trainer.py"]
+    n27["src/core/model_registry.py"]
+    n28["src/engines/ml_gaussian_engine.py"]
+    n29["src/engines/heuristic_gaussian_engine.py"]
+    n30["src/engines/gaussian_engine.py"]
+    n31["scripts/training/gaussian_from_backtest.py"]
+    n32["src/runtime/baseline_capture.py"]
+    n43["ARTIFACTS:gaussian_p5_* (12)"]
+    n44["ARTIFACTS:gaussian_xau_m15_causal_n9_20261011"]
+    n45["ARTIFACTS:v1.json / import_fix_v1 stubs"]
+    n48["REGISTRY:models/gaussian_registry.json"]
+  end
+  subgraph D["D: Other consumers"]
+    n4["model_export_format.json"]
+    n33["src/features/bitnet_feature_builder.py"]
+    n34["src/bitnet/search_engine.py"]
+    n35["src/bitnet/bitnet_runner.py"]
+    n36["src/bitnet/bitnet_inference.py"]
+    n37["src/engines/zone_gate_engine.py"]
+    n38["tools/cpp/cpp_runner.cpp"]
+    n39["src/inout/runner.py"]
+    n42["UNVERIFIED:external_callers"]
+    n46["ARTIFACTS:tradenet_p5_* (5)"]
+  end
+  subgraph S["S: Shared"]
+    n0["src/features/feature_schema.py"]
+    n1["src/features/dataset_builder.py"]
+    n2["src/features/schema_validator.py"]
+    n3["src/features/feature_contract.py"]
+    n13["src/core/engine_runner.py"]
+    n47["CONFIG:configs/production/v1_multi_2026_03.json"]
+  end
+  n31 --> n1
+  n31 --> n5
+  n31 --> n26
+  n31 --> n27
+  n24 --> n0
+  n24 --> n1
+  n24 --> n26
+  n24 --> n27
+  n16 --> n13
+  n16 --> n21
+  n16 --> n22
+  n15 --> n6
+  n15 --> n11
+  n35 --> n36
+  n35 --> n0
+  n34 --> n1
+  n34 --> n0
+  n7 --> n36
+  n7 --> n0
+  n7 --> n2
+  n9 --> n5
+  n9 --> n0
+  n9 --> n2
+  n13 --> n20
+  n13 --> n29
+  n13 --> n28
+  n13 --> n37
+  n13 --> n21
+  n13 --> n14
+  n12 --> n0
+  n12 --> n2
+  n27 --> n0
+  n27 --> n3
+  n30 --> n29
+  n29 --> n0
+  n14 --> n1
+  n14 --> n34
+  n28 --> n27
+  n28 --> n26
+  n28 --> n1
+  n37 --> n0
+  n33 --> n0
+  n1 --> n0
+  n10 --> n0
+  n10 --> n19
+  n19 --> n1
+  n3 --> n0
+  n5 --> n0
+  n5 --> n2
+  n0 --> n2
+  n17 --> n13
+  n17 --> n22
+  n6 --> n0
+  n6 --> n7
+  n6 --> n5
+  n6 --> n36
+  n6 --> n13
+  n32 --> n0
+  n32 --> n27
+  n11 --> n13
+  n11 --> n14
+  n11 --> n22
+  n11 --> n12
+  n25 --> n10
+  n25 --> n1
+  n25 --> n9
+  n25 --> n26
+  n25 --> n27
+  n25 --> n0
+  n26 --> n0
+  n26 --> n3
+  n26 --> n1
+  n9 --> n6
+  n21 --> n5
+  n14 --> n5
+  n16 --> n6
+  n17 --> n6
+  n11 --> n6
+  n21 --> n19
+  n40 --> n5
+  n41 -.-> n11
+  n42 -.-> n11
+  n47 --> n13
+  n43 --> n26
+  n44 --> n26
+  n46 --> n26
+  n45 --> n29
+  n48 --> n27
+  n48 --> n29
+  n48 --> n28
+  n38 --> n4
+  n2 --> n0

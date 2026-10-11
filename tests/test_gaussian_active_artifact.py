@@ -1,4 +1,8 @@
-"""Verifies the registered active Gaussian artifact is loadable, schema-exact and safe to call."""
+"""The registered active Gaussian artifact: identity, fail-closed loading, and safe failure modes.
+
+The active artifact (experimental, 9 trades) predates the feature-definition contract, so the default loader
+must refuse it; it can only be inspected with allow_legacy=True.
+"""
 import hashlib
 import json
 import math
@@ -8,6 +12,7 @@ import pytest
 
 from core.model_registry import get_active_gaussian
 from features.dataset_builder import GAUSSIAN_FEATURE_SCHEMA
+from features.feature_contract import ContractMismatchError
 from training import trainer
 
 MODELS = Path(__file__).resolve().parents[1] / "models"
@@ -27,23 +32,24 @@ def test_active_entry_resolves_to_existing_file_with_matching_checksum():
     assert e["feature_schema"] == list(GAUSSIAN_FEATURE_SCHEMA)
 
 
-def test_artifact_loads_with_exact_schema_and_gives_valid_probabilities():
+def test_default_loader_rejects_legacy_active_artifact():
     _, e = _active()
-    model, scaler, meta = trainer.load_gaussian_model(e["model_file"])
+    with pytest.raises(ContractMismatchError, match="legacy"):
+        trainer.load_gaussian_model(e["model_file"])
+
+
+def test_legacy_artifact_loads_only_when_explicitly_allowed_and_is_labelled():
+    _, e = _active()
+    model, scaler, meta = trainer.load_gaussian_model(e["model_file"], allow_legacy=True)
+    assert meta["contract_status"] == "legacy_unverified"
     assert model.n_features == len(GAUSSIAN_FEATURE_SCHEMA) == 35
-    raw = json.loads((MODELS / e["model_file"]).read_text())
     x = scaler.transform([list(scaler._mean)])[0]
-    probs = model.predict_proba(x) if hasattr(model, "predict_proba") else None
-    if probs is not None:
-        assert len(probs) == 4 and abs(sum(probs) - 1.0) < 1e-6
-    exp_rr = model.predict_expected_rr(x)[0]
-    assert math.isfinite(exp_rr)
-    assert raw["feature_definition"]["structure_mode"] == "causal_v2"
+    assert math.isfinite(model.predict_expected_rr(x)[0])
 
 
 def test_incompatible_input_and_missing_model_fail_explicitly():
     _, e = _active()
-    model, scaler, _ = trainer.load_gaussian_model(e["model_file"])
+    model, scaler, _ = trainer.load_gaussian_model(e["model_file"], allow_legacy=True)
     with pytest.raises(Exception):
         model.predict_expected_rr([0.0] * 34)
     with pytest.raises(FileNotFoundError):

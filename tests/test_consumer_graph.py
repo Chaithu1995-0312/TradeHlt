@@ -49,5 +49,14 @@ def test_known_defects_are_not_hidden(reg):
     assert live["body_ratio"] == "value_mismatch" and live["session"] == "type_break" and live["rsi_14"] == "identical"
 
 
-def test_no_feature_definition_contract_is_claimed(reg):
-    assert reg["contract_state"]["feature_definition_contract_exists"] is False
+def test_contract_scope_is_stated_honestly(reg):
+    cs = reg["contract_state"]
+    assert cs["feature_definition_contract_exists"] is True and "3 formal" in cs["feature_definition_contract_scope"]
+    assert reg["evidence"]["contract"]["formal_features"] == ["body_size", "wick_size", "body_ratio"]
+
+
+def test_gate_branches_do_not_propagate_verified_status(reg):
+    st = {b["id"]: b for b in reg["branches"]}
+    assert st["S1"]["status"] == "verified" and st["S2"]["status"] == "verified"
+    assert "does_not_imply" in st["S1"] and "does_not_imply" in st["S2"]
+    assert st["C4"]["status"] != "verified" and st["B1"]["status"] == "mismatched"

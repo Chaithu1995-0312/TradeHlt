@@ -54,6 +54,12 @@ def _gaussian_registry(tmp_path: Path) -> GaussianModelRegistry:
     return GaussianModelRegistry(models_dir=tmp_path)
 
 
+def _write_contract_artifact(directory: Path, name: str) -> None:
+    """Minimal artifact carrying the current feature contract hash (promotion is gated on it)."""
+    from features.feature_contract import contract_hash
+    (directory / name).write_text(json.dumps({"feature_contract_hash": contract_hash()}))
+
+
 def _gaussian_metrics(corr: float = 0.5) -> dict:
     return {"corr_expected_rr": corr, "calibration_error": 0.1,
             "n_train": 100, "n_val": 50}
@@ -222,6 +228,7 @@ def test_concurrent_promote_no_dual_active(tmp_path):
 
 def test_gaussian_promote_single_active(tmp_path):
     greg = _gaussian_registry(tmp_path)
+    _write_contract_artifact(tmp_path, "m1.json"); _write_contract_artifact(tmp_path, "m2.json")
 
     with patch("core.model_registry.SCHEMA_VERSION", "v1"):
         greg.register_gaussian("v1", "m1.json", [], _gaussian_metrics(0.5))
@@ -242,6 +249,7 @@ def test_gaussian_promote_single_active(tmp_path):
 
 def test_gaussian_promote_blocks_regression(tmp_path):
     greg = _gaussian_registry(tmp_path)
+    _write_contract_artifact(tmp_path, "m1.json"); _write_contract_artifact(tmp_path, "m2.json")
 
     with patch("core.model_registry.SCHEMA_VERSION", "v1"):
         greg.register_gaussian("v1", "m1.json", [], _gaussian_metrics(0.5))
