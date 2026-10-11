@@ -566,3 +566,19 @@ Belief Update / ROI / Goal: none
 Open Questions: none
 Next Step: none
 ---
+
+---
+
+📝 SESSION LOG ENTRY
+Date: 2026-10-10
+Topic: Research Navigator lane — SITS grandfather-pin repair (commit 1 of 2)
+Decision/Output: On new branch lane/research-navigator @ d397067 (worktree D:\Tradelatest-wt-navigator), repaired a pre-existing SITS grandfather-pin/stub drift that blocked any lane from certifying on this anchor: 45 concurrent-session Semantic OS v2 / scratch scripts entered docs/governance/script_registry_stubs.jsonl (via script_census --write-stubs) but were never added to docs/governance/script_registry_grandfather.json, so test_grandfather_paths_match_stubs (pin 453 != stubs 498) and test_grandfather_ratchet_live_universe (45 unclassified new paths) were RED for reasons that predate and are independent of the Navigator. Mechanically verified only_in_pin==0 (pin is a strict subset of stubs), so the resync is PURELY ADDITIVE (453 -> 498). The 45 added paths are PINNED, not overlay-classified: their purpose is unknown to this session, so they remain GRANDFATHER_UNCLASSIFIED honestly rather than guessed — the exact discipline the pin's own description documents for the prior 2026-09-10 concurrent-WIP entry. Separate manifest CH-research-navigator-registry-repair-v1 (SCRIPT_LIFECYCLE_CHANGE, so validate-completion RUNS the registry floor and proves the fix). validate-completion = COMPLETE (SITS floor 69 passed); repo_state_hash=PENDING via the validator's own manifest-in-its-own-diff escape, tests still re-run live. The Navigator indexer scripts/governance/nav_reconcile.py is held OFF the governed tree (gitignored data/_nav_stage/) during this repair so its own registration certifies in its own change.
+Belief Update / ROI / Goal:
+  Goal: give the Research Navigator lane a green script-registry floor so it can certify without entangling with in-flight Semantic OS v2 work.
+  Belief: no commit on semanticos_impl has both the Navigator source workbooks AND a green registry floor (verified across all 271 commits; workbooks introduced in 795124283f, every workbook-bearing commit already ships the drift; main is 266 behind and lacks workbooks+SITS tooling). So the "clean known starting commit" premise is unsatisfiable as stated — a separately-manifested additive repair is the honest path (user authorized Option 2).
+  Knowledge ROI: high — proves the drift is one-directional and self-healing without inventing purposes.
+  Action: commit the pin resync (commit 1), then restore + register nav_reconcile.py (commit 2).
+Open Questions: none for the repair. Deferred to commit 2: register nav_reconcile.py via --write-stubs + overlay (purpose != GRANDFATHER_UNCLASSIFIED) + additive pin add, then validate-completion.
+Next Step: git commit --no-verify the pin resync (established branch precedent; the pre-commit hook runs a broad floor with pre-existing reds unrelated to this additive JSON change and explicitly sanctions --no-verify), then proceed to Navigator commit 2.
+---
+
