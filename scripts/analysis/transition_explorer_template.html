@@ -1,0 +1,176 @@
+<title>Feature Transition Explorer</title>
+<style>
+/* Layout: filter rail left, evidence table + detail right; dark-first research console, stacks on phones. */
+:root{--bg:#0b1020;--panel:#121a2d;--panel2:#172238;--line:#293650;--text:#edf2fb;--muted:#9eacc3;--good:#52d6a0;--bad:#ff7d89;--warn:#f6c66b;--accent:#8bb8ff;--btn:#203a60;--btnline:#3a5279;--input:#0d1527;--inputline:#34435f;--banner:#292317;--bannerline:#69552c;--bannertext:#f3dba7;--sel:#1b2b45;color-scheme:dark;
+--font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f3f5fa;--panel:#fff;--panel2:#eef2f9;--line:#d5dcea;--text:#111a2c;--muted:#566580;--good:#0b7a55;--bad:#b3243a;--warn:#8a5a00;--accent:#1d5fc4;--btn:#e3ecfb;--btnline:#a9bde0;--input:#fff;--inputline:#b8c4dc;--banner:#fff6df;--bannerline:#d9b86a;--bannertext:#5b4300;--sel:#e6eefb;color-scheme:light}}
+:root[data-theme="light"]{--bg:#f3f5fa;--panel:#fff;--panel2:#eef2f9;--line:#d5dcea;--text:#111a2c;--muted:#566580;--good:#0b7a55;--bad:#b3243a;--warn:#8a5a00;--accent:#1d5fc4;--btn:#e3ecfb;--btnline:#a9bde0;--input:#fff;--inputline:#b8c4dc;--banner:#fff6df;--bannerline:#d9b86a;--bannertext:#5b4300;--sel:#e6eefb;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 var(--font);padding-inline:16px}
+header{padding-block:20px;display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap;max-width:1500px;margin:auto;border-bottom:1px solid var(--line)}
+h1{font-size:21px;margin:0 0 4px;text-wrap:balance}h2{font-size:15px;margin:0 0 12px}h3{font-size:12px;margin:14px 0 6px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+p{margin:0;color:var(--muted)}.eyebrow{font-size:11px;letter-spacing:.13em;color:var(--accent);text-transform:uppercase;font-weight:700}
+.wrap{max-width:1500px;margin:auto;padding-block:18px;display:grid;grid-template-columns:290px minmax(0,1fr);gap:18px}
+.panel,.metric{background:var(--panel);border:1px solid var(--line);border-radius:12px}
+.filters{padding:16px;align-self:start}.field{margin:0 0 12px}.field label{display:block;color:var(--muted);font-size:12px;margin-bottom:5px}
+input,select{width:100%;background:var(--input);color:var(--text);border:1px solid var(--inputline);border-radius:7px;padding:8px;font:inherit}
+input:focus-visible,select:focus-visible,button:focus-visible,tbody tr:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:9px}.checkrow{display:flex;gap:8px;align-items:center;color:var(--muted);margin:7px 0}.checkrow input{width:auto}
+button{border:1px solid var(--btnline);background:var(--btn);color:var(--text);padding:9px 12px;border-radius:8px;cursor:pointer;font-weight:650;font:inherit}button.secondary{background:transparent;border-color:var(--line);color:var(--muted)}button:hover{filter:brightness(1.12)}.actions{display:flex;gap:8px}.actions button{flex:1}
+.note{font-size:11px;color:var(--muted);margin-top:10px}
+main{min-width:0}.banner{border:1px solid var(--bannerline);background:var(--banner);color:var(--bannertext);padding:11px 14px;border-radius:9px;margin-bottom:14px}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}.metric{padding:13px}.metric span{display:block;color:var(--muted);font-size:12px}.metric strong{font-size:22px;display:block;margin-top:4px;font-variant-numeric:tabular-nums}.metric small{color:var(--muted)}
+.results,.detail{padding:16px;margin-bottom:14px}.toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}.toolbar p{font-size:12px}
+.tablewrap{overflow:auto;max-height:520px;min-width:0}table{border-collapse:collapse;width:100%;min-width:1050px;font-variant-numeric:tabular-nums}
+th,td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}th{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;position:sticky;top:0;background:var(--panel);cursor:pointer}tbody tr{cursor:pointer}tbody tr:hover,tbody tr.selected{background:var(--sel)}
+.tag{display:inline-block;border:1px solid var(--line);border-radius:20px;padding:2px 8px;font-size:11px}.pos{color:var(--good)}.neg{color:var(--bad)}.warn{color:var(--warn)}
+.detailgrid{display:grid;grid-template-columns:1.2fr 1fr;gap:18px}.detailgrid>div{min-width:0}
+.kv{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 12px;font-size:12px}.kv dt{color:var(--muted)}.kv dd{margin:0;text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.traces{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}.tr{border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--panel2);min-width:0}.tr b{font-size:12px}.tr small{display:block;color:var(--muted);font-size:11px}
+svg{width:100%;height:90px;display:block}.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:8px}.legend i{display:inline-block;width:10px;height:3px;margin-right:5px;vertical-align:middle}
+ul{padding-left:18px;color:var(--muted);margin:6px 0}li{margin:5px 0}.small{font-size:12px;color:var(--muted)}pre{margin:0;overflow:auto;font:11px/1.4 var(--mono);color:var(--muted);max-height:260px}
+details{margin-top:10px}summary{cursor:pointer;color:var(--accent)}
+footer{max-width:1500px;margin:auto;padding-block:0 22px;color:var(--muted);font-size:11px}
+@media(max-width:950px){.wrap{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,1fr)}.detailgrid{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<header>
+ <div><div class="eyebrow">TradeResearch / Research Lab</div><h1>Feature Transition Explorer</h1><p>Rolling feature sign transitions around real XAUUSD M15 trades.</p></div>
+ <div class="tag" id="runTag">measured run</div>
+</header>
+<div class="wrap">
+ <aside class="panel filters">
+  <h2>1. Narrow the evidence</h2>
+  <div class="field"><label for="feature">Feature name</label><input id="feature" placeholder="e.g. trend_bias" autocomplete="off"></div>
+  <div class="field"><label for="pattern">Transition pattern</label><select id="pattern"><option value="all">All patterns</option><option value="NPN">Negative → Positive → Negative</option><option value="PNP">Positive → Negative → Positive</option><option value="NP">Single upward crossing (− → +)</option><option value="PN">Single downward crossing (+ → −)</option></select></div>
+  <div class="field"><label for="family">Feature kind</label><select id="family"><option value="all">All features</option><option value="zero_cross">Signed (zero-centred)</option><option value="median_relative">Non-signed (vs trailing median)</option></select></div>
+  <div class="field"><label for="phase">Evidence phase</label><select id="phase"><option value="all">All phases</option><option value="before">Before entry (causal)</option><option value="during">During trade (descriptive)</option><option value="after">After exit (descriptive)</option></select></div>
+  <div class="field"><label for="cmp">Outcome comparison</label><select id="cmp"><option value="win_vs_loss">Profitable vs losing</option><option value="mfe1r_vs_not">Reached +1R MFE vs not</option><option value="gaveback_vs_held">+1R then gave back vs held</option></select></div>
+  <div class="row2">
+   <div class="field"><label for="window">Rolling window</label><select id="window"><option value="all">All</option><option>8</option><option>12</option><option>16</option><option>20</option></select></div>
+   <div class="field"><label for="sort">Sort by</label><select id="sort"><option value="perm_p">Permutation p</option><option value="abs_d">|Δ net R|</option><option value="freq_vs_base_p">Frequency vs base p</option><option value="cmp_p">Group Fisher p</option><option value="n_with">n with pattern</option></select></div>
+  </div>
+  <div class="row2">
+   <div class="field"><label for="minWith">Min n with</label><input id="minWith" type="number" min="0" value="2"></div>
+   <div class="field"><label for="minWithout">Min n without</label><input id="minWithout" type="number" min="0" value="2"></div>
+  </div>
+  <div class="row2">
+   <div class="field"><label for="minEffect">Min |Δ R|</label><input id="minEffect" type="number" step=".05" value="0"></div>
+   <div class="field"><label for="oos">Train → test</label><select id="oos"><option value="all">Any</option><option value="same_sign">Same sign</option><option value="sign_flip">Sign flip</option><option value="test_not_evaluable">Not evaluable</option><option value="not_selected_on_train">Not selected</option></select></div>
+  </div>
+  <div class="checkrow"><input id="causal" type="checkbox"><label for="causal">Entry-time causal evidence only</label></div>
+  <div class="checkrow"><input id="testable" type="checkbox" checked><label for="testable">Only rows with both groups testable</label></div>
+  <div class="actions"><button id="apply">Apply filters</button><button id="reset" class="secondary">Reset</button></div>
+  <div class="note">Thresholds above are display filters. The train/test selection rule was fixed in spec.json before measuring.</div>
+ </aside>
+ <main>
+  <div class="banner" id="banner"></div>
+  <section class="metrics">
+   <div class="metric"><span>Rows matching filters</span><strong id="mRows">-</strong><small id="mRowsSub"></small></div>
+   <div class="metric"><span>Trade episodes</span><strong id="mTrades">-</strong><small id="mTradesSub"></small></div>
+   <div class="metric"><span>Smallest permutation p</span><strong id="mP">-</strong><small id="mPSub"></small></div>
+   <div class="metric"><span>Evidence status</span><strong id="mStatus" style="font-size:16px">-</strong><small id="mStatusSub"></small></div>
+  </section>
+  <section class="panel results">
+   <div class="toolbar"><div><h2>2. Candidate patterns</h2><p id="resultSummary"></p></div><button class="secondary" id="copyCsv">Copy filtered rows (CSV)</button></div>
+   <div class="tablewrap"><table><thead><tr id="thead"></tr></thead><tbody id="rows"></tbody></table></div>
+   <div class="small" id="rowNote" style="margin-top:8px"></div>
+  </section>
+  <section class="panel detail">
+   <div class="toolbar"><div><h2>3. Evidence detail</h2><p id="detailSubtitle">Select a row to inspect every field.</p></div><span class="tag" id="detailTag"></span></div>
+   <div class="detailgrid">
+    <div><h3>Measured fields</h3><dl class="kv" id="kv"></dl></div>
+    <div><h3>Interpretation guard</h3><ul id="audit"></ul>
+     <h3>Run manifest</h3><dl class="kv" id="mf"></dl>
+     <details><summary>Pre-registered specification</summary><pre id="spec"></pre></details>
+     <details><summary>Schema authority and discrepancies</summary><pre id="schema"></pre></details>
+    </div>
+   </div>
+   <h3 style="margin-top:18px">Actual feature trace, one panel per trade (bars from entry − 20 to exit + 20)</h3>
+   <div class="traces" id="traces"></div>
+   <div class="legend"><span><i style="background:var(--accent)"></i>feature value (z-scaled per panel)</span><span><i style="background:var(--good)"></i>entry</span><span><i style="background:var(--bad)"></i>exit</span><span><i style="background:var(--warn)"></i>MFE bar</span></div>
+  </section>
+ </main>
+</div>
+<footer>Every row is computed by scripts/analysis/feature_transition_research.py from the M15 corpus and the trade records named in the run manifest. Nothing here is a trading signal.</footer>
+<script>
+const D=/*__DATA__*/null;
+const C={};D.cols.forEach((c,i)=>C[c]=i);
+const ROWS=D.rows;
+const $=id=>document.getElementById(id);
+const g=(r,c)=>r[C[c]];
+const fmt=(v,d=3)=>v===null||v===undefined?'n/a':(typeof v==='number'?(Math.abs(v)<0.001&&v!==0?v.toExponential(1):v.toFixed(d)):String(v));
+const PAT={NPN:'− → + → −',PNP:'+ → − → +',NP:'− → +',PN:'+ → −'};
+const COLS=[['feature','Feature'],['pattern','Pattern'],['phase','Phase'],['window','Win'],['n_eval','n eval'],['n_with','n with'],['n_without','n w/o'],['freq_with','Freq'],['corpus_base_rate','Base rate'],['d_net_R','Δ net R'],['perm_p','Perm p'],['perm_q_bh','BH q'],['cmp_rates','Group rates A | B'],['cmp_p','Fisher p'],['oos_status','Train → test']];
+let view=[],sel=0,sortKey='perm_p';
+function cmpOf(r){const c=$('cmp').value;return {nA:g(r,c+'_nA'),nB:g(r,c+'_nB'),kA:g(r,c+'_kA'),kB:g(r,c+'_kB'),rA:g(r,c+'_rateA'),rB:g(r,c+'_rateB'),p:g(r,c+'_fisher_p'),q:g(r,c+'_fisher_q_bh'),rd:g(r,c+'_risk_diff')}}
+function render(){
+ const f=$('feature').value.trim().toLowerCase(),p=$('pattern').value,fam=$('family').value,ph=$('phase').value,w=$('window').value,mw=+$('minWith').value||0,mwo=+$('minWithout').value||0,me=+$('minEffect').value||0,oos=$('oos').value,causal=$('causal').checked,tst=$('testable').checked;
+ view=ROWS.filter(r=>(!f||g(r,'feature').toLowerCase().includes(f))&&(p==='all'||g(r,'pattern')===p)&&(fam==='all'||g(r,'family')===fam)&&(ph==='all'||g(r,'phase')===ph)&&(w==='all'||g(r,'window')===+w)&&g(r,'n_with')>=mw&&g(r,'n_without')>=mwo&&(me===0||Math.abs(g(r,'d_net_R')||0)>=me)&&(oos==='all'||g(r,'oos_status')===oos)&&(!causal||g(r,'causal_entry_time'))&&(!tst||g(r,'testable')));
+ const key=$('sort').value;
+ const val=r=>key==='abs_d'?-Math.abs(g(r,'d_net_R')||0):key==='cmp_p'?cmpOf(r).p:key==='n_with'?-g(r,'n_with'):g(r,key);
+ view.sort((a,b)=>{const x=val(a),y=val(b);return (x===null)-(y===null)||(x-y)});
+ sel=Math.min(sel,Math.max(view.length-1,0));
+ const head=$('thead');head.innerHTML=COLS.map(c=>`<th scope="col">${c[1]}</th>`).join('');
+ const tb=$('rows');tb.innerHTML='';
+ view.slice(0,300).forEach((r,i)=>{const c=cmpOf(r),d=g(r,'d_net_R');const tr=document.createElement('tr');tr.tabIndex=0;tr.className=i===sel?'selected':'';
+  const st=g(r,'oos_status');
+  tr.innerHTML=`<td><strong>${g(r,'feature')}</strong></td><td>${PAT[g(r,'pattern')]}</td><td>${g(r,'phase')}${g(r,'causal_entry_time')?'':' <span class="tag warn">descriptive</span>'}</td><td>${g(r,'window')}</td><td>${g(r,'n_eval')}</td><td>${g(r,'n_with')}</td><td>${g(r,'n_without')}</td><td>${fmt(g(r,'freq_with'),2)}</td><td>${fmt(g(r,'corpus_base_rate'),2)}</td><td class="${d>0?'pos':d<0?'neg':''}">${d===null?'n/a':(d>=0?'+':'')+d.toFixed(2)+'R'}</td><td>${fmt(g(r,'perm_p'))}</td><td>${fmt(g(r,'perm_q_bh'))}</td><td>${c.nA?c.kA+'/'+c.nA:'-'} | ${c.nB?c.kB+'/'+c.nB:'-'}</td><td>${fmt(c.p)}</td><td><span class="tag ${st==='same_sign'?'pos':st==='sign_flip'?'neg':'warn'}">${st.replace(/_/g,' ')}</span></td>`;
+  tr.onclick=()=>{sel=i;[...tb.children].forEach((x,j)=>x.classList.toggle('selected',j===i));detail(r)};
+  tr.onkeydown=e=>{if(e.key==='Enter')tr.onclick()};tb.appendChild(tr)});
+ const m=D.manifest.tests,tp=view.map(r=>g(r,'perm_p')).filter(x=>x!==null);
+ $('mRows').textContent=view.length.toLocaleString();$('mRowsSub').textContent=`of ${ROWS.length.toLocaleString()} (feature × pattern × phase × window)`;
+ const n=D.manifest.trades_n;$('mTrades').textContent=n;$('mTradesSub').textContent=`${D.manifest.overlapping_episode_pairs} overlapping episode pairs`;
+ $('mP').textContent=tp.length?Math.min(...tp).toFixed(3):'n/a';$('mPSub').textContent=`${m.rows_testable} testable rows; Bonferroni α ${m['bonferroni_alpha_0.05'].toExponential(1)}`;
+ $('mStatus').textContent=m['rows_perm_q_lt_0.10']===0?'No pattern survives':'Review';$('mStatusSub').textContent=`${m['rows_perm_q_lt_0.10']} rows with BH q < 0.10`;
+ $('resultSummary').textContent=`${view.length} rows match${view.length>300?' (first 300 shown)':''}. Comparison: ${$('cmp').selectedOptions[0].text}.`;
+ $('rowNote').textContent='Group rates show trades with the pattern / trades in the group (A | B). Rows with an empty group show "-".';
+ if(view.length)detail(view[sel]);else{$('detailSubtitle').textContent='No rows match. Relax a filter.';$('kv').innerHTML='';$('traces').innerHTML=''}
+}
+function detail(r){
+ const c=cmpOf(r);
+ $('detailSubtitle').textContent=`${g(r,'feature')} · ${PAT[g(r,'pattern')]} · ${g(r,'phase')} · ${g(r,'window')}-candle window`;
+ $('detailTag').textContent=g(r,'causal_entry_time')?'entry-time causal':'descriptive only';
+ const rows=[['Kind',g(r,'family')],['n eval / with / without',`${g(r,'n_eval')} / ${g(r,'n_with')} / ${g(r,'n_without')}`],['Frequency with pattern',fmt(g(r,'freq_with'),3)],['Corpus base rate (windows)',`${fmt(g(r,'corpus_base_rate'),3)} (${g(r,'corpus_windows')})`],['Frequency vs base, exact p',fmt(g(r,'freq_vs_base_p'))],
+  ['Net R with | without',`${fmt(g(r,'net_R_with'),2)} | ${fmt(g(r,'net_R_without'),2)}`],['Δ net R',fmt(g(r,'d_net_R'),2)],['Δ 95% bootstrap CI',`${fmt(g(r,'d_net_R_ci_lo'),2)} … ${fmt(g(r,'d_net_R_ci_hi'),2)}`],['Hedges g',fmt(g(r,'hedges_g'),2)],['Permutation p | BH q',`${fmt(g(r,'perm_p'))} | ${fmt(g(r,'perm_q_bh'))}`],
+  ['Win rate with | without',`${fmt(g(r,'win_rate_with'),2)} | ${fmt(g(r,'win_rate_without'),2)}`],['MFE R with | without',`${fmt(g(r,'mfe_with'),2)} | ${fmt(g(r,'mfe_without'),2)}`],['MAE R with | without',`${fmt(g(r,'mae_with'),2)} | ${fmt(g(r,'mae_without'),2)}`],['Duration bars with | without',`${fmt(g(r,'duration_with'),1)} | ${fmt(g(r,'duration_without'),1)}`],
+  ['Transition bar vs entry (median)',fmt(g(r,'trans_rel_entry_median'),1)],['Transition bar vs exit (median)',fmt(g(r,'trans_rel_exit_median'),1)],['Transition bar vs MFE bar (median)',fmt(g(r,'trans_rel_mfe_median'),1)],
+  ['Group A n / with',`${c.nA} / ${c.kA}`],['Group B n / with',`${c.nB} / ${c.kB}`],['Rate A | B',`${fmt(c.rA,2)} | ${fmt(c.rB,2)}`],['Risk difference',fmt(c.rd,2)],['Fisher p | BH q',`${fmt(c.p)} | ${fmt(c.q)}`],
+  ['Train Δ R (n with/without)',`${fmt(g(r,'train_d_net_R'),2)} (${g(r,'train_n_with')}/${g(r,'train_n_without')})`],['Test Δ R (n with/without)',`${fmt(g(r,'test_d_net_R'),2)} (${g(r,'test_n_with')}/${g(r,'test_n_without')})`],['Selected on train',g(r,'selected_on_train')?'yes':'no'],['Train → test',g(r,'oos_status')]];
+ $('kv').innerHTML=rows.map(x=>`<dt>${x[0]}</dt><dd>${x[1]}</dd>`).join('');
+ const small=g(r,'n_with')<5||g(r,'n_without')<5;
+ $('audit').innerHTML=`<li>${g(r,'causal_entry_time')?'Window ends at the entry bar close; no later bars are used.':'Uses bars after entry. Descriptive or exit research only, never an entry rule.'}</li><li>${small?'Fewer than 5 trades on at least one side. The effect size is not stable.':'Both sides have at least 5 trades.'}</li><li>Rows are one of ${ROWS.length.toLocaleString()} tests; use the BH q column, not the raw p.</li><li>Features are raw values; SHORT trades are not sign-flipped.</li>`;
+ traces(g(r,'feature'),g(r,'pattern'));
+}
+function traces(f){
+ const box=$('traces');box.innerHTML='';
+ Object.entries(D.traces).forEach(([id,t])=>{
+  const xs=t.features[f],off=t.bar_offsets_rel_entry,fin=xs.filter(v=>v!==null);if(!fin.length)return;
+  const mn=Math.min(...fin),mx=Math.max(...fin),sp=(mx-mn)||1,W=200,H=80;
+  const px=i=>4+i*(W-8)/Math.max(xs.length-1,1),py=v=>H-6-(v-mn)/sp*(H-12);
+  let d='';xs.forEach((v,i)=>{if(v!==null)d+=(d&&xs[i-1]!==null?'L':'M')+px(i).toFixed(1)+','+py(v).toFixed(1)});
+  const ei=off.indexOf(0),xi=off.indexOf(t.trade.exit_idx-t.trade.entry_idx),mi=off.indexOf(t.trade.mfe_bar_rel_entry);
+  const line=(i,col)=>i<0?'':`<line x1="${px(i)}" x2="${px(i)}" y1="0" y2="${H}" stroke="${col}" stroke-width="1.5" stroke-dasharray="3 2"/>`;
+  const el=document.createElement('div');el.className='tr';
+  el.innerHTML=`<b>${id} ${t.trade.direction}</b><small>net ${t.trade.net_R.toFixed(2)}R · MFE ${t.trade.mfe_R.toFixed(2)}R · MAE ${t.trade.mae_R.toFixed(2)}R · ${t.trade.duration} bars · ${t.trade.exit_reason}</small><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${f} around ${id}">${line(ei,'var(--good)')}${line(mi,'var(--warn)')}${line(xi,'var(--bad)')}<path d="${d}" fill="none" stroke="var(--accent)" stroke-width="1.6"/></svg><small>range ${mn.toPrecision(4)} … ${mx.toPrecision(4)} · ${t.trade.split}</small>`;
+  box.appendChild(el)});
+}
+function init(){
+ const m=D.manifest;m.trades_n=Object.keys(D.traces).length;
+ $('banner').innerHTML=`<strong>Measured run.</strong> ${m.trades_n} actual production-config M15 trades on XAUUSD (${m.corpus.range[0].slice(0,10)} to ${m.corpus.range[1].slice(0,10)}). With this few trades, no pattern can be called an edge; the table shows what was measured and how weak it is.`;
+ $('runTag').textContent=`schema ${m.schema.schema_object_version} · ${m.schema.feature_count} features · ${m.schema.schema_object_checksum.slice(0,8)}`;
+ const mf=[['Git commit',m.git_commit.slice(0,10)],['OHLCV sha256',m.ohlcv_sha256.slice(0,16)+'…'],['Trades sha256',m.trades_sha256.slice(0,16)+'…'],['Prod config sha256',m.production_config_sha256.slice(0,16)+'…'],['Pipeline sha256',m.feature_pipeline_sha256.slice(0,16)+'…'],['Spec sha256',m.spec_sha256.slice(0,16)+'…'],['Structure mode',m.structure_mode],['Feature rows / bars',`${m.corpus.feature_rows} / ${m.corpus.raw_bars}`],['Names-only hash',m.schema.names_only_SCHEMA_HASH.slice(0,12)+'…'],['Snapshot matches backtest',m.snapshot_integrity_all_equal?'yes':'no'],['Rows / testable',`${m.tests.rows_total} / ${m.tests.rows_testable}`],['Selected on train',m.tests.rows_selected_on_train],['Train→test same / flip / n.e.',`${m.tests.selected_oos_same_sign} / ${m.tests.selected_oos_sign_flip} / ${m.tests.selected_test_not_evaluable}`]];
+ $('mf').innerHTML=mf.map(x=>`<dt>${x[0]}</dt><dd>${x[1]}</dd>`).join('');
+ $('spec').textContent=JSON.stringify(D.spec,null,1);
+ $('schema').textContent=JSON.stringify({ordered_features:m.schema.ordered_features,discrepancies:m.schema.discrepancies,model_export:m.schema['model_export_format.json'],signed:m.signed_features},null,1);
+ render();
+}
+$('apply').onclick=()=>{sel=0;render()};
+['pattern','family','phase','window','cmp','sort','oos','causal','testable'].forEach(id=>$(id).onchange=()=>{sel=0;render()});
+$('feature').oninput=()=>{sel=0;render()};
+$('reset').onclick=()=>{$('feature').value='';['pattern','family','phase','window','oos'].forEach(i=>$(i).value='all');$('cmp').value='win_vs_loss';$('sort').value='perm_p';$('minWith').value=2;$('minWithout').value=2;$('minEffect').value=0;$('causal').checked=false;$('testable').checked=true;sel=0;render()};
+$('copyCsv').onclick=async()=>{const head=D.cols.join(',');const body=view.map(r=>r.map(v=>v===null?'':(typeof v==='string'?`"${v}"`:v)).join(','));const txt=[head,...body].join('\n');
+ try{await navigator.clipboard.writeText(txt);$('copyCsv').textContent='Copied '+view.length+' rows'}catch(e){$('copyCsv').textContent='Clipboard blocked';}
+ setTimeout(()=>$('copyCsv').textContent='Copy filtered rows (CSV)',2000)};
+init();
+</script>

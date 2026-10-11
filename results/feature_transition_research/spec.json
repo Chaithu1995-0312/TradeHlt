@@ -1,0 +1,60 @@
+{
+  "comparisons": {
+    "gaveback_vs_held": [
+      "gaveback",
+      "held"
+    ],
+    "mfe1r_vs_not": [
+      "mfe_1r",
+      "no_mfe_1r"
+    ],
+    "win_vs_loss": [
+      "profitable",
+      "losing"
+    ]
+  },
+  "direction_note": "features are NOT sign-flipped for SHORT trades (semantics preserved)",
+  "features_used": "all names in CANONICAL_FEATURES, raw values (not direction-adjusted), exact order",
+  "groups": {
+    "gaveback": "MFE >= 1.0R and (MFE - exit_favorable_R) >= 0.5R",
+    "held": "MFE >= 1.0R and (MFE - exit_favorable_R) < 0.5R",
+    "losing": "pnl_rr_net <= 0",
+    "mfe_1r": "MFE >= 1.0R (R = |entry_fill - sl|; MFE/MAE from highs/lows of bars entry+1..exit-1, plus the exit bar in full for non-stop/non-TP exits, or only the realised exit excursion for STOPPED/TP exits)",
+    "no_mfe_1r": "MFE < 1.0R",
+    "profitable": "pnl_rr_net > 0"
+  },
+  "oos": "chronological split of trades by entry time: first 70% (floor) = train, rest = test; candidates selected on train only: n_with>=2, n_without>=2 and |dNetR|>=0.10",
+  "patterns": {
+    "NP": "window's last two runs are (-,+) ('other': single upward crossing); transition bar = start of last run",
+    "NPN": "three consecutive runs (-,+,-) anywhere in the window; transition bar = start of 3rd run",
+    "PN": "window's last two runs are (+,-) ('other': single downward crossing); transition bar = start of last run",
+    "PNP": "three consecutive runs (+,-,+) anywhere in the window; transition bar = start of 3rd run"
+  },
+  "phases": {
+    "after": "bars [exit+1 .. exit+W] (descriptive / exit research only)",
+    "before": "bars [entry-W+1 .. entry] (entry bar close is when the entry is decided; causal)",
+    "during": "bars [entry+1 .. entry+W], only if the trade is still open through entry+W (descriptive only)"
+  },
+  "seed": 42,
+  "sign_rule": {
+    "min_run_len": 2,
+    "non_signed_feature": "sign(x_t - trailing median of previous 96 bars, current excluded); equal -> 0",
+    "run_cleanup": "consecutive equal signs form a run; runs shorter than min_run_len are removed; adjacent equal runs merged",
+    "signed_feature": "min<0<max over the post-warm-up corpus (property of the feature, not of outcomes) -> sign(x_t)",
+    "zeros_dropped": true
+  },
+  "tests": {
+    "baseline": "pattern base rate over corpus windows (stride 4); exact binomial test of trade-window frequency against it",
+    "min_n": 2,
+    "multiple_testing": "Benjamini-Hochberg q over every row with n_with>=2 and n_without>=2; Bonferroni threshold reported",
+    "null": "label permutation (above)",
+    "outcome_effect": "mean net R with vs without pattern; Hedges g; bootstrap 95% CI (2000); permutation p (5000, seed 42)",
+    "prevalence": "Fisher exact (group A vs B), risk difference"
+  },
+  "windows": [
+    8,
+    12,
+    16,
+    20
+  ]
+}

@@ -1451,3 +1451,12 @@ Decision/Output: models/gaussian_xau_m15_causal_n9_20261011.json (35 features, 6
 Open Questions: live inference still blocked (missing imports, no trade_data producer).
 Next Step: obtain larger corpus and retrain; do not rely on this model.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-11
+Topic: Profitable-zone feature-transition research on real XAUUSD M15 trades
+Decision/Output: results/feature_transition_research/ (spec, manifest, 1,680 rows, traces, REPORT, explorer.html), scripts feature_transition_research.py, build_transition_explorer.py, tests. 9 trades only: no pattern survives BH (min q 1.0, min p 0.027 of 300 tests); +1R group n=1; gave-back not testable. Exit-bar MAE/MFE rule changed after first run (disclosed).
+Open Questions: larger trade corpus; whether stops are close-evaluated (CRT-0005); TP1 ending trades below 1R.
+Next Step: rerun unchanged on a larger corpus.
+---
