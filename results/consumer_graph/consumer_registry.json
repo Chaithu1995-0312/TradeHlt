@@ -1,0 +1,5470 @@
+{
+  "generated_by": "scripts/analysis/consumer_graph.py",
+  "git_commit": "c3318fefacc6daff90c11b80c0f1228278f71aa9",
+  "rule": "One feature meaning; many explicitly mapped consumers. A branch that cannot comply is marked incompatible and does not inherit fixes from another branch.",
+  "contract_state": {
+    "feature_count": 35,
+    "ordered_features": [
+      "open",
+      "high",
+      "low",
+      "close",
+      "volume",
+      "volume_ratio",
+      "double_sweep",
+      "ema_fast",
+      "ema_slow",
+      "ema_spread",
+      "trend_bias",
+      "trend_strength",
+      "momentum_score",
+      "atr",
+      "volatility_ratio",
+      "rsi_14",
+      "macd_line",
+      "macd_signal",
+      "macd_hist",
+      "sweep_detected",
+      "liquidity_sweep",
+      "break_of_structure",
+      "swing_high",
+      "swing_low",
+      "higher_high",
+      "lower_low",
+      "body_size",
+      "wick_size",
+      "body_ratio",
+      "volatility_regime",
+      "session",
+      "hour_of_day",
+      "disp_strength",
+      "retest_depth",
+      "candles_since_retest"
+    ],
+    "SCHEMA_HASH_names_only": "f80ca4bdcea15f1b38413abc3ba51343",
+    "SchemaObject_checksum": "f9b806ea0ca042aafb1d9bbd91b3d0fe",
+    "versions": {
+      "module_SCHEMA_VERSION": "1.0",
+      "SchemaObject": "2.0",
+      "model_export_format": "v5"
+    },
+    "feature_definition_contract_exists": false,
+    "feature_pipeline_sha256": "0e6eb2c600e34ea561a9ec87a203f530cbb978a1760ea0da936d9c66cd24da24",
+    "production_config_sha256": "59a4b1863c52842d28c8a79de79d7a2f01563d5ecfd0d2ab12f3b26676bd9a09"
+  },
+  "trees": {
+    "A": "Batch / backtest",
+    "B": "Live / streaming",
+    "C": "ML / Gaussian",
+    "D": "Other consumers",
+    "S": "Shared"
+  },
+  "nodes": [
+    {
+      "id": "src/features/feature_schema.py",
+      "role": "schema_authority",
+      "tree": "S"
+    },
+    {
+      "id": "src/features/dataset_builder.py",
+      "role": "schema_authority",
+      "tree": "S"
+    },
+    {
+      "id": "src/features/schema_validator.py",
+      "role": "duplicate_validator",
+      "tree": "S"
+    },
+    {
+      "id": "model_export_format.json",
+      "role": "external_mirror",
+      "tree": "D"
+    },
+    {
+      "id": "src/features/feature_pipeline.py",
+      "role": "producer_canonical",
+      "tree": "A"
+    },
+    {
+      "id": "src/runtime/backtest_v2.py",
+      "role": "consumer_producer",
+      "tree": "A"
+    },
+    {
+      "id": "src/config_layer/crt_engine_v2.py",
+      "role": "duplicate_producer+consumer",
+      "tree": "A"
+    },
+    {
+      "id": "scripts/backtest/manual_backtest.py",
+      "role": "duplicate_producer+consumer",
+      "tree": "A"
+    },
+    {
+      "id": "src/config_layer/rr/rr_dataset_builder.py",
+      "role": "producer_variant",
+      "tree": "C"
+    },
+    {
+      "id": "src/features/dataset_validator.py",
+      "role": "consumer",
+      "tree": "C"
+    },
+    {
+      "id": "src/runtime/live_engine_hook.py",
+      "role": "producer_variant",
+      "tree": "B"
+    },
+    {
+      "id": "src/core/feature_store.py",
+      "role": "producer_variant",
+      "tree": "B"
+    },
+    {
+      "id": "src/core/engine_runner.py",
+      "role": "decision_consumer",
+      "tree": "S"
+    },
+    {
+      "id": "src/engines/live_engine.py",
+      "role": "consumer",
+      "tree": "B"
+    },
+    {
+      "id": "src/agent/modes/pipeline_mode.py",
+      "role": "consumer",
+      "tree": "B"
+    },
+    {
+      "id": "src/agent/modes/copilot_mode.py",
+      "role": "consumer_external_input",
+      "tree": "B"
+    },
+    {
+      "id": "src/llm_research/forward_tester.py",
+      "role": "consumer",
+      "tree": "B"
+    },
+    {
+      "id": "src/scanner/scanner.py",
+      "role": "consumer_injected_provider",
+      "tree": "B"
+    },
+    {
+      "id": "src/features/feature_builder.py",
+      "role": "producer_variant",
+      "tree": "B"
+    },
+    {
+      "id": "src/engines/adapter_engine.py",
+      "role": "consumer",
+      "tree": "B"
+    },
+    {
+      "id": "src/core/fusion_engine.py",
+      "role": "consumer",
+      "tree": "B"
+    },
+    {
+      "id": "src/config_layer/execution_planner.py",
+      "role": "consumer",
+      "tree": "B"
+    },
+    {
+      "id": "src/config_layer/crt_gaussian_scorer.py",
+      "role": "consumer",
+      "tree": "B"
+    },
+    {
+      "id": "scripts/training/phase5_calibration.py",
+      "role": "training_path_P5",
+      "tree": "C"
+    },
+    {
+      "id": "src/training/train_pipeline.py",
+      "role": "training_path_TP",
+      "tree": "C"
+    },
+    {
+      "id": "src/training/trainer.py",
+      "role": "loader_saver",
+      "tree": "C"
+    },
+    {
+      "id": "src/core/model_registry.py",
+      "role": "registry_writer",
+      "tree": "C"
+    },
+    {
+      "id": "src/engines/ml_gaussian_engine.py",
+      "role": "inference_adapter",
+      "tree": "C"
+    },
+    {
+      "id": "src/engines/heuristic_gaussian_engine.py",
+      "role": "registry_reader_heuristic",
+      "tree": "C"
+    },
+    {
+      "id": "src/engines/gaussian_engine.py",
+      "role": "consumer",
+      "tree": "C"
+    },
+    {
+      "id": "scripts/training/gaussian_from_backtest.py",
+      "role": "training_path_experimental",
+      "tree": "C"
+    },
+    {
+      "id": "src/runtime/baseline_capture.py",
+      "role": "consumer",
+      "tree": "C"
+    },
+    {
+      "id": "src/features/bitnet_feature_builder.py",
+      "role": "producer_variant_unused",
+      "tree": "D"
+    },
+    {
+      "id": "src/bitnet/search_engine.py",
+      "role": "consumer",
+      "tree": "D"
+    },
+    {
+      "id": "src/bitnet/bitnet_runner.py",
+      "role": "consumer",
+      "tree": "D"
+    },
+    {
+      "id": "src/bitnet/bitnet_inference.py",
+      "role": "consumer",
+      "tree": "D"
+    },
+    {
+      "id": "src/engines/zone_gate_engine.py",
+      "role": "consumer",
+      "tree": "D"
+    },
+    {
+      "id": "tools/cpp/cpp_runner.cpp",
+      "role": "external_runtime",
+      "tree": "D"
+    },
+    {
+      "id": "src/inout/runner.py",
+      "role": "parallel_independent",
+      "tree": "D"
+    },
+    {
+      "id": "scripts/analysis/* (research consumers)",
+      "role": "research_consumers",
+      "tree": "A"
+    },
+    {
+      "id": "MISSING:trade_data_producer",
+      "role": "missing_producer",
+      "tree": "B"
+    },
+    {
+      "id": "UNVERIFIED:external_callers",
+      "role": "unverified_external",
+      "tree": "D"
+    },
+    {
+      "id": "ARTIFACTS:gaussian_p5_* (12)",
+      "role": "model_artifacts",
+      "tree": "C"
+    },
+    {
+      "id": "ARTIFACTS:gaussian_xau_m15_causal_n9_20261011",
+      "role": "model_artifact_experimental",
+      "tree": "C"
+    },
+    {
+      "id": "ARTIFACTS:v1.json / import_fix_v1 stubs",
+      "role": "registry_stub_artifacts",
+      "tree": "C"
+    },
+    {
+      "id": "ARTIFACTS:tradenet_p5_* (5)",
+      "role": "model_artifacts",
+      "tree": "D"
+    },
+    {
+      "id": "CONFIG:configs/production/v1_multi_2026_03.json",
+      "role": "config",
+      "tree": "S"
+    },
+    {
+      "id": "REGISTRY:models/gaussian_registry.json",
+      "role": "registry_file",
+      "tree": "C"
+    }
+  ],
+  "edges": [
+    {
+      "src": "scripts/training/gaussian_from_backtest.py",
+      "dst": "src/features/dataset_builder.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "scripts/training/gaussian_from_backtest.py:27 from features.dataset_builder import GAUSSIAN_FEATURE_SCHEMA"
+    },
+    {
+      "src": "scripts/training/gaussian_from_backtest.py",
+      "dst": "src/features/feature_pipeline.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "scripts/training/gaussian_from_backtest.py:28 from features import feature_pipeline"
+    },
+    {
+      "src": "scripts/training/gaussian_from_backtest.py",
+      "dst": "src/training/trainer.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "scripts/training/gaussian_from_backtest.py:29 from training import trainer"
+    },
+    {
+      "src": "scripts/training/gaussian_from_backtest.py",
+      "dst": "src/core/model_registry.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "scripts/training/gaussian_from_backtest.py:102 from core import model_registry"
+    },
+    {
+      "src": "scripts/training/phase5_calibration.py",
+      "dst": "src/features/feature_schema.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "scripts/training/phase5_calibration.py:48 from features.feature_schema import GAUSSIAN_SCHEMA"
+    },
+    {
+      "src": "scripts/training/phase5_calibration.py",
+      "dst": "src/features/dataset_builder.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "scripts/training/phase5_calibration.py:53 from features.dataset_builder import extract_feature_vector"
+    },
+    {
+      "src": "scripts/training/phase5_calibration.py",
+      "dst": "src/training/trainer.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "scripts/training/phase5_calibration.py:105 from training.trainer import GaussianNBModel"
+    },
+    {
+      "src": "scripts/training/phase5_calibration.py",
+      "dst": "src/core/model_registry.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "scripts/training/phase5_calibration.py:112 from core.model_registry import register_gaussian"
+    },
+    {
+      "src": "src/agent/modes/copilot_mode.py",
+      "dst": "src/core/engine_runner.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/agent/modes/copilot_mode.py:36 from core.engine_runner import EngineRunner"
+    },
+    {
+      "src": "src/agent/modes/copilot_mode.py",
+      "dst": "src/core/fusion_engine.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/agent/modes/copilot_mode.py:61 from core.fusion_engine import FusionEngine"
+    },
+    {
+      "src": "src/agent/modes/copilot_mode.py",
+      "dst": "src/config_layer/execution_planner.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/agent/modes/copilot_mode.py:87 from config_layer.execution_planner import ExecutionPlannerV1_2"
+    },
+    {
+      "src": "src/agent/modes/pipeline_mode.py",
+      "dst": "src/runtime/backtest_v2.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/agent/modes/pipeline_mode.py:136 from runtime.backtest_v2 import BacktestRunner"
+    },
+    {
+      "src": "src/agent/modes/pipeline_mode.py",
+      "dst": "src/runtime/live_engine_hook.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/agent/modes/pipeline_mode.py:160 from runtime.live_engine_hook import LiveEngineHook"
+    },
+    {
+      "src": "src/bitnet/bitnet_runner.py",
+      "dst": "src/bitnet/bitnet_inference.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/bitnet/bitnet_runner.py:8 from bitnet.bitnet_inference import BitNetModel"
+    },
+    {
+      "src": "src/bitnet/bitnet_runner.py",
+      "dst": "src/features/feature_schema.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/bitnet/bitnet_runner.py:9 from features.feature_schema import CANONICAL_FEATURES"
+    },
+    {
+      "src": "src/bitnet/search_engine.py",
+      "dst": "src/features/dataset_builder.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/bitnet/search_engine.py:28 from features.dataset_builder import extract_feature_vector"
+    },
+    {
+      "src": "src/bitnet/search_engine.py",
+      "dst": "src/features/feature_schema.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/bitnet/search_engine.py:29 from features.feature_schema import CANONICAL_FEATURE_DIM"
+    },
+    {
+      "src": "src/config_layer/crt_engine_v2.py",
+      "dst": "src/bitnet/bitnet_inference.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/config_layer/crt_engine_v2.py:20 from bitnet.bitnet_inference import bitnet_score"
+    },
+    {
+      "src": "src/config_layer/crt_engine_v2.py",
+      "dst": "src/features/feature_schema.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/config_layer/crt_engine_v2.py:28 from features.feature_schema import CANONICAL_FEATURES"
+    },
+    {
+      "src": "src/config_layer/crt_engine_v2.py",
+      "dst": "src/features/schema_validator.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/config_layer/crt_engine_v2.py:29 from features.schema_validator import validate_features"
+    },
+    {
+      "src": "src/config_layer/rr/rr_dataset_builder.py",
+      "dst": "src/features/feature_pipeline.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/config_layer/rr/rr_dataset_builder.py:28 from features.feature_pipeline import FeaturePipeline"
+    },
+    {
+      "src": "src/config_layer/rr/rr_dataset_builder.py",
+      "dst": "src/features/feature_schema.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/config_layer/rr/rr_dataset_builder.py:29 from features.feature_schema import CANONICAL_FEATURES"
+    },
+    {
+      "src": "src/config_layer/rr/rr_dataset_builder.py",
+      "dst": "src/features/schema_validator.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/config_layer/rr/rr_dataset_builder.py:30 from features.schema_validator import validate_features"
+    },
+    {
+      "src": "src/core/engine_runner.py",
+      "dst": "src/engines/adapter_engine.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/core/engine_runner.py:21 from engines.adapter_engine import TrapValidatorEngine"
+    },
+    {
+      "src": "src/core/engine_runner.py",
+      "dst": "src/engines/heuristic_gaussian_engine.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/core/engine_runner.py:23 from engines.heuristic_gaussian_engine import HeuristicGaussianEngine"
+    },
+    {
+      "src": "src/core/engine_runner.py",
+      "dst": "src/engines/ml_gaussian_engine.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/core/engine_runner.py:24 from engines.ml_gaussian_engine import MLGaussianEngine"
+    },
+    {
+      "src": "src/core/engine_runner.py",
+      "dst": "src/engines/zone_gate_engine.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/core/engine_runner.py:25 from engines.zone_gate_engine import run_zone_gate_engine"
+    },
+    {
+      "src": "src/core/engine_runner.py",
+      "dst": "src/core/fusion_engine.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/core/engine_runner.py:27 from core.fusion_engine import FusionEngine"
+    },
+    {
+      "src": "src/core/engine_runner.py",
+      "dst": "src/engines/live_engine.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/core/engine_runner.py:33 from engines.live_engine import get_zone_gate"
+    },
+    {
+      "src": "src/core/feature_store.py",
+      "dst": "src/features/feature_schema.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/core/feature_store.py:13 from features.feature_schema import CANONICAL_FEATURES"
+    },
+    {
+      "src": "src/core/feature_store.py",
+      "dst": "src/features/schema_validator.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/core/feature_store.py:14 from features.schema_validator import validate_features"
+    },
+    {
+      "src": "src/core/model_registry.py",
+      "dst": "src/features/feature_schema.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/core/model_registry.py:31 from features.feature_schema import schema_for_model"
+    },
+    {
+      "src": "src/engines/gaussian_engine.py",
+      "dst": "src/engines/heuristic_gaussian_engine.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/engines/gaussian_engine.py:16 from engines.heuristic_gaussian_engine import HeuristicGaussianEngine"
+    },
+    {
+      "src": "src/engines/heuristic_gaussian_engine.py",
+      "dst": "src/features/feature_schema.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/engines/heuristic_gaussian_engine.py:23 from features.feature_schema import CANONICAL_FEATURES"
+    },
+    {
+      "src": "src/engines/live_engine.py",
+      "dst": "src/features/dataset_builder.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/engines/live_engine.py:881 from features.dataset_builder import validate_feature_vector"
+    },
+    {
+      "src": "src/engines/live_engine.py",
+      "dst": "src/bitnet/search_engine.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/engines/live_engine.py:122 from bitnet.search_engine import load_zone_registry"
+    },
+    {
+      "src": "src/engines/ml_gaussian_engine.py",
+      "dst": "src/core/model_registry.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/engines/ml_gaussian_engine.py:52 from core.model_registry import GaussianModelRegistry"
+    },
+    {
+      "src": "src/engines/ml_gaussian_engine.py",
+      "dst": "src/training/trainer.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/engines/ml_gaussian_engine.py:53 from training.trainer import load_gaussian_model"
+    },
+    {
+      "src": "src/engines/ml_gaussian_engine.py",
+      "dst": "src/features/dataset_builder.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/engines/ml_gaussian_engine.py:114 from features.dataset_builder import extract_feature_vector"
+    },
+    {
+      "src": "src/engines/zone_gate_engine.py",
+      "dst": "src/features/feature_schema.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/engines/zone_gate_engine.py:20 from features.feature_schema import CANONICAL_FEATURE_ORDER"
+    },
+    {
+      "src": "src/features/bitnet_feature_builder.py",
+      "dst": "src/features/feature_schema.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/features/bitnet_feature_builder.py:11 from features.feature_schema import CANONICAL_FEATURES"
+    },
+    {
+      "src": "src/features/dataset_builder.py",
+      "dst": "src/features/feature_schema.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/features/dataset_builder.py:5 from features.feature_schema import FEATURE_SCHEMA"
+    },
+    {
+      "src": "src/features/dataset_validator.py",
+      "dst": "src/features/feature_schema.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/features/dataset_validator.py:29 from features.feature_schema import CANONICAL_FEATURES"
+    },
+    {
+      "src": "src/features/dataset_validator.py",
+      "dst": "src/features/feature_builder.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/features/dataset_validator.py:31 from features.feature_builder import feature_dict_to_vector"
+    },
+    {
+      "src": "src/features/feature_builder.py",
+      "dst": "src/features/dataset_builder.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/features/feature_builder.py:34 from features.dataset_builder import extract_feature_vector"
+    },
+    {
+      "src": "src/features/feature_pipeline.py",
+      "dst": "src/features/feature_schema.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/features/feature_pipeline.py:48 from features.feature_schema import CANONICAL_FEATURES"
+    },
+    {
+      "src": "src/features/feature_pipeline.py",
+      "dst": "src/features/schema_validator.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/features/feature_pipeline.py:49 from features.schema_validator import validate_features"
+    },
+    {
+      "src": "src/features/feature_schema.py",
+      "dst": "src/features/schema_validator.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/features/feature_schema.py:304 from features.schema_validator import validate_features"
+    },
+    {
+      "src": "src/llm_research/forward_tester.py",
+      "dst": "src/core/engine_runner.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/llm_research/forward_tester.py:103 from src.core.engine_runner import EngineRunner"
+    },
+    {
+      "src": "src/llm_research/forward_tester.py",
+      "dst": "src/config_layer/execution_planner.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/llm_research/forward_tester.py:104 from src.config_layer.execution_planner import ExecutionPlannerV1_2"
+    },
+    {
+      "src": "src/runtime/backtest_v2.py",
+      "dst": "src/features/feature_schema.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/runtime/backtest_v2.py:40 from features.feature_schema import CANONICAL_FEATURES"
+    },
+    {
+      "src": "src/runtime/backtest_v2.py",
+      "dst": "src/config_layer/crt_engine_v2.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/runtime/backtest_v2.py:60 from config_layer.crt_engine_v2 import Candle"
+    },
+    {
+      "src": "src/runtime/backtest_v2.py",
+      "dst": "src/features/feature_pipeline.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/runtime/backtest_v2.py:45 from features.feature_pipeline import FeaturePipeline"
+    },
+    {
+      "src": "src/runtime/backtest_v2.py",
+      "dst": "src/bitnet/bitnet_inference.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/runtime/backtest_v2.py:50 from bitnet.bitnet_inference import BitNetModel"
+    },
+    {
+      "src": "src/runtime/backtest_v2.py",
+      "dst": "src/core/engine_runner.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/runtime/backtest_v2.py:55 from core.engine_runner import EngineRunner"
+    },
+    {
+      "src": "src/runtime/baseline_capture.py",
+      "dst": "src/features/feature_schema.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/runtime/baseline_capture.py:24 from features.feature_schema import CANONICAL_FEATURE_DIM"
+    },
+    {
+      "src": "src/runtime/baseline_capture.py",
+      "dst": "src/core/model_registry.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/runtime/baseline_capture.py:30 from core.model_registry import get_active"
+    },
+    {
+      "src": "src/runtime/live_engine_hook.py",
+      "dst": "src/core/engine_runner.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/runtime/live_engine_hook.py:13 from core.engine_runner import EngineRunner"
+    },
+    {
+      "src": "src/runtime/live_engine_hook.py",
+      "dst": "src/engines/live_engine.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/runtime/live_engine_hook.py:14 from engines.live_engine import LiveEngine"
+    },
+    {
+      "src": "src/runtime/live_engine_hook.py",
+      "dst": "src/config_layer/execution_planner.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/runtime/live_engine_hook.py:15 from config_layer.execution_planner import ExecutionPlannerV1_2"
+    },
+    {
+      "src": "src/runtime/live_engine_hook.py",
+      "dst": "src/core/feature_store.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/runtime/live_engine_hook.py:29 from core.feature_store import FeatureStore"
+    },
+    {
+      "src": "src/training/train_pipeline.py",
+      "dst": "src/features/dataset_validator.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/training/train_pipeline.py:38 from features.dataset_validator import MIN_RECORDS_TO_TRAIN"
+    },
+    {
+      "src": "src/training/train_pipeline.py",
+      "dst": "src/features/dataset_builder.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/training/train_pipeline.py:73 from features.dataset_builder import extract_feature_vector"
+    },
+    {
+      "src": "src/training/train_pipeline.py",
+      "dst": "src/config_layer/rr/rr_dataset_builder.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/training/train_pipeline.py:269 from config_layer.rr.rr_dataset_builder import build_dataset"
+    },
+    {
+      "src": "src/training/train_pipeline.py",
+      "dst": "src/training/trainer.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/training/train_pipeline.py:270 from training.trainer import train_gaussian"
+    },
+    {
+      "src": "src/training/train_pipeline.py",
+      "dst": "src/core/model_registry.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/training/train_pipeline.py:273 from core.model_registry import register_gaussian"
+    },
+    {
+      "src": "src/training/train_pipeline.py",
+      "dst": "src/features/feature_schema.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/training/train_pipeline.py:274 from features.feature_schema import GAUSSIAN_SCHEMA"
+    },
+    {
+      "src": "src/training/trainer.py",
+      "dst": "src/features/feature_schema.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/training/trainer.py:25 from features.feature_schema import GAUSSIAN_SCHEMA"
+    },
+    {
+      "src": "src/training/trainer.py",
+      "dst": "src/features/dataset_builder.py",
+      "kind": "imports",
+      "established_by": "ast",
+      "evidence": "src/training/trainer.py:308 from features.dataset_builder import rr_to_class"
+    },
+    {
+      "src": "src/config_layer/rr/rr_dataset_builder.py",
+      "dst": "src/runtime/backtest_v2.py",
+      "kind": "references FeaturePipeline",
+      "established_by": "ast",
+      "evidence": "src/config_layer/rr/rr_dataset_builder.py:28"
+    },
+    {
+      "src": "src/core/fusion_engine.py",
+      "dst": "src/features/feature_pipeline.py",
+      "kind": "references build_feature_vector",
+      "established_by": "ast",
+      "evidence": "src/core/fusion_engine.py:90"
+    },
+    {
+      "src": "src/engines/live_engine.py",
+      "dst": "src/features/feature_pipeline.py",
+      "kind": "references build_feature_vector",
+      "established_by": "ast",
+      "evidence": "src/engines/live_engine.py:622"
+    },
+    {
+      "src": "src/agent/modes/copilot_mode.py",
+      "dst": "src/runtime/backtest_v2.py",
+      "kind": "references EngineRunner",
+      "established_by": "ast",
+      "evidence": "src/agent/modes/copilot_mode.py:36"
+    },
+    {
+      "src": "src/llm_research/forward_tester.py",
+      "dst": "src/runtime/backtest_v2.py",
+      "kind": "references EngineRunner",
+      "established_by": "ast",
+      "evidence": "src/llm_research/forward_tester.py:103"
+    },
+    {
+      "src": "src/runtime/live_engine_hook.py",
+      "dst": "src/runtime/backtest_v2.py",
+      "kind": "references EngineRunner",
+      "established_by": "ast",
+      "evidence": "src/runtime/live_engine_hook.py:13"
+    },
+    {
+      "src": "src/core/fusion_engine.py",
+      "dst": "src/features/feature_builder.py",
+      "kind": "bare import feature_builder",
+      "established_by": "ast",
+      "evidence": "src/core/fusion_engine.py:90 from feature_builder import build_feature_vector, feature_dict_to_vector, N_FEATURES",
+      "runtime_resolves": false,
+      "resolution_note": "True: importable with src on sys.path; None: not importable here but the file edits sys.path (not simulated); False: not importable and no sys.path edit"
+    },
+    {
+      "src": "scripts/analysis/* (research consumers)",
+      "dst": "src/features/feature_pipeline.py",
+      "kind": "references FeaturePipeline",
+      "established_by": "ast",
+      "evidence": "11 files, e.g. ['scripts/analysis/consumer_graph.py', 'scripts/analysis/feature_pnp_hypothesis.py', 'scripts/analysis/feature_transition_research.py']"
+    },
+    {
+      "src": "MISSING:trade_data_producer",
+      "dst": "src/runtime/live_engine_hook.py",
+      "kind": "feeds trade_data",
+      "established_by": "absence",
+      "evidence": "repo-wide search for 'trade_data' finds only ['src/engines/live_engine.py', 'src/runtime/live_engine_hook.py']; no caller of HookedLiveEngine.process outside the module"
+    },
+    {
+      "src": "UNVERIFIED:external_callers",
+      "dst": "src/runtime/live_engine_hook.py",
+      "kind": "may call",
+      "established_by": "none",
+      "evidence": "no in-repo caller; external deployment not inspectable"
+    },
+    {
+      "src": "CONFIG:configs/production/v1_multi_2026_03.json",
+      "dst": "src/core/engine_runner.py",
+      "kind": "selects gaussian_impl='heuristic'",
+      "established_by": "config",
+      "evidence": "configs/production/v1_multi_2026_03.json engine_runner.gaussian_impl; engine_runner.py:263-281"
+    },
+    {
+      "src": "ARTIFACTS:gaussian_p5_* (12)",
+      "dst": "src/training/trainer.py",
+      "kind": "read by",
+      "established_by": "ast+file",
+      "evidence": "src/training/trainer.py reads the artifact/registry path (see loader code)"
+    },
+    {
+      "src": "ARTIFACTS:gaussian_xau_m15_causal_n9_20261011",
+      "dst": "src/training/trainer.py",
+      "kind": "read by",
+      "established_by": "ast+file",
+      "evidence": "src/training/trainer.py reads the artifact/registry path (see loader code)"
+    },
+    {
+      "src": "ARTIFACTS:tradenet_p5_* (5)",
+      "dst": "src/training/trainer.py",
+      "kind": "read by",
+      "established_by": "ast+file",
+      "evidence": "src/training/trainer.py reads the artifact/registry path (see loader code)"
+    },
+    {
+      "src": "ARTIFACTS:v1.json / import_fix_v1 stubs",
+      "dst": "src/engines/heuristic_gaussian_engine.py",
+      "kind": "read by",
+      "established_by": "ast+file",
+      "evidence": "src/engines/heuristic_gaussian_engine.py reads the artifact/registry path (see loader code)"
+    },
+    {
+      "src": "REGISTRY:models/gaussian_registry.json",
+      "dst": "src/core/model_registry.py",
+      "kind": "read by",
+      "established_by": "ast+file",
+      "evidence": "src/core/model_registry.py reads the artifact/registry path (see loader code)"
+    },
+    {
+      "src": "REGISTRY:models/gaussian_registry.json",
+      "dst": "src/engines/heuristic_gaussian_engine.py",
+      "kind": "read by",
+      "established_by": "ast+file",
+      "evidence": "src/engines/heuristic_gaussian_engine.py reads the artifact/registry path (see loader code)"
+    },
+    {
+      "src": "REGISTRY:models/gaussian_registry.json",
+      "dst": "src/engines/ml_gaussian_engine.py",
+      "kind": "read by",
+      "established_by": "ast+file",
+      "evidence": "src/engines/ml_gaussian_engine.py reads the artifact/registry path (see loader code)"
+    },
+    {
+      "src": "tools/cpp/cpp_runner.cpp",
+      "dst": "model_export_format.json",
+      "kind": "mirrors feature order (comment only)",
+      "established_by": "static_text",
+      "evidence": "tools/cpp/cpp_runner.cpp:11 comment; FEATURE_ORDER parsed and compared"
+    },
+    {
+      "src": "src/features/schema_validator.py",
+      "dst": "src/features/feature_schema.py",
+      "kind": "duplicates validate_vector",
+      "established_by": "ast",
+      "evidence": "src/features/schema_validator.py:63 vs src/features/feature_schema.py:266"
+    }
+  ],
+  "branches": [
+    {
+      "id": "A1",
+      "tree": "A",
+      "producer": "src/features/feature_pipeline.py (FeaturePipeline.run)",
+      "consumer": "src/runtime/backtest_v2.py (BacktestRunner) -> engine input and trade snapshot",
+      "transformation": "canonical; parameters embedded in code (windows, ATR, EMA, swing mode)",
+      "contract_identity": "none declared (no contract hash); pipeline file sha256 only",
+      "dependency_path": [
+        {
+          "edge": "src/runtime/backtest_v2.py -> src/features/feature_pipeline.py",
+          "present": true
+        }
+      ],
+      "parity_evidence": "trade snapshots vs pipeline: 35 features identical; 0 not in trades.csv",
+      "status": "verified",
+      "required_tests": [
+        "pipeline output equals trade snapshot for all 35 columns",
+        "causal prefix test for every feature (swings and volatility_regime exist)"
+      ],
+      "acceptance": "all 35 snapshot columns identical; contract hash recorded in the run manifest",
+      "path_complete": true
+    },
+    {
+      "id": "A2",
+      "tree": "A",
+      "producer": "src/runtime/backtest_v2.py",
+      "consumer": "src/core/engine_runner.py (EngineRunner)",
+      "transformation": "pipeline row -> input dict (BacktestRunner.run loop)",
+      "contract_identity": "none",
+      "dependency_path": [
+        {
+          "edge": "src/runtime/backtest_v2.py -> src/core/engine_runner.py",
+          "present": true
+        }
+      ],
+      "parity_evidence": "same producer as A1; consumer reads body_ratio at engine_runner.py:558",
+      "status": "verified",
+      "required_tests": [
+        "engine decision invariant under definition-preserving refactor"
+      ],
+      "acceptance": "decisions identical before/after contract introduction on frozen corpus",
+      "path_complete": true
+    },
+    {
+      "id": "A3",
+      "tree": "A",
+      "producer": "src/config_layer/crt_engine_v2.py (Candle properties)",
+      "consumer": "CRT state machine (displacement/confirmation thresholds)",
+      "transformation": "body_size=|c-o|, wick_size=h-l, body_ratio=body/(h-l)",
+      "contract_identity": "none; separate implementation",
+      "dependency_path": [],
+      "parity_evidence": "vs pipeline on 700 real bars: {'body_size': 'identical', 'wick_size': 'identical', 'body_ratio': 'identical'}",
+      "status": "verified",
+      "required_tests": [
+        "Candle anatomy equals pipeline anatomy (property test)"
+      ],
+      "acceptance": "single formula source or test pinning equality",
+      "path_complete": null
+    },
+    {
+      "id": "A4",
+      "tree": "A",
+      "producer": "scripts/backtest/manual_backtest.py (body_ratio, wick_size)",
+      "consumer": "manual backtest scorer",
+      "transformation": "body_ratio=|c-o|/(h-l), wick_size=h-l",
+      "contract_identity": "none; separate implementation",
+      "dependency_path": [],
+      "parity_evidence": "vs pipeline on 700 bars: {'body_ratio': 'identical', 'wick_size': 'identical', 'body_size': 'unverified (no function; inline expression)'}",
+      "status": "unverified",
+      "required_tests": [
+        "anatomy equality test; remaining local indicators (ATR, regime) have no parity test"
+      ],
+      "acceptance": "every locally computed feature pinned to the contract or removed",
+      "path_complete": null
+    },
+    {
+      "id": "A5",
+      "tree": "A",
+      "producer": "src/features/feature_pipeline.py",
+      "consumer": "scripts/analysis/* (11 research scripts)",
+      "transformation": "canonical",
+      "contract_identity": "research manifests record pipeline sha256 and schema checksum",
+      "dependency_path": [
+        {
+          "edge": "scripts/analysis/* (research consumers) -> src/features/feature_pipeline.py",
+          "present": true
+        }
+      ],
+      "parity_evidence": "uses FeaturePipeline directly",
+      "status": "verified",
+      "required_tests": [
+        "research manifests assert pipeline sha256 (done in census and incremental test)"
+      ],
+      "acceptance": "same",
+      "path_complete": true
+    },
+    {
+      "id": "B1",
+      "tree": "B",
+      "producer": "src/runtime/live_engine_hook.py + src/core/feature_store.py (ideal upstream = batch row)",
+      "consumer": "src/core/engine_runner.py (EngineRunner.run)",
+      "transformation": "pass-through with 0.0 defaults; recomputes wick_size, body_ratio, double_sweep, volume_ratio; session -> string. Non-identical features: {'double_sweep': 'value_mismatch', 'wick_size': 'value_mismatch', 'body_ratio': 'value_mismatch', 'session': 'type_break'}",
+      "contract_identity": "none (no schema hash or definition check at the hook boundary)",
+      "dependency_path": [
+        {
+          "edge": "src/runtime/live_engine_hook.py -> src/core/feature_store.py",
+          "present": true
+        },
+        {
+          "edge": "src/runtime/live_engine_hook.py -> src/core/engine_runner.py",
+          "present": true
+        },
+        {
+          "edge": "MISSING:trade_data_producer -> src/runtime/live_engine_hook.py",
+          "present": true
+        }
+      ],
+      "parity_evidence": "31/35 identical over 700 bars; body_ratio/wick_size/double_sweep value mismatches, session type break",
+      "status": "mismatched",
+      "required_tests": [
+        "hook-built row equals pipeline row for all 35 features and types",
+        "fail-closed on missing field instead of 0.0"
+      ],
+      "acceptance": "35/35 identical incl. types; missing/unknown input raises",
+      "path_complete": true
+    },
+    {
+      "id": "B2",
+      "tree": "B",
+      "producer": "src/runtime/live_engine_hook.py",
+      "consumer": "src/engines/live_engine.py (LiveEngine.process Gaussian inference)",
+      "transformation": "LiveEngine builds its own vector via build_feature_vector",
+      "contract_identity": "none",
+      "dependency_path": [
+        {
+          "edge": "src/runtime/live_engine_hook.py -> src/engines/live_engine.py",
+          "present": true
+        }
+      ],
+      "parity_evidence": "imports: ImportError: name missing; ImportError: name missing",
+      "status": "broken",
+      "required_tests": [
+        "LiveEngine.process on a valid frame returns non-error"
+      ],
+      "acceptance": "no feature_error; probabilities valid; fail-closed on incompatible model",
+      "path_complete": true
+    },
+    {
+      "id": "B3",
+      "tree": "B",
+      "producer": "src/agent/modes/pipeline_mode.py (live_hook.dry_run tool)",
+      "consumer": "runtime.live_engine_hook.LiveEngineHook",
+      "transformation": "n/a",
+      "contract_identity": "none",
+      "dependency_path": [],
+      "parity_evidence": "ImportError: name missing",
+      "status": "broken",
+      "required_tests": [
+        "dry-run tool returns schema identity and parity result"
+      ],
+      "acceptance": "deterministic read-only dry run, no orders",
+      "path_complete": null
+    },
+    {
+      "id": "B4",
+      "tree": "B",
+      "producer": "MISSING:trade_data_producer",
+      "consumer": "src/runtime/live_engine_hook.py",
+      "transformation": "n/a",
+      "contract_identity": "n/a",
+      "dependency_path": [
+        {
+          "edge": "MISSING:trade_data_producer -> src/runtime/live_engine_hook.py",
+          "present": true
+        }
+      ],
+      "parity_evidence": "repo-wide search: no producer, no caller",
+      "status": "broken",
+      "required_tests": [
+        "producer design after tracing intended flow"
+      ],
+      "acceptance": "deterministic producer with contract stamp",
+      "path_complete": true
+    },
+    {
+      "id": "B5",
+      "tree": "B",
+      "producer": "src/agent/modes/copilot_mode.py (caller-supplied feature dict)",
+      "consumer": "src/core/engine_runner.py",
+      "transformation": "no construction: agent tool passes a dict from the user",
+      "contract_identity": "none",
+      "dependency_path": [
+        {
+          "edge": "src/agent/modes/copilot_mode.py -> src/core/engine_runner.py",
+          "present": true
+        }
+      ],
+      "parity_evidence": "no validation seen before EngineRunner",
+      "status": "unverified",
+      "required_tests": [
+        "tool rejects dicts that fail contract validation"
+      ],
+      "acceptance": "validated or labelled unvalidated",
+      "path_complete": true
+    },
+    {
+      "id": "B6",
+      "tree": "B",
+      "producer": "src/features/feature_builder.py (FeatureBuilder.build) and src/core/fusion_engine.py import of 'feature_builder'",
+      "consumer": "adapter_engine (requires FeatureBuilder output) / fusion_engine",
+      "transformation": "FeatureBuilder class has no callers; fusion_engine imports bare 'feature_builder' (names build_feature_vector, N_FEATURES)",
+      "contract_identity": "none",
+      "dependency_path": [
+        {
+          "edge": "src/core/fusion_engine.py -> src/features/feature_builder.py",
+          "present": false
+        }
+      ],
+      "parity_evidence": "imports: ModuleNotFoundError: No module named 'feature_builder'; features.feature_builder.build_feature_vector: ImportError: name missing; ImportError is swallowed (_FEATURE_BUILDER_AVAILABLE False)",
+      "status": "broken",
+      "required_tests": [
+        "import guard fails loudly or the dependency is removed"
+      ],
+      "acceptance": "no silent ImportError fallback on the contract path",
+      "path_complete": false
+    },
+    {
+      "id": "B8",
+      "tree": "B",
+      "producer": "(none found) -> src/config_layer/crt_gaussian_scorer.py",
+      "consumer": "CRTGaussianScorer (reads body_ratio, retest_depth, disp_strength)",
+      "transformation": "Gaussian kernel on three features",
+      "contract_identity": "none",
+      "dependency_path": [],
+      "parity_evidence": "no importer anywhere in src, scripts or tests (only comments, and phase5 text injection markers)",
+      "status": "unverified",
+      "required_tests": [
+        "identify instantiation path; parity of its three inputs with the contract"
+      ],
+      "acceptance": "importer registered or module marked dormant",
+      "path_complete": null
+    },
+    {
+      "id": "B7",
+      "tree": "B",
+      "producer": "src/scanner/scanner.py",
+      "consumer": "EngineRunner via injected provider",
+      "transformation": "data_fetcher/engine_runner are injected callables",
+      "contract_identity": "none",
+      "dependency_path": [],
+      "parity_evidence": "no concrete provider in repo",
+      "status": "unverified",
+      "required_tests": [
+        "provider contract test"
+      ],
+      "acceptance": "provider identified and contract-checked",
+      "path_complete": null
+    },
+    {
+      "id": "C1",
+      "tree": "C",
+      "producer": "scripts/training/phase5_calibration.py (trades.csv entry snapshot -> extract_feature_vector)",
+      "consumer": "trainer.save_gaussian_model -> models/gaussian_*.json",
+      "transformation": "entry-bar snapshot of batch features (parity A1)",
+      "contract_identity": "schema_checksum (md5 of names) only",
+      "dependency_path": [
+        {
+          "edge": "scripts/training/phase5_calibration.py -> src/training/trainer.py",
+          "present": true
+        },
+        {
+          "edge": "scripts/training/phase5_calibration.py -> src/features/dataset_builder.py",
+          "present": true
+        }
+      ],
+      "parity_evidence": "source results dirs not in repo; snapshot parity shown in A1",
+      "status": "unverified",
+      "required_tests": [
+        "training row equals pipeline row at the trade timestamp"
+      ],
+      "acceptance": "dataset hash + contract hash stored in artifact",
+      "path_complete": true
+    },
+    {
+      "id": "C2",
+      "tree": "C",
+      "producer": "src/training/train_pipeline.py -> src/config_layer/rr/rr_dataset_builder.py",
+      "consumer": "trainer / model_registry",
+      "transformation": "FeaturePipeline run over trade records treated as candles; positional alignment",
+      "contract_identity": "SCHEMA_HASH stored in dataset cache",
+      "dependency_path": [
+        {
+          "edge": "src/training/train_pipeline.py -> src/config_layer/rr/rr_dataset_builder.py",
+          "present": true
+        },
+        {
+          "edge": "src/training/train_pipeline.py -> src/training/trainer.py",
+          "present": true
+        },
+        {
+          "edge": "src/training/train_pipeline.py -> src/core/model_registry.py",
+          "present": true
+        }
+      ],
+      "parity_evidence": "different observation unit; rows surviving warm-up on N trades: {50: 0, 120: 0, 250: 36, 350: 136, 600: 386}",
+      "status": "mismatched",
+      "required_tests": [
+        "training rows come from contiguous candle history keyed by timestamp"
+      ],
+      "acceptance": "row timestamps match the originating bars",
+      "path_complete": true
+    },
+    {
+      "id": "C3",
+      "tree": "C",
+      "producer": "ARTIFACTS:gaussian_p5_* (12)",
+      "consumer": "src/training/trainer.py::load_gaussian_model",
+      "transformation": "32/33-feature schemas",
+      "contract_identity": "schema_checksum bffbe5c1.../36ff0665...; no definition identity; no timeframe",
+      "dependency_path": [
+        {
+          "edge": "ARTIFACTS:gaussian_p5_* (12) -> src/training/trainer.py",
+          "present": true
+        }
+      ],
+      "parity_evidence": "12 of 12 p5 files rejected by loader (all)",
+      "status": "mismatched",
+      "required_tests": [
+        "loader rejects stale/incompatible artifacts (exists: test_trainer)"
+      ],
+      "acceptance": "artifacts marked ineligible by derived status, not deleted",
+      "path_complete": true
+    },
+    {
+      "id": "C3b",
+      "tree": "C",
+      "producer": "ARTIFACTS:gaussian_xau_m15_causal_n9_20261011",
+      "consumer": "src/training/trainer.py::load_gaussian_model",
+      "transformation": "35 ordered features; experimental 9-trade fit",
+      "contract_identity": "schema_checksum f9b806ea0ca042aafb1d9bbd91b3d0fe; feature_definition_hash present; metrics degenerate",
+      "dependency_path": [
+        {
+          "edge": "ARTIFACTS:gaussian_xau_m15_causal_n9_20261011 -> src/training/trainer.py",
+          "present": true
+        }
+      ],
+      "parity_evidence": "loads; order exact",
+      "status": "unverified",
+      "required_tests": [
+        "eligibility rule for experimental artifacts"
+      ],
+      "acceptance": "not used for inference unless eligibility criteria met",
+      "path_complete": true
+    },
+    {
+      "id": "C4",
+      "tree": "C",
+      "producer": "REGISTRY:models/gaussian_registry.json + loader",
+      "consumer": "src/engines/ml_gaussian_engine.py -> EngineRunner (only if gaussian_impl='ml')",
+      "transformation": "extract_feature_vector -> scaler -> predict_expected_rr; any exception -> neutral 0.5",
+      "contract_identity": "n_features check only",
+      "dependency_path": [
+        {
+          "edge": "REGISTRY:models/gaussian_registry.json -> src/engines/ml_gaussian_engine.py",
+          "present": true
+        },
+        {
+          "edge": "src/engines/ml_gaussian_engine.py -> src/training/trainer.py",
+          "present": true
+        },
+        {
+          "edge": "CONFIG:configs/production/v1_multi_2026_03.json -> src/core/engine_runner.py",
+          "present": true
+        }
+      ],
+      "parity_evidence": "numeric row: {'score': 0.5, 'reason': 'ml_gaussian'}; hook-built row: {'score': 0.5, 'reason': 'ml_gaussian_fallback'} (extract_feature_vector error: ValueError: could not convert string to float: 'asia'); production gaussian_impl='heuristic'",
+      "status": "mismatched",
+      "required_tests": [
+        "incompatible input yields explicit error, not neutral score"
+      ],
+      "acceptance": "fail-closed adapter; hook-built row accepted",
+      "path_complete": true
+    },
+    {
+      "id": "C5",
+      "tree": "C",
+      "producer": "REGISTRY:models/gaussian_registry.json + stubs",
+      "consumer": "src/engines/heuristic_gaussian_engine.py (mu, sigma only) -> EngineRunner (production path)",
+      "transformation": "reads active entry's mu/sigma and falls back v1 -> import_fix_v1",
+      "contract_identity": "none (no feature schema check; uses no features from the model)",
+      "dependency_path": [
+        {
+          "edge": "REGISTRY:models/gaussian_registry.json -> src/engines/heuristic_gaussian_engine.py",
+          "present": true
+        },
+        {
+          "edge": "src/core/engine_runner.py -> src/engines/heuristic_gaussian_engine.py",
+          "present": true
+        }
+      ],
+      "parity_evidence": "executed registry resolution: {'current': {'active': 'xau_m15_causal_n9_20261011', 'mu': 0.0, 'sigma': 1.0}, 'pre_experimental_promotion': {'active': 'v1', 'mu': 0.0, 'sigma': 1.0}}",
+      "status": "verified",
+      "required_tests": [
+        "registry change cannot alter heuristic mu/sigma silently"
+      ],
+      "acceptance": "registry entry change recorded with impact on this branch",
+      "path_complete": true
+    },
+    {
+      "id": "D1",
+      "tree": "D",
+      "producer": "src/features/bitnet_feature_builder.py",
+      "consumer": "none (no callers)",
+      "transformation": "own anatomy formulas, TREND_MAP/SESSION_MAP string lookups",
+      "contract_identity": "none",
+      "dependency_path": [],
+      "parity_evidence": "equivalent numeric inputs give non-identical features: {'ema_spread': 'value_mismatch', 'trend_bias': 'value_mismatch', 'wick_size': 'value_mismatch', 'body_ratio': 'value_mismatch', 'session': 'value_mismatch'}",
+      "status": "mismatched",
+      "required_tests": [
+        "remove or conform to the contract"
+      ],
+      "acceptance": "no unused divergent implementation",
+      "path_complete": null
+    },
+    {
+      "id": "D2",
+      "tree": "D",
+      "producer": "ARTIFACTS:tradenet_p5_* (5)",
+      "consumer": "src/training/trainer.py::load_model",
+      "transformation": "32 or 33 inputs against 35",
+      "contract_identity": "no schema metadata in checkpoint; loader has no schema check; torch.load without weights_only",
+      "dependency_path": [
+        {
+          "edge": "ARTIFACTS:tradenet_p5_* (5) -> src/training/trainer.py",
+          "present": true
+        }
+      ],
+      "parity_evidence": "first-layer inputs [32, 32, 32, 32, 33] vs 35; torch installed: False",
+      "status": "mismatched",
+      "required_tests": [
+        "loader verifies input dimension and contract hash before load_state_dict"
+      ],
+      "acceptance": "incompatible checkpoint raises before use",
+      "path_complete": true
+    },
+    {
+      "id": "D3",
+      "tree": "D",
+      "producer": "tools/cpp/cpp_runner.cpp (FEATURE_ORDER)",
+      "consumer": "C++ runner reading test_vectors.json + model.json",
+      "transformation": "no feature computation; missing/null -> 0.0 silently",
+      "contract_identity": "order mirrors CANONICAL_FEATURES (verified by text parse); no hash",
+      "dependency_path": [
+        {
+          "edge": "tools/cpp/cpp_runner.cpp -> model_export_format.json",
+          "present": true
+        }
+      ],
+      "parity_evidence": "order equal: True; zero-fill policy differs from Python (raises); binary not executed here",
+      "status": "unverified",
+      "required_tests": [
+        "Python vs C++ vector parity on shared vectors"
+      ],
+      "acceptance": "identical outputs on the fixture set; missing-value policy aligned",
+      "path_complete": true
+    },
+    {
+      "id": "D4",
+      "tree": "D",
+      "producer": "src/bitnet/* and src/engines/zone_gate_engine.py",
+      "consumer": "BitNet/zone gate inference (EngineRunner via get_zone_gate)",
+      "transformation": "extract_feature_vector / CANONICAL_FEATURE_ORDER vectors",
+      "contract_identity": "CANONICAL_FEATURE_DIM checks only",
+      "dependency_path": [
+        {
+          "edge": "src/core/engine_runner.py -> src/engines/live_engine.py",
+          "present": true
+        }
+      ],
+      "parity_evidence": "uses canonical vector helpers; model.json legacy schema has fixed input dim 6 (bitnet_inference.py)",
+      "status": "unverified",
+      "required_tests": [
+        "zone gate input equals contract vector; legacy schema 1 handled explicitly"
+      ],
+      "acceptance": "schema identity checked at load",
+      "path_complete": true
+    },
+    {
+      "id": "D5",
+      "tree": "D",
+      "producer": "UNVERIFIED:external_callers",
+      "consumer": "src/runtime/live_engine_hook.py / agent tools",
+      "transformation": "unknown",
+      "contract_identity": "unknown",
+      "dependency_path": [
+        {
+          "edge": "UNVERIFIED:external_callers -> src/runtime/live_engine_hook.py",
+          "present": true
+        }
+      ],
+      "parity_evidence": "no evidence available",
+      "status": "unverified",
+      "required_tests": [
+        "identify and register each external caller"
+      ],
+      "acceptance": "caller registered with contract identity",
+      "path_complete": true
+    },
+    {
+      "id": "D6",
+      "tree": "D",
+      "producer": "src/inout/runner.py (INOUT)",
+      "consumer": "own probability/scanner stack",
+      "transformation": "documented as independent of EngineRunner and the hook",
+      "contract_identity": "not part of the canonical contract",
+      "dependency_path": [],
+      "parity_evidence": "module docstrings state independence; no import edge to hook or EngineRunner found",
+      "status": "unverified",
+      "required_tests": [
+        "declare INOUT out of contract scope or map its features"
+      ],
+      "acceptance": "explicit scope statement",
+      "path_complete": null
+    }
+  ],
+  "features": [
+    {
+      "index": 0,
+      "name": "open",
+      "canonical_definition": "raw input column (OHLCV), not computed",
+      "alternate_implementations": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "line": 39,
+          "function": "build_bitnet_features",
+          "source": "features[\"open\"]     = float(candle.get(\"open\", 0.0))"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "line": 245,
+          "function": "_build_ohlcv_and_auxiliary/_build_engine_input",
+          "source": "open_"
+        }
+      ],
+      "static_consumers": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "lines": [
+            39,
+            102
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/dataset_builder.py",
+          "lines": [
+            69
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lines": [
+            236,
+            237,
+            238,
+            241,
+            242,
+            472
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/inout/scanner.py",
+          "lines": [
+            275
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "lines": [
+            193,
+            240
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "tools/btcusdt_crt_v3_replay.py",
+          "lines": [
+            131
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        }
+      ],
+      "parity": {
+        "live_hook_featurestore": "identical",
+        "bitnet_feature_builder": "identical",
+        "backtest_trade_snapshot": "identical",
+        "cpp_feature_order": "identical"
+      }
+    },
+    {
+      "index": 1,
+      "name": "high",
+      "canonical_definition": "raw input column (OHLCV), not computed",
+      "alternate_implementations": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "line": 40,
+          "function": "build_bitnet_features",
+          "source": "features[\"high\"]     = float(candle.get(\"high\", 0.0))"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "line": 245,
+          "function": "_build_ohlcv_and_auxiliary/_build_engine_input",
+          "source": "high"
+        }
+      ],
+      "static_consumers": [
+        {
+          "file": "src/config_layer/execution_planner.py",
+          "lines": [
+            372,
+            449,
+            483
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/engines/rr_engine.py",
+          "lines": [
+            30
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "lines": [
+            40,
+            103
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/dataset_builder.py",
+          "lines": [
+            70
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lines": [
+            237,
+            289,
+            290,
+            374,
+            377,
+            380,
+            401,
+            403
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/inout/scanner.py",
+          "lines": [
+            243,
+            349,
+            425,
+            429
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "lines": [
+            194,
+            241
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "tools/btcusdt_crt_v3_replay.py",
+          "lines": [
+            132
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        }
+      ],
+      "parity": {
+        "live_hook_featurestore": "identical",
+        "bitnet_feature_builder": "identical",
+        "backtest_trade_snapshot": "identical",
+        "cpp_feature_order": "identical"
+      }
+    },
+    {
+      "index": 2,
+      "name": "low",
+      "canonical_definition": "raw input column (OHLCV), not computed",
+      "alternate_implementations": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "line": 41,
+          "function": "build_bitnet_features",
+          "source": "features[\"low\"]      = float(candle.get(\"low\", 0.0))"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "line": 245,
+          "function": "_build_ohlcv_and_auxiliary/_build_engine_input",
+          "source": "low"
+        }
+      ],
+      "static_consumers": [
+        {
+          "file": "src/config_layer/execution_planner.py",
+          "lines": [
+            373,
+            448,
+            482
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/engines/rr_engine.py",
+          "lines": [
+            31
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "lines": [
+            41,
+            103
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/dataset_builder.py",
+          "lines": [
+            71
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lines": [
+            238,
+            289,
+            291,
+            375,
+            378,
+            381,
+            402,
+            404
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/inout/scanner.py",
+          "lines": [
+            244,
+            357,
+            425,
+            430
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "lines": [
+            195,
+            242
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "tools/btcusdt_crt_v3_replay.py",
+          "lines": [
+            133
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        }
+      ],
+      "parity": {
+        "live_hook_featurestore": "identical",
+        "bitnet_feature_builder": "identical",
+        "backtest_trade_snapshot": "identical",
+        "cpp_feature_order": "identical"
+      }
+    },
+    {
+      "index": 3,
+      "name": "close",
+      "canonical_definition": "raw input column (OHLCV), not computed",
+      "alternate_implementations": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "line": 42,
+          "function": "build_bitnet_features",
+          "source": "features[\"close\"]    = float(candle.get(\"close\", 0.0))"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "line": 245,
+          "function": "_build_ohlcv_and_auxiliary/_build_engine_input",
+          "source": "close"
+        }
+      ],
+      "static_consumers": [
+        {
+          "file": "src/config_layer/execution_planner.py",
+          "lines": [
+            371,
+            446
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/core/engine_runner.py",
+          "lines": [
+            479
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/engines/rr_engine.py",
+          "lines": [
+            29
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/engines/zone_gate_engine.py",
+          "lines": [
+            68
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "lines": [
+            42,
+            102
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/dataset_builder.py",
+          "lines": [
+            72
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lines": [
+            233,
+            234,
+            236,
+            237,
+            238,
+            241,
+            242,
+            272
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/inout/runner.py",
+          "lines": [
+            217
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/inout/scanner.py",
+          "lines": [
+            242,
+            276,
+            346,
+            431
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "lines": [
+            192,
+            239
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "tools/btcusdt_crt_v3_replay.py",
+          "lines": [
+            134
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        }
+      ],
+      "parity": {
+        "live_hook_featurestore": "identical",
+        "bitnet_feature_builder": "identical",
+        "backtest_trade_snapshot": "identical",
+        "cpp_feature_order": "identical"
+      }
+    },
+    {
+      "index": 4,
+      "name": "volume",
+      "canonical_definition": [
+        {
+          "file": "src/features/feature_pipeline.py",
+          "line": 221,
+          "function": "_validate_input",
+          "source": "self.df[\"volume\"] = 0.0"
+        }
+      ],
+      "alternate_implementations": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "line": 43,
+          "function": "build_bitnet_features",
+          "source": "features[\"volume\"]   = float(candle.get(\"volume\", 0.0))"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "line": 245,
+          "function": "_build_ohlcv_and_auxiliary/_build_engine_input",
+          "source": "volume"
+        }
+      ],
+      "static_consumers": [
+        {
+          "file": "src/config_layer/execution_planner.py",
+          "lines": [
+            591,
+            610
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "lines": [
+            43
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lines": [
+            221,
+            253,
+            257
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/inout/scanner.py",
+          "lines": [
+            302,
+            307,
+            402
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/runtime/backtest_v2.py",
+          "lines": [
+            1720
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "lines": [
+            209,
+            243
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "tools/btcusdt_crt_v3_replay.py",
+          "lines": [
+            135
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        }
+      ],
+      "parity": {
+        "live_hook_featurestore": "identical",
+        "bitnet_feature_builder": "identical",
+        "backtest_trade_snapshot": "identical",
+        "cpp_feature_order": "identical"
+      }
+    },
+    {
+      "index": 5,
+      "name": "volume_ratio",
+      "canonical_definition": [
+        {
+          "file": "src/features/feature_pipeline.py",
+          "line": 255,
+          "function": "compute_volume_features",
+          "source": "df[\"volume_ratio\"] = np.where(\n            df[\"volume_ma20\"] > 0,\n            df[\"volume\"] / df[\"volume_ma20\"],\n            1.0\n        )"
+        }
+      ],
+      "alternate_implementations": [
+        {
+          "file": "src/core/feature_store.py",
+          "line": 77,
+          "function": "process",
+          "source": "raw[\"volume_ratio\"] = 1.0"
+        },
+        {
+          "file": "src/core/feature_store.py",
+          "line": 131,
+          "function": "_compute_derived",
+          "source": "d[\"volume_ratio\"] = 1.0"
+        },
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "line": 48,
+          "function": "build_bitnet_features",
+          "source": "features[\"volume_ratio\"]       = float(candle.get(\"volume_ratio\", 0.0))"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "line": 270,
+          "function": "_build_ohlcv_and_auxiliary/_build_engine_input",
+          "source": "max(0.0, _safe_float(trade_data.get(\"volume_ratio\"), 1.0))"
+        }
+      ],
+      "static_consumers": [
+        {
+          "file": "src/core/feature_store.py",
+          "lines": [
+            77,
+            131
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "lines": [
+            48
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lines": [
+            255,
+            261
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/inout/probability_engine.py",
+          "lines": [
+            206,
+            371,
+            1042,
+            1070
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "lines": [
+            270
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        }
+      ],
+      "parity": {
+        "live_hook_featurestore": "identical",
+        "bitnet_feature_builder": "identical",
+        "backtest_trade_snapshot": "identical",
+        "cpp_feature_order": "identical"
+      }
+    },
+    {
+      "index": 6,
+      "name": "double_sweep",
+      "canonical_definition": [
+        {
+          "file": "src/features/feature_pipeline.py",
+          "line": 570,
+          "function": "compute_canonical_structure_features",
+          "source": "df[\"double_sweep\"] = (seen_up & seen_down).astype(np.int8)"
+        }
+      ],
+      "alternate_implementations": [
+        {
+          "file": "src/core/feature_store.py",
+          "line": 79,
+          "function": "process",
+          "source": "raw[\"double_sweep\"] = 0"
+        },
+        {
+          "file": "src/core/feature_store.py",
+          "line": 125,
+          "function": "_compute_derived",
+          "source": "d[\"double_sweep\"] = 1 if (has_pos and has_neg) else 0"
+        },
+        {
+          "file": "src/core/feature_store.py",
+          "line": 127,
+          "function": "_compute_derived",
+          "source": "d[\"double_sweep\"] = 0"
+        },
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "line": 49,
+          "function": "build_bitnet_features",
+          "source": "features[\"double_sweep\"]       = float(state.get(\"double_sweep\", 0.0))"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "line": 273,
+          "function": "_build_ohlcv_and_auxiliary/_build_engine_input",
+          "source": "0.0"
+        }
+      ],
+      "static_consumers": [
+        {
+          "file": "src/bitnet/bitnet_inference.py",
+          "lines": [
+            244
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/config_layer/crt_engine_v2.py",
+          "lines": [
+            1644
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/config_layer/execution_planner.py",
+          "lines": [
+            406
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/core/collector.py",
+          "lines": [
+            130
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/core/feature_store.py",
+          "lines": [
+            79,
+            125,
+            127
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/engines/crt_engine.py",
+          "lines": [
+            31
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "lines": [
+            49
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lines": [
+            570
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "lines": [
+            219,
+            379
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        }
+      ],
+      "parity": {
+        "live_hook_featurestore": "value_mismatch",
+        "bitnet_feature_builder": "identical",
+        "backtest_trade_snapshot": "identical",
+        "cpp_feature_order": "identical"
+      }
+    },
+    {
+      "index": 7,
+      "name": "ema_fast",
+      "canonical_definition": [
+        {
+          "file": "src/features/feature_pipeline.py",
+          "line": 515,
+          "function": "compute_canonical_ema_features",
+          "source": "df[\"ema_fast\"] = df[\"close\"].ewm(span=9, adjust=False).mean().astype(np.float32)"
+        }
+      ],
+      "alternate_implementations": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "line": 54,
+          "function": "build_bitnet_features",
+          "source": "features[\"ema_fast\"]           = float(candle.get(\"ema_fast\", 0.0))"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "line": 261,
+          "function": "_build_ohlcv_and_auxiliary/_build_engine_input",
+          "source": "ema_fast"
+        }
+      ],
+      "static_consumers": [
+        {
+          "file": "src/config_layer/execution_planner.py",
+          "lines": [
+            412,
+            452
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/engines/heuristic_gaussian_engine.py",
+          "lines": [
+            243
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "lines": [
+            54,
+            56
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_builder.py",
+          "lines": [
+            65
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lines": [
+            515,
+            520,
+            534,
+            535,
+            553,
+            585
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "lines": [
+            196,
+            252
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        }
+      ],
+      "parity": {
+        "live_hook_featurestore": "identical",
+        "bitnet_feature_builder": "identical",
+        "backtest_trade_snapshot": "identical",
+        "cpp_feature_order": "identical"
+      }
+    },
+    {
+      "index": 8,
+      "name": "ema_slow",
+      "canonical_definition": [
+        {
+          "file": "src/features/feature_pipeline.py",
+          "line": 516,
+          "function": "compute_canonical_ema_features",
+          "source": "df[\"ema_slow\"] = df[\"close\"].ewm(span=21, adjust=False).mean().astype(np.float32)"
+        }
+      ],
+      "alternate_implementations": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "line": 55,
+          "function": "build_bitnet_features",
+          "source": "features[\"ema_slow\"]           = float(candle.get(\"ema_slow\", 0.0))"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "line": 262,
+          "function": "_build_ohlcv_and_auxiliary/_build_engine_input",
+          "source": "ema_slow"
+        }
+      ],
+      "static_consumers": [
+        {
+          "file": "src/config_layer/execution_planner.py",
+          "lines": [
+            413,
+            453
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/engines/heuristic_gaussian_engine.py",
+          "lines": [
+            244
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "lines": [
+            55,
+            56
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_builder.py",
+          "lines": [
+            66
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lines": [
+            516,
+            520,
+            534,
+            535
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "lines": [
+            197,
+            253
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        }
+      ],
+      "parity": {
+        "live_hook_featurestore": "identical",
+        "bitnet_feature_builder": "identical",
+        "backtest_trade_snapshot": "identical",
+        "cpp_feature_order": "identical"
+      }
+    },
+    {
+      "index": 9,
+      "name": "ema_spread",
+      "canonical_definition": [
+        {
+          "file": "src/features/feature_pipeline.py",
+          "line": 518,
+          "function": "compute_canonical_ema_features",
+          "source": "df[\"ema_spread\"] = np.where(\n            df[\"atr\"] > 0,\n            (df[\"ema_fast\"] - df[\"ema_slow\"]) / df[\"atr\"],\n            0.0\n        ).astype(np.float32)"
+        }
+      ],
+      "alternate_implementations": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "line": 56,
+          "function": "build_bitnet_features",
+          "source": "features[\"ema_spread\"]         = features[\"ema_fast\"] - features[\"ema_slow\"]"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "line": 263,
+          "function": "_build_ohlcv_and_auxiliary/_build_engine_input",
+          "source": "_safe_float(trade_data.get(\"ema_spread\"), ema_fast - ema_slow)"
+        }
+      ],
+      "static_consumers": [
+        {
+          "file": "src/core/engine_runner.py",
+          "lines": [
+            116,
+            133
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "lines": [
+            56
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lines": [
+            518
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "lines": [
+            215,
+            263
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        }
+      ],
+      "parity": {
+        "live_hook_featurestore": "identical",
+        "bitnet_feature_builder": "value_mismatch",
+        "backtest_trade_snapshot": "identical",
+        "cpp_feature_order": "identical"
+      }
+    },
+    {
+      "index": 10,
+      "name": "trend_bias",
+      "canonical_definition": [
+        {
+          "file": "src/features/feature_pipeline.py",
+          "line": 533,
+          "function": "compute_canonical_trend_features",
+          "source": "df[\"trend_bias\"] = np.where(\n            df[\"ema_fast\"] > df[\"ema_slow\"], 1,\n            np.where(df[\"ema_fast\"] < df[\"ema_slow\"], -1, 0)\n        ).astype(np.float32)"
+        }
+      ],
+      "alternate_implementations": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "line": 62,
+          "function": "build_bitnet_features",
+          "source": "features[\"trend_bias\"]         = TREND_MAP.get(str(trend_bias).lower(), 0.0)"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "line": 265,
+          "function": "_build_ohlcv_and_auxiliary/_build_engine_input",
+          "source": "_safe_float(trade_data.get(\"trend_bias\"), 0.0)"
+        }
+      ],
+      "static_consumers": [
+        {
+          "file": "src/core/engine_runner.py",
+          "lines": [
+            131,
+            157
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "lines": [
+            61,
+            62
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/dataset_builder.py",
+          "lines": [
+            80
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lines": [
+            533
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "lines": [
+            214,
+            265
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        }
+      ],
+      "parity": {
+        "live_hook_featurestore": "identical",
+        "bitnet_feature_builder": "value_mismatch",
+        "backtest_trade_snapshot": "identical",
+        "cpp_feature_order": "identical"
+      }
+    },
+    {
+      "index": 11,
+      "name": "trend_strength",
+      "canonical_definition": [
+        {
+          "file": "src/features/feature_pipeline.py",
+          "line": 322,
+          "function": "compute_trend_features",
+          "source": "df[\"trend_strength\"] = df[\"ma_slope_20\"].rolling(10).mean()"
+        }
+      ],
+      "alternate_implementations": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "line": 63,
+          "function": "build_bitnet_features",
+          "source": "features[\"trend_strength\"]     = float(state.get(\"trend_strength\", 0.0))"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "line": 266,
+          "function": "_build_ohlcv_and_auxiliary/_build_engine_input",
+          "source": "_safe_float(trade_data.get(\"trend_strength\"), 0.0)"
+        }
+      ],
+      "static_consumers": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "lines": [
+            63
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lines": [
+            322
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "lines": [
+            266
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        }
+      ],
+      "parity": {
+        "live_hook_featurestore": "identical",
+        "bitnet_feature_builder": "identical",
+        "backtest_trade_snapshot": "identical",
+        "cpp_feature_order": "identical"
+      }
+    },
+    {
+      "index": 12,
+      "name": "momentum_score",
+      "canonical_definition": [
+        {
+          "file": "src/features/feature_pipeline.py",
+          "line": 524,
+          "function": "compute_canonical_ema_features",
+          "source": "df[\"momentum_score\"] = np.where(\n            df[\"atr\"] > 0,\n            df[\"close\"].diff() / df[\"atr\"],\n            0.0\n        ).astype(np.float32)"
+        }
+      ],
+      "alternate_implementations": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "line": 68,
+          "function": "build_bitnet_features",
+          "source": "features[\"momentum_score\"]     = float(state.get(\"momentum_score\", 0.0))"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "line": 267,
+          "function": "_build_ohlcv_and_auxiliary/_build_engine_input",
+          "source": "_safe_float(trade_data.get(\"momentum_score\"), 0.0)"
+        }
+      ],
+      "static_consumers": [
+        {
+          "file": "src/config_layer/execution_planner.py",
+          "lines": [
+            409
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/core/engine_runner.py",
+          "lines": [
+            117,
+            132
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/engines/heuristic_gaussian_engine.py",
+          "lines": [
+            245
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "lines": [
+            68
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lines": [
+            524
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "lines": [
+            216,
+            267
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        }
+      ],
+      "parity": {
+        "live_hook_featurestore": "identical",
+        "bitnet_feature_builder": "identical",
+        "backtest_trade_snapshot": "identical",
+        "cpp_feature_order": "identical"
+      }
+    },
+    {
+      "index": 13,
+      "name": "atr",
+      "canonical_definition": [
+        {
+          "file": "src/features/feature_pipeline.py",
+          "line": 491,
+          "function": "compute_canonical_volatility_features",
+          "source": "df[\"atr\"] = np.where(\n            df[\"close\"] > 0,\n            df[\"atr_14_raw\"] / df[\"close\"],\n            0.0\n        ).astype(np.float32)"
+        }
+      ],
+      "alternate_implementations": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "line": 73,
+          "function": "build_bitnet_features",
+          "source": "features[\"atr\"]                = float(candle.get(\"atr\", 0.0))"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "line": 260,
+          "function": "_build_ohlcv_and_auxiliary/_build_engine_input",
+          "source": "max(0.0, _safe_float(trade_data.get(\"atr\"), 0.0))"
+        }
+      ],
+      "static_consumers": [
+        {
+          "file": "src/bitnet/bitnet_inference.py",
+          "lines": [
+            242
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/config_layer/crt_engine_v2.py",
+          "lines": [
+            990,
+            1056
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/config_layer/execution_planner.py",
+          "lines": [
+            374,
+            447,
+            481,
+            555
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/engines/adapter_engine.py",
+          "lines": [
+            47
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/engines/crt_engine.py",
+          "lines": [
+            27
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/engines/rr_engine.py",
+          "lines": [
+            33
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "lines": [
+            73
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_builder.py",
+          "lines": [
+            64
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lines": [
+            491,
+            506,
+            507,
+            519,
+            520,
+            525,
+            526,
+            546
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/inout/probability_engine.py",
+          "lines": [
+            205,
+            1041,
+            1069
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/inout/runner.py",
+          "lines": [
+            218
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/inout/scanner.py",
+          "lines": [
+            419,
+            420
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/inout/state_machine.py",
+          "lines": [
+            226,
+            250
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/regime/regime_classifier.py",
+          "lines": [
+            98
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "lines": [
+            210,
+            260
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        }
+      ],
+      "parity": {
+        "live_hook_featurestore": "identical",
+        "bitnet_feature_builder": "identical",
+        "backtest_trade_snapshot": "identical",
+        "cpp_feature_order": "identical"
+      }
+    },
+    {
+      "index": 14,
+      "name": "volatility_ratio",
+      "canonical_definition": [
+        {
+          "file": "src/features/feature_pipeline.py",
+          "line": 505,
+          "function": "compute_canonical_volatility_features",
+          "source": "df[\"volatility_ratio\"] = np.where(\n            (df[\"atr\"] > 0) & (df[\"close\"] > 0),\n            (df[\"high\"] - df[\"low\"]) / (df[\"atr\"] * df[\"close\"]),\n            1.0\n        ).astype(np.float32)"
+        }
+      ],
+      "alternate_implementations": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "line": 74,
+          "function": "build_bitnet_features",
+          "source": "features[\"volatility_ratio\"]   = float(state.get(\"volatility_ratio\", 0.0))"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "line": 268,
+          "function": "_build_ohlcv_and_auxiliary/_build_engine_input",
+          "source": "max(0.0, _safe_float(trade_data.get(\"volatility_ratio\"), 1.0))"
+        }
+      ],
+      "static_consumers": [
+        {
+          "file": "src/core/engine_runner.py",
+          "lines": [
+            118
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "lines": [
+            74
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lines": [
+            505
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "lines": [
+            217,
+            268
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        }
+      ],
+      "parity": {
+        "live_hook_featurestore": "identical",
+        "bitnet_feature_builder": "identical",
+        "backtest_trade_snapshot": "identical",
+        "cpp_feature_order": "identical"
+      }
+    },
+    {
+      "index": 15,
+      "name": "rsi_14",
+      "canonical_definition": [
+        {
+          "file": "src/features/feature_pipeline.py",
+          "line": 281,
+          "function": "compute_indicators",
+          "source": "df[\"rsi_14\"] = 100.0 - (100.0 / (1.0 + rs))"
+        }
+      ],
+      "alternate_implementations": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "line": 79,
+          "function": "build_bitnet_features",
+          "source": "features[\"rsi_14\"]             = float(candle.get(\"rsi_14\", 0.0))"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "line": 288,
+          "function": "_build_ohlcv_and_auxiliary/_build_engine_input",
+          "source": "_safe_float(trade_data.get(\"rsi_14\"), 0.0)"
+        }
+      ],
+      "static_consumers": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "lines": [
+            79
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lines": [
+            281,
+            284,
+            285
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "lines": [
+            288
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        }
+      ],
+      "parity": {
+        "live_hook_featurestore": "identical",
+        "bitnet_feature_builder": "identical",
+        "backtest_trade_snapshot": "identical",
+        "cpp_feature_order": "identical"
+      }
+    },
+    {
+      "index": 16,
+      "name": "macd_line",
+      "canonical_definition": [
+        {
+          "file": "src/features/feature_pipeline.py",
+          "line": 307,
+          "function": "compute_indicators",
+          "source": "df[\"macd_line\"] = ema12 - ema26"
+        }
+      ],
+      "alternate_implementations": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "line": 80,
+          "function": "build_bitnet_features",
+          "source": "features[\"macd_line\"]          = float(candle.get(\"macd_line\", 0.0))"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "line": 289,
+          "function": "_build_ohlcv_and_auxiliary/_build_engine_input",
+          "source": "_safe_float(trade_data.get(\"macd_line\"), 0.0)"
+        }
+      ],
+      "static_consumers": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "lines": [
+            80
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lines": [
+            307,
+            308,
+            309
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "lines": [
+            289
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        }
+      ],
+      "parity": {
+        "live_hook_featurestore": "identical",
+        "bitnet_feature_builder": "identical",
+        "backtest_trade_snapshot": "identical",
+        "cpp_feature_order": "identical"
+      }
+    },
+    {
+      "index": 17,
+      "name": "macd_signal",
+      "canonical_definition": [
+        {
+          "file": "src/features/feature_pipeline.py",
+          "line": 308,
+          "function": "compute_indicators",
+          "source": "df[\"macd_signal\"] = df[\"macd_line\"].ewm(span=9, adjust=False).mean()"
+        }
+      ],
+      "alternate_implementations": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "line": 81,
+          "function": "build_bitnet_features",
+          "source": "features[\"macd_signal\"]        = float(candle.get(\"macd_signal\", 0.0))"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "line": 290,
+          "function": "_build_ohlcv_and_auxiliary/_build_engine_input",
+          "source": "_safe_float(trade_data.get(\"macd_signal\"), 0.0)"
+        }
+      ],
+      "static_consumers": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "lines": [
+            81
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lines": [
+            308,
+            309
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "lines": [
+            290
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        }
+      ],
+      "parity": {
+        "live_hook_featurestore": "identical",
+        "bitnet_feature_builder": "identical",
+        "backtest_trade_snapshot": "identical",
+        "cpp_feature_order": "identical"
+      }
+    },
+    {
+      "index": 18,
+      "name": "macd_hist",
+      "canonical_definition": [
+        {
+          "file": "src/features/feature_pipeline.py",
+          "line": 309,
+          "function": "compute_indicators",
+          "source": "df[\"macd_hist\"] = df[\"macd_line\"] - df[\"macd_signal\"]"
+        }
+      ],
+      "alternate_implementations": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "line": 82,
+          "function": "build_bitnet_features",
+          "source": "features[\"macd_hist\"]          = float(candle.get(\"macd_hist\", 0.0))"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "line": 291,
+          "function": "_build_ohlcv_and_auxiliary/_build_engine_input",
+          "source": "_safe_float(trade_data.get(\"macd_hist\"), 0.0)"
+        }
+      ],
+      "static_consumers": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "lines": [
+            82
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lines": [
+            309
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "lines": [
+            291
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        }
+      ],
+      "parity": {
+        "live_hook_featurestore": "identical",
+        "bitnet_feature_builder": "identical",
+        "backtest_trade_snapshot": "identical",
+        "cpp_feature_order": "identical"
+      }
+    },
+    {
+      "index": 19,
+      "name": "sweep_detected",
+      "canonical_definition": [
+        {
+          "file": "src/features/feature_pipeline.py",
+          "line": 542,
+          "function": "compute_canonical_structure_features",
+          "source": "df[\"sweep_detected\"] = (df[\"liquidity_sweep\"] != 0).astype(np.int8)"
+        }
+      ],
+      "alternate_implementations": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "line": 87,
+          "function": "build_bitnet_features",
+          "source": "features[\"sweep_detected\"]     = float(state.get(\"sweep_detected\", 0.0))"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "line": 272,
+          "function": "_build_ohlcv_and_auxiliary/_build_engine_input",
+          "source": "_safe_float(trade_data.get(\"sweep_detected\"), 0.0)"
+        }
+      ],
+      "static_consumers": [
+        {
+          "file": "src/config_layer/execution_planner.py",
+          "lines": [
+            405
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/core/collector.py",
+          "lines": [
+            126
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/core/engine_runner.py",
+          "lines": [
+            155
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/engines/crt_engine.py",
+          "lines": [
+            30
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "lines": [
+            87
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lines": [
+            542
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "lines": [
+            218,
+            272,
+            378
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        }
+      ],
+      "parity": {
+        "live_hook_featurestore": "identical",
+        "bitnet_feature_builder": "identical",
+        "backtest_trade_snapshot": "identical",
+        "cpp_feature_order": "identical"
+      }
+    },
+    {
+      "index": 20,
+      "name": "liquidity_sweep",
+      "canonical_definition": [
+        {
+          "file": "src/features/feature_pipeline.py",
+          "line": 441,
+          "function": "compute_structure_liquidity",
+          "source": "df[\"liquidity_sweep\"] = np.where(\n            sweep_high,  1,\n            np.where(sweep_low, -1, 0)\n        ).astype(np.int8)"
+        }
+      ],
+      "alternate_implementations": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "line": 88,
+          "function": "build_bitnet_features",
+          "source": "features[\"liquidity_sweep\"]    = float(state.get(\"liquidity_sweep\", 0.0))"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "line": 274,
+          "function": "_build_ohlcv_and_auxiliary/_build_engine_input",
+          "source": "_safe_float(trade_data.get(\"liquidity_sweep\"), 0.0)"
+        }
+      ],
+      "static_consumers": [
+        {
+          "file": "src/core/feature_store.py",
+          "lines": [
+            116
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "lines": [
+            88
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lines": [
+            441,
+            542,
+            552,
+            559,
+            565
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "lines": [
+            274
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        }
+      ],
+      "parity": {
+        "live_hook_featurestore": "identical",
+        "bitnet_feature_builder": "identical",
+        "backtest_trade_snapshot": "identical",
+        "cpp_feature_order": "identical"
+      }
+    },
+    {
+      "index": 21,
+      "name": "break_of_structure",
+      "canonical_definition": [
+        {
+          "file": "src/features/feature_pipeline.py",
+          "line": 433,
+          "function": "compute_structure_liquidity",
+          "source": "df[\"break_of_structure\"] = np.where(\n            df[\"close\"] > ref_high,  1,\n            np.where(df[\"close\"] < ref_low, -1, 0)\n        ).astype(np.int8)"
+        }
+      ],
+      "alternate_implementations": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "line": 89,
+          "function": "build_bitnet_features",
+          "source": "features[\"break_of_structure\"] = float(state.get(\"break_of_structure\", 0.0))"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "line": 275,
+          "function": "_build_ohlcv_and_auxiliary/_build_engine_input",
+          "source": "_safe_float(trade_data.get(\"break_of_structure\"), 0.0)"
+        }
+      ],
+      "static_consumers": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "lines": [
+            89
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lines": [
+            433
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "lines": [
+            275
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        }
+      ],
+      "parity": {
+        "live_hook_featurestore": "identical",
+        "bitnet_feature_builder": "identical",
+        "backtest_trade_snapshot": "identical",
+        "cpp_feature_order": "identical"
+      }
+    },
+    {
+      "index": 22,
+      "name": "swing_high",
+      "canonical_definition": [
+        {
+          "file": "src/features/feature_pipeline.py",
+          "line": 377,
+          "function": "_swings_centred_v1",
+          "source": "df[\"swing_high\"] = (df[\"high\"] == roll_high).astype(np.int8)"
+        }
+      ],
+      "alternate_implementations": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "line": 94,
+          "function": "build_bitnet_features",
+          "source": "features[\"swing_high\"]         = float(state.get(\"swing_high\", 0.0))"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "line": 277,
+          "function": "_build_ohlcv_and_auxiliary/_build_engine_input",
+          "source": "_safe_float(trade_data.get(\"swing_high\"), 0.0)"
+        }
+      ],
+      "static_consumers": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "lines": [
+            94
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lines": [
+            377,
+            380
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "lines": [
+            277
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        }
+      ],
+      "parity": {
+        "live_hook_featurestore": "identical",
+        "bitnet_feature_builder": "identical",
+        "backtest_trade_snapshot": "identical",
+        "cpp_feature_order": "identical"
+      }
+    },
+    {
+      "index": 23,
+      "name": "swing_low",
+      "canonical_definition": [
+        {
+          "file": "src/features/feature_pipeline.py",
+          "line": 378,
+          "function": "_swings_centred_v1",
+          "source": "df[\"swing_low\"]  = (df[\"low\"]  == roll_low).astype(np.int8)"
+        }
+      ],
+      "alternate_implementations": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "line": 95,
+          "function": "build_bitnet_features",
+          "source": "features[\"swing_low\"]          = float(state.get(\"swing_low\", 0.0))"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "line": 278,
+          "function": "_build_ohlcv_and_auxiliary/_build_engine_input",
+          "source": "_safe_float(trade_data.get(\"swing_low\"), 0.0)"
+        }
+      ],
+      "static_consumers": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "lines": [
+            95
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lines": [
+            378,
+            381
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "lines": [
+            278
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        }
+      ],
+      "parity": {
+        "live_hook_featurestore": "identical",
+        "bitnet_feature_builder": "identical",
+        "backtest_trade_snapshot": "identical",
+        "cpp_feature_order": "identical"
+      }
+    },
+    {
+      "index": 24,
+      "name": "higher_high",
+      "canonical_definition": [
+        {
+          "file": "src/features/feature_pipeline.py",
+          "line": 430,
+          "function": "compute_structure_liquidity",
+          "source": "df[\"higher_high\"] = (df[\"high\"] > ref_high).astype(np.int8)"
+        }
+      ],
+      "alternate_implementations": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "line": 96,
+          "function": "build_bitnet_features",
+          "source": "features[\"higher_high\"]        = float(state.get(\"higher_high\", 0.0))"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "line": 279,
+          "function": "_build_ohlcv_and_auxiliary/_build_engine_input",
+          "source": "_safe_float(trade_data.get(\"higher_high\"), 0.0)"
+        }
+      ],
+      "static_consumers": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "lines": [
+            96
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lines": [
+            430
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "lines": [
+            279
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        }
+      ],
+      "parity": {
+        "live_hook_featurestore": "identical",
+        "bitnet_feature_builder": "identical",
+        "backtest_trade_snapshot": "identical",
+        "cpp_feature_order": "identical"
+      }
+    },
+    {
+      "index": 25,
+      "name": "lower_low",
+      "canonical_definition": [
+        {
+          "file": "src/features/feature_pipeline.py",
+          "line": 431,
+          "function": "compute_structure_liquidity",
+          "source": "df[\"lower_low\"]   = (df[\"low\"]  < ref_low).astype(np.int8)"
+        }
+      ],
+      "alternate_implementations": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "line": 97,
+          "function": "build_bitnet_features",
+          "source": "features[\"lower_low\"]          = float(state.get(\"lower_low\", 0.0))"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "line": 280,
+          "function": "_build_ohlcv_and_auxiliary/_build_engine_input",
+          "source": "_safe_float(trade_data.get(\"lower_low\"), 0.0)"
+        }
+      ],
+      "static_consumers": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "lines": [
+            97
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lines": [
+            431
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "lines": [
+            280
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        }
+      ],
+      "parity": {
+        "live_hook_featurestore": "identical",
+        "bitnet_feature_builder": "identical",
+        "backtest_trade_snapshot": "identical",
+        "cpp_feature_order": "identical"
+      }
+    },
+    {
+      "index": 26,
+      "name": "body_size",
+      "canonical_definition": [
+        {
+          "file": "src/features/feature_pipeline.py",
+          "line": 472,
+          "function": "compute_canonical_price_features",
+          "source": "df[\"body_size\"] = (df[\"close\"] - df[\"open\"]).abs()"
+        }
+      ],
+      "alternate_implementations": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "line": 104,
+          "function": "build_bitnet_features",
+          "source": "features[\"body_size\"]          = body_size"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "line": 282,
+          "function": "_build_ohlcv_and_auxiliary/_build_engine_input",
+          "source": "body_size"
+        },
+        {
+          "file": "src/config_layer/crt_engine_v2.py",
+          "line": null,
+          "function": "Candle.body_size",
+          "source": "property"
+        }
+      ],
+      "static_consumers": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "lines": [
+            104
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lines": [
+            472,
+            477,
+            544,
+            578
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        }
+      ],
+      "parity": {
+        "live_hook_featurestore": "identical",
+        "bitnet_feature_builder": "identical",
+        "backtest_trade_snapshot": "identical",
+        "crt_candle": "identical",
+        "manual_backtest": "unverified (no function; inline expression)",
+        "cpp_feature_order": "identical"
+      }
+    },
+    {
+      "index": 27,
+      "name": "wick_size",
+      "canonical_definition": [
+        {
+          "file": "src/features/feature_pipeline.py",
+          "line": 473,
+          "function": "compute_canonical_price_features",
+          "source": "df[\"wick_size\"] = df[\"high\"] - df[\"low\"]"
+        }
+      ],
+      "alternate_implementations": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "line": 105,
+          "function": "build_bitnet_features",
+          "source": "features[\"wick_size\"]          = wick_size"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "line": 283,
+          "function": "_build_ohlcv_and_auxiliary/_build_engine_input",
+          "source": "wick_size"
+        },
+        {
+          "file": "src/config_layer/crt_engine_v2.py",
+          "line": null,
+          "function": "Candle.wick_size",
+          "source": "property"
+        },
+        {
+          "file": "scripts/backtest/manual_backtest.py",
+          "line": null,
+          "function": "wick_size",
+          "source": "function"
+        }
+      ],
+      "static_consumers": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "lines": [
+            105
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lines": [
+            473,
+            476,
+            477,
+            482,
+            483,
+            544
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        }
+      ],
+      "parity": {
+        "live_hook_featurestore": "value_mismatch",
+        "bitnet_feature_builder": "value_mismatch",
+        "backtest_trade_snapshot": "identical",
+        "crt_candle": "identical",
+        "manual_backtest": "identical",
+        "cpp_feature_order": "identical"
+      }
+    },
+    {
+      "index": 28,
+      "name": "body_ratio",
+      "canonical_definition": [
+        {
+          "file": "src/features/feature_pipeline.py",
+          "line": 475,
+          "function": "compute_canonical_price_features",
+          "source": "df[\"body_ratio\"] = np.where(\n            df[\"wick_size\"] > 0,\n            df[\"body_size\"] / df[\"wick_size\"],\n            0.0\n        ).astype(np.float32)"
+        }
+      ],
+      "alternate_implementations": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "line": 106,
+          "function": "build_bitnet_features",
+          "source": "features[\"body_ratio\"]         = body_size / wick_size if wick_size > 1e-8 else 0.0"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "line": 284,
+          "function": "_build_ohlcv_and_auxiliary/_build_engine_input",
+          "source": "body_ratio"
+        },
+        {
+          "file": "src/config_layer/crt_engine_v2.py",
+          "line": null,
+          "function": "Candle.body_ratio",
+          "source": "property"
+        },
+        {
+          "file": "scripts/backtest/manual_backtest.py",
+          "line": null,
+          "function": "body_ratio",
+          "source": "function"
+        }
+      ],
+      "static_consumers": [
+        {
+          "file": "scripts/backtest/manual_backtest.py",
+          "lines": [
+            475,
+            494
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "scripts/misc/trade_replay_validator.py",
+          "lines": [
+            89
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/bitnet/bitnet_inference.py",
+          "lines": [
+            239
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/config_layer/crt_engine_v2.py",
+          "lines": [
+            717,
+            1641
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/config_layer/crt_gaussian_scorer.py",
+          "lines": [
+            89
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/config_layer/execution_planner.py",
+          "lines": [
+            410
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/config_layer/rr/rr_fusion.py",
+          "lines": [
+            113,
+            153
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/core/collector.py",
+          "lines": [
+            111
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/core/engine_runner.py",
+          "lines": [
+            558
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/engines/crt_engine.py",
+          "lines": [
+            25,
+            42
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/engines/llm_engine.py",
+          "lines": [
+            34
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/engines/scoring_engine.py",
+          "lines": [
+            125
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "lines": [
+            106
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_monitor.py",
+          "lines": [
+            90,
+            146,
+            189
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lines": [
+            475
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "lines": [
+            220,
+            367
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "tools/btcusdt_crt_v3_replay.py",
+          "lines": [
+            184,
+            207,
+            218,
+            224,
+            228,
+            262,
+            281,
+            377
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        }
+      ],
+      "parity": {
+        "live_hook_featurestore": "value_mismatch",
+        "bitnet_feature_builder": "value_mismatch",
+        "backtest_trade_snapshot": "identical",
+        "crt_candle": "identical",
+        "manual_backtest": "identical",
+        "cpp_feature_order": "identical"
+      }
+    },
+    {
+      "index": 29,
+      "name": "volatility_regime",
+      "canonical_definition": [
+        {
+          "file": "src/features/feature_pipeline.py",
+          "line": 336,
+          "function": "compute_volatility_regime",
+          "source": "df[\"volatility_regime\"] = np.where(\n            np.isnan(pct), np.nan,\n            np.where(pct < VOL_REGIME_LOW_PCT, 0.0, np.where(pct < VOL_REGIME_HIGH_PCT, 1.0, 2.0)),\n        )"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "line": 610,
+          "function": "finalize",
+          "source": "df[\"volatility_regime\"] = df[\"volatility_regime\"].astype(np.int8)"
+        }
+      ],
+      "alternate_implementations": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "line": 111,
+          "function": "build_bitnet_features",
+          "source": "features[\"volatility_regime\"]  = float(state.get(\"volatility_regime\", 0.0))"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "line": 286,
+          "function": "_build_ohlcv_and_auxiliary/_build_engine_input",
+          "source": "_safe_float(trade_data.get(\"volatility_regime\"), 0.0)"
+        }
+      ],
+      "static_consumers": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "lines": [
+            111
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lines": [
+            336,
+            610
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "lines": [
+            286
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        }
+      ],
+      "parity": {
+        "live_hook_featurestore": "identical",
+        "bitnet_feature_builder": "identical",
+        "backtest_trade_snapshot": "identical",
+        "cpp_feature_order": "identical"
+      }
+    },
+    {
+      "index": 30,
+      "name": "session",
+      "canonical_definition": [
+        {
+          "file": "src/features/feature_pipeline.py",
+          "line": 355,
+          "function": "compute_context",
+          "source": "df[\"session\"] = np.where(\n            hour < 8, 0,\n            np.where(hour < 16, 1, 2)\n        ).astype(np.int8)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "line": 601,
+          "function": "compute_canonical_session",
+          "source": "df[\"session\"] = df[\"session\"].astype(np.int8)"
+        }
+      ],
+      "alternate_implementations": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "line": 117,
+          "function": "build_bitnet_features",
+          "source": "features[\"session\"]            = SESSION_MAP.get(session, 0.0)"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "line": 264,
+          "function": "_build_ohlcv_and_auxiliary/_build_engine_input",
+          "source": "_derive_session(trade_data)"
+        }
+      ],
+      "static_consumers": [
+        {
+          "file": "scripts/misc/trade_replay_validator.py",
+          "lines": [
+            92
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/config_layer/crt_engine_v2.py",
+          "lines": [
+            721,
+            1643
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/config_layer/llama_gate.py",
+          "lines": [
+            725,
+            750
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/engines/adapter_engine.py",
+          "lines": [
+            48
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/engines/live_engine.py",
+          "lines": [
+            596
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "lines": [
+            116,
+            117
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/dataset_builder.py",
+          "lines": [
+            79
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_builder.py",
+          "lines": [
+            72
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lines": [
+            355,
+            601
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/governance/portfolio_validation.py",
+          "lines": [
+            546
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "lines": [
+            74,
+            75
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        }
+      ],
+      "parity": {
+        "live_hook_featurestore": "type_break",
+        "bitnet_feature_builder": "value_mismatch",
+        "backtest_trade_snapshot": "identical",
+        "cpp_feature_order": "identical"
+      }
+    },
+    {
+      "index": 31,
+      "name": "hour_of_day",
+      "canonical_definition": [
+        {
+          "file": "src/features/feature_pipeline.py",
+          "line": 350,
+          "function": "compute_context",
+          "source": "df[\"hour_of_day\"] = df[\"timestamp\"].dt.hour.astype(np.int8)"
+        }
+      ],
+      "alternate_implementations": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "line": 118,
+          "function": "build_bitnet_features",
+          "source": "features[\"hour_of_day\"]        = float(candle.get(\"hour_of_day\", 0.0))"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "line": 293,
+          "function": "_build_ohlcv_and_auxiliary/_build_engine_input",
+          "source": "_safe_float(trade_data.get(\"hour_of_day\"), 0.0)"
+        }
+      ],
+      "static_consumers": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "lines": [
+            118
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lines": [
+            350,
+            354
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "lines": [
+            293
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        }
+      ],
+      "parity": {
+        "live_hook_featurestore": "identical",
+        "bitnet_feature_builder": "identical",
+        "backtest_trade_snapshot": "identical",
+        "cpp_feature_order": "identical"
+      }
+    },
+    {
+      "index": 32,
+      "name": "disp_strength",
+      "canonical_definition": [
+        {
+          "file": "src/features/feature_pipeline.py",
+          "line": 576,
+          "function": "compute_canonical_temporal_features",
+          "source": "df[\"disp_strength\"] = np.where(\n            (df[\"atr\"] > 0) & (df[\"close\"] > 0),\n            df[\"body_size\"] / (df[\"atr\"] * df[\"close\"]),\n            0.0,\n        ).astype(np.float32)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "line": 581,
+          "function": "compute_canonical_temporal_features",
+          "source": "df[\"disp_strength\"] = df[\"disp_strength\"].clip(lower=0.0, upper=3.0).astype(np.float32)"
+        }
+      ],
+      "alternate_implementations": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "line": 123,
+          "function": "build_bitnet_features",
+          "source": "features[\"disp_strength\"]      = float(state.get(\"disp_strength\", 0.0))"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "line": 295,
+          "function": "_build_ohlcv_and_auxiliary/_build_engine_input",
+          "source": "disp_strength"
+        }
+      ],
+      "static_consumers": [
+        {
+          "file": "src/bitnet/bitnet_inference.py",
+          "lines": [
+            241
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/config_layer/crt_engine_v2.py",
+          "lines": [
+            1642
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/config_layer/execution_planner.py",
+          "lines": [
+            411
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/config_layer/rr/rr_fusion.py",
+          "lines": [
+            114,
+            154
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/core/engine_runner.py",
+          "lines": [
+            156,
+            559
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/engines/crt_engine.py",
+          "lines": [
+            26
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/engines/scoring_engine.py",
+          "lines": [
+            127
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "lines": [
+            123
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_monitor.py",
+          "lines": [
+            91,
+            147,
+            190
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lines": [
+            576,
+            581
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "lines": [
+            199,
+            255,
+            369
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        }
+      ],
+      "parity": {
+        "live_hook_featurestore": "identical",
+        "bitnet_feature_builder": "identical",
+        "backtest_trade_snapshot": "identical",
+        "cpp_feature_order": "identical"
+      }
+    },
+    {
+      "index": 33,
+      "name": "retest_depth",
+      "canonical_definition": [
+        {
+          "file": "src/features/feature_pipeline.py",
+          "line": 583,
+          "function": "compute_canonical_temporal_features",
+          "source": "df[\"retest_depth\"] = np.where(\n            (df[\"retest_flag\"] == 1) & (df[\"atr\"] > 0) & (df[\"close\"] > 0),\n            (df[\"close\"] - df[\"ema_fast\"]).abs() / (df[\"atr\"] * df[\"close\"]),\n            0.0,\n        ).astype(np.float32)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "line": 588,
+          "function": "compute_canonical_temporal_features",
+          "source": "df[\"retest_depth\"] = df[\"retest_depth\"].clip(lower=0.0, upper=1.0).astype(np.float32)"
+        }
+      ],
+      "alternate_implementations": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "line": 124,
+          "function": "build_bitnet_features",
+          "source": "features[\"retest_depth\"]       = float(state.get(\"retest_depth\", 0.0))"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "line": 296,
+          "function": "_build_ohlcv_and_auxiliary/_build_engine_input",
+          "source": "_safe_float(trade_data.get(\"retest_depth\"), 0.0)"
+        }
+      ],
+      "static_consumers": [
+        {
+          "file": "scripts/backtest/manual_backtest.py",
+          "lines": [
+            493
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "scripts/misc/trade_replay_validator.py",
+          "lines": [
+            88
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/bitnet/bitnet_inference.py",
+          "lines": [
+            240
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/config_layer/crt_engine_v2.py",
+          "lines": [
+            720,
+            1640
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/config_layer/crt_gaussian_scorer.py",
+          "lines": [
+            88
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/config_layer/execution_planner.py",
+          "lines": [
+            407
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/config_layer/rr/rr_fusion.py",
+          "lines": [
+            112,
+            152
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/core/collector.py",
+          "lines": [
+            112
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/core/engine_runner.py",
+          "lines": [
+            557
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/engines/crt_engine.py",
+          "lines": [
+            28,
+            43
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/engines/llm_engine.py",
+          "lines": [
+            35
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/engines/scoring_engine.py",
+          "lines": [
+            126
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "lines": [
+            124
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_monitor.py",
+          "lines": [
+            89,
+            145,
+            188
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lines": [
+            583,
+            588
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "lines": [
+            222,
+            296,
+            368
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        }
+      ],
+      "parity": {
+        "live_hook_featurestore": "identical",
+        "bitnet_feature_builder": "identical",
+        "backtest_trade_snapshot": "identical",
+        "cpp_feature_order": "identical"
+      }
+    },
+    {
+      "index": 34,
+      "name": "candles_since_retest",
+      "canonical_definition": [
+        {
+          "file": "src/features/feature_pipeline.py",
+          "line": 592,
+          "function": "compute_canonical_temporal_features",
+          "source": "df[\"candles_since_retest\"] = np.where(\n            retest_groups > 0,\n            bars_since,\n            0,\n        ).astype(np.int16)"
+        }
+      ],
+      "alternate_implementations": [
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "line": 125,
+          "function": "build_bitnet_features",
+          "source": "features[\"candles_since_retest\"] = float(state.get(\"candles_since_retest\", 0.0))"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "line": 297,
+          "function": "_build_ohlcv_and_auxiliary/_build_engine_input",
+          "source": "int(_safe_float(trade_data.get(\"candles_since_retest\"), 0.0))"
+        }
+      ],
+      "static_consumers": [
+        {
+          "file": "src/bitnet/bitnet_inference.py",
+          "lines": [
+            243
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/config_layer/crt_engine_v2.py",
+          "lines": [
+            991,
+            1057
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/config_layer/crt_gaussian_scorer.py",
+          "lines": [
+            97
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/config_layer/execution_planner.py",
+          "lines": [
+            408
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/core/collector.py",
+          "lines": [
+            119,
+            121
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/engines/crt_engine.py",
+          "lines": [
+            29
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/engines/live_engine.py",
+          "lines": [
+            714
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/bitnet_feature_builder.py",
+          "lines": [
+            125
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/features/feature_pipeline.py",
+          "lines": [
+            592
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        },
+        {
+          "file": "src/runtime/live_engine_hook.py",
+          "lines": [
+            223,
+            297,
+            377
+          ],
+          "evidence": "static string-literal reference (not proof of dataflow)"
+        }
+      ],
+      "parity": {
+        "live_hook_featurestore": "identical",
+        "bitnet_feature_builder": "identical",
+        "backtest_trade_snapshot": "identical",
+        "cpp_feature_order": "identical"
+      }
+    }
+  ],
+  "evidence": {
+    "live_hook_featurestore": {
+      "open": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "high": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "low": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "close": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "volume": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "volume_ratio": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "double_sweep": {
+        "status": "value_mismatch",
+        "type_breaks": 0,
+        "value_mismatches": 99,
+        "n": 700
+      },
+      "ema_fast": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "ema_slow": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "ema_spread": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "trend_bias": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "trend_strength": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "momentum_score": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "atr": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "volatility_ratio": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "rsi_14": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "macd_line": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "macd_signal": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "macd_hist": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "sweep_detected": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "liquidity_sweep": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "break_of_structure": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "swing_high": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "swing_low": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "higher_high": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "lower_low": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "body_size": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "wick_size": {
+        "status": "value_mismatch",
+        "type_breaks": 0,
+        "value_mismatches": 700,
+        "n": 700
+      },
+      "body_ratio": {
+        "status": "value_mismatch",
+        "type_breaks": 0,
+        "value_mismatches": 700,
+        "n": 700
+      },
+      "volatility_regime": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "session": {
+        "status": "type_break",
+        "type_breaks": 700,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "hour_of_day": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "disp_strength": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "retest_depth": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "candles_since_retest": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      }
+    },
+    "bitnet_feature_builder": {
+      "open": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "high": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "low": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "close": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "volume": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "volume_ratio": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "double_sweep": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "ema_fast": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "ema_slow": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "ema_spread": {
+        "status": "value_mismatch",
+        "type_breaks": 0,
+        "value_mismatches": 700,
+        "n": 700
+      },
+      "trend_bias": {
+        "status": "value_mismatch",
+        "type_breaks": 0,
+        "value_mismatches": 700,
+        "n": 700
+      },
+      "trend_strength": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "momentum_score": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "atr": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "volatility_ratio": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "rsi_14": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "macd_line": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "macd_signal": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "macd_hist": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "sweep_detected": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "liquidity_sweep": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "break_of_structure": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "swing_high": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "swing_low": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "higher_high": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "lower_low": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "body_size": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "wick_size": {
+        "status": "value_mismatch",
+        "type_breaks": 0,
+        "value_mismatches": 700,
+        "n": 700
+      },
+      "body_ratio": {
+        "status": "value_mismatch",
+        "type_breaks": 0,
+        "value_mismatches": 700,
+        "n": 700
+      },
+      "volatility_regime": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "session": {
+        "status": "value_mismatch",
+        "type_breaks": 0,
+        "value_mismatches": 494,
+        "n": 700
+      },
+      "hour_of_day": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "disp_strength": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "retest_depth": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      },
+      "candles_since_retest": {
+        "status": "identical",
+        "type_breaks": 0,
+        "value_mismatches": 0,
+        "n": 700
+      }
+    },
+    "backtest_trade_snapshot": {
+      "open": {
+        "status": "identical",
+        "mismatches": 0,
+        "n": 9
+      },
+      "high": {
+        "status": "identical",
+        "mismatches": 0,
+        "n": 9
+      },
+      "low": {
+        "status": "identical",
+        "mismatches": 0,
+        "n": 9
+      },
+      "close": {
+        "status": "identical",
+        "mismatches": 0,
+        "n": 9
+      },
+      "volume": {
+        "status": "identical",
+        "mismatches": 0,
+        "n": 9
+      },
+      "volume_ratio": {
+        "status": "identical",
+        "mismatches": 0,
+        "n": 9
+      },
+      "double_sweep": {
+        "status": "identical",
+        "mismatches": 0,
+        "n": 9
+      },
+      "ema_fast": {
+        "status": "identical",
+        "mismatches": 0,
+        "n": 9
+      },
+      "ema_slow": {
+        "status": "identical",
+        "mismatches": 0,
+        "n": 9
+      },
+      "ema_spread": {
+        "status": "identical",
+        "mismatches": 0,
+        "n": 9
+      },
+      "trend_bias": {
+        "status": "identical",
+        "mismatches": 0,
+        "n": 9
+      },
+      "trend_strength": {
+        "status": "identical",
+        "mismatches": 0,
+        "n": 9
+      },
+      "momentum_score": {
+        "status": "identical",
+        "mismatches": 0,
+        "n": 9
+      },
+      "atr": {
+        "status": "identical",
+        "mismatches": 0,
+        "n": 9
+      },
+      "volatility_ratio": {
+        "status": "identical",
+        "mismatches": 0,
+        "n": 9
+      },
+      "rsi_14": {
+        "status": "identical",
+        "mismatches": 0,
+        "n": 9
+      },
+      "macd_line": {
+        "status": "identical",
+        "mismatches": 0,
+        "n": 9
+      },
+      "macd_signal": {
+        "status": "identical",
+        "mismatches": 0,
+        "n": 9
+      },
+      "macd_hist": {
+        "status": "identical",
+        "mismatches": 0,
+        "n": 9
+      },
+      "sweep_detected": {
+        "status": "identical",
+        "mismatches": 0,
+        "n": 9
+      },
+      "liquidity_sweep": {
+        "status": "identical",
+        "mismatches": 0,
+        "n": 9
+      },
+      "break_of_structure": {
+        "status": "identical",
+        "mismatches": 0,
+        "n": 9
+      },
+      "swing_high": {
+        "status": "identical",
+        "mismatches": 0,
+        "n": 9
+      },
+      "swing_low": {
+        "status": "identical",
+        "mismatches": 0,
+        "n": 9
+      },
+      "higher_high": {
+        "status": "identical",
+        "mismatches": 0,
+        "n": 9
+      },
+      "lower_low": {
+        "status": "identical",
+        "mismatches": 0,
+        "n": 9
+      },
+      "body_size": {
+        "status": "identical",
+        "mismatches": 0,
+        "n": 9
+      },
+      "wick_size": {
+        "status": "identical",
+        "mismatches": 0,
+        "n": 9
+      },
+      "body_ratio": {
+        "status": "identical",
+        "mismatches": 0,
+        "n": 9
+      },
+      "volatility_regime": {
+        "status": "identical",
+        "mismatches": 0,
+        "n": 9
+      },
+      "session": {
+        "status": "identical",
+        "mismatches": 0,
+        "n": 9
+      },
+      "hour_of_day": {
+        "status": "identical",
+        "mismatches": 0,
+        "n": 9
+      },
+      "disp_strength": {
+        "status": "identical",
+        "mismatches": 0,
+        "n": 9
+      },
+      "retest_depth": {
+        "status": "identical",
+        "mismatches": 0,
+        "n": 9
+      },
+      "candles_since_retest": {
+        "status": "identical",
+        "mismatches": 0,
+        "n": 9
+      },
+      "_file": "results/gaussian_training/backtest/run_20261011_055447_XAUUSD/XAUUSD_trades.csv"
+    },
+    "crt_candle_anatomy": {
+      "body_size": "identical",
+      "wick_size": "identical",
+      "body_ratio": "identical"
+    },
+    "manual_backtest_anatomy": {
+      "body_ratio": "identical",
+      "wick_size": "identical",
+      "body_size": "unverified (no function; inline expression)"
+    },
+    "extract_feature_vector_numeric_row": {
+      "order_ok": true,
+      "len": 35
+    },
+    "extract_feature_vector_live_row": "ValueError: could not convert string to float: 'asia'",
+    "ml_engine_on_live_row": {
+      "score": 0.5,
+      "reason": "ml_gaussian_fallback"
+    },
+    "ml_engine_on_numeric_row": {
+      "score": 0.5,
+      "reason": "ml_gaussian"
+    },
+    "rr_dataset_builder_rows_surviving": {
+      "50": 0,
+      "120": 0,
+      "250": 36,
+      "350": 136,
+      "600": 386
+    },
+    "import_checks": {
+      "features.dataset_builder.build_feature_vector": "ImportError: name missing",
+      "features.dataset_builder.validate_feature_vector": "ImportError: name missing",
+      "runtime.live_engine_hook.LiveEngineHook": "ImportError: name missing",
+      "feature_builder.N_FEATURES": "ModuleNotFoundError: No module named 'feature_builder'",
+      "features.feature_builder.build_feature_vector": "ImportError: name missing",
+      "features.feature_builder.N_FEATURES": "ImportError: name missing"
+    },
+    "bare_imports": [
+      {
+        "file": "scripts/backtest/run_debug.py",
+        "line": 3,
+        "module": "backtest_v2",
+        "names": [
+          "BacktestConfig",
+          "BacktestRunner",
+          "CandleLoader"
+        ],
+        "defined_in": "src/runtime/backtest_v2.py",
+        "resolves_with_src_on_path": false,
+        "file_edits_sys_path": true,
+        "runtime_resolution": null
+      },
+      {
+        "file": "scripts/misc/regen_bit.py",
+        "line": 36,
+        "module": "train_pipeline",
+        "names": [
+          "run_bitnet_search"
+        ],
+        "defined_in": "src/training/train_pipeline.py",
+        "resolves_with_src_on_path": false,
+        "file_edits_sys_path": false,
+        "runtime_resolution": false
+      },
+      {
+        "file": "scripts/training/auto_tuner.py",
+        "line": 76,
+        "module": "backtest_v2",
+        "names": [
+          "BacktestConfig",
+          "BacktestRunner",
+          "CandleLoader"
+        ],
+        "defined_in": "src/runtime/backtest_v2.py",
+        "resolves_with_src_on_path": false,
+        "file_edits_sys_path": false,
+        "runtime_resolution": false
+      },
+      {
+        "file": "scripts/training/auto_tuner_multi.py",
+        "line": 57,
+        "module": "backtest_v2",
+        "names": [
+          "BacktestConfig",
+          "BacktestRunner",
+          "CandleLoader"
+        ],
+        "defined_in": "src/runtime/backtest_v2.py",
+        "resolves_with_src_on_path": false,
+        "file_edits_sys_path": true,
+        "runtime_resolution": null
+      },
+      {
+        "file": "src/bitnet/_smoke_test.py",
+        "line": 91,
+        "module": "live_engine",
+        "names": [
+          "BitNetZoneGate"
+        ],
+        "defined_in": "src/engines/live_engine.py",
+        "resolves_with_src_on_path": false,
+        "file_edits_sys_path": true,
+        "runtime_resolution": null
+      },
+      {
+        "file": "src/config_layer/rr/rr_fusion.py",
+        "line": 21,
+        "module": "production_config",
+        "names": [
+          "get_prod_section"
+        ],
+        "defined_in": "src/config_layer/production_config.py",
+        "resolves_with_src_on_path": false,
+        "file_edits_sys_path": false,
+        "runtime_resolution": false
+      },
+      {
+        "file": "src/config_layer/rr/rr_pattern_miner.py",
+        "line": 26,
+        "module": "production_config",
+        "names": [
+          "get_prod_section"
+        ],
+        "defined_in": "src/config_layer/production_config.py",
+        "resolves_with_src_on_path": false,
+        "file_edits_sys_path": false,
+        "runtime_resolution": false
+      },
+      {
+        "file": "src/core/fusion_engine.py",
+        "line": 90,
+        "module": "feature_builder",
+        "names": [
+          "build_feature_vector",
+          "feature_dict_to_vector",
+          "N_FEATURES"
+        ],
+        "defined_in": "src/features/feature_builder.py",
+        "resolves_with_src_on_path": false,
+        "file_edits_sys_path": false,
+        "runtime_resolution": false
+      },
+      {
+        "file": "src/governance/portfolio_validation.py",
+        "line": 476,
+        "module": "backtest_v2",
+        "names": [
+          "TradeJournal",
+          "SlippageModel",
+          "CapitalCurve"
+        ],
+        "defined_in": "src/runtime/backtest_v2.py",
+        "resolves_with_src_on_path": false,
+        "file_edits_sys_path": true,
+        "runtime_resolution": null
+      },
+      {
+        "file": "src/utils/trade_logger.py",
+        "line": 74,
+        "module": "fusion_engine",
+        "names": [
+          "FusionResult"
+        ],
+        "defined_in": "src/core/fusion_engine.py",
+        "resolves_with_src_on_path": false,
+        "file_edits_sys_path": false,
+        "runtime_resolution": false
+      },
+      {
+        "file": "tests/test_crt_fixes.py",
+        "line": 20,
+        "module": "decision_engine",
+        "names": [
+          "DecisionEngine",
+          "DecisionResult",
+          "DynamicThreshold",
+          "_THRESHOLD_MIN",
+          "_THRESHOLD_MAX"
+        ],
+        "defined_in": "src/core/decision_engine.py",
+        "resolves_with_src_on_path": false,
+        "file_edits_sys_path": true,
+        "runtime_resolution": null
+      },
+      {
+        "file": "tests/test_crt_fixes.py",
+        "line": 27,
+        "module": "fusion_engine",
+        "names": [
+          "EngineHealthTracker",
+          "FusionResult",
+          "ScoreNormalizer"
+        ],
+        "defined_in": "src/core/fusion_engine.py",
+        "resolves_with_src_on_path": false,
+        "file_edits_sys_path": true,
+        "runtime_resolution": null
+      }
+    ],
+    "heuristic_registry_resolution": {
+      "current": {
+        "active": "xau_m15_causal_n9_20261011",
+        "mu": 0.0,
+        "sigma": 1.0
+      },
+      "pre_experimental_promotion": {
+        "active": "v1",
+        "mu": 0.0,
+        "sigma": 1.0
+      }
+    },
+    "cpp_runner": {
+      "order_equal_to_CANONICAL_FEATURES": true,
+      "n": 35,
+      "missing_or_null_policy": "missing key -> 0.0; null -> NaN -> 0.0 (silent)",
+      "inputs": "test_vectors.json + model.json (precomputed rows; computes no features)",
+      "binary_in_repo": true,
+      "executed_here": false
+    },
+    "gaussian_artifacts": [
+      {
+        "file": "gaussian_p5_20260405T155721.json",
+        "n_features": 32,
+        "schema_checksum": "bffbe5c1200005d90b799d8aa2cdd3f3",
+        "load": "rejected: ValueError",
+        "missing_vs_canonical": [
+          "volume",
+          "volume_ratio",
+          "double_sweep"
+        ],
+        "order_matches_common": true,
+        "has_feature_definition_identity": false,
+        "has_timeframe_or_provenance": false
+      },
+      {
+        "file": "gaussian_p5_20260405T155823.json",
+        "n_features": 32,
+        "schema_checksum": "bffbe5c1200005d90b799d8aa2cdd3f3",
+        "load": "rejected: ValueError",
+        "missing_vs_canonical": [
+          "volume",
+          "volume_ratio",
+          "double_sweep"
+        ],
+        "order_matches_common": true,
+        "has_feature_definition_identity": false,
+        "has_timeframe_or_provenance": false
+      },
+      {
+        "file": "gaussian_p5_20260405T175730.json",
+        "n_features": 32,
+        "schema_checksum": "bffbe5c1200005d90b799d8aa2cdd3f3",
+        "load": "rejected: ValueError",
+        "missing_vs_canonical": [
+          "volume",
+          "volume_ratio",
+          "double_sweep"
+        ],
+        "order_matches_common": true,
+        "has_feature_definition_identity": false,
+        "has_timeframe_or_provenance": false
+      },
+      {
+        "file": "gaussian_p5_20260405T180807.json",
+        "n_features": 32,
+        "schema_checksum": "bffbe5c1200005d90b799d8aa2cdd3f3",
+        "load": "rejected: ValueError",
+        "missing_vs_canonical": [
+          "volume",
+          "volume_ratio",
+          "double_sweep"
+        ],
+        "order_matches_common": true,
+        "has_feature_definition_identity": false,
+        "has_timeframe_or_provenance": false
+      },
+      {
+        "file": "gaussian_p5_20260405T202752.json",
+        "n_features": 32,
+        "schema_checksum": "bffbe5c1200005d90b799d8aa2cdd3f3",
+        "load": "rejected: ValueError",
+        "missing_vs_canonical": [
+          "volume",
+          "volume_ratio",
+          "double_sweep"
+        ],
+        "order_matches_common": true,
+        "has_feature_definition_identity": false,
+        "has_timeframe_or_provenance": false
+      },
+      {
+        "file": "gaussian_p5_20260405T202838.json",
+        "n_features": 32,
+        "schema_checksum": "bffbe5c1200005d90b799d8aa2cdd3f3",
+        "load": "rejected: ValueError",
+        "missing_vs_canonical": [
+          "volume",
+          "volume_ratio",
+          "double_sweep"
+        ],
+        "order_matches_common": true,
+        "has_feature_definition_identity": false,
+        "has_timeframe_or_provenance": false
+      },
+      {
+        "file": "gaussian_p5_20260405T203532.json",
+        "n_features": 32,
+        "schema_checksum": "bffbe5c1200005d90b799d8aa2cdd3f3",
+        "load": "rejected: ValueError",
+        "missing_vs_canonical": [
+          "volume",
+          "volume_ratio",
+          "double_sweep"
+        ],
+        "order_matches_common": true,
+        "has_feature_definition_identity": false,
+        "has_timeframe_or_provenance": false
+      },
+      {
+        "file": "gaussian_p5_20260405T204109.json",
+        "n_features": 32,
+        "schema_checksum": "bffbe5c1200005d90b799d8aa2cdd3f3",
+        "load": "rejected: ValueError",
+        "missing_vs_canonical": [
+          "volume",
+          "volume_ratio",
+          "double_sweep"
+        ],
+        "order_matches_common": true,
+        "has_feature_definition_identity": false,
+        "has_timeframe_or_provenance": false
+      },
+      {
+        "file": "gaussian_p5_20260405T211410.json",
+        "n_features": 32,
+        "schema_checksum": "bffbe5c1200005d90b799d8aa2cdd3f3",
+        "load": "rejected: ValueError",
+        "missing_vs_canonical": [
+          "volume",
+          "volume_ratio",
+          "double_sweep"
+        ],
+        "order_matches_common": true,
+        "has_feature_definition_identity": false,
+        "has_timeframe_or_provenance": false
+      },
+      {
+        "file": "gaussian_p5_20260405T213057.json",
+        "n_features": 32,
+        "schema_checksum": "bffbe5c1200005d90b799d8aa2cdd3f3",
+        "load": "rejected: ValueError",
+        "missing_vs_canonical": [
+          "volume",
+          "volume_ratio",
+          "double_sweep"
+        ],
+        "order_matches_common": true,
+        "has_feature_definition_identity": false,
+        "has_timeframe_or_provenance": false
+      },
+      {
+        "file": "gaussian_p5_20260405T224338.json",
+        "n_features": 32,
+        "schema_checksum": "bffbe5c1200005d90b799d8aa2cdd3f3",
+        "load": "rejected: ValueError",
+        "missing_vs_canonical": [
+          "volume",
+          "volume_ratio",
+          "double_sweep"
+        ],
+        "order_matches_common": true,
+        "has_feature_definition_identity": false,
+        "has_timeframe_or_provenance": false
+      },
+      {
+        "file": "gaussian_p5_20260406T005252.json",
+        "n_features": 33,
+        "schema_checksum": "36ff066545c16192d0bd1a6eeabc3549",
+        "load": "rejected: ValueError",
+        "missing_vs_canonical": [
+          "volume_ratio",
+          "double_sweep"
+        ],
+        "order_matches_common": true,
+        "has_feature_definition_identity": false,
+        "has_timeframe_or_provenance": false
+      },
+      {
+        "file": "gaussian_xau_m15_causal_n9_20261011.json",
+        "n_features": 35,
+        "schema_checksum": "f9b806ea0ca042aafb1d9bbd91b3d0fe",
+        "load": "loads",
+        "missing_vs_canonical": [],
+        "order_matches_common": true,
+        "has_feature_definition_identity": true,
+        "has_timeframe_or_provenance": true
+      }
+    ],
+    "tradenet_artifacts": {
+      "items": [
+        {
+          "file": "tradenet_p5_20260405T204109.pth",
+          "first_layer_inputs": 32,
+          "expected": 35
+        },
+        {
+          "file": "tradenet_p5_20260405T211455.pth",
+          "first_layer_inputs": 32,
+          "expected": 35
+        },
+        {
+          "file": "tradenet_p5_20260405T213213.pth",
+          "first_layer_inputs": 32,
+          "expected": 35
+        },
+        {
+          "file": "tradenet_p5_20260405T224424.pth",
+          "first_layer_inputs": 32,
+          "expected": 35
+        },
+        {
+          "file": "tradenet_p5_20260406T005347.pth",
+          "first_layer_inputs": 33,
+          "expected": 35
+        }
+      ],
+      "torch_installed": false
+    },
+    "stub_artifacts": {
+      "v1.json": "gaussian_params_v1",
+      "import_fix_v1.json": "absent"
+    }
+  },
+  "duplicate_implementations": {
+    "anatomy (body_size/wick_size/body_ratio)": [
+      "src/features/feature_pipeline.py",
+      "src/config_layer/crt_engine_v2.py::Candle",
+      "scripts/backtest/manual_backtest.py",
+      "src/runtime/live_engine_hook.py",
+      "src/features/bitnet_feature_builder.py"
+    ],
+    "double_sweep": [
+      "src/features/feature_pipeline.py (window 5)",
+      "src/core/feature_store.py (deque 10)",
+      "src/features/bitnet_feature_builder.py (pass-through)"
+    ],
+    "session encoding": [
+      "src/features/feature_pipeline.py (0/1/2 by hour)",
+      "src/features/feature_schema.py::SESSION_MAP",
+      "src/runtime/live_engine_hook.py::_normalize_session (strings)"
+    ],
+    "validate_vector": [
+      "src/features/feature_schema.py",
+      "src/features/schema_validator.py"
+    ],
+    "schema hash": [
+      "SCHEMA_HASH (names md5)",
+      "SchemaObject.checksum (md5 of json)"
+    ]
+  },
+  "summary": {
+    "branches": 25,
+    "by_status": {
+      "verified": 5,
+      "unverified": 10,
+      "mismatched": 6,
+      "broken": 4
+    },
+    "nodes": 48,
+    "edges": 89,
+    "edges_by_basis": {
+      "absence": 1,
+      "ast": 78,
+      "ast+file": 7,
+      "config": 1,
+      "none": 1,
+      "static_text": 1
+    },
+    "features_with_single_ast_definition": 31,
+    "features_hook_identical": 31,
+    "features_bitnet_builder_identical": 30
+  }
+}

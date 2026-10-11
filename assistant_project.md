@@ -1505,3 +1505,12 @@ Decision/Output: results/parity_audit/ (AUDIT_REPORT.md, probes.json, audit.json
 Open Questions: D1 registry rollback; D2 src approval; D3 authoritative body_ratio.
 Next Step: user decisions, then R1-R2 additive implementation.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-11
+Topic: Consumer registry and dependency graph (machine-readable)
+Decision/Output: results/consumer_graph/ (consumer_registry.json, dependency_graph.json/.mmd, feature_matrix.csv, REPORT.md); scripts/analysis/consumer_graph.py; 6 invariant tests. 25 branches (5 verified, 6 mismatched, 4 broken, 10 unverified); 89 AST/absence/config edges; no definition contract exists. New findings: fusion_engine imports nonexistent feature_builder names (silent ImportError), CRTGaussianScorer has no importer, BitNet builder mismatched on 5 features, heuristic engine unaffected by registry promotion (executed).
+Open Questions: D1-D3; unverified branches (external callers, C++ execution, TradeNet loading).
+Next Step: approve src changes and choose authoritative body_ratio; implement branch by branch with tests.
+---
