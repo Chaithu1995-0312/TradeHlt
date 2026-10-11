@@ -1433,3 +1433,12 @@ Decision/Output: results/training_live_parity/REPORT.md + parity.json; scripts/a
 Open Questions: live trade_data producer; training timeframe of models; canonical training path (P5 vs train_pipeline).
 Next Step: contract review of the mismatches, then freeze definition hash (still blocked).
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-11
+Topic: Gaussian training run - stopped at prerequisite check
+Decision/Output: No training, no artifact or registry change. Only dataset: XAUUSD (M15 47,275 bars, H1 11,828). Canonical observation unit (backtest trade entry snapshot) yields 9 trades on M15 (2024-08-02..2026-01-27; classes loss 4 / small win 5) and 12-13 on H1 htf24. Canonical builder phase5_calibration.build_gaussian_dataset raises (9 < 20). Historical p5 sources (350 / 84,822 rows, results/portfolio_p*) absent; no *_fusion.jsonl logs.
+Open Questions: where the multi-instrument corpus / portfolio_p* trade sets live; whether a different observation unit (e.g. per-bar scored inference rows) is approved.
+Next Step: user supplies data or approves an observation-unit decision.
+---
