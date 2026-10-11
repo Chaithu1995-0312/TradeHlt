@@ -1,0 +1,189 @@
+[94m[2026-10-11T05:54:34Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth retest_depth | zero_rate=86.37% nan_rate=0.00% min=0 max=0.999797 mean=0.0562177[0m
+[94m[2026-10-11T05:54:34Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth disp_strength | zero_rate=0.17% nan_rate=0.00% min=0 max=3 mean=0.497667[0m
+[94m[2026-10-11T05:54:34Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth trend_bias | zero_rate=0.01% nan_rate=0.00% min=-1 max=1 mean=0.121884[0m
+[94m[2026-10-11T05:54:34Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth momentum_score | zero_rate=0.18% nan_rate=0.00% min=-26421.5 max=25225.9 mean=55.4351[0m
+[94m[2026-10-11T05:54:34Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth ema_spread | zero_rate=0.01% nan_rate=0.00% min=-9369.94 max=12110 mean=414.671[0m
+[94m[2026-10-11T05:54:34Z] [FLOW:FEATURE_PIPELINE] [INFO] FeatureHealth atr | zero_rate=0.00% nan_rate=0.00% min=0.000315719 max=0.0165545 mean=0.00172985[0m
+[94m[2026-10-11T05:54:47Z] [FLOW:FEATURE_PIPELINE] [WARNING] FeatureMonitor: 3703/47061 rows flagged as drift in this batch (Z > 2.5 on retest_depth/body_ratio/disp_strength).[0m
+05:54:47 [BT] FeaturePipeline built: 47061 rows | first 3 ts keys: ['2024-05-24 08:30:00', '2024-05-24 08:45:00', '2024-05-24 09:00:00']
+2026-10-11 05:54:47 [INFO] CRT.Backtest | FeaturePipeline built: 47061 rows | first 3 ts keys: ['2024-05-24 08:30:00', '2024-05-24 08:45:00', '2024-05-24 09:00:00']
+05:54:47 [BT] Backtest v2 | XAUUSD | 47,275 candles | capital=100,000 | slip=ON | gap_reset=ON
+2026-10-11 05:54:47 [INFO] CRT.Backtest | Backtest v2 | XAUUSD | 47,275 candles | capital=100,000 | slip=ON | gap_reset=ON
+05:54:47 [BT]   Engine init @ candle 30 | HTF=XAUUSD-HTF-000007
+2026-10-11 05:54:47 [INFO] CRT.Backtest |   Engine init @ candle 30 | HTF=XAUUSD-HTF-000007
+2026-10-11 05:54:47 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2024-05-27 01:00 → 2024-05-27 01:00)
+2026-10-11 05:54:47 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 225min > 120min (2024-05-28 01:00 → 2024-05-28 01:00)
+2026-10-11 05:54:47 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2024-06-03 01:00 → 2024-06-03 01:00)
+2026-10-11 05:54:47 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2024-06-10 01:00 → 2024-06-10 01:00)
+2026-10-11 05:54:47 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2024-06-17 01:00 → 2024-06-17 01:00)
+2026-10-11 05:54:47 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 225min > 120min (2024-06-20 01:00 → 2024-06-20 01:00)
+2026-10-11 05:54:47 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2024-06-24 01:00 → 2024-06-24 01:00)
+2026-10-11 05:54:47 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2024-07-01 01:00 → 2024-07-01 01:00)
+2026-10-11 05:54:47 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 225min > 120min (2024-07-05 01:00 → 2024-07-05 01:00)
+2026-10-11 05:54:47 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2024-07-08 01:00 → 2024-07-08 01:00)
+2026-10-11 05:54:47 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2024-07-15 01:00 → 2024-07-15 01:00)
+2026-10-11 05:54:47 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2024-07-22 01:00 → 2024-07-22 01:00)
+2026-10-11 05:54:47 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2024-07-29 01:00 → 2024-07-29 01:00)
+[CRT DEBUG] disp_open=2459.13000 disp_close=2466.74000 retest=2459.64000 r=0.067
+05:54:47 [BT] FEATURE DIAG | dict_size=47061 dict_sample=['2024-05-24 08:30:00', '2024-05-24 08:45:00', '2024-05-24 09:00:00'] candle_ts_key='2024-08-02 14:45:00' fv_idx=4595 fv_shape=(47061, 35)
+2026-10-11 05:54:47 [WARNING] CRT.Backtest | FEATURE DIAG | dict_size=47061 dict_sample=['2024-05-24 08:30:00', '2024-05-24 08:45:00', '2024-05-24 09:00:00'] candle_ts_key='2024-08-02 14:45:00' fv_idx=4595 fv_shape=(47061, 35)
+2026-10-11 05:54:47 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2024-08-05 01:00 → 2024-08-05 01:00)
+05:54:47 [BT]   5,000/47,275 (11%) | trades=1 cap=98,960 dd=1.0%
+2026-10-11 05:54:47 [INFO] CRT.Backtest |   5,000/47,275 (11%) | trades=1 cap=98,960 dd=1.0%
+2026-10-11 05:54:47 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2024-08-12 01:00 → 2024-08-12 01:00)
+2026-10-11 05:54:47 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2024-08-19 01:00 → 2024-08-19 01:00)
+2026-10-11 05:54:47 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2024-08-26 01:00 → 2024-08-26 01:00)
+2026-10-11 05:54:47 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2024-09-02 01:00 → 2024-09-02 01:00)
+2026-10-11 05:54:47 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 225min > 120min (2024-09-03 01:00 → 2024-09-03 01:00)
+2026-10-11 05:54:47 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2024-09-09 01:00 → 2024-09-09 01:00)
+2026-10-11 05:54:47 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2024-09-16 01:00 → 2024-09-16 01:00)
+2026-10-11 05:54:47 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2024-09-23 01:00 → 2024-09-23 01:00)
+2026-10-11 05:54:47 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2024-09-30 01:00 → 2024-09-30 01:00)
+2026-10-11 05:54:47 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2024-10-07 01:00 → 2024-10-07 01:00)
+[CRT DEBUG] disp_open=2617.49000 disp_close=2614.19000 retest=2617.77000 r=0.085
+2026-10-11 05:54:47 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2024-10-14 01:00 → 2024-10-14 01:00)
+2026-10-11 05:54:47 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2024-10-21 01:00 → 2024-10-21 01:00)
+05:54:47 [BT]   10,000/47,275 (21%) | trades=2 cap=97,826 dd=2.2%
+2026-10-11 05:54:47 [INFO] CRT.Backtest |   10,000/47,275 (21%) | trades=2 cap=97,826 dd=2.2%
+2026-10-11 05:54:47 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2024-10-28 01:00 → 2024-10-28 01:00)
+2026-10-11 05:54:47 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2024-11-04 01:00 → 2024-11-04 01:00)
+2026-10-11 05:54:47 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2024-11-11 01:00 → 2024-11-11 01:00)
+2026-10-11 05:54:47 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2024-11-18 01:00 → 2024-11-18 01:00)
+2026-10-11 05:54:47 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2024-11-25 01:00 → 2024-11-25 01:00)
+2026-10-11 05:54:47 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 225min > 120min (2024-11-29 01:00 → 2024-11-29 01:00)
+2026-10-11 05:54:47 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 3090min > 120min (2024-12-02 01:00 → 2024-12-02 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2024-12-09 01:00 → 2024-12-09 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2024-12-16 01:00 → 2024-12-16 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2024-12-23 01:00 → 2024-12-23 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 1710min > 120min (2024-12-26 01:00 → 2024-12-26 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2024-12-30 01:00 → 2024-12-30 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 1515min > 120min (2025-01-02 01:00 → 2025-01-02 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-01-06 01:00 → 2025-01-06 01:00)
+05:54:48 [BT]   15,000/47,275 (32%) | trades=2 cap=97,826 dd=2.2%
+2026-10-11 05:54:48 [INFO] CRT.Backtest |   15,000/47,275 (32%) | trades=2 cap=97,826 dd=2.2%
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-01-13 01:00 → 2025-01-13 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-01-20 01:00 → 2025-01-20 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 225min > 120min (2025-01-21 01:00 → 2025-01-21 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-01-27 01:00 → 2025-01-27 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-02-03 01:00 → 2025-02-03 01:00)
+[CRT DEBUG] disp_open=2854.59000 disp_close=2841.97000 retest=2856.56000 r=0.156
+2026-10-11 05:54:48 [WARNING] CRT.StateMachine | ILLEGAL RANGE → RESOLUTION | Trade closed: TP2
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-02-10 01:00 → 2025-02-10 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-02-17 01:00 → 2025-02-17 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 225min > 120min (2025-02-18 01:00 → 2025-02-18 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-02-24 01:00 → 2025-02-24 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-03-03 01:00 → 2025-03-03 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-03-10 01:00 → 2025-03-10 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-03-17 01:00 → 2025-03-17 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-03-24 01:00 → 2025-03-24 01:00)
+05:54:48 [BT]   20,000/47,275 (42%) | trades=3 cap=98,728 dd=1.3%
+2026-10-11 05:54:48 [INFO] CRT.Backtest |   20,000/47,275 (42%) | trades=3 cap=98,728 dd=1.3%
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-03-31 01:00 → 2025-03-31 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-04-07 01:00 → 2025-04-07 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-04-14 01:00 → 2025-04-14 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 4395min > 120min (2025-04-21 01:00 → 2025-04-21 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-04-28 01:00 → 2025-04-28 01:00)
+[CRT DEBUG] disp_open=3275.24000 disp_close=3289.74000 retest=3272.69000 r=0.176
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-05-05 01:00 → 2025-05-05 01:00)
+[CRT DEBUG] disp_open=3394.44000 disp_close=3383.95000 retest=3395.22000 r=0.074
+2026-10-11 05:54:48 [WARNING] CRT.StateMachine | ILLEGAL RANGE → RESOLUTION | Trade closed: STOPPED
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-05-12 01:00 → 2025-05-12 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-05-19 01:00 → 2025-05-19 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-05-26 01:00 → 2025-05-26 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 225min > 120min (2025-05-27 01:00 → 2025-05-27 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-06-02 01:00 → 2025-06-02 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-06-09 01:00 → 2025-06-09 01:00)
+05:54:48 [BT]   25,000/47,275 (53%) | trades=5 cap=97,211 dd=2.8%
+2026-10-11 05:54:48 [INFO] CRT.Backtest |   25,000/47,275 (53%) | trades=5 cap=97,211 dd=2.8%
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-06-16 01:00 → 2025-06-16 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 225min > 120min (2025-06-20 01:00 → 2025-06-20 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-06-23 01:00 → 2025-06-23 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-06-30 01:00 → 2025-06-30 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 3195min > 120min (2025-07-07 01:00 → 2025-07-07 01:00)
+[CRT DEBUG] disp_open=3293.21000 disp_close=3287.82000 retest=3293.48000 r=0.050
+2026-10-11 05:54:48 [WARNING] CRT.Execution | Trade REJECTED: inverted SL on SHORT (entry=3296.45000 sl=3294.23929 sweep=3296.02000)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-07-14 01:00 → 2025-07-14 01:00)
+[CRT DEBUG] disp_open=3367.74000 disp_close=3374.69000 retest=3367.53000 r=0.030
+2026-10-11 05:54:48 [WARNING] CRT.StateMachine | ILLEGAL RANGE → RESOLUTION | Trade closed: TP2
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-07-21 01:00 → 2025-07-21 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-07-28 01:00 → 2025-07-28 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-08-04 01:00 → 2025-08-04 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-08-11 01:00 → 2025-08-11 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-08-18 01:00 → 2025-08-18 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-08-25 01:00 → 2025-08-25 01:00)
+05:54:48 [BT]   30,000/47,275 (63%) | trades=6 cap=98,017 dd=2.0%
+2026-10-11 05:54:48 [INFO] CRT.Backtest |   30,000/47,275 (63%) | trades=6 cap=98,017 dd=2.0%
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-09-01 01:00 → 2025-09-01 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 225min > 120min (2025-09-02 01:00 → 2025-09-02 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-09-08 01:00 → 2025-09-08 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-09-15 01:00 → 2025-09-15 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-09-22 01:00 → 2025-09-22 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-09-29 01:00 → 2025-09-29 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-10-06 01:00 → 2025-10-06 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-10-13 01:00 → 2025-10-13 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-10-20 01:00 → 2025-10-20 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-10-27 01:00 → 2025-10-27 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-11-03 01:00 → 2025-11-03 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-11-10 01:00 → 2025-11-10 01:00)
+05:54:48 [BT]   35,000/47,275 (74%) | trades=6 cap=98,017 dd=2.0%
+2026-10-11 05:54:48 [INFO] CRT.Backtest |   35,000/47,275 (74%) | trades=6 cap=98,017 dd=2.0%
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-11-17 01:00 → 2025-11-17 01:00)
+[CRT DEBUG] disp_open=4098.54000 disp_close=4113.34000 retest=4096.56000 r=0.134
+2026-10-11 05:54:48 [WARNING] CRT.StateMachine | ILLEGAL RANGE → RESOLUTION | Trade closed: STOPPED
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-11-24 01:00 → 2025-11-24 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 225min > 120min (2025-11-28 01:00 → 2025-11-28 01:00)
+2026-10-11 05:54:48 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 3090min > 120min (2025-12-01 01:00 → 2025-12-01 01:00)
+2026-10-11 05:54:49 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-12-08 01:00 → 2025-12-08 01:00)
+2026-10-11 05:54:49 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-12-15 01:00 → 2025-12-15 01:00)
+2026-10-11 05:54:49 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-12-22 01:00 → 2025-12-22 01:00)
+2026-10-11 05:54:49 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 1710min > 120min (2025-12-26 01:00 → 2025-12-26 01:00)
+2026-10-11 05:54:49 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2025-12-29 01:00 → 2025-12-29 01:00)
+2026-10-11 05:54:49 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 1515min > 120min (2026-01-02 01:00 → 2026-01-02 01:00)
+2026-10-11 05:54:49 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2026-01-05 01:00 → 2026-01-05 01:00)
+2026-10-11 05:54:49 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2026-01-12 01:00 → 2026-01-12 01:00)
+2026-10-11 05:54:49 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2026-01-19 01:00 → 2026-01-19 01:00)
+2026-10-11 05:54:49 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 225min > 120min (2026-01-20 01:00 → 2026-01-20 01:00)
+[CRT DEBUG] disp_open=4667.97000 disp_close=4659.62000 retest=4666.15000 r=0.218
+2026-10-11 05:54:49 [WARNING] CRT.StateMachine | ILLEGAL SWEEP → RESOLUTION | Trade closed: TP2
+2026-10-11 05:54:49 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2026-01-26 01:00 → 2026-01-26 01:00)
+[CRT DEBUG] disp_open=5060.31000 disp_close=5027.59000 retest=5066.82000 r=0.199
+2026-10-11 05:54:49 [WARNING] CRT.StateMachine | ILLEGAL RANGE → RESOLUTION | Trade closed: TP2
+05:54:49 [BT]   40,000/47,275 (85%) | trades=9 cap=100,645 dd=0.0%
+2026-10-11 05:54:49 [INFO] CRT.Backtest |   40,000/47,275 (85%) | trades=9 cap=100,645 dd=0.0%
+2026-10-11 05:54:49 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2026-02-02 01:00 → 2026-02-02 01:00)
+2026-10-11 05:54:49 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2026-02-09 01:00 → 2026-02-09 01:00)
+2026-10-11 05:54:49 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2026-02-16 01:00 → 2026-02-16 01:00)
+2026-10-11 05:54:49 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 225min > 120min (2026-02-17 01:00 → 2026-02-17 01:00)
+2026-10-11 05:54:49 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2026-02-23 01:00 → 2026-02-23 01:00)
+2026-10-11 05:54:49 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2026-03-02 01:00 → 2026-03-02 01:00)
+2026-10-11 05:54:49 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2026-03-09 01:00 → 2026-03-09 01:00)
+2026-10-11 05:54:49 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2026-03-16 01:00 → 2026-03-16 01:00)
+2026-10-11 05:54:49 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2026-03-23 01:00 → 2026-03-23 01:00)
+2026-10-11 05:54:49 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2026-03-30 01:00 → 2026-03-30 01:00)
+2026-10-11 05:54:49 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 4395min > 120min (2026-04-06 01:00 → 2026-04-06 01:00)
+2026-10-11 05:54:49 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2026-04-13 01:00 → 2026-04-13 01:00)
+[CRT DEBUG] disp_open=4816.24000 disp_close=4824.25000 retest=4821.06000 r=0.602
+2026-10-11 05:54:49 [WARNING] CRT.Execution | Trade REJECTED: inverted SL on LONG (entry=4811.77000 sl=4813.22500 sweep=4814.38000)
+05:54:49 [BT]   45,000/47,275 (95%) | trades=9 cap=100,645 dd=0.0%
+2026-10-11 05:54:49 [INFO] CRT.Backtest |   45,000/47,275 (95%) | trades=9 cap=100,645 dd=0.0%
+2026-10-11 05:54:49 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2026-04-20 01:00 → 2026-04-20 01:00)
+2026-10-11 05:54:49 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2026-04-27 01:00 → 2026-04-27 01:00)
+2026-10-11 05:54:49 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2026-05-04 01:00 → 2026-05-04 01:00)
+2026-10-11 05:54:49 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2026-05-11 01:00 → 2026-05-11 01:00)
+2026-10-11 05:54:49 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2026-05-18 01:00 → 2026-05-18 01:00)
+05:54:49 [BT] ───────────────────────────────────────────────────────
+2026-10-11 05:54:49 [INFO] CRT.Backtest | ───────────────────────────────────────────────────────
+05:54:49 [BT]   XAUUSD | 9 trades | WR=55.6% | AvgRR=0.08R | PnL(net)=+0.68R | MaxDD=2.8%
+2026-10-11 05:54:49 [INFO] CRT.Backtest |   XAUUSD | 9 trades | WR=55.6% | AvgRR=0.08R | PnL(net)=+0.68R | MaxDD=2.8%
+05:54:49 [BT] ───────────────────────────────────────────────────────
+2026-10-11 05:54:49 [INFO] CRT.Backtest | ───────────────────────────────────────────────────────
+05:54:49 [BT] Output:
+2026-10-11 05:54:49 [INFO] CRT.Backtest | Output:
+05:54:49 [BT]   summary         → results/gaussian_training/backtest/run_20261011_055447_XAUUSD/XAUUSD_summary.json
+2026-10-11 05:54:49 [INFO] CRT.Backtest |   summary         → results/gaussian_training/backtest/run_20261011_055447_XAUUSD/XAUUSD_summary.json
+05:54:49 [BT]   trades_csv      → results/gaussian_training/backtest/run_20261011_055447_XAUUSD/XAUUSD_trades.csv
+2026-10-11 05:54:49 [INFO] CRT.Backtest |   trades_csv      → results/gaussian_training/backtest/run_20261011_055447_XAUUSD/XAUUSD_trades.csv
+05:54:49 [BT]   events          → results/gaussian_training/backtest/run_20261011_055447_XAUUSD/XAUUSD_events.jsonl
+2026-10-11 05:54:49 [INFO] CRT.Backtest |   events          → results/gaussian_training/backtest/run_20261011_055447_XAUUSD/XAUUSD_events.jsonl
+05:54:49 [BT]   report          → results/gaussian_training/backtest/run_20261011_055447_XAUUSD/XAUUSD_report.txt
+2026-10-11 05:54:49 [INFO] CRT.Backtest |   report          → results/gaussian_training/backtest/run_20261011_055447_XAUUSD/XAUUSD_report.txt

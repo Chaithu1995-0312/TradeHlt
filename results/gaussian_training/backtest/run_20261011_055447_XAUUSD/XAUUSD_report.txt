@@ -1,0 +1,63 @@
+═════════════════════════════════════════════════════════════════
+  CRT ENGINE BACKTEST v2 — XAUUSD
+═════════════════════════════════════════════════════════════════
+
+── COVERAGE ──────────────────────────────────────────────────
+  Total candles:                   47,275
+  Session gap resets:                 121
+  Total setups:                         9
+  Approved / Rejected:             9 / 0    
+  Approval rate:                   100.0%
+
+── PERFORMANCE (NET of costs) ────────────────────────────────
+  Win rate:                         55.6%
+  Avg RR (net):                      0.08R
+  Total PnL raw/net:            +2.99R /  +0.68R
+  Cost drag:                        +2.31R
+  TP1 / TP2 hit rate:          66.7% / 0.0%
+
+── RISK ──────────────────────────────────────────────────────
+  Max drawdown (R):                  2.80R
+  Max drawdown (% equity):           2.8%
+  Max win / loss streak:          4 / 2   
+  Avg trade duration:                14.2 candles
+
+── CAPITAL CURVE ─────────────────────────────────────────────
+  Starting capital:               100,000
+  Final capital:                  100,645
+  Total return:                      0.6%
+
+── TRADE COSTS ───────────────────────────────────────────────
+  Total slippage:                   538.1 pips
+  Total spread:                     637.4 pips
+  Avg cost per trade:               130.6 pips
+  Raw vs Net PnL delta:             +2.31R
+
+── SESSION BREAKDOWN ─────────────────────────────────────────
+  ASIA            1 trades  WR=0%  PnL= -1.34R
+  NEWYORK         1 trades  WR=0%  PnL= -1.04R
+  OFF_SESSION     7 trades  WR=71%  PnL= +3.06R
+
+── DAY OF WEEK ───────────────────────────────────────────────
+  Friday          1 trades  WR=0%  PnL= -1.04R
+  Thursday        3 trades  WR=33%  PnL= -1.56R
+  Tuesday         3 trades  WR=67%  PnL= +1.52R
+  Monday          1 trades  WR=100%  PnL= +0.83R
+  Wednesday       1 trades  WR=100%  PnL= +0.93R
+
+── SIGNAL QUALITY ────────────────────────────────────────────
+  Score→outcome correlation:       -0.153  (>0.2 = score predictive)
+  Loss clustering score:            0.407  (<0.3 = well dispersed)
+
+── REJECTION BREAKDOWN ───────────────────────────────────────
+
+── MONTHLY PnL ───────────────────────────────────────────────
+  2024-08  -1.04R  █
+  2024-10  -1.15R  █
+  2025-02  +0.92R  
+  2025-05  -1.54R  █
+  2025-07  +0.83R  
+  2025-11  +0.93R  
+  2026-01  +1.72R  █
+
+═════════════════════════════════════════════════════════════════

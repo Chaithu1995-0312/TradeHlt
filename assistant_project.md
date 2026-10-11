@@ -1442,3 +1442,12 @@ Decision/Output: No training, no artifact or registry change. Only dataset: XAUU
 Open Questions: where the multi-instrument corpus / portfolio_p* trade sets live; whether a different observation unit (e.g. per-bar scored inference rows) is approved.
 Next Step: user supplies data or approves an observation-unit decision.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-11
+Topic: Gaussian training on 9 trades (operator override), registered active
+Decision/Output: models/gaussian_xau_m15_causal_n9_20261011.json (35 features, 6 train/3 val, metrics 0.0/0.0 degenerate), registry updated, v1 dangling entry deactivated, backup gaussian_registry.pre_*.json. scripts/training/gaussian_from_backtest.py, tests/test_gaussian_active_artifact.py. Full suite: same 12 pre-existing failures.
+Open Questions: live inference still blocked (missing imports, no trade_data producer).
+Next Step: obtain larger corpus and retrain; do not rely on this model.
+---

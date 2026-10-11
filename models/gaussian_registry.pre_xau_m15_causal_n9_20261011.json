@@ -1,0 +1,46 @@
+{
+  "v1": {
+    "active": true,
+    "metrics": {
+      "corr_expected_rr": 0.2,
+      "calibration_error": 0.08
+    }
+  },
+  "v2": {
+    "active": false,
+    "metrics": {
+      "corr_expected_rr": 0.05,
+      "calibration_error": 0.1
+    }
+  },
+  "import_fix_v1": {
+    "version": "import_fix_v1",
+    "model_file": "import_fix_v1.json",
+    "feature_schema": [
+      "retest_depth",
+      "body_ratio",
+      "disp_strength",
+      "volatility",
+      "range_size",
+      "session_encoded",
+      "hour_of_day",
+      "time_decay_feature",
+      "regime_encoded",
+      "retest_disp",
+      "vol_disp"
+    ],
+    "metrics": {
+      "corr_expected_rr": -0.0811,
+      "calibration_error": 0.0716,
+      "n_train": 105,
+      "n_val": 45
+    },
+    "trained_at": "2026-03-25T07:43:22Z",
+    "active": false
+  },
+  "_registry_meta": {
+    "repaired_at": "2026-04-03",
+    "repair_reason": "v2 artifact missing; fell back to v1 per SAFE MODE policy",
+    "original_active": "v2"
+  }
+}

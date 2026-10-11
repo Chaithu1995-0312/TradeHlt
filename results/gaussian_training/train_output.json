@@ -1,0 +1,44 @@
+{
+  "artifact": "models/gaussian_xau_m15_causal_n9_20261011.json",
+  "sha256": "7ed3a3616542c86aaf586237a2edc7092d959e5637389a1976def7863fa2ddc6",
+  "metrics": {
+    "corr_expected_rr": 0.0,
+    "calibration_error": 0.0,
+    "n_train": 6,
+    "n_val": 3,
+    "trained_at": "2026-10-11T05:57:44Z"
+  },
+  "provenance": {
+    "trades_csv": "results/gaussian_training/backtest/run_20261011_055447_XAUUSD/XAUUSD_trades.csv",
+    "trades_csv_sha256": "78cdeceb0a28061d9c4d52a3d82aa3bc507f1d24760afd508259ce18cfce6c40",
+    "ohlcv_csv": "data/XAUUSD_M15.csv",
+    "ohlcv_csv_sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+    "instrument_timeframe": "XAUUSD M15",
+    "git_commit": "03f94c434ef23caf7968d50e7cbedbc61ca779bc",
+    "train_range": [
+      "2024-08-02T14:45:00",
+      "2025-07-14T11:30:00"
+    ],
+    "val_range": [
+      "2025-11-19T18:00:00",
+      "2026-01-27T03:30:00"
+    ],
+    "n_total": 9,
+    "class_counts_train": {
+      "0": 4,
+      "1": 2
+    },
+    "class_counts_val": {
+      "1": 3
+    },
+    "split": "temporal 70/30, scaler and model fit on train only",
+    "min_samples_override": 5,
+    "caveat": "EXPERIMENTAL: operator-approved sample-count override; <=6 train rows, classes 2/3 absent"
+  },
+  "definition_hash": "60b813190a9bb100c5d02ecc3ad23b45a6e63e8cce258030cbdcc1be7c5f9075",
+  "schema_checksum": "f9b806ea0ca042aafb1d9bbd91b3d0fe",
+  "promote": [
+    true,
+    "Promoted Gaussian xau_m15_causal_n9_20261011 (corr=+0.0000 cal=0.0000) over v1 (corr=+0.2000 cal=0.0800)"
+  ]
+}
