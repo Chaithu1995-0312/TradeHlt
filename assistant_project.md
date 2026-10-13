@@ -1115,3 +1115,20 @@ Open Questions: None.
 Next Step: When new modules are added, update Section 3 cross-reference matrix
   in lockstep — it is the single chokepoint where module paths appear.
 ---
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-13
+Topic: XAUUSD time-range screen — plan approved, blocked on data and lookahead N
+Decision/Output: |
+  Plan written to /root/.claude/plans/i-want-you-to-drifting-lobster.md and approved.
+  Cost model taken only from configs/production/v1_multi_2026_03.json backtest section:
+    simulated_spread_pct 0.0002 (round trip = 2 x half-spread, backtest_v2.py SlippageModel L368-384),
+    slippage_atr_fraction 0.10 per side (worst-case round trip 0.20 x ATR).
+  Sizing: units = allocation / entry; D_max = risk / units - (spread + 0.20 x ATR).
+  Scenarios (INR as given): A capital 10,00,000 / allocation 1,00,000 / risk 30,000;
+    B capital 1,00,000 / allocation 10,000 / risk 3,000.
+  Min SL none; Min TP = D_max; Max TP = furthest favourable excursion before touching Max SL.
+  Not implemented yet: data/ directory and XAUUSD_M15.csv are absent from the repo; no XAUUSD .xlsx found.
+Open Questions: lookahead N for "any future candle open"; source file (xlsx upload or CSV); ATR period; start/end time range.
+Next Step: Receive the MT5 export or CSV plus N and time range, then write the screen script and run it for scenarios A and B.
+---
