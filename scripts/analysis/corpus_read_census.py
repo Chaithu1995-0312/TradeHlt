@@ -70,6 +70,10 @@ GATED_CALLS = frozenset({
     "admit_corpus", "admit_csv_path", "CandleLoader",
     "guard_xauusd_csv_path", "require_phase1_frozen_candidate",
     "validate_dataset", "corpus_for",
+    # CH-corpus-ssot (2026-10-08): the corpus SSOT's entry points (data_ingestion.corpus_store.load
+    # and the helpers that wrap it). A path that reaches a reader through one of these is the
+    # sanctioned seam, not a competing read.
+    "corpus_load", "_corpus_load", "_load_corpus", "contract_corpus", "as_corpus", "_ssot",
 })
 
 # ── Corpus path signals ───────────────────────────────────────────────────────
@@ -396,7 +400,17 @@ def _unparseable_key(rel: str, marker: str, evidence: str) -> str:
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
 
 
+#: The corpus SSOT module IS the authority (CH-corpus-ssot): its own reads are the seam, so the
+#: census does not report them as competing readers (like corpus_store.build, noted in the lint).
+_SSOT_AUTHORITY_FILES = frozenset({"src/data_ingestion/corpus_store.py"})
+
+
 def scan_file(path: Path) -> list[dict]:
+    try:
+        if path.resolve().relative_to(_ROOT).as_posix() in _SSOT_AUTHORITY_FILES:
+            return []
+    except ValueError:
+        pass
     try:
         # utf-8-sig, not utf-8: CPython's own tokenizer accepts a leading BOM in source, so a
         # BOM'd file is valid Python and must be ANALYSED, not reported. Reading it as plain

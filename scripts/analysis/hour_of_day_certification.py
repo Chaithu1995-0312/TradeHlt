@@ -243,7 +243,7 @@ def run_battery() -> dict:
             )
         )
     df = pd.DataFrame(rows)
-    fp = FeaturePipeline(df)
+    fp = FeaturePipeline(df, timeframe="H1")   # rows are one bar per hour (CH-timeframe-ssot-v1)
     fp.compute_context()
     pipe_col = fp.df["hour_of_day"].to_numpy()
     ora_col = oracle_hour_of_day(fp.df["timestamp"].tolist())

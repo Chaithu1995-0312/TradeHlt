@@ -1,0 +1,695 @@
+<title>XAUUSD Bar Features</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
+<style>
+/* Single deliberate look: white ground, black ink, like a printed TradingView chart.
+   Layout: toolbar → candle chart (+volume) → feature pane (time-synced) → full bar table. */
+:root{
+  --bg:#ffffff; --fg:#111111; --muted:#6b6b6b; --line:#e6e6e6; --grid:#f1f1f1;
+  --up:#16a34a; --down:#dc2626; --vol:rgba(22,163,74,.35); --vold:rgba(220,38,38,.35); --ema1:#111111; --ema2:#9a9a9a; --hi:#f3f3f3;
+  --f-body:"IBM Plex Sans",system-ui,sans-serif; --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  color-scheme:light;
+}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);padding-block:20px 40px;padding-inline:16px}
+.wrap{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+header{display:flex;flex-wrap:wrap;gap:8px 24px;align-items:baseline;justify-content:space-between}
+h1{font-size:1.25rem;margin:0;font-weight:600;letter-spacing:-.01em}
+h1 b{font-family:var(--f-mono);font-weight:500}
+.sub{color:var(--muted);font-size:.82rem;margin:0}
+.bar{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;border-top:1px solid var(--fg);border-bottom:1px solid var(--line);padding-block:8px}
+.tfs{display:flex;gap:0;border:1px solid var(--fg)}
+.tfs button{font:500 .8rem var(--f-mono);background:var(--bg);color:var(--fg);border:0;border-right:1px solid var(--fg);padding:5px 11px;cursor:pointer}
+.tfs button:last-child{border-right:0}
+.tfs button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+.tfs button:focus-visible,select:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.legend{font-family:var(--f-mono);font-size:.78rem;font-variant-numeric:tabular-nums;color:var(--fg);display:flex;flex-wrap:wrap;gap:4px 14px}
+.legend span{color:var(--muted)}
+select{font:.8rem var(--f-mono);padding:5px 8px;border:1px solid var(--fg);border-radius:0;background:var(--bg);color:var(--fg)}
+.chart{height:440px;border:1px solid var(--line)}
+.fchart{height:180px;border:1px solid var(--line);border-top:0;margin-top:-14px}
+.lbl{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.note{color:var(--muted);font-size:.78rem;margin:0;line-height:1.5}
+.facts{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:.78rem}
+.facts div{display:flex;gap:6px}
+.facts dt{color:var(--muted)} .facts dd{margin:0;font-family:var(--f-mono)}
+.tablebox{overflow:auto;max-height:520px;border:1px solid var(--fg)}
+table{border-collapse:collapse;font-family:var(--f-mono);font-size:.74rem;font-variant-numeric:tabular-nums}
+th,td{padding:4px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th{position:sticky;top:0;background:var(--fg);color:var(--bg);font-weight:500;z-index:1}
+th:first-child,td:first-child{position:sticky;left:0;text-align:left;z-index:2;background:var(--bg)}
+th:first-child{z-index:3;background:var(--fg)}
+tbody tr:hover td{background:var(--hi)}
+tr.first td{font-weight:500;background:var(--hi)}
+tr.first td:first-child{box-shadow:inset 3px 0 0 var(--fg)}
+.zchecks{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.8rem}
+.zchecks label{display:inline-flex;align-items:center;gap:6px;cursor:pointer;user-select:none}
+.zchecks input{width:15px;height:15px;margin:0;cursor:pointer}
+.zchecks i{display:inline-block;width:14px;height:10px;border:1.5px solid;border-radius:2px}
+.pill{font:500 .65rem var(--f-body);border:1px solid var(--fg);padding:0 5px;margin-left:6px}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1><b>XAUUSD</b> · bar features after warm-up</h1>
+    <p class="sub">MT5 terminal data from 28 Sep · broker-server time</p>
+  </header>
+  <dl class="facts" id="facts"></dl>
+
+  <div class="bar">
+    <div class="tfs" id="tfs" role="group" aria-label="Timeframe"></div>
+    <div class="legend" id="legend"></div>
+  </div>
+  <div class="legend" id="hhll"></div>
+  <div class="bar">
+    <span class="lbl">Oracle trades (M15)</span>
+    <div class="tfs" id="otog" role="group" aria-label="Oracle trades">
+      <button type="button" data-o="none">Off</button><button type="button" data-o="long">Long</button><button type="button" data-o="short">Short</button><button type="button" data-o="both">Both</button>
+    </div>
+    <span class="note">Solid = TP, dashed = SL, thin = entry; drawn on M15 only.</span>
+  </div>
+  <div class="bar">
+    <span class="lbl">D1_AMD states</span>
+    <div class="tfs" id="amdtog" role="group" aria-label="AMD overlay">
+      <button type="button" data-a="on">Show</button><button type="button" data-a="off">Off</button>
+    </div>
+    <div class="legend" id="amdkey"></div>
+  </div>
+  <div class="bar">
+    <span class="lbl">SMC zones on price</span>
+    <div class="zchecks" id="ztog" role="group" aria-label="SMC zones"></div>
+    <div class="legend" id="zleg"></div>
+  </div>
+  <div class="chart" id="chart" style="position:relative"></div>
+  <p class="note" id="amdnote"></p>
+
+  <div class="bar">
+    <span class="lbl">Feature pane (M15)</span>
+    <select id="fsel" aria-label="Feature"></select>
+    <div class="legend" id="flegend"></div>
+  </div>
+  <div class="fchart" id="fchart" style="margin-top:0"></div>
+  <p class="note">Features exist on M15 only (that is the pipeline's timeframe); on other timeframes the pane still shows the M15 series on the same clock. EMA overlays and the warm-up marker are drawn on M15.</p>
+
+  <div class="bar">
+    <span class="lbl">SMC monitor (M15)</span>
+    <div class="legend" id="slegend"></div>
+  </div>
+  <div class="fchart" id="schart" style="margin-top:0;height:220px"></div>
+  <div class="tablebox" style="max-height:none"><table id="mon"><thead></thead><tbody></tbody></table></div>
+  <p class="note">Each value is <code>tanh(signed distance from close to the zone's near edge ÷ ATR)</code>, from <code>features/smc/*</code>. Near 0 = price at the zone edge; ±1 = far away (about 3.8 ATR or more). Positive = price on the zone's favourable side (above a bullish zone, below a bearish one). <b>0 is also emitted when no active zone exists</b>, so 0 alone cannot tell "touching" from "none". The ATR column converts back with atanh. HH and LL rows use the M15 bar where the window's highest high and lowest low printed.</p>
+
+  <div class="bar"><span class="lbl">SMC zone prices, every M15 bar ($)</span><span class="note" id="zcount"></span></div>
+  <div class="tablebox" style="max-height:480px"><table id="ztbl"><thead></thead><tbody></tbody></table></div>
+  <p class="note" id="znote"></p>
+
+  <div class="bar"><span class="lbl">Oracle trades: sequential, largest TP</span><span class="note" id="osum"></span></div>
+  <div class="tablebox" style="max-height:420px"><table id="otbl"><thead></thead><tbody></tbody></table></div>
+  <p class="note"><b>How each trade is built (hindsight, uses future bars on purpose).</b> Enter at a bar's close. Look at every later bar to the end of the window. TP = the furthest price reached in the trade's direction (first bar to reach it). SL = the tightest stop that would not have been touched up to and including that TP bar (a bar touching both counts as stopped), never on the wrong side of entry, minus one tick. Keep the trade only if TP distance minus the round-trip cost is above zero; otherwise try the next bar. The next trade starts at the close of the TP bar. Long and short run as two separate chains. Cost <span id="ocost"></span> $/oz round trip, from the repo's measured XAUUSD broker calibration (F-082): half-spread, commission and entry slippage in, half-spread and commission out. Overnight swap is not charged because it has not been measured. Net per lot = 100 oz.</p>
+
+  <div class="bar">
+    <span class="lbl">Profitable zones: features before, at and after</span>
+    <div class="tfs" id="pzside" role="group" aria-label="Side"><button type="button" data-s="long">Long zones</button><button type="button" data-s="short">Short zones</button></div>
+    <label class="note"><input type="checkbox" id="pzonly"> only features that look traceable</label>
+    <span class="note" id="pzcount"></span>
+  </div>
+  <p class="note" id="pzdef"></p>
+  <div class="bar"><span class="lbl">Right now: latest bar against the zone-start profile</span><span class="note" id="nowsum"></span></div>
+  <div class="tablebox" style="max-height:none"><table id="nowtbl"><thead></thead><tbody></tbody></table></div>
+  <p class="note" id="nownote"></p>
+  <div class="tablebox" style="max-height:640px"><table id="pztbl"><thead></thead><tbody></tbody></table></div>
+  <p class="note" id="pznote"></p>
+  <div class="tablebox" style="max-height:300px"><table id="pzlist"><thead></thead><tbody></tbody></table></div>
+  <div class="bar"><span class="lbl">Does it pay? Entering on the feature, 2 years</span><span class="note" id="edsum"></span></div>
+  <div class="tablebox" style="max-height:none"><table id="edtbl"><thead></thead><tbody></tbody></table></div>
+  <p class="note" id="ednote"></p>
+
+  <div class="bar">
+    <span class="lbl">Feature ranges: low→high vs high→low moves</span>
+    <label class="note" for="mwhen">Measured&nbsp;<select id="mwhen"><option value="entry">at the bar the move starts</option><option value="during">on every bar of the move</option></select></label>
+    <label class="note" for="mmin">Moves with reward&nbsp;<select id="mmin"><option value="0">all</option><option value="2">≥ $2</option><option value="5">≥ $5</option><option value="10">≥ $10</option></select></label>
+    <span class="note" id="mcount"></span>
+  </div>
+  <div class="tablebox" style="max-height:640px"><table id="mtbl"><thead></thead><tbody></tbody></table></div>
+  <p class="note">Moves are the oracle trades above: long trades are the low→high legs, short trades the high→low legs. Each bar shows the feature's middle half (25th–75th percentile, thick) and full range (thin) on a scale of that feature's own min–max over the whole window; black = up moves, grey = down moves. <b>Separated</b> means the two middle halves do not overlap. Sorted by the gap between medians in units of the pooled spread. Moves that start inside the warm-up have no feature values and are left out. These are hindsight legs and a handful of samples: a separation here describes these ten days and is not evidence that a feature predicts direction.</p>
+
+  <div class="bar"><span class="lbl">Every M15 bar, every feature</span><span class="note" id="tcount"></span></div>
+  <div class="tablebox"><table id="tbl"><thead></thead><tbody></tbody></table></div>
+  <p class="note">Price-unit columns (ema_fast, macd_line, body_size, candle_range) are in USD; atr is close-relative.</p>
+</div>
+
+<script>
+const DATA = __DATA__;
+const M = DATA.meta, F = M.features, R = DATA.rows, T = DATA.epoch, C = DATA.candles;
+const col = n => F.indexOf(n) + 1;
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const fmt = v => v === null ? '' : (Number.isInteger(v) ? v : (Math.abs(v) >= 100 ? v.toFixed(2) : v.toFixed(4)));
+
+const facts = [["Bars fetched (M15)", M.raw_bars], ["Warm-up dropped", M.warmup_bars],
+  ["First post-warm-up bar", M.first_post_warmup], ["Last bar", R[R.length-1][0]], ["Rows", M.rows], ["Fetched", M.generated_utc]];
+document.getElementById('facts').innerHTML = facts.map(([k,v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+
+const LW = LightweightCharts;
+const base = el => ({
+  autoSize:true,
+  layout:{background:{type:'solid', color:css('--bg')}, textColor:css('--fg'), fontFamily:'IBM Plex Mono', fontSize:11},
+  grid:{vertLines:{color:css('--grid')}, horzLines:{color:css('--grid')}},
+  rightPriceScale:{borderColor:css('--fg')},
+  timeScale:{borderColor:css('--fg'), timeVisible:true, secondsVisible:false},
+  crosshair:{mode:LW.CrosshairMode.Normal, vertLine:{color:css('--muted'), labelBackgroundColor:css('--fg')}, horzLine:{color:css('--muted'), labelBackgroundColor:css('--fg')}},
+});
+const chart = LW.createChart(document.getElementById('chart'), base());
+// State wash: a canvas BEHIND a transparent chart. (It used to be a hidden histogram series, which
+// broke the time scale on M15/M30/H1 — the chart stuck on 1–2 bars or went blank.)
+chart.applyOptions({layout:{background:{type:'solid', color:'rgba(0,0,0,0)'}}});
+document.getElementById('chart').style.background = css('--bg');
+const bandCanvas = document.createElement('canvas');
+bandCanvas.style.cssText = 'position:absolute;left:0;top:0;pointer-events:none;z-index:0';
+document.getElementById('chart').prepend(bandCanvas);
+[...document.getElementById('chart').children].forEach(el => { if (el !== bandCanvas && !el.style.position) { el.style.position = 'relative'; el.style.zIndex = '1'; } });
+let bandHits = [];   // per candle of the current timeframe: AMD state or null
+const candle =chart.addCandlestickSeries({upColor:css('--up'), downColor:css('--down'), borderUpColor:css('--up'), borderDownColor:css('--down'), wickUpColor:css('--up'), wickDownColor:css('--down')});
+const vol = chart.addHistogramSeries({color:css('--vol'), priceFormat:{type:'volume'}, priceScaleId:'vol'});
+chart.priceScale('vol').applyOptions({scaleMargins:{top:0.82, bottom:0}});
+const emaF = chart.addLineSeries({color:css('--ema1'), lineWidth:1, priceLineVisible:false, lastValueVisible:false});
+const emaS = chart.addLineSeries({color:css('--ema2'), lineWidth:1, lineStyle:LW.LineStyle.Dashed, priceLineVisible:false, lastValueVisible:false});
+
+const fchart = LW.createChart(document.getElementById('fchart'), base());
+const fline = fchart.addLineSeries({color:css('--fg'), lineWidth:1, priceLineVisible:false});
+
+let tf = 'M15', syncing = false, linkReady = false, hhLine = null, llLine = null, baseMarkers = [], oMode = 'both', oSeries = [];
+const O = DATA.oracle;
+function seg(t0, t1, v, o){ const s = chart.addLineSeries({...o, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false}); s.setData([{time:t0, value:v}, {time:t1, value:v}]); oSeries.push(s); }
+// ── D1_AMD overlay ────────────────────────────────────────────────────────
+const AMD = DATA.amd;
+const ST = {ACCUMULATION:['Accumulation','#d9d9d9'], MANIPULATION:['Manipulation','#e8a3a3'],
+  DIST_EARLY:['Distribution early','#e9c77a'], DIST_CONFIRMED:['Distribution confirmed','#8cc98c'], DIRECT_EXPANSION:['Direct expansion','#9fbfe6']};
+// Option A: translucent wash behind the candles over each state's exact interval, badge on top.
+const BADGE = {MANIPULATION:['M','#c0392b','#ffffff'], DIST_EARLY:['E','#d9a730','#111111'], DIST_CONFIRMED:['C','#3f8f4a','#ffffff'], DIRECT_EXPANSION:['T2','#4a7fc0','#ffffff']};
+const PRIO = ['MANIPULATION','DIST_CONFIRMED','DIST_EARLY','DIRECT_EXPANSION'];
+const TFSEC = {M5:300, M15:900, M30:1800, H1:3600, H4:14400, D1:86400};
+let amdOn = true, aSeries = [];
+// Contiguous runs of one state on M15 (end = close of the last bar in the run).
+const RUNS = [];
+AMD.states.forEach(([t,s]) => { const r = RUNS[RUNS.length-1];
+  if (r && r.s === s && t - r.last <= 900) { r.last = t; r.t1 = t + 900; } else RUNS.push({s, t0:t, last:t, t1:t + 900}); });
+const SHOWN = RUNS.filter(r => BADGE[r.s]);
+function alpha(hex, a){ const n = parseInt(hex.slice(1),16); return `rgba(${n>>16},${(n>>8)&255},${n&255},${a})`; }
+function aseg(t0, t1, v, o){ const s = chart.addLineSeries({...o, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false}); s.setData([{time:t0, value:v}, {time:t1, value:v}]); aSeries.push(s); }
+function candleIdx(t){ const c = C[tf]; let lo = 0, hi = c.length - 1, k = -1; while (lo <= hi) { const m = (lo+hi) >> 1; if (c[m][0] <= t) { k = m; lo = m+1; } else hi = m-1; } return k; }
+const chartEl = document.getElementById('chart');
+const badgeLayer = document.createElement('div');
+badgeLayer.style.cssText = 'position:absolute;left:0;top:0;right:0;height:0;pointer-events:none;z-index:4';
+chartEl.appendChild(badgeLayer);
+function placeBadges(){
+  badgeLayer.innerHTML = '';
+  if (!amdOn) return;
+  const ts = chart.timeScale(), w = chartEl.clientWidth - 70;
+  let lastX = -99;
+  SHOWN.forEach(r => {
+    const a = candleIdx(r.t0), b = candleIdx(r.last); if (a < 0) return;
+    const xa = ts.timeToCoordinate(C[tf][a][0]), xb = ts.timeToCoordinate(C[tf][Math.max(a,b)][0]);
+    if (xa === null && xb === null) return;
+    const x = ((xa ?? xb) + (xb ?? xa)) / 2;
+    if (x < 8 || x > w || x - lastX < 22) return;
+    lastX = x;
+    const [txt, bg, fg] = BADGE[r.s];
+    const el = document.createElement('div');
+    el.textContent = txt;
+    el.title = `${r.s} ${new Date(r.t0*1000).toISOString().slice(5,16).replace('T',' ')} – ${new Date(r.t1*1000).toISOString().slice(11,16)} server`;
+    el.style.cssText = `position:absolute;top:6px;left:${x}px;transform:translateX(-50%);background:${bg};color:${fg};font:600 11px "IBM Plex Mono",monospace;padding:2px 6px;border-radius:3px`;
+    badgeLayer.appendChild(el);
+  });
+}
+function drawAMD(){
+  aSeries.forEach(s => chart.removeSeries(s)); aSeries = [];
+  if (!amdOn) { bandHits = []; zKick(); placeBadges(); return []; }
+  // Each candle of the current timeframe takes the highest-priority state it overlaps.
+  const sec = TFSEC[tf];
+  bandHits = C[tf].map(([t]) => PRIO.find(s => SHOWN.some(r => r.s === s && r.t0 < t + sec && r.t1 > t)) || null);
+  zKick();
+  if (tf === 'M15') AMD.days.forEach(d => {
+    aseg(d.t0, d.t1, d.P0, {color:'#111111', lineWidth:1, lineStyle:LW.LineStyle.Dotted});
+    if (d.asia_t1) { aseg(d.t0, d.asia_t1, d.AH, {color:'#555555', lineWidth:1}); aseg(d.t0, d.asia_t1, d.AL, {color:'#555555', lineWidth:1}); }
+    aseg(d.t0, d.t1, d.PDH, {color:'#b0b0b0', lineWidth:1, lineStyle:LW.LineStyle.LargeDashed});
+    aseg(d.t0, d.t1, d.PDL, {color:'#b0b0b0', lineWidth:1, lineStyle:LW.LineStyle.LargeDashed});
+  });
+  requestAnimationFrame(placeBadges);
+  return [];
+}
+chart.timeScale().subscribeVisibleLogicalRangeChange(() => placeBadges());
+new ResizeObserver(() => placeBadges()).observe(chartEl);
+document.getElementById('amdkey').innerHTML = Object.entries(BADGE).map(([s,[txt,bg,fg]]) => `<span style="display:inline-flex;align-items:center;gap:5px"><i style="font:600 10px 'IBM Plex Mono',monospace;font-style:normal;background:${bg};color:${fg};padding:1px 5px;border-radius:3px">${txt}</i>${ST[s][0]}</span>`).join(' ') +
+  ' <span>· unshaded = Accumulation · on M15 also: dotted = P0 · solid = Asia range · dashed grey = PDH/PDL</span>';
+const nB = AMD.days.filter(d => d.events.some(e => e[0] === 'TYPE2')).length;
+const atrs = AMD.days.map(d => d.D1_ATR);
+document.getElementById('amdnote').innerHTML = `Days are UTC days (P0 = 00:00 UTC open, 03:00 server in this window). Rules C2: daily ATR of the previous 14 days (here $${Math.min(...atrs).toFixed(0)}–$${Math.max(...atrs).toFixed(0)}). Manipulation = a probe at least 0.15×D1_ATR past PDL/PDH/Asia range that closes back inside within 8 bars, by 12:00 UTC. Direct expansion = no reclaim within 8 bars (acceptance), or 0.75×D1_ATR from P0 with no pool on the other side breached. Marker times on the chart are server time. <b>${nB} of ${AMD.days.length} days reach Direct expansion.</b> Over two years 353 of 369 direct-expansion days come from acceptance, mostly price holding outside the Asia range or the prior day's range for two hours. The coloured bands show on every timeframe; on higher timeframes a candle takes the strongest state it overlaps (Manipulation first). P0, Asia and PDH/PDL lines show on M15 only.`;
+function setA(m){ amdOn = m === 'on'; document.querySelectorAll('#amdtog button').forEach(b => b.setAttribute('aria-pressed', b.dataset.a === m)); drawOracle(); }
+
+// ── SMC zone prices: each active zone's top and bottom in $, on the bars where it is active ──
+const SZ = DATA.smc_z;
+const ZK = [
+  ['ob',  'Order Block', '#e53935'], ['fvg', 'FVG', '#1e63d6'], ['brk', 'Breaker', '#ef8f00'],
+  ['mit', 'Mitigation', '#00897b'], ['rb_bear', 'Rejection ↓', '#8e24aa'], ['rb_bull', 'Rejection ↑', '#c04fd6'],
+];
+const ZLAB = Object.fromEntries(ZK.map(([k, lab, c]) => [k, [lab, c]]));
+let zOn = new Set(ZK.map(([k]) => k));
+let zMode = 'active';
+try { if (localStorage.getItem('xau_zmode') === 'all') zMode = 'all'; } catch(e) {}
+try { const s = JSON.parse(localStorage.getItem('xau_zones')); if (Array.isArray(s)) zOn = new Set(s); } catch(e) {}
+const zKey = z => z ? z.join('|') : '';
+// One box per zone instance: from its origin candle to the bar after it was last active.
+// Still active on the last bar -> the box runs to the right edge.
+const BOXES = [];
+ZK.forEach(([k]) => {
+  let cur = null;
+  SZ.t.forEach((t, i) => {
+    const z = SZ.z[i][k], key = zKey(z);
+    if (cur && key !== cur.key) { BOXES.push(cur); cur = null; }
+    if (z && !cur) {
+      const isRb = k.startsWith('rb'), fi = isRb ? z[2] : z[3];
+      cur = {k, key, lo:z[0], hi:z[1], bull: isRb ? k === 'rb_bull' : z[2], i0: Math.min(fi, i), iFirst:i, i1:i};
+    }
+    if (cur) cur.i1 = i;
+  });
+  if (cur) { cur.open = true; BOXES.push(cur); }
+});
+const zCanvas = document.createElement('canvas');
+zCanvas.style.cssText = 'position:absolute;left:0;top:0;pointer-events:none;z-index:3';
+chartEl.appendChild(zCanvas);
+function drawZones(){
+  const w = chartEl.clientWidth, h = chartEl.clientHeight, dpr = window.devicePixelRatio || 1;
+  if (zCanvas.width !== w*dpr || zCanvas.height !== h*dpr) { zCanvas.width = w*dpr; zCanvas.height = h*dpr; zCanvas.style.width = w+'px'; zCanvas.style.height = h+'px'; }
+  const g = zCanvas.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,w,h);
+  if (!zOn.size) return;
+  // zone time -> fractional bar position on the CURRENT timeframe (zones are found on M15)
+  // logicalToCoordinate only takes whole bars (a fraction returns 0), so interpolate with the bar spacing
+  const xOf = t => { const j = Math.max(0, candleIdx(t)), x = chart.timeScale().logicalToCoordinate(j); if (x === null) return null;
+    return x + Math.max(0, Math.min(1, (t - C[tf][j][0]) / TFSEC[tf])) * (chart.timeScale().options().barSpacing || 6); };
+  const ts = chart.timeScale(), plotW = w - chart.priceScale('right').width(), plotH = h - ts.height();
+  const half = (ts.options().barSpacing || 6) / 2;
+  g.save(); g.beginPath(); g.rect(0, 0, plotW, plotH); g.clip();
+  g.font = '500 11px "IBM Plex Mono", monospace'; g.textBaseline = 'top';
+  const placed = [];   // label rectangles already drawn, so labels never overlap
+  const hit = (r) => placed.some(p => r.x < p.x + p.w && p.x < r.x + r.w && r.y < p.y + p.h && p.y < r.y + r.h);
+  BOXES.forEach(b => {
+    if (!zOn.has(b.k) || (zMode === 'active' && !b.open)) return;
+    const xa = xOf(SZ.t[b.i0]), xb = b.open ? plotW : xOf(SZ.t[b.i1] + 900);
+    const ya = candle.priceToCoordinate(b.hi), yb = candle.priceToCoordinate(b.lo);
+    if ([xa, xb, ya, yb].some(v => v === null)) return;
+    const x0 = xa - half, x1 = b.open ? plotW : xb - half;
+    if (x1 < 0 || x0 > plotW) return;
+    const y0 = Math.min(ya, yb), hh = Math.max(Math.abs(yb - ya), 2);
+    const [lab, c] = ZLAB[b.k];
+    g.fillStyle = alpha(c, .16); g.fillRect(x0, y0, x1 - x0, hh);
+    g.strokeStyle = c; g.lineWidth = 1; g.strokeRect(Math.round(x0)+.5, Math.round(y0)+.5, Math.round(x1 - x0), Math.round(hh));
+    if (x1 - x0 > (zMode === 'active' ? 12 : 90)) {
+      const name = b.k.startsWith('rb') ? lab : `${b.bull ? 'Bullish' : 'Bearish'} ${lab}`;
+      const px = `${b.lo.toFixed(2)} – ${b.hi.toFixed(2)}`;
+      const lw = Math.max(g.measureText(name).width, g.measureText(px).width) + 8;
+      const tx = Math.min(Math.max(x0, 0) + 4, plotW - lw - 4);
+      // inside the box if it is tall enough, else just above it, else just below it
+      const tries = (hh > 30 ? [y0 + 3] : []).concat([0,1,2,3].flatMap(s => [y0 - 28 - 28*s, y0 + hh + 2 + 28*s]));
+      const ty = tries.find(y => !hit({x:tx, y, w:lw, h:26}));
+      if (ty !== undefined) {
+        placed.push({x:tx, y:ty, w:lw, h:26});
+        g.fillStyle = 'rgba(255,255,255,.82)'; g.fillRect(tx - 2, ty - 1, lw, 26);
+        g.fillStyle = c; g.fillText(name, tx, ty); g.fillStyle = '#111111'; g.fillText(px, tx, ty + 12);
+      }
+    }
+  });
+  g.restore();
+}
+// Redraw only when the view changes: pan/zoom, resize, pointer over the chart (price-scale drag),
+// toggles, timeframe. Two frames later as well, because the price scale settles after the range.
+// The chart throws "Value is null" while it has no layout yet, so every draw is guarded.
+// Timers, not animation frames: frames do not fire in a hidden or background tab.
+function drawBands(){
+  const w = chartEl.clientWidth, h = chartEl.clientHeight, dpr = window.devicePixelRatio || 1;
+  if (bandCanvas.width !== w*dpr || bandCanvas.height !== h*dpr) { bandCanvas.width = w*dpr; bandCanvas.height = h*dpr; bandCanvas.style.width = w+'px'; bandCanvas.style.height = h+'px'; }
+  const g = bandCanvas.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,w,h);
+  if (!bandHits.length) return;
+  const ts = chart.timeScale(), plotW = w - chart.priceScale('right').width(), plotH = h - ts.height();
+  const sp = ts.options().barSpacing || 6, vr = ts.getVisibleLogicalRange(); if (!vr) return;
+  const a = Math.max(0, Math.floor(vr.from) - 1), b = Math.min(bandHits.length - 1, Math.ceil(vr.to) + 1);
+  for (let i = a; i <= b; i++) {
+    const s = bandHits[i]; if (!s) continue;
+    const x = ts.logicalToCoordinate(i); if (x === null) continue;
+    g.fillStyle = alpha(BADGE[s][1], s === 'MANIPULATION' ? .2 : .13);
+    g.fillRect(Math.max(0, x - sp/2), 0, Math.min(sp, plotW - (x - sp/2)) + .5, plotH);
+  }
+}
+// Profitable zones (see the "Profitable zones" section): green strip = long zone, red = short zone,
+// along the bottom of the price chart, on every timeframe.
+const Z10 = DATA.zones10;
+let pzOn = true;
+try { pzOn = localStorage.getItem('xau_pz') !== 'off'; } catch(e) {}
+function drawPZ(){
+  if (!pzOn || !Z10) return;
+  const g = zCanvas.getContext('2d'), ts = chart.timeScale(), w = chartEl.clientWidth, h = chartEl.clientHeight;
+  const plotW = w - chart.priceScale('right').width(), plotH = h - ts.height(), sp = ts.options().barSpacing || 6;
+  const xOf = t => { const j = Math.max(0, candleIdx(t)), x = ts.logicalToCoordinate(j); if (x === null) return null;
+    return x - sp/2 + Math.max(0, Math.min(1, (t - C[tf][j][0]) / TFSEC[tf])) * sp; };
+  g.save(); g.beginPath(); g.rect(0, 0, plotW, plotH); g.clip();
+  [['long', '#2e7d32', 16], ['short', '#c62828', 8]].forEach(([side, col, off]) => {
+    Z10[side].zones.forEach(([s, e]) => {
+      const x0 = xOf(Z10.epoch[s]), x1 = xOf(Z10.epoch[e] + 900); if (x0 === null || x1 === null) return;
+      g.fillStyle = col; g.fillRect(x0, plotH - off, Math.max(2, x1 - x0), 6);
+    });
+  });
+  g.restore();
+}
+const zSafe = () => { try { drawBands(); } catch(e) {} try { drawZones(); } catch(e) {} try { drawPZ(); } catch(e) {} };
+let zT1 = null, zT2 = null;
+function zKick(){
+  zSafe();
+  clearTimeout(zT1); clearTimeout(zT2);
+  zT1 = setTimeout(zSafe, 30); zT2 = setTimeout(zSafe, 250);
+}
+window.addEventListener('load', () => setTimeout(zKick, 300));
+chart.timeScale().subscribeVisibleLogicalRangeChange(zKick);
+chart.subscribeCrosshairMove(zKick);
+new ResizeObserver(zKick).observe(chartEl);
+['pointermove','wheel','pointerup'].forEach(ev => chartEl.addEventListener(ev, zKick, {passive:true}));
+const zfmt = (k, z) => !z ? '<span>none</span>' : `${z[0].toFixed(2)}–${z[1].toFixed(2)}` + (k.startsWith('rb') ? '' : ` <span>${z[2] ? 'bull' : 'bear'}</span>`);
+function zLegend(t){
+  const i = SZ.t.indexOf(t); if (i < 0) return;
+  document.getElementById('zleg').innerHTML = ZK.filter(([k]) => zOn.has(k)).map(([k, lab, c]) =>
+    `<span style="color:${c};font-weight:500">${lab}</span> ${zfmt(k, SZ.z[i][k])}`).join(' ');
+}
+document.getElementById('ztog').innerHTML = ZK.map(([k, lab, c]) =>
+  `<label><input type="checkbox" data-z="${k}" ${zOn.has(k) ? 'checked' : ''}><i style="border-color:${c};background:${alpha(c, .2)}"></i>${lab}</label>`).join('') +
+  '<label><input type="checkbox" id="zall"> <b>All</b></label>' +
+  `<label title="Strips along the bottom: green = long profitable zone, red = short"><input type="checkbox" id="pzchk" ${pzOn ? 'checked' : ''}><i style="border-color:#2e7d32;background:linear-gradient(#2e7d32 50%,#c62828 50%)"></i>Profitable zones</label>` +
+  `<span class="tfs" id="zmode" role="group" aria-label="Which zones"><button type="button" data-m="active">Active now (${BOXES.filter(b => b.open).length})</button><button type="button" data-m="all">All history (${BOXES.length})</button></span>`;
+const zAll = document.getElementById('zall');
+const zSync = () => { zAll.checked = zOn.size === ZK.length; zAll.indeterminate = zOn.size > 0 && zOn.size < ZK.length;
+  try{localStorage.setItem('xau_zones', JSON.stringify([...zOn]));}catch(e){} zKick(); zLegend(SZ.t[SZ.t.length-1]); };
+document.querySelectorAll('#ztog input[data-z]').forEach(cb => cb.addEventListener('change', () => {
+  cb.checked ? zOn.add(cb.dataset.z) : zOn.delete(cb.dataset.z); zSync(); }));
+zAll.addEventListener('change', () => { zOn = new Set(zAll.checked ? ZK.map(([k]) => k) : []);
+  document.querySelectorAll('#ztog input[data-z]').forEach(cb => cb.checked = zOn.has(cb.dataset.z)); zSync(); });
+zSync();
+function setZM(m){ zMode = m; document.querySelectorAll('#zmode button').forEach(b => b.setAttribute('aria-pressed', b.dataset.m === m)); try{localStorage.setItem('xau_zmode', m);}catch(e){} zKick(); }
+document.querySelectorAll('#zmode button').forEach(b => b.addEventListener('click', () => setZM(b.dataset.m)));
+setZM(zMode);
+document.getElementById('pzchk').addEventListener('change', e => { pzOn = e.target.checked; try{localStorage.setItem('xau_pz', pzOn ? 'on' : 'off');}catch(x){} zKick(); });
+
+function drawOracle(){
+  oSeries.forEach(s => chart.removeSeries(s)); oSeries = [];
+  zKick();
+  const mk = [...baseMarkers, ...drawAMD()];
+  if (tf === 'M15' && oMode !== 'none') {
+    const dirs = oMode === 'both' ? ['long','short'] : [oMode];
+    dirs.forEach(d => O[d].trades.forEach((x,k) => {
+      const ink = d === 'long' ? '#111111' : '#7a7a7a';
+      seg(x.entry_t, x.exit_t, x.tp, {color:ink, lineWidth:2});
+      seg(x.entry_t, x.exit_t, x.sl, {color:ink, lineWidth:1, lineStyle:LW.LineStyle.Dashed});
+      seg(x.entry_t, x.exit_t, x.entry, {color:ink, lineWidth:1, lineStyle:LW.LineStyle.Dotted});
+      mk.push({time:x.entry_t, position: d === 'long' ? 'belowBar' : 'aboveBar', color:ink, shape: d === 'long' ? 'arrowUp' : 'arrowDown', text:(d === 'long' ? 'L' : 'S') + (k+1)});
+    }));
+  }
+  candle.setMarkers(mk.sort((a,b) => a.time - b.time));
+}
+const iso = s => new Date(s*1000).toISOString().slice(5,16).replace('T',' ');
+function setTF(name){
+  tf = name;
+  document.querySelectorAll('#tfs button').forEach(b => b.setAttribute('aria-pressed', b.dataset.tf === name));
+  const c = C[name];
+  candle.setData(c.map(x => ({time:x[0], open:x[1], high:x[2], low:x[3], close:x[4]})));
+  vol.setData(c.map(x => ({time:x[0], value:x[5], color: x[4] >= x[1] ? css('--vol') : css('--vold')})));
+  const onM15 = name === 'M15';
+  emaF.setData(onM15 ? R.map((r,i) => ({time:T[i], value:r[col('ema_fast')]})) : []);
+  emaS.setData(onM15 ? R.map((r,i) => ({time:T[i], value:r[col('ema_slow')]})) : []);
+  // Highest high / lowest low of the whole window on THIS timeframe.
+  const hh = c.reduce((a,x) => x[2] > a[2] ? x : a), ll = c.reduce((a,x) => x[3] < a[3] ? x : a);
+  hhLine && candle.removePriceLine(hhLine); llLine && candle.removePriceLine(llLine);
+  hhLine = candle.createPriceLine({price:hh[2], color:css('--fg'), lineWidth:1, lineStyle:LW.LineStyle.Dashed, axisLabelVisible:true, title:'HH'});
+  llLine = candle.createPriceLine({price:ll[3], color:css('--fg'), lineWidth:1, lineStyle:LW.LineStyle.Dashed, axisLabelVisible:true, title:'LL'});
+  const mk = [{time:hh[0], position:'aboveBar', color:css('--fg'), shape:'arrowDown', text:'HH ' + hh[2].toFixed(2)},
+              {time:ll[0], position:'belowBar', color:css('--fg'), shape:'arrowUp', text:'LL ' + ll[3].toFixed(2)}];
+  if (onM15) mk.push({time:T[0], position:'belowBar', color:css('--muted'), shape:'circle', text:'first post-warm-up'});
+  baseMarkers = mk;
+  drawOracle();
+  document.getElementById('hhll').innerHTML = `<span>${name} HH</span> ${hh[2].toFixed(2)} @ ${iso(hh[0])} <span>LL</span> ${ll[3].toFixed(2)} @ ${iso(ll[0])} <span>range</span> ${(hh[2]-ll[3]).toFixed(2)}`;
+  fitAll();
+  legendFor(c[c.length-1]);
+}
+document.getElementById('tfs').innerHTML = Object.keys(C).map(k => `<button type="button" data-tf="${k}">${k}</button>`).join('');
+document.querySelectorAll('#tfs button').forEach(b => b.addEventListener('click', () => { setTF(b.dataset.tf); try{localStorage.setItem('xau_tf', b.dataset.tf);}catch(e){} }));
+
+const lg = document.getElementById('legend');
+function legendFor(x){
+  if (!x) return;
+  const t = new Date(x[0]*1000).toISOString().slice(0,16).replace('T',' ');
+  lg.innerHTML = `<b>${tf}</b> ${t} <span>O</span>${x[1].toFixed(2)} <span>H</span>${x[2].toFixed(2)} <span>L</span>${x[3].toFixed(2)} <span>C</span>${x[4].toFixed(2)} <span>Vol</span>${x[5]}`;
+}
+chart.subscribeCrosshairMove(p => {
+  if (!p.time) return;
+  const x = C[tf].find(c => c[0] === p.time); legendFor(x);
+  zLegend(SZ.t[Math.max(0, SZ.t.findIndex(t => t > p.time) - 1)] ?? SZ.t[SZ.t.length-1]);
+});
+
+const sel = document.getElementById('fsel');
+sel.innerHTML = F.filter(f => !['open','high','low','close'].includes(f)).map(f => `<option>${f}</option>`).join('');
+function drawFeat(){
+  const n = sel.value;
+  fline.setData(R.map((r,i) => ({time:T[i], value:r[col(n)]})).filter(d => d.value !== null));
+  const last = R[R.length-1][col(n)];
+  document.getElementById('flegend').innerHTML = `<span>last</span> ${fmt(last)}`;
+}
+sel.addEventListener('change', () => { try{localStorage.setItem('xau_feat', sel.value);}catch(e){} drawFeat(); });
+
+// Keep the two panes on the same clock.
+// The library's own visible-TIME-range event throws ("Value is null") when the view runs past the
+// data, which froze the price chart on phones and on H1. So follow the LOGICAL (bar index) range
+// and turn it into times from each chart's own bars.
+function link(a, aTimes, b){
+  a.timeScale().subscribeVisibleLogicalRangeChange(lr => {
+    if (syncing || !linkReady || !lr || lr.to - lr.from < 3) return;
+    const t = aTimes(); if (!t.length) return;
+    const cl = i => Math.max(0, Math.min(t.length - 1, i));
+    const from = t[cl(Math.floor(lr.from))], to = t[cl(Math.ceil(lr.to))];
+    if (!(to > from)) return;
+    syncing = true;
+    try { b.timeScale().setVisibleRange({from, to}); } catch(e) {}
+    syncing = false;
+  });
+}
+// SMC monitor: four distance features on one pane, plus a snapshot table.
+const SMC = [
+  ['order_block_distance', 'Order block', {color:'#111111', lineWidth:2}],
+  ['fvg_distance', 'FVG', {color:'#111111', lineWidth:1, lineStyle:LW.LineStyle.Dashed}],
+  ['breaker_distance', 'Breaker', {color:'#8a8a8a', lineWidth:2}],
+  ['mitigation_block_distance', 'Mitigation', {color:'#8a8a8a', lineWidth:1, lineStyle:LW.LineStyle.Dotted}],
+];
+const schart = LW.createChart(document.getElementById('schart'), base());
+schart.priceScale('right').applyOptions({autoScale:false});
+const sSeries = SMC.map(([f,,o]) => {
+  const s = schart.addLineSeries({...o, priceLineVisible:false, lastValueVisible:false, autoscaleInfoProvider:() => ({priceRange:{minValue:-1.05, maxValue:1.05}})});
+  s.setData(R.map((r,i) => ({time:T[i], value:r[col(f)]})));
+  return s;
+});
+sSeries[0].createPriceLine({price:0, color:'#bdbdbd', lineWidth:1, lineStyle:LW.LineStyle.Solid, axisLabelVisible:false, title:''});
+const keyStyle = o => o.lineStyle === LW.LineStyle.Dashed ? 'dashed' : o.lineStyle === LW.LineStyle.Dotted ? 'dotted' : 'solid';
+function sLegend(i){
+  document.getElementById('slegend').innerHTML = `<b>${R[i][0]}</b> ` + SMC.map(([f,lab,o]) =>
+    `<span style="border-bottom:${o.lineWidth}px ${keyStyle(o)} ${o.color}">${lab}</span> ${fmt(R[i][col(f)])}`).join(' ');
+}
+sLegend(R.length-1);
+schart.subscribeCrosshairMove(p => { if (!p.time) return; const i = T.indexOf(p.time); if (i >= 0) sLegend(i); });
+
+const atrDist = v => v === null ? '' : v === 0 ? '0 / none' : (Math.abs(v) >= 0.999 ? (v > 0 ? '≥ +3.8' : '≤ −3.8') : (Math.atanh(v)).toFixed(2));
+function nearestIdx(t){ let b = 0; for (let i = 0; i < T.length; i++) if (Math.abs(T[i]-t) < Math.abs(T[b]-t)) b = i; return b; }
+const m15 = C.M15, HH = m15.reduce((a,x) => x[2] > a[2] ? x : a), LL = m15.reduce((a,x) => x[3] < a[3] ? x : a);
+const snaps = [['Highest high', HH[0], HH[2]], ['Lowest low', LL[0], LL[3]], ['Latest bar', T[T.length-1], null]];
+document.querySelector('#mon thead').innerHTML = '<tr><th>point</th><th>bar</th><th>price</th>' +
+  SMC.map(([,lab]) => `<th>${lab}</th><th>${lab} ATR</th>`).join('') + '</tr>';
+document.querySelector('#mon tbody').innerHTML = snaps.map(([lab,t,px]) => {
+  const i = T.indexOf(t);
+  if (i < 0) return `<tr><td>${lab} <span class="pill">warm-up</span></td><td>${iso(t)}</td><td>${px.toFixed(2)}</td>` +
+    `<td colspan="${SMC.length*2}" style="text-align:left">No feature values: this bar is inside the ${M.warmup_bars}-bar warm-up.</td></tr>`;
+  const r = R[i];
+  return `<tr><td>${lab}</td><td>${r[0]}</td><td>${(px ?? r[col('close')]).toFixed(2)}</td>` +
+    SMC.map(([f]) => `<td>${fmt(r[col(f)])}</td><td>${atrDist(r[col(f)])}</td>`).join('') + '</tr>';
+}).join('') + `<tr><td>Bars with a zone (≠0)</td><td></td><td></td>` +
+  SMC.map(([f]) => { const n = R.filter(r => r[col(f)]).length; return `<td>${n}/${R.length}</td><td>${Math.round(100*n/R.length)}%</td>`; }).join('') + '</tr>';
+
+// Zone price table (newest first). Low / high in $, side for the repo's four zones.
+const zCell = (k, z) => !z ? '<td></td><td></td>' + (k.startsWith('rb') ? '' : '<td></td>') :
+  `<td>${z[0].toFixed(2)}</td><td>${z[1].toFixed(2)}</td>` + (k.startsWith('rb') ? '' : `<td>${z[2] ? 'bull' : 'bear'}</td>`);
+document.querySelector('#ztbl thead').innerHTML = '<tr><th>bar (server)</th><th>close</th>' +
+  ZK.map(([k, lab, c]) => `<th colspan="${k.startsWith('rb') ? 2 : 3}" style="box-shadow:inset 0 -3px 0 ${c}">${lab}</th>`).join('') + '</tr>' +
+  '<tr><th></th><th></th>' + ZK.map(([k]) => '<th>low</th><th>high</th>' + (k.startsWith('rb') ? '' : '<th>side</th>')).join('') + '</tr>';
+document.querySelector('#ztbl thead').querySelectorAll('tr:nth-child(2) th').forEach(th => th.style.top = '24px');
+const m15byT = new Map(C.M15.map(x => [x[0], x]));
+document.querySelector('#ztbl tbody').innerHTML = SZ.t.map((t, i) => [t, i]).reverse().map(([t, i]) => {
+  const c = m15byT.get(t), wu = t < T[0];
+  return `<tr><td>${iso(t)}${wu ? '<span class="pill">warm-up</span>' : ''}</td><td>${c ? c[4].toFixed(2) : ''}</td>` + ZK.map(([k]) => zCell(k, SZ.z[i][k])).join('') + '</tr>';
+}).join('');
+const zc = k => SZ.z.filter(z => z[k]).length;
+document.getElementById('zcount').textContent = ZK.map(([k, lab]) => `${lab} ${zc(k)}/${SZ.t.length}`).join(' · ');
+const pm = SZ.parity_mismatch, pmTot = Object.values(pm).reduce((a, b) => a + b, 0);
+document.getElementById('znote').innerHTML = `Order block, FVG, breaker and mitigation are the repo's own zones (<code>features/smc/*</code>), found on the same trailing window the pipeline uses (last ${SZ.max_window} M15 bars, swing half-window k = ${SZ.k}). Only the zone active on each bar is shown, from the bar it becomes known; the line breaks when the zone is replaced or mitigated. Check: rebuilding each distance feature from these prices matches the pipeline on <b>${SZ.rows - Math.max(...Object.values(pm))} of ${SZ.rows}</b> post-warm-up bars for all four (${pmTot} mismatches). <b>Rejection block is not in the repo</b>; here it is the wick of a confirmed swing (swing high: from the body top up to the high, red; swing low: from the low up to the body bottom, green), live from confirmation (k bars later) until price trades back into the wick or closes beyond its extreme. The most recent live one on each side is shown. Zones are found on M15 and drawn on every timeframe at the same prices and times.`;
+
+const cT = () => C[tf].map(x => x[0]), fT = () => T;
+link(chart, cT, fchart); link(fchart, fT, chart); link(chart, cT, schart); link(schart, fT, chart); link(fchart, fT, schart);
+
+// Oracle toggle + table
+function setO(m){ oMode = m; document.querySelectorAll('#otog button').forEach(b => b.setAttribute('aria-pressed', b.dataset.o === m)); drawOracle(); }
+document.querySelectorAll('#otog button').forEach(b => b.addEventListener('click', () => setO(b.dataset.o)));
+document.getElementById('ocost').textContent = DATA.cost.round_trip_tp_exit.toFixed(2);
+document.querySelector('#otbl thead').innerHTML = '<tr><th>#</th><th>side</th><th>entry time</th><th>exit (TP) time</th><th>bars</th><th>entry</th><th>SL</th><th>TP</th><th>risk $</th><th>reward $</th><th>R</th><th>net $/oz</th><th>net $/lot</th><th>skipped before</th></tr>';
+const orows = [];
+['long','short'].forEach(d => O[d].trades.forEach((x,k) => orows.push([d,k,x])));
+document.querySelector('#otbl tbody').innerHTML = orows.map(([d,k,x]) =>
+  `<tr><td>${d === 'long' ? 'L' : 'S'}${k+1}</td><td>${d}</td><td>${iso(x.entry_t)}</td><td>${iso(x.exit_t)}</td><td>${x.bars}</td><td>${x.entry.toFixed(2)}</td><td>${x.sl.toFixed(2)}</td><td>${x.tp.toFixed(2)}</td><td>${x.risk.toFixed(2)}</td><td>${x.reward.toFixed(2)}</td><td>${x.R}</td><td>${x.net_oz.toFixed(2)}</td><td>${x.net_lot.toFixed(2)}</td><td>${x.skipped_before}</td></tr>`).join('');
+const sumOf = d => O[d].trades.reduce((a,x) => a + x.net_oz, 0);
+document.getElementById('osum').textContent = `Long ${O.long.trades.length} trades, net ${sumOf('long').toFixed(2)} $/oz · Short ${O.short.trades.length} trades, net ${sumOf('short').toFixed(2)} $/oz`;
+
+// Feature ranges on up vs down moves
+const q = (a, p) => { if (!a.length) return null; const s = [...a].sort((x,y) => x-y), k = (s.length-1)*p, lo = Math.floor(k), hi = Math.ceil(k); return s[lo] + (s[hi]-s[lo])*(k-lo); };
+const MF = F.filter(f => !['open','high','low','close'].includes(f));
+const fullRange = Object.fromEntries(MF.map(f => { const v = R.map(r => r[col(f)]).filter(x => x !== null); return [f, [Math.min(...v), Math.max(...v)]]; }));
+function legRows(d, when, minR){
+  const out = []; let used = 0, warm = 0;
+  O[d].trades.forEach(x => {
+    if (x.reward < minR) return;
+    const i0 = T.indexOf(x.entry_t);
+    if (i0 < 0) { warm++; return; }
+    used++;
+    if (when === 'entry') out.push(R[i0]);
+    else { const i1 = T.indexOf(x.exit_t); for (let i = i0; i <= (i1 < 0 ? R.length-1 : i1); i++) out.push(R[i]); }
+  });
+  return {rows: out, used, warm};
+}
+function bar(st, lo, hi, ink, y){
+  const sx = v => hi === lo ? 50 : 4 + 172*(v-lo)/(hi-lo);
+  if (!st) return '';
+  return `<line x1="${sx(st.min)}" x2="${sx(st.max)}" y1="${y}" y2="${y}" stroke="${ink}" stroke-width="1"/>` +
+    `<rect x="${sx(st.p25)}" y="${y-3}" width="${Math.max(1.5, sx(st.p75)-sx(st.p25))}" height="6" fill="${ink}"/>` +
+    `<line x1="${sx(st.med)}" x2="${sx(st.med)}" y1="${y-5}" y2="${y+5}" stroke="#ffffff" stroke-width="1.2"/>`;
+}
+function stats(rows, f){ const v = rows.map(r => r[col(f)]).filter(x => x !== null); if (!v.length) return null;
+  return {min:Math.min(...v), p25:q(v,.25), med:q(v,.5), p75:q(v,.75), max:Math.max(...v), n:v.length}; }
+function drawRanges(){
+  const when = document.getElementById('mwhen').value, minR = +document.getElementById('mmin').value;
+  const up = legRows('long', when, minR), dn = legRows('short', when, minR);
+  document.getElementById('mcount').textContent = `${up.used} up moves, ${dn.used} down moves (${up.warm + dn.warm} in warm-up, left out) · ${up.rows.length} / ${dn.rows.length} bars`;
+  const res = MF.map(f => {
+    const a = stats(up.rows, f), b = stats(dn.rows, f);
+    if (!a || !b) return {f, a, b, gap:0, sep:false};
+    const spread = ((a.p75-a.p25) + (b.p75-b.p25))/2 || (fullRange[f][1]-fullRange[f][0])/100 || 1;
+    return {f, a, b, gap: Math.abs(a.med-b.med)/spread, sep: a.p75 < b.p25 || b.p75 < a.p25};
+  }).sort((x,y) => (y.sep - x.sep) || (y.gap - x.gap));
+  document.querySelector('#mtbl thead').innerHTML = '<tr><th>feature</th><th style="text-align:left">range (black up · grey down)</th><th>up median</th><th>up 25–75%</th><th>down median</th><th>down 25–75%</th><th>gap</th><th>separated</th></tr>';
+  document.querySelector('#mtbl tbody').innerHTML = res.map(({f,a,b,gap,sep}) => {
+    const [lo,hi] = fullRange[f];
+    return `<tr${sep ? ' class="first"' : ''}><td>${f}</td><td style="text-align:left"><svg width="180" height="26" viewBox="0 0 180 26" role="img" aria-label="${f} ranges"><rect x="0" y="0" width="180" height="26" fill="none"/>${bar(a,lo,hi,'#111111',8)}${bar(b,lo,hi,'#9a9a9a',19)}</svg></td>` +
+      `<td>${a ? fmt(+a.med.toFixed(4)) : ''}</td><td>${a ? fmt(+a.p25.toFixed(4)) + ' – ' + fmt(+a.p75.toFixed(4)) : ''}</td>` +
+      `<td>${b ? fmt(+b.med.toFixed(4)) : ''}</td><td>${b ? fmt(+b.p25.toFixed(4)) + ' – ' + fmt(+b.p75.toFixed(4)) : ''}</td>` +
+      `<td>${gap.toFixed(2)}</td><td>${sep ? 'yes' : ''}</td></tr>`;
+  }).join('');
+}
+['mwhen','mmin'].forEach(id => document.getElementById(id).addEventListener('change', drawRanges));
+drawRanges();
+
+// ── Profitable zones: feature profile around each zone, and whether it looks traceable ─────
+const ZF = DATA.zones_full;
+let pzSide = 'long';
+const fz = v => v === null || v === undefined ? '' : (Math.abs(v) >= 100 ? v.toFixed(1) : Math.abs(v) >= 1 ? v.toFixed(2) : v.toFixed(3));
+const aucCell = a => a === null || a === undefined ? '<td></td>' :
+  `<td style="background:${a >= .5 ? `rgba(46,125,50,${Math.min(.5, (a-.5)*1.6)})` : `rgba(198,40,40,${Math.min(.5, (.5-a)*1.6)})`}">${a.toFixed(2)} ${a >= .5 ? '↑' : '↓'}</td>`;
+function verdict(p, q){
+  const a = p.auc; if (a === null || Math.abs(a - .5) < .1 || !p.same_sign) return ['', 0];
+  if (!q) return ['10 days only', 1];
+  const ok = q.auc !== null && (q.auc - .5) * (a - .5) > 0 && Math.abs(q.auc - .5) >= .03 && q.same_sign;
+  return ok ? ['holds on 2 years', 2] : ['10 days only', 1];
+}
+function drawPZTable(){
+  document.querySelectorAll('#pzside button').forEach(b => b.setAttribute('aria-pressed', b.dataset.s === pzSide));
+  const z = Z10[pzSide], full = ZF ? Object.fromEntries(ZF[pzSide].profile.map(q => [q.feature, q])) : null;
+  const only = document.getElementById('pzonly').checked;
+  document.querySelector('#pztbl thead').innerHTML = '<tr><th>feature</th><th>8 bars before</th><th>4 before</th><th>1 before</th><th>zone start</th><th>zone end</th><th>4 after</th><th>8 after</th><th>other bars</th><th>AUC 10 days</th><th>both halves</th><th>AUC 2 years</th><th>2-yr halves</th><th>verdict</th></tr>';
+  const rows = z.profile.map(p => { const q = full && full[p.feature]; const [vt, vr] = verdict(p, q); return {p, q, vt, vr}; })
+    .filter(r => !only || r.vr > 0).sort((a, b) => b.vr - a.vr);
+  document.querySelector('#pztbl tbody').innerHTML = rows.map(({p, q, vt, vr}) =>
+    `<tr><td>${p.feature}</td><td>${fz(p['s-8'])}</td><td>${fz(p['s-4'])}</td><td>${fz(p['s-1'])}</td><td><b>${fz(p['s+0'])}</b></td><td>${fz(p.end)}</td><td>${fz(p['e+4'])}</td><td>${fz(p['e+8'])}</td><td>${fz(p.base)}</td>` +
+    aucCell(p.auc) + `<td>${p.same_sign ? 'yes' : ''}</td>` + aucCell(q ? q.auc : null) + `<td>${q && q.same_sign ? 'yes' : ''}</td>` +
+    `<td style="text-align:left;font-weight:${vr === 2 ? 600 : 400}">${vt}</td></tr>`).join('');
+  document.getElementById('pzcount').textContent = `${z.n_zones} ${pzSide} zones · ${z.zone_bars} bars inside · compared against ${z.base_bars} other bars` +
+    (ZF ? ` · 2 years: ${ZF[pzSide].n_zones} zones` : '');
+  document.querySelector('#pzlist thead').innerHTML = '<tr><th>#</th><th>side</th><th>start (server)</th><th>end</th><th>bars</th><th>close at start</th><th>close at end</th></tr>';
+  document.querySelector('#pzlist tbody').innerHTML = ['long','short'].flatMap(s => Z10[s].zones.map((zz, k) => [s, k, zz]))
+    .sort((a, b) => a[2][0] - b[2][0]).map(([s, k, [a, b]]) =>
+      `<tr><td>${s === 'long' ? 'L' : 'S'}${k+1}</td><td style="color:${s === 'long' ? '#2e7d32' : '#c62828'}">${s}</td><td>${iso(Z10.epoch[a])}</td><td>${iso(Z10.epoch[b])}</td><td>${b-a+1}</td><td>${R[a][col('close')].toFixed(2)}</td><td>${R[b][col('close')].toFixed(2)}</td></tr>`).join('');
+}
+{
+  const P = Z10.params;
+  document.getElementById('pzdef').innerHTML = `<b>Profitable zone</b> = a run of at least ${P.min_run} bars in a row where entering at the bar's close would have won: price reaches ${P.target_atr}×ATR in the trade's favour before ${P.stop_atr}×ATR against, within ${P.horizon_bars} bars (${P.horizon_bars/4} h); a bar that touches both counts as a loss. Here ${Math.round(100*Z10.win_rate.long)}% of bars win long and ${Math.round(100*Z10.win_rate.short)}% win short. Zones show as strips along the bottom of the price chart (green long, red short; tick or untick “Profitable zones” above the chart). Each row gives the feature's median across zones at that point; “other bars” is its median on bars outside any zone on that side.`;
+  document.getElementById('pznote').innerHTML = `<b>How to read “traceable”.</b> AUC compares the feature at a zone's first bar (known at that bar's close, i.e. when you would enter) with all other bars: 0.50 = no difference, above = higher at zone starts (green ↑), below = lower (red ↓). <b>Both halves</b> = the same direction in the first and second half of the period, each at least 0.05 from 0.50. A row is marked <b>10 days only</b> when AUC is at least 0.10 from 0.50 and both halves agree here, and <b>holds on 2 years</b> when the same feature also points the same way on the 2-year XAUUSD file${ZF ? ` (${ZF.corpus.first.slice(0,10)} → ${ZF.corpus.last.slice(0,10)}, ${ZF.bars} bars)` : ' (not attached)'} with both of its halves agreeing. These labels use future bars to define the zones, so a zone's first bar is by construction where a move starts: features that just describe “price has moved the other way” (momentum, distance from a level) score well partly for that reason. Separation is information, not an edge: none of this has been tested as a trade with costs, and 10 days is ${Z10.long.n_zones + Z10.short.n_zones} zones.`;
+  document.querySelectorAll('#pzside button').forEach(b => b.addEventListener('click', () => { pzSide = b.dataset.s; drawPZTable(); }));
+  document.getElementById('pzonly').addEventListener('change', drawPZTable);
+  drawPZTable();
+}
+{
+  const N = DATA.now;
+  if (N) {
+    // Which zone-start profile is the latest value closer to? Only for features that separate (|AUC-0.5| >= 0.05).
+    const lean = r => {
+      const sepL = Math.abs(r.aucL - .5) >= .05, sepS = Math.abs(r.aucS - .5) >= .05;
+      if (!sepL && !sepS) return ['not telling', '#6b6b6b'];
+      const dL = Math.abs(r.v - r.L), dS = Math.abs(r.v - r.S), dB = Math.abs(r.v - r.base);
+      if (dB <= Math.min(dL, dS)) return r.pct <= 5 ? ['unusually low (neither zone type)', '#6b6b6b'] : r.pct >= 95 ? ['unusually high (neither zone type)', '#6b6b6b'] : ['ordinary', '#6b6b6b'];
+      // If long and short zone starts look alike on this feature, it only says "a zone may start", not which side.
+      if (Math.abs(r.L - r.S) < 0.6 * Math.min(Math.abs(r.L - r.base), Math.abs(r.S - r.base))) return ['like a zone start, no direction', '#8a6d00'];
+      return dL < dS ? ['like a long-zone start', '#2e7d32'] : ['like a short-zone start', '#c62828'];
+    };
+    document.querySelector('#nowtbl thead').innerHTML = '<tr><th>feature</th><th>now</th><th>at long-zone starts</th><th>at short-zone starts</th><th>other bars</th><th>now vs 2 years</th><th>reads</th></tr>';
+    const rows = N.rows.map(r => ({r, l: lean(r)}));
+    document.querySelector('#nowtbl tbody').innerHTML = rows.map(({r, l}) =>
+      `<tr><td>${r.f}</td><td><b>${fz(r.v)}</b></td><td>${fz(r.L)}</td><td>${fz(r.S)}</td><td>${fz(r.base)}</td><td>${Math.round(r.pct)}th pct</td><td style="text-align:left;color:${l[1]};font-weight:500">${l[0]}</td></tr>`).join('');
+    const cL = rows.filter(x => x.l[0].includes('long')).length, cS = rows.filter(x => x.l[0].includes('short')).length;
+    document.getElementById('nowsum').textContent = `bar ${N.bar} · close ${N.close.toFixed(2)} · ${cL} lean long-start, ${cS} lean short-start, ${rows.length - cL - cS} ordinary or not telling`;
+    document.getElementById('nownote').innerHTML = `Zone-start and “other bars” columns are 2-year medians (same zone definition). “Reads” says which of the three the value is closest to, for features that separate zone starts at all. This is a description of the latest closed bar, not a signal: the table below shows that entering on these features does not pay after cost.`;
+  }
+}
+{
+  const E = DATA.zone_edge;
+  if (E) {
+    const rf = v => v === null || v === undefined ? '' : (v >= 0 ? '+' : '') + v.toFixed(3);
+    const rc = v => `<td style="color:${v > 0 ? '#2e7d32' : '#c62828'};font-weight:500">${rf(v)}</td>`;
+    const rng = r => r.lo === r.hi ? `= ${fz(r.lo)}` : `${fz(r.lo)} – ${fz(r.hi)}`;
+    const best = (rows, s) => rows.filter(r => r[s].all).reduce((a, r) => r[s].all.R > a[s].all.R ? r : a);
+    const B = E.base;
+    document.querySelector('#edtbl thead').innerHTML = '<tr><th>feature</th><th>best long bin</th><th>trades</th><th>win %</th><th>net R</th><th>1st yr</th><th>2nd yr</th><th>best short bin</th><th>trades</th><th>win %</th><th>net R</th><th>1st yr</th><th>2nd yr</th></tr>';
+    const line = (name, L, S, lr, sr) => `<tr><td>${name}</td><td>${lr}</td><td>${L.all.n}</td><td>${(100*L.all.win).toFixed(1)}</td>${rc(L.all.R)}${rc(L.h1.R)}${rc(L.h2.R)}<td>${sr}</td><td>${S.all.n}</td><td>${(100*S.all.win).toFixed(1)}</td>${rc(S.all.R)}${rc(S.h1.R)}${rc(S.h2.R)}</tr>`;
+    document.querySelector('#edtbl tbody').innerHTML = line('<b>every bar (no filter)</b>', B.long, B.short, 'all', 'all') +
+      Object.entries(E.features).map(([f, rows]) => { const l = best(rows, 'long'), s = best(rows, 'short'); return line(f, l.long, s.short, rng(l), rng(s)); }).join('');
+    const nb = Object.values(E.features).reduce((a, rows) => a + rows.length * 2, 0);
+    const npos = Object.values(E.features).reduce((a, rows) => a + rows.filter(r => r.long.all && r.long.all.R > 0).length + rows.filter(r => r.short.all && r.short.all.R > 0).length, 0);
+    document.getElementById('edsum').textContent = `${npos} of ${nb} feature bins are net-positive · all of them long`;
+    document.getElementById('ednote').innerHTML = `Same trade as the zones (target ${E.params.target_atr}×ATR, stop ${E.params.stop_atr}×ATR, ${E.params.horizon_bars} bars; a trade that hits neither is closed at the last bar's close), entered on <b>every</b> bar whose feature sits in a given tenth of its 2-year range (or at a given value for 0/1 features). For each feature only its best tenth is shown, so this table is the most flattering cut; net R is after the $${E.params.cost} cost. ${E.corpus.bars} bars, ${E.corpus.first.slice(0,10)} → ${E.corpus.last.slice(0,10)}; “1st yr / 2nd yr” are the two halves. <b>Reading it:</b> entering long on every bar with no filter is already about break-even gross (+${B.long.all.R_gross.toFixed(3)} R, net ${rf(B.long.all.R)}) because gold rose over these two years; short loses everywhere. The best feature cuts add a few hundredths of an R on top of that drift, which is about what picking the best of ${nb} bins finds by luck. Consecutive bars overlap, so the real number of independent trades is far smaller than “trades”.`;
+  }
+}
+
+// Table
+const thead = document.querySelector('#tbl thead'), tbody = document.querySelector('#tbl tbody');
+thead.innerHTML = '<tr><th>time</th>' + F.map(f => `<th>${f}</th>`).join('') + '</tr>';
+tbody.innerHTML = R.map((r,i) => `<tr${i===0?' class="first"':''}><td>${r[0]}${i===0?'<span class="pill">first</span>':''}</td>` +
+  r.slice(1).map(v => `<td>${fmt(v)}</td>`).join('') + '</tr>').join('');
+document.getElementById('tcount').textContent = `${R.length} bars × ${F.length} features`;
+
+let startTF = 'M15', startF = 'rsi_14';
+try { startTF = localStorage.getItem('xau_tf') || 'M15'; startF = localStorage.getItem('xau_feat') || 'rsi_14'; } catch(e) {}
+if (!C[startTF]) startTF = 'M15';
+sel.value = startF; if (!sel.value) sel.value = 'rsi_14';
+document.querySelectorAll('#amdtog button').forEach(b => b.addEventListener('click', () => setA(b.dataset.a)));
+drawFeat(); setO('none'); setA('on'); setTF(startTF);
+zLegend(SZ.t[SZ.t.length-1]);
+// Link the panes only after every chart has its real size, then fit once (a pane's first, near-empty
+// range used to be copied onto the price chart and zoom it to 1–2 bars on phones).
+function fitAll(){ linkReady = false; chart.timeScale().fitContent(); fchart.timeScale().fitContent(); schart.timeScale().fitContent(); setTimeout(() => { linkReady = true; zKick(); }, 150); }
+window.addEventListener('load', () => setTimeout(fitAll, 100));
+setTimeout(fitAll, 400);
+</script>

@@ -61,8 +61,13 @@ def _strip(ts: str) -> str:
 
 def main() -> int:
     rows: list[dict] = []
-    with CSV_PATH.open(encoding="utf-8") as fh:
-        for i, rec in enumerate(csv.DictReader(fh)):
+    # CH-corpus-ssot (2026-10-08): rows from the corpus SSOT, not a separate CSV open.
+    import sys as _sys
+    _sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
+    from data_ingestion.corpus_store import load as _corpus_load
+
+    if True:
+        for i, rec in enumerate(_corpus_load(CSV_PATH, sequence_check=False).records()):
             rec["_i"] = i
             rec["_ts"] = rec["timestamp"][:19]
             rows.append(rec)

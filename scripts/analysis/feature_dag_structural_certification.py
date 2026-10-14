@@ -150,13 +150,24 @@ def _load(sym, limit):
     csv = _ROOT / "data" / f"{sym}_M15.csv"
     if not csv.exists():
         return None
-    df = pd.read_csv(csv)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    df = _corpus_load(csv, sequence_check=False).frame()
     df.columns = [c.strip().lower() for c in df.columns]
     return df.head(limit).copy() if limit else df
 
 
+def _legacy_fp_cfg() -> dict:
+    """This probe certifies the LEGACY sweep identity (FM-058/059/060/065, `latest_unconsumed`)
+    against independent oracles. The ACTIVE config may select the E01 lifecycle identity
+    (FM-090..093, certified by tests/test_e01_sweep_semantics.py); a certification must name the
+    identity it certifies instead of inheriting whichever one is active."""
+    from config_layer.production_config import get_prod_section
+    from features.feature_pipeline import SWEEP_LEGACY
+    return dict(get_prod_section("feature_pipeline"), sweep_semantics=SWEEP_LEGACY)
+
+
 def _run(raw):
-    feat, _ = FeaturePipeline(raw.copy()).run()
+    feat, _ = FeaturePipeline(raw.copy(), cfg=_legacy_fp_cfg()).run()
     return feat.set_index("timestamp")
 
 

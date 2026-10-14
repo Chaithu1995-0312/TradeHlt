@@ -462,7 +462,8 @@ def _episode_tables(chain: list[dict], df: pd.DataFrame, cfg, fate: str) -> list
 
 def main() -> int:
     cfg = load_prod_config_from_registry("v2_multi_2026_04", "XAUUSD")
-    df = pd.read_csv(CSV, parse_dates=["timestamp"])
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    df = _corpus_load(CSV, sequence_check=False).frame(parse_dates=["timestamp"])
     events = [
         json.loads(l)
         for l in (RUN / "XAUUSD_events.jsonl").read_text(encoding="utf-8").splitlines()

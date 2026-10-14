@@ -113,7 +113,8 @@ class _NamedSpineHypothesis:
 def _load_ohlcv(csv_path: str):
     import pandas as pd
 
-    df = pd.read_csv(csv_path)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    df = _corpus_load(csv_path, sequence_check=False).frame()
     df.columns = [c.strip().lower() for c in df.columns]
     # standard OHLCV names
     rename = {}

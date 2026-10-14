@@ -47,7 +47,8 @@ SYMBOLS = {
     "BTCUSDT": "BTC/USDT", "ETHUSDT": "ETH/USDT", "SOLUSDT": "SOL/USDT",
     "BNBUSDT": "BNB/USDT", "XRPUSDT": "XRP/USDT", "DOGEUSDT": "DOGE/USDT",
 }
-TF_CCXT = {"M5": "5m", "M15": "15m", "H1": "1h", "H4": "4h"}
+TF_CCXT = {"M5": "5m", "M15": "15m", "H1": "1h", "H4": "4h", "D1": "1d"}
+DEFAULT_TIMEFRAMES = ("M5", "M15", "H1", "H4")   # D1 is opt-in (--timeframes ...,D1); defaults unchanged
 DEFAULT_OUT = "data/binance"
 DEFAULT_START = "2024-05-22"
 DEFAULT_END = "2026-05-22"
@@ -131,15 +132,46 @@ def _missing_tradable(path: Path, symbol: str, tf: str, cfg: dict, override: dic
     return out
 
 
+def _declare_clock(path: Path, clock_id: str, declared_by: str, note: str) -> None:
+    """CH-corpus-clock-contract-v1: declare the CONFIGURED clock of a freshly written file so the
+    strict gate can read it. Explicit and opt-in (--declare-clock/--declared-by): nothing is
+    inferred, the clock must exist in the registry `clocks` table, and the human attribution is
+    recorded. Same record the review CLI would write."""
+    from data_ingestion import clock_registry as cr
+    clocks = cr.load_clocks()
+    if clock_id not in clocks:
+        raise SystemExit(f"--declare-clock {clock_id!r} is not a configured clock ({sorted(clocks)})")
+    c = clocks[clock_id]
+    records = cr.load_registry()
+    key = cr.normalize_key(path)
+    records[key] = cr.ClockRecord(
+        path=key, sha256=cr.sha256_file(path), timezone="", user_reviewed=True,
+        reviewed_by=declared_by, reviewed_at=cr.utcnow_iso(), notes=note,
+        provider=c.provider, broker=c.broker, clock_id=c.clock_id)
+    cr.save_registry(records)
+
+
+def _undeclare_clock(path: Path) -> None:
+    from data_ingestion import clock_registry as cr
+    records = cr.load_registry()
+    if records.pop(cr.normalize_key(path), None) is not None:
+        cr.save_registry(records)
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="fetch_and_verify_binance",
                                  description="Fetch Binance crypto (CCXT) + STRICT gap gate")
     ap.add_argument("--symbols", default=",".join(SYMBOLS))
-    ap.add_argument("--timeframes", default=",".join(TF_CCXT))
+    ap.add_argument("--timeframes", default=",".join(DEFAULT_TIMEFRAMES))
     ap.add_argument("--start", default=DEFAULT_START)
     ap.add_argument("--end", default=DEFAULT_END)
     ap.add_argument("--out", default=DEFAULT_OUT)
     ap.add_argument("--quarantine", default="data/binance/_rejected")
+    ap.add_argument("--declare-clock", default=None,
+                    help="configured clock_id to declare for each fetched file (e.g. binance_utc); "
+                         "required to pass the clock-provenance gate on a NEW file")
+    ap.add_argument("--declared-by", default=None,
+                    help="who authorizes the clock declaration (required with --declare-clock)")
     args = ap.parse_args(argv)
 
     import ccxt
@@ -169,6 +201,13 @@ def main(argv=None) -> int:
                 continue
             path = Path(args.out) / f"{sym}_{tf}.csv"
             n = _write_csv(rows, path)
+            if args.declare_clock:
+                if not args.declared_by:
+                    raise SystemExit("--declare-clock requires --declared-by (an unattributable review is not a review)")
+                _declare_clock(path, args.declare_clock, args.declared_by,
+                               f"fetched {datetime.now(timezone.utc).date()} by fetch_and_verify_binance.py "
+                               f"(Binance spot klines are UTC epoch by API contract); declaration "
+                               f"explicitly authorized via --declare-clock")
             rep = validate_dataset(str(path), instrument=sym, raise_on_fail=False,
                                    cfg_override=override)
             if rep.get("decision") == "REJECT":
@@ -178,6 +217,8 @@ def main(argv=None) -> int:
                 if miss:
                     safe_print(f"           first missing: {miss[:8]}")
                 quarantine.mkdir(parents=True, exist_ok=True)
+                if args.declare_clock:
+                    _undeclare_clock(path)      # a rejected file is not a declared corpus
                 shutil.move(str(path), str(quarantine / path.name))
                 failures.append(f"{sym}_{tf}")
             else:

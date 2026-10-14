@@ -28,8 +28,11 @@ class Bar:
 
 def load_bars():
     bars = []
-    with CORPUS.open(newline="", encoding="utf-8") as f:
-        for i, row in enumerate(csv.DictReader(f)):
+    import sys
+    sys.path.insert(0, str(ROOT / "src"))
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot
+    if True:
+        for i, row in enumerate(_corpus_load(CORPUS, sequence_check=False).records()):
             bars.append(
                 Bar(
                     i,

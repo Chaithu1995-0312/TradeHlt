@@ -40,6 +40,7 @@ Run in this order; each data step adds its group to `results/divergence_h4.json`
 | 6 | `smc_data.py` | SMC zones (about a minute; runs the pipeline twice for the calendar branch) |
 | 7 | `rejection_data.py` | rejection blocks |
 | 8 | `ohlcv_data.py` | raw OHLCV (identity trunk + file checks: candle validity, H4 vs M15 buckets, short 00:00 bar) |
+| 8b | `candle_images_data.py` | Candle Images workflow: study-card pattern rules vs FM-107..114/120, last month of H4 |
 | 9 | `render_divergence.py` | writes `results/branch_mockup_rsi.html` (uses `divergence.css` / `divergence.js`) |
 
 ```
@@ -51,6 +52,7 @@ venv\Scripts\python.exe tools\feature_audit\liquidity_data.py
 venv\Scripts\python.exe tools\feature_audit\smc_data.py
 venv\Scripts\python.exe tools\feature_audit\rejection_data.py
 venv\Scripts\python.exe tools\feature_audit\ohlcv_data.py
+venv\Scripts\python.exe tools\feature_audit\candle_images_data.py
 venv\Scripts\python.exe tools\feature_audit\render_divergence.py
 ```
 

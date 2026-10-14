@@ -232,7 +232,8 @@ def drive_resolver_with_memory(
     from features.crt_state_resolver import CRTStateResolver, build_htf_id_timeline
     from features.feature_schema import CANONICAL_FEATURES
 
-    df = pd.read_csv(ohlcv_path)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    df = _corpus_load(ohlcv_path, sequence_check=False).frame()
     rename = {c: c.lower() for c in df.columns if c.lower() in
               {"open", "high", "low", "close", "volume", "timestamp", "time"}}
     df = df.rename(columns=rename)

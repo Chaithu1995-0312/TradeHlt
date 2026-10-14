@@ -53,6 +53,7 @@ sys.path.insert(0, str(_ROOT))
 sys.path.insert(0, str(_ROOT / "src"))
 sys.path.insert(0, str(_ROOT / "scripts" / "research"))
 
+from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot
 import pandas as pd  # noqa: E402
 
 import crt_state_confusion_matrix as cm  # noqa: E402
@@ -133,7 +134,7 @@ def main() -> int:
         enriched = enriched.copy()
         enriched[ts_col] = pd.to_datetime(enriched[ts_col])
 
-    n_raw = int(pd.read_csv(DEFAULT_OHLCV).shape[0])
+    n_raw = int(_corpus_load(DEFAULT_OHLCV, sequence_check=False).n_rows)  # CH-corpus-ssot
 
     results = {}
     for variant in ("base", "choch"):
@@ -148,7 +149,7 @@ def main() -> int:
 
         first_src = int(source_indices[0]) if source_indices else 0
         if getattr(resolver, "_sweep_geometry", "pipeline_swing") == "htf_range" and first_src > 0:
-            df_raw = pd.read_csv(DEFAULT_OHLCV)
+            df_raw = _corpus_load(DEFAULT_OHLCV, sequence_check=False).frame()
             df_raw.columns = [c.lower() for c in df_raw.columns]
             raw_o = df_raw["open"].astype(float).tolist()
             raw_h = df_raw["high"].astype(float).tolist()

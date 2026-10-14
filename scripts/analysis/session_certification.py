@@ -95,8 +95,9 @@ def oracle_session(timestamps) -> np.ndarray:
     return out
 
 
-def pipeline_session_from_timestamps(timestamps) -> np.ndarray:
-    """Production path via FeaturePipeline.compute_context only."""
+def pipeline_session_from_timestamps(timestamps, timeframe: str = "H1") -> np.ndarray:
+    """Production path via FeaturePipeline.compute_context only. The certification series are one bar per hour,
+    so the bar size is declared H1 (CH-timeframe-ssot-v1: the pipeline refuses a mislabelled frame)."""
     from features.feature_pipeline import FeaturePipeline
 
     df = pd.DataFrame(
@@ -109,7 +110,7 @@ def pipeline_session_from_timestamps(timestamps) -> np.ndarray:
             "volume": 100.0,
         }
     )
-    fp = FeaturePipeline(df)
+    fp = FeaturePipeline(df, timeframe=timeframe)
     fp.compute_context()
     return fp.df["session"].to_numpy()
 

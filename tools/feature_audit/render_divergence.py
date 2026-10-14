@@ -183,7 +183,56 @@ sections = "".join(
     f'<h2 id="g-{g}">{esc(title)}</h2>' + "".join(feature_block(col) for col, f in F.items() if f["group"] == g) for g, title in GROUPS)
 docgaps = "".join(f'<li><code>{esc(x["where"])}</code>: {esc(x["text"])}</li>' for x in D["doc_gaps"])
 
-CSS = open(os.path.join(_HERE, "divergence.css"), encoding="utf-8").read()
+def pattern_chart(CW, p):
+    """Month of candles; filled dot above = registered rule fires, ring below = card rule fires, band = they differ."""
+    nb = len(CW["c"]); Wd, H = 680, 170; x0, x1 = 6, Wd - 6; step = (x1 - x0) / nb
+    xs = [x0 + step * (i + 0.5) for i in range(nb)]
+    hi, lo = max(CW["h"]), min(CW["l"]); yp = lambda v: 14 + (hi - v) / (hi - lo) * (H - 44)
+    out = []
+    for i in range(nb):
+        r, k_ = p["repo_mask"][i], p["card_mask"][i]
+        if r != k_: out.append(f'<rect x="{xs[i]-step/2:.1f}" y="4" width="{step:.1f}" height="{H-26}" class="zdiff"><title>{esc(CW["ts"][i])}: registered {int(r)}, card {int(k_)}</title></rect>')
+    for i in range(nb):
+        o, h, l, c = CW["o"][i], CW["h"][i], CW["l"][i], CW["c"][i]; k = "up" if c >= o else "dn"
+        t, b = yp(max(o, c)), yp(min(o, c))
+        out.append(f'<line x1="{xs[i]:.1f}" y1="{yp(h):.1f}" x2="{xs[i]:.1f}" y2="{yp(l):.1f}" class="wk {k}"/>'
+                   f'<rect x="{xs[i]-step*0.32:.1f}" y="{t:.1f}" width="{step*0.64:.1f}" height="{max(b-t,0.8):.1f}" class="bd {k}"/>')
+        if p["repo_mask"][i]: out.append(f'<circle cx="{xs[i]:.1f}" cy="{yp(h)-5:.1f}" r="2.6" class="mk-repo"><title>{esc(CW["ts"][i])}: registered rule</title></circle>')
+        if p["card_mask"][i]: out.append(f'<circle cx="{xs[i]:.1f}" cy="{yp(l)+5:.1f}" r="2.6" class="mk-card"><title>{esc(CW["ts"][i])}: card rule</title></circle>')
+    out.append(f'<text x="{x0}" y="{H-4}" class="ax">{esc(CW["ts"][0])}</text><text x="{x1}" y="{H-4}" class="ax" text-anchor="end">{esc(CW["ts"][-1])} UTC</text>')
+    return f'<svg viewBox="0 0 {Wd} {H}" class="chart" role="img" aria-label="{esc(p["title"])}: registered vs card hits">{"".join(out)}</svg>'
+
+def candle_images_section():
+    CI = D.get("candle_images")
+    if not CI: return ""
+    CW = CI["window"]; blocks = []; srow = []
+    for p in CI["patterns"]:
+        tr = (f'<span class="ok">✓</span> recompute = pipeline on {CI["bars"]} of {CI["bars"]} month bars and {p["trunk_all_bars"]:,} of {p["trunk_all_bars"]:,} in the file'
+              if p["trunk_month_mismatch"] == 0 and p["trunk_all_mismatch"] == 0 else f'<span class="bad">✗</span> {p["trunk_month_mismatch"]} month bars differ')
+        facts = (f"<dt>Registered fires</dt><dd>{p['repo_hits']} bars</dd><dt>Card rule fires</dt><dd>{p['card_hits']} bars</dd>"
+                 f"<dt>Both</dt><dd>{p['both']}</dd><dt>Registered only</dt><dd>{p['repo_only']}</dd><dt>Card only</dt><dd>{p['card_only']}</dd>"
+                 f"<dt>Whole file ({p['trunk_all_bars']:,} bars)</dt><dd>registered {p['all_repo_hits']}, card {p['all_card_hits']}, differ on {p['all_diff']}</dd>")
+        diffs = "".join(f'<tr><th scope="row">{esc(x["ts"])}</th><td>{x["repo"]}</td><td>{x["card"]}</td></tr>' for x in p["diff_bars"])
+        dtab = (f'<details><summary>{len(p["diff_bars"])} bars where they differ this month</summary><div class="tw"><table><thead><tr><th>bar (UTC)</th><th>registered</th><th>card</th></tr></thead><tbody>{diffs}</tbody></table></div></details>'
+                if p["diff_bars"] else "")
+        bid = f'card-{p["col"]}'
+        dec = decision_panel({"id": bid, "kind": "definition"}) if p["open"] else '<p class="note">Same bars fire under both rules this month: nothing to decide.</p>'
+        blocks.append(
+            f'<section class="feature" id="ci-{esc(p["col"])}"><div class="fhead"><span class="fmid">{esc(p["fm"])}</span><h3>{esc(p["title"])}</h3>'
+            f'<span class="chip c-data">card {esc(p["card"])}</span>{"<span class=\"chip c-definition\">Definition branch open</span>" if p["open"] else "<span class=\"chip c-closed\">same bars</span>"}</div>'
+            f'{pattern_chart(CW, p)}<div class="keyrow"><span><i class="dk"></i>registered rule fires (above)</span><span><i class="kl brl"></i>card rule fires (ring below)</span><span><i class="kl zl"></i>they differ</span></div>'
+            f'<div class="cols"><div class="col trunk-col"><span class="coltag">Trunk · registered {esc(p["fm"])}</span><code class="formula">{esc(p["registered"] or "")}</code>'
+            f'<dl class="facts"><dt>Pipeline vs recompute</dt><dd>{tr}</dd></dl></div>'
+            f'<div class="bstack"><div class="col branch-col k-definition"><span class="coltag">Branch · Candle Images workflow · card {esc(p["card"])}</span>'
+            f'<code class="formula">{esc(p["card_rule"])}</code><p class="note">{esc(p["card_change"])}</p><dl class="facts">{facts}</dl>{dtab}{dec}</div></div></div></section>')
+        srow.append(f'<tr><td><a href="#ci-{esc(p["col"])}">{esc(p["fm"])}</a></td><td>{esc(p["title"])}</td><td>{esc(p["card"])}</td><td>{p["repo_hits"]}</td><td>{p["card_hits"]}</td><td>{p["repo_only"]}</td><td>{p["card_only"]}</td></tr>')
+    return (f'<h2 id="g-candle-images">Candle Images workflow</h2>'
+            f'<p class="lede">A parallel branch built from the study cards in <code>docs/reference/candle_theory/</code>. Each card rule is put beside the registered pattern on the last month of H4 bars, {esc(CI["from"])} to {esc(CI["to"])} UTC ({CI["bars"]} bars). The cards give no numbers, so a card rule keeps the registered thresholds and changes only what the card draws or says. "Downtrend" / "uptrend" = the previous close is below / above the close {CI["lookback"]} bars earlier (the registered swing lookback). The cards are teaching material: a pick here chooses a definition, not a trade.</p>'
+            f'<div class="summary"><table><thead><tr><th>FM</th><th>Pattern</th><th>Card</th><th>Registered</th><th>Card rule</th><th>Registered only</th><th>Card only</th></tr></thead><tbody>{"".join(srow)}</tbody></table></div>'
+            + "".join(blocks))
+
+CSS = open(os.path.join(_HERE, "divergence.css"), encoding="utf-8").read() + \
+    "\n.mk-repo{fill:var(--accent)} .mk-card{fill:none;stroke:var(--branch);stroke-width:1.6}\n"
 JS = open(os.path.join(_HERE, "divergence.js"), encoding="utf-8").read()
 
 page = f"""<title>Divergence Branches</title>
@@ -224,6 +273,8 @@ page = f"""<title>Divergence Branches</title>
       <tbody>{"".join(srows)}</tbody></table></div>
     <p class="note">Documentation gaps found on the way (no decision needed, fix with the next change to that file): </p><ul class="note">{docgaps}</ul>
   </section>
+
+  {candle_images_section()}
 
   {sections}
 

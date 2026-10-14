@@ -332,6 +332,23 @@ OVERLAYS: list[dict[str, Any]] = [
         ),
     },
     {
+        "path": "scripts/analysis/set2_consumer_scale_probe.py",
+        "category": "DIAGNOSTIC",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "LOGIC_IN_SCRIPT",
+        "ttl_days": 90,
+        "purpose": (
+            "OBSERVATION_ONLY probe (F-061/F-064/F-109, Set-2 consumer-scale program): runs a XAUUSD "
+            "M15 window through FeaturePipeline under both normalization_basis values and reports "
+            "regime / breakout / vol-score / kernel distributions; changes no config or code."
+        ),
+        "task_refs": ["F-061", "F-064", "F-109", "SITS"],
+        "notes": (
+            "wontfix:reason=before/after measurement instrument for the 2026-10-07 basis activation; "
+            "no extract until a second consumer needs it"
+        ),
+    },
+    {
         "path": "scripts/research/crt_range_rebuild_probe.py",
         "category": "DIAGNOSTIC",
         "lifecycle": "ACTIVE",
@@ -877,6 +894,74 @@ OVERLAYS: list[dict[str, Any]] = [
             "Grants nothing and changes nothing — verifies identity joins only, no market "
             "quantity. production_behavior_changed: NO."
         ),
+    },
+
+    # -- 2026-10-09 XAUUSD candle-theory / feature-decode session (scratchpad -> repo; rule + result in each docstring) --
+    {
+        "path": "scripts/research/xau_1009_pattern_pay_test.py",
+        "category": "RESEARCH_RUNNER", "lifecycle": "ACTIVE", "implementation_status": "LOGIC_IN_SCRIPT",
+        "logic_in_script": True,
+        "purpose": "Exploratory: does each candle-pattern flag pay alone on XAUUSD M15 (1 ATR stop, 2 ATR target, 16 bars) vs random bars. Observation only.",
+    },
+    {
+        "path": "scripts/research/xau_1009_pattern_info_test.py",
+        "category": "RESEARCH_RUNNER", "lifecycle": "ACTIVE", "implementation_status": "LOGIC_IN_SCRIPT",
+        "logic_in_script": True,
+        "purpose": "Exploratory: do candle-pattern flags add information beyond random bars matched on hour, bar size and colour (XAUUSD M15). Observation only.",
+    },
+    {
+        "path": "scripts/research/xau_1009_h4_next_high_walk.py",
+        "category": "RESEARCH_RUNNER", "lifecycle": "ACTIVE", "implementation_status": "LOGIC_IN_SCRIPT",
+        "logic_in_script": True,
+        "purpose": "Exploratory: every XAUUSD H4 bar walked forward with the stop at its own low/high; best move before the stop, by pattern, vs same-stop-size bars.",
+    },
+    {
+        "path": "scripts/research/xau_1009_mt5_page_extract.py",
+        "category": "DIAGNOSTIC", "lifecycle": "ACTIVE", "implementation_status": "LOGIC_IN_SCRIPT",
+        "logic_in_script": True,
+        "purpose": "Helper: prints the data embedded in a saved XAUUSD Bar Features artifact page (path as argv[1]). Read-only.",
+    },
+    {
+        "path": "scripts/research/xau_1009_prereg_h4_lowerwick_3r.py",
+        "category": "RESEARCH_RUNNER", "lifecycle": "ACTIVE", "implementation_status": "LOGIC_IN_SCRIPT",
+        "logic_in_script": True,
+        "purpose": "Pre-registered: H4 pin_lower|hammer long, stop bar low, 3R; out-of-sample 22 May-6 Oct 2026. Result INSUFFICIENT (n=14). Do not re-tune on those months.",
+    },
+    {
+        "path": "scripts/research/xau_1009_prereg_h1_pdl_sweep_3r.py",
+        "category": "RESEARCH_RUNNER", "lifecycle": "ACTIVE", "implementation_status": "LOGIC_IN_SCRIPT",
+        "logic_in_script": True,
+        "purpose": "Pre-registered: H1 sweep of prior-day low closing back above, long, 3R; out-of-sample 22 May-6 Oct 2026. Result FAIL (n=67, -0.26R).",
+    },
+    {
+        "path": "scripts/research/xau_1009_prereg_feature_direction_decode.py",
+        "category": "RESEARCH_RUNNER", "lifecycle": "ACTIVE", "implementation_status": "LOGIC_IN_SCRIPT",
+        "logic_in_script": True,
+        "purpose": "Pre-registered: all 67 canonical features vs next-4h H1 direction, walk-forward boosted + tree. Result NOT FOUND (AUC 0.496).",
+    },
+    {
+        "path": "scripts/research/xau_1009_prereg_range_decode.py",
+        "category": "RESEARCH_RUNNER", "lifecycle": "ACTIVE", "implementation_status": "LOGIC_IN_SCRIPT",
+        "logic_in_script": True,
+        "purpose": "Pre-registered: do 67 features predict next-4h range beyond a 5-feature volatility/time baseline. Result NO ADDED INFORMATION (baseline R^2 0.38).",
+    },
+    {
+        "path": "scripts/research/xau_1009_prereg_vol_sizing.py",
+        "category": "RESEARCH_RUNNER", "lifecycle": "ACTIVE", "implementation_status": "LOGIC_IN_SCRIPT",
+        "logic_in_script": True,
+        "purpose": "Pre-registered: long gold in 4h blocks, constant vs forecast-range vs 1/ATR sizing. Result SIZING HELPS (Sharpe 0.008 -> 0.037; 1/ATR alone 0.040). No authority.",
+    },
+    {
+        "path": "scripts/research/xau_1009_winner_feature_repeat.py",
+        "category": "RESEARCH_RUNNER", "lifecycle": "ACTIVE", "implementation_status": "LOGIC_IN_SCRIPT",
+        "logic_in_script": True,
+        "purpose": "Descriptive: do the 67 feature values of winning H4 lower-wick 3R trades repeat (per-feature AUC vs shuffle max; nearest-neighbour share)? Hindsight by construction, no rule.",
+    },
+    {
+        "path": "scripts/research/sujan_trade_decode.py",
+        "category": "DIAGNOSTIC", "lifecycle": "ACTIVE", "implementation_status": "LOGIC_IN_SCRIPT",
+        "logic_in_script": True,
+        "purpose": "Read-only: candidate levels for Sujan's 2026-09-25 XAU chart (red lines vs week/day opens, 1H C1/C2 around BUY 4276.30). Candidates only, UNVALIDATED; drift log Record 9. No authority.",
     },
 ]
 

@@ -755,7 +755,8 @@ if __name__ == "__main__":
         trades = trades_df.to_dict(orient="records")
 
         # Candle mapping (simple version: same CSV for all trades)
-        candles_df = pd.read_csv(args.csv)
+        from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+        candles_df = _corpus_load(args.csv, sequence_check=False).frame()
         candles = candles_df.to_dict(orient="records")
 
         # Map all trades → same candle stream (safe for now)

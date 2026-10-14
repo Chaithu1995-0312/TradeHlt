@@ -102,8 +102,10 @@ def main(argv: list[str] | None = None) -> int:
         base_transitions = None
 
     print(f"[3/5] aggregating to {args.timeframe}")
-    htf = cs.to_timeframe(base, args.timeframe)
-    htf_states = cs.downsample_states(base, base_states, htf, args.timeframe)
+    from features.market_calendar import calendar_for_instrument
+    _cal = calendar_for_instrument(inst)     # market calendar of the INSTRUMENT, not the broker
+    htf = cs.to_timeframe(base, args.timeframe, _cal)
+    htf_states = cs.downsample_states(base, base_states, htf, args.timeframe, _cal)
 
     # `base_span` must track the SAME window as `htf`, otherwise the aliasing check
     # divides a full-corpus base count by a windowed bucket count and reports nonsense

@@ -165,11 +165,12 @@ def _inventory() -> dict:
         if entry["csv_present"]:
             # date span (first/last data line) — descriptive inventory only
             try:
-                lines = csv_path.read_text(encoding="utf-8", errors="replace").splitlines()
-                if len(lines) >= 2:
-                    entry["csv_rows"] = len(lines) - 1
-                    entry["csv_start"] = lines[1].split(",")[0]
-                    entry["csv_end"] = lines[-1].split(",")[0]
+                from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot
+                _c = _corpus_load(csv_path, sequence_check=False)
+                if _c.n_rows >= 1:
+                    entry["csv_rows"] = _c.n_rows
+                    entry["csv_start"] = _c.start
+                    entry["csv_end"] = _c.end
             except Exception as exc:
                 entry["csv_span_error"] = str(exc)
 

@@ -70,7 +70,8 @@ def _load_candles(csv_path: Path):
     # site would stay an ungated UNKNOWN.
     _fh = None
     try:
-        for i, row in enumerate(csv.DictReader(_fh := open(adm.filepath, encoding="utf-8"))):
+        from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot
+        for i, row in enumerate(_corpus_load(adm.filepath, sequence_check=False).records()):
             ts = _norm_ts(row["timestamp"])
             c = Candle(
                 timestamp=datetime.fromisoformat(ts.replace(" ", "T")),

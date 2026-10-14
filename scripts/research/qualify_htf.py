@@ -91,6 +91,9 @@ def _resolve_config(cfg_path: str, tf: str, out_dir: Path) -> tuple[dict, str]:
     sha256 honestly reflects the per-TF universe. Deterministic location, inspectable."""
     d = json.loads(Path(cfg_path).read_text(encoding="utf-8"))
     d["universe"]["pattern"] = d["universe"]["pattern"].replace("{TF}", tf)
+    sp = d.get("spine")
+    if isinstance(sp, dict) and isinstance(sp.get("timeframe"), str):   # CH-timeframe-ssot-v2
+        sp["timeframe"] = sp["timeframe"].replace("{TF}", tf)
     resolved_dir = out_dir / "_resolved"
     resolved_dir.mkdir(parents=True, exist_ok=True)
     resolved_path = resolved_dir / f"{Path(cfg_path).stem}__{tf}.json"
@@ -184,6 +187,9 @@ def main(argv: list[str] | None = None) -> int:
         description="Program 3: higher-timeframe M4 qualification of the existing hypothesis pool")
     parser.add_argument("--tf", required=True, choices=["H1", "H4"], help="resampled timeframe")
     parser.add_argument("--out", default="results/research/qualification_htf")
+    parser.add_argument("--spine-config", default=SPINE_CONFIG,
+                        help="spine research config (CH-timeframe-ssot-v2: select the ACTIVE composite to re-measure; "
+                             "default = the standing legacy-composite config)")
     args = parser.parse_args(argv)
 
     out_dir = Path(args.out)
@@ -198,10 +204,10 @@ def main(argv: list[str] | None = None) -> int:
     # PROMOTE is impossible at HTF n<30 regardless. Surfaced, never hidden.
     spine_status, spine_err = "MEASURED", ""
     try:
-        spine_cfg, spine_family = _run_family(SPINE_CONFIG, SPINE_CANDIDATES, args.tf, out_dir)
+        spine_cfg, spine_family = _run_family(args.spine_config, SPINE_CANDIDATES, args.tf, out_dir)
     except Exception as ex:   # noqa: BLE001 — record any spine-adapter failure as a measurement caveat
         spine_status, spine_err = "NOT_MEASURABLE", f"{type(ex).__name__}: {ex}"
-        spine_cfg = ResearchConfig.from_dict(_resolve_config(SPINE_CONFIG, args.tf, out_dir)[0])
+        spine_cfg = ResearchConfig.from_dict(_resolve_config(args.spine_config, args.tf, out_dir)[0])
         spine_family = {
             sc: {"winning_control": "n/a", "winning_control_exp": 0.0,
                  "hypotheses": {n: {"n": 0, "profit_factor": 0.0, "expectancy_rr": 0.0,
@@ -230,7 +236,7 @@ def main(argv: list[str] | None = None) -> int:
                 **toy_family,
             },
             "spine": {
-                "config_path": SPINE_CONFIG,
+                "config_path": args.spine_config,
                 "config_sha256": spine_cfg.sha256(),
                 "prod_version": "v2_multi_2026_04",
                 "status": spine_status,

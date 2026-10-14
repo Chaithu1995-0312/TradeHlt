@@ -179,7 +179,8 @@ def build_ftr_context(csv_path: Path, n_bars: int) -> dict[str, Any]:
 
     Mirrors feature_trace_report.py:996-1040 — same stages, same snapshots, finalize() skipped.
     """
-    raw = pd.read_csv(csv_path)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    raw = _corpus_load(csv_path, sequence_check=False).frame()
     fp_cfg = get_prod_section("feature_pipeline")
     pipe = FeaturePipeline(raw, cfg=fp_cfg)
     raw_cols = set(pipe.df.columns)

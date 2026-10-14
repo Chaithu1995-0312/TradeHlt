@@ -117,7 +117,8 @@ def build_canonical_frame(csv_path: Path) -> tuple[dict[str, int], Any, dict]:
     (backtest_v2.py:2053-2057), so a lookup here resolves the SAME row the runtime's
     T-16 fail-closed lookup would resolve for that bar.
     """
-    raw = pd.read_csv(csv_path)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    raw = _corpus_load(csv_path, sequence_check=False).frame()
     raw.columns = [c.lower() for c in raw.columns]
     fp_cfg = get_prod_section("feature_pipeline")
     enriched_df, feature_vectors = FeaturePipeline(raw, cfg=fp_cfg).run()

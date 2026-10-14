@@ -107,6 +107,7 @@ def _weekly_sweep_per_instrument(
     for instrument in sorted(csv_map):
         candles = runner._load_candles(csv_map[instrument], instrument)
         mask = derive_weekly_mask((c.timestamp for c in candles), presence_min=0.5)
+        from features.market_calendar import calendar_for_instrument
         hyp = WeeklySweepReversal(
             min_accumulation_bars=ws_cfg["min_accumulation_bars"],
             sl_range_frac=ws_cfg["sl_range_frac"],
@@ -115,6 +116,7 @@ def _weekly_sweep_per_instrument(
             regime_tercile_window=ws_cfg["regime_tercile_window"],
             check_week_validity=ws_cfg["check_week_validity"],
             weekly_mask=mask,
+            calendar=calendar_for_instrument(instrument),   # clock contract: instrument's market calendar
         )
         _, outs = runner.run_instrument(hyp, csv_map[instrument], instrument)
         per_instrument[instrument] = outs

@@ -53,8 +53,13 @@ def load_candles(csv_path: Path):
     """Plain OHLC arrays + ts->index; SimpleNamespace bars for optional debug."""
     highs, lows, closes, opens, ts_list = [], [], [], [], []
     ts_to_idx = {}
-    with csv_path.open(encoding="utf-8", newline="") as fh:
-        rd = csv.DictReader(fh)
+    # CH-corpus-ssot (2026-10-08): rows from the corpus SSOT, not a separate CSV open.
+    from pathlib import Path as _P
+    sys.path.insert(0, str(_P(__file__).resolve().parents[2] / "src"))
+    from data_ingestion.corpus_store import load as _corpus_load
+
+    if True:
+        rd = _corpus_load(csv_path, sequence_check=False).records()
         for i, row in enumerate(rd):
             ts = _norm_ts(row["timestamp"])
             highs.append(float(row["high"]))

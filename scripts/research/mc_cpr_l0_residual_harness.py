@@ -33,7 +33,6 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 
-from features.broker_clock import mt5_server_to_utc  # noqa: E402
 from features.feature_pipeline import FeaturePipeline  # noqa: E402
 from features.feature_schema import CANONICAL_FEATURES  # noqa: E402
 
@@ -52,15 +51,17 @@ from research.provenance import sha256_file as _sha256  # noqa: E402 — researc
 
 
 def _load_ohlcv(csv_path: Path) -> pd.DataFrame:
-    df = pd.read_csv(csv_path)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    df = _corpus_load(csv_path, sequence_check=False).frame()
     need = {"timestamp", "open", "high", "low", "close", "volume"}
     missing = need - set(df.columns)
     if missing:
         raise ValueError(f"CSV missing columns {missing}")
     df = df.copy()
     df["timestamp"] = pd.to_datetime(df["timestamp"])
-    # Research UTC: MT5 broker labels → true UTC (F-066)
-    df["timestamp_utc"] = mt5_server_to_utc(df["timestamp"])
+    # Research UTC: the corpus SSOT frame is already canonical UTC (clock contract); the raw broker
+    # label is `source_timestamp`. No second conversion here.
+    df["timestamp_utc"] = df["timestamp"]
     df = df.sort_values("timestamp_utc").reset_index(drop=True)
     for c in ("open", "high", "low", "close", "volume"):
         df[c] = pd.to_numeric(df[c], errors="coerce")

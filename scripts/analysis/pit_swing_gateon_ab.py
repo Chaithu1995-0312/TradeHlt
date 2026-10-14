@@ -116,9 +116,10 @@ class StrongInterventionPipeline(_BaseWrappedPipeline):
 
 def prove_corpus_parity(csv_path: Path) -> dict:
     """Hash raw OHLCV corpus — both arms must see the same file."""
-    raw = csv_path.read_bytes()
-    h = hashlib.sha256(raw).hexdigest()
-    df = pd.read_csv(csv_path)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    _c = _corpus_load(csv_path, sequence_check=False)
+    h = _c.sha256
+    df = _c.frame()
     return {
         "path": str(csv_path).replace("\\", "/"),
         "sha256": h,
@@ -129,7 +130,8 @@ def prove_corpus_parity(csv_path: Path) -> dict:
 
 def prove_intervention_isolation(csv_path: Path, limit: int = 8000) -> dict:
     """Assert only the 10 contaminated columns change under causal intervention."""
-    df = pd.read_csv(csv_path)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    df = _corpus_load(csv_path, sequence_check=False).frame()
     df.columns = [c.strip().lower() for c in df.columns]
     if limit and limit > 0:
         df = df.head(limit).copy()
@@ -194,7 +196,8 @@ def prove_intervention_isolation(csv_path: Path, limit: int = 8000) -> dict:
 
 def prove_pc1_local_channel(csv_path: Path, limit: int = 5000) -> dict:
     """Force sweep_detected/double_sweep perturbation → assert CRT scores change."""
-    df = pd.read_csv(csv_path)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    df = _corpus_load(csv_path, sequence_check=False).frame()
     df.columns = [c.strip().lower() for c in df.columns]
     if limit:
         df = df.head(limit).copy()

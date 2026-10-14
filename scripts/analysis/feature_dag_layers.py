@@ -167,6 +167,48 @@ _NODES: dict[str, tuple[list[str], int, str | None]] = {
     "eql_distance":               (["close", "atr"], 3, "FM-082"),
     # change_of_character depends only on two ALREADY-registered DAG nodes -- no rollup needed.
     "change_of_character":        (["break_of_structure", "trend_bias"], 3, "FM-083"),
+    # CH-feature-semantic-fixes-v7 (2026-10-08, schema v7.0): zone/cluster presence flags.
+    # Declared on the raw inputs the finders actually read (swings/breaks/origin colour; EQH/EQL
+    # also the ATR tolerance band) -- identical to the ontology depends_on, so no rollup.
+    "order_block_present":        (["open", "high", "low", "close"], 3, "FM-097"),
+    "fvg_present":                (["high", "low"], 3, "FM-098"),
+    "breaker_present":            (["open", "high", "low", "close"], 3, "FM-099"),
+    "mitigation_block_present":   (["open", "high", "low", "close"], 3, "FM-100"),
+    "eqh_present":                (["high", "low", "atr"], 3, "FM-101"),
+    "eql_present":                (["high", "low", "atr"], 3, "FM-102"),
+    # CH-candle-pattern-observations-v8 (2026-10-08, schema v8.0): candle-pattern observations
+    # (features.candle_patterns). Edges == ontology depends_on (no rollup); the size gate reads
+    # the price-unit ATR, FM-074 atr_absolute, registered here as its own L1 node.
+    "atr_absolute":               (["true_range"], 1, "FM-074"),
+    "upper_wick_ratio":           (["open", "high", "low", "close", "upper_wick", "candle_range"], 2, "FM-103"),
+    "lower_wick_ratio":           (["open", "high", "low", "close", "lower_wick", "candle_range"], 2, "FM-104"),
+    "pin_lower":                  (["open", "high", "low", "close", "atr_absolute"], 2, "FM-105"),
+    "pin_upper":                  (["open", "high", "low", "close", "atr_absolute"], 2, "FM-106"),
+    "hammer":                     (["open", "high", "low", "close", "atr_absolute"], 2, "FM-107"),
+    "shooting_star":              (["open", "high", "low", "close", "atr_absolute"], 2, "FM-108"),
+    "doji_material":              (["open", "high", "low", "close", "atr_absolute"], 2, "FM-109"),
+    "dragonfly_doji":             (["open", "high", "low", "close", "atr_absolute"], 2, "FM-110"),
+    "gravestone_doji":            (["open", "high", "low", "close", "atr_absolute"], 2, "FM-111"),
+    "engulfing_bull":             (["open", "close", "timestamp"], 2, "FM-112"),
+    "engulfing_bear":             (["open", "close", "timestamp"], 2, "FM-113"),
+    "inside_bar":                 (["high", "low", "timestamp"], 2, "FM-114"),
+    "compression_ratio":          (["high", "low", "candle_range", "timestamp"], 2, "FM-115"),
+    "rejection_intensity_signed": (["open", "high", "low", "close", "atr_absolute"], 2, "FM-116"),
+    "rejection_intensity_lower":  (["open", "high", "low", "close", "atr_absolute"], 2, "FM-117"),
+    "engulfing_strength":         (["open", "close", "timestamp"], 2, "FM-118"),
+    "rejection_intensity_upper":  (["open", "high", "low", "close", "atr_absolute"], 2, "FM-119"),
+    # CH-card-identity-census-v9. last_swing_* are internal (no vector slot) and are the
+    # parents of the sequence states, so the edges match the ontology depends_on.
+    "last_swing_high_price":      (["high", "swing_high"], 2, "FM-066"),
+    "last_swing_low_price":       (["low", "swing_low"], 2, "FM-067"),
+    "morning_star":               (["open", "high", "low", "close", "timestamp"], 2, "FM-120"),
+    "higher_low":                 (["swing_low", "last_swing_low_price"], 3, "FM-121"),
+    "lower_high":                (["swing_high", "last_swing_high_price"], 3, "FM-122"),
+    "sideways":                   (["swing_high", "swing_low", "last_swing_high_price", "last_swing_low_price"], 3, "FM-123"),
+    "rejection_bull_present":     (["open", "high", "low", "close"], 3, "FM-124"),
+    "rejection_bear_present":     (["open", "high", "low", "close"], 3, "FM-125"),
+    "rejection_bull_distance":    (["open", "high", "low", "close", "atr"], 3, "FM-126"),
+    "rejection_bear_distance":    (["open", "high", "low", "close", "atr"], 3, "FM-127"),
 }
 
 

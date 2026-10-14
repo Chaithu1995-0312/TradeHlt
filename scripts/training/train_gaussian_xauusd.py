@@ -581,7 +581,8 @@ def main() -> int:
 
     # ── corpus ──────────────────────────────────────────────────────────
     corpus = Path(guard_xauusd_csv_path("data/mt5/XAUUSD_M15.csv", INSTRUMENT))
-    df = pd.read_csv(corpus)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    df = _corpus_load(corpus, sequence_check=False).frame()
     df["timestamp"] = pd.to_datetime(df["timestamp"])
     corpus_sha = _sha256_file(corpus)
     tracker.total_bars = len(df)

@@ -90,7 +90,8 @@ def _frame_definition(ohlcv_path: Path, source_indices: list[int]) -> dict[str, 
     """
     import pandas as pd
 
-    raw_n = len(pd.read_csv(ohlcv_path, usecols=[0]))
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    raw_n = len(_corpus_load(ohlcv_path, sequence_check=False).frame(usecols=[0]))
     first_pos = source_indices[0] if source_indices else None
     return {
         "raw_corpus_bars": raw_n,
@@ -127,7 +128,8 @@ def _engine_to_raw_offsets(events_path: Path, ohlcv_path: Path) -> dict[int, int
     """
     import pandas as pd
 
-    df = pd.read_csv(ohlcv_path)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    df = _corpus_load(ohlcv_path, sequence_check=False).frame()
     df.columns = [c.lower() for c in df.columns]
     ts_col = "timestamp" if "timestamp" in df.columns else "time"
     df[ts_col] = pd.to_datetime(df[ts_col])

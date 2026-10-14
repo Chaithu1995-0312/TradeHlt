@@ -27,9 +27,10 @@ Arms (each a FULL independent replay -- a veto changes the trajectory via reset_
 arms cannot share one pass; that is F-055's removed-!=-added lesson):
 
     A0 baseline      as configured today
-    A1 clock         _session_ts_basis = "utc_corrected"          (is the timezone binding?)
+    A1 clock         RETIRED (CH-corpus-clock-contract-v1): candle timestamps are canonical UTC,
+                     so the clock is no longer a switch — A0 already runs the UTC clock.
     A2 allowed_set   allowed_sessions + ASIA                      (is the allowed set binding?)
-    A3 windows       A1's clock + session_windows rebuilt from the already-registered
+    A3 windows       session_windows rebuilt from the already-registered
                      feature_pipeline.session_windows_utc         (are the widths binding?)
 
 Every arm is a process-local dataclasses.replace + instance-attribute override. NOTHING is
@@ -107,9 +108,7 @@ def _event_row(
     build_failed: bool = False,
 ) -> dict[str, Any]:
     """One inspectable row per notable bar. Display-only; feeds no counter."""
-    from features import broker_clock as _bc
-
-    utc = _bc.mt5_server_to_utc_scalar(candle.timestamp)
+    utc = candle.timestamp   # canonical UTC (corpus SSOT)
     reason = ";".join(r for r, _ in bar_reasons) or None
     sess = next((s for _, s in bar_reasons if s), None)
 
@@ -158,7 +157,6 @@ def _event_row(
 class Arm:
     name: str
     label: str
-    ts_basis: str                                   # "broker_local" | "utc_corrected"
     allowed_sessions: tuple[str, ...] | None        # None = leave config value
     session_windows: dict[str, tuple[dtime, dtime]] | None  # None = leave config value
 
@@ -180,13 +178,15 @@ def build_arms(names: list[str]) -> list[Arm]:
         get_prod_section("feature_pipeline")["session_windows_utc"]
     )
     catalogue = {
-        "A0": Arm("A0", "baseline (as configured)", "broker_local", None, None),
-        "A1": Arm("A1", "clock: utc_corrected", "utc_corrected", None, None),
-        "A2": Arm("A2", "allowed_sessions + ASIA", "broker_local",
+        "A0": Arm("A0", "baseline (as configured)", None, None),
+        "A2": Arm("A2", "allowed_sessions + ASIA",
                   ("LONDON", "NEWYORK", "OVERLAP", "ASIA"), None),
-        "A3": Arm("A3", "utc clock + session_windows_utc", "utc_corrected",
+        "A3": Arm("A3", "session_windows_utc windows",
                   ("LONDON", "NEWYORK", "OVERLAP", "ASIA"), utc_windows),
     }
+    if "A1" in names:
+        raise SystemExit("arm A1 (clock) is retired: timestamps are canonical UTC "
+                         "(CH-corpus-clock-contract-v1); the clock is not a switch any more")
     missing = [n for n in names if n not in catalogue]
     if missing:
         raise SystemExit(f"unknown arm(s): {missing}; known: {sorted(catalogue)}")
@@ -206,9 +206,6 @@ def replay_arm(candles: list[Candle], arm: Arm, instrument: str) -> dict[str, An
     cfg = dataclasses.replace(base, **overrides) if overrides else base
 
     engine = CRTEngine.from_production(cfg)
-    # Process-local clock override. The attribute is assigned from config at
-    # crt_engine_v2.py:2483; reassigning the instance attribute changes nothing on disk.
-    engine._session_ts_basis = arm.ts_basis
 
     htf = HTFBuilder(4, instrument)
     initialized = False
@@ -334,7 +331,6 @@ def replay_arm(candles: list[Candle], arm: Arm, instrument: str) -> dict[str, An
         "arm": arm.name,
         "label": arm.label,
         "config": {
-            "ts_basis": arm.ts_basis,
             "allowed_sessions": list(cfg.allowed_sessions),
             "session_windows": {
                 k: [v[0].strftime("%H:%M"), v[1].strftime("%H:%M")]

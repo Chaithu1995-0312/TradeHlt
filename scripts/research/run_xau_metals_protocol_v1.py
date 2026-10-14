@@ -1032,7 +1032,8 @@ def main(argv: Optional[list[str]] = None) -> int:
             file=sys.stderr,
         )
         return 3
-    df = pd.read_csv(corpus)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    df = _corpus_load(corpus, sequence_check=False).frame()
     df["timestamp"] = pd.to_datetime(df["timestamp"])
     end = df["timestamp"].max()
     months = int(protocol["corpus"]["holdout"]["months"])

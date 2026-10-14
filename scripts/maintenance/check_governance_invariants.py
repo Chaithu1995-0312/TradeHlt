@@ -131,6 +131,12 @@ GREEN_FLOOR: tuple[str, ...] = (
     "tests/test_model_registry_join.py",
     # Semantic OS v2 slice 1: geometry, identity, events, availability, absence, episodes.
     "tests/semantics/",
+    # CH-timeframe-ssot-v1: declared timeframe == measured bar size (FeaturePipeline, backtest gap reset,
+    # live rail) + shrink-only ratchet over hand-rolled candle merging.
+    "tests/test_timeframe_guards.py",
+    "tests/test_aggregation_authority.py",
+    # CH-timeframe-ssot-v2: the resolver's HTF window equals backtest.htf_candles_per_range (stale copy read 4 vs 16).
+    "tests/test_resolver_htf_window_alignment.py",
 )
 
 

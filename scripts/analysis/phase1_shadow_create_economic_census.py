@@ -196,10 +196,11 @@ def _load_create_events() -> list[dict]:
 
 
 def _csv_index_by_timestamp(path: Path) -> dict[str, int]:
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot
+
     out: dict[str, int] = {}
-    with path.open(encoding="utf-8", newline="") as fh:
-        for i, r in enumerate(csv.DictReader(fh)):
-            out[r["timestamp"]] = i
+    for i, r in enumerate(_corpus_load(path, sequence_check=False).records()):
+        out[r["timestamp"]] = i
     return out
 
 

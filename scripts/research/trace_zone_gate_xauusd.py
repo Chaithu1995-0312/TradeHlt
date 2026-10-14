@@ -76,7 +76,8 @@ def main(argv=None) -> int:
     safe_print(f"bytes: {csv_path.stat().st_size}")
     safe_print(f"sha256: {_sha16(csv_path)}")
 
-    raw = pd.read_csv(csv_path)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    raw = _corpus_load(csv_path, sequence_check=False).frame()
     raw.columns = [c.strip().lower() for c in raw.columns]
     safe_print(f"raw_rows: {len(raw)}")
     safe_print(f"raw_cols: {list(raw.columns)}")

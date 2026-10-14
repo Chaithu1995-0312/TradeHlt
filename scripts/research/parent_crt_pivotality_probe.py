@@ -189,14 +189,13 @@ def compare_configs(cfg_on: dict, cfg_off: dict) -> dict:
 # ── validity gate 3: corpus identity ──────────────────────────────────────────
 def verify_corpus(csv_path: str | Path) -> dict:
     """Fail closed unless the corpus is the Phase-1 frozen candidate."""
+    from data_ingestion.corpus_store import load as corpus_load
     from data_ingestion.xauusd_phase1_candidate import PHASE1_SHA256
 
-    h = hashlib.sha256()
-    with open(csv_path, "rb") as f:
-        for chunk in iter(lambda: f.read(1048576), b""):
-            h.update(chunk)
-    got = h.hexdigest()
-    return {"ok": got == PHASE1_SHA256, "expected": PHASE1_SHA256, "got": got}
+    corpus = corpus_load(csv_path, "XAUUSD", sequence_check=False)   # CH-corpus-ssot
+    got = corpus.sha256
+    return {"ok": got == PHASE1_SHA256, "expected": PHASE1_SHA256, "got": got,
+            "dataset_id": corpus.dataset_id}
 
 
 # ── event-stream profile ──────────────────────────────────────────────────────

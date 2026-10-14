@@ -220,7 +220,8 @@ def analyze(
     candles_per_htf: int = 4,
     atr_period: int = 14,
 ) -> dict[str, Any]:
-    df = pd.read_csv(ohlcv_path)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    df = _corpus_load(ohlcv_path, sequence_check=False).frame()
     rename = {c: c.lower() for c in df.columns}
     df = df.rename(columns=rename)
     n = len(df)

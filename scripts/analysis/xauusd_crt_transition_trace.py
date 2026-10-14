@@ -284,7 +284,8 @@ def main() -> int:
     eff_cfg = effective_config_snapshot(crt_cfg, prod_sha)
 
     # FeaturePipeline once
-    raw_df = pd.read_csv(csv_path)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    raw_df = _corpus_load(csv_path, sequence_check=False).frame()
     raw_df.columns = [c.strip().lower() for c in raw_df.columns]
     pipeline = FeaturePipeline(raw_df)
     enriched_df, feature_vectors = pipeline.run()

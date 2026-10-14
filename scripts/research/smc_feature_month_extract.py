@@ -91,7 +91,8 @@ def main(argv=None) -> int:
 
     from features.feature_pipeline import FeaturePipeline
 
-    df = pd.read_csv(args.csv)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    df = _corpus_load(args.csv, sequence_check=False).frame()
     total_bars = len(df)
 
     pipeline = FeaturePipeline(df)

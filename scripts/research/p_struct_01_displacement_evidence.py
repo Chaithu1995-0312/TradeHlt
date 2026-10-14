@@ -148,7 +148,8 @@ def official_volume_by_ts(csv_path: Path) -> dict[str, dict[str, Any]]:
 
     if not csv_path.is_file():
         raise SystemExit(f"official-pipeline CSV missing: {csv_path}")
-    df = pd.read_csv(csv_path)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    df = _corpus_load(csv_path, sequence_check=False).frame()
     enriched, _vectors = FeaturePipeline(df).run()
     missing = [c for c in ("timestamp", "volume_ratio", "volume_spike") if c not in enriched.columns]
     if missing:

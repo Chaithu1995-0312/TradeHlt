@@ -92,7 +92,8 @@ def export_window(months: int, output_dir: Path, fmt: str = "xlsx") -> list[Path
     differ and the data bounds are what a reader needs.
     """
     csv_path = _guarded_csv()
-    df = pd.read_csv(csv_path, parse_dates=["timestamp"])
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    df = _corpus_load(csv_path, sequence_check=False).frame(parse_dates=["timestamp"])
 
     last_ts = df["timestamp"].max()
     cutoff = last_ts - pd.DateOffset(months=months)

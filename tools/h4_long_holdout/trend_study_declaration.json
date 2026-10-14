@@ -1,0 +1,25 @@
+{
+  "id": "H4-TREND-FILTER-20261014",
+  "question": "Does a simple daily trend filter tell when H4 trades in that direction pay? Tested both ways (long in uptrend, short in downtrend) so gold's rise cannot pass for information.",
+  "population": "every complete H4 candle on data/mt5/XAUUSD_M15.csv, both sides, same entry/stop/1.5R target/costs/funding as the replica (no candle-shape filter; range_study found none)",
+  "trend_definitions": {
+    "T1_sma50": "last completed broker-day close above (up) / below (down) the mean of the last 50 completed daily closes",
+    "T2_ret20": "last completed daily close above (up) / below (down) the close 20 completed days earlier"
+  },
+  "causality": "only daily candles that closed before the H4 signal candle closed",
+  "books": {
+    "trend_both": "long when trend up, short when trend down",
+    "controls": ["all longs", "all shorts", "longs in downtrend", "shorts in uptrend"]
+  },
+  "periods": {"history_seen": "2024-05-22..2025-05-21 (reported, not judged)", "test": "2025-05-22..2026-05-21 (judged)"},
+  "pass_bar_per_definition": [
+    "test: longs in uptrend beat all longs by more than one standard error",
+    "test: shorts in downtrend beat all shorts by more than one standard error",
+    "test: trend_both mean net R > 0 with at least 30 trades per side"
+  ],
+  "multiple_testing": "two definitions; a definition passes only if all three conditions hold",
+  "caveats": [
+    "The test year's all-longs average (+0.038R) was printed in range_study; no trend split of it has been seen.",
+    "22 May - 6 Oct 2026 is not used: those months were looked at today."
+  ]
+}

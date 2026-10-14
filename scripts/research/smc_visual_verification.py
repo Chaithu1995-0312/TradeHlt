@@ -127,7 +127,8 @@ class Check:
 
 
 def load_bars(csv_path: Path) -> pd.DataFrame:
-    df = pd.read_csv(csv_path)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    df = _corpus_load(csv_path, sequence_check=False).frame()
     df["timestamp"] = pd.to_datetime(df["timestamp"])
     return df
 

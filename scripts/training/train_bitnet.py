@@ -93,7 +93,8 @@ def build_dataset(csv_paths: list[str]) -> tuple[list[list[float]], list[float]]
         if not Path(csv_path).exists():
             print(f"  [SKIP] {csv_path} not found")
             continue
-        df = pd.read_csv(csv_path, parse_dates=["timestamp"])
+        from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+        df = _corpus_load(csv_path, sequence_check=False).frame(parse_dates=["timestamp"])
         if len(df) < WARMUP + MAX_FWD + 20:
             continue
         try:

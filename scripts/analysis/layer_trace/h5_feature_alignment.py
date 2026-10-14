@@ -63,7 +63,8 @@ def main() -> int:
     import pandas as pd
     from features.feature_pipeline import FeaturePipeline, required_warmup_rows
 
-    raw_df = pd.read_csv(args.csv)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    raw_df = _corpus_load(args.csv, sequence_check=False).frame()
     raw_df.columns = [c.strip().lower() for c in raw_df.columns]
     if "timestamp" not in raw_df.columns and "date" in raw_df.columns and "time" in raw_df.columns:
         raw_df["timestamp"] = raw_df["date"].astype(str) + " " + raw_df["time"].astype(str)

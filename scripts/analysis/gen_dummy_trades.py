@@ -9,7 +9,8 @@ from features.feature_pipeline import FeaturePipeline
 from features.feature_schema import CANONICAL_FEATURES
 
 def main(ohlcv_path, output_dir="results/dummy"):
-    df = pd.read_csv(ohlcv_path)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    df = _corpus_load(ohlcv_path, sequence_check=False).frame()
     pipeline = FeaturePipeline(df)
     enriched, _ = pipeline.run()
     

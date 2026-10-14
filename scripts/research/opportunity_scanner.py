@@ -46,7 +46,8 @@ logger = logging.getLogger("OpportunityScanner")
 
 
 def _load_csv(csv_path: Path) -> pd.DataFrame:
-    df = pd.read_csv(csv_path)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    df = _corpus_load(csv_path, sequence_check=False).frame()
     df.columns = [c.strip().lower() for c in df.columns]
     if "timestamp" not in df.columns:
         if "date" in df.columns and "time" in df.columns:

@@ -1,0 +1,28 @@
+{
+  "id": "H4-LONG-CANDLE-RANGES-20261014",
+  "question": "During profitable H4 long trades, which ranges of the signal candle's arithmetic features differ from losing ones, and does a range picked on older history still beat 'long every candle' on newer history?",
+  "population": "every complete H4 candle on data/mt5/XAUUSD_M15.csv (2024-05-22..2026-05-21), LONG, same entry/stop/1.5R target/costs/funding as declaration.json",
+  "features_of_signal_candle": {
+    "body_ratio": "|close-open| / (high-low)",
+    "upper_wick_ratio": "(high-max(open,close)) / (high-low)",
+    "lower_wick_ratio": "(min(open,close)-low) / (high-low)",
+    "close_location": "(close-low) / (high-low)",
+    "range_atr": "(high-low) / ATR14",
+    "body_atr_signed": "(close-open) / ATR14",
+    "momentum_atr": "(close - previous H4 close) / ATR14",
+    "trend_6_atr": "(close - close 6 H4 candles earlier) / ATR14",
+    "hour": "broker hour the candle opens"
+  },
+  "split": {"train": "signals 2024-05-22..2025-05-21", "test": "signals 2025-05-22..2026-05-21 (run once)"},
+  "procedure": [
+    "Train only: cut each feature into 5 equal-count bins (hour: its 5 to 6 actual values).",
+    "For each feature, the 'profit range' is the single contiguous run of 1-3 bins with the highest mean net R, holding at least 20% of train candidates.",
+    "Selection-noise check: repeat the same search 200 times with net R shuffled across candidates; a range counts only if its train gain over all-candles beats 95% of the shuffles.",
+    "Ranges that pass are frozen, then measured once on test: mean net R inside the range vs all test candles (the control)."
+  ],
+  "pass_bar": "a frozen range passes on test if its mean net R beats the test control by more than one standard error and is above 0, with at least 30 test candidates",
+  "caveats": [
+    "This history was already used to look at this rule's aggregate results today (not per feature range).",
+    "Gold rose about 87% over the full history; the control removes the drift that all longs share."
+  ]
+}

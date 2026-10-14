@@ -106,7 +106,8 @@ def remap_event_indices_to_ohlcv(
     """
     import pandas as pd
 
-    df = pd.read_csv(ohlcv_path)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    df = _corpus_load(ohlcv_path, sequence_check=False).frame()
     df.columns = [c.lower() for c in df.columns]
     ts_col = "timestamp" if "timestamp" in df.columns else "time"
     df[ts_col] = pd.to_datetime(df[ts_col])
@@ -278,7 +279,8 @@ def compute_enriched_frame(
     from features.feature_pipeline import FeaturePipeline
 
     if _df is None:
-        df = pd.read_csv(ohlcv_path)
+        from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+        df = _corpus_load(ohlcv_path, sequence_check=False).frame()
         rename = {c: c.lower() for c in df.columns if c.lower() in
                   {"open", "high", "low", "close", "volume", "timestamp", "time"}}
         df = df.rename(columns=rename)
@@ -417,7 +419,8 @@ def build_resolver_timeline(
     # compute). Needed for the warmup-range HTF seed step below regardless of
     # whether `enriched` is cached, because seeding replays raw bars that
     # FeaturePipeline.finalize() drops (they never appear in `enriched`).
-    df = pd.read_csv(ohlcv_path)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    df = _corpus_load(ohlcv_path, sequence_check=False).frame()
     rename = {c: c.lower() for c in df.columns if c.lower() in
               {"open", "high", "low", "close", "volume", "timestamp", "time"}}
     df = df.rename(columns=rename)
@@ -1121,7 +1124,8 @@ def prepare_engine_context(
             reference[k] = int(v)
 
     events = load_events(events_path)
-    n_bars = len(pd.read_csv(ohlcv_path))
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    n_bars = len(_corpus_load(ohlcv_path, sequence_check=False).frame())
     events, _remap_meta = remap_event_indices_to_ohlcv(events, ohlcv_path)
     timeline = reconstruct_engine_timeline(events, n_bars)
     engine_reset_by_idx = build_engine_reset_map(events, n_bars)

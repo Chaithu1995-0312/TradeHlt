@@ -598,7 +598,6 @@ def run_xy_research(
                     ),
                     "identity_selectors": {
                         "normalization_basis": fp_cfg["normalization_basis"],
-                        "session_timestamp_basis": fp_cfg["session_timestamp_basis"],
                         "swing_window": fp_cfg["swing_window"],
                     },
                     "config": fp_cfg,
@@ -1011,7 +1010,7 @@ def main(argv: list[str] | None = None) -> int:
         help=(
             "This-run only: add OFF_SESSION to CRTConfig.allowed_sessions so the "
             "session gate does not FILTER_REJECT. Does not rewrite production JSON "
-            "or change session_windows / feature session_timestamp_basis."
+            "or change session_windows."
         ),
     )
     ap.add_argument(
@@ -1214,7 +1213,7 @@ def main(argv: list[str] | None = None) -> int:
                 "where": "CRTConfig.allowed_sessions",
                 "meaning": (
                     "Sessions that may open a trade. --ignore-off-session adds OFF_SESSION "
-                    "only; session_windows and feature session_timestamp_basis stay production."
+                    "only; session_windows stays production."
                 ),
             },
             {
@@ -1235,7 +1234,6 @@ def main(argv: list[str] | None = None) -> int:
             "config_untouched_by_htf": True,
             "identity_selectors": {
                 "normalization_basis": fp_cfg_used["normalization_basis"],
-                "session_timestamp_basis": fp_cfg_used["session_timestamp_basis"],
                 "swing_window": fp_cfg_used["swing_window"],
             },
             "config": fp_cfg_used,
@@ -1276,7 +1274,6 @@ def main(argv: list[str] | None = None) -> int:
     print(
         "feature_identity "
         f"normalization_basis={fp_cfg_used['normalization_basis']} "
-        f"session_timestamp_basis={fp_cfg_used['session_timestamp_basis']} "
         f"swing_window={fp_cfg_used['swing_window']} "
         f"warmup_rows={required_warmup_rows(fp_cfg_used)}"
     )

@@ -1,0 +1,34 @@
+{
+  "id": "H4-LONG-BODY066-1P5R-HOLDOUT-20261014",
+  "declared_at": "2026-10-14 (before any outcome in the holdout spans was computed for this rule)",
+  "rule": {
+    "timeframe": "H4 broker-time bucket with exactly 16 M15 children",
+    "side": "LONG only",
+    "signal": "body / (high - low) >= 0.66 on the closed H4 candle",
+    "entry": "first M15 OPEN within 120 min after the H4 close; E = open + spread 0.09 + entry slip 0.09",
+    "stop": "signal low - 0.2 x ATR14 (simple mean of 14 TR over complete H4 parents)",
+    "target": "TP = E + (1.5 x D + exit slip 0.09 + commission 0.08), D = E - SL + stop slip 0.09 + commission 0.08",
+    "fills": "stop first on a shared bar; a stop gapped at the open fills at the open",
+    "funding": "LONG -0.5759 USD/oz per broker midnight, Wednesday x3",
+    "book": "one position at a time; Account A INR 1,000,000 fixed risk INR 30,000; Account B INR 100,000 fixed risk INR 3,000; lots floored to 0.01, min 0.01, max 10"
+  },
+  "control": "LONG on every complete H4 candle, identical entry/stop/target/book",
+  "data": {
+    "file": "data/mt5/XAUUSD_M15_2026-04-20_to_2026-10-06.csv",
+    "sha256": "494e045b700aac88b0a538789549418ebf1014fa7e1f64d6c7cbe420c297c7b6",
+    "clock": "mt5_icmarkets_xau broker labels as-is (same as the parity runs)",
+    "signal_spans": ["2026-05-22 00:00 to 2026-07-06 00:00", "2026-08-08 00:00 to 2026-10-07 00:00"],
+    "excluded": "2026-07-06..2026-08-07 (rule was fitted there) and everything before 2026-05-22 (already seen)",
+    "exits": "trades may run on later bars of the same file; still open at file end = UNRESOLVED, excluded from cash"
+  },
+  "pass_bar": {
+    "primary": "rule mean net R per settled book trade (Account A) > 0",
+    "secondary": "rule Account A net INR > control Account A net INR",
+    "power": "fewer than 30 settled Account A trades = INSUFFICIENT, no verdict",
+    "no_retune": "one run; no threshold, target or window change after seeing the result"
+  },
+  "caveats": [
+    "Long-only was chosen after seeing 2024-05..2026-05 results (shorts lost); that choice is not tested by this holdout.",
+    "The holdout months were already used as out-of-sample for other rules (H4 lower-wick 3R, H1 PDL sweep) in earlier sessions, not for this rule."
+  ]
+}

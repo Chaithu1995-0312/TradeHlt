@@ -52,7 +52,8 @@ def main() -> int:
     ap.add_argument("--out", default=None, help="optional JSON output path")
     args = ap.parse_args()
 
-    raw = pd.read_csv(args.csv)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    raw = _corpus_load(args.csv, sequence_check=False).frame()
     values, fwd, years = prepare_fm030_series(raw, horizon=args.horizon)
 
     params = BandValidationParams(

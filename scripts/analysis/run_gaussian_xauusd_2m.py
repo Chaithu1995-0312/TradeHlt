@@ -96,7 +96,8 @@ def main() -> int:
     ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 
     corpus = Path(guard_xauusd_csv_path("data/mt5/XAUUSD_M15.csv", "XAUUSD"))
-    df = pd.read_csv(corpus)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    df = _corpus_load(corpus, sequence_check=False).frame()
     df["timestamp"] = pd.to_datetime(df["timestamp"])
     corpus_sha = _sha256_file(corpus)
 

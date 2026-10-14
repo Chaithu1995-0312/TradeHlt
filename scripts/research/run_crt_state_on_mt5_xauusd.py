@@ -51,7 +51,8 @@ def load_ohlcv(path: str) -> pd.DataFrame:
     # artifact instead. A REJECT raises; a WARN proceeds and is recorded.
     global ADMISSION
     ADMISSION = admit_corpus(path, "XAUUSD", write_report=False, log=log)
-    df = pd.read_csv(ADMISSION.filepath)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    df = _corpus_load(ADMISSION.filepath, sequence_check=False).frame()
     df["timestamp"] = pd.to_datetime(df["timestamp"])
     log.info("Loaded %d OHLCV rows from %s", len(df), path)
     return df
