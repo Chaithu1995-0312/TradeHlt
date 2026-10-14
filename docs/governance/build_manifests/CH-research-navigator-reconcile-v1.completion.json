@@ -1,0 +1,36 @@
+{
+  "change_id": "CH-research-navigator-reconcile-v1",
+  "date_utc": "2026-10-10",
+  "objective": "Research Navigator Phase-1 source reconciliation plus a read-only HTML view: a read-only derived indexer (scripts/governance/nav_reconcile.py) that reads the declared research/documentation inventories (DOC_TRACKING_INDEX.xlsx, RESEARCH_SCRIPTS_INTENT_TRACKER.csv, scripts_business_functionality.xlsx, Infrastructure Inventory.xlsx) and emits a derived index under data/nav_index/ (gitignored, non-governed), including index.html filled from ui_kits/research_navigator/template.html. Identity rule enforced: records join ONLY on equal normalized full POSIX path; the 10 basename-only scripts_business_functionality rows are surfaced as inferred candidates, never verified-joined. The page does not record decisions. Also registers nav_reconcile.py under SITS and resyncs the grandfather pin so stubs==pin.",
+  "change_classes": [
+    "SCRIPT_LIFECYCLE_CHANGE"
+  ],
+  "declared_files": [
+    "scripts/governance/nav_reconcile.py",
+    "scripts/governance/seed_script_registry.py",
+    "docs/governance/script_registry_stubs.jsonl",
+    "docs/governance/script_registry_grandfather.json",
+    "docs/reference/script-matrix.md",
+    "docs/governance/build_manifests/CH-research-navigator-reconcile-v1.impact.json",
+    "docs/governance/build_manifests/CH-research-navigator-reconcile-v1.completion.json",
+    "assistant_project.md",
+    "tests/test_nav_reconcile.py",
+    "ui_kits/research_navigator/template.html"
+  ],
+  "checks_executed": [
+    "tests/test_script_registry.py",
+    "tests/test_script_matrix_sync.py",
+    "tests/test_construction_protocol.py",
+    "tests/test_nav_reconcile.py"
+  ],
+  "checks_result": {
+    "tests/test_script_registry.py": "49 passed, 2 warnings (warnings are a pre-existing SyntaxWarning in another session's untracked _tmp_measure_rag_ranking.py, not a failure; unrelated to this change)",
+    "tests/test_script_matrix_sync.py": "pass",
+    "tests/test_construction_protocol.py": "pass",
+    "impact_validation": "IMPACT: APPROVED"
+  },
+  "repo_state_hash": "PENDING",
+  "completion_status": "COMPLETE",
+  "production_behavior_changed": "NO",
+  "result_summary": "Read-only Phase-1 reconciler corrected against the workbook headers and re-run. Business intent now reads Summary of functionality (empty cells stay intent_unstated; the prior pass marked every business row declared). Infrastructure edges keep the Relationship cell (the prior pass defaulted every edge to depends_on) and attach an asset id only on exact id, name, or '{id} {name}'. Referred-files cells become reference edges with unresolved endpoints unless the token is an indexed full path. Every non-legend sheet is row-preserved or typed-indexed; Legend, Role_Protocol, Repo_Coverage_Summary, Counts, and README are explicit exclusions and stay in the inventory denominator. Intent xlsx path set equals the csv (229/229, 0 text disagreements) and is not double-counted. Regenerated data/nav_index (gitignored): 4493 artifact rows, 1931 relationships, inventory accounted 4619/4740 (121 excluded), intent declared 2371/4493, lifecycle confirmed 0/4493, confidence sheet 69 exact / 11 unmatched, 10 basename identity candidates. The same run wrote data/nav_index/index.html (4,803,041 bytes) from ui_kits/research_navigator/template.html. The page embeds the payload, opens from disk, caps the visible list at 150, and has no decision-write control. tests/test_nav_reconcile.py: 2 passed (bindings plus script-close escaping). No source workbook, config, ontology, finding, or production surface was modified; no economic/G001 claim; no execution of any other repository script."
+}

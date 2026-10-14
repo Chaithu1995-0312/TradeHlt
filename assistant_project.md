@@ -582,3 +582,45 @@ Open Questions: none for the repair. Deferred to commit 2: register nav_reconcil
 Next Step: git commit --no-verify the pin resync (established branch precedent; the pre-commit hook runs a broad floor with pre-existing reds unrelated to this additive JSON change and explicitly sanctions --no-verify), then proceed to Navigator commit 2.
 ---
 
+==== 📝 SESSION LOG ENTRY
+Date: 2026-10-10
+Topic: Research Navigator — register the Phase-1 read-only reconciler (commit 2, lane/research-navigator)
+Decision/Output: Registered scripts/governance/nav_reconcile.py as SCR-499 in docs/governance/script_registry_stubs.jsonl with a real classified purpose (DESCRIPTIVE/DATA read-only indexer; purpose != GRANDFATHER_UNCLASSIFIED) plus a matching seed overlay in scripts/governance/seed_script_registry.py, and additively pinned nav_reconcile.py in script_registry_grandfather.json (498 -> 499) so stubs==pin==499. This closed the latent test_grandfather_paths_match_stubs bug (adding a stub without a matching pin add would have failed pin==stubs). Regenerated docs/reference/script-matrix.md via the matrix generator. The indexer is read-only: it reads the four declared source workbooks (DOC_TRACKING_INDEX.xlsx, RESEARCH_SCRIPTS_INTENT_TRACKER.csv, scripts_business_functionality.xlsx, Infrastructure Inventory.xlsx), mutates no source/config/registry, executes no other script, and makes no economic/G001 claim. It emits a DERIVED index under data/nav_index/ (gitignored, not a governed surface): artifacts.jsonl (1918), relationships.jsonl (57), reconciliation.json. Identity rule enforced per spec §9/§10: records join ONLY on equal normalized full POSIX path; the 10 basename-only scripts_business_functionality rows are surfaced as inferred_candidates, never verified-joined. Manifests: CH-research-navigator-reconcile-v1.impact.json (IMPACT: APPROVED) + .completion.json (COMPLETION: COMPLETE). Full SITS registry floor GREEN (test_script_registry.py 49 passed).
+Belief Update / ROI / Goal:
+  Goal: ship the Navigator as a non-authoritative derived navigation surface over existing sources, never a second research architecture.
+  Belief: a governance CLI may legitimately keep logic_in_script (precedent SCR-179 construction_protocol.py); missing_impl is a visibility backlog, not a CI fail. The pin==stubs invariant must be maintained additively per new script or the registry floor reddens.
+  Knowledge ROI: high — proves a read-only metadata indexer can be registered and certified on this anchor without executing or mutating any source.
+  Action: commit 2 lands the reconciler + its registration; commit 1 (3b5af83) already landed the pre-existing-drift repair.
+Open Questions: none. Deferred to Phase 2: add a search/filter static HTML surface over data/nav_index/ and wire the SSOT overlap-map reference (read-only, separately manifested).
+Next Step: git add + commit (hooks run the governed floor; pre-commit GREEN_FLOOR is green). No --no-verify needed unless a pre-existing unrelated red appears.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-13 15:14
+Topic: Research Navigator Phase 1 — column bindings and sheet census
+Decision/Output: Continued nav_reconcile.py on lane/research-navigator @ 3b5af83. The registered indexer compiled and had been run, but it read business intent from headers that are not in the workbook, marked every business row declared, and stored every infrastructure edge as depends_on with a NAV-SUBSYS: prefix on the raw name. Corrected to Summary of functionality / Referred files, kept the Relationship verb, and resolved asset endpoints only on exact id, name, or '{id} {name}'. Row-preserved every non-legend sheet as type unknown. Legend, Role_Protocol, Repo_Coverage_Summary, Counts, and README are explicit exclusions in the inventory denominator. Intent xlsx path set equals the csv (0 text disagreements) and is not double-counted. Regenerated data/nav_index (gitignored): 4493 artifacts, 1931 relationships, inventory 4619/4740, intent declared 2371/4493, lifecycle confirmed 0, confidence 69 exact / 11 unmatched, 10 basename candidates. Added tests/test_nav_reconcile.py. validate-completion COMPLETE (repo_state at that moment 3b5af8361d81+f195c277a5d8; manifest hash left PENDING). No source workbook, config, or production edit. Not committed.
+Belief Update / ROI / Goal: Goal: account for the research inventories without a second authority. Belief: the 2026-10-10 index overstated intent coverage and mislabeled infrastructure edges; the corrected index keeps those gaps visible. Knowledge ROI: high. Action: do not treat the old 1918/1.0 intent figure as the census.
+Open Questions: Phase 2 static HTML was the deferred next slice. Commit of this lane was Cline's unfinished next step and was not done here.
+Next Step: User decides whether to commit lane/research-navigator or start the read-only HTML surface over data/nav_index.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-13 16:39
+Topic: Research Navigator read-only HTML page
+Decision/Output: Added a self-contained page over the derived index on lane/research-navigator. ui_kits/research_navigator/template.html is the tracked template. scripts/governance/nav_reconcile.py fills it into data/nav_index/index.html (4,803,041 bytes). The payload is embedded so the file opens from disk. Search and filters use fields that already exist (type, source inventory, intent confidence, lifecycle confirmed, authority role, basename-only). The list shows at most 150 matches. Coverage shows the sheet census, exclusions, missing sources, and conflicts. The identity queue lists the 10 inferred candidates and does not mark them verified. There is no decision-write control. Vendored Babel was not used: a file:// page cannot fetch the JSONL, and the crt_dashboard vendor files were not copied. tests/test_nav_reconcile.py: 2 passed. validate-completion COMPLETE; repo_state printed 3b5af8361d81+8c6715088233 and the manifest hash stays PENDING. Regenerated census unchanged: 4493 artifacts, 1931 relationships, inventory 4619/4740, intent declared 2371/4493, lifecycle confirmed 0. Not committed.
+Belief Update / ROI / Goal: Goal: navigate the research inventories without a second authority. Belief: a static embedded page can show the corrected census, including unresolved joins, without recording decisions. Knowledge ROI: medium. Action: open data/nav_index/index.html from the navigator worktree; do not treat inferred candidates as verified.
+Open Questions: Commit of lane/research-navigator is still not done.
+Next Step: User decides whether to commit the lane.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-13 22:00
+Topic: Where the relationship explorer is in the navigator HTML
+Decision/Output: Answered from the generated index. index.html has no Relationship explorer section and no graph. Relationship rows are inside the embedded payload and render only under Relationships (N) after a row is selected. 1931 relationships: 1874 references, 57 infrastructure verbs kept as written, confidence mechanically_observed on all 1931, inferred relationship count 0. Spec labels depends_on, produces, defines contract for, provides_evidence_for, supersedes, conflicts with, and requires user confirmation have 0 rows. 9 edges have neither endpoint id, so they are in the payload and the coverage count and on no detail pane. No code change.
+Belief Update / ROI / Goal: Goal: see document, script, and inventory links without treating a filename as a dependency. Belief: the page shows stored edges on a selected record; it does not implement spec section D. Knowledge ROI: medium. Action: do not tell the user those ten labels are filters.
+Open Questions: Whether to add a read-only relationship list that shows every edge, including the 9 with no attached row.
+Next Step: User decides whether that list is in scope.
+---

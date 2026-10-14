@@ -3,7 +3,7 @@
   "description": "SITS Phase-1 grandfather freeze: path set present when coverage floor landed. Match key is path (POSIX). Rename updates path here + stubs same commit; SCR id stays stable. Phase-2 ratchet (PR-3) treats discovered - paths as new. Resynced 2026-08-06 (355->359->368) after M-GATE-01 + 4 pre-existing untracked scripts were classified via seed_script_registry.py overlays. Resynced 2026-08-07 (368->372) after the module-census turn re-ran script_census; 8 already-overlay-classified scripts plus scripts/analysis/module_census.py entered the stub set. No path was grandfathered unclassified. Resynced 2026-08-08 (372->373) for CH-semantic-os-v2: scripts/governance/seed_semantic_os.py entered the stub set. It is classified via a real seed_script_registry.py overlay (EXTRACTED_TO_SRC -> src/governance/semantic_os.py); no path was grandfathered unclassified. Resynced 2026-09-06 for CH-trace-parquet-duckdb-query: scripts/analysis/query_trace.py classified via seed_script_registry.py overlay (DIAGNOSTIC/LOGIC_IN_SCRIPT). Resynced 2026-09-09 for CORPUS-READ-SEAM-P0: scripts/analysis/corpus_read_census.py classified via seed_script_registry.py overlay (DIAGNOSTIC/LOGIC_IN_SCRIPT). Resynced 2026-09-10 for CORPUS-READ-SEAM-P3: scripts/analysis/corpus_read_lint.py classified via seed_script_registry.py overlay (GOVERNANCE/LOGIC_IN_SCRIPT). Also pinned (NOT overlay-classified -- concurrent-session WIP, purpose unknown to this session, left GRANDFATHER_UNCLASSIFIED honestly rather than guessed) scripts/analysis/phase1_resolver_replay_evidence.py and phase1_resolver_replay_sample_acquisition.py. Resynced 2026-09-10 (452->453) for CH-trade-chart-tab: scripts/analysis/build_resolver_overlay.py entered the stub set, classified via a real seed_script_registry.py overlay (DATA/EXTRACTED_TO_SRC -> src/charts/resolver_overlay.py); no path was grandfathered unclassified. NOT resynced for the same-session batch of concurrent-session unclassified scripts (_build_run_story.py, scripts/analysis/phase1_shadow_create_economic_census.py, phase1_shadow_memory_create_expire_mine.py, phase1_shadow_memory_subsystem_probe.py, phase1_shadow_memory_timing_race_mine.py) -- purpose unknown to this session, left for their own owning session per the same discipline as the prior entry. Resynced 2026-10-10 (453->498) for CH-research-navigator: additive grandfather-pin resync so the Research Navigator (scripts/governance/nav_reconcile.py) can certify on a green SITS floor. The 45 same-session concurrent-SITs scripts that entered the stub set without a pin entry are now PINNED (NOT overlay-classified -- purpose unknown to this session, left GRANDFATHER_UNCLASSIFIED honestly rather than guessed), per the same discipline as the prior entries. No path was removed; no purpose was invented; no behavior surface changed.",
   "frozen_at": "2026-08-08T00:00:00Z",
   "match_key": "path",
-  "path_count": 498,
+  "path_count": 499,
   "paths": [
     "__init__.py",
     "_build_run_story.py",
@@ -258,6 +258,7 @@
     "scripts/governance/framework_gap_audit.py",
     "scripts/governance/framework_registry_report.py",
     "scripts/governance/identity_chain_check.py",
+    "scripts/governance/nav_reconcile.py",
     "scripts/governance/patch_msip_shadow_design_consistency_v1.py",
     "scripts/governance/promote_v2.py",
     "scripts/governance/provenance_query.py",
