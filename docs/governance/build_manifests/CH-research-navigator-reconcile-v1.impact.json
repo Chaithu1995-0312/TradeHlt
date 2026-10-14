@@ -1,0 +1,42 @@
+{
+  "change_id": "CH-research-navigator-reconcile-v1",
+  "date_utc": "2026-10-10",
+  "objective": "Research Navigator Phase 1 (source reconciliation) plus the read-only HTML view of that derived index. Introduce a READ-ONLY indexer scripts/governance/nav_reconcile.py that reads the five declared research/documentation source inventories (DOC_TRACKING_INDEX.xlsx Master_Index, RESEARCH_SCRIPTS_INTENT_TRACKER.xlsx/.csv, scripts_business_functionality.xlsx, Infrastructure Inventory.xlsx Assets+Relationships, and the local SSOT framework inventory output) and emits a derived reconciliation report + JSONL. It accounts for 100% of in-scope records and surfaces unresolved identity matches, conflicting intent, authority disagreements, missing links and unverified relationships. It performs ZERO joins that are not evidence-backed, mutates no source artifact, executes no repository script, and makes no economic/trading claim. The same command fills ui_kits/research_navigator/template.html into data/nav_index/index.html. The page embeds the JSON so it opens from disk, searches and filters fields that already exist, and does not record decisions. It formalizes the Research SSOT Framework v0.1 ARCHITECTURE.md 'read-only overlap map' phase as a governed UI initiative.",
+  "change_classes": [
+    "SCRIPT_LIFECYCLE_CHANGE"
+  ],
+  "change_class_rationale": "No new change class is introduced. SCRIPT_LIFECYCLE_CHANGE already governs registering a new script under scripts/** and its SITS floor (test_script_registry/test_script_matrix_sync/test_construction_protocol) is exactly the floor validate-completion enforces for any declared scripts/**/*.py. Adding a bespoke READ_ONLY_NAVIGATION_INDEX class would add zero mechanical enforcement (the read-only / no-execution / no-source-mutation invariants live in authority_NOT_granted + production_behavior_changed=NO, as RUN_IDENTITY_CHANGE does) and would break test_contracts_registry_wellformed's len(c)==19 pin, forcing a governed test edit. Registration rides an OVERLAY in seed_script_registry.py (matching the construction_protocol.py / semantic_os_integration.py precedent), so the grandfather pin == stubs path set is unchanged.",
+  "affected_files": [
+    "scripts/governance/nav_reconcile.py",
+    "scripts/governance/seed_script_registry.py",
+    "docs/governance/script_registry_stubs.jsonl",
+    "docs/governance/script_registry_grandfather.json",
+    "docs/reference/script-matrix.md",
+    "docs/governance/build_manifests/CH-research-navigator-reconcile-v1.impact.json",
+    "docs/governance/build_manifests/CH-research-navigator-reconcile-v1.completion.json",
+    "assistant_project.md",
+    "tests/test_nav_reconcile.py",
+    "ui_kits/research_navigator/template.html"
+  ],
+  "affected_scripts": "One new read-only script: scripts/governance/nav_reconcile.py (category GOVERNANCE, lifecycle ACTIVE, implementation_status LOGIC_IN_SCRIPT, authority inventory). It imports only stdlib + openpyxl (already a repo dependency) and never executes other repository scripts.",
+  "required_checks_ack": [
+    "tests/test_script_registry.py",
+    "tests/test_script_matrix_sync.py",
+    "tests/test_construction_protocol.py"
+  ],
+  "required_checks_note": "SCRIPT_LIFECYCLE_CHANGE floor. Declaring scripts/governance/nav_reconcile.py additionally forces the SITS floor; validate-completion re-runs all three. validate-completion re-derives repo_state_hash so the completion manifest must be finalized only after the disk tree matches the declared_files set exactly.",
+  "unknowns": [],
+  "blocking_unknowns_note": "Source reconciliation facts are MECHANICALLY OBSERVED from committed git state, not assumed: (a) researcharctitecuredocs/ is gitignored (.gitignore:92) and therefore absent from this clean worktree -> the SSOT inventory input is read from an explicitly-declared local path, never from the tracked tree; (b) the four workbooks + intent-tracker csv/xlsx are git-tracked and present at d397067; (c) grandfather pin == stubs path set (453) so registration uses an overlay, not a stub. No blocking UNKNOWN remains.",
+  "rollback_boundary": "Single-commit, file-local revert on branch lane/research-navigator: drop nav_reconcile.py, remove its OVERLAY block from seed_script_registry.py, regenerate script-matrix.md (git checkout), delete the manifest/finding. No source workbook, config, registry or spine module is touched, so rollback cannot alter any production or research behavior.",
+  "authority_granted": "User 2026-10-10, Act mode: approved building the full Research Navigator with source reconciliation as the first deliverable; approved three defaults (full Python indexer + derived JSONL + phased UI; dedicated navigator branch at clean anchor d397067; vendored-Babel static-HTML UI). First acceptance criterion = every in-scope record accounted for and every unresolved identity/relationship visible, not successful joins. User 2026-10-13: read-only HTML. The page is vanilla and self-contained. Vendored Babel stays unused: a file:// document cannot fetch the JSONL, and the payload is already embedded. The crt_dashboard vendor blobs are not copied.",
+  "authority_NOT_granted": "No execution of repository scripts; no deletion or rewrite of source documents; no production configuration change; no promotion of any research conclusion into a trading decision; no treatment of an inferred relationship or a matching filename/semantic label as a verified dependency or artifact identity; no automatic marking of any component dormant/dead; no silent omission or merge of records. Conflicting identities are preserved until evidence resolves them.",
+  "production_behavior_changed": "NO",
+  "economic_claims": "NONE (descriptive-only index; no G001, no measured claim)",
+  "read_only_invariants": [
+    "reads existing inventories and documents only",
+    "emits derived JSONL, a reconciliation report, and a self-contained read-only HTML page; mutates no source",
+    "proposes classifications but records none as confirmed",
+    "builds no DAG and presents no evidence in this phase",
+    "treats neither a matching filename nor a semantic label as artifact identity"
+  ]
+}

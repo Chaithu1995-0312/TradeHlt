@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Research Navigator</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 16px 20px 40px;
+    font: 15px/1.45 "Segoe UI", system-ui, sans-serif;
+    color: #1c1c1c; background: #f6f5f2;
+  }
+  h1 { font-size: 22px; margin: 0 0 8px; }
+  h2 { font-size: 16px; margin: 18px 0 8px; }
+  .banner {
+    margin: 0; padding: 10px 12px; background: #fff8e8; border: 1px solid #e2c98a;
+  }
+  #meta { color: #444; margin: 8px 0 0; }
+  nav { display: flex; gap: 8px; margin: 14px 0; }
+  nav button, .controls button {
+    font: inherit; padding: 6px 10px; border: 1px solid #b9b6ae; background: #fff; cursor: pointer;
+  }
+  nav button[aria-pressed="true"] { background: #1f4e79; color: #fff; border-color: #1f4e79; }
+  .controls { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: end; margin-bottom: 8px; }
+  label { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: #333; }
+  label.check { flex-direction: row; align-items: center; gap: 6px; font-size: 14px; padding-bottom: 4px; }
+  input[type="search"], select { font: inherit; min-width: 160px; padding: 4px 6px; }
+  .lead { margin: 0 0 10px; }
+  .muted { color: #555; }
+  .warn { color: #6b4a00; background: #fff4d6; padding: 8px 10px; border: 1px solid #e2c98a; }
+  .split { display: grid; grid-template-columns: minmax(280px, 42%) 1fr; gap: 12px; align-items: start; }
+  #list { max-height: 70vh; overflow: auto; border: 1px solid #d5d2cb; background: #fff; }
+  .row {
+    display: block; width: 100%; text-align: left; font: inherit; padding: 8px 10px;
+    border: 0; border-bottom: 1px solid #eee; background: #fff; cursor: pointer;
+  }
+  .row strong { display: block; font-size: 13px; word-break: break-all; }
+  .row.on { background: #e7f0f8; }
+  #detail, .card, table { background: #fff; border: 1px solid #d5d2cb; }
+  #detail { padding: 12px; }
+  .card { padding: 10px 12px; margin: 0 0 10px; }
+  table { border-collapse: collapse; width: 100%; margin: 0 0 16px; }
+  th, td { border-bottom: 1px solid #eee; padding: 4px 8px; text-align: left; vertical-align: top; font-size: 13px; }
+  th { background: #f0eeea; }
+  dl { display: grid; grid-template-columns: 180px 1fr; gap: 4px 8px; margin: 0 0 12px; }
+  dt { color: #555; }
+  dd { margin: 0; word-break: break-word; }
+  pre { white-space: pre-wrap; word-break: break-word; font-size: 12px; background: #f7f7f5; padding: 8px; }
+  @media (max-width: 860px) { .split { grid-template-columns: 1fr; } #list { max-height: 40vh; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Research Navigator</h1>
+  <p class="banner">Derived index. Not an authority registry. Identity joins only on an equal normalized full POSIX path. A bare basename or a semantic label is not a verified join. This page does not record decisions.</p>
+  <p id="meta"></p>
+</header>
+<nav>
+  <button type="button" id="tab-search" aria-pressed="true">Search</button>
+  <button type="button" id="tab-coverage" aria-pressed="false">Coverage</button>
+  <button type="button" id="tab-queue" aria-pressed="false">Identity queue</button>
+</nav>
+<section id="view-search">
+  <div class="controls">
+    <label>Search <input id="q" type="search" placeholder="id, path, intent, type, source"></label>
+    <label>Type <select id="f-type"></select></label>
+    <label>Source inventory <select id="f-source"></select></label>
+    <label>Intent <select id="f-intent"></select></label>
+    <label>Lifecycle confirmed <select id="f-life"></select></label>
+    <label>Authority role <select id="f-auth"></select></label>
+    <label class="check"><input id="f-base" type="checkbox"> Basename-only identity</label>
+    <button type="button" id="browse">Browse first 150</button>
+    <button type="button" id="clear">Clear</button>
+  </div>
+  <p id="match-count" class="muted"></p>
+  <div class="split">
+    <div id="list"></div>
+    <div id="detail"><p class="muted">Select a row. Path text does not mean the file exists.</p></div>
+  </div>
+</section>
+<section id="view-coverage" hidden>
+  <p class="lead">Excluded sheets stay in the inventory denominator. Duplicate snapshots are census-only. Unresolved endpoints stay visible.</p>
+  <div id="coverage-body"></div>
+</section>
+<section id="view-queue" hidden>
+  <p class="lead">These rows are inferred_candidate. A bare basename or a semantic label is not a verified join. This page cannot confirm them.</p>
+  <div id="queue-body"></div>
+</section>
+<script>
+const PAYLOAD = __NAV_PAYLOAD__;
+const ROW_CAP = 150;
+const REL_CAP = 40;
+const ARTS = PAYLOAD.artifacts || [];
+const RELS = PAYLOAD.relationships || [];
+const REC = PAYLOAD.reconciliation || {};
+const HAY = ARTS.map(function (a) {
+  return [a.artifact_id, a.original_path, a.declared_intent, a.type, a.source_inventory,
+    a.classification_basis, a.authority_role, a.lifecycle_observed, a.lifecycle_confirmed,
+    a.intent_confidence].filter(function (v) { return v != null && v !== ""; }).join("\n").toLowerCase();
+});
+const relBy = new Map();
+function addRel(id, rel) {
+  if (!id) return;
+  var list = relBy.get(id);
+  if (!list) { list = []; relBy.set(id, list); }
+  list.push(rel);
+}
+RELS.forEach(function (r) {
+  addRel(r.source, r);
+  if (r.target && r.target !== r.source) addRel(r.target, r);
+});
+
+function el(tag, text, cls) {
+  var n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text != null) n.textContent = String(text);
+  return n;
+}
+function uniq(keyFn) {
+  var s = new Set();
+  ARTS.forEach(function (a) {
+    var v = keyFn(a);
+    if (v != null && String(v) !== "") s.add(String(v));
+  });
+  return Array.from(s).sort();
+}
+function fillSelect(id, values) {
+  var sel = document.getElementById(id);
+  sel.appendChild(el("option", "Any"));
+  sel.lastChild.value = "";
+  values.forEach(function (v) {
+    var o = el("option", v);
+    o.value = v;
+    sel.appendChild(o);
+  });
+}
+fillSelect("f-type", uniq(function (a) { return a.type; }));
+fillSelect("f-source", uniq(function (a) { return a.source_inventory; }));
+fillSelect("f-intent", uniq(function (a) { return a.intent_confidence; }));
+fillSelect("f-life", uniq(function (a) { return a.lifecycle_confirmed; }));
+fillSelect("f-auth", uniq(function (a) { return a.authority_role; }));
+
+var browsing = false;
+var selected = null;
+
+function val(id) { return document.getElementById(id).value; }
+function constrained() {
+  return !!(val("q").trim() || val("f-type") || val("f-source") || val("f-intent")
+    || val("f-life") || val("f-auth") || document.getElementById("f-base").checked);
+}
+function keep(i) {
+  var a = ARTS[i];
+  if (val("f-type") && String(a.type || "") !== val("f-type")) return false;
+  if (val("f-source") && String(a.source_inventory || "") !== val("f-source")) return false;
+  if (val("f-intent") && String(a.intent_confidence || "") !== val("f-intent")) return false;
+  if (val("f-life") && String(a.lifecycle_confirmed || "") !== val("f-life")) return false;
+  if (val("f-auth") && String(a.authority_role || "") !== val("f-auth")) return false;
+  if (document.getElementById("f-base").checked && !(a.provenance && a.provenance.basename_only)) return false;
+  var q = val("q").trim().toLowerCase();
+  if (q && HAY[i].indexOf(q) === -1) return false;
+  return true;
+}
+function renderList() {
+  var list = document.getElementById("list");
+  var count = document.getElementById("match-count");
+  list.textContent = "";
+  var hits = [];
+  if (!constrained() && !browsing) {
+    count.textContent = ARTS.length + " artifacts. Search or set a filter. The list shows at most " + ROW_CAP + " matches.";
+    return;
+  }
+  for (var i = 0; i < ARTS.length; i++) {
+    if (keep(i)) hits.push(i);
+  }
+  var shown = hits.slice(0, ROW_CAP);
+  count.textContent = "Showing " + shown.length + " of " + hits.length + " matches. Cap is " + ROW_CAP + ".";
+  shown.forEach(function (i) {
+    var a = ARTS[i];
+    var btn = el("button", null, "row" + (a.artifact_id === selected ? " on" : ""));
+    btn.type = "button";
+    btn.appendChild(el("strong", a.artifact_id || "(no id)"));
+    var bits = [a.type, a.source_inventory, a.intent_confidence, a.lifecycle_confirmed].filter(Boolean).join(" · ");
+    btn.appendChild(el("span", bits));
+    btn.appendChild(el("span", a.original_path || "(no path)"));
+    if (a.provenance && a.provenance.basename_only) {
+      btn.appendChild(el("span", "inferred_candidate — not a verified join"));
+    }
+    btn.addEventListener("click", function () { showDetail(a.artifact_id); });
+    list.appendChild(btn);
+  });
+}
+function addPairs(parent, obj, keys) {
+  var dl = el("dl");
+  keys.forEach(function (k) {
+    if (!obj || obj[k] == null || obj[k] === "") return;
+    dl.appendChild(el("dt", k));
+    dl.appendChild(el("dd", typeof obj[k] === "object" ? JSON.stringify(obj[k]) : obj[k]));
+  });
+  parent.appendChild(dl);
+}
+function showDetail(id) {
+  selected = id;
+  var a = null;
+  for (var i = 0; i < ARTS.length; i++) if (ARTS[i].artifact_id === id) { a = ARTS[i]; break; }
+  var host = document.getElementById("detail");
+  host.textContent = "";
+  if (!a) { host.appendChild(el("p", "No artifact with that id in this index.")); renderList(); return; }
+  host.appendChild(el("h2", a.artifact_id));
+  if (a.provenance && a.provenance.basename_only) {
+    host.appendChild(el("p", "Basename-only identity. inferred_candidate — not a verified join.", "warn"));
+  }
+  host.appendChild(el("p", "Path is inventory text. This page does not check that the file exists.", "muted"));
+  addPairs(host, a, ["artifact_id", "type", "original_path", "source_inventory", "source_version",
+    "content_hash", "classification_basis", "declared_intent", "intent_confidence",
+    "authority_role", "lifecycle_observed", "lifecycle_confirmed"]);
+  host.appendChild(el("h2", "Provenance"));
+  var raw = JSON.stringify(a.provenance || {}, null, 2);
+  if (raw.length > 6000) raw = raw.slice(0, 6000) + "\n… truncated for display";
+  host.appendChild(el("pre", raw));
+  var rels = relBy.get(a.artifact_id) || [];
+  host.appendChild(el("h2", "Relationships (" + rels.length + ")"));
+  host.appendChild(el("p", "endpoint_resolution and confidence are shown as stored. unresolved and inferred_candidate stay unresolved.", "muted"));
+  rels.slice(0, REL_CAP).forEach(function (r) {
+    var card = el("article", null, "card");
+    addPairs(card, r, ["relationship_type", "confidence", "endpoint_resolution",
+      "source_resolution", "target_resolution", "source", "target", "source_raw", "target_raw",
+      "evidence", "source_inventory"]);
+    host.appendChild(card);
+  });
+  if (rels.length > REL_CAP) {
+    host.appendChild(el("p", (rels.length - REL_CAP) + " more relationships are not shown.", "muted"));
+  }
+  renderList();
+}
+function table(columns, rows) {
+  var t = el("table");
+  var thead = el("thead");
+  var hr = el("tr");
+  columns.forEach(function (c) { hr.appendChild(el("th", c)); });
+  thead.appendChild(hr);
+  t.appendChild(thead);
+  var tb = el("tbody");
+  rows.forEach(function (row) {
+    var tr = el("tr");
+    columns.forEach(function (c) {
+      var v = row[c];
+      tr.appendChild(el("td", v == null ? "" : (typeof v === "object" ? JSON.stringify(v) : v)));
+    });
+    tb.appendChild(tr);
+  });
+  t.appendChild(tb);
+  return t;
+}
+function renderCoverage() {
+  var host = document.getElementById("coverage-body");
+  host.textContent = "";
+  var cov = REC.coverage || {};
+  host.appendChild(el("h2", "Coverage"));
+  ["inventory", "intent", "lifecycle", "relationship"].forEach(function (name) {
+    host.appendChild(el("h2", name));
+    var block = cov[name] || {};
+    addPairs(host, block, Object.keys(block));
+  });
+  host.appendChild(el("p", "verified_endpoints counts exact and exact_path. exact_path means equal normalized full POSIX path. It is not an economic claim.", "muted"));
+  host.appendChild(el("h2", "Counts"));
+  addPairs(host, REC.counts || {}, Object.keys(REC.counts || {}));
+  host.appendChild(el("h2", "Conflicts"));
+  addPairs(host, REC.conflicts || {}, Object.keys(REC.conflicts || {}));
+  host.appendChild(el("h2", "Missing sources"));
+  var missing = REC.missing_sources || [];
+  if (!missing.length) host.appendChild(el("p", "None recorded."));
+  missing.forEach(function (m) { host.appendChild(el("p", typeof m === "string" ? m : JSON.stringify(m))); });
+  host.appendChild(el("h2", "Sheet census"));
+  host.appendChild(table(["workbook", "sheet", "rows", "disposition", "reason"], REC.sheet_census || []));
+  host.appendChild(el("h2", "Exclusions"));
+  var ex = REC.exclusions || [];
+  var exCols = ["item", "reason", "rows"];
+  host.appendChild(table(exCols, ex));
+  host.appendChild(el("h2", "Identity rule"));
+  host.appendChild(el("p", REC.identity_rule || ""));
+  host.appendChild(el("p", REC.scope_note || ""));
+}
+function renderQueue() {
+  var host = document.getElementById("queue-body");
+  host.textContent = "";
+  var rows = REC.inferred_identity_candidates || [];
+  host.appendChild(el("p", rows.length + " inferred identity candidates. None of these is a verified join."));
+  if (!rows.length) { host.appendChild(el("p", "None in this index.")); return; }
+  rows.forEach(function (row) {
+    var card = el("article", null, "card");
+    card.appendChild(el("p", row.confidence || "inferred_candidate", "warn"));
+    card.appendChild(el("p", row.reason || ""));
+    addPairs(card, row, Object.keys(row));
+    var path = row.business_path || row.intent_path;
+    if (path) {
+      var btn = el("button", "Show matching inventory text");
+      btn.type = "button";
+      btn.addEventListener("click", function () {
+        document.getElementById("q").value = path;
+        browsing = false;
+        showTab("search");
+        var found = null;
+        for (var i = 0; i < ARTS.length; i++) {
+          if (ARTS[i].original_path === path) { found = ARTS[i].artifact_id; break; }
+        }
+        if (found) showDetail(found);
+        else renderList();
+      });
+      card.appendChild(btn);
+    }
+    host.appendChild(card);
+  });
+}
+function showTab(name) {
+  ["search", "coverage", "queue"].forEach(function (n) {
+    document.getElementById("view-" + n).hidden = n !== name;
+    document.getElementById("tab-" + n).setAttribute("aria-pressed", n === name ? "true" : "false");
+  });
+  if (name === "coverage") renderCoverage();
+  if (name === "queue") renderQueue();
+}
+document.getElementById("tab-search").addEventListener("click", function () { showTab("search"); });
+document.getElementById("tab-coverage").addEventListener("click", function () { showTab("coverage"); });
+document.getElementById("tab-queue").addEventListener("click", function () { showTab("queue"); });
+["q", "f-type", "f-source", "f-intent", "f-life", "f-auth"].forEach(function (id) {
+  document.getElementById(id).addEventListener("input", function () { browsing = false; renderList(); });
+  document.getElementById(id).addEventListener("change", function () { browsing = false; renderList(); });
+});
+document.getElementById("f-base").addEventListener("change", function () { browsing = false; renderList(); });
+document.getElementById("browse").addEventListener("click", function () { browsing = true; renderList(); });
+document.getElementById("clear").addEventListener("click", function () {
+  document.getElementById("q").value = "";
+  ["f-type", "f-source", "f-intent", "f-life", "f-auth"].forEach(function (id) {
+    document.getElementById(id).value = "";
+  });
+  document.getElementById("f-base").checked = false;
+  browsing = false;
+  selected = null;
+  document.getElementById("detail").textContent = "";
+  document.getElementById("detail").appendChild(el("p", "Select a row. Path text does not mean the file exists.", "muted"));
+  renderList();
+});
+(function () {
+  var c = REC.counts || {};
+  var inv = (REC.coverage || {}).inventory || {};
+  document.getElementById("meta").textContent = [
+    REC.spec_version || "",
+    REC.generated_utc || "",
+    (c.artifacts_total != null ? c.artifacts_total + " artifacts" : ""),
+    (inv.accounted_for != null ? "inventory " + inv.accounted_for + "/" + inv.discovered_data_rows : "")
+  ].filter(Boolean).join(" · ");
+})();
+renderList();
+</script>
+</body>
+</html>

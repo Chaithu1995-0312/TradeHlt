@@ -12,7 +12,7 @@ python scripts/analysis/generate_script_matrix.py
 Authority: **inventory only** (no promote power). Thin-wrapper purity is **not**
 CI-enforced in v1 — rows track `logic_in_script` / `implementation_status` only.
 
-**Records:** 514
+**Records:** 515
 
 | ID | Category | Lifecycle | Impl status | Path | Purpose |
 |---|---|---|---|---|---|
@@ -530,6 +530,7 @@ CI-enforced in v1 — rows track `logic_in_script` / `implementation_status` onl
 | `SCR-512` | DATA | ACTIVE | LOGIC_IN_SCRIPT | `scripts/data/mt5_history_probe.py` | Program 12 Step 2a: read-only MT5 history-availability probe. Per symbol x ti... |
 | `SCR-513` | RESEARCH_RUNNER | ACTIVE | EXTRACTED_TO_SRC | `scripts/research/program12_parity_one_month.py` | Program 12 Slice 1: one-month XAUUSD projector parity. Loads data/XAUUSD_M15.... |
 | `SCR-514` | RESEARCH_RUNNER | ACTIVE | EXTRACTED_TO_SRC | `scripts/research/timeframe_ladder.py` | Program 12 Slice 2: H1/H4 ladder on the sealed one-month XAUUSD parent. Loads... |
+| `SCR-515` | GOVERNANCE | ACTIVE | LOGIC_IN_SCRIPT | `scripts/governance/nav_reconcile.py` | Research Navigator Phase-1 source reconciliation (READ-ONLY). Reads the decla... |
 
 ---
 

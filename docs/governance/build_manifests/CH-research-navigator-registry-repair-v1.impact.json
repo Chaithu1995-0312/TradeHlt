@@ -1,0 +1,43 @@
+{
+  "change_id": "CH-research-navigator-registry-repair-v1",
+  "date_utc": "2026-10-10",
+  "objective": "Repair a pre-existing SITS grandfather-pin/stub drift so the Research Navigator lane can certify on a green script-registry floor. 45 concurrent-session Semantic OS v2 / scratch scripts entered docs/governance/script_registry_stubs.jsonl (via script_census --write-stubs) but were never added to the grandfather pin docs/governance/script_registry_grandfather.json, so test_grandfather_paths_match_stubs (pin != stubs) and test_grandfather_ratchet_live_universe (45 unclassified new paths) fail on the anchor commit d397067 for reasons that predate and are independent of the Navigator. The repair resyncs the pin to the stub path set. The pin is a strict subset of stubs (only_in_pin == 0, mechanically verified), so the resync is PURELY ADDITIVE (453 -> 498). The 45 added paths are PINNED, not overlay-classified: their purpose is unknown to this session, so they are left GRANDFATHER_UNCLASSIFIED honestly rather than guessed -- exactly the discipline the pin's own description documents for the prior 2026-09-10 concurrent-WIP entry. No path is removed, no purpose is invented, no behavior surface changes.",
+  "change_classes": ["SCRIPT_LIFECYCLE_CHANGE"],
+  "change_class_rationale": "SCRIPT_LIFECYCLE_CHANGE is the only class whose required_checks include tests/test_script_registry.py, so validate-completion actually RUNS the registry floor and thereby PROVES this repair turns it green. A DOCUMENTATION_ONLY manifest would not execute the floor and could not certify the fix. The class fits: this is an inventory/lifecycle-metadata change (the grandfather freeze is a SITS lifecycle artifact). No new change class is introduced (a bespoke class would break test_contracts_registry_wellformed's len(c)==19 pin).",
+  "affected_files": [
+    "docs/governance/script_registry_grandfather.json",
+    "docs/governance/build_manifests/CH-research-navigator-registry-repair-v1.impact.json"
+  ],
+  "affected_scripts": "None. This repair adds, edits, or runs no script. The resync is a metadata edit to a non-governed docs/ JSON artifact, performed by a one-shot helper run from gitignored data/_nav_stage/ that is not committed and not registered.",
+  "required_checks_ack": [
+    "tests/test_script_registry.py",
+    "tests/test_script_matrix_sync.py",
+    "tests/test_construction_protocol.py"
+  ],
+  "required_checks_note": "SCRIPT_LIFECYCLE_CHANGE floor. test_script_registry.py is the check that verifies the repair (test_grandfather_paths_match_stubs + test_grandfather_ratchet_live_universe + test_disk_coverage_full_universe all go green once pin==stubs and no Navigator script is on the governed tree during this change). validate-completion re-runs all three against the live disk.",
+  "unknowns": [],
+  "blocking_unknowns_note": "All repair facts are MECHANICALLY OBSERVED from committed state, not assumed: (a) stubs=498, pin=453, only_in_pin=0 -> the pin is a strict subset, so the resync is purely additive with a fixed delta of 45; (b) the 45 stub-only paths are concurrent-session WIP with no owner-known purpose in this session; (c) the repair script asserts result==stub_set and delta==45 and aborts otherwise. This is a separate, independently-manifested change from CH-research-navigator-reconcile-v1; the Navigator script scripts/governance/nav_reconcile.py is held OFF the governed tree (in gitignored data/_nav_stage/) during this repair so its own registration is certified in its own change. No blocking UNKNOWN remains.",
+  "rollback_boundary": "Single-commit, file-local revert on branch lane/research-navigator: git checkout docs/governance/script_registry_grandfather.json restores the 453-path pin exactly (the diff is additive only, so revert is lossless). No script, config, registry stub, spine module, or source workbook is touched, so rollback cannot alter any production or research behavior -- it only restores the pre-existing (red) pin state.",
+  "authority_granted": "User 2026-10-10, Act mode: authorized Option 2 -- a separate, independently-manifested governed change that repairs the pre-existing 45-path stub/pin + unclassified drift so the Navigator can then certify cleanly, rather than re-rooting or gaming the gate.",
+  "authority_NOT_granted": "No invention or guessing of any script purpose; the 45 pinned paths remain GRANDFATHER_UNCLASSIFIED for their owning sessions to classify. No removal of any pinned path. No execution of repository scripts. No change to production configuration, spine modules, stubs, or the seed overlay list. No promotion of any research conclusion. No silent omission or merge.",
+  "production_behavior_changed": "NO",
+  "economic_claims": "NONE (SITS lifecycle-metadata resync; no G001, no measured claim)",
+  "read_only_invariants": [
+    "edits one non-governed docs/ metadata artifact (the grandfather freeze)",
+    "resync is purely additive; no path removed, no purpose invented",
+    "certified by re-running the SITS floor, never by a trusted log",
+    "does not register, execute, or classify any script"
+  ],
+  "declared_files": [
+    "docs/governance/script_registry_grandfather.json",
+    "docs/governance/build_manifests/CH-research-navigator-registry-repair-v1.impact.json"
+  ],
+  "checks_executed": [
+    "tests/test_script_registry.py",
+    "tests/test_script_matrix_sync.py",
+    "tests/test_construction_protocol.py"
+  ],
+  "repo_state_hash": "PENDING",
+  "completion_status": "COMPLETE",
+  "completion_note": "repo_state_hash is PENDING by the validator's own manifest-in-its-own-diff escape (construction_protocol.py line ~191 whitelists 'PENDING' exactly for a staged manifest that participates in its own git-diff hash). The mechanical guarantee is NOT weakened: validate-completion still re-runs the full SCRIPT_LIFECYCLE floor against the live disk (never log-trusted). test_grandfather_paths_match_stubs (pin==stubs==498) and test_grandfather_ratchet_live_universe (0 unclassified, 0 unregistered) and test_disk_coverage_full_universe now pass with nav_reconcile.py held off the governed tree. Repaired purely additively: 45 concurrent-WIP paths pinned, 0 removed, 0 purposes invented, 0 behavior surfaces changed."
+}

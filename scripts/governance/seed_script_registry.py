@@ -1056,6 +1056,35 @@ OVERLAYS: list[dict[str, Any]] = [
             "economic_claims_allowed stays false. No D1 ladder."
         ),
     },
+    # Research Navigator v0.1 — read-only derived index over the research/documentation
+    # source inventories (spec §11 Phase 1; SSOT ARCHITECTURE.md "read-only overlap map").
+    {
+        "path": "scripts/governance/nav_reconcile.py",
+        "category": "GOVERNANCE",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "LOGIC_IN_SCRIPT",
+        "logic_in_script": True,
+        "dest_modules": [],
+        "purpose": (
+            "Research Navigator Phase-1 source reconciliation (READ-ONLY). Reads the declared "
+            "research/documentation inventories (DOC_TRACKING_INDEX.xlsx, "
+            "RESEARCH_SCRIPTS_INTENT_TRACKER.csv, scripts_business_functionality.xlsx, "
+            "Infrastructure Inventory.xlsx, optional SSOT inventory.jsonl) and emits a DERIVED "
+            "index under data/nav_index/ (artifacts.jsonl, relationships.jsonl, "
+            "reconciliation.json, index.html). Mutates no source workbook/document/config; joins ONLY on "
+            "equal normalized full POSIX path (basename/semantic similarity = inferred_candidate, "
+            "never a verified join); preserves conflicting identities; makes no economic/trading "
+            "claim and no G001 assertion. Descriptive only (CLAUDE.md §6.5)."
+        ),
+        "task_refs": ["Research Navigator v0.1", "SITS"],
+        "tests": ["tests/test_nav_reconcile.py"],
+        "notes": (
+            "Self-contained governance CLI, logic genuinely in-script (dest_modules=[]). "
+            "Read-only, production_behavior_changed: NO, no promotion. Derived outputs land under "
+            "gitignored data/nav_index/ (not a governed surface), including a self-contained "
+            "index.html that does not record decisions. Registered SCR-515."
+        ),
+    },
 ]
 
 
