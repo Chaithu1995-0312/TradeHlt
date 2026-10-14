@@ -89,7 +89,7 @@ def _battery() -> pd.DataFrame:
 
 def test_pipeline_vectorized_equals_scalar_primitive():
     df = _battery()
-    fp = FeaturePipeline(df)
+    fp = FeaturePipeline(df, timeframe="M1")   # the battery is one bar per MINUTE (CH-timeframe-ssot-v1)
     fp.compute_canonical_price_features()
     out = fp.df
     for _, row in out.iterrows():

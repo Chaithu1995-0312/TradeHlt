@@ -52,6 +52,28 @@ def _nearest_equal_cluster(
     return None
 
 
+def find_equal_clusters(
+    window: "Sequence[Candle]", k: int, atr: float, *, tolerance_atr: float = 0.1, max_swings: int = 8,
+) -> tuple[Optional[SwingPoint], Optional[SwingPoint]]:
+    """(eqh, eql) — the most recent member of an equal-highs / equal-lows cluster, or None.
+    The ONE place EQH/EQL existence is decided: `eqh_eql_distance` measures to these, and the
+    `eqh_present` / `eql_present` vector slots (schema v7.0) report whether they exist."""
+    highs = collect_causal_swings(window, k, "high", max_count=max_swings)
+    lows = collect_causal_swings(window, k, "low", max_count=max_swings)
+    return (_nearest_equal_cluster(highs, atr, tolerance_atr),
+            _nearest_equal_cluster(lows, atr, tolerance_atr))
+
+
+def eqh_eql_present(
+    window: "Sequence[Candle]", k: int, atr: float, *, tolerance_atr: float = 0.1, max_swings: int = 8,
+) -> tuple[float, float]:
+    """FM-101 / FM-102 (schema v7.0): (eqh_present, eql_present) — 1.0 where an equal-highs /
+    equal-lows cluster exists (same finder as eqh_eql_distance), else 0.0. Separates "no cluster"
+    from "price on the level", which the distances report identically as 0.0."""
+    eqh, eql = find_equal_clusters(window, k, atr, tolerance_atr=tolerance_atr, max_swings=max_swings)
+    return (1.0 if eqh is not None else 0.0), (1.0 if eql is not None else 0.0)
+
+
 def eqh_eql_distance(
     window: "Sequence[Candle]", k: int, atr: float, *, tolerance_atr: float = 0.1, max_swings: int = 8,
 ) -> tuple[float, float]:
@@ -59,10 +81,7 @@ def eqh_eql_distance(
     `window[-1].close` to the nearest equal-highs cluster above / equal-lows cluster below.
     `0.0` component when no cluster of that kind exists yet."""
     close = window[-1].close
-    highs = collect_causal_swings(window, k, "high", max_count=max_swings)
-    lows = collect_causal_swings(window, k, "low", max_count=max_swings)
-    eqh = _nearest_equal_cluster(highs, atr, tolerance_atr)
-    eql = _nearest_equal_cluster(lows, atr, tolerance_atr)
+    eqh, eql = find_equal_clusters(window, k, atr, tolerance_atr=tolerance_atr, max_swings=max_swings)
     eqh_dist = signed_atr_distance(close, eqh.price, atr, favorable_sign=-1) if eqh is not None else 0.0
     eql_dist = signed_atr_distance(close, eql.price, atr, favorable_sign=1) if eql is not None else 0.0
     return eqh_dist, eql_dist

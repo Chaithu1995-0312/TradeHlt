@@ -59,7 +59,7 @@ class ParentCRTFeed:
     """One instance per instrument / parent timeframe. Push every child candle
     (including warmup); read `.bias` / `.htf_state` / `.objective` after `push`."""
 
-    def __init__(self, rule: str, thresholds: HTFStateThresholds) -> None:
+    def __init__(self, rule: str, thresholds: HTFStateThresholds, calendar=None) -> None:
         if rule not in SUPPORTED_RULES:
             raise ValueError(
                 f"ParentCRTFeed: unsupported parent timeframe {rule!r} "
@@ -67,7 +67,9 @@ class ParentCRTFeed:
             )
         self._rule = rule
         self._thresholds = thresholds
-        self._builder = ParentCandleBuilder(rule, keep=3)
+        # CH-corpus-clock-contract-v1: candles arrive on canonical UTC; `calendar` is the
+        # instrument's market calendar (None = UTC grid, for constructed data).
+        self._builder = ParentCandleBuilder(rule, keep=3, calendar=calendar)
         self._track = ParentCRTTrack()
         self._prev_parent = None
         self._htf_state = HTFState.UNKNOWN
@@ -149,8 +151,9 @@ class ParentCRTFeed:
         return True
 
     @classmethod
-    def from_prod_config(cls) -> Optional["ParentCRTFeed"]:
-        """None when `parent_crt.enabled` is false. Raises on missing/illegal keys."""
+    def from_prod_config(cls, calendar=None) -> Optional["ParentCRTFeed"]:
+        """None when `parent_crt.enabled` is false. Raises on missing/illegal keys.
+        `calendar`: the run's market calendar (features.market_calendar.CalendarSpec)."""
         section = get_prod_section("parent_crt")
         enabled = bool(_require(section, "enabled"))
         timeframe = str(_require(section, "timeframe"))
@@ -191,4 +194,4 @@ class ParentCRTFeed:
             )
         if not enabled:
             return None
-        return cls(timeframe, thresholds)
+        return cls(timeframe, thresholds, calendar)

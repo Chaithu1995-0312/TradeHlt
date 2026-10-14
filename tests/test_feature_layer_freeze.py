@@ -65,11 +65,12 @@ def test_freeze_pin_schema_governance_class():
     # active_config field was the stale artifact, not the runtime (CLAUDE.md 6.2 rule 3).
     assert pin.get("active_config_version") == "v2_htfcrt_2026_08"
     schema = pin["schema"]
-    # 48 under schema v5.0 (was 39 pre-2026-08-15 CH-htfcrt-parent-candle-smc-v1, 38 pre-v4;
-    # pin refreshed 2026-08-15 per that program's own regeneration requirement).
-    assert schema["feature_dim"] == 48
-    assert schema["feature_count"] == 48
-    assert len(schema["canonical_features"]) == 48
+    # 79 under schema v9.0 (71 at v8.0; 54 at v7.0; 48 at v5.0/v6.0; 39 pre-2026-08-15
+    # CH-htfcrt-parent-candle-smc-v1, 38 pre-v4; pin regenerated 2026-10-08 by
+    # CH-card-identity-census-v9, waiver_log entry).
+    assert schema["feature_dim"] == 79
+    assert schema["feature_count"] == 79
+    assert len(schema["canonical_features"]) == 79
     assert "regression_benchmarks" in pin
     assert "source_file_pins" in pin
     assert isinstance(pin.get("accepted_future_programs"), list)

@@ -109,7 +109,8 @@ class StrategyIntentBuilder:
         self, r: StrategyResult, features: dict
     ) -> List[InvalidationRule]:
         """Geometry-based invalidation applicable to every strategy."""
-        atr = float(features.get("atr", 0.001)) or 0.001
+        # price-unit ATR (FM-074): canonical `atr` is close-relative, this is a price offset
+        atr = (float(features.get("atr", 0.001)) or 0.001) * r.entry
         rules: List[InvalidationRule] = []
         if r.signal == "BUY":
             rules.append(InvalidationRule(

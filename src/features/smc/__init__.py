@@ -13,6 +13,8 @@ Every distance-type scalar follows the same convention as the repo's existing `l
 (FM-025): ATR-normalized, signed, tanh-bounded to keep the value finite when a zone is very far
 away, and exactly `0.0` when no qualifying structure exists yet (never NaN, never a fabricated
 "no data" sentinel that could be confused with a genuine zero-distance reading).
+
+`rejection.py` is the card's rejection block: the live wick of a confirmed causal swing.
 """
 
 from __future__ import annotations

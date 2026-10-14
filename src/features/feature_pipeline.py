@@ -61,6 +61,7 @@ import pandas as pd
 import numpy as np
 
 from features.feature_schema import CANONICAL_FEATURES
+from features import candle_patterns as _cp
 from features.schema_validator import validate_features, validate_feature_values, validate_vector
 from features.feature_monitor import FeatureMonitor
 from data_ingestion.ohlcv_schema import require_ohlcv_columns, validate_ohlcv_frame
@@ -112,34 +113,12 @@ _FP_CFG_KEYS = (
     # "atr_absolute" == the scale-invariant FM-030/FM-031 corrections. Program
     # FM-030-031-DIMENSIONAL-MIX-MIGRATION under the 2026-07-20 feature-layer freeze. ──
     "normalization_basis",                                    # FM-022/023 <-> FM-030/031
-    # ── session/hour_of_day timestamp domain selector (F-066, 2026-08-01) — NOT a window.
-    # Chooses which clock `hour_of_day`/`session` (FM-052) are derived from. "broker_local" ==
-    # the legacy behavior (byte-identical to every pipeline run before this key existed): derives
-    # from the raw `timestamp` column AS-IS, which for every MT5-sourced corpus is actually
-    # broker-server time (EET/EEST, NY-DST-tracking), not UTC, despite `session_windows_utc`'s
-    # name and the "real market sessions in UTC" doctrine in session_classifier.py. Measured this
-    # session (docs/research/preregistration-blind-label-descriptive-fidelity.md investigation):
-    # two independent tests (BTCUSDT cross-correlation, NFP-release alignment) confirm the offset
-    # and its New-York DST tracking; 53.36% of XAUUSD bars carry the wrong session label under the
-    # legacy basis. "utc_corrected" == derive from `broker_clock.mt5_server_to_utc(timestamp)`,
-    # making `session`/`hour_of_day` true UTC as `session_windows_utc` already claims.
-    # SCOPE (updated 2026-08-05): this key now ALSO gates the `crt_engine` trade-gating session
-    # FILTER (`CRTEngine.__init__` resolves `self._session_ts_basis` from this same key; the
-    # filter block converts `candle.timestamp` via `broker_clock.mt5_server_to_utc_scalar` before
-    # its window comparison when set to "utc_corrected"). Originally (2026-08-01) this key only
-    # reached the FM-052 FEATURE, leaving the FILTER reading the raw broker timestamp regardless
-    # of this setting — that gap is closed. `crt_engine.session_windows`'s own numeric values are
-    # UNCHANGED (they were already authored as UTC per `CRTConfig.session_windows`'s "(UTC)"
-    # comment; only the comparison basis was wrong).
-    # SCOPE WARNING (corrected same-session after an initial drafting error — CLAUDE.md E-001):
-    # "utc_corrected" shifts WHATEVER timestamp it is given by the NY-DST offset; it does NOT
-    # detect data provenance. It is only valid for MT5-sourced frames (data/mt5/*.csv). Feeding it
-    # an already-true-UTC corpus (Binance) would WRONGLY subtract 2-3h and corrupt session/
-    # hour_of_day AND the trade filter on that corpus — there is no automatic guard, since the
-    # DataFrame carries no provenance marker; this is a per-config/per-caller responsibility. See
-    # tests/test_session_timestamp_basis.py for a regression proving the shift is NOT a no-op on
-    # non-MT5 timestamps (documented, not just asserted away). ──
-    "session_timestamp_basis",                                # FM-052 clock domain + crt_engine filter
+    # RETIRED 2026-10-08 (CH-corpus-clock-contract-v1): `session_timestamp_basis` is no longer a
+    # key. The corpus SSOT normalizes every corpus to canonical UTC exactly once at admission
+    # (data_ingestion.clock_contract; the clock is a configured, declared identity), so
+    # `hour_of_day`/`session` (FM-052) and the CRT session filter read UTC directly and there is
+    # no `broker_local`/`utc_corrected` choice left to make. A config that still carries the key
+    # is refused (see `_RETIRED_FP_KEYS`) rather than reinterpreted — the F-056 config-illusion rule.
     # MKT-E01 sweep identity (2026-10-03). "latest_unconsumed" (legacy, FM-058/059/060/065): the
     # sweep slots test only the LATEST swing level and never consume it. "e01_lifecycle"
     # (FM-090..093): every ACTIVE swing level, consumed once swept or broken
@@ -152,14 +131,24 @@ _FP_CFG_KEYS = (
     # for the OB/FVG/breaker/mitigation scanners (a performance/scope bound, not a registered
     # identity parameter — smaller values simply forget older, likely-stale zones sooner).
     "smc_max_window",
+    # Candle-pattern observations (CH-candle-pattern-observations-v8, schema v8.0): one nested
+    # block holding every threshold of FM-103..FM-119 (features.candle_patterns); each inner key
+    # is strict-read by CandlePatternParams.from_cfg.
+    "candle_patterns",
 )
 
 # Legal values for `feature_pipeline.normalization_basis`. Anything else is a config-authoring
 # error and raises -- there is deliberately NO silent fall-through to the legacy arm (§6.5).
 _NORMALIZATION_BASES = ("atr_relative", "atr_absolute")
 
-# Legal values for `feature_pipeline.session_timestamp_basis`. Same no-silent-fallback rule.
-_SESSION_TIMESTAMP_BASES = ("broker_local", "utc_corrected")
+# CH-corpus-clock-contract-v1 (2026-10-08): keys that no longer exist. Presence in a config is an
+# error, never a silent no-op.
+_RETIRED_FP_KEYS = {
+    "session_timestamp_basis": (
+        "corpora are normalized to canonical UTC once at the corpus SSOT (clock contract), so "
+        "session/hour_of_day and the CRT session filter read UTC directly; there is no "
+        "broker_local/utc_corrected choice."),
+}
 
 # Legal values for `feature_pipeline.sweep_semantics`. Same no-silent-fallback rule.
 SWEEP_LEGACY = "latest_unconsumed"
@@ -191,29 +180,6 @@ def _warn_once_if_superseded_basis(basis: str) -> None:
             "|ema_spread|>0.15 on 99.99 pct of bars, |tanh(momentum_score)|>0.999 on 99.81 pct "
             "of bars (C2, extends F-061). This is the ACTIVE default and no config was changed "
             "by this warning -- see market_ontology.yaml FM-022/FM-023 for the correction path."
-        )
-
-
-# F-066 (2026-08-01 blind-label investigation). Declaration only, mirrors _warn_once_if_
-# superseded_basis's pattern exactly -- logs once, changes no emitted value.
-_F066_BROKER_LOCAL_BASIS_WARNED = False
-
-
-def _warn_once_if_mislabeled_session_basis(basis: str) -> None:
-    global _F066_BROKER_LOCAL_BASIS_WARNED
-    if basis == "broker_local" and not _F066_BROKER_LOCAL_BASIS_WARNED:
-        _F066_BROKER_LOCAL_BASIS_WARNED = True
-        logger.warning(
-            "feature_pipeline.session_timestamp_basis='broker_local': `session`/`hour_of_day` "
-            "(FM-052) AND the crt_engine session-gating FILTER are both derived from the raw "
-            "timestamp AS-IS. On MT5-sourced corpora (data/mt5/*.csv) that raw timestamp is "
-            "broker-server time (EET/EEST, NY-DST-tracking), not UTC, though session_windows_utc's "
-            "name and docstring claim UTC. F-066: measured 53.36 pct of XAUUSD bars carry the "
-            "wrong session label under this basis (two independent cross-instrument tests confirm "
-            "the offset). This is the ACTIVE default and no config was changed by this warning -- "
-            "see docs/research/preregistration-blind-label-descriptive-fidelity.md and "
-            "features/broker_clock.py for the correction path ('utc_corrected', which as of "
-            "2026-08-05 also gates CRTEngine's session filter, not just the FM-052 feature)."
         )
 
 
@@ -255,15 +221,11 @@ def _resolve_feature_pipeline_cfg(cfg: Optional[dict]) -> dict:
             "the legacy arm -- it would emit a different feature identity than the config declares."
         )
     _warn_once_if_superseded_basis(_basis)
-    _ts_basis = cfg["session_timestamp_basis"]
-    if _ts_basis not in _SESSION_TIMESTAMP_BASES:
-        raise ValueError(
-            f"feature_pipeline.session_timestamp_basis={_ts_basis!r} is not one of "
-            f"{_SESSION_TIMESTAMP_BASES}. An unrecognised value must NOT silently fall through "
-            "to the legacy arm -- it would emit a different session/hour_of_day identity than "
-            "the config declares."
-        )
-    _warn_once_if_mislabeled_session_basis(_ts_basis)
+    for _retired, _why in _RETIRED_FP_KEYS.items():
+        if _retired in cfg:
+            raise ValueError(
+                f"feature_pipeline.{_retired} is RETIRED: {_why} Remove it from the config; a "
+                "retired key must fail, not be silently reinterpreted (F-056).")
     if cfg["sweep_semantics"] not in _SWEEP_SEMANTICS:
         raise ValueError(
             f"feature_pipeline.sweep_semantics={cfg['sweep_semantics']!r} is not one of "
@@ -483,7 +445,38 @@ class FeaturePipeline:
         df: pd.DataFrame,
         monitor: Optional[FeatureMonitor] = None,
         cfg: Optional[dict] = None,
+        calendar=None,
+        timeframe: str = "M15",
     ):
+        # CH-timeframe-ssot-v1: every window below is a BAR COUNT tuned on M15, and the candle-pattern
+        # and indicator features describe ONE bar of the frame given. The declared timeframe must
+        # therefore equal the bar size actually measured in `df["timestamp"]`, else the features would
+        # silently describe a different candle than the caller thinks (fail closed).
+        from features.calendar_periods import BAR_MINUTES, modal_bar_minutes
+        if timeframe not in BAR_MINUTES:
+            raise ValueError(f"FeaturePipeline: unknown timeframe {timeframe!r}; expected one of {sorted(BAR_MINUTES)}")
+        # min_share: only a REGULAR series has a bar size to measure; an irregular list of timestamps is not checked
+        _measured = modal_bar_minutes(df["timestamp"], min_share=0.5) if "timestamp" in df.columns else None
+        if _measured is not None and _measured != BAR_MINUTES[timeframe]:
+            raise ValueError(
+                f"FeaturePipeline: declared timeframe {timeframe!r} ({BAR_MINUTES[timeframe]} min) but the frame's "
+                f"measured bar size is {_measured} min. Declare the real timeframe "
+                f"(FeaturePipeline(df, timeframe=...)); do not run it on a frame of another bar size by accident."
+            )
+        if timeframe != "M15":
+            logger.warning(
+                "FeaturePipeline on %s bars: indicator windows, swing/sweep lookbacks and warm-up are BAR COUNTS "
+                "tuned on M15, so they span a different amount of time here.", timeframe)
+        self.timeframe = timeframe
+        # CH-corpus-clock-contract-v1: `df["timestamp"]` is canonical UTC. Day-of-week and the D1
+        # grid (PDH/PDL) are CALENDAR concepts: `calendar` (a features.market_calendar.CalendarSpec)
+        # is passed explicitly, else taken from the instrument the SSOT frame carries
+        # (`df.attrs["instrument"]`), else the UTC calendar (constructed frames).
+        if calendar is None:
+            from features.market_calendar import UTC_CALENDAR, calendar_for_instrument
+            _inst = df.attrs.get("instrument")
+            calendar = calendar_for_instrument(_inst) if _inst else UTC_CALENDAR
+        self.calendar = calendar
         self.df = df.copy()
         # Drift monitor: injected or created fresh (window_size=500 default).
         # Pass an existing monitor to accumulate statistics across multiple run() calls.
@@ -748,20 +741,13 @@ class FeaturePipeline:
         df = self.df
 
         df["timestamp"] = pd.to_datetime(df["timestamp"])
-        df["day_of_week"] = df["timestamp"].dt.dayofweek.astype(np.int8)
+        # `timestamp` is canonical UTC (corpus SSOT). Day-of-week follows the market CALENDAR
+        # (the day starts at the calendar's day_start, e.g. 17:00 New York for FX/metals).
+        df["day_of_week"] = self.calendar.wall_series(df["timestamp"]).dt.dayofweek.astype(np.int8)
 
-        # F-066 (2026-08-01): which clock feeds hour_of_day/session (FM-052). "broker_local"
-        # (legacy default, byte-identical) uses `timestamp` as-is. "utc_corrected" derives from
-        # the true-UTC conversion in features/broker_clock.py -- see that module's docstring for
-        # the evidence. The raw `timestamp` COLUMN ITSELF IS NEVER MUTATED either way: OHLCV
-        # identity/hashing must stay byte-identical regardless of this selector.
-        _session_ts_basis = self._fp_cfg["session_timestamp_basis"]
-        if _session_ts_basis == "utc_corrected":
-            from features import broker_clock as _bc
-            session_ts = _bc.mt5_server_to_utc(df["timestamp"])
-        else:
-            session_ts = df["timestamp"]
-        df["hour_of_day"] = session_ts.dt.hour.astype(np.int8)
+        # hour_of_day/session (FM-052) are UTC hours: the windows in `session_windows_utc` are
+        # authored in UTC and the timestamp IS UTC — no conversion happens here (clock contract).
+        df["hour_of_day"] = df["timestamp"].dt.hour.astype(np.int8)
 
         # FM-052 session encoding — v4.0 window model {ASIA, LONDON, NEWYORK, OVERLAP, CLOSED}.
         # The math is NOT inlined here: features/session_classifier.py is the single owner, and it
@@ -859,6 +845,19 @@ class FeaturePipeline:
                 "compute_structure_liquidity: higher_high and lower_low are "
                 "bit-for-bit identical — column reference bug detected."
             )
+
+        # FM-121..123: swing-sequence states. Not the pierce columns above. Raw last-swing
+        # prices (NaN until the first confirmation) are the inputs; do not fill them first.
+        from features.structure_sequence import swing_sequence_states
+        _hl, _lh, _side = swing_sequence_states(
+            df["swing_high"].to_numpy(),
+            df["swing_low"].to_numpy(),
+            df["last_swing_high_price"].to_numpy(),
+            df["last_swing_low_price"].to_numpy(),
+        )
+        df["higher_low"] = _hl
+        df["lower_high"] = _lh
+        df["sideways"] = _side
 
         df["break_of_structure"] = np.where(
             df["close"] > ref_high,  1,
@@ -980,6 +979,26 @@ class FeaturePipeline:
             (df["high"] - df["low"]) / (df["atr"] * df["close"]),
             1.0
         ).astype(np.float32)
+
+    def compute_candle_patterns(self) -> None:
+        """Schema v8.0 slots 54-70 plus morning_star at slot 71 (FM-103..FM-120).
+
+        All math lives in `features.candle_patterns` (the registered authority); this stage only
+        supplies its inputs: OHLC, the canonical price-unit ATR (FM-074 `atr_14_raw`, never the
+        close-relative `atr`), and the bar-contiguity mask from `timestamp` (two-bar patterns are
+        not formed across session/weekend gaps). Thresholds: `feature_pipeline.candle_patterns`.
+        """
+        df = self.df
+        params = _cp.CandlePatternParams.from_cfg(self._fp_cfg["candle_patterns"])
+        contiguous = _cp.contiguous_mask(pd.to_datetime(df["timestamp"]).to_numpy())
+        cols = _cp.compute_all(
+            df["open"].to_numpy(), df["high"].to_numpy(), df["low"].to_numpy(),
+            df["close"].to_numpy(), df["atr_14_raw"].to_numpy(), contiguous, params,
+        )
+        for name in _cp.PATTERN_COLUMNS:
+            df[name] = cols[name]
+        # FM-120 is computed with the pattern block and is not a member of PATTERN_COLUMNS.
+        df["morning_star"] = cols["morning_star"]
 
     def compute_canonical_ema_features(self) -> None:
         """Compute ema_fast, ema_slow, ema_spread, momentum_score.
@@ -1290,12 +1309,18 @@ class FeaturePipeline:
         """
         from config_layer.crt_engine_v2 import Candle
         from features.parent_candle import ParentCandleBuilder
-        from features.smc.breaker import breaker_distance
+        from features.smc.breaker import breaker_distance, breaker_present
         from features.smc.choch import change_of_character
-        from features.smc.fvg import fvg_distance
-        from features.smc.levels import eqh_eql_distance, pdh_pdl_distance
-        from features.smc.mitigation import mitigation_block_distance
-        from features.smc.order_block import order_block_distance
+        from features.smc.fvg import fvg_distance, fvg_present
+        from features.smc.levels import eqh_eql_distance, eqh_eql_present, pdh_pdl_distance
+        from features.smc.mitigation import mitigation_block_distance, mitigation_block_present
+        from features.smc.order_block import (
+            _find_break_events, order_block_distance, order_block_present,
+        )
+        from features.smc.rejection import (
+            rejection_bear_distance, rejection_bear_present,
+            rejection_bull_distance, rejection_bull_present,
+        )
 
         df = self.df
         n = len(df)
@@ -1320,9 +1345,24 @@ class FeaturePipeline:
         pdl_d = np.zeros(n, dtype=np.float32)
         eqh_d = np.zeros(n, dtype=np.float32)
         eql_d = np.zeros(n, dtype=np.float32)
+        # Schema v7.0 (CH-feature-semantic-fixes-v7): the *_distance slots emit 0.0 both at a zone
+        # edge and when NO zone exists; these flags say which (1 = an active zone/cluster exists).
+        # Decided by the SAME finder the distance measures to, so present==0 => distance==0.
+        ob_p = np.zeros(n, dtype=np.float32)
+        fvg_p = np.zeros(n, dtype=np.float32)
+        brk_p = np.zeros(n, dtype=np.float32)
+        mit_p = np.zeros(n, dtype=np.float32)
+        eqh_p = np.zeros(n, dtype=np.float32)
+        eql_p = np.zeros(n, dtype=np.float32)
+        # Schema v9.0 rejection block (FM-124..127). Zeros, not NaN: finalize() drops a
+        # canonical column that is NaN, and a missing block is a real zero.
+        rej_bull_p = np.zeros(n, dtype=np.float32)
+        rej_bear_p = np.zeros(n, dtype=np.float32)
+        rej_bull_d = np.zeros(n, dtype=np.float32)
+        rej_bear_d = np.zeros(n, dtype=np.float32)
 
         window: list = []
-        d1_builder = ParentCandleBuilder("D1", keep=2)
+        d1_builder = ParentCandleBuilder("D1", keep=2, calendar=self.calendar)
 
         for i in range(n):
             ts = pd.Timestamp(timestamps[i]).to_pydatetime()
@@ -1337,17 +1377,32 @@ class FeaturePipeline:
 
             atr_i = float(atr_abs[i]) if not np.isnan(atr_abs[i]) else 0.0
 
-            ob_d[i] = order_block_distance(window, k, atr_i)
+            # One break-event scan per bar shared by OB / breaker / mitigation (pure, so passing it
+            # back is identical to recomputing it -- pinned by tests/test_smc_break_event_memo.py).
+            ev = _find_break_events(window, k)
+            ob_d[i] = order_block_distance(window, k, atr_i, ev)
             fvg_d[i] = fvg_distance(window, atr_i)
-            brk_d[i] = breaker_distance(window, k, atr_i)
-            mit_d[i] = mitigation_block_distance(window, k, atr_i)
+            brk_d[i] = breaker_distance(window, k, atr_i, ev)
+            mit_d[i] = mitigation_block_distance(window, k, atr_i, ev)
+            ob_p[i] = order_block_present(window, k, ev)
+            fvg_p[i] = fvg_present(window)
+            brk_p[i] = breaker_present(window, k, ev)
+            mit_p[i] = mitigation_block_present(window, k, ev)
             pdh, pdl = pdh_pdl_distance(float(closes[i]), d1_builder.parent_history, atr_i)
             pdh_d[i] = pdh
             pdl_d[i] = pdl
             eqh, eql = eqh_eql_distance(window, k, atr_i)
             eqh_d[i] = eqh
             eql_d[i] = eql
+            eqh_p[i], eql_p[i] = eqh_eql_present(window, k, atr_i)
+            rej_bull_p[i] = rejection_bull_present(window, k)
+            rej_bear_p[i] = rejection_bear_present(window, k)
+            rej_bull_d[i] = rejection_bull_distance(window, k, atr_i)
+            rej_bear_d[i] = rejection_bear_distance(window, k, atr_i)
 
+        # One defragmenting copy (values unchanged): by here the frame has had >100 single-column
+        # inserts, and pandas warns on every further one (the 15 SMC columns below).
+        df = df.copy()
         df["order_block_distance"] = ob_d
         df["fvg_distance"] = fvg_d
         df["breaker_distance"] = brk_d
@@ -1356,6 +1411,16 @@ class FeaturePipeline:
         df["pdl_distance"] = pdl_d
         df["eqh_distance"] = eqh_d
         df["eql_distance"] = eql_d
+        df["order_block_present"] = ob_p
+        df["fvg_present"] = fvg_p
+        df["breaker_present"] = brk_p
+        df["mitigation_block_present"] = mit_p
+        df["eqh_present"] = eqh_p
+        df["eql_present"] = eql_p
+        df["rejection_bull_present"] = rej_bull_p
+        df["rejection_bear_present"] = rej_bear_p
+        df["rejection_bull_distance"] = rej_bull_d
+        df["rejection_bear_distance"] = rej_bear_d
 
         # change_of_character: vectorized, pure algebra over already-computed columns.
         df["change_of_character"] = [
@@ -1499,7 +1564,7 @@ class FeaturePipeline:
         -------
         df : pd.DataFrame
             Enriched, NaN-free DataFrame with all len(CANONICAL_FEATURES) canonical features
-            (48 under schema v6.0; dim fixed at v5.0, F-076).
+            (79 under schema v9.0).
         vectors : np.ndarray, shape (N, len(CANONICAL_FEATURES)), dtype float32
             Feature matrix in canonical CANONICAL_FEATURES order.
         """
@@ -1524,6 +1589,7 @@ class FeaturePipeline:
         self.promote_volume_spike()           # v3.0: index 37 (adaptive percentile)
         self.compute_canonical_session()
         self.compute_smc_features()           # v5.0: indices 39-47 (9 SMC primitives)
+        self.compute_candle_patterns()        # v8.0 slots 54-70; v9.0 morning_star at 71
 
         # Finalize and build vectors
         df = self.finalize()

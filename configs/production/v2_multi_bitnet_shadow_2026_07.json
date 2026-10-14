@@ -1,5 +1,5 @@
 {
-  "setup": {"target_policy": "fixed_r", "trade_ttl_candles": null, "decider": "engine", "entry_semantics": "approval_bar_legacy", "retest_stop_guard": false},
+  "setup": {"target_policy": "fixed_r", "trade_ttl_candles": null, "decider": "engine", "entry_semantics": "approval_bar_legacy", "retest_stop_guard": false, "retrace_semantics": "legacy_kept_fraction"},
   "version": "v2_multi_bitnet_shadow_2026_07",
   "config_id": "v2_multi_bitnet_shadow_2026_07",
   "created_at": "2026-05-06T19:34:01.007073+00:00",
@@ -831,6 +831,96 @@
           "from": "2026-07-03T20:00:00",
           "to": "2026-07-06T01:00:00",
           "reason": "XAUUSD Jul-4-holiday early-close through weekend reopen, reviewed 2026-07-07"
+        },
+        {
+          "symbol": "BTCUSDT",
+          "from": "2020-02-09T02:00:00",
+          "to": "2020-02-09T03:00:00",
+          "reason": "Binance spot maintenance outage 2020-02-09 (BTCUSDT), reviewed 2026-10-09 (user-authorized)"
+        },
+        {
+          "symbol": "BTCUSDT",
+          "from": "2020-02-19T11:40:00",
+          "to": "2020-02-19T17:30:00",
+          "reason": "Binance spot maintenance outage 2020-02-19 (BTCUSDT), reviewed 2026-10-09 (user-authorized)"
+        },
+        {
+          "symbol": "BTCUSDT",
+          "from": "2020-03-04T09:25:00",
+          "to": "2020-03-04T11:30:00",
+          "reason": "Binance spot maintenance outage 2020-03-04 (BTCUSDT), reviewed 2026-10-09 (user-authorized)"
+        },
+        {
+          "symbol": "BTCUSDT",
+          "from": "2020-04-25T02:00:00",
+          "to": "2020-04-25T04:30:00",
+          "reason": "Binance spot maintenance outage 2020-04-25 (BTCUSDT), reviewed 2026-10-09 (user-authorized)"
+        },
+        {
+          "symbol": "BTCUSDT",
+          "from": "2020-06-28T02:00:00",
+          "to": "2020-06-28T05:30:00",
+          "reason": "Binance spot maintenance outage 2020-06-28 (BTCUSDT), reviewed 2026-10-09 (user-authorized)"
+        },
+        {
+          "symbol": "BTCUSDT",
+          "from": "2020-11-30T06:00:00",
+          "to": "2020-11-30T07:00:00",
+          "reason": "Binance spot maintenance outage 2020-11-30 (BTCUSDT), reviewed 2026-10-09 (user-authorized)"
+        },
+        {
+          "symbol": "BTCUSDT",
+          "from": "2020-12-21T13:50:00",
+          "to": "2020-12-21T18:00:00",
+          "reason": "Binance spot maintenance outage 2020-12-21 (BTCUSDT), reviewed 2026-10-09 (user-authorized)"
+        },
+        {
+          "symbol": "BTCUSDT",
+          "from": "2020-12-25T02:00:00",
+          "to": "2020-12-25T03:00:00",
+          "reason": "Binance spot maintenance outage 2020-12-25 (BTCUSDT), reviewed 2026-10-09 (user-authorized)"
+        },
+        {
+          "symbol": "BTCUSDT",
+          "from": "2021-02-11T03:45:00",
+          "to": "2021-02-11T05:00:00",
+          "reason": "Binance spot maintenance outage 2021-02-11 (BTCUSDT), reviewed 2026-10-09 (user-authorized)"
+        },
+        {
+          "symbol": "BTCUSDT",
+          "from": "2021-03-06T02:00:00",
+          "to": "2021-03-06T03:30:00",
+          "reason": "Binance spot maintenance outage 2021-03-06 (BTCUSDT), reviewed 2026-10-09 (user-authorized)"
+        },
+        {
+          "symbol": "BTCUSDT",
+          "from": "2021-04-20T02:00:00",
+          "to": "2021-04-20T04:30:00",
+          "reason": "Binance spot maintenance outage 2021-04-20 (BTCUSDT), reviewed 2026-10-09 (user-authorized)"
+        },
+        {
+          "symbol": "BTCUSDT",
+          "from": "2021-04-25T04:05:00",
+          "to": "2021-04-25T08:45:00",
+          "reason": "Binance spot maintenance outage 2021-04-25 (BTCUSDT), reviewed 2026-10-09 (user-authorized)"
+        },
+        {
+          "symbol": "BTCUSDT",
+          "from": "2021-08-13T02:00:00",
+          "to": "2021-08-13T06:30:00",
+          "reason": "Binance spot maintenance outage 2021-08-13 (BTCUSDT), reviewed 2026-10-09 (user-authorized)"
+        },
+        {
+          "symbol": "BTCUSDT",
+          "from": "2021-09-29T07:00:00",
+          "to": "2021-09-29T09:00:00",
+          "reason": "Binance spot maintenance outage 2021-09-29 (BTCUSDT), reviewed 2026-10-09 (user-authorized)"
+        },
+        {
+          "symbol": "BTCUSDT",
+          "from": "2023-03-24T12:40:00",
+          "to": "2023-03-24T14:00:00",
+          "reason": "Binance spot maintenance outage 2023-03-24 (BTCUSDT), reviewed 2026-10-09 (user-authorized)"
         }
       ]
     }

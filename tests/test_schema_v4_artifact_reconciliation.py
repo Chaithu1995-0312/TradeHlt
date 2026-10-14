@@ -47,8 +47,8 @@ def test_schema_is_v4():
     file's B6 reconciliation covers were never undone. Do not read this test as "the live
     schema is v4"; read it as "v4's changes are still present in whatever the live schema is."
     """
-    assert SCHEMA_VERSION == "6.0"   # F-107 in-place rename; v4 facts still hold
-    assert CANONICAL_FEATURE_DIM == 48 == len(CANONICAL_FEATURE_ORDER)
+    assert SCHEMA_VERSION == "9.0"   # F-107 in-place rename (v6.0) + v7.0 presence flags + v8.0 candle patterns + v9.0 card identities (all additive); v4 facts still hold
+    assert CANONICAL_FEATURE_DIM == 79 == len(CANONICAL_FEATURE_ORDER)
     assert {"macd_hist_raw", "macd_hist_z", "candle_range"} <= set(CANONICAL_FEATURE_ORDER)
     assert not ({"macd_hist", "wick_size"} & set(CANONICAL_FEATURE_ORDER)), (
         "v3 names must be gone from the canonical vector — they survive only as read-side aliases"
@@ -167,21 +167,28 @@ def test_gaussian_registry_stamped_and_name_addressed():
 
 
 def test_gaussian_nb_name_anchored_load_under_v4():
-    """P0 contract: trained 38/35 checkpoints load via alias remap, not ambient equality.
+    """P0 name resolution still remaps v3 names. Public load refuses: no semantic stamp.
 
-    Live spine stays heuristic (F-060); this proves the ML path is no longer FAIL_OPEN
-    (silent truncate) and no longer hard-refuses solely because v3 names differ.
+    Live spine stays heuristic (F-060). Width and alias remap are not semantic MATCH.
     """
-    from training.trainer import load_gaussian_model
+    import json
+    from training.trainer import MODELS_DIR, GaussianNBModel, StandardScaler, load_gaussian_model
+    from features.gaussian_schema_contract import assert_model_schema_compatible
+    from features.semantic_equivalence import FeatureSemanticIncompatible
 
-    model, scaler, meta = load_gaussian_model(
-        "BNBUSDT/bnbusdt_balanced_20260524/gaussian_p5_20260524T120449.json"
+    rel = "BNBUSDT/bnbusdt_balanced_20260524/gaussian_p5_20260524T120449.json"
+    with pytest.raises(FeatureSemanticIncompatible) as exc_info:
+        load_gaussian_model(rel)
+    assert exc_info.value.status == "UNVERIFIED"
+    bundle = json.loads((MODELS_DIR / rel).read_text(encoding="utf-8"))
+    model = GaussianNBModel.from_dict(bundle["model"])
+    scaler = StandardScaler.from_dict(bundle["scaler"])
+    resolved = assert_model_schema_compatible(
+        bundle["feature_schema"], model_n_features=model.n_features
     )
     assert model.n_features == 38
-    assert meta["name_anchored"] is True
-    assert meta["schema_alignment"] == "named_subset"
-    assert "macd_hist_z" in meta["feature_schema_resolved"]
-    assert "candle_range" in meta["feature_schema_resolved"]
+    assert "macd_hist_z" in resolved
+    assert "candle_range" in resolved
     assert scaler is not None
 
 

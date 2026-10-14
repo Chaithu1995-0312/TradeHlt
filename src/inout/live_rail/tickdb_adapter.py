@@ -31,21 +31,11 @@ class TickDBAdapter:
         if not self._path.is_file():
             raise FileNotFoundError(f"TickDB: missing {self._path}")
         if self._require_clock:
-            # Phase-3: a file's own 'UTC' claim is not evidence (F-066).
-            # basis= is feature_pipeline.session_timestamp_basis, NOT ClockBasis.
-            from config_layer.production_config import get_prod_section
-
-            # EPIC-84: get_prod_section() already raises RuntimeError if the
-            # section is absent from the registry — no `or {}` fallback needed
-            # (no config declares this section as JSON null either).
-            fp = get_prod_section("feature_pipeline")
-            # session_timestamp_basis is a genuinely optional opt-in key (F-066):
-            # absence means the byte-identical broker_local default applies.
-            session_basis = fp.get("session_timestamp_basis")
-            if session_basis is None:
-                require_reviewed_clock(self._path)
-            else:
-                require_reviewed_clock(self._path, basis=str(session_basis))
+            # Phase-3: a file's own 'UTC' claim is not evidence (F-066). CH-corpus-clock-contract-v1:
+            # the file must carry a reviewed record naming a configured clock (provider/broker/
+            # clock_id exact match); the `basis=` double-conversion guard is retired with
+            # `feature_pipeline.session_timestamp_basis`.
+            require_reviewed_clock(self._path)
         if self._cfg.clock_basis is ClockBasis.UTC and self._cfg.symbol == "XAUUSD":
             raise RuntimeError(
                 "TickDB: clock_basis=utc on XAUUSD refuses start — "

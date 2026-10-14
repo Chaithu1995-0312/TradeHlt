@@ -141,18 +141,19 @@ def build_and_cache(
     """
     import pandas as pd
 
-    from data_ingestion.corpus_gate import admit_corpus
     from features.feature_pipeline import FeaturePipeline
     from features.crt_state_resolver import CRTStateResolver, build_htf_id_timeline
     from features.resolver_supply import build_resolver_supply
     from config_layer.production_config import get_prod_section
 
-    csv_path = Path(csv_path)
-    corpus_sha = _sha256_file(csv_path)
+    # CH-corpus-ssot (2026-10-08): admission, bytes and hash from the corpus SSOT.
+    # (Was enforce=False: a REJECT corpus no longer renders — it raises, like every consumer.)
+    from data_ingestion.corpus_store import load as corpus_load
 
-    admission = admit_corpus(str(csv_path), instrument, write_report=False,
-                             enforce=False, log=log)
-    df = pd.read_csv(admission.filepath)
+    corpus = corpus_load(csv_path, instrument)
+    csv_path = Path(corpus.path)
+    corpus_sha = corpus.sha256
+    df = corpus.frame()
     df["timestamp"] = pd.to_datetime(df["timestamp"])
     total_raw = len(df)
 

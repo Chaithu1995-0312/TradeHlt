@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import io
 import json
 import logging
 import math
@@ -54,7 +55,6 @@ from data_ingestion.ohlcv_schema import (
     OHLCV_TIMESTAMP_SPLIT_ALIASES,
     parse_ohlcv_timestamp,
     require_ohlcv_columns,
-    require_reviewed_clock,
     require_unique_ohlcv_headers,
     resolve_ohlcv_column_indices,
     validate_ohlcv_row,
@@ -883,7 +883,7 @@ class DistributionAnalyser:
         dow_stats = defaultdict(lambda: {"trades": 0, "wins": 0, "pnl_rr": 0.0})
         for t in trades:
             if t.opened_at:
-                dow = self.DOW[t.opened_at.weekday()]
+                dow = self.DOW[t.opened_at.weekday()]   # report breakdown is in canonical UTC
                 dow_stats[dow]["trades"] += 1
                 dow_stats[dow]["wins"]   += int(t.is_winner)
                 dow_stats[dow]["pnl_rr"] += t.pnl_rr_net
@@ -1008,21 +1008,6 @@ class DistributionAnalyser:
 # CANDLE LOADER (unchanged from v1, with minor fix)
 # ─────────────────────────────────────────────────────────────────
 
-def _resolved_session_ts_basis() -> Optional[str]:
-    """Active `feature_pipeline.session_timestamp_basis`, or None if it cannot be resolved.
-
-    Feeds the Phase-3 double-conversion guard only. Returning None means "skip that optional
-    check" — it never substitutes a default basis, so this is not a silent-default (CLAUDE.md
-    6.5): the review gate itself still applies unconditionally, and the basis remains strictly
-    required by `feature_pipeline` where it actually drives behaviour.
-    """
-    try:
-        from config_layer.production_config import get_prod_section
-        return get_prod_section("feature_pipeline")["session_timestamp_basis"]
-    except Exception:
-        return None
-
-
 class CandleLoader:
     # Single source of truth lives in ohlcv_schema.OHLCV_DATE_FORMATS; kept as a
     # class attribute for backward compatibility with callers/tests.
@@ -1048,21 +1033,26 @@ class CandleLoader:
         # R3 Dataset Identity admission (CH-dataset-identity-r3-v1).
         # Bound XAUUSD M15: rewrite to Phase-1 candidate + hash/range (not APPROVED).
         # FORENSIC native HTF CSVs: reject. Unbound instruments: path passthrough.
+        # CH-corpus-ssot (2026-10-08): admission AND content come from the corpus SSOT
+        # (`corpus_store.load`) — the loader parses the SSOT's in-memory bytes, so the
+        # dataset_id / sha256 a run reports describe exactly what stream() yields.
+        from data_ingestion.corpus_store import CorpusStoreError, load as _load_corpus
         try:
-            admission = admit_csv_path(filepath, instrument)
-        except (DatasetAdmissionError, Phase1CandidateError) as exc:
+            admission = _load_corpus(filepath, instrument, sequence_check=False)
+        except (DatasetAdmissionError, Phase1CandidateError, CorpusStoreError) as exc:
             raise DatasetIntegrityError(
                 f"corpus admission failed (R3 fail-closed): {exc}"
             ) from exc
-        guarded = admission.filepath
+        self.corpus     = admission
+        guarded = admission.path
         self.filepath   = guarded
         self.instrument = instrument
         self.log        = logging.getLogger("CRT.CandleLoader")
-        # ── Phase 3: clock provenance (ohlcv_schema) ──────────────────────────
-        # Phases 1-2 validate WHAT the numbers are; this validates what the TIMESTAMPS MEAN.
-        # Gated in __init__, not stream(), so an undeclared corpus fails at construction rather
-        # than lazily on first iteration. Eager beats surprising.
-        require_reviewed_clock(self.filepath, basis=_resolved_session_ts_basis())
+        # ── Phase 3: clock provenance ───────────────────────────────────────────
+        # CH-corpus-clock-contract-v1: the SSOT load above already required a configured,
+        # declared clock for this corpus and normalized its timestamps to canonical UTC (once).
+        # Gated at construction (the SSOT load raises ClockProvenanceError), so an undeclared
+        # corpus fails here rather than lazily on first iteration.
         if admission.rewritten or guarded != str(filepath):
             self.log.info(
                 "R3 admitted %s -> %s (dataset_id=%s; NOT AUTHORITATIVE / NOT APPROVED)",
@@ -1081,7 +1071,7 @@ class CandleLoader:
         return parse_ohlcv_timestamp(raw)
 
     def stream(self) -> Iterator[Candle]:
-        with open(self.filepath, newline="", encoding="utf-8-sig") as f:
+        with io.StringIO(self.corpus.text, newline="") as f:
             reader = csv.reader(f)
             headers = [h.strip() for h in next(reader)]
             # B1 (2026-07-24): delegate ALL header resolution to the schema SSOT. This one call
@@ -1174,8 +1164,7 @@ class CandleLoader:
                 _candle_pos += 1
 
     def count(self) -> int:
-        with open(self.filepath, "r", encoding="utf-8-sig") as f:
-            return sum(1 for _ in f) - 1
+        return len(self.corpus.text.splitlines()) - 1
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -1187,7 +1176,8 @@ class CandleLoader:
 
 class HTFBuilder:
     def __init__(self, candles_per_htf: int, instrument: str = "UNKNOWN", *,
-                 clock_basis: str = "count", calendar_rule: Optional[str] = None):
+                 clock_basis: str = "count", calendar_rule: Optional[str] = None,
+                 calendar=None):
         # G2 (2026-09-10): config-gated clock basis, default "count" (byte-identical to
         # pre-G2 behaviour — a pure bar counter, `current_htf_id` flips every Nth pushed
         # candle regardless of what timeframe that count is meant to represent). "calendar"
@@ -1208,6 +1198,10 @@ class HTFBuilder:
         self.instrument      = instrument
         self._clock_basis    = clock_basis
         self._calendar_rule  = calendar_rule
+        # CH-corpus-clock-contract-v1: candles are canonical UTC; the calendar (market day
+        # start) defines the period keys. The key stays in the calendar WALL frame, so the
+        # HTFCAL ids are unchanged from the broker-time era.
+        self._calendar       = calendar
         self._cal_key        = None   # calendar basis only; mirrors ParentCandleBuilder._cur_key
         self._buffer:      list[Candle] = []
         self._htf_idx:     int  = 0
@@ -1229,7 +1223,7 @@ class HTFBuilder:
             # buffer); a period boundary closes the PRIOR buffer and starts a fresh one
             # with the boundary-crossing candle.
             from features.calendar_periods import period_key
-            key = period_key(candle.timestamp, self._calendar_rule)
+            key = period_key(candle.timestamp, self._calendar_rule, self._calendar)
             if self._cal_key is None:
                 self._cal_key = key
                 self._buffer  = [candle]
@@ -1305,9 +1299,16 @@ class TradeJournal:
         risk_denominator_id: str = "",
         intrabar_exits: bool = True,
         sl_anchor: str = "displacement",
+        calendar=None,
     ):
         self.instrument    = instrument
         self.pip_size      = pip_size
+        # CH-corpus-clock-contract-v1: trade stamps are canonical UTC; week/day-of-week of the
+        # TradeRecord follow the market calendar (None = UTC grid, constructed data).
+        if calendar is None:
+            from features.market_calendar import UTC_CALENDAR
+            calendar = UTC_CALENDAR
+        self.calendar      = calendar
         self.slip          = slippage
         self.cap           = capital_curve
         # REQUIRED (no default): the SL-distance floor used by the [FIX-SL] guard in
@@ -1429,9 +1430,9 @@ class TradeJournal:
             session               = session,
             capital_before        = self.cap.current_capital,
             position_size         = size,
-            week_of_year          = candle.timestamp.isocalendar()[1],
-            day_of_week           = candle.timestamp.weekday(),
-            hour_of_day           = candle.timestamp.hour,
+            week_of_year          = self.calendar.wall(candle.timestamp).isocalendar()[1],
+            day_of_week           = self.calendar.wall(candle.timestamp).weekday(),
+            hour_of_day           = candle.timestamp.hour,   # canonical UTC hour
             features              = feature_map,
             # ── Universe-B live audit fields ─────────────────────────────────
             live_atr              = float(lm.get("live_atr",             0.0)),
@@ -2078,42 +2079,11 @@ def _corpus_range_from_csv(filepath: Optional[str]) -> Optional[tuple[str, str]]
     if not filepath:
         return None
     try:
-        with open(filepath, "r", encoding="utf-8-sig", newline="") as fh:
-            header = fh.readline()
-            if not header:
-                return None
-            cols = [c.strip().strip('"') for c in header.rstrip("\r\n").split(",")]
-            if "timestamp" not in cols:
-                return None
-            first = fh.readline().rstrip("\r\n")
-            if not first:
-                return None
-            # last non-empty line: scan backwards from EOF
-            fh.seek(0, 2)
-            pos = fh.tell()
-            last = ""
-            while pos > 0:
-                pos = max(0, pos - 4096)
-                fh.seek(pos)
-                chunk = fh.read(8192)
-                chunk = chunk.replace("\r\n", "\n")
-                lines = chunk.split("\n")
-                for ln in reversed(lines):
-                    if ln.strip() and "," in ln:
-                        last = ln.rstrip("\r\n")
-                        break
-                if last:
-                    break
-            if not last:
-                return None
-            def _cell(row: str, idx: int) -> Optional[str]:
-                cells = [c.strip() for c in row.split(",")]
-                return cells[idx] if len(cells) > idx else None
-            start = _cell(first, cols.index("timestamp"))
-            end = _cell(last, cols.index("timestamp"))
-            if not start or not end:
-                return None
-            return (start, end)
+        # CH-corpus-ssot (2026-10-08): the range is a property of the authoritative corpus.
+        from data_ingestion.corpus_store import load as _load_corpus
+
+        c = _load_corpus(filepath, sequence_check=False)
+        return (c.start, c.end) if c.start and c.end else None
     except Exception:  # noqa: BLE001 — fail-open: old unsuffixed folder on any problem
         return None
 
@@ -2620,13 +2590,24 @@ class BacktestRunner:
         # R3 Dataset Identity admission (fail-closed rewrite + hash/range for bound M15).
         if csv_path:
             try:
-                csv_path = admit_csv_path(
-                    csv_path, bt_config.instrument
-                ).filepath
-            except (DatasetAdmissionError, Phase1CandidateError) as exc:
+                # CH-corpus-ssot (2026-10-08): the run's ONE corpus. Features, the candle
+                # stream, row counts, ranges and every sidecar hash derive from this object.
+                from data_ingestion.corpus_store import CorpusStoreError, load as _load_corpus
+                self.corpus = _load_corpus(csv_path, bt_config.instrument, sequence_check=False)
+                csv_path = self.corpus.path
+            except (DatasetAdmissionError, Phase1CandidateError, CorpusStoreError) as exc:
                 raise DatasetIntegrityError(
                     f"corpus admission failed (R3 fail-closed): {exc}"
                 ) from exc
+        else:
+            self.corpus = None
+        # CH-corpus-clock-contract-v1: candles/feature frames are canonical UTC; the MARKET
+        # calendar (where the trading day starts) comes from the instrument, never the broker.
+        if self.corpus is not None:
+            self.calendar = self.corpus.calendar
+        else:
+            from features.market_calendar import UTC_CALENDAR
+            self.calendar = UTC_CALENDAR     # programmatic no-CSV path: constructed UTC candles
         self.csv_path = csv_path
         self._overrides: dict = overrides or {}
 
@@ -2666,9 +2647,7 @@ class BacktestRunner:
         elif self.csv_path:
             try:
                 from features.feature_pipeline import FeaturePipeline
-                require_reviewed_clock(self.csv_path,
-                                       basis=_resolved_session_ts_basis())  # Phase 3
-                raw_df = pd.read_csv(self.csv_path)
+                raw_df = self.corpus.frame()   # CH-corpus-ssot: same bytes as the candle stream
                 # Normalise headers so FeaturePipeline always sees lowercase names
                 raw_df.columns = [c.strip().lower() for c in raw_df.columns]
                 # Merge split date+time columns into a single "timestamp" column
@@ -2682,7 +2661,8 @@ class BacktestRunner:
                 # Fail fast on a malformed source before any feature work.
                 # (FeaturePipeline re-runs full value validation internally.)
                 require_ohlcv_columns(raw_df.columns, source=f"Historical dataset {self.csv_path}")
-                pipeline = FeaturePipeline(raw_df)
+                _validate_gap_reset_vs_bar_size(self.cfg, raw_df["timestamp"])   # CH-timeframe-ssot-v1 G2
+                pipeline = FeaturePipeline(raw_df, calendar=self.calendar, timeframe=self.cfg.timeframe)   # G3 inside
                 enriched_df, self.feature_vectors = pipeline.run()
                 # CH-v4-dual-construction-crt-trace-2026-08-30: `CRTStateResolver.resolve()`
                 # requires 3 non-canonical, non-vector columns FeaturePipeline already computes
@@ -2733,6 +2713,8 @@ class BacktestRunner:
                     )
             except FeatureAlignmentError:
                 raise   # a governed contract failure — never repackaged as a generic RuntimeError
+            except TimeframeGuardError:
+                raise   # CH-timeframe-ssot-v1: a governed timeframe contract failure, same rule
             except Exception as _fp_err:
                 raise RuntimeError(
                     f"FeaturePipeline init FAILED for {self.csv_path} — "
@@ -2887,7 +2869,7 @@ class BacktestRunner:
                 config_hash=self._bar_structure_config_hash(),
                 swing_window=int(fp["swing_window"]),
                 smc_max_window=int(fp["smc_max_window"]),
-                timestamp_basis=str(fp["session_timestamp_basis"]),
+                timestamp_basis="canonical_utc",
                 objective_gate_enabled=bool(obj_gate.get("enabled", False)),
                 objective_gate_mode=str(obj_gate.get("mode", "")),
                 parent_timeframe=parent.get("timeframe"),
@@ -2983,14 +2965,9 @@ class BacktestRunner:
     def _layer_trace_corpus_rows(self) -> int:
         """Data rows in the corpus file (lines minus the header). -1 when there is no file or
         it cannot be read — a sentinel, so an unknown count never reads as an empty corpus."""
-        if not self.csv_path:
+        if not self.csv_path or getattr(self, "corpus", None) is None:
             return -1
-        try:
-            with open(self.csv_path, "rb") as fh:
-                lines = sum(1 for _ in fh)   # counts a final line with no trailing newline
-            return max(lines - 1, 0)
-        except Exception:  # noqa: BLE001
-            return -1
+        return self.corpus.n_rows   # CH-corpus-ssot
 
     @staticmethod
     def _layer_trace_code_sha() -> str:
@@ -3266,7 +3243,7 @@ class BacktestRunner:
         # Constructed BEFORE `htf` (moved up from its original position) because [G2]
         # "calendar" clock basis reuses `parent_feed.rule` as HTFBuilder's calendar_rule
         # rather than re-reading `parent_crt.timeframe` a third time.
-        parent_feed = ParentCRTFeed.from_prod_config()
+        parent_feed = ParentCRTFeed.from_prod_config(self.calendar)
         if parent_feed is not None:
             self.log.info(
                 "ParentCRT feed wired | timeframe=%s | gate=reject_on_mismatch",
@@ -3281,6 +3258,7 @@ class BacktestRunner:
             self.cfg.htf_candles_per_range, self.cfg.instrument,
             clock_basis=self.cfg.htf_clock_basis,
             calendar_rule=parent_feed.rule if parent_feed is not None else None,
+            calendar=self.calendar,
         )
         slip    = SlippageModel(
             self.cfg.slippage_atr_fraction if self.cfg.slippage_enabled else 0.0,
@@ -3317,6 +3295,7 @@ class BacktestRunner:
             risk_denominator_id=BACKTEST_RISK_DENOM_ID,
             intrabar_exits=engine.intrabar_exits,
             sl_anchor=engine.executor.sl_anchor,                      # [K23 F3]
+            calendar=self.calendar,
         )
         gap_det =GapDetector(self.cfg.gap_reset_minutes, self.cfg.gap_reset_enabled)
         met_eng = MetricsEngine(self.cfg.instrument)
@@ -3562,6 +3541,8 @@ class BacktestRunner:
         _htf_pos:       int = 0
         _prev_htf_id:   str = ""
         _htf_remaining: int = self.cfg.htf_candles_per_range
+        from features.calendar_periods import BAR_MINUTES as _BAR_MINUTES
+        _bar_minutes: int = _BAR_MINUTES[self.cfg.timeframe]   # CH-timeframe-ssot-v1
         # [Phase 1] Shadow displacement counters for counterfactual comparison
         _shadow_sweep_count:     int = 0   # SHADOW_PENDING entries (resume attempts)
         _shadow_expansion_count: int = 0   # successful SHADOW_EXPANSION_CONFIRMED
@@ -3600,6 +3581,9 @@ class BacktestRunner:
                 _htf_pos      += 1
                 _htf_remaining = max(0, _htf_remaining - 1)
             engine.state.htf_remaining_candles = _htf_remaining
+            engine.state.htf_window_candles = self.cfg.htf_candles_per_range   # CH-timeframe-ssot-v2
+            engine.state.bar_minutes = _bar_minutes   # CH-timeframe-ssot-v1: declared timeframe's bar size
+            engine.telemetry.bar_minutes = _bar_minutes
 
             # ── Warmup ─────────────────────────────────────────────
             if not warmup_done:
@@ -4551,7 +4535,9 @@ class BacktestRunner:
             from governance.run_identity import dataset_hash as _file_digest
             from config_layer.production_config import get_prod_metadata as _gpm
             _cfg_hash = str((_gpm().get("config_hash") or ""))
-            _ds_hash = _file_digest(self.csv_path) if self.csv_path else ""
+            # CH-corpus-ssot: the identity of the bytes this run consumed (not a re-read).
+            _ds_hash = (self.corpus.sha256 if getattr(self, "corpus", None) is not None
+                        else (_file_digest(self.csv_path) if self.csv_path else ""))
             _identity = _build_run_identity(
                 _canonical_run_id, PROD_VERSION, _cfg_hash, _ds_hash
             ).to_dict()
@@ -4655,6 +4641,9 @@ class BacktestRunner:
                     "start": m.corpus_start,
                     "end":   m.corpus_end,
                     "rows":  int(total_candles),
+                    # CH-corpus-ssot: the authoritative corpus this run consumed.
+                    "ssot": (self.corpus.provenance()
+                             if getattr(self, "corpus", None) is not None else None),
                 },
                 "identity": _identity,
                 "artifacts": dict(paths),
@@ -4775,22 +4764,34 @@ def _preflight_dataset(csv_path: str, instrument: str, log: logging.Logger) -> b
     check (D-1 lattice) across every backtest instrument is a separate authorized
     decision, not a side effect of removing a duplicate."""
     try:
-        adm = admit_corpus(
-            csv_path,
-            instrument,
-            enforce=False,
-            check_plausibility=False,
-            log=log,
-        )
-    except (DatasetAdmissionError, Phase1CandidateError) as exc:
+        # CH-corpus-ssot (2026-10-08): validate the corpus the SSOT resolves for this request.
+        # A different, undeclared existing file is its OWN corpus (unregistered identity), so
+        # it is validated itself — never via admit_corpus's legacy rewrite to another file.
+        from data_ingestion.corpus_store import CorpusStoreError, load as _load_corpus
+
+        _c = _load_corpus(csv_path, instrument, sequence_check=False)
+        if _c.dataset_id is None and Path(_c.path).resolve() == Path(csv_path).resolve():
+            rep = validate_dataset(_c.path, instrument=instrument or None,
+                                   raise_on_fail=False, write_report=False)
+            decision = rep.get("decision", DatasetDecision.APPROVE.value)
+            csv_path = _c.path
+        else:
+            adm = admit_corpus(
+                csv_path,
+                instrument,
+                enforce=False,
+                check_plausibility=False,
+                log=log,
+            )
+            csv_path = adm.filepath
+            rep = adm.report
+            decision = adm.decision
+    except (DatasetAdmissionError, Phase1CandidateError, CorpusStoreError) as exc:
         log.error(
             "[dataset_integrity] R3 admission REJECT %s (%s): %s — skipping.",
             csv_path, instrument, exc,
         )
         return False
-    csv_path = adm.filepath
-    rep = adm.report
-    decision = adm.decision
     if decision == DatasetDecision.REJECT.value:
         log.error(
             "[dataset_integrity] REJECT %s (%s): %s — skipping instrument.",
@@ -4803,6 +4804,26 @@ def _preflight_dataset(csv_path: str, instrument: str, log: logging.Logger) -> b
             csv_path, instrument, "; ".join(rep.get("warnings", [])),
         )
     return True
+
+
+class TimeframeGuardError(ValueError):
+    """A declared timeframe / bar-size mismatch that would silently change what a run measures."""
+
+
+def _validate_gap_reset_vs_bar_size(cfg: "BacktestConfig", timestamps) -> None:
+    """CH-timeframe-ssot-v1 (G2): the session-gap reset fires when the gap between consecutive bars exceeds
+    `gap_reset_minutes`. If ONE bar is longer than that limit (e.g. 240-minute H4 bars against the 120-minute
+    default), the detector fires on every bar and the engine resets continuously. Fail closed, naming the
+    fix, instead of running a backtest whose state machine never survives a bar."""
+    from features.calendar_periods import modal_bar_minutes
+
+    bar = modal_bar_minutes(timestamps, min_share=0.5)
+    if cfg.gap_reset_enabled and bar is not None and bar > cfg.gap_reset_minutes:
+        raise TimeframeGuardError(
+            f"G2 gap-reset mismatch: backtest.gap_reset_minutes={cfg.gap_reset_minutes} is shorter than one "
+            f"{bar}-minute bar, so the gap detector would fire on every bar. Set gap_reset_minutes above the bar "
+            f"size (a weekend/holiday gap is hours, so a few bars' worth is safe) or disable gap_reset_enabled."
+        )
 
 
 def _validate_htf_clock(cfg: "BacktestConfig", csv_path: str, log: logging.Logger) -> None:
@@ -5135,13 +5156,15 @@ def run_backtest(config: dict, csv_path: str) -> list:
     """
     # R3 Dataset Identity admission (fail-closed for bound corpora).
     symbol_hint = os.path.basename(csv_path).split("_")[0]
+    from data_ingestion.corpus_store import CorpusStoreError, load as _load_corpus
     try:
-        csv_path = admit_csv_path(csv_path, symbol_hint).filepath
-    except (DatasetAdmissionError, Phase1CandidateError) as exc:
+        _corpus = _load_corpus(csv_path, symbol_hint, sequence_check=False)   # CH-corpus-ssot
+        csv_path = _corpus.path
+    except (DatasetAdmissionError, Phase1CandidateError, CorpusStoreError) as exc:
         raise DatasetIntegrityError(
             f"corpus admission failed (R3 fail-closed): {exc}"
         ) from exc
-    raw_df  = pd.read_csv(csv_path)
+    raw_df  = _corpus.frame()
     pipeline = FeaturePipeline(raw_df)
     enriched_df, vectors = pipeline.run()
 

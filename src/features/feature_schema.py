@@ -44,7 +44,7 @@ FEATURE_SCHEMA = {
 }
 
 # Canonical feature order for vector construction.
-# Total vector dimension = 48 (== CANONICAL_FEATURE_DIM below; hard-asserted at import).
+# Total vector dimension = 79 (== CANONICAL_FEATURE_DIM below; hard-asserted at import).
 #
 # ── SCHEMA v4.0 (2026-07-22, program SCHEMA-V4-VECTOR-MIGRATION) ──────────────────────────────
 # THREE changes from v3.0, all name-level and therefore all hash-invalidating (SCHEMA_HASH and
@@ -164,9 +164,24 @@ SCHEMA_V2_FEATURE_DIM: int = 35
 
 CANONICAL_FEATURE_ORDER = list(CANONICAL_FEATURES)
 
-# Total number of floats produced by extract_feature_vector() under schema v5.0.
+# Total number of floats produced by extract_feature_vector() under schema v9.0.
 # MUST equal len(CANONICAL_FEATURES).
-CANONICAL_FEATURE_DIM: int = 48
+CANONICAL_FEATURE_DIM: int = 79
+
+# v8.0 sentinel — records written on the 71-dim layout (before the v9.0 card identities,
+# CH-card-identity-census-v9 2026-10-08). Slots 0-70 are unchanged in v9.0, so a 71-dim
+# record is the first 71 slots of a v9.0 vector. Live code uses this cut to require the tail.
+SCHEMA_V8_FEATURE_DIM: int = 71
+
+# v7.0 sentinel — records written on the 54-dim layout (before the v8.0 candle-pattern
+# observations, CH-candle-pattern-observations-v8 2026-10-08). Slots 0-53 are unchanged in v8.0,
+# so a 54-dim record is the first 54 slots of a v8.0 vector.
+SCHEMA_V7_FEATURE_DIM: int = 54
+
+# v5.0/v6.0 sentinel — artifacts and records written on the 48-dim layout (before the v7.0
+# presence flags, CH-feature-semantic-fixes-v7 2026-10-08). Slots 0-47 are unchanged in v7.0,
+# so a 48-dim record is the first 48 slots of a v7.0 vector.
+SCHEMA_V6_FEATURE_DIM: int = 48
 
 # v3.0 sentinel — artifacts trained on the 38-dim layout slice/reject against this.
 SCHEMA_V3_FEATURE_DIM: int = 38
@@ -317,12 +332,12 @@ class SchemaObject:
 
 # ── Schema versioning (required by model_registry.py and training/trainer.py) ──
 
-SCHEMA_VERSION: str = "6.0"   # v2.0 = 35 feats; v3.0 = 38; v4.0 = 39 (MACD split + candle_range rename + FM-052 domain); v5.0 = 48 (+9 SMC primitives, CH-htfcrt-parent-candle-smc-v1); v6.0 = 48 (NAMES ONLY: trend_strength -> trend_strength_z, candles_since_retest -> candles_since_sweep; CH-schema-v6-normalization-identity)
+SCHEMA_VERSION: str = "9.0"   # v2.0 = 35 feats; v3.0 = 38; v4.0 = 39 (MACD split + candle_range rename + FM-052 domain); v5.0 = 48 (+9 SMC primitives, CH-htfcrt-parent-candle-smc-v1); v6.0 = 48 (NAMES ONLY: trend_strength -> trend_strength_z, candles_since_retest -> candles_since_sweep; CH-schema-v6-normalization-identity); v7.0 = 54 (+6 SMC presence flags at slots 48-53, slots 0-47 unchanged; CH-feature-semantic-fixes-v7); v8.0 = 71 (+17 candle-pattern observations at slots 54-70, slots 0-53 unchanged; CH-candle-pattern-observations-v8); v9.0 = 79 (+8 card identities at slots 71-78: morning_star, higher_low, lower_high, sideways, rejection present/distance; slots 0-70 unchanged; CH-card-identity-census-v9)
 
 # TradeNet — uses full canonical vector (n_features computed dynamically from CANONICAL_FEATURES).
 TRADENET_SCHEMA = SchemaObject(
     name="tradenet",
-    n_features=len(CANONICAL_FEATURES),   # 48 (schema v6.0)
+    n_features=len(CANONICAL_FEATURES),   # 79 (schema v9.0)
     version="3.0",
     features=list(CANONICAL_FEATURES),
 )
@@ -330,7 +345,7 @@ TRADENET_SCHEMA = SchemaObject(
 # Gaussian NB — uses full canonical vector.
 GAUSSIAN_SCHEMA = SchemaObject(
     name="gaussian",
-    n_features=len(CANONICAL_FEATURES),   # 48 (schema v6.0)
+    n_features=len(CANONICAL_FEATURES),   # 79 (schema v9.0)
     version="3.0",
     features=list(CANONICAL_FEATURES),
 )

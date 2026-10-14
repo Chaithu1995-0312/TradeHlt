@@ -141,7 +141,7 @@ def test_state_changes_marks_every_transition():
 # ── legend (A-AC3 / A-AC3b) ────────────────────────────────────────────────────
 def _legend(states: list[str]) -> dict:
     s = cs.ChartSeries("XAUUSD", "H4", _synth(len(states)), states, "RESOLVED:vX",
-                       {"session_timestamp_basis": "broker_local"})
+                       {"timestamp_clock": "UTC", "clock_id": "mt5_icmarkets_xau"})
     return cs.build_legend(s)
 
 
@@ -149,8 +149,8 @@ def test_aac3_legend_lists_tokens_and_clock_basis():
     leg = _legend(["RANGE", "SWEEP", "EXPANSION"])
     assert leg["crt_color_tokens"] == {
         "RANGE": "crt.range", "SWEEP": "crt.sweep", "EXPANSION": "crt.exp"}
-    assert leg["session_timestamp_basis"] == "broker_local"
-    assert "F-066" in leg["clock_note"]
+    assert leg["timestamp_clock"] == "UTC"
+    assert "canonical UTC" in leg["clock_note"] and "mt5_icmarkets_xau" in leg["clock_note"]
     for tok in leg["crt_color_tokens"].values():
         assert leg["crt_token_hex"][tok].startswith("#")
 
@@ -232,7 +232,7 @@ def test_unavailable_track_never_emits_a_real_state():
 # ── render degradation ─────────────────────────────────────────────────────────
 def test_svg_fallback_renders_without_mplfinance(tmp_path):
     s = cs.ChartSeries("XAUUSD", "H1", _synth(40), ["RANGE"] * 20 + ["SWEEP"] * 20,
-                       "RESOLVED:vX", {"session_timestamp_basis": "broker_local"})
+                       "RESOLVED:vX", {"timestamp_clock": "UTC", "clock_id": "mt5_icmarkets_xau"})
     names = rd.render_tiles(s, tmp_path, fmt="svg")
     assert names == ["chart_H1_01.svg"]
     body = (tmp_path / names[0]).read_text(encoding="utf-8")
@@ -256,7 +256,7 @@ def test_state_runs_are_contiguous_and_total():
 # ── export pack ────────────────────────────────────────────────────────────────
 def test_export_pack_writes_every_contract_file(tmp_path):
     s = cs.ChartSeries("XAUUSD", "D1", _synth(5), ["RANGE"] * 5, "NONE",
-                       {"active_version": "vX", "session_timestamp_basis": "broker_local"})
+                       {"active_version": "vX", "timestamp_clock": "UTC", "clock_id": "mt5_icmarkets_xau"})
     out = cs.write_export(s, tmp_path, chart_files=["chart_D1_01.png"])
     for f in ("series.csv", "legend.json", "config_pin.json", "INDEX.md"):
         assert (out / f).is_file(), f"missing {f}"
@@ -290,6 +290,7 @@ def test_aac1_exported_m15_bars_match_source_csv_exactly():
     comparison tautological (two paths converging on the same parser, testing nothing).
     Pinned in docs/governance/corpus_read_allowlist.json with a matching `note`.
     """
+    from features import broker_clock
     base = cs.load_base_candles(CORPUS, "XAUUSD")
     with open(CORPUS, newline="", encoding="utf-8-sig") as f:
         src = list(csv.DictReader(f))
@@ -300,7 +301,11 @@ def test_aac1_exported_m15_bars_match_source_csv_exactly():
     checked = 0
     for i in sorted(set(sample)):
         c, row = base[i], src[i]
-        assert c.timestamp == datetime.strptime(row["timestamp"], "%Y-%m-%d %H:%M:%S")
+        # bars are canonical UTC; the raw CSV stamp is the broker clock. The independent oracle is
+        # the legacy reference conversion (features.broker_clock), NOT the contract's own code.
+        raw_ts = datetime.strptime(row["timestamp"], "%Y-%m-%d %H:%M:%S")
+        want = broker_clock.mt5_server_to_utc_scalar(raw_ts)
+        assert c.timestamp == want
         assert c.open == float(row["open"])
         assert c.high == float(row["high"])
         assert c.low == float(row["low"])
@@ -315,7 +320,7 @@ def test_corpus_identity_is_pinned_in_config_pin():
     from data_ingestion.xauusd_phase1_candidate import PHASE1_SHA256
     pin = cs.build_config_pin("XAUUSD", CORPUS)
     assert pin["corpus_sha256"] == PHASE1_SHA256
-    assert pin["session_timestamp_basis"]
+    assert pin["timestamp_clock"] == "UTC" and pin["clock_id"] == "mt5_icmarkets_xau"
 
 
 # ── CRT aliasing guard ─────────────────────────────────────────────────────────
@@ -372,7 +377,7 @@ def test_aliasing_warning_reaches_the_image_title():
     """The PNG travels without legend.json, so the warning must be in the title."""
     states = ["RANGE", "SWEEP"] * 50
     s = cs.ChartSeries("XAUUSD", "D1", _synth(100), states, "RESOLVED:vX",
-                       {"session_timestamp_basis": "broker_local"},
+                       {"timestamp_clock": "UTC", "clock_id": "mt5_icmarkets_xau"},
                        base_bars=47275, base_transitions=2382)
     assert "ALIASED" in rd._title(s, 0, 99)
 

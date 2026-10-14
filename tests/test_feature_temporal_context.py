@@ -76,8 +76,9 @@ def _one_bar_per_hour() -> pd.DataFrame:
 
 
 def _context_only(df: pd.DataFrame) -> pd.DataFrame:
-    """Run only compute_context (hour_of_day + session) — no finalize drop."""
-    fp = FeaturePipeline(df)
+    """Run only compute_context (hour_of_day + session) — no finalize drop. The frames here are one bar per HOUR,
+    so the bar size is declared H1 (CH-timeframe-ssot-v1: the pipeline refuses a mislabelled frame)."""
+    fp = FeaturePipeline(df, timeframe="H1")
     fp.compute_context()
     return fp.df
 

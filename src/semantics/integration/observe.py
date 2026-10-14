@@ -91,10 +91,9 @@ def read_history(csv: Path, instrument: str) -> dict:
     feature pipeline saw."""
     import pandas as pd
 
-    from data_ingestion.dataset_registry import admit_csv_path
+    from data_ingestion.corpus_store import load as corpus_load   # CH-corpus-ssot
 
-    path = admit_csv_path(str(csv), instrument).filepath
-    df = pd.read_csv(path)
+    df = corpus_load(str(csv), instrument, sequence_check=False).frame()
     df.columns = [c.strip().lower() for c in df.columns]
     if "timestamp" not in df.columns:
         df["timestamp"] = (df["date"].astype(str) + " " + df["time"].astype(str)

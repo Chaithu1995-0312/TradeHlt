@@ -126,6 +126,7 @@ spec_schema:
     - Volatility                # dispersion / range magnitude
     - Liquidity                 # sweeps, stop-runs, liquidity levels
     - MarketStructure           # swings, BOS, HH/LL
+    - Risk                      # reward:risk constructions (not a candle observation)
     - Retest                    # post-sweep return-to-level behaviour
     - Volume                    # traded size and its anomalies
     - Time                      # calendar projections
@@ -378,6 +379,12 @@ base_inputs:
   - prev_day_low               # most recently closed D1 parent candle's low
   - eqh_level                  # nearest equal-highs cluster price (features.smc.levels)
   - eql_level                  # nearest equal-lows cluster price
+  # CH-card-identity-census-v9 (2026-10-08): leaves of FM-129 reward_risk_bracket.
+  # Named entry/stop/target (not *_price) so the geometry census does not read them as OHLC.
+  - entry                    # bracket entry price
+  - stop                     # bracket stop price
+  - target                   # bracket target price
+  - multiple                 # reward:risk multiple the bracket must clear (card value 3)
 
 # ═══════════════════════════════════════════════════════════════════════════
 # SOURCE INPUTS (2026-09-16, FEATURE-NAME-IDENTITY-BINDING Step 1)
@@ -1190,6 +1197,44 @@ derived_metrics:
       vector_key:       []
       vector_index:     []
       scope:            EPISODE
+    superseded_by: FM-096   # 2026-10-08 CH-feature-semantic-fixes-v7 -- see FM-096 note. Kept for the
+                            # legacy arm (setup.retrace_semantics=legacy_kept_fraction); never deleted.
+  displacement_retrace_signed:
+    id:          FM-096
+    version:     1
+    lifecycle:   registered
+    formula:     "(disp_close - retest_close) / (disp_close - disp_open); unclipped; disp body 0 -> 0.0"
+    impl:        derived_math.displacement_retrace_signed
+    depends_on:  [retest_close, disp_open, disp_close]
+    active:      true
+    source_of_truth: crt_engine_v2.py (try_expansion_to_retest cache build, selected by setup.retrace_semantics) + crt_gaussian_scorer.py fallback
+    note: >
+      CH-feature-semantic-fixes-v7 (2026-10-08, user-authorized). FM-027's declared meaning (its
+      semantics.description: "how far the retest close retraced back into the displacement body";
+      interpretation high = "retraced most") is what this computes. FM-027's code computes
+      |retest_close - disp_open| / |body| clipped to [0,1] = the share KEPT (1 - retrace inside the
+      body), and abs() folds a close beyond the displacement open back into [0,1] (a 150% retrace
+      reads 0.5 and lands inside the trade-intent pullback band 0.3-0.7). Signed by the
+      displacement direction, so bullish and bearish read the same way. Selected by
+      setup.retrace_semantics (legacy_kept_fraction = FM-027 byte-identical | signed_retrace = FM-096).
+      Same EPISODE scope as FM-027 (one displacement candle, one retest candle); not a vector slot.
+    taxonomy:
+      category:        Retest
+      knowledge_class: Derived
+    semantics:
+      description:   "Fraction of the displacement candle's body given back by the retest candle's close, signed by the displacement's direction."
+      why_it_exists: "The CRT retracement depth FM-027 was meant to carry: 0 = displacement fully held, 1 = back to its open, above 1 = the displacement failed."
+      interpretation:
+        high: "Deep retracement; above 1 the retest closed beyond the displacement open."
+        low:  "Shallow retracement; below 0 the retest extended past the displacement close."
+    states: []
+    lineage:
+      derivation_depth: 1
+      produced_by:      derived_math.displacement_retrace_signed
+      consumed_by:      [crt_gaussian_scorer, crt_engine_v2]
+      vector_key:       []
+      vector_index:     []
+      scope:            EPISODE
   displacement_atr_ratio:
     id:          FM-028
     version:     2
@@ -1529,6 +1574,742 @@ derived_metrics:
       consumed_by:      [UNKNOWN]
       vector_key:       eql_distance
       vector_index:     46
+  # ── Schema v7.0 (2026-10-08, CH-feature-semantic-fixes-v7, user-authorized): presence flags. ──
+  # Each *_distance above emits 0.0 BOTH when price sits on the zone edge AND when no zone exists,
+  # so 0.0 alone cannot be read. Each flag is decided by the SAME finder its distance measures to
+  # (present == 0 implies distance == 0). Appended at slots 48-53; slots 0-47 unchanged.
+  order_block_present:
+    id:          FM-097
+    version:     1
+    lifecycle:   registered
+    formula:     "1.0 if an unmitigated order block exists as of the bar (find_active_order_block) else 0.0"
+    impl:        features.smc.order_block.order_block_present
+    depends_on:  [open, high, low, close]
+    active:      true
+    source_of_truth: features/smc/order_block.py
+    taxonomy:
+      category:        MarketStructure
+      knowledge_class: Derived
+    semantics:
+      description:   "Whether an active (unmitigated) order block exists at this bar."
+      why_it_exists: "order_block_distance is 0.0 both on the zone edge and when there is no zone; this flag says which."
+      interpretation:
+        high: "An active order block exists; order_block_distance measures to it."
+        low:  "No active order block; order_block_distance's 0.0 means 'none', not 'at the edge'."
+    states: []
+    lineage:
+      derivation_depth: 4
+      produced_by:      features.feature_pipeline.compute_smc_features
+      consumed_by:      [UNKNOWN]
+      vector_key:       order_block_present
+      vector_index:     48
+  fvg_present:
+    id:          FM-098
+    version:     1
+    lifecycle:   registered
+    formula:     "1.0 if an unfilled fair value gap exists as of the bar (find_active_fvg) else 0.0"
+    impl:        features.smc.fvg.fvg_present
+    depends_on:  [high, low]
+    active:      true
+    source_of_truth: features/smc/fvg.py
+    taxonomy:
+      category:        MarketStructure
+      knowledge_class: Derived
+    semantics:
+      description:   "Whether an unfilled fair value gap exists at this bar."
+      why_it_exists: "fvg_distance is 0.0 both on the gap edge and when there is no gap; this flag says which."
+      interpretation:
+        high: "An unfilled FVG exists; fvg_distance measures to it."
+        low:  "No unfilled FVG; fvg_distance's 0.0 means 'none'."
+    states: []
+    lineage:
+      derivation_depth: 4
+      produced_by:      features.feature_pipeline.compute_smc_features
+      consumed_by:      [UNKNOWN]
+      vector_key:       fvg_present
+      vector_index:     49
+  breaker_present:
+    id:          FM-099
+    version:     1
+    lifecycle:   registered
+    formula:     "1.0 if an un-retested breaker exists as of the bar (find_active_breaker) else 0.0"
+    impl:        features.smc.breaker.breaker_present
+    depends_on:  [open, high, low, close]
+    active:      true
+    source_of_truth: features/smc/breaker.py
+    taxonomy:
+      category:        MarketStructure
+      knowledge_class: Derived
+    semantics:
+      description:   "Whether an active (un-retested) breaker block exists at this bar."
+      why_it_exists: "breaker_distance is 0.0 both on the zone edge and when there is no breaker; this flag says which."
+      interpretation:
+        high: "An active breaker exists; breaker_distance measures to it."
+        low:  "No active breaker; breaker_distance's 0.0 means 'none'."
+    states: []
+    lineage:
+      derivation_depth: 4
+      produced_by:      features.feature_pipeline.compute_smc_features
+      consumed_by:      [UNKNOWN]
+      vector_key:       breaker_present
+      vector_index:     50
+  mitigation_block_present:
+    id:          FM-100
+    version:     1
+    lifecycle:   registered
+    formula:     "1.0 if a live mitigation block exists as of the bar (find_active_mitigation_block) else 0.0"
+    impl:        features.smc.mitigation.mitigation_block_present
+    depends_on:  [open, high, low, close]
+    active:      true
+    source_of_truth: features/smc/mitigation.py
+    taxonomy:
+      category:        MarketStructure
+      knowledge_class: Derived
+    semantics:
+      description:   "Whether a live mitigation block (body zone of a touched order block) exists at this bar."
+      why_it_exists: "mitigation_block_distance is 0.0 both on the zone edge and when there is no block; this flag says which."
+      interpretation:
+        high: "A live mitigation block exists; mitigation_block_distance measures to it."
+        low:  "No live mitigation block; mitigation_block_distance's 0.0 means 'none'."
+    states: []
+    lineage:
+      derivation_depth: 4
+      produced_by:      features.feature_pipeline.compute_smc_features
+      consumed_by:      [UNKNOWN]
+      vector_key:       mitigation_block_present
+      vector_index:     51
+  eqh_present:
+    id:          FM-101
+    version:     1
+    lifecycle:   registered
+    formula:     "1.0 if an equal-highs cluster exists as of the bar (levels.find_equal_clusters) else 0.0"
+    impl:        features.smc.levels.eqh_eql_present
+    depends_on:  [high, low, atr]
+    active:      true
+    source_of_truth: features/smc/levels.py
+    taxonomy:
+      category:        Liquidity
+      knowledge_class: Derived
+    semantics:
+      description:   "Whether an equal-highs cluster (2+ confirmed swing highs within 0.1 ATR) exists at this bar."
+      why_it_exists: "eqh_distance is 0.0 both on the level and when there is no cluster; this flag says which."
+      interpretation:
+        high: "An equal-highs cluster exists; eqh_distance measures to it."
+        low:  "No equal-highs cluster; eqh_distance's 0.0 means 'none'."
+    states: []
+    lineage:
+      derivation_depth: 4
+      produced_by:      features.feature_pipeline.compute_smc_features
+      consumed_by:      [UNKNOWN]
+      vector_key:       eqh_present
+      vector_index:     52
+  eql_present:
+    id:          FM-102
+    version:     1
+    lifecycle:   registered
+    formula:     "1.0 if an equal-lows cluster exists as of the bar (levels.find_equal_clusters) else 0.0"
+    impl:        features.smc.levels.eqh_eql_present
+    depends_on:  [high, low, atr]
+    active:      true
+    source_of_truth: features/smc/levels.py
+    taxonomy:
+      category:        Liquidity
+      knowledge_class: Derived
+    semantics:
+      description:   "Whether an equal-lows cluster (2+ confirmed swing lows within 0.1 ATR) exists at this bar."
+      why_it_exists: "eql_distance is 0.0 both on the level and when there is no cluster; this flag says which."
+      interpretation:
+        high: "An equal-lows cluster exists; eql_distance measures to it."
+        low:  "No equal-lows cluster; eql_distance's 0.0 means 'none'."
+    states: []
+    lineage:
+      derivation_depth: 4
+      produced_by:      features.feature_pipeline.compute_smc_features
+      consumed_by:      [UNKNOWN]
+      vector_key:       eql_present
+      vector_index:     53
+  # ── FM-103..FM-119 (2026-10-08, CH-candle-pattern-observations-v8, schema v8.0 slots 54-70):
+  # candle-pattern OBSERVATIONS from the user's candle-theory cards (docs/reference/candle_theory/)
+  # under the corrected multi-LLM spec. Thresholds live in feature_pipeline.candle_patterns.
+  # ATR is FM-074 atr_absolute (price units). Observations, not signals: no authority (§6.5).
+  upper_wick_ratio:
+    id:          FM-103
+    version:     1
+    lifecycle:   registered
+    formula:     "upper_wick / candle_range if candle_range > 0 else 0.0"
+    impl:        features.candle_patterns.upper_wick_ratio
+    depends_on:  [open, high, low, close, upper_wick, candle_range]
+    active:      true
+    source_of_truth: features/candle_patterns.py
+    taxonomy:
+      category:        CandleGeometry
+      knowledge_class: Derived
+    semantics:
+      description:   "Share of the bar's range taken by the upper wick (0..1); with body_ratio and lower_wick_ratio sums to 1."
+      why_it_exists: "Scale-free upside-rejection geometry; the raw upper_wick is in price units and cannot be compared across price levels."
+      interpretation:
+        high: "Most of the bar was an upside probe that was given back."
+        low:  "The close/open sat near the high: no upside rejection."
+    states: []
+    lineage:
+      derivation_depth: 2
+      produced_by:      features.feature_pipeline.compute_candle_patterns
+      consumed_by:      [UNKNOWN]
+      vector_key:       upper_wick_ratio
+      vector_index:     54
+  lower_wick_ratio:
+    id:          FM-104
+    version:     1
+    lifecycle:   registered
+    formula:     "lower_wick / candle_range if candle_range > 0 else 0.0"
+    impl:        features.candle_patterns.lower_wick_ratio
+    depends_on:  [open, high, low, close, lower_wick, candle_range]
+    active:      true
+    source_of_truth: features/candle_patterns.py
+    taxonomy:
+      category:        CandleGeometry
+      knowledge_class: Derived
+    semantics:
+      description:   "Share of the bar's range taken by the lower wick (0..1)."
+      why_it_exists: "Scale-free downside-rejection geometry (card 01/03 anatomy)."
+      interpretation:
+        high: "Most of the bar was a downside probe that was bought back."
+        low:  "The close/open sat near the low: no downside rejection."
+    states: []
+    lineage:
+      derivation_depth: 2
+      produced_by:      features.feature_pipeline.compute_candle_patterns
+      consumed_by:      [UNKNOWN]
+      vector_key:       lower_wick_ratio
+      vector_index:     55
+  pin_lower:
+    id:          FM-105
+    version:     1
+    lifecycle:   registered
+    formula:     "1 if lower_wick_ratio >= <feature_pipeline.candle_patterns.pin_wick_min> and body_ratio <= <feature_pipeline.candle_patterns.pin_body_max> and upper_wick_ratio <= <feature_pipeline.candle_patterns.pin_opposite_wick_max> and range >= <feature_pipeline.candle_patterns.size_gate_atr_k> * atr_absolute and range > 0 else 0"
+    impl:        features.candle_patterns.pin_lower
+    depends_on:  [open, high, low, close, atr_absolute]
+    active:      true
+    source_of_truth: features/candle_patterns.py
+    taxonomy:
+      category:        CandleGeometry
+      knowledge_class: Derived
+    semantics:
+      description:   "Lower-wick pin bar: a dominant lower wick, small body, little upper wick, on a material-range bar."
+      why_it_exists: "Card 06/07 pin bar as an observation. Named by geometry (lower), not direction — direction is the context layer's call."
+      interpretation:
+        high: "Long lower-wick rejection on a material bar."
+        low:  "Not a lower-wick pin."
+    states: []
+    lineage:
+      derivation_depth: 2
+      produced_by:      features.feature_pipeline.compute_candle_patterns
+      consumed_by:      [UNKNOWN]
+      vector_key:       pin_lower
+      vector_index:     56
+  pin_upper:
+    id:          FM-106
+    version:     1
+    lifecycle:   registered
+    formula:     "1 if upper_wick_ratio >= <feature_pipeline.candle_patterns.pin_wick_min> and body_ratio <= <feature_pipeline.candle_patterns.pin_body_max> and lower_wick_ratio <= <feature_pipeline.candle_patterns.pin_opposite_wick_max> and range >= <feature_pipeline.candle_patterns.size_gate_atr_k> * atr_absolute and range > 0 else 0"
+    impl:        features.candle_patterns.pin_upper
+    depends_on:  [open, high, low, close, atr_absolute]
+    active:      true
+    source_of_truth: features/candle_patterns.py
+    taxonomy:
+      category:        CandleGeometry
+      knowledge_class: Derived
+    semantics:
+      description:   "Upper-wick pin bar: a dominant upper wick, small body, little lower wick, on a material-range bar."
+      why_it_exists: "Mirror of pin_lower (card 06/07)."
+      interpretation:
+        high: "Long upper-wick rejection on a material bar."
+        low:  "Not an upper-wick pin."
+    states: []
+    lineage:
+      derivation_depth: 2
+      produced_by:      features.feature_pipeline.compute_candle_patterns
+      consumed_by:      [UNKNOWN]
+      vector_key:       pin_upper
+      vector_index:     57
+  hammer:
+    id:          FM-107
+    version:     1
+    lifecycle:   registered
+    formula:     "1 if lower_wick >= <feature_pipeline.candle_patterns.probe_wick_body_multiple> * body_size and upper_wick_ratio <= <feature_pipeline.candle_patterns.probe_opposite_wick_max> and low <= min(low[i-k..i-1]) (k = <feature_pipeline.candle_patterns.swing_lookback>, current bar excluded) and range >= <feature_pipeline.candle_patterns.size_gate_atr_k> * atr_absolute and range > 0 else 0"
+    impl:        features.candle_patterns.hammer
+    depends_on:  [open, high, low, close, atr_absolute]
+    active:      true
+    source_of_truth: features/candle_patterns.py
+    taxonomy:
+      category:        CandleGeometry
+      knowledge_class: Derived
+    semantics:
+      description:   "Hammer: a lower-wick probe at or below the prior k-bar low."
+      why_it_exists: "Card 03: the extremity condition separates a hammer from generic lower-wick geometry. No trend condition (context layer)."
+      interpretation:
+        high: "The bar probed to a fresh k-bar low and closed off it."
+        low:  "Not a hammer."
+    states: []
+    lineage:
+      derivation_depth: 2
+      produced_by:      features.feature_pipeline.compute_candle_patterns
+      consumed_by:      [UNKNOWN]
+      vector_key:       hammer
+      vector_index:     58
+  shooting_star:
+    id:          FM-108
+    version:     1
+    lifecycle:   registered
+    formula:     "1 if upper_wick >= <feature_pipeline.candle_patterns.probe_wick_body_multiple> * body_size and lower_wick_ratio <= <feature_pipeline.candle_patterns.probe_opposite_wick_max> and high >= max(high[i-k..i-1]) (k = <feature_pipeline.candle_patterns.swing_lookback>, current bar excluded) and range >= <feature_pipeline.candle_patterns.size_gate_atr_k> * atr_absolute and range > 0 else 0"
+    impl:        features.candle_patterns.shooting_star
+    depends_on:  [open, high, low, close, atr_absolute]
+    active:      true
+    source_of_truth: features/candle_patterns.py
+    taxonomy:
+      category:        CandleGeometry
+      knowledge_class: Derived
+    semantics:
+      description:   "Shooting star: an upper-wick probe at or above the prior k-bar high."
+      why_it_exists: "Card 04 mirror of hammer."
+      interpretation:
+        high: "The bar probed to a fresh k-bar high and closed off it."
+        low:  "Not a shooting star."
+    states: []
+    lineage:
+      derivation_depth: 2
+      produced_by:      features.feature_pipeline.compute_candle_patterns
+      consumed_by:      [UNKNOWN]
+      vector_key:       shooting_star
+      vector_index:     59
+  doji_material:
+    id:          FM-109
+    version:     1
+    lifecycle:   registered
+    formula:     "1 if body_ratio <= <feature_pipeline.candle_patterns.doji_body_max> and |upper_wick_ratio - lower_wick_ratio| <= <feature_pipeline.candle_patterns.doji_wick_asymmetry_max> and range >= <feature_pipeline.candle_patterns.size_gate_atr_k> * atr_absolute and range > 0 else 0"
+    impl:        features.candle_patterns.doji_material
+    depends_on:  [open, high, low, close, atr_absolute]
+    active:      true
+    source_of_truth: features/candle_patterns.py
+    taxonomy:
+      category:        CandleGeometry
+      knowledge_class: Derived
+    semantics:
+      description:   "Material doji: near-zero body with balanced wicks on a material-range bar."
+      why_it_exists: "Card 05 indecision. The size gate makes it a MATERIAL doji, not every tiny bar."
+      interpretation:
+        high: "Two-sided rejection, close near open, on a real-range bar."
+        low:  "Not a material doji."
+    states: []
+    lineage:
+      derivation_depth: 2
+      produced_by:      features.feature_pipeline.compute_candle_patterns
+      consumed_by:      [UNKNOWN]
+      vector_key:       doji_material
+      vector_index:     60
+  dragonfly_doji:
+    id:          FM-110
+    version:     1
+    lifecycle:   registered
+    formula:     "1 if body_ratio <= <feature_pipeline.candle_patterns.doji_extreme_body_max> and lower_wick_ratio >= <feature_pipeline.candle_patterns.doji_extreme_wick_min> and range >= <feature_pipeline.candle_patterns.size_gate_atr_k> * atr_absolute and range > 0 else 0"
+    impl:        features.candle_patterns.dragonfly_doji
+    depends_on:  [open, high, low, close, atr_absolute]
+    active:      true
+    source_of_truth: features/candle_patterns.py
+    taxonomy:
+      category:        CandleGeometry
+      knowledge_class: Derived
+    semantics:
+      description:   "Dragonfly doji: no body, almost all lower wick."
+      why_it_exists: "Card 05/06 variant; overlaps hammer/pin_lower by construction (flags are non-exclusive)."
+      interpretation:
+        high: "Full downside probe bought back to the open."
+        low:  "Not a dragonfly doji."
+    states: []
+    lineage:
+      derivation_depth: 2
+      produced_by:      features.feature_pipeline.compute_candle_patterns
+      consumed_by:      [UNKNOWN]
+      vector_key:       dragonfly_doji
+      vector_index:     61
+  gravestone_doji:
+    id:          FM-111
+    version:     1
+    lifecycle:   registered
+    formula:     "1 if body_ratio <= <feature_pipeline.candle_patterns.doji_extreme_body_max> and upper_wick_ratio >= <feature_pipeline.candle_patterns.doji_extreme_wick_min> and range >= <feature_pipeline.candle_patterns.size_gate_atr_k> * atr_absolute and range > 0 else 0"
+    impl:        features.candle_patterns.gravestone_doji
+    depends_on:  [open, high, low, close, atr_absolute]
+    active:      true
+    source_of_truth: features/candle_patterns.py
+    taxonomy:
+      category:        CandleGeometry
+      knowledge_class: Derived
+    semantics:
+      description:   "Gravestone doji: no body, almost all upper wick."
+      why_it_exists: "Card 05/06 variant; mirror of dragonfly_doji."
+      interpretation:
+        high: "Full upside probe sold back to the open."
+        low:  "Not a gravestone doji."
+    states: []
+    lineage:
+      derivation_depth: 2
+      produced_by:      features.feature_pipeline.compute_candle_patterns
+      consumed_by:      [UNKNOWN]
+      vector_key:       gravestone_doji
+      vector_index:     62
+  engulfing_bull:
+    id:          FM-112
+    version:     1
+    lifecycle:   registered
+    formula:     "1 if contiguous(i-1,i) and close[i-1] < open[i-1] and close > open and open <= close[i-1] and close >= open[i-1] and body_size > body_size[i-1] else 0"
+    impl:        features.candle_patterns.engulfing_bull
+    depends_on:  [open, close, timestamp]
+    active:      true
+    source_of_truth: features/candle_patterns.py
+    taxonomy:
+      category:        CandleGeometry
+      knowledge_class: Derived
+    semantics:
+      description:   "Bullish engulfing: a bullish body that covers (inclusive) the previous bearish body and is larger."
+      why_it_exists: "Card 06/07 two-bar pattern. Not formed across a session/weekend gap (previous row must be the immediately preceding bar)."
+      interpretation:
+        high: "The bar's body swallowed the prior bearish body."
+        low:  "No bullish engulfing."
+    states: []
+    lineage:
+      derivation_depth: 2
+      produced_by:      features.feature_pipeline.compute_candle_patterns
+      consumed_by:      [UNKNOWN]
+      vector_key:       engulfing_bull
+      vector_index:     63
+  engulfing_bear:
+    id:          FM-113
+    version:     1
+    lifecycle:   registered
+    formula:     "1 if contiguous(i-1,i) and close[i-1] > open[i-1] and close < open and open >= close[i-1] and close <= open[i-1] and body_size > body_size[i-1] else 0"
+    impl:        features.candle_patterns.engulfing_bear
+    depends_on:  [open, close, timestamp]
+    active:      true
+    source_of_truth: features/candle_patterns.py
+    taxonomy:
+      category:        CandleGeometry
+      knowledge_class: Derived
+    semantics:
+      description:   "Bearish engulfing: a bearish body that covers (inclusive) the previous bullish body and is larger."
+      why_it_exists: "Mirror of engulfing_bull."
+      interpretation:
+        high: "The bar's body swallowed the prior bullish body."
+        low:  "No bearish engulfing."
+    states: []
+    lineage:
+      derivation_depth: 2
+      produced_by:      features.feature_pipeline.compute_candle_patterns
+      consumed_by:      [UNKNOWN]
+      vector_key:       engulfing_bear
+      vector_index:     64
+  inside_bar:
+    id:          FM-114
+    version:     1
+    lifecycle:   registered
+    formula:     "1 if contiguous(i-1,i) and high <= high[i-1] and low >= low[i-1] else 0"
+    impl:        features.candle_patterns.inside_bar
+    depends_on:  [high, low, timestamp]
+    active:      true
+    source_of_truth: features/candle_patterns.py
+    taxonomy:
+      category:        CandleGeometry
+      knowledge_class: Derived
+    semantics:
+      description:   "Inside bar: the bar's range sits (inclusively) inside the previous bar's range."
+      why_it_exists: "Card 12 compression/containment. Not formed across a gap. Distinct from compression_ratio."
+      interpretation:
+        high: "Range contained by the mother bar."
+        low:  "Not an inside bar."
+    states: []
+    lineage:
+      derivation_depth: 2
+      produced_by:      features.feature_pipeline.compute_candle_patterns
+      consumed_by:      [UNKNOWN]
+      vector_key:       inside_bar
+      vector_index:     65
+  compression_ratio:
+    id:          FM-115
+    version:     1
+    lifecycle:   registered
+    formula:     "candle_range / candle_range[i-1] clipped to [0, <feature_pipeline.candle_patterns.compression_ratio_cap>]; 1.0 when candle_range[i-1] == 0 or not contiguous"
+    impl:        features.candle_patterns.compression_ratio
+    depends_on:  [high, low, candle_range, timestamp]
+    active:      true
+    source_of_truth: features/candle_patterns.py
+    taxonomy:
+      category:        Volatility
+      knowledge_class: Derived
+    semantics:
+      description:   "One-bar range ratio: <1 contraction, >1 expansion relative to the previous bar."
+      why_it_exists: "Continuous companion to inside_bar (a small bar need not be inside)."
+      interpretation:
+        high: "Range expanded versus the previous bar."
+        low:  "Range contracted versus the previous bar."
+    states: []
+    lineage:
+      derivation_depth: 2
+      produced_by:      features.feature_pipeline.compute_candle_patterns
+      consumed_by:      [UNKNOWN]
+      vector_key:       compression_ratio
+      vector_index:     66
+  rejection_intensity_signed:
+    id:          FM-116
+    version:     1
+    lifecycle:   registered
+    formula:     "clip(lower_wick_ratio - upper_wick_ratio, -1, 1) if range >= <feature_pipeline.candle_patterns.size_gate_atr_k> * atr_absolute and range > 0 else 0.0"
+    impl:        features.candle_patterns.rejection_intensity_signed
+    depends_on:  [open, high, low, close, atr_absolute]
+    active:      true
+    source_of_truth: features/candle_patterns.py
+    taxonomy:
+      category:        CandleGeometry
+      knowledge_class: Derived
+    semantics:
+      description:   "Signed wick asymmetry on material bars: + lower-wick rejection, - upper-wick rejection."
+      why_it_exists: "Continuous pin intensity (corrected spec I_pin) — geometry, not direction."
+      interpretation:
+        high: "Lower-wick rejection dominates."
+        low:  "Upper-wick rejection dominates (negative)."
+    states: []
+    lineage:
+      derivation_depth: 2
+      produced_by:      features.feature_pipeline.compute_candle_patterns
+      consumed_by:      [UNKNOWN]
+      vector_key:       rejection_intensity_signed
+      vector_index:     67
+  rejection_intensity_lower:
+    id:          FM-117
+    version:     1
+    lifecycle:   registered
+    formula:     "clip(lower_wick_ratio - body_ratio, 0, 1) if range >= <feature_pipeline.candle_patterns.size_gate_atr_k> * atr_absolute and range > 0 else 0.0"
+    impl:        features.candle_patterns.rejection_intensity_lower
+    depends_on:  [open, high, low, close, atr_absolute]
+    active:      true
+    source_of_truth: features/candle_patterns.py
+    taxonomy:
+      category:        CandleGeometry
+      knowledge_class: Derived
+    semantics:
+      description:   "Excess of lower-wick share over body share on material bars."
+      why_it_exists: "Continuous downside-rejection strength."
+      interpretation:
+        high: "Lower wick far larger than the body."
+        low:  "No lower-wick excess."
+    states: []
+    lineage:
+      derivation_depth: 2
+      produced_by:      features.feature_pipeline.compute_candle_patterns
+      consumed_by:      [UNKNOWN]
+      vector_key:       rejection_intensity_lower
+      vector_index:     68
+  engulfing_strength:
+    id:          FM-118
+    version:     1
+    lifecycle:   registered
+    formula:     "min(body_size / body_size[i-1], <feature_pipeline.candle_patterns.engulfing_strength_cap>) if engulfing_bull or engulfing_bear else 0.0"
+    impl:        features.candle_patterns.engulfing_strength
+    depends_on:  [open, close, timestamp]
+    active:      true
+    source_of_truth: features/candle_patterns.py
+    taxonomy:
+      category:        Momentum
+      knowledge_class: Derived
+    semantics:
+      description:   "Body expansion of an engulfing bar relative to the body it engulfed (capped)."
+      why_it_exists: "Corrected spec E_score; previous body > 0 is guaranteed by the pattern so no epsilon."
+      interpretation:
+        high: "Engulfing body much larger than the prior body."
+        low:  "No engulfing (0) or a marginal one (~1)."
+    states: []
+    lineage:
+      derivation_depth: 2
+      produced_by:      features.feature_pipeline.compute_candle_patterns
+      consumed_by:      [UNKNOWN]
+      vector_key:       engulfing_strength
+      vector_index:     69
+  rejection_intensity_upper:
+    id:          FM-119
+    version:     1
+    lifecycle:   registered
+    formula:     "clip(upper_wick_ratio - body_ratio, 0, 1) if range >= <feature_pipeline.candle_patterns.size_gate_atr_k> * atr_absolute and range > 0 else 0.0"
+    impl:        features.candle_patterns.rejection_intensity_upper
+    depends_on:  [open, high, low, close, atr_absolute]
+    active:      true
+    source_of_truth: features/candle_patterns.py
+    taxonomy:
+      category:        CandleGeometry
+      knowledge_class: Derived
+    semantics:
+      description:   "Excess of upper-wick share over body share on material bars."
+      why_it_exists: "Continuous upside-rejection strength (mirror of rejection_intensity_lower)."
+      interpretation:
+        high: "Upper wick far larger than the body."
+        low:  "No upper-wick excess."
+    states: []
+    lineage:
+      derivation_depth: 2
+      produced_by:      features.feature_pipeline.compute_candle_patterns
+      consumed_by:      [UNKNOWN]
+      vector_key:       rejection_intensity_upper
+      vector_index:     70
+  morning_star:
+    id:          FM-120
+    version:     1
+    lifecycle:   registered
+    formula:     "close[i-2] < open[i-2] and body_ratio[i-2] >= <feature_pipeline.candle_patterns.morning_star_body_min> and body_ratio[i-1] <= <feature_pipeline.candle_patterns.morning_star_mid_max> and close[i] > open[i] and body_ratio[i] >= <feature_pipeline.candle_patterns.morning_star_body_min>, both joins contiguous; else 0. Middle color is free. No ATR gate. No trend argument. No evening star."
+    impl:        features.candle_patterns.morning_star
+    depends_on:  [open, high, low, close, timestamp]
+    active:      true
+    source_of_truth: features/candle_patterns.py
+    taxonomy:
+      category:        CandleGeometry
+      knowledge_class: Derived
+    semantics:
+      description:   "Three-bar morning-star shape: big bearish, small middle, big bullish, known on the third bar."
+      why_it_exists: "The confirmation card names morning star and the repo had no formula for it. This is the shape only."
+      interpretation:
+        high: "1 — the three-bar shape is present on contiguous bars."
+        low:  "0 — the shape is absent, a bar is not contiguous, or a required body is not big."
+    states: []
+    lineage:
+      derivation_depth: 2
+      produced_by:      features.feature_pipeline.compute_candle_patterns
+      consumed_by:      [UNKNOWN]
+      vector_key:       morning_star
+      vector_index:     71
+  rejection_bull_present:
+    id:          FM-124
+    version:     1
+    lifecycle:   registered
+    formula:     "1.0 if a live bullish rejection block (lower wick of a confirmed causal swing low) exists else 0.0"
+    impl:        features.smc.rejection.rejection_bull_present
+    depends_on:  [open, high, low, close]
+    active:      true
+    source_of_truth: features/smc/rejection.py
+    taxonomy:
+      category:        Liquidity
+      knowledge_class: Derived
+    semantics:
+      description:   "Whether a bullish rejection block is live as of this bar."
+      why_it_exists: "The card's rejection block had no registered identity. Presence separates no-block from price sitting on the wick."
+      interpretation:
+        high: "1 — a live lower-wick block of a confirmed swing low."
+        low:  "0 — no such block."
+    states: []
+    lineage:
+      derivation_depth: 4
+      produced_by:      features.feature_pipeline.compute_smc_features
+      consumed_by:      [UNKNOWN]
+      vector_key:       rejection_bull_present
+      vector_index:     75
+  rejection_bear_present:
+    id:          FM-125
+    version:     1
+    lifecycle:   registered
+    formula:     "1.0 if a live bearish rejection block (upper wick of a confirmed causal swing high) exists else 0.0"
+    impl:        features.smc.rejection.rejection_bear_present
+    depends_on:  [open, high, low, close]
+    active:      true
+    source_of_truth: features/smc/rejection.py
+    taxonomy:
+      category:        Liquidity
+      knowledge_class: Derived
+    semantics:
+      description:   "Whether a bearish rejection block is live as of this bar."
+      why_it_exists: "Mirror of rejection_bull_present for the upper wick of a confirmed swing high."
+      interpretation:
+        high: "1 — a live upper-wick block of a confirmed swing high."
+        low:  "0 — no such block."
+    states: []
+    lineage:
+      derivation_depth: 4
+      produced_by:      features.feature_pipeline.compute_smc_features
+      consumed_by:      [UNKNOWN]
+      vector_key:       rejection_bear_present
+      vector_index:     76
+  rejection_bull_distance:
+    id:          FM-126
+    version:     1
+    lifecycle:   registered
+    formula:     "signed_atr_distance(close, bullish_rejection_body_bottom, atr, favorable_sign=1); 0.0 when no block"
+    impl:        features.smc.rejection.rejection_bull_distance
+    depends_on:  [open, high, low, close, atr]
+    active:      true
+    source_of_truth: features/smc/rejection.py
+    taxonomy:
+      category:        Liquidity
+      knowledge_class: Derived
+    semantics:
+      description:   "Signed ATR distance from the close to the near edge of the live bullish rejection block."
+      why_it_exists: "Same distance contract as order_block_distance. present == 0 implies distance == 0."
+      interpretation:
+        high: "Price is on the favorable side of the wick's body edge."
+        low:  "0 when no block, or price is at the edge. Negative is through the block."
+    states: []
+    lineage:
+      derivation_depth: 4
+      produced_by:      features.feature_pipeline.compute_smc_features
+      consumed_by:      [UNKNOWN]
+      vector_key:       rejection_bull_distance
+      vector_index:     77
+  rejection_bear_distance:
+    id:          FM-127
+    version:     1
+    lifecycle:   registered
+    formula:     "signed_atr_distance(close, bearish_rejection_body_top, atr, favorable_sign=-1); 0.0 when no block"
+    impl:        features.smc.rejection.rejection_bear_distance
+    depends_on:  [open, high, low, close, atr]
+    active:      true
+    source_of_truth: features/smc/rejection.py
+    taxonomy:
+      category:        Liquidity
+      knowledge_class: Derived
+    semantics:
+      description:   "Signed ATR distance from the close to the near edge of the live bearish rejection block."
+      why_it_exists: "Mirror of rejection_bull_distance. present == 0 implies distance == 0."
+      interpretation:
+        high: "Price is on the favorable side of the wick's body edge."
+        low:  "0 when no block, or price is at the edge. Negative is through the block."
+    states: []
+    lineage:
+      derivation_depth: 4
+      produced_by:      features.feature_pipeline.compute_smc_features
+      consumed_by:      [UNKNOWN]
+      vector_key:       rejection_bear_distance
+      vector_index:     78
+  reward_risk_bracket:
+    id:          FM-129
+    version:     1
+    lifecycle:   registered
+    formula:     "abs(target - entry) / abs(entry - stop) >= multiple; false when abs(entry - stop) == 0. The card identity uses multiple = 3. The live gate min_rr_ratio stays 1.5 and is not this function."
+    impl:        features.reward_bracket.reward_risk_clears
+    depends_on:  [entry, stop, target, multiple]
+    active:      true
+    source_of_truth: features/reward_bracket.py
+    note: >
+      Outcome/risk identity. Not a candle observation and not a canonical slot. Calling it
+      does not read or write ultron_risk_gate.min_rr_ratio.
+    taxonomy:
+      category:        Risk
+      knowledge_class: Derived
+    semantics:
+      description:   "Whether a proposed bracket clears a required reward:risk multiple."
+      why_it_exists: "The risk card draws 1:3. The live gate that can block is 1.5. Those are different objects."
+      interpretation:
+        high: "The bracket clears the supplied multiple."
+        low:  "The bracket does not clear it, or the risk distance is zero."
+    states: []
+    lineage:
+      derivation_depth: 1
+      produced_by:      features.reward_bracket.reward_risk_clears
+      consumed_by:      [UNKNOWN]
+      vector_key:       []
+      vector_index:     []
 
 # ═══════════════════════════════════════════════════════════════════════════
 # ROLLING INDICATORS — first-class WINDOWED identities (bottom-up cert program, 2026-07-12)
@@ -3220,6 +4001,161 @@ structural_states:
       consumed_by:      [UNKNOWN]
       vector_key:       change_of_character
       vector_index:     47
+  higher_low:
+    id:        FM-121
+    version:   1
+    lifecycle: registered
+    computation_class: structural_state
+    formula:   "On a causal swing_low confirmation, last_swing_low_price > the same series one bar earlier (strict). 1 persists until the next swing low that is not strictly higher. 0 before the second swing low. Equals are 0."
+    impl:      features.structure_sequence.swing_sequence_states
+    depends_on: [swing_low, last_swing_low_price]
+    bounds:    "{0, 1}"
+    active:    true
+    note: >
+      CH-card-identity-census-v9 (2026-10-08). TruthConflict with FM-055: higher_high is a
+      one-bar pierce (this bar's high versus the previous published swing high). higher_low
+      is a swing-sequence state and does not use that pierce. Not MKT-E08. Classifies
+      already-published swings and adds no new detector.
+    taxonomy:
+      category:        MarketStructure
+      knowledge_class: Structural
+    semantics:
+      description:   "The latest two confirmed swing lows form a higher low, and that reading is still the latest one."
+      why_it_exists: "The trend card defines an uptrend as higher highs and higher lows. The repo had the pierce event and no sequence state."
+      interpretation:
+        high: "1 — the last confirmed swing low is strictly above the one before it."
+        low:  "0 — fewer than two swing lows, or the latest pair is not a higher low."
+    states:
+      - name:        NotHigherLow
+        value:       0
+        condition:   "fewer than two confirmed swing lows, or the latest pair is not strictly higher"
+        description: "No higher-low sequence is established."
+      - name:        HigherLow
+        value:       1
+        condition:   "latest confirmed swing low price > previous confirmed swing low price"
+        description: "Swing lows are stepping up. The flag stays until a later swing low breaks that."
+    lineage:
+      derivation_depth: 3
+      produced_by:      feature_pipeline.compute_structure_liquidity
+      consumed_by:      [UNKNOWN]
+      vector_key:       higher_low
+      vector_index:     72
+  lower_high:
+    id:        FM-122
+    version:   1
+    lifecycle: registered
+    computation_class: structural_state
+    formula:   "On a causal swing_high confirmation, last_swing_high_price < the same series one bar earlier (strict). 1 persists until the next swing high that is not strictly lower. 0 before the second swing high. Equals are 0."
+    impl:      features.structure_sequence.swing_sequence_states
+    depends_on: [swing_high, last_swing_high_price]
+    bounds:    "{0, 1}"
+    active:    true
+    note: >
+      Mirror of FM-121. FM-056 lower_low stays the one-bar pierce. This entry does not rewrite it.
+    taxonomy:
+      category:        MarketStructure
+      knowledge_class: Structural
+    semantics:
+      description:   "The latest two confirmed swing highs form a lower high, and that reading is still the latest one."
+      why_it_exists: "The trend card defines a downtrend as lower highs and lower lows. The repo had no lower-high state."
+      interpretation:
+        high: "1 — the last confirmed swing high is strictly below the one before it."
+        low:  "0 — fewer than two swing highs, or the latest pair is not a lower high."
+    states:
+      - name:        NotLowerHigh
+        value:       0
+        condition:   "fewer than two confirmed swing highs, or the latest pair is not strictly lower"
+        description: "No lower-high sequence is established."
+      - name:        LowerHigh
+        value:       1
+        condition:   "latest confirmed swing high price < previous confirmed swing high price"
+        description: "Swing highs are stepping down. The flag stays until a later swing high breaks that."
+    lineage:
+      derivation_depth: 3
+      produced_by:      feature_pipeline.compute_structure_liquidity
+      consumed_by:      [UNKNOWN]
+      vector_key:       lower_high
+      vector_index:     73
+  sideways:
+    id:        FM-123
+    version:   1
+    lifecycle: registered
+    computation_class: structural_state
+    formula:   "1 when both swing pairs are known and the pair is not (higher high and higher low) and not (lower high and lower low). 0 until two swing highs and two swing lows exist. Expanding range and equal swings are sideways."
+    impl:      features.structure_sequence.swing_sequence_states
+    depends_on: [swing_high, swing_low, last_swing_high_price, last_swing_low_price]
+    bounds:    "{0, 1}"
+    active:    true
+    note: >
+      Unknown structure is 0, not sideways. An expanding range (higher high and lower low)
+      is sideways. This is not a mapped MKT-E08 state.
+    taxonomy:
+      category:        MarketStructure
+      knowledge_class: Structural
+    semantics:
+      description:   "Both swing sides are known, and the sequence is neither a higher-high/higher-low uptrend nor a lower-high/lower-low downtrend."
+      why_it_exists: "The doji card says indecision is frequent in a sideways market. The repo had no sideways state."
+      interpretation:
+        high: "1 — structure is known and is not a clean uptrend or downtrend sequence."
+        low:  "0 — not enough swings yet, or the sequence is HH+HL or LH+LL."
+    states:
+      - name:        NotSideways
+        value:       0
+        condition:   "fewer than two swing highs or two swing lows, or the sequence is HH+HL or LH+LL"
+        description: "Structure is unknown or is a directional swing sequence."
+      - name:        Sideways
+        value:       1
+        condition:   "both pairs known and not (seq_hh and higher_low) and not (lower_high and seq_ll)"
+        description: "Known structure that is not a clean trend sequence, including expansion and equals."
+    lineage:
+      derivation_depth: 3
+      produced_by:      feature_pipeline.compute_structure_liquidity
+      consumed_by:      [UNKNOWN]
+      vector_key:       sideways
+      vector_index:     74
+  wait_for_next_candle:
+    id:        FM-128
+    version:   1
+    lifecycle: registered
+    computation_class: structural_state
+    formula:   "A setup armed on bar t-1 confirms on contiguous bar t: +1 if close > open and the long arm fired, -1 if close < open and the short arm fired, else 0. A gap expires the setup. close == open confirms neither. If both arms fired, the close side wins."
+    impl:      features.confirmation_state.wait_for_next_candle
+    depends_on: [hammer, pin_lower, dragonfly_doji, engulfing_bull, morning_star, shooting_star, pin_upper, gravestone_doji, engulfing_bear, open, close, timestamp]
+    bounds:    "{-1, 0, 1}"
+    active:    true
+    note: >
+      Decision/state rule. Not a canonical slot and not written onto the pipeline frame.
+      doji_material does not arm it. The card's "look at many candles" has no numeric
+      window; this identity does not invent one. The same bar that prints the pattern
+      is not the entry.
+    taxonomy:
+      category:        MarketStructure
+      knowledge_class: Structural
+    semantics:
+      description:   "The next contiguous candle confirms a pattern that was armed on the previous bar."
+      why_it_exists: "The confirmation card says wait for the next candle. A same-bar flag is not that rule."
+      interpretation:
+        high: "+1 — a long setup on the previous bar is confirmed by a bullish close on this contiguous bar."
+        low:  "-1 — a short setup is confirmed by a bearish close. 0 means no confirmation."
+    states:
+      - name:        ShortConfirmed
+        value:       -1
+        condition:   "contiguous and close < open and the previous bar armed a short setup"
+        description: "The next candle confirmed the short setup."
+      - name:        Unconfirmed
+        value:       0
+        condition:   "gap, close == open, or the previous bar did not arm the side the close takes"
+        description: "No confirmation. A gap expires a pending setup."
+      - name:        LongConfirmed
+        value:       1
+        condition:   "contiguous and close > open and the previous bar armed a long setup"
+        description: "The next candle confirmed the long setup."
+    lineage:
+      derivation_depth: 3
+      produced_by:      features.confirmation_state.wait_for_next_candle
+      consumed_by:      [UNKNOWN]
+      vector_key:       []
+      vector_index:     []
 
 # ═══════════════════════════════════════════════════════════════════════════
 # INDICATOR IDENTITIES — DESCRIPTIVE clarification of rolling indicators (B0/B1, 2026-07-12)

@@ -164,13 +164,14 @@ def test_basis_reaches_pipeline_via_prod_version_path():
         pytest.skip(f"corpus absent: {csv}")
     df = pd.read_csv(csv).head(2000)
 
-    prev = pc.PROD_VERSION
-    try:
-        out_legacy, _ = FeaturePipeline(df).run()          # active config == atr_relative
-        pc.PROD_VERSION = SHADOW_VERSION
-        out_corrected, _ = FeaturePipeline(df).run()       # cfg=None -> resolves the SHADOW config
-    finally:
-        pc.PROD_VERSION = prev
+    # 2026-10-07: the ACTIVE config (v2_htfcrt_2026_08) now selects atr_absolute, so the production
+    # resolution path (cfg=None -> active PROD_VERSION) is the CORRECTED arm; the legacy arm is
+    # forced with an explicit basis override. (The old v2_multi_2026_04 legacy config no longer
+    # loads through the prod-version path: it lacks strict keys such as smc_max_window.)
+    assert pc.get_prod_section("feature_pipeline")["normalization_basis"] == "atr_absolute"
+    legacy_cfg = {**pc.get_prod_section("feature_pipeline"), "normalization_basis": "atr_relative"}
+    out_legacy, _ = FeaturePipeline(df, cfg=legacy_cfg).run()
+    out_corrected, _ = FeaturePipeline(df).run()           # cfg=None -> resolves the ACTIVE config
 
     med_legacy = float(np.nanmedian(np.abs(out_legacy["ema_spread"].to_numpy(np.float64))))
     med_corrected = float(np.nanmedian(np.abs(out_corrected["ema_spread"].to_numpy(np.float64))))

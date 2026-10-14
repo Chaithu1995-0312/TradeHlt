@@ -1046,12 +1046,19 @@ class CRTStateResolver:
     # ── lifecycle (HTF / gap) ─────────────────────────────────────
 
     def _load_lifecycle(self) -> dict[str, Any]:
-        """Load lifecycle block from thresholds (defaults match active backtest)."""
+        """Load lifecycle block from thresholds. Boolean/minute defaults match the active backtest; the HTF window
+        has NO default (CH-timeframe-ssot-v2): it used to default to 4 while the active config says 16, so a
+        thresholds block without it must now say which window it means."""
         thr = self._config.get("thresholds", {})
         life = thr.get("lifecycle") or {}
+        if "htf_candles_per_range" not in life:
+            raise ValueError(
+                "CRTStateResolver: thresholds.lifecycle.htf_candles_per_range is required (no default). It is the HTF "
+                "window in bars and must equal backtest.htf_candles_per_range of the config the engine is run with."
+            )
         return {
             "htf_reset_enabled": bool(life.get("htf_reset_enabled", True)),
-            "htf_candles_per_range": int(life.get("htf_candles_per_range", 4)),
+            "htf_candles_per_range": int(life["htf_candles_per_range"]),
             "htf_protect_states": set(
                 life.get("htf_protect_states") or ["EXPANSION", "RETEST"]
             ),

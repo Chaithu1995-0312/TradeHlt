@@ -67,10 +67,14 @@ class ParentCandleBuilder:
     can use the default of 1 cheaply (a single-slot ring, no extra memory).
     """
 
-    def __init__(self, rule: str, keep: int = 1):
+    def __init__(self, rule: str, keep: int = 1, calendar=None):
         if rule not in SUPPORTED_RULES:
             raise ValueError(f"ParentCandleBuilder: unsupported rule '{rule}' (expected one of {SUPPORTED_RULES})")
         self.rule = rule
+        # CH-corpus-clock-contract-v1: candles arrive on canonical UTC; `calendar` (a
+        # features.market_calendar.CalendarSpec) defines where the market day starts. None =
+        # bucket the timestamps as given (UTC / constructed data).
+        self.calendar = calendar
         self._keep = max(1, int(keep))
         self._buffer: list = []
         self._cur_key = None
@@ -81,13 +85,14 @@ class ParentCandleBuilder:
         """Feed one child candle (must arrive in chronological order — same contract as
         `resample.resample`/`HTFBuilder.push`). Returns True iff this push closed a period
         (a new parent candle is now the most recent entry in `parent_history`)."""
-        key = period_key(candle.timestamp, self.rule)
+        key = period_key(candle.timestamp, self.rule, self.calendar)
         if self._cur_key is None:
             self._cur_key = key
             self._buffer = [candle]
             return False
         if key != self._cur_key:
-            parent = _aggregate(self._buffer, period_start(self._cur_key, self.rule), self._period_idx)
+            parent = _aggregate(self._buffer, period_start(self._cur_key, self.rule, self.calendar),
+                                self._period_idx)
             self._history.append(parent)
             self._period_idx += 1
             self._cur_key = key

@@ -262,7 +262,12 @@ def test_swing_high_implies_higher_high_possible(enriched_output):
 def test_retest_flag_uses_recent_sweep_not_bos():
     """Retest should trigger from recent sweep even when BOS is zero."""
     seed_df = _make_synthetic_ohlcv(10)
-    pipeline = FeaturePipeline(seed_df)
+    # The hand-built frame below carries only the LEGACY sweep slot; since 2026-10-08 (F-117) the
+    # active config selects e01_lifecycle, which reads the per-side lifecycle columns instead. Pin
+    # the legacy arm this test exercises.
+    from config_layer.production_config import get_prod_section
+    cfg = {**get_prod_section("feature_pipeline"), "sweep_semantics": "latest_unconsumed"}
+    pipeline = FeaturePipeline(seed_df, cfg=cfg)
 
     pipeline.df = pd.DataFrame({
         "liquidity_sweep": [0, 1, 0],

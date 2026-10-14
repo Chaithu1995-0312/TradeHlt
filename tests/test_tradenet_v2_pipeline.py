@@ -214,13 +214,25 @@ def test_v2_envelope_predict_composite_formula(tmp_path):
     p = tmp_path / "v2.json"
     p.write_text(json.dumps(envelope))
 
-    m = TradeNetV2(p, instrument="TEST")
-    assert m._mode == "v2"
+    loaded = TradeNetV2(p, instrument="TEST")
+    assert loaded._mode == "missing"
+    assert loaded.predict({k: 0.5 for k in CANONICAL_FEATURES}) is None
 
-    feats = {k: 0.5 for k in CANONICAL_FEATURES}
-    feats["session"] = 1.0
-    feats["trend_bias"] = 0.0
-    out = m.predict(feats)
+    # Composite math stays covered without treating dim+names as a semantic load.
+    m = TradeNetV2.__new__(TradeNetV2)
+    m._mode = "v2"
+    m._trunk = [
+        (W1, np.zeros(32, dtype=np.float32)),
+        (W2, np.zeros(16, dtype=np.float32)),
+    ]
+    m._heads = {
+        "p_tp1": (Wt1, np.zeros(1, dtype=np.float32)),
+        "p_tp2": (Wt2, np.zeros(1, dtype=np.float32)),
+        "p_survives_be": (Wbe, np.zeros(1, dtype=np.float32)),
+    }
+    m._scaler_mean = np.zeros(n_feat, dtype=np.float32)
+    m._scaler_std = np.ones(n_feat, dtype=np.float32)
+    out = m._predict_v2([0.5] * n_feat)
     assert out is not None
     assert set(out.keys()) == {
         "tradenet_score", "p_tp1", "p_tp2", "p_survives_be", "schema_version",

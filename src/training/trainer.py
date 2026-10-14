@@ -396,15 +396,35 @@ def save_gaussian_model(
     except Exception:
         _foh = ""
 
+    names = feature_schema or list(GAUSSIAN_SCHEMA.feature_names)
+    semantic_contract = None
+    try:
+        from features.semantic_equivalence import build_contract, evaluate_artifact_binding
+        contract = build_contract()
+        declared = {
+            "contract_id": contract["contract_id"],
+            "contract_version": contract["contract_version"],
+            "contract_hash": contract["contract_hash"],
+        }
+        binding = evaluate_artifact_binding(names, declared, contract=contract)
+        semantic_contract = {
+            **declared,
+            "binding_status": binding["status"],
+        }
+    except Exception as exc:
+        log.warning("Gaussian save: semantic contract stamp skipped — %s", exc)
+        semantic_contract = None
+
     bundle = {
         "model":              model.to_dict(),
         "scaler":             scaler.to_dict(),
         "metrics":            metrics,
-        "feature_schema":     feature_schema or list(GAUSSIAN_SCHEMA.feature_names),
+        "feature_schema":     names,
         "schema_name":        "gaussian",       # PATCH v3: explicit schema tag for safe loading
         "schema_version":     GAUSSIAN_SCHEMA.version,  # PATCH v3: version check on load
         "schema_checksum":    GAUSSIAN_SCHEMA.checksum,  # PATCH v3: tamper / drift detection
         "feature_order_hash": _foh,             # Part 1: FeatureSchemaRegistry correlation key
+        "semantic_contract":  semantic_contract,
     }
     path.write_text(json.dumps(bundle, indent=2))
     log.info(f"Gaussian model saved → {path}")
@@ -424,7 +444,12 @@ def load_gaussian_model(
       * resolved length must equal ``model.n_features``;
       * unresolvable names raise ``GaussianSchemaError`` (fail-closed);
       * inference must use the resolved name order — never ambient-vector
-        truncation (see ``MLGaussianEngine.compute``).
+        truncation (see ``MLGaussianEngine.compute``);
+      * after names resolve, ``semantic_contract`` must be MATCH under
+        ``features.semantic_equivalence``. Absent stamp, hash drift, an
+        alias used as proof, or an UNMAPPED definition raises
+        ``FeatureSemanticIncompatible``. Name resolution still raises
+        ``GaussianSchemaError`` first.
 
     Returns (model, scaler, metadata_dict) with meta keys:
       feature_schema           — original saved names
@@ -518,6 +543,16 @@ def load_gaussian_model(
     # Name-anchored contract is the alignment authority; hash equality to live
     # FEATURE_ORDER_HASH is informational only for subset models.
     meta["name_anchored"] = True
+
+    # Semantic identity is a separate gate from name resolution. A resolved
+    # alias or a matching width is not a semantic contract. Refusal happens
+    # before the schema registry records this file as loaded.
+    from features.semantic_equivalence import require_artifact_compatible
+    require_artifact_compatible(
+        saved_schema,
+        bundle.get("semantic_contract"),
+        what=f"Gaussian model '{name}'",
+    )
 
     # Part 1 — FeatureSchemaRegistry: register stored hash so callers can
     # detect schema drift at inference time via check_compatibility(name).

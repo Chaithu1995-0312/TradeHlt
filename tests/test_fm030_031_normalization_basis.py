@@ -61,9 +61,12 @@ def _run(df: pd.DataFrame, cfg: dict, basis: str) -> pd.DataFrame:
 
 # ── 1. the active config ships the legacy arm, and it is the legacy math ────────────────────
 def test_active_config_default_is_legacy_basis(base_cfg):
-    assert base_cfg["normalization_basis"] == "atr_relative", (
-        "the active production config must keep the LEGACY arm as default — switching it is an "
-        "activation decision requiring demonstrated G001 improvement, not a config edit"
+    # 2026-10-07: user-approved activation (Set-2 consumer-scale program) — the active config
+    # v2_htfcrt_2026_08 now selects the corrected FM-030/031 arm. The legacy arm stays covered by
+    # the explicit-basis tests below; this pins the activation so a revert is a visible decision.
+    assert base_cfg["normalization_basis"] == "atr_absolute", (
+        "active config no longer selects atr_absolute — if this is a deliberate rollback, record "
+        "it in the freeze-pin waiver_log and F-114, then update this pin"
     )
 
 

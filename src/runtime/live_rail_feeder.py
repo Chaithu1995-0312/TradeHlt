@@ -184,7 +184,7 @@ class LiveRailFeeder:
         if len(self._bars) <= self._warmup:
             return
         frame = self._bars_to_frame()
-        pipeline = FeaturePipeline(frame)
+        pipeline = FeaturePipeline(frame, timeframe=self._timeframe)
         enriched, _vectors = pipeline.run()
         if len(enriched) == 0:
             logger.warning(

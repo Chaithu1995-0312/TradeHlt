@@ -67,19 +67,27 @@ def test_e0_journal_holdout_and_label_counts(e0):
     reason="XAUUSD Gaussian artifact missing",
 )
 def test_e0_model_n_features_is_39(e0):
+    import json
     sys.path.insert(0, str(ROOT / "src"))
-    from training.trainer import load_gaussian_model
+    from training.trainer import GaussianNBModel, StandardScaler, load_gaussian_model
+    from features.gaussian_schema_contract import assert_model_schema_compatible
+    from features.semantic_equivalence import FeatureSemanticIncompatible
 
-    model, scaler, meta = load_gaussian_model(MODEL_REL)
+    with pytest.raises(FeatureSemanticIncompatible) as exc_info:
+        load_gaussian_model(MODEL_REL)
+    assert exc_info.value.status == "UNVERIFIED"
+    bundle = json.loads((ROOT / "models" / MODEL_REL).read_text(encoding="utf-8"))
+    model = GaussianNBModel.from_dict(bundle["model"])
+    scaler = StandardScaler.from_dict(bundle["scaler"])
+    resolved = assert_model_schema_compatible(
+        bundle["feature_schema"], model_n_features=int(model.n_features)
+    )
     assert model.n_features == 39
-    resolved = meta.get("feature_schema_resolved") or []
     assert len(resolved) == 39
-    assert meta.get("schema_alignment") in ("exact", "named_subset", None) or True
-    # one transform smoke
     vec = [0.0] * 39
     scaled = scaler.transform_one(vec)
     assert len(scaled) == 39
-    err, conf, probs = model.predict_expected_rr(scaled)
+    _err, conf, probs = model.predict_expected_rr(scaled)
     assert conf >= 0.0
     assert len(probs) >= 1
 

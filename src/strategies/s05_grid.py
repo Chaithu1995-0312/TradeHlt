@@ -102,8 +102,8 @@ class S05Grid(BaseStrategy):
 
         swing_high = float(features.get("swing_high", 0.0))
         swing_low = float(features.get("swing_low", 0.0))
-        atr = float(features.get("atr", 0.0))
         close = float(candle["close"])
+        atr = self._atr_price(features, close)
 
         if close <= 0.0 or atr <= 0.0 or swing_high <= swing_low:
             return self._no_trade("UNKNOWN")

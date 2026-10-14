@@ -496,9 +496,12 @@ class SLTPComparator:
         Same loading logic as BacktestRunner._read_csv.
         """
         import csv as _csv
+        import io as _io
+
+        from data_ingestion.corpus_store import load as _corpus_load   # CH-corpus-ssot
         candles = []
         require_reviewed_clock(csv_path)   # Phase 3: declared + reviewed clock (ohlcv_schema)
-        with open(csv_path, newline="", encoding="utf-8") as f:
+        with _io.StringIO(_corpus_load(csv_path, sequence_check=False).text, newline="") as f:
             reader = _csv.DictReader(f)
             # Enforce the full six-column dataset contract even though this
             # comparator only consumes timestamp + OHLC.

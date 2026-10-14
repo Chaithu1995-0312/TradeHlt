@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "feature-semantic-equivalence-v1.schema.json",
+  "title": "Feature semantic equivalence contract",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "contract_id",
+    "contract_version",
+    "contract_hash",
+    "schema_prefix_dim",
+    "schema_prefix_order",
+    "prefix_frozen",
+    "features",
+    "aliases_are_not_equivalence",
+    "economic_claims_allowed",
+    "production_formulas_changed"
+  ],
+  "properties": {
+    "contract_id": {"const": "FEATURE-SEMANTIC-EQUIVALENCE-V1"},
+    "contract_version": {"type": "string", "minLength": 1},
+    "contract_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "schema_prefix_dim": {"const": 35},
+    "schema_prefix_order": {
+      "type": "array",
+      "minItems": 35,
+      "maxItems": 35,
+      "items": {"type": "string"}
+    },
+    "prefix_frozen": {"const": true},
+    "economic_claims_allowed": {"const": false},
+    "production_formulas_changed": {"const": false},
+    "aliases_are_not_equivalence": {"type": "object"},
+    "features": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/feature"}
+    }
+  },
+  "$defs": {
+    "status": {
+      "enum": ["MATCH", "DRIFT", "UNMAPPED", "AMBIGUOUS", "UNVERIFIED"]
+    },
+    "behavior": {
+      "type": "object",
+      "required": [
+        "formula",
+        "source_inputs",
+        "lookback",
+        "warmup",
+        "timing",
+        "units",
+        "normalization",
+        "encoding",
+        "missing_value_policy",
+        "edge_cases",
+        "causal_availability"
+      ]
+    },
+    "feature": {
+      "type": "object",
+      "required": [
+        "concept_id",
+        "slot_name",
+        "vector_index",
+        "definition_hash",
+        "binding",
+        "formula",
+        "source_inputs",
+        "lookback",
+        "warmup",
+        "timing",
+        "units",
+        "normalization",
+        "encoding",
+        "missing_value_policy",
+        "edge_cases",
+        "causal_availability"
+      ],
+      "properties": {
+        "binding": {"enum": ["UNIQUE", "UNMAPPED", "AMBIGUOUS"]},
+        "definition_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    }
+  }
+}

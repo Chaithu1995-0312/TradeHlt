@@ -1,5 +1,5 @@
 {
-  "setup": {"target_policy": "fixed_r", "trade_ttl_candles": null, "decider": "engine", "entry_semantics": "approval_bar_legacy", "retest_stop_guard": false},
+  "setup": {"target_policy": "fixed_r", "trade_ttl_candles": null, "decider": "engine", "entry_semantics": "approval_bar_legacy", "retest_stop_guard": false, "retrace_semantics": "legacy_kept_fraction"},
   "version": "v2_dispkill_shadow_2026_08",
   "config_id": "v2_htfcrt_2026_08_promote",
   "created_at": "2026-08-15T00:00:00+00:00",
@@ -566,11 +566,28 @@
     "swing_window": 2,
     "_comment_normalization_basis": "FM-030/031 IDENTITY SELECTOR (2026-07-22, program FM-030-031-DIMENSIONAL-MIX-MIGRATION). Not a period -- it chooses WHICH registered identity ema_spread/momentum_score emit. 'atr_relative' = FM-022/FM-023, numerator / atr; because atr is close-relative (atr_14_raw/close) and the numerator is absolute price, the emitted value scales with price level (legacy == corrected * close). This is the DEFAULT and is byte-identical to the pre-2026-07-22 pipeline -- the XAUUSD freeze-pin vector SHA is its parity proof. 'atr_absolute' = FM-030/FM-031, numerator / (atr * close), scale-invariant. F-061 measured the legacy arm's decision-surface cost on crypto (detect_regime ~constant 'trend', breakout score pinned at 1.0, tanh(momentum) saturated); the corrected arm is measured via configs/production/v2_multi_dimfix_shadow_2026_07.json and carries NO production authority (CLAUDE.md 6.5).",
     "normalization_basis": "atr_relative",
-    "_comment_session_timestamp_basis": "F-066 (2026-08-01, blind-label investigation). Selects which clock hour_of_day/session (FM-052) derive from. 'broker_local' = the DEFAULT, byte-identical to every pipeline run before this key existed: uses the raw timestamp column as-is. For this MT5-sourced corpus that raw timestamp is actually broker-server time (EET/EEST, tracking America/New_York DST), NOT UTC, despite session_windows_utc's name -- measured 53.36 pct of XAUUSD bars carry the wrong session label under this basis (two independent cross-instrument tests: BTCUSDT cross-correlation, NFP-release alignment; see docs/research/preregistration-blind-label-descriptive-fidelity.md). 'utc_corrected' = derives from features/broker_clock.py's true-UTC conversion, making session/hour_of_day match what session_windows_utc already claims. This key stays 'broker_local' here; flipping to 'utc_corrected' is a separate, explicitly-gated decision (feature-vector SHA changes on ~53 pct of bars, freeze-pin re-certification required) -- NOT made by this config edit.",
-    "session_timestamp_basis": "broker_local",
+    "_comment_session_timestamp_basis_retired": "2026-10-08 CH-corpus-clock-contract-v1: `feature_pipeline.session_timestamp_basis` is RETIRED. Corpora are normalized to canonical UTC once at the corpus SSOT from a configured clock (configs/data_provenance/ohlcv_clock_registry.json), so session/hour_of_day and the CRT session filter read UTC and there is no broker_local/utc_corrected switch. Prior value on this config: broker_local.",
     "sweep_semantics": "latest_unconsumed",
     "_comment_smc_max_window": "CH-htfcrt-parent-candle-smc-v1 (2026-08-15). Trailing-candle-buffer bound for compute_smc_features's OB/FVG/breaker/mitigation scanners -- a performance/scope bound, not a registered identity parameter. Reuses swing_window above for the causal swing half-window k (no duplicate key).",
-    "smc_max_window": 100
+    "smc_max_window": 100,
+    "candle_patterns": {
+      "_comment": "CH-candle-pattern-observations-v8 (2026-10-08): thresholds of FM-103..FM-119 (features.candle_patterns). Research hypotheses from the corrected candle-pattern spec; ATR = FM-074 atr_absolute (price units).",
+      "size_gate_atr_k": 0.5,
+      "swing_lookback": 5,
+      "pin_wick_min": 0.6,
+      "pin_body_max": 0.25,
+      "pin_opposite_wick_max": 0.15,
+      "probe_wick_body_multiple": 2.0,
+      "probe_opposite_wick_max": 0.1,
+      "doji_body_max": 0.1,
+      "doji_wick_asymmetry_max": 0.2,
+      "doji_extreme_body_max": 0.05,
+      "doji_extreme_wick_min": 0.75,
+      "engulfing_strength_cap": 3.0,
+      "compression_ratio_cap": 10.0,
+      "morning_star_body_min": 0.6,
+      "morning_star_mid_max": 0.25
+    }
   },
   "notes": "CH-htfcrt-parent-candle-smc-v1 (2026-08-15, user-authorized). Real calendar-true HTF parent candles (H4/D1/W1/MN1) + 3-candle parent-timeframe CRT (RANGE_C1/MANIPULATION_C2/DISTRIBUTION_C3, disjoint sub-graph) + 9 SMC primitives (order block, FVG, breaker, mitigation block, PDH/PDL, EQH/EQL, change-of-character) as canonical vector features (39->48, schema v5.0). parent_crt.enabled=true (arm ON per user decision) -- the M15 EXECUTION-gate bias check in crt_engine_v2.process_candle is live IN CODE. CH-parent-crt-caller-wire (2026-08-16): BacktestRunner now constructs runtime.parent_crt_feed.ParentCRTFeed and threads feed.bias into process_candle (pushed on every child bar including warmup). Live still has no process_candle loop (F-073). Research/analysis process_candle call sites still default parent_state=None. params UNCHANGED from v2_multi_2026_04 (config_hash identical, no rehash needed). MODEL-ARTIFACT STATUS: zone_gate/rr_fusion/gaussian/bitnet/tradenet are ALL trained on <=39-dim schemas and were ALREADY degrading (zone_gate: pre-existing feature_order drift, KeyError on legacy macd_hist name, fail-closed BLOCK) before this program -- verified via direct integration test that this promotion does not make it worse (BLOCK/refuse-load, never silent truncate, identical failure mode to today). Retraining all 6 model families is a separate, explicitly deferred, compute-bound activity; per user decision (\"Promote now, gates inert\"), this promotion does not block on that retrain. PROMOTION PATH: NOT via PromotionManager.promote_* (would silently strip parent_crt and every other new top-level section by overlaying only _METADATA_KEYS onto the v1_multi_2026_03 base). ConfigValidator.validate() was ATTEMPTED first (the real governance gate, not bypassed for convenience) and found REJECTing with hard_failure 'F-057 product gate: CRTConfig mode UNKNOWN' -- confirmed via a control run that this rejection is PRE-EXISTING and unrelated to this program: the unchanged, currently-active v2_multi_2026_04 params produce the IDENTICAL rejection today, because ConfigValidator does not stamp CRTConfig with an allowed construction-provenance mode before calling BacktestRunner. This is a real, separate defect worth its own governed fix, not patched here. Promoted via the governed manual-write shape (matching scripts/maintenance/_promote_v4_bnb_cutover.py's own precedent for when PromotionManager.promote_* cannot carry a full-config change): write config, flip ACTIVE_VERSION, append PROMOTED log entry with params_fingerprint freshness anchor, verify via PromotionManager.load_version + config_integrity.audit. User confirmed this exact write+flip explicitly before it was executed.",
   "schema_version": "1.3",
@@ -942,6 +959,96 @@
           "from": "2026-07-03T20:00:00",
           "to": "2026-07-06T01:00:00",
           "reason": "XAUUSD Jul-4-holiday early-close through weekend reopen, reviewed 2026-07-07"
+        },
+        {
+          "symbol": "BTCUSDT",
+          "from": "2020-02-09T02:00:00",
+          "to": "2020-02-09T03:00:00",
+          "reason": "Binance spot maintenance outage 2020-02-09 (BTCUSDT), reviewed 2026-10-09 (user-authorized)"
+        },
+        {
+          "symbol": "BTCUSDT",
+          "from": "2020-02-19T11:40:00",
+          "to": "2020-02-19T17:30:00",
+          "reason": "Binance spot maintenance outage 2020-02-19 (BTCUSDT), reviewed 2026-10-09 (user-authorized)"
+        },
+        {
+          "symbol": "BTCUSDT",
+          "from": "2020-03-04T09:25:00",
+          "to": "2020-03-04T11:30:00",
+          "reason": "Binance spot maintenance outage 2020-03-04 (BTCUSDT), reviewed 2026-10-09 (user-authorized)"
+        },
+        {
+          "symbol": "BTCUSDT",
+          "from": "2020-04-25T02:00:00",
+          "to": "2020-04-25T04:30:00",
+          "reason": "Binance spot maintenance outage 2020-04-25 (BTCUSDT), reviewed 2026-10-09 (user-authorized)"
+        },
+        {
+          "symbol": "BTCUSDT",
+          "from": "2020-06-28T02:00:00",
+          "to": "2020-06-28T05:30:00",
+          "reason": "Binance spot maintenance outage 2020-06-28 (BTCUSDT), reviewed 2026-10-09 (user-authorized)"
+        },
+        {
+          "symbol": "BTCUSDT",
+          "from": "2020-11-30T06:00:00",
+          "to": "2020-11-30T07:00:00",
+          "reason": "Binance spot maintenance outage 2020-11-30 (BTCUSDT), reviewed 2026-10-09 (user-authorized)"
+        },
+        {
+          "symbol": "BTCUSDT",
+          "from": "2020-12-21T13:50:00",
+          "to": "2020-12-21T18:00:00",
+          "reason": "Binance spot maintenance outage 2020-12-21 (BTCUSDT), reviewed 2026-10-09 (user-authorized)"
+        },
+        {
+          "symbol": "BTCUSDT",
+          "from": "2020-12-25T02:00:00",
+          "to": "2020-12-25T03:00:00",
+          "reason": "Binance spot maintenance outage 2020-12-25 (BTCUSDT), reviewed 2026-10-09 (user-authorized)"
+        },
+        {
+          "symbol": "BTCUSDT",
+          "from": "2021-02-11T03:45:00",
+          "to": "2021-02-11T05:00:00",
+          "reason": "Binance spot maintenance outage 2021-02-11 (BTCUSDT), reviewed 2026-10-09 (user-authorized)"
+        },
+        {
+          "symbol": "BTCUSDT",
+          "from": "2021-03-06T02:00:00",
+          "to": "2021-03-06T03:30:00",
+          "reason": "Binance spot maintenance outage 2021-03-06 (BTCUSDT), reviewed 2026-10-09 (user-authorized)"
+        },
+        {
+          "symbol": "BTCUSDT",
+          "from": "2021-04-20T02:00:00",
+          "to": "2021-04-20T04:30:00",
+          "reason": "Binance spot maintenance outage 2021-04-20 (BTCUSDT), reviewed 2026-10-09 (user-authorized)"
+        },
+        {
+          "symbol": "BTCUSDT",
+          "from": "2021-04-25T04:05:00",
+          "to": "2021-04-25T08:45:00",
+          "reason": "Binance spot maintenance outage 2021-04-25 (BTCUSDT), reviewed 2026-10-09 (user-authorized)"
+        },
+        {
+          "symbol": "BTCUSDT",
+          "from": "2021-08-13T02:00:00",
+          "to": "2021-08-13T06:30:00",
+          "reason": "Binance spot maintenance outage 2021-08-13 (BTCUSDT), reviewed 2026-10-09 (user-authorized)"
+        },
+        {
+          "symbol": "BTCUSDT",
+          "from": "2021-09-29T07:00:00",
+          "to": "2021-09-29T09:00:00",
+          "reason": "Binance spot maintenance outage 2021-09-29 (BTCUSDT), reviewed 2026-10-09 (user-authorized)"
+        },
+        {
+          "symbol": "BTCUSDT",
+          "from": "2023-03-24T12:40:00",
+          "to": "2023-03-24T14:00:00",
+          "reason": "Binance spot maintenance outage 2023-03-24 (BTCUSDT), reviewed 2026-10-09 (user-authorized)"
         }
       ]
     }

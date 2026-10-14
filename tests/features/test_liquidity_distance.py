@@ -153,15 +153,15 @@ def test_zero_atr_handled():
     )
 
 
-# ── Test 5: CANONICAL_FEATURE_DIM == 48 (v5.0 SMC append; v6.0 kept it; was 39 at v4.0) ──
+# ── Test 5: CANONICAL_FEATURE_DIM == 79 (v5.0 SMC append 48; v6.0 kept it; v7.0 +6 presence flags; v8.0 +17 candle patterns; v9.0 +8 card identities) ──
 
 def test_canonical_dim():
     from features.feature_schema import CANONICAL_FEATURE_DIM, CANONICAL_FEATURES
-    assert CANONICAL_FEATURE_DIM == 48, (
-        f"Expected CANONICAL_FEATURE_DIM=48, got {CANONICAL_FEATURE_DIM}"
+    assert CANONICAL_FEATURE_DIM == 79, (
+        f"Expected CANONICAL_FEATURE_DIM=79, got {CANONICAL_FEATURE_DIM}"
     )
-    assert len(CANONICAL_FEATURES) == 48, (
-        f"Expected len(CANONICAL_FEATURES)=48, got {len(CANONICAL_FEATURES)}"
+    assert len(CANONICAL_FEATURES) == 79, (
+        f"Expected len(CANONICAL_FEATURES)=79, got {len(CANONICAL_FEATURES)}"
     )
     # Check the three new features are present
     for feat in ("liquidity_distance", "liquidity_pressure_score", "volume_spike"):

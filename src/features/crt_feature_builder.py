@@ -32,7 +32,9 @@ import logging
 import os
 import numpy as np
 
-from features.feature_schema import CANONICAL_FEATURES, SESSION_MAP, SESSION_UNKNOWN, TREND_MAP
+from features.feature_schema import (
+    CANONICAL_FEATURES, SCHEMA_V8_FEATURE_DIM, SESSION_MAP, SESSION_UNKNOWN, TREND_MAP,
+)
 from features import derived_math
 from features.fm_resolve import bind_phase3a_feature_builder_callables
 
@@ -269,6 +271,19 @@ def build_bitnet_features(trade: dict, candle: dict, state: dict) -> dict:
     features["eqh_distance"]              = float(_require(state, "eqh_distance", "state"))
     features["eql_distance"]              = float(_require(state, "eql_distance", "state"))
     features["change_of_character"]       = float(_require(state, "change_of_character", "state"))
+    # Schema v7.0 tail, indices 48-53 (CH-feature-semantic-fixes-v7): presence flags, same
+    # transcriber contract -- sourced from `state`, never computed or defaulted here.
+    for _flag in ("order_block_present", "fvg_present", "breaker_present",
+                  "mitigation_block_present", "eqh_present", "eql_present"):
+        features[_flag] = float(_require(state, _flag, "state"))
+    # Schema v8.0 tail, indices 54-70 (CH-candle-pattern-observations-v8): candle-pattern
+    # observations, same transcriber contract.
+    from features.candle_patterns import PATTERN_COLUMNS as _pattern_cols
+    for _flag in _pattern_cols:
+        features[_flag] = float(_require(state, _flag, "state"))
+    # Schema v9.0 tail. Not added through PATTERN_COLUMNS (morning_star is outside that tuple).
+    for _name in CANONICAL_FEATURES[SCHEMA_V8_FEATURE_DIM:]:
+        features[_name] = float(_require(state, _name, "state"))
 
     # --------------------------
     # NaN Guard

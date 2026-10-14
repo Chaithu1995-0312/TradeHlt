@@ -1,25 +1,19 @@
 """
-Pins the contract of `feature_pipeline.session_timestamp_basis` (F-066, 2026-08-01).
+Pins the hour / session / day-of-week semantics after `feature_pipeline.session_timestamp_basis`
+was RETIRED (CH-corpus-clock-contract-v1, 2026-10-08; originally F-066 / F-117).
 
-Why this file exists: docs/research/preregistration-blind-label-descriptive-fidelity.md's
-investigation measured that MT5-sourced timestamps (data/mt5/*.csv) are broker-server time
-labeled as UTC (`mt5_candle_fetcher.py:186`), causing `session`/`hour_of_day` (FM-052) to be
-wrong on 53.36% of XAUUSD bars. This introduces a config-gated correction
-(`features/broker_clock.py`) following the exact pattern already proven for
-`normalization_basis` (F-061/FM-030-031): strict-read key, no silent fallback, default arm
-byte-identical to every pipeline run before the key existed, corrected arm opt-in only.
+History: MT5 timestamps (data/mt5/*.csv) are broker-server time labeled UTC
+(`mt5_candle_fetcher.py:186`), so `session`/`hour_of_day` (FM-052) were wrong on 53.36% of XAUUSD
+bars; a config switch (`broker_local` | `utc_corrected`) chose whether to convert. The conversion
+now happens exactly once, at the corpus SSOT, from a configured clock; downstream reads UTC and
+there is no switch. This file pins that:
 
-Covers:
-  1. Default ('broker_local') is byte-identical to the pre-existing (pre-F-066) behavior.
-  2. Missing key -> KeyError (no silent default -- CLAUDE.md Section 6.5).
-  3. Unrecognised value -> ValueError (no silent fallback to the legacy arm).
-  4. 'utc_corrected' arm actually changes hour_of_day/session and matches
-     broker_clock.mt5_server_to_utc applied directly.
-  5. The scope-warning regression: 'utc_corrected' is NOT a no-op on already-true-UTC
-     (Binance-shaped) timestamps -- it wrongly shifts them. Documents the risk the code
-     comment names, rather than merely asserting it away (an earlier draft of that comment
-     claimed the opposite and was corrected same-session -- E-001).
-  6. The NY-DST offset table matches the dates this session's investigation walked by hand.
+  1. FM-052 `hour_of_day` / `session` derive from the canonical UTC timestamp (no conversion) and
+     match the independent legacy reference (`features.broker_clock`) applied to the SOURCE stamp.
+  2. `day_of_week` follows the MARKET calendar (the FX day starts 17:00 New York), not UTC.
+  3. A config that still carries the retired key is refused (no silent reinterpretation).
+  4. The legacy reference function is NOT a no-op on true-UTC timestamps (why it must never be
+     called outside the corpus boundary) and its NY-DST offset table matches the hand walk.
 """
 from __future__ import annotations
 
@@ -49,76 +43,57 @@ def base_cfg() -> dict:
 
 
 @pytest.fixture(scope="module")
-def raw() -> pd.DataFrame:
+def ssot_df() -> pd.DataFrame:
     if not CSV.is_file():
         pytest.skip(f"corpus absent: {CSV}")
-    return pd.read_csv(CSV).head(ROWS)
+    from data_ingestion.corpus_store import load
+    return load(CSV, "XAUUSD", sequence_check=False).frame().head(ROWS)
 
 
-def _run(df: pd.DataFrame, cfg: dict, basis: str) -> pd.DataFrame:
-    out, _vectors = FeaturePipeline(df, cfg={**cfg, "session_timestamp_basis": basis}).run()
+def _run(df: pd.DataFrame, cfg: dict) -> pd.DataFrame:
+    out, _vectors = FeaturePipeline(df, cfg=cfg).run()
     return out
 
 
-# ── 1: default is byte-identical to pre-existing behavior ──────────────────────────────────
+# ── 1: hour/session come straight from canonical UTC and match the legacy reference ───────
 
-def test_broker_local_is_byte_identical_to_raw_timestamp_hour(raw, base_cfg):
-    out = _run(raw, base_cfg, "broker_local")
-    expected_hour = pd.to_datetime(out["timestamp"]).dt.hour.astype(np.int8)
-    assert (out["hour_of_day"] == expected_hour).all(), (
-        "broker_local must derive hour_of_day from the raw timestamp AS-IS -- "
-        "any deviation is a behavior change on the default arm"
-    )
+def test_hour_of_day_is_the_utc_hour_of_the_canonical_timestamp(ssot_df, base_cfg):
+    out = _run(ssot_df, base_cfg)
+    ts = pd.to_datetime(out["timestamp"])
+    assert (out["hour_of_day"] == ts.dt.hour.astype(np.int8)).all()
+    assert out["session"].between(0, 4).all() and out["hour_of_day"].dtype == np.int8
 
 
-def test_broker_local_matches_pin(raw, base_cfg):
-    """Byte-identity pin: this exact corpus slice + broker_local must reproduce the
-    pre-F-066 session occupancy this pipeline has always produced."""
-    out = _run(raw, base_cfg, "broker_local")
-    pre_existing = pd.to_datetime(raw["timestamp"].iloc[len(raw) - len(out):]).dt.hour
-    # loose sanity check on shape/dtype -- the strict per-row check above is the real proof
-    assert out["hour_of_day"].dtype == np.int8
-    assert out["session"].between(0, 4).all()
+def test_hour_of_day_equals_legacy_conversion_of_the_source_stamp(ssot_df, base_cfg):
+    """Independent reference: broker_clock applied to the SOURCE stamp gives the same hour."""
+    out = _run(ssot_df, base_cfg)
+    src = pd.to_datetime(out["source_timestamp"])
+    legacy_utc = broker_clock.mt5_server_to_utc(src)
+    assert (out["hour_of_day"] == legacy_utc.dt.hour.astype(np.int8)).all()
+    # the old broker-label hour would have disagreed on a large share of bars (F-066: 53.36%)
+    assert (out["hour_of_day"] != src.dt.hour.astype(np.int8)).mean() > 0.30
 
 
-# ── 2 & 3: strict config contract ───────────────────────────────────────────────────────────
+# ── 2: day-of-week follows the market calendar ───────────────────────────────────────────
 
-def test_missing_key_raises(raw, base_cfg):
-    cfg = {k: v for k, v in base_cfg.items() if k != "session_timestamp_basis"}
-    with pytest.raises(KeyError, match="session_timestamp_basis"):
-        FeaturePipeline(raw, cfg=cfg).run()
-
-
-def test_unrecognised_value_raises(raw, base_cfg):
-    with pytest.raises(ValueError, match="session_timestamp_basis"):
-        FeaturePipeline(raw, cfg={**base_cfg, "session_timestamp_basis": "eastern_standard"}).run()
+def test_day_of_week_follows_the_market_calendar_not_utc(ssot_df, base_cfg):
+    out = _run(ssot_df, base_cfg)
+    src = pd.to_datetime(out["source_timestamp"])
+    # fx_metals calendar wall == the broker grid, so the calendar day-of-week is the source one
+    assert (out["day_of_week"] == src.dt.dayofweek.astype(np.int8)).all()
+    utc_dow = pd.to_datetime(out["timestamp"]).dt.dayofweek.astype(np.int8)
+    assert (out["day_of_week"] != utc_dow).any(), "a UTC-day-of-week would differ near the day boundary"
 
 
-# ── 4: corrected arm actually changes output and matches the conversion directly ───────────
+# ── 3: the retired key is refused ────────────────────────────────────────────────────────
 
-def test_utc_corrected_changes_session_and_matches_broker_clock(raw, base_cfg):
-    out_legacy = _run(raw, base_cfg, "broker_local")
-    out_fixed = _run(raw, base_cfg, "utc_corrected")
-
-    changed = (out_legacy["session"] != out_fixed["session"]).mean()
-    assert changed > 0.30, (
-        f"only {changed:.1%} of session labels changed under utc_corrected -- expected roughly "
-        "half (F-066 measured 53.36% on the full XAUUSD corpus); this slice should show a "
-        "comparable order of magnitude, not near-zero"
-    )
-
-    expected_utc = broker_clock.mt5_server_to_utc(pd.to_datetime(out_fixed["timestamp"]))
-    assert (out_fixed["hour_of_day"] == expected_utc.dt.hour.astype(np.int8)).all()
-
-    # the raw timestamp column itself must NEVER be mutated by either arm
-    pd.testing.assert_series_equal(
-        pd.to_datetime(out_legacy["timestamp"]).reset_index(drop=True),
-        pd.to_datetime(out_fixed["timestamp"]).reset_index(drop=True),
-        check_names=False,
-    )
+@pytest.mark.parametrize("value", ["broker_local", "utc_corrected", "eastern_standard"])
+def test_retired_key_is_refused(ssot_df, base_cfg, value):
+    with pytest.raises(ValueError, match="RETIRED"):
+        FeaturePipeline(ssot_df, cfg={**base_cfg, "session_timestamp_basis": value})
 
 
-# ── 5: scope-warning regression -- NOT safe on already-true-UTC timestamps ─────────────────
+# ── 4a: the legacy reference is NOT a no-op on true-UTC timestamps (never call it outside the boundary) ──
 
 def test_utc_corrected_is_not_a_noop_on_true_utc_timestamps():
     """Binance-shaped corpora carry genuinely-UTC timestamps. Applying the MT5 server-time
@@ -134,7 +109,7 @@ def test_utc_corrected_is_not_a_noop_on_true_utc_timestamps():
     assert (true_utc - shifted).iloc[0] == pd.Timedelta(hours=3)  # June -> NY on EDT
 
 
-# ── 6: NY-DST offset table matches this session's manual walk ──────────────────────────────
+# ── 4b: NY-DST offset table of the legacy reference matches this session's manual walk ───────
 
 @pytest.mark.parametrize("date_str,expected_offset", [
     ("2024-07-15", 3),   # deep summer -> EDT -> server UTC+3

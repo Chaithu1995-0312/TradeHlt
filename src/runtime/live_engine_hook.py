@@ -25,6 +25,11 @@ from config_layer.production_config import get_prod_metadata, get_prod_section
 from core.position_sizing import instrument_spec, size_trade_lots
 from core.ultron_risk_gate import UltronRiskGate
 from core.ultron_risk_gate_wrapper import UltronRiskGateWrapper
+from features.candle_patterns import PATTERN_COLUMNS as _CANDLE_PATTERN_KEYS
+from features.feature_schema import (
+    CANONICAL_FEATURES as _CANONICAL_FEATURES,
+    SCHEMA_V8_FEATURE_DIM as _SCHEMA_V8_FEATURE_DIM,
+)
 from config_layer.strict_config import (
     ConfigKeyMissingError, missing_keys, missing_reason, require_section,
 )
@@ -672,6 +677,20 @@ def _build_ohlcv_and_auxiliary(trade_data: dict) -> tuple[dict, dict]:
         "eqh_distance":              _req(trade_data, "eqh_distance"),
         "eql_distance":              _req(trade_data, "eql_distance"),
         "change_of_character":       _req(trade_data, "change_of_character"),
+        # Schema v7.0 (CH-feature-semantic-fixes-v7): zone/cluster presence flags (FM-097..102).
+        # MANDATORY for the same F-085 reason: a missing flag must not default to "no zone".
+        "order_block_present":       _req(trade_data, "order_block_present"),
+        "fvg_present":               _req(trade_data, "fvg_present"),
+        "breaker_present":           _req(trade_data, "breaker_present"),
+        "mitigation_block_present":  _req(trade_data, "mitigation_block_present"),
+        "eqh_present":               _req(trade_data, "eqh_present"),
+        "eql_present":               _req(trade_data, "eql_present"),
+        # Schema v8.0 (CH-candle-pattern-observations-v8): candle-pattern observations
+        # (FM-103..119, features.candle_patterns.PATTERN_COLUMNS). MANDATORY, same F-085 reason.
+        **{_k: _req(trade_data, _k) for _k in _CANDLE_PATTERN_KEYS},
+        # Schema v9.0 tail (CH-card-identity-census-v9): morning_star, swing-sequence states,
+        # and the rejection block. MANDATORY. A missing key fails closed (F-085).
+        **{_k: _req(trade_data, _k) for _k in _CANONICAL_FEATURES[_SCHEMA_V8_FEATURE_DIM:]},
     }
     return ohlcv, auxiliary
 

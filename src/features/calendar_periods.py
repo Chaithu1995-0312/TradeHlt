@@ -60,7 +60,39 @@ if TYPE_CHECKING:  # avoid pulling the heavy crt_engine_v2 import at runtime
 # formula (`_bucket_start` there / `_hour_grid_start` here): floored_hour = (h // n) * n.
 HOUR_GRID_HOURS = {"H1": 1, "H4": 4, "D1": 24}
 
+# CH-timeframe-ssot-v1: the ONE bar-size table. Minute-width bars are literal; the hour-grid bars are
+# derived from HOUR_GRID_HOURS so the two tables cannot drift. FeaturePipeline, the backtest guards and
+# the live rail compare a DECLARED timeframe against `modal_bar_minutes(...)` of the data actually loaded.
+BAR_MINUTES = {"M1": 1, "M5": 5, "M15": 15, "M30": 30, **{k: 60 * h for k, h in HOUR_GRID_HOURS.items()}}
+
 CALENDAR_RULES = ("W1", "MN1")
+
+
+def modal_gap_ns(timestamps, min_share: float = 0.0) -> "int | None":
+    """Most common positive gap between consecutive timestamps, in nanoseconds (the measured bar
+    interval; weekends and holidays are rare gaps and do not move the mode). None when fewer than
+    two timestamps or no positive gap, or when `min_share` > 0 and that gap is less than `min_share`
+    of all positive gaps (an irregular list of timestamps has no bar size to measure). Accepts
+    anything numpy reads as datetimes."""
+    import numpy as np  # local: this module otherwise imports no third-party code
+
+    ts = np.asarray(timestamps, dtype="datetime64[ns]").astype(np.int64)
+    if len(ts) < 2:
+        return None
+    diffs = np.diff(ts)
+    pos = diffs[diffs > 0]
+    if len(pos) == 0:
+        return None
+    vals, counts = np.unique(pos, return_counts=True)
+    if min_share > 0 and counts.max() / len(pos) < min_share:
+        return None
+    return int(vals[np.argmax(counts)])
+
+
+def modal_bar_minutes(timestamps, min_share: float = 0.0) -> "int | None":
+    """`modal_gap_ns` in whole minutes (the measured bar size), or None."""
+    gap = modal_gap_ns(timestamps, min_share=min_share)
+    return None if gap is None else int(round(gap / 60_000_000_000))
 
 
 def _iso_week_key(ts: datetime) -> tuple[int, int]:
@@ -109,14 +141,21 @@ def _hour_grid_start(ts: datetime, hours: int) -> datetime:
 ALL_PERIOD_RULES = tuple(sorted(HOUR_GRID_HOURS)) + CALENDAR_RULES
 
 
-def period_key(ts: datetime, rule: str):
+def period_key(ts: datetime, rule: str, calendar=None):
     """Unified bucket key for ANY supported rule (hour-grid or calendar).
 
     Hour-grid rules (H1/H4/D1): the key IS the bucket-start timestamp (matching
     `research.resample.bucket_floor`'s convention). Calendar rules (W1/MN1): the key is the
     `(year, week|month)` tuple from `calendar_key`. `period_start` converts either key back to
     a canonical bucket-start timestamp — for hour-grid rules that is the identity function.
+
+    `calendar` (CH-corpus-clock-contract-v1): a `features.market_calendar.CalendarSpec`. `ts` is
+    canonical UTC; buckets are cut on the calendar WALL time (the market day starts at wall
+    00:00), so the key lives in the wall frame and `period_start(key, rule, calendar)` maps it
+    back to a UTC label. `None` = bucket `ts` as given (UTC / constructed data).
     """
+    if calendar is not None:
+        ts = calendar.wall(ts)
     if rule in HOUR_GRID_HOURS:
         return _hour_grid_start(ts, HOUR_GRID_HOURS[rule])
     if rule in CALENDAR_RULES:
@@ -124,16 +163,20 @@ def period_key(ts: datetime, rule: str):
     raise ValueError(f"period_key: unsupported rule '{rule}' (expected one of {ALL_PERIOD_RULES})")
 
 
-def period_start(key, rule: str) -> datetime:
-    """Inverse of `period_key`: the canonical bucket-start timestamp for `key` under `rule`."""
+def period_start(key, rule: str, calendar=None) -> datetime:
+    """Inverse of `period_key`: the canonical bucket-start timestamp for `key` under `rule`
+    (UTC when a `calendar` is given — the wall-frame key is mapped back through it)."""
     if rule in HOUR_GRID_HOURS:
-        return key   # hour-grid: the key already IS the bucket-start timestamp
-    if rule in CALENDAR_RULES:
-        return bucket_start(key, rule)
-    raise ValueError(f"period_start: unsupported rule '{rule}' (expected one of {ALL_PERIOD_RULES})")
+        start = key   # hour-grid: the key already IS the bucket-start timestamp
+    elif rule in CALENDAR_RULES:
+        start = bucket_start(key, rule)
+    else:
+        raise ValueError(f"period_start: unsupported rule '{rule}' (expected one of {ALL_PERIOD_RULES})")
+    return calendar.to_utc(start) if calendar is not None else start
 
 
-def _emit(children: "Sequence[Candle]", key: tuple[int, int], rule: str, index: int) -> "Candle":
+def _emit(children: "Sequence[Candle]", key: tuple[int, int], rule: str, index: int,
+          calendar=None) -> "Candle":
     """Aggregate a non-empty list of child candles into one calendar-period parent candle.
 
     Identical aggregation contract to `resample._emit`: open=first.open, high=max, low=min,
@@ -144,7 +187,7 @@ def _emit(children: "Sequence[Candle]", key: tuple[int, int], rule: str, index: 
     ordered = list(children)
     vol = sum((Decimal(str(c.volume)) for c in ordered), Decimal(0))
     return Candle(
-        timestamp=bucket_start(key, rule),
+        timestamp=period_start(key, rule, calendar),
         open=ordered[0].open,
         high=max(c.high for c in ordered),
         low=min(c.low for c in ordered),
@@ -154,7 +197,7 @@ def _emit(children: "Sequence[Candle]", key: tuple[int, int], rule: str, index: 
     )
 
 
-def aggregate_calendar(candles: "Sequence[Candle]", rule: str) -> "list[Candle]":
+def aggregate_calendar(candles: "Sequence[Candle]", rule: str, calendar=None) -> "list[Candle]":
     """Aggregate chronologically-ordered `candles` into `rule` ∈ {"W1", "MN1"} parent candles.
 
     Input MUST be time-ordered (same contract as `resample.resample`). Emits a period only
@@ -174,11 +217,11 @@ def aggregate_calendar(candles: "Sequence[Candle]", rule: str) -> "list[Candle]"
     cur_children: "list[Candle]" = []
 
     for c in candles:
-        key = calendar_key(c.timestamp, rule)
+        key = calendar_key(calendar.wall(c.timestamp) if calendar is not None else c.timestamp, rule)
         if cur_key is None:
             cur_key = key
         elif key != cur_key:
-            out.append(_emit(cur_children, cur_key, rule, len(out)))
+            out.append(_emit(cur_children, cur_key, rule, len(out), calendar))
             cur_key = key
             cur_children = []
         cur_children.append(c)

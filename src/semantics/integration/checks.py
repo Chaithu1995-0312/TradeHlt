@@ -504,7 +504,10 @@ def _param(shard: dict, name: str) -> Any:
     """One identity-bearing parameter, resolved from every representation that declares it."""
     refs = {rep["parameterization"][name] for rep in (shard.get("representations") or {}).values()
             if isinstance((rep or {}).get("parameterization"), dict) and name in rep["parameterization"]}
-    values = {_cfg(ref) for ref in refs}
+    # a parameter binds to a config reference OR a literal (the clock parameter is the literal
+    # `utc_corrected` since CH-corpus-clock-contract-v1 retired its config key)
+    from semantics.registry import _is_config_ref
+    values = {_cfg(ref) if _is_config_ref(ref) else ref for ref in refs}
     if len(values) != 1:
         raise KeyError(f"{shard.get('producer_id')}: parameter {name!r} resolves to {sorted(map(str, values))}")
     return values.pop()

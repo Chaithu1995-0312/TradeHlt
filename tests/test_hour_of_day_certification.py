@@ -126,7 +126,7 @@ def test_compute_context_parity(probe):
             "volume": 100.0,
         }
     )
-    fp = FeaturePipeline(df)
+    fp = FeaturePipeline(df, timeframe="H1")   # one bar per hour (CH-timeframe-ssot-v1)
     fp.compute_context()
     assert np.array_equal(
         fp.df["hour_of_day"].to_numpy(),

@@ -68,10 +68,14 @@ def test_momentum_bias_is_the_ema_sign():
 
 def test_session_depends_on_the_declared_clock():
     windows = {"ASIA": [0, 9], "LONDON": [7, 16], "NEWYORK": [12, 21]}
-    ts = ["2026-07-06 22:00:00"]            # broker 22:00 (CLOSED) = 19:00 UTC (NEWYORK), summer UTC+3
+    # CH-corpus-clock-contract-v1: `basis` LABELS the clock the supplied series is on; no conversion
+    # happens here any more (the corpus SSOT normalizes once). The same series therefore
+    # classifies identically under either label, while the label stays identity-bearing.
+    ts = ["2026-07-06 19:00:00"]            # canonical UTC 19:00 = NEWYORK
     broker = session(ts, basis="broker_local", windows=windows)
     utc = session(ts, basis="utc_corrected", windows=windows)
-    assert broker.values != utc.values and broker.parameterization_id != utc.parameterization_id
+    assert broker.values == utc.values and broker.parameterization_id != utc.parameterization_id
+    assert session(["2026-07-06 22:00:00"], basis="utc_corrected", windows=windows).values != utc.values  # CLOSED
     with pytest.raises(ValueError):
         session(ts, basis="local", windows=windows)
     assert len(session(pd.Series(ts * 3), basis="broker_local", windows=windows).values) == 3

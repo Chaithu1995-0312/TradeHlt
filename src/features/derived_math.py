@@ -176,6 +176,27 @@ def displacement_retrace(retest_close: float, disp_open: float, disp_close: floa
     return min(1.0, max(0.0, val))
 
 
+def displacement_retrace_signed(retest_close: float, disp_open: float, disp_close: float) -> float:
+    """
+    FM-096 (CH-feature-semantic-fixes-v7, 2026-10-08): the RETRACEMENT FM-027 is named for.
+
+    Fraction of the displacement body given back by the retest close, signed by the displacement's
+    own direction: ``(disp_close - retest_close) / (disp_close - disp_open)``, UNCLIPPED.
+    0 = no retrace (retest closed at the displacement close), 0.5 = half given back, 1 = back to
+    the displacement open, > 1 = closed beyond the open (the displacement failed), < 0 = extended
+    past the displacement close. Same sign convention for bullish and bearish displacements.
+
+    FM-027 (``displacement_retrace``) returns ``|retest_close - disp_open| / |body|`` clipped to
+    [0, 1]: the share KEPT (= 1 - this, inside the body), and its abs() folds a close beyond the
+    open back into [0, 1] (a 150% retrace reads 0.5). FM-027 is kept unchanged for the legacy arm.
+    Returns 0.0 when the displacement body is zero (same skip convention as FM-027).
+    """
+    disp_move = disp_close - disp_open
+    if disp_move == 0:
+        return 0.0
+    return (disp_close - retest_close) / disp_move
+
+
 def displacement_atr_ratio(candle_range: float, atr: float) -> float:
     """
     FM-028 (F-050 sibling): structural displacement magnitude in ATR units — candle_range / atr,

@@ -201,7 +201,14 @@ def run_backtest(
     decision_log = open(log_filename, 'w', encoding='utf-8')
     logger.info("Writing all decision records to: %s", log_filename)
 
-    raw_df = pd.read_csv(data_path)
+    # CH-corpus-ssot (2026-10-08): the same authoritative corpus as backtest_v2 / research —
+    # admitted (identity + sequence) and parsed from the SSOT's in-memory bytes.
+    from data_ingestion.corpus_store import load as corpus_load
+
+    corpus = corpus_load(data_path, symbol)
+    logger.info("corpus SSOT: %s dataset_id=%s sha256=%s rows=%d",
+                corpus.path, corpus.dataset_id, corpus.sha256[:16], corpus.n_rows)
+    raw_df = corpus.frame()
     raw_rows = len(raw_df)
     raw_df = _apply_month_filter(raw_df, months)
     filtered_rows = len(raw_df)

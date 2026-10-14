@@ -14,6 +14,22 @@ from pathlib import Path
 
 import pytest
 from tests.helpers.crt_config import crt_config_for_test
+
+
+@pytest.fixture(autouse=True)
+def _certify_the_legacy_fm027_identity(monkeypatch):
+    """This module certifies FM-027 (the legacy kept-fraction retrace). The ACTIVE config selects
+    FM-096 (`setup.retrace_semantics=signed_retrace`, CH-feature-semantic-fixes-v7, certified by
+    tests/test_feature_semantic_fixes_v7.py); a certification must name the identity it certifies
+    rather than inherit whichever one is active."""
+    import config_layer.production_config as pc
+    real = pc.get_prod_section
+
+    def named(section, *a, **k):
+        v = real(section, *a, **k)
+        return dict(v, retrace_semantics="legacy_kept_fraction") if section == "setup" else v
+
+    monkeypatch.setattr(pc, "get_prod_section", named)
 from tests.helpers.crt_config import bar_features_for_test  # noqa: E402,F401
 
 _ROOT = Path(__file__).resolve().parents[1]

@@ -39,6 +39,11 @@ from features.registry import (  # noqa: E402
 # 0.08/0.15/0.25) -- aligns YAML to the live production value. This test's own docstring said to
 # update the snapshot in the same turn as any real Phase E value change, with the finding cited;
 # doing so here.
+# UPDATED 2026-10-10 (CH-timeframe-ssot-v2): lifecycle.htf_candles_per_range 4 -> 16, a user-directed alignment with the
+# active config's backtest.htf_candles_per_range (the YAML held a stale COPY: the engine moved 4 -> 16 on 2026-09-09,
+# commit 63562ab, the resolver's copy did not). Measured NOT inert: resolver-vs-engine bar agreement on one engine run of
+# the active config (--injection none, engine_mode=exit, 47,197 bars) was 53.07% with window 4 and 73.40% with window 16
+# (results/tf_ssot/parity_w4.json / parity_w16.json). Guarded by tests/test_resolver_htf_window_alignment.py.
 _THRESHOLDS_SNAPSHOT = {
     "sweep_geometry": "htf_range",
     "range_atr_period": 14,
@@ -60,7 +65,7 @@ _THRESHOLDS_SNAPSHOT = {
     "rsi_oversold": 30,
     "lifecycle": {
         "htf_reset_enabled": True,
-        "htf_candles_per_range": 4,
+        "htf_candles_per_range": 16,
         "htf_protect_states": ["EXPANSION", "RETEST"],
         "htf_protect_execution": True,
         "gap_reset_enabled": True,

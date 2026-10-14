@@ -268,9 +268,11 @@ def chart_payload(
         instrument, corpus_sha, base_ts,
     )
 
-    htf_bars = cs.to_timeframe(base_bars, timeframe)
-    engine_htf_states = cs.downsample_states(base_bars, engine_track.states, htf_bars, timeframe)
-    resolver_htf_states = cs.downsample_states(base_bars, resolver_states_full, htf_bars, timeframe)
+    from features.market_calendar import calendar_for_instrument
+    _cal = calendar_for_instrument(instrument)     # market calendar of the INSTRUMENT, not the broker
+    htf_bars = cs.to_timeframe(base_bars, timeframe, _cal)
+    engine_htf_states = cs.downsample_states(base_bars, engine_track.states, htf_bars, timeframe, _cal)
+    resolver_htf_states = cs.downsample_states(base_bars, resolver_states_full, htf_bars, timeframe, _cal)
 
     # Window: default the tail `limit` bars; start/end override. One shared index list keeps
     # bars / engine states / resolver states aligned regardless of which branch is taken.

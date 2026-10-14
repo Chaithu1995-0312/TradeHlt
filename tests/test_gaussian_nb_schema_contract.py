@@ -81,47 +81,66 @@ def test_extract_model_feature_vector_order_and_missing():
         extract_model_feature_vector(bad, order)
 
 
+_BNB = "BNBUSDT/bnbusdt_balanced_20260524/gaussian_p5_20260524T120449.json"
+_ETH = "ETHUSDT/20260519_113806/gaussian_v5_auto_2026_06_eth.json"
+
+
+def _name_anchored_bundle(rel: str):
+    """Read a historical bundle without treating public load as semantic success."""
+    import json
+    from training.trainer import MODELS_DIR, GaussianNBModel, StandardScaler
+
+    bundle = json.loads((MODELS_DIR / rel).read_text(encoding="utf-8"))
+    n_features = int(bundle["model"]["n_features"])
+    resolved = assert_model_schema_compatible(
+        bundle["feature_schema"], model_n_features=n_features
+    )
+    model = GaussianNBModel.from_dict(bundle["model"])
+    scaler = StandardScaler.from_dict(bundle["scaler"])
+    return model, scaler, resolved
+
+
 def test_load_gaussian_bnb_38_succeeds_with_resolved_schema():
     from training.trainer import load_gaussian_model
+    from features.semantic_equivalence import FeatureSemanticIncompatible
 
-    model, scaler, meta = load_gaussian_model(
-        "BNBUSDT/bnbusdt_balanced_20260524/gaussian_p5_20260524T120449.json"
-    )
+    with pytest.raises(FeatureSemanticIncompatible) as exc_info:
+        load_gaussian_model(_BNB)
+    assert exc_info.value.status == "UNVERIFIED"
+    model, scaler, resolved = _name_anchored_bundle(_BNB)
     assert model.n_features == 38
-    assert meta["name_anchored"] is True
-    assert meta["schema_alignment"] == "named_subset"
-    assert len(meta["feature_schema_resolved"]) == 38
-    assert "macd_hist_z" in meta["feature_schema_resolved"]
-    assert "candle_range" in meta["feature_schema_resolved"]
+    assert len(resolved) == 38
+    assert "macd_hist_z" in resolved
+    assert "candle_range" in resolved
     assert scaler is not None
+    assert set(resolved) != set(CANONICAL_FEATURE_ORDER)
 
 
 def test_load_gaussian_eth_35_succeeds_with_resolved_schema():
     from training.trainer import load_gaussian_model
+    from features.semantic_equivalence import FeatureSemanticIncompatible
 
-    model, scaler, meta = load_gaussian_model(
-        "ETHUSDT/20260519_113806/gaussian_v5_auto_2026_06_eth.json"
-    )
+    with pytest.raises(FeatureSemanticIncompatible) as exc_info:
+        load_gaussian_model(_ETH)
+    assert exc_info.value.status == "UNVERIFIED"
+    model, _scaler, resolved = _name_anchored_bundle(_ETH)
     assert model.n_features == 35
-    assert meta["schema_alignment"] == "named_subset"
-    assert len(meta["feature_schema_resolved"]) == 35
+    assert len(resolved) == 35
 
 
 def test_ml_gaussian_compute_name_anchored_no_truncate():
-    """Forced load of BNB model; compute on full live feature dict must score (not 0.5 schema fail)."""
+    """Name-anchored extract still scores. Public load of the unstamped artifact does not."""
     from engines.ml_gaussian_engine import MLGaussianEngine
-    from training.trainer import load_gaussian_model
 
-    model, scaler, meta = load_gaussian_model(
-        "BNBUSDT/bnbusdt_balanced_20260524/gaussian_p5_20260524T120449.json"
-    )
+    model, scaler, resolved = _name_anchored_bundle(_BNB)
     eng = MLGaussianEngine({"instrument": "BNBUSDT"}, preload=False)
     eng._model = model
     eng._scaler = scaler
     eng._model_version = "p5_20260524T120449"
     eng._load_failed = False
-    eng._feature_schema_resolved = list(meta["feature_schema_resolved"])
-    eng._schema_alignment = meta["schema_alignment"]
+    eng._semantic_refused = False
+    eng._feature_schema_resolved = list(resolved)
+    eng._schema_alignment = "named_subset"
 
     feats = {k: 0.1 for k in CANONICAL_FEATURE_ORDER}
     feats["ema_fast"] = 1.01
@@ -139,16 +158,14 @@ def test_ml_gaussian_compute_name_anchored_no_truncate():
 
 def test_ml_gaussian_refuses_missing_required_feature():
     from engines.ml_gaussian_engine import MLGaussianEngine
-    from training.trainer import load_gaussian_model
 
-    model, scaler, meta = load_gaussian_model(
-        "BNBUSDT/bnbusdt_balanced_20260524/gaussian_p5_20260524T120449.json"
-    )
+    model, scaler, resolved = _name_anchored_bundle(_BNB)
     eng = MLGaussianEngine({}, preload=False)
     eng._model = model
     eng._scaler = scaler
     eng._load_failed = False
-    eng._feature_schema_resolved = list(meta["feature_schema_resolved"])
+    eng._semantic_refused = False
+    eng._feature_schema_resolved = list(resolved)
     eng._schema_alignment = "named_subset"
 
     feats = {k: 0.1 for k in CANONICAL_FEATURE_ORDER}
@@ -169,16 +186,8 @@ def test_no_silent_truncate_helper_exists_not_used_for_overlong_ambient():
     ambient = extract_feature_vector(feats)
     assert len(ambient) == CANONICAL_FEATURE_DIM == 48
 
-    path = __import__("pathlib").Path(
-        "models/BNBUSDT/bnbusdt_balanced_20260524/gaussian_p5_20260524T120449.json"
-    )
-    import json
-    from training.trainer import load_gaussian_model
-
-    _, _, meta = load_gaussian_model(
-        "BNBUSDT/bnbusdt_balanced_20260524/gaussian_p5_20260524T120449.json"
-    )
-    named = extract_model_feature_vector(feats, meta["feature_schema_resolved"])
+    _model, _scaler, resolved = _name_anchored_bundle(_BNB)
+    named = extract_model_feature_vector(feats, resolved)
     assert len(named) == 38
     # Truncating ambient by index is NOT equal to name-anchored extract under v4
     # (MACD split shifts the tail) — this is exactly the FAIL_OPEN we closed.

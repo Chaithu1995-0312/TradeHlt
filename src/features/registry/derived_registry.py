@@ -6,13 +6,16 @@ from __future__ import annotations
 import inspect
 from typing import Callable
 
+from features import candle_patterns as _candle_patterns
 from features import derived_math
 from features.registry._loader import load_ontology
 from features.smc import breaker as _smc_breaker
 from features.smc import fvg as _smc_fvg
 from features.smc import levels as _smc_levels
 from features.smc import mitigation as _smc_mitigation
+from features.reward_bracket import reward_risk_clears
 from features.smc import order_block as _smc_order_block
+from features.smc import rejection as _smc_rejection
 
 # Declared impl name (derived_metrics.<name>.impl in the ontology) -> explicit callable.
 DERIVED: dict[str, Callable] = {
@@ -26,6 +29,9 @@ DERIVED: dict[str, Callable] = {
     # F-050 remediation CH-001: the two formerly name-colliding CRT quantities, now first-class.
     "derived_math.displacement_retrace":     derived_math.displacement_retrace,
     "derived_math.displacement_atr_ratio":   derived_math.displacement_atr_ratio,
+    # FM-096 (2026-10-08, CH-feature-semantic-fixes-v7): signed retracement, selected over FM-027
+    # by `setup.retrace_semantics`.
+    "derived_math.displacement_retrace_signed": derived_math.displacement_retrace_signed,
     # GD-004 closure 2026-07-11: scoring_engine's as-wired breakout displacement input (FM-029).
     "derived_math.disp_strength_atr_rescale": derived_math.disp_strength_atr_rescale,
     # FM-030/031 (2026-07-22): scale-invariant corrections of FM-022/FM-023, selected by
@@ -47,6 +53,28 @@ DERIVED: dict[str, Callable] = {
     "features.smc.mitigation.mitigation_block_distance": _smc_mitigation.mitigation_block_distance,
     "features.smc.levels.pdh_pdl_distance":           _smc_levels.pdh_pdl_distance,
     "features.smc.levels.eqh_eql_distance":           _smc_levels.eqh_eql_distance,
+    # FM-097..FM-102 (2026-10-08, CH-feature-semantic-fixes-v7, schema v7.0): zone/cluster
+    # presence flags, separating "no zone" from "price on the zone edge" (both 0.0 in *_distance).
+    "features.smc.order_block.order_block_present":   _smc_order_block.order_block_present,
+    "features.smc.fvg.fvg_present":                   _smc_fvg.fvg_present,
+    "features.smc.breaker.breaker_present":           _smc_breaker.breaker_present,
+    "features.smc.mitigation.mitigation_block_present": _smc_mitigation.mitigation_block_present,
+    "features.smc.levels.eqh_eql_present":            _smc_levels.eqh_eql_present,
+    # FM-103..FM-119 (2026-10-08, CH-candle-pattern-observations-v8, schema v8.0): candle-pattern
+    # observations. Per-bar scalar identities; the pipeline's vectorized mirror
+    # (candle_patterns.compute_all) is parity-bound by tests/test_candle_patterns.py.
+    **{f"features.candle_patterns.{_n}": getattr(_candle_patterns, _n)
+       for _n in _candle_patterns.PATTERN_COLUMNS},
+    # FM-120 (CH-card-identity-census-v9): morning star is a candle-geometry identity and is
+    # not a member of PATTERN_COLUMNS (slots 54-70 stay that tuple; morning_star is slot 71).
+    "features.candle_patterns.morning_star": _candle_patterns.morning_star,
+    # FM-124..127: live rejection-block presence and distance.
+    "features.smc.rejection.rejection_bull_present": _smc_rejection.rejection_bull_present,
+    "features.smc.rejection.rejection_bear_present": _smc_rejection.rejection_bear_present,
+    "features.smc.rejection.rejection_bull_distance": _smc_rejection.rejection_bull_distance,
+    "features.smc.rejection.rejection_bear_distance": _smc_rejection.rejection_bear_distance,
+    # FM-129: card reward:risk bracket. Not the live min_rr_ratio gate.
+    "features.reward_bracket.reward_risk_clears": reward_risk_clears,
 }
 
 

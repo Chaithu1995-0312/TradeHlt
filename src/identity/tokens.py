@@ -13,7 +13,7 @@ LAYERS = frozenset({
 })
 
 TIMEFRAMES = frozenset({"M15", "H1", "H4", "D1", "W1", "MN1"})
-SCHEMA_VERSIONS = frozenset({"2.0", "3.0", "4.0", "5.0", "6.0"})
+SCHEMA_VERSIONS = frozenset({"2.0", "3.0", "4.0", "5.0", "6.0", "7.0", "8.0", "9.0"})
 PRODUCER_IDS = frozenset({"engine", "resolver"})
 TRACK_IDS = frozenset({"execution_tf", "parent_tf"})
 EVENT_KINDS = frozenset({"STATE_TRANSITION", "RESET"})
@@ -42,7 +42,7 @@ EXECUTION_TF_STATES = frozenset({
 })
 PARENT_TF_STATES = frozenset({"RANGE_C1", "MANIPULATION_C2", "DISTRIBUTION_C3"})
 
-SCHEMA_DIM = {"2.0": 35, "3.0": 38, "4.0": 39, "5.0": 48}
+SCHEMA_DIM = {"2.0": 35, "3.0": 38, "4.0": 39, "5.0": 48, "6.0": 48, "7.0": 54, "8.0": 71, "9.0": 79}
 
 L0_PK = ("instrument", "timeframe", "bar_open_ts", "corpus_sha256")
 L0_PAYLOAD = ("open", "high", "low", "close", "volume")

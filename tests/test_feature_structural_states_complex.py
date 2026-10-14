@@ -60,7 +60,10 @@ def _state_domain(name: str) -> set[int]:
 
 
 def _fp_cfg() -> dict:
-    return get_prod_section("feature_pipeline")
+    # These reference formulas certify the LEGACY sweep identity (FM-058/059/060/065,
+    # `latest_unconsumed`); the E01 lifecycle identity (FM-090..093) is certified by
+    # tests/test_e01_sweep_semantics.py. Name the identity instead of inheriting the active one.
+    return dict(get_prod_section("feature_pipeline"), sweep_semantics="latest_unconsumed")
 
 
 def _synthetic(n: int = 600, seed: int = 3) -> pd.DataFrame:

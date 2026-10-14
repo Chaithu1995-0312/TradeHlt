@@ -120,6 +120,7 @@ class S08MLEnsemble(BaseStrategy):
 
         close = float(candle["close"])
         atr = float(features.get("atr", 0.0))
+        atr_px = self._atr_price(features, close)   # price-unit ATR for SL; score/BitNet keep relative `atr`
         if close <= 0.0 or atr <= 0.0:
             return self._no_trade("UNKNOWN")
 
@@ -163,10 +164,10 @@ class S08MLEnsemble(BaseStrategy):
             return self._no_trade(regime)
 
         if signal == "BUY":
-            sl = close - atr * sl_mult
+            sl = close - atr_px * sl_mult
             tp = close + (close - sl) * tp_rr
         else:
-            sl = close + atr * sl_mult
+            sl = close + atr_px * sl_mult
             tp = close - (sl - close) * tp_rr
 
         sl_pips = self._sl_pips(close, sl)

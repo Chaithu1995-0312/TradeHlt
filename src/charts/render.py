@@ -70,7 +70,7 @@ def _title(series: ChartSeries, i0: int, i1: int) -> str:
         f"[bars {i0}-{i1} of {len(series.bars)}]\n"
         f"ACTIVE_VERSION={pin.get('active_version')}   "
         f"crt={series.crt_state_source}   "
-        f"clock={pin.get('session_timestamp_basis')} (broker-server, F-066)"
+        f"clock={pin.get('timestamp_clock')} (canonical; source {pin.get('clock_id')})"
     )
     # An aliased colour layer must say so ON THE IMAGE — the PNG travels without its
     # legend.json, and a barcode is exactly the kind of artifact that gets screenshotted

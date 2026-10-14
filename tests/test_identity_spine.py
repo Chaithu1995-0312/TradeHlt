@@ -56,10 +56,11 @@ class TestNormalizeBarTs:
         assert normalize_bar_ts("2026-09-22T14:30:00Z") == "2026-09-22 14:30:00"
 
     def test_iso_with_timezone_offset(self):
-        # +02:00 aware datetime -> rendered in the machine's local tz wall-clock
+        # +02:00 aware datetime -> canonical UTC wall-clock (CH-corpus-clock-contract-v1: a bar
+        # key must not depend on the machine's local timezone)
         aware = dt.datetime(2026, 9, 22, 14, 30, 0, tzinfo=dt.timezone(dt.timedelta(hours=2)))
-        expected = aware.astimezone().strftime("%Y-%m-%d %H:%M:%S")
-        assert normalize_bar_ts("2026-09-22T14:30:00+02:00") == expected
+        assert normalize_bar_ts("2026-09-22T14:30:00+02:00") == "2026-09-22 12:30:00"
+        assert normalize_bar_ts(aware) == "2026-09-22 12:30:00"
 
     def test_epoch_seconds(self):
         t = dt.datetime(2026, 9, 22, 14, 30, 0, tzinfo=dt.timezone.utc).timestamp()

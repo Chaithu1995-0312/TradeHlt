@@ -144,7 +144,11 @@ def normalize_bar_ts(value) -> str:
         return _dt.fromtimestamp(float(value), tz=_tz.utc).strftime(BAR_TS_FORMAT)
     if isinstance(value, _dt):
         if value.tzinfo is not None:
-            return value.astimezone(_dt.now().astimezone().tzinfo).strftime(BAR_TS_FORMAT)
+            # CH-corpus-clock-contract-v1: a bar key is canonical UTC. Aware values used to be
+            # rendered in the MACHINE's local timezone (a machine-dependent key; epoch values
+            # were already UTC) — now UTC for every input form.
+            from datetime import timezone as _tz
+            return value.astimezone(_tz.utc).strftime(BAR_TS_FORMAT)
         return value.strftime(BAR_TS_FORMAT)
     if isinstance(value, str):
         s = value.strip()
@@ -154,7 +158,8 @@ def normalize_bar_ts(value) -> str:
             if "+" in s:
                 aware = _dt.fromisoformat(s)
                 if aware.tzinfo is not None:
-                    return aware.astimezone(_dt.now().astimezone().tzinfo).strftime(BAR_TS_FORMAT)
+                    from datetime import timezone as _tz
+                    return aware.astimezone(_tz.utc).strftime(BAR_TS_FORMAT)
             for fmt in ("%Y-%m-%d %H:%M:%S.%f", "%Y-%m-%d %H:%M:%S",
                         "%Y-%m-%dT%H:%M:%S.%f", "%Y-%m-%dT%H:%M:%S"):
                 try:

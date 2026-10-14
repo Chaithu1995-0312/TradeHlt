@@ -88,6 +88,16 @@ def find_active_order_block(
     return None
 
 
+def order_block_present(
+    window: "Sequence[Candle]", k: int,
+    break_events: Optional[list[tuple[int, bool]]] = None,
+) -> float:
+    """FM-097 (schema v7.0): 1.0 if an active (unmitigated) order block exists as of `window[-1]`,
+    else 0.0. Separates "no zone" from "price on the zone edge", which order_block_distance
+    reports identically as 0.0. Same finder, so present == 0.0 implies distance == 0.0."""
+    return 1.0 if find_active_order_block(window, k, break_events) is not None else 0.0
+
+
 def order_block_distance(
     window: "Sequence[Candle]", k: int, atr: float,
     break_events: Optional[list[tuple[int, bool]]] = None,

@@ -70,20 +70,45 @@ def _materialize_month_window_csv(data_path: str, months: int, output_dir: str) 
     if months <= 0:
         raise ValueError(f"months must be > 0, got {months}")
 
-    df = pd.read_csv(data_path)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    parent = _corpus_load(data_path, sequence_check=False)
+    df = parent.frame()                       # canonical UTC `timestamp` + audit `source_timestamp`
     ts = _resolve_timestamp_series(df)
     if ts.isna().all():
         raise ValueError("Timestamp parse failed for all rows; cannot apply month filter.")
 
     max_ts = ts.max()
     cutoff = max_ts - pd.DateOffset(months=months)
-    out_df = df.loc[ts >= cutoff].copy().reset_index(drop=True)
+    # CH-corpus-clock-contract-v1 (contract §13): the window is cut on canonical UTC but WRITTEN in
+    # the parent's SOURCE representation, so its bytes are a true sub-range of the parent and it
+    # inherits the parent's declared clock through the sidecar below (never a fresh guess — the
+    # pytest tmp tree used to make a window look like a UTC corpus).
+    kept = df.loc[ts >= cutoff].copy()
+    window_start_utc = str(kept["timestamp"].iloc[0]) if len(kept) else ""
+    window_end_utc = str(kept["timestamp"].iloc[-1]) if len(kept) else ""
+    out_df = parent.to_source_rows(kept).reset_index(drop=True)
 
     out_dir = Path(output_dir) / "filtered_inputs"
     out_dir.mkdir(parents=True, exist_ok=True)
     stem = Path(data_path).stem
     out_path = out_dir / f"{stem}_last_{months}m.csv"
     out_df.to_csv(out_path, index=False)
+    # CH-corpus-ssot: a month window is a DERIVED corpus. Its parent identity is written next to
+    # it so every artifact built on the window can name the authoritative corpus it came from.
+    import json as _json
+
+    import hashlib as _hashlib
+
+    (out_path.with_suffix(".parent.json")).write_text(_json.dumps({
+        "derived_from": parent.provenance(),
+        "parent_dataset_id": parent.dataset_id,
+        "derived_corpus_sha256": _hashlib.sha256(out_path.read_bytes()).hexdigest(),
+        "window_start_utc": window_start_utc,
+        "window_end_utc": window_end_utc,
+        "selection_rule": f"last {months} month(s) by canonical-UTC timestamp, cutoff {cutoff}",
+        "clock_inherited_from": parent.sha256,
+        "rows": int(len(out_df)),
+    }, indent=2, default=str), encoding="utf-8")
     return str(out_path)
 
 

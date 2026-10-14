@@ -112,16 +112,17 @@ def load_base_candles(csv_path: str | Path, instrument: str) -> list[Candle]:
     return list(CandleLoader(str(csv_path), instrument).stream())
 
 
-def to_timeframe(base: Sequence[Candle], timeframe: str) -> list[Candle]:
-    """Aggregate M15 `base` to `timeframe`. M15 is a pass-through copy."""
+def to_timeframe(base: Sequence[Candle], timeframe: str, calendar=None) -> list[Candle]:
+    """Aggregate M15 `base` (canonical UTC) to `timeframe`. M15 is a pass-through copy.
+    `calendar`: the instrument's market calendar (features.market_calendar); None = UTC grid."""
     if timeframe not in TIMEFRAMES:
         raise ValueError(
             f"unsupported timeframe {timeframe!r} (expected {list(TIMEFRAMES)})")
     if timeframe == "M15":
         return list(base)
     if timeframe in _RESAMPLE_RULES:
-        return resample(list(base), timeframe)
-    return aggregate_calendar(list(base), timeframe)
+        return resample(list(base), timeframe, calendar)
+    return aggregate_calendar(list(base), timeframe, calendar)
 
 
 def downsample_states(
@@ -129,6 +130,7 @@ def downsample_states(
     base_states: Sequence[str],
     htf: Sequence[Candle],
     timeframe: str,
+    calendar=None,
 ) -> list[str]:
     """Project per-M15 CRT states onto `htf` bars: state as of each bucket's LAST child.
 
@@ -141,10 +143,10 @@ def downsample_states(
 
     if timeframe in _RESAMPLE_RULES:
         def key(ts: datetime):
-            return bucket_floor(ts, timeframe)
+            return bucket_floor(ts, timeframe, calendar)
     else:
         def key(ts: datetime):
-            return period_key(ts, timeframe)
+            return period_key(ts, timeframe, calendar)
 
     last_by_bucket: dict = {}
     for c, s in zip(base, base_states):
@@ -202,7 +204,8 @@ def build_config_pin(
         "corpus_path": str(csv_path).replace("\\", "/"),
         "corpus_sha256": None,
         "instrument": instrument,
-        "session_timestamp_basis": None,
+        "timestamp_clock": "UTC",
+        "clock_id": None,
         "run_config_version": run_config_version,
         "run_htf_clock_basis": run_htf_clock_basis,
         "run_htf_candles_per_range": run_htf_candles_per_range,
@@ -218,23 +221,23 @@ def build_config_pin(
     except Exception as exc:                                    # noqa: BLE001
         pin["config_hash"] = f"UNRESOLVED: {exc}"
     try:
-        pin["corpus_sha256"] = sha256_file(csv_path)
+        from data_ingestion.corpus_store import load as _corpus_load   # CH-corpus-ssot
+
+        _c = _corpus_load(csv_path, instrument, sequence_check=False)
+        pin["corpus_sha256"] = _c.sha256
+        pin["dataset_id"] = _c.dataset_id
     except Exception as exc:                                    # noqa: BLE001
         pin["corpus_sha256"] = f"UNRESOLVED: {exc}"
-    # F-066: broker-server stamps. The legend MUST name the basis; 53.36% of XAUUSD
-    # session labels are wrong under the uncorrected basis, so an unlabelled chart is
-    # actively misleading about time.
+    # Clock contract: bars are canonical UTC (the corpus SSOT normalized the declared source
+    # clock once); the legend names that. Raw broker stamps remain available as
+    # `source_timestamp` on the SSOT frame for comparison with broker-time screenshots.
     try:
-        from config_layer.production_config import get_prod_section
-        fp = get_prod_section("feature_pipeline")
-    except Exception as exc:
-        raise ConfigKeyMissingError(
-            ["feature_pipeline"], section="<root>", consumer="chart_series",
-        ) from exc
-    pin["session_timestamp_basis"] = require(
-        fp, "session_timestamp_basis",
-        section_name="feature_pipeline", consumer="chart_series",
-    )
+        from data_ingestion.corpus_store import load as _corpus_load2
+
+        _c2 = _corpus_load2(csv_path, instrument, sequence_check=False)
+        pin["clock_id"] = _c2.clock.clock_id if _c2.clock else None
+    except Exception as exc:                                    # noqa: BLE001
+        pin["clock_id"] = f"UNRESOLVED: {exc}"
     return pin
 
 
@@ -321,10 +324,11 @@ def build_legend(series: ChartSeries) -> dict:
         "crt_token_hex": {tok: CRT_TOKEN_HEX[tok] for st, tok in CRT_COLOR_TOKENS.items()
                           if st in present},
         "states_present": present,
-        "session_timestamp_basis": series.config_pin.get("session_timestamp_basis"),
+        "timestamp_clock": series.config_pin.get("timestamp_clock"),
         "clock_note": (
-            "Timestamps are broker-server time as stored (F-066). Session labels are NOT "
-            "UTC-corrected on this chart; price geometry is the primary comparison surface."
+            "Timestamps are canonical UTC (the corpus SSOT normalized the declared source clock "
+            f"{series.config_pin.get('clock_id')} once); the raw broker stamp is "
+            "source_timestamp on the SSOT frame."
         ),
         # A-AC3b: these names collide across modules; the legend states the distinction
         # even though A0 draws no EMA, so a later A2 pass cannot quietly conflate them.
@@ -373,7 +377,8 @@ def write_export(series: ChartSeries, out_dir: str | Path,
         f"- Run HTF clock basis: `{series.config_pin.get('run_htf_clock_basis')}` "
         f"({series.config_pin.get('run_htf_candles_per_range')} candles/window)",
         f"- Corpus sha256: `{series.config_pin.get('corpus_sha256')}`",
-        f"- Clock basis: `{series.config_pin.get('session_timestamp_basis')}` (F-066)",
+        f"- Timestamp clock: `{series.config_pin.get('timestamp_clock')}` "
+        f"(source clock `{series.config_pin.get('clock_id')}`)",
         "",
         "## Files",
         "- `series.csv` - **authority**; the PNG is a view of this.",

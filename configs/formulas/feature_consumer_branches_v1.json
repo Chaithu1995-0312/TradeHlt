@@ -1,0 +1,302 @@
+{
+  "registry_id": "feature-consumer-branches-v1",
+  "contract_id": "FEATURE-SEMANTIC-EQUIVALENCE-V1",
+  "note": "Independent producer and consumer branches. A manifest row is not an edge in this file. Aliases are not transformations. No edge here is a reviewed resolution of a drift.",
+  "edges": [
+    {
+      "branch_id": "live_engine_hook.historical_body_ratio",
+      "parent_consumer": "live_engine_hook",
+      "role": "producer",
+      "entrypoint": "src/features/candle_math.py",
+      "surface_name": "body_ratio",
+      "implementation": {
+        "formula": "body_size / total_wick"
+      },
+      "evidence": [
+        {
+          "path": "src/features/candle_math.py",
+          "lines": "64-74",
+          "kind": "source",
+          "symbol": "body_to_total_wick_ratio"
+        },
+        {
+          "path": "src/runtime/live_engine_hook.py",
+          "lines": "571-575",
+          "kind": "source",
+          "symbol": "historical body_ratio comment"
+        }
+      ],
+      "note": "Historical live emission of FM-013 under the bare name body_ratio (GD-001). The current runtime key at live_engine_hook.py:599 is a separate edge."
+    },
+    {
+      "branch_id": "live_engine_hook.current_body_ratio",
+      "parent_consumer": "live_engine_hook",
+      "role": "producer",
+      "entrypoint": "src/runtime/live_engine_hook.py",
+      "surface_name": "body_ratio",
+      "implementation": {
+        "formula": "body_size / candle_range",
+        "source_inputs": ["body_size", "candle_range"]
+      },
+      "evidence": [
+        {
+          "path": "src/runtime/live_engine_hook.py",
+          "lines": "595-599",
+          "kind": "source",
+          "symbol": "body_ratio"
+        },
+        {
+          "path": "src/features/candle_math.py",
+          "lines": "50-61",
+          "kind": "source",
+          "symbol": "body_ratio"
+        }
+      ],
+      "note": "T-16 assigns the runtime key body_ratio from candle_math.body_ratio (FM-010). Incomplete contract fields keep this edge off MATCH."
+    },
+    {
+      "branch_id": "live_engine_hook.wick_size_local",
+      "parent_consumer": "live_engine_hook",
+      "role": "producer",
+      "entrypoint": "src/runtime/live_engine_hook.py",
+      "surface_name": "wick_size",
+      "implementation": {
+        "formula": "upper_wick + lower_wick"
+      },
+      "evidence": [
+        {
+          "path": "src/runtime/live_engine_hook.py",
+          "lines": "588-593",
+          "kind": "source",
+          "symbol": "wick_size"
+        },
+        {
+          "path": "src/features/candle_math.py",
+          "lines": "45-47",
+          "kind": "source",
+          "symbol": "total_wick"
+        }
+      ],
+      "note": "Local wick_size is total_wick. It is not inserted into the canonical auxiliary dict. The read-side alias wick_size -> candle_range does not make these formulas the same."
+    },
+    {
+      "branch_id": "live_engine_hook.session_string",
+      "parent_consumer": "live_engine_hook",
+      "role": "producer",
+      "entrypoint": "src/runtime/live_engine_hook.py",
+      "surface_name": "session",
+      "implementation": {
+        "encoding": "string:{asia,london,new_york,overlap,closed}"
+      },
+      "evidence": [
+        {
+          "path": "src/runtime/live_engine_hook.py",
+          "lines": "219-262",
+          "kind": "source",
+          "symbol": "_normalize_session"
+        },
+        {
+          "path": "src/runtime/live_engine_hook.py",
+          "lines": "282-307",
+          "kind": "source",
+          "symbol": "_derive_session"
+        },
+        {
+          "path": "src/runtime/live_engine_hook.py",
+          "lines": "613",
+          "kind": "source",
+          "symbol": "auxiliary.session"
+        }
+      ],
+      "note": "Live auxiliary session is a string. The pipeline slot is the int8 nominal FM-052. No coercion."
+    },
+    {
+      "branch_id": "semantics.market.levels.double_sweep_window_1",
+      "parent_consumer": "semantics.market.levels",
+      "role": "producer",
+      "entrypoint": "src/semantics/market/levels.py",
+      "surface_name": "double_sweep",
+      "implementation": {
+        "lookback": 1
+      },
+      "evidence": [
+        {
+          "path": "src/semantics/market/levels.py",
+          "lines": "79",
+          "kind": "source",
+          "symbol": "swing_levels"
+        }
+      ],
+      "note": "causal_structure_series is called with double_sweep_window=1. The caller reads swing flags only. The series is still computed at lookback 1, which is not FM-060 lookback 5."
+    },
+    {
+      "branch_id": "semantics.market.conditions.double_sweep_window_param",
+      "parent_consumer": "semantics.market.conditions",
+      "role": "producer",
+      "entrypoint": "src/semantics/market/conditions.py",
+      "surface_name": "double_sweep",
+      "evidence": [
+        {
+          "path": "src/semantics/market/conditions.py",
+          "lines": "53-58",
+          "kind": "source",
+          "symbol": "_series"
+        }
+      ],
+      "note": "double_sweep_window is the caller-supplied window argument (default 1). Callers were not enumerated, so this branch stays unclassified."
+    },
+    {
+      "branch_id": "feature_pipeline.double_sweep_legacy_arm",
+      "parent_consumer": "FeaturePipeline",
+      "role": "producer",
+      "entrypoint": "src/features/feature_pipeline.py",
+      "surface_name": "double_sweep",
+      "implementation": {
+        "formula": "any(liquidity_sweep > 0) and any(liquidity_sweep < 0) over rolling(<feature_pipeline.double_sweep_window>, min_periods=1) -> int8 {0, 1} # default 5",
+        "source_inputs": ["liquidity_sweep"],
+        "lookback": 5,
+        "encoding": "{0, 1}"
+      },
+      "evidence": [
+        {
+          "path": "src/features/feature_pipeline.py",
+          "lines": "1107-1127",
+          "kind": "source",
+          "symbol": "compute_canonical_structure_features"
+        },
+        {
+          "path": "configs/formulas/market_ontology.yaml",
+          "lines": "3479-3515",
+          "kind": "source",
+          "symbol": "FM-060"
+        }
+      ],
+      "note": "Else arm of sweep_semantics. Formula and lookback match FM-060. Fields the ontology does not state stay UNMAPPED, so this edge is not MATCH. Active config selects the other arm."
+    },
+    {
+      "branch_id": "feature_pipeline.double_sweep_e01_arm",
+      "parent_consumer": "FeaturePipeline",
+      "role": "producer",
+      "entrypoint": "src/features/feature_pipeline.py",
+      "surface_name": "double_sweep",
+      "implementation": {
+        "formula": "MKT-C04 v2: at least one UPPER and at least one LOWER MKT-E01 event (FM-090 lifecycle, per side, NOT the signed slot) within rolling(<feature_pipeline.double_sweep_window>) bars, bar i included -> int8 {0, 1}. Emitted only when <feature_pipeline.sweep_semantics> == 'e01_lifecycle'; the default selects FM-060.",
+        "source_inputs": ["close", "high", "low", "swing_high", "swing_low"],
+        "lookback": 5,
+        "encoding": "{0, 1}"
+      },
+      "evidence": [
+        {
+          "path": "src/features/feature_pipeline.py",
+          "lines": "1108-1111",
+          "kind": "source",
+          "symbol": "SWEEP_E01_LIFECYCLE"
+        },
+        {
+          "path": "configs/formulas/market_ontology.yaml",
+          "lines": "3614-3622",
+          "kind": "source",
+          "symbol": "FM-092"
+        },
+        {
+          "path": "configs/production/v2_htfcrt_2026_08.json",
+          "lines": "682",
+          "kind": "source",
+          "symbol": "sweep_semantics"
+        }
+      ],
+      "note": "Active config sweep_semantics is e01_lifecycle, so this arm writes the double_sweep slot. The ontology node FM-092 still says active false. That note was not rewritten. The slot's contracted concept remains FM-060. Same lookback is not the same formula."
+    },
+    {
+      "branch_id": "feature_store.missing_value_substitutes",
+      "parent_consumer": "FeatureStore",
+      "role": "consumer",
+      "entrypoint": "src/core/feature_store.py",
+      "surface_name": "double_sweep",
+      "implementation": {
+        "formula": "any(liquidity_sweep > 0) and any(liquidity_sweep < 0) over rolling(<feature_pipeline.double_sweep_window>, min_periods=1) -> int8 {0, 1} # default 5",
+        "source_inputs": ["liquidity_sweep"],
+        "lookback": 5,
+        "encoding": "{0, 1}",
+        "missing_value_policy": "absent double_sweep substituted with 0; absent volume_ratio substituted with 1.0"
+      },
+      "evidence": [
+        {
+          "path": "src/core/feature_store.py",
+          "lines": "108-111",
+          "kind": "source",
+          "symbol": "process"
+        },
+        {
+          "path": "src/core/feature_store.py",
+          "lines": "197-200",
+          "kind": "source",
+          "symbol": "_compute_derived"
+        }
+      ],
+      "note": "Deque maxlen max(10, window) is a buffer floor, not a second formula window. The canonical missing-value policy is not stated, so a concrete substitute is not recorded as DRIFT against an undefined policy."
+    },
+    {
+      "branch_id": "gaussian_artifact.dimension_only",
+      "parent_consumer": "Gaussian_v4_mirrored_38dim",
+      "role": "trained_model",
+      "entrypoint": "models/gaussian_registry.json",
+      "surface_name": "gaussian_feature_schema",
+      "vector_order": [
+        "open", "high", "low", "close", "volume", "volume_ratio", "double_sweep",
+        "ema_fast", "ema_slow", "ema_spread", "trend_bias", "trend_strength_z",
+        "momentum_score", "atr", "volatility_ratio", "rsi_14", "macd_line",
+        "macd_signal", "macd_hist_raw", "macd_hist_z", "sweep_detected",
+        "liquidity_sweep", "break_of_structure", "swing_high", "swing_low",
+        "higher_high", "lower_low", "body_size", "candle_range", "body_ratio",
+        "volatility_regime", "session", "hour_of_day", "disp_strength", "retest_depth"
+      ],
+      "evidence": [
+        {
+          "path": "src/training/trainer.py",
+          "lines": "414-539",
+          "kind": "dimension"
+        }
+      ],
+      "note": "Name width and SCHEMA_V3_ALIASES resolution are not a semantic contract. Manifest compatibility_verdict is preserved on the separate manifest edge and is not copied here as MATCH."
+    },
+    {
+      "branch_id": "tradenet_artifact.dimension_only",
+      "parent_consumer": "TradeNet",
+      "role": "trained_model",
+      "entrypoint": "models/tradenet_registry.json",
+      "surface_name": "tradenet_feature_names",
+      "vector_order": [
+        "open", "high", "low", "close", "volume", "volume_ratio", "double_sweep",
+        "ema_fast", "ema_slow", "ema_spread", "trend_bias", "trend_strength_z",
+        "momentum_score", "atr", "volatility_ratio", "rsi_14", "macd_line",
+        "macd_signal", "macd_hist_raw", "macd_hist_z", "sweep_detected",
+        "liquidity_sweep", "break_of_structure", "swing_high", "swing_low",
+        "higher_high", "lower_low", "body_size", "candle_range", "body_ratio",
+        "volatility_regime", "session", "hour_of_day", "disp_strength", "retest_depth"
+      ],
+      "evidence": [
+        {
+          "path": "src/training/trade_net_v2.py",
+          "lines": "182-201",
+          "kind": "dimension"
+        }
+      ],
+      "note": "feature_dim equal to the canonical width is not semantic compatibility. F-005 unwired status is unchanged."
+    },
+    {
+      "branch_id": "gaussian_live_heuristic.names_only",
+      "parent_consumer": "Gaussian_live_heuristic",
+      "role": "engine",
+      "entrypoint": "src/engines/heuristic_gaussian_engine.py",
+      "surface_name": "momentum_score",
+      "evidence": [
+        {
+          "path": "docs/governance/feature_consumer_binding_manifest_fc05-2026-07-10.json",
+          "kind": "manifest"
+        }
+      ],
+      "note": "The manifest lists ema_fast, ema_slow, momentum_score and verdict EXACT_COMPATIBLE. That verdict is not field-by-field source evidence, so this edge stays UNVERIFIED. The manifest row remains its own edge."
+    }
+  ]
+}

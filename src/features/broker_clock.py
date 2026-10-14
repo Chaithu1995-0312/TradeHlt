@@ -1,6 +1,17 @@
 """
 broker_clock.py — converts MT5 broker-server timestamps to true UTC.
 
+LEGACY REFERENCE (CH-corpus-clock-contract-v1, 2026-10-08)
+----------------------------------------------------------
+The conversion of a corpus to UTC now happens exactly once, at the corpus SSOT, from a CONFIGURED
+clock definition (`data_ingestion.clock_contract`, `ohlcv_clock_registry.json` `clocks`). The
+`mt5_server_*` functions below are kept as the independent reference implementation the clock
+contract is parity-tested against (tests/test_corpus_clock_contract.py::A) and MUST NOT be called
+from production code or scripts — a second conversion of an already-canonical timestamp is the
+double-normalization defect the contract exists to prevent (enforced by a static scan in
+tests/test_corpus_ssot.py). `parse_exchange_session_windows` / `exchange_sessions_at` remain the
+session-window helpers and now take canonical UTC.
+
 WHY THIS EXISTS (evidence, not assertion)
 ------------------------------------------
 `inout/mt5_candle_fetcher.py:186` does `datetime.fromtimestamp(r["time"], tz=timezone.utc)` on
@@ -149,16 +160,17 @@ def parse_exchange_session_windows(raw: Mapping[str, Mapping[str, str]]) -> dict
 
 
 def exchange_sessions_at(
-    broker_ts: datetime, windows: Mapping[str, ExchangeWindow]
+    utc_ts: datetime, windows: Mapping[str, ExchangeWindow]
 ) -> tuple[str, ...]:
-    """Names of every session whose EXCHANGE-local window contains this MT5 bar, in declared order.
+    """Names of every session whose EXCHANGE-local window contains this bar, in declared order.
 
-    broker -> UTC via `mt5_server_to_utc_scalar` (the one NY-DST rule) -> each session's own
-    zone, so the London/EU-DST and NY/US-DST shifts (and the US/EU mismatch weeks) are exact
-    per date. Half-open ``open <= t < close`` because MT5 stamps are bar OPEN (F-098): the bar
-    opening at the close time belongs to the next period. MT5-corpus only (module SCOPE).
+    CH-corpus-clock-contract-v1: `utc_ts` is the bar's CANONICAL UTC timestamp (the corpus SSOT
+    already normalized the source clock, once). It is mapped to each session's own IANA zone, so
+    the London/EU-DST and NY/US-DST shifts (and the US/EU mismatch weeks) are exact per instant.
+    Half-open ``open <= t < close`` because MT5 stamps are bar OPEN (F-098): the bar opening at
+    the close time belongs to the next period. No broker conversion happens here any more.
     """
-    utc = mt5_server_to_utc_scalar(broker_ts)
+    utc = utc_ts
     if utc.tzinfo is None:
         utc = utc.replace(tzinfo=timezone.utc)
     hits = []

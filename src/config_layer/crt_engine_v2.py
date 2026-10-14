@@ -31,7 +31,19 @@ from features import candle_math as _cm  # single source of truth for candle geo
 # Phase-2 Option A: FM id → registry/composition binding (identity-preserving; no auto-run required_fm).
 # FM-027/028 CRT emission identities (CH-002 / F-050) resolve through FORMULA_REGISTRY here.
 from features.fm_resolve import bind_phase2_crt_callables
-_FM_CRT: dict = bind_phase2_crt_callables()  # FM-002/010/027/028 callables
+_FM_CRT: dict = bind_phase2_crt_callables()  # FM-002/010/027/028/070/096 callables
+
+# CH-feature-semantic-fixes-v7 (2026-10-08): `setup.retrace_semantics` -> the FM id that fills
+# cached_features["displacement_retrace"]. Strict: an unknown value raises (no fallback).
+RETRACE_SEMANTICS: dict = {"legacy_kept_fraction": "FM-027", "signed_retrace": "FM-096"}
+
+
+def retrace_fm_for(semantics: str) -> str:
+    if semantics not in RETRACE_SEMANTICS:
+        raise ValueError(
+            f"setup.retrace_semantics={semantics!r} must be one of {tuple(RETRACE_SEMANTICS)}"
+        )
+    return RETRACE_SEMANTICS[semantics]
 from config_layer.retest_geometry import (  # noqa: E402  [STORY-83.11a] shared with the resolver
     FAIL_DEPTH_ABOVE_CEILING,
     FAIL_DEPTH_BELOW_MIN,
@@ -268,6 +280,13 @@ class EngineState:
     ema_slow_val:         float = 0.0
     # Phase 0b telemetry context (set from backtest loop; read by reset_to_range)
     htf_remaining_candles: int  = 0
+    # CH-timeframe-ssot-v2: length of the HTF window in bars (backtest.htf_candles_per_range), set by the
+    # caller next to htf_remaining_candles. 0 = the caller did not supply it (telemetry then uses the
+    # legacy 4 and warns once). The would_expand score reads the remaining position OUT OF this window.
+    htf_window_candles: int = 0
+    # CH-timeframe-ssot-v1: minutes per bar, for the bars->hours telemetry estimates below. The backtest
+    # runner sets the DECLARED timeframe's size; 15 is the M15 value every other caller has always had.
+    bar_minutes: int = 15
     _displacement_entry_idx: int = 0   # candle_index when DISPLACEMENT state was entered
     # Phase 1 — Shadow displacement memory (survives one HTF reset, expires after TTL)
     pending_displacement_candle:       Optional[Candle]   = None
@@ -391,6 +410,9 @@ class TelemetryCollector:
     def __init__(self) -> None:
         self._transition_counts: dict[str, int] = {}
         self._state_entered_idx: int = 0
+        # CH-timeframe-ssot-v1: minutes per bar for the bars->hours estimate in on_expansion_ended. 15 is the
+        # M15 value every caller has always had; the backtest runner sets the declared timeframe's size.
+        self.bar_minutes: int = 15
         # Per-expansion episode running state
         self._expansion_active: bool = False
         self._expansion_start_idx: int = 0
@@ -519,8 +541,8 @@ class TelemetryCollector:
             else "reset"
         )
 
-        # Phase 3a: dual age_hours — actual from timestamps, estimated from M15 approximation
-        _age_estimated: float = round(dwell * 15 / 60, 2)
+        # Phase 3a: dual age_hours — actual from timestamps, estimated from bars x minutes-per-bar
+        _age_estimated: float = round(dwell * self.bar_minutes / 60, 2)
         _age_actual: Optional[float] = None
         if self._expansion_start_ts is not None and end_ts is not None:
             _age_actual = round(
@@ -582,6 +604,7 @@ class TelemetryCollector:
         candle_ts: Optional[datetime],              # Phase 3a — for age_hours_actual
         shadow_used: bool,                          # Phase 3a — was expansion shadow-sourced?
         candidate_age_at_entry: int,                # Phase 3a — candles from displacement → expansion
+        htf_window_candles: int = 0,                # CH-timeframe-ssot-v2: window length in bars; 0 = not supplied
     ) -> None:
         """Called from StateMachine.reset_to_range() before state changes."""
         state_age = candle_index - self._state_entered_idx
@@ -589,14 +612,26 @@ class TelemetryCollector:
         self._transition_counts["RANGE"] = (
             self._transition_counts.get("RANGE", 0) + 1
         )
-        # Compute expansion probability score for DISPLACEMENT+HTF resets
+        # Compute expansion probability score for DISPLACEMENT+HTF resets.
+        # CH-timeframe-ssot-v2: the remaining-position term is read OUT OF THE HTF WINDOW (it was a hard-coded 4,
+        # right for a 4-bar window but saturating for the active 16-bar one). Callers that do not supply the
+        # window keep the legacy 4 and are warned once.
+        if htf_window_candles > 0:
+            _htf_window = htf_window_candles
+        else:
+            _htf_window = 4
+            if not getattr(self, "_warned_no_htf_window", False):
+                self._warned_no_htf_window = True
+                logging.getLogger("CRT.Telemetry").warning(
+                    "would_expand_score: htf_window_candles not supplied by the caller; using the legacy window of 4. "
+                    "Set engine.state.htf_window_candles next to htf_remaining_candles.")
         _would_expand_score = 0.0
         if from_state == "DISPLACEMENT" and "HTF" in reason:
             _would_expand_score = (
                 min(displacement_age_candles / 3, 1.0) * 0.30
                 + (0.30 if ema_aligned else 0.0)
                 + (0.25 if direction_consistent else 0.0)
-                + min(remaining_htf_candles / 4, 1.0) * 0.15
+                + min(remaining_htf_candles / _htf_window, 1.0) * 0.15
             )
         self._reset_records.append({
             "kind":                  "RESET_ATTRIBUTED",
@@ -1020,6 +1055,11 @@ class StateMachine:
         self.config = config
         self.telemetry = telemetry
         self.log = logging.getLogger("CRT.StateMachine")
+        # CH-feature-semantic-fixes-v7 (2026-10-08): which identity fills cached_features
+        # ["displacement_retrace"] at RETEST. Strict (no default): "legacy_kept_fraction" = FM-027,
+        # byte-identical to before; "signed_retrace" = FM-096. Resolved once (hot loop).
+        from config_layer.production_config import get_prod_section
+        self._retrace_fm = retrace_fm_for(get_prod_section("setup")["retrace_semantics"])
         # Optional CRT baseline trace hooks (default None — zero behavior change).
         self.trace_hooks = None
         # Phase-Topology: instance graph (WHO-loaded when provided; else module seed).
@@ -1893,7 +1933,7 @@ class StateMachine:
         state.retest_candle       = candle
         state.retest_candle_index = state.current_candle_index  # [PATCH 6]
         # Phase-2: FM-027/FM-028 via FORMULA_REGISTRY (identity-preserving).
-        _retrace = _FM_CRT["FM-027"](
+        _retrace = _FM_CRT[self._retrace_fm](
             retest_close=float(candle.close),
             disp_open=float(disp.open),
             disp_close=float(disp.close),
@@ -1989,6 +2029,7 @@ class StateMachine:
                 displacement_age_candles=_disp_age,
                 ema_aligned=_ema_aligned,
                 remaining_htf_candles=state.htf_remaining_candles,
+                htf_window_candles=state.htf_window_candles,   # CH-timeframe-ssot-v2
                 direction_consistent=_dir_con,
                 candle_ts=candle.timestamp,                              # Phase 3a
                 shadow_used=state._came_from_shadow,                     # Phase 3a
@@ -2068,7 +2109,7 @@ class UltronRiskEngine:
         self.log = logging.getLogger("CRT.UltronRisk")
         self._news_active      = False
         self._current_spread_pct = 0.0
-        # [K23 F2] None = legacy static broker-time windows (config.session_windows).
+        # [K23 F2] None = static UTC windows (config.session_windows).
         # Set by CRTEngine when backtest.session_window_basis == "exchange_local".
         self.exchange_windows = None
 
@@ -3078,15 +3119,11 @@ class CRTEngine:
         self.log = logging.getLogger("CRT.Orchestrator")
         # Optional baseline bar-trace hooks (default None — production behavior unchanged).
         self.baseline_trace = None
-        # F-066 session-filter fix: resolve ONCE (not per-candle — this is a 47k+ candle hot
-        # loop), reusing the existing feature_pipeline key rather than introducing a duplicate.
-        # "broker_local" (default) preserves prior behavior byte-for-byte; "utc_corrected"
-        # converts the candle timestamp before the session-window comparison (see
-        # process_candle's session-filter block).
+        # CH-corpus-clock-contract-v1: candle timestamps are canonical UTC and
+        # `config.session_windows` is authored in UTC, so the session filter compares them
+        # directly — there is no basis selector and no per-candle conversion any more.
         from config_layer.production_config import get_prod_section
-        self._session_ts_basis = get_prod_section("feature_pipeline")["session_timestamp_basis"]
-        # CH-htfcrt-parent-candle-smc-v1 (2026-08-15): resolve ONCE (hot loop), same pattern
-        # as _session_ts_basis above. enabled:false (v2_multi_2026_04) means process_candle's
+        # CH-htfcrt-parent-candle-smc-v1 (2026-08-15): resolve ONCE (hot loop). enabled:false (v2_multi_2026_04) means process_candle's
         # parent_state gate below is a structural no-op regardless of what a caller passes —
         # byte-identical behavior on this config. See config comment "_comment_parent_crt".
         _pc = get_prod_section("parent_crt")
@@ -3405,11 +3442,11 @@ class CRTEngine:
         the soft-confirmation session filter so the resting-order open event reuses the one
         resolution instead of a second copy.
 
-        F-066: self.config.session_windows is authored in UTC (see CRTConfig.session_windows's
-        own "(UTC)" comment), but candle.timestamp on every MT5-sourced corpus is broker-server
-        time, not UTC. Compare against the UTC-converted timestamp when the operator has opted in
-        via the same feature_pipeline.session_timestamp_basis key the FM-052 feature already uses
-        (default "broker_local" = byte-identical prior behavior).
+        CH-corpus-clock-contract-v1: self.config.session_windows is authored in UTC (see
+        CRTConfig.session_windows's own "(UTC)" comment) and candle.timestamp is canonical UTC
+        (the corpus SSOT normalized the source clock once), so they are compared directly. (F-066
+        history: before the clock contract the timestamp was broker-server time and a
+        `session_timestamp_basis` switch converted it here; that key is retired.)
         """
         _sess_name = "OFF_SESSION"
         if self._exchange_windows is not None:
@@ -3420,11 +3457,7 @@ class CRTEngine:
             if _hits:
                 _sess_name = _hits[0]
         else:
-            if self._session_ts_basis == "utc_corrected":
-                from features import broker_clock as _bc
-                _ts_time = _bc.mt5_server_to_utc_scalar(candle.timestamp).time()
-            else:
-                _ts_time = candle.timestamp.time()
+            _ts_time = candle.timestamp.time()   # canonical UTC vs UTC-authored windows
             for _name, (_start, _end) in self.config.session_windows.items():
                 if _start <= _ts_time <= _end:
                     _sess_name = _name
@@ -4001,7 +4034,7 @@ class CRTEngine:
                 if self.state._expansion_entry_ts is not None:
                     _age_h = (candle.timestamp - self.state._expansion_entry_ts).total_seconds() / 3600.0
                 else:
-                    _age_h = _exp_age_c * 15.0 / 60.0   # M15 approximation
+                    _age_h = _exp_age_c * self.state.bar_minutes / 60.0   # bars x declared minutes-per-bar
 
                 _ttl_exceeded = (
                     (_max_c > 0 and _exp_age_c > _max_c)
@@ -4223,12 +4256,8 @@ class CRTEngine:
                     # Skip trade open if candle's session is not in the allowed set.
                     # Live mode would reject anyway via adapter_engine; doing it here
                     # avoids burning a CRT setup on a session that won't trade.
-                    # F-066: self.config.session_windows is authored in UTC (see
-                    # CRTConfig.session_windows's own "(UTC)" comment), but candle.timestamp on
-                    # every MT5-sourced corpus is broker-server time, not UTC. Compare against
-                    # the UTC-converted timestamp when the operator has opted in via the same
-                    # feature_pipeline.session_timestamp_basis key the FM-052 feature already
-                    # uses (default "broker_local" = byte-identical prior behavior).
+                    # Clock contract: session_windows (UTC-authored) vs candle.timestamp
+                    # (canonical UTC) — see _session_name_at.
                     _sess_name = self._session_name_at(candle)
                     if _sess_name not in self.config.allowed_sessions:
                         self.ev_log.record(

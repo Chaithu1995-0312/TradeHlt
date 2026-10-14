@@ -7,8 +7,12 @@ The fusion slot is EmaMomentumKernel. EngineRunner does not construct this class
 nb_outcome_classifier is the offline NB model, not a fusion slot.
 
 Fail-open doctrine:
-  Any exception during model load or inference returns
-  {"score": 0.5, "reason": "ml_gaussian_fallback"} — never raises.
+  Ordinary load and inference exceptions return
+  {"score": 0.5, "reason": "ml_gaussian_fallback"}.
+  FeatureSemanticIncompatible does not. A model whose features are not a
+  semantic MATCH raises that exception from compute(); it is not rewritten
+  to the neutral score. EngineRunner does not construct this class. The
+  live fusion slot is EmaMomentumKernel.
 """
 
 from __future__ import annotations
@@ -38,6 +42,8 @@ class MLGaussianEngine:
         self._scaler = None
         self._model_version: Optional[str] = None
         self._load_failed: bool = False
+        self._semantic_refused: bool = False
+        self._semantic_refusal: Optional[BaseException] = None
         # P0 name-anchored contract: live names in the order the model was trained.
         self._feature_schema_resolved: Optional[list] = None
         self._schema_alignment: Optional[str] = None
@@ -48,8 +54,10 @@ class MLGaussianEngine:
     def _load_model(self) -> None:
         """
         Load GaussianNBModel + StandardScaler from the active registry entry.
-        Sets self._load_failed = True on any exception (fail-open).
+        Sets self._load_failed = True on an ordinary exception (fail-open).
+        FeatureSemanticIncompatible is stored and re-raised by compute().
         """
+        from features.semantic_equivalence import FeatureSemanticIncompatible
         try:
             import os
             from core.model_registry import GaussianModelRegistry
@@ -152,6 +160,21 @@ class MLGaussianEngine:
                 len(self._feature_schema_resolved),
             )
 
+        except FeatureSemanticIncompatible as exc:
+            logger.error(
+                "MLGaussianEngine: semantic contract refused load — %s. "
+                "compute() will raise; neutral 0.5 is not a substitute.",
+                exc,
+            )
+            self._model = None
+            self._scaler = None
+            self._feature_schema_resolved = None
+            self._schema_alignment = None
+            self._load_failed = False
+            self._semantic_refused = True
+            self._semantic_refusal = exc
+            return
+
         except Exception as exc:
             logger.warning(
                 "MLGaussianEngine: model load failed — %s. "
@@ -179,8 +202,18 @@ class MLGaussianEngine:
         """
         _fallback = {"score": 0.5, "reason": "ml_gaussian_fallback"}
 
-        if self._model is None and not self._load_failed:
+        if self._model is None and not self._load_failed and not self._semantic_refused:
             self._load_model()
+
+        if self._semantic_refused:
+            from features.semantic_equivalence import FeatureSemanticIncompatible
+            refusal = self._semantic_refusal
+            if isinstance(refusal, FeatureSemanticIncompatible):
+                raise refusal
+            raise FeatureSemanticIncompatible(
+                "UNVERIFIED",
+                "MLGaussianEngine semantic load was refused without a stored status",
+            )
 
         if self._model is None or self._load_failed:
             return _fallback

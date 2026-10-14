@@ -1,7 +1,7 @@
 """
 test_ema_momentum_kernel_slot.py
 ================================
-The fusion slot is EmaMomentumKernel. Schema width stays 48.
+The fusion slot is EmaMomentumKernel. Schema width is 79 (v9.0; 71 at v8.0, 54 at v7.0, 48 at v5.0/v6.0).
 """
 
 import inspect
@@ -11,7 +11,7 @@ import pytest
 
 @pytest.fixture
 def feature_dict_32():
-    """A minimal 48-dim canonical feature dict (name kept for test stability)."""
+    """A minimal 79-dim canonical feature dict (name kept for test stability)."""
     from features.feature_schema import CANONICAL_FEATURES
     d = {k: 0.0 for k in CANONICAL_FEATURES}
     d["ema_fast"] = 1.01
@@ -22,23 +22,23 @@ def feature_dict_32():
 
 def test_tradenet_schema_is_32():
     from features.feature_schema import TRADENET_SCHEMA, CANONICAL_FEATURES, CANONICAL_FEATURE_DIM
-    assert TRADENET_SCHEMA.n_features == len(CANONICAL_FEATURES) == CANONICAL_FEATURE_DIM == 48
+    assert TRADENET_SCHEMA.n_features == len(CANONICAL_FEATURES) == CANONICAL_FEATURE_DIM == 79
 
 
 def test_gaussian_schema_is_32():
     from features.feature_schema import GAUSSIAN_SCHEMA, CANONICAL_FEATURES, CANONICAL_FEATURE_DIM
-    assert GAUSSIAN_SCHEMA.n_features == len(CANONICAL_FEATURES) == CANONICAL_FEATURE_DIM == 48
+    assert GAUSSIAN_SCHEMA.n_features == len(CANONICAL_FEATURES) == CANONICAL_FEATURE_DIM == 79
 
 
 def test_schema_object_attribute_and_dict_access():
     from features.feature_schema import TRADENET_SCHEMA, GAUSSIAN_SCHEMA, SchemaObject
     assert isinstance(TRADENET_SCHEMA, SchemaObject)
     assert isinstance(GAUSSIAN_SCHEMA, SchemaObject)
-    assert TRADENET_SCHEMA.n_features == 48
-    assert GAUSSIAN_SCHEMA.n_features == 48
-    assert TRADENET_SCHEMA["n_features"] == 48
-    assert GAUSSIAN_SCHEMA.get("n_features") == 48
-    assert len(TRADENET_SCHEMA.feature_names) == 48
+    assert TRADENET_SCHEMA.n_features == 79
+    assert GAUSSIAN_SCHEMA.n_features == 79
+    assert TRADENET_SCHEMA["n_features"] == 79
+    assert GAUSSIAN_SCHEMA.get("n_features") == 79
+    assert len(TRADENET_SCHEMA.feature_names) == 79
     assert len(GAUSSIAN_SCHEMA.checksum) == 32
 
 
@@ -50,15 +50,15 @@ def test_validate_vector_with_label():
 
 def test_validate_vector_raises_on_mismatch():
     from features.feature_schema import validate_vector, GAUSSIAN_SCHEMA
-    with pytest.raises(ValueError, match="expected 48"):
+    with pytest.raises(ValueError, match="expected 79"):
         validate_vector([0.0] * 10, GAUSSIAN_SCHEMA, label="wrong_dim")
 
 
 def test_trainer_n_features_is_32():
     from training.trainer import N_FEATURES, GAUSSIAN_N_FEATURES
     from features.feature_schema import CANONICAL_FEATURE_DIM
-    assert N_FEATURES == CANONICAL_FEATURE_DIM == 48, f"TradeNet N_FEATURES={N_FEATURES}"
-    assert GAUSSIAN_N_FEATURES == CANONICAL_FEATURE_DIM == 48
+    assert N_FEATURES == CANONICAL_FEATURE_DIM == 79, f"TradeNet N_FEATURES={N_FEATURES}"
+    assert GAUSSIAN_N_FEATURES == CANONICAL_FEATURE_DIM == 79
 
 
 def test_heuristic_engine_import():

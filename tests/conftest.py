@@ -46,14 +46,15 @@ def _declare_synthetic_corpus_clocks(tmp_path_factory):
     ARRIVE from outside with an unknown clock — it is not about a 6-row CSV a test writes into
     tmp_path and deletes on teardown, whose clock the test itself chose.
 
-    So the harness declares its own scratch tree, in process, once. This is a CALL in test
+    So the harness declares its own scratch tree (configured clock `constructed_utc`), in
+    process, once. This is a CALL in test
     infrastructure — not an env var, not a config flag, and never persisted to the registry — and
     `test_ohlcv_clock_provenance.py::test_no_production_module_declares_in_process` fails the build
     if any module under `src/` tries the same trick.
     """
     from data_ingestion.clock_registry import declare_tree_in_process
     declare_tree_in_process(
-        tmp_path_factory.getbasetemp(), "UTC",
+        tmp_path_factory.getbasetemp(), "constructed_utc",
         reason="pytest tmp tree: corpora are constructed by the test that reads them",
     )
 
@@ -68,7 +69,8 @@ def _mock_unreviewed_real_corpus_clocks():
     in process, by acquisition family: crypto USDT pairs are exchange UTC, data/mt5/ is broker time.
 
     Scope is deliberately narrow:
-      - only registry records with user_reviewed=false (reviewed records keep the real SHA check);
+      - only registry records that declare no configured clock (unreviewed, or reviewed legacy
+        records without a clock_id); records naming a clock keep the real SHA/identity check;
       - never persisted — configs/data_provenance/ohlcv_clock_registry.json is untouched, and
         production still refuses these files until the review CLI is run;
       - test_ohlcv_clock_provenance.py isolates itself from in-process declarations, so the gate
@@ -78,13 +80,17 @@ def _mock_unreviewed_real_corpus_clocks():
 
     root = cr.repo_root()
     for key, rec in cr.load_registry().items():
-        if rec.user_reviewed or not key.endswith(".csv"):
+        # records that already name a configured clock keep the real gate; unreviewed records AND
+        # reviewed-but-clock-less legacy records (no clock_id declared yet) are mocked.
+        if (rec.user_reviewed and rec.clock_id) or not key.endswith(".csv"):
             continue
         name = Path(key).name.upper()
         if key.startswith("data/mt5/"):
-            tz = cr.TZ_MT5_SERVER_NY_DST
+            tz = "mt5_icmarkets_xau"      # configured clock ids; in-process only, a mock not a review
         elif "USDT" in name:
-            tz = cr.TZ_UTC
+            tz = "binance_utc"
+        elif key.startswith("data/") and "/" not in key[5:] and name.endswith("_M15.CSV"):
+            tz = "mt5_icmarkets_xau"      # data/{FX}_M15.csv: MT5 acquisitions (F-035), broker clock
         else:
             continue
         cr.declare_in_process(root / key, tz,

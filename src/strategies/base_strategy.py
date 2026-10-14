@@ -16,6 +16,7 @@ Config section: "capital_management" in production JSON.
 
 from __future__ import annotations
 
+import math
 import sys
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -27,6 +28,13 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 from config_layer.production_config import get_prod_section   # type: ignore
+from core.position_sizing import (                              # type: ignore
+    SPEC_SECTION,
+    has_instrument_spec,
+    instrument_spec,
+    size_trade_lots,
+    usd_quote_pnl_inr,
+)
 from strategies.strategy_result import StrategyResult          # type: ignore
 from utils.logging_config import get_flow_logger               # type: ignore
 
@@ -62,6 +70,9 @@ _TOTAL_CAPITAL_INR: float   = float(_require(_CAPITAL_CFG, "total_capital_inr"))
 _MAX_RISK_PER_TRADE: float  = float(_require(_CAPITAL_CFG, "max_risk_per_trade_inr"))
 _PIP_VALUE_PER_LOT: dict    = dict(_require(_CAPITAL_CFG, "pip_value_per_lot"))
 _USD_TO_INR_RATE: float     = float(_require(_CAPITAL_CFG, "usd_to_inr_rate"))
+# F-115: broker contract facts (top-level section, declared per instrument). Optional as a
+# whole: an instrument with no entry keeps the legacy FX pip path below.
+_INSTRUMENT_SPECS: dict     = dict(get_prod_section(SPEC_SECTION) or {})
 
 
 # ── BaseStrategy ─────────────────────────────────────────────────────────────
@@ -90,6 +101,12 @@ class BaseStrategy(ABC):
         self.capital_inr = capital_inr
         self._cfg        = config or _CAPITAL_CFG
         self._pip_value  = self._resolve_pip_value(self.pair)
+        # F-115: a declared broker spec sizes through core.position_sizing (the one
+        # INR->lots bridge Ultron and CapitalCurve already use); None keeps legacy FX pip math.
+        self._spec = (
+            instrument_spec(_INSTRUMENT_SPECS, self.pair, consumer="BaseStrategy")
+            if has_instrument_spec(_INSTRUMENT_SPECS, self.pair) else None
+        )
 
     # ── Abstract interface ────────────────────────────────────────────────────
 
@@ -125,17 +142,37 @@ class BaseStrategy(ABC):
         """
         if sl_pips <= 0.0:
             return 0.0
+        if self._spec is not None:
+            # sl_pips == |entry - sl| * _pips_per_unit(); invert back to the price distance.
+            lots, reason = size_trade_lots(
+                _MAX_RISK_PER_TRADE, _USD_TO_INR_RATE,
+                sl_pips / self._pips_per_unit(), **self._spec,
+            )
+            if lots is None:
+                logger.debug("%s %s sizing rejected: %s", self.strategy_id, self.pair, reason)
+                return 0.0
+            return lots
         lot_size = _MAX_RISK_PER_TRADE / (sl_pips * self._pip_value * _USD_TO_INR_RATE)
+        # FLOOR to the 0.01 step, never round-to-nearest: rounding up could risk MORE than
+        # the cap (sl_inr > max -> StrategyResult.validate raised on ~half of signals).
+        # Same policy as core.position_sizing.floor_to_lot_step. Epsilon guards exact steps.
+        lot_size = math.floor(lot_size * 100.0 + 1e-9) / 100.0
         # Cap at 100 lots — sanity guard; realistic retail max is ~10 lots
-        return min(round(lot_size, 2), 100.0)
+        return min(lot_size, 100.0)
 
     def _calc_sl_inr(self, entry: float, sl: float, lot_size: float) -> float:
         """INR loss if SL is hit."""
+        if self._spec is not None:
+            return round(usd_quote_pnl_inr(
+                abs(entry - sl), self._spec["contract_size"], lot_size, _USD_TO_INR_RATE), 2)
         sl_pips = abs(entry - sl) * self._pips_per_unit()
         return round(sl_pips * lot_size * self._pip_value * _USD_TO_INR_RATE, 2)
 
     def _calc_tp_inr(self, entry: float, tp: float, lot_size: float) -> float:
         """INR gain if TP is hit."""
+        if self._spec is not None:
+            return round(usd_quote_pnl_inr(
+                abs(tp - entry), self._spec["contract_size"], lot_size, _USD_TO_INR_RATE), 2)
         tp_pips = abs(tp - entry) * self._pips_per_unit()
         return round(tp_pips * lot_size * self._pip_value * _USD_TO_INR_RATE, 2)
 
@@ -178,6 +215,18 @@ class BaseStrategy(ABC):
         All others: 1 pip = 0.0001 price unit → multiply price diff by 10,000.
         """
         return 100.0 if self.pair.endswith("JPY") else 10_000.0
+
+    @staticmethod
+    def _atr_price(features: dict, close: float) -> float:
+        """ATR in PRICE units, for SL/TP/range distances.
+
+        The canonical ``atr`` feature (FM-041) is CLOSE-RELATIVE (atr_14_raw / close);
+        a price distance needs FM-074 ``atr_absolute`` = ``atr * close`` -- the same
+        recovery ``execution_planner`` and ``gate_intelligence`` already use (F-072/F-109).
+        Using the relative value as a distance put a gold stop ~$0.0007 from entry (F-115).
+        Ratio denominators against other canonical features must keep the relative ``atr``.
+        """
+        return float(features.get("atr", 0.0)) * close
 
     def _sl_pips(self, entry: float, sl: float) -> float:
         return abs(entry - sl) * self._pips_per_unit()

@@ -147,8 +147,11 @@ def momentum_bias(closes: Sequence[float], *, fast: int, slow: int) -> Condition
 def session(timestamps: Sequence, *, basis: str, windows: dict) -> ConditionSeries:
     """MKT-C06 = FM-052: the session ordinal of each bar on a declared clock.
 
-    `basis` is the identity-bearing clock (`broker_local` = the timestamp as recorded,
-    `utc_corrected` = MT5 server time converted by `features.broker_clock`). `windows` is the
+    `basis` is the identity-bearing label of the clock the supplied `timestamps` are ON
+    (CH-corpus-clock-contract-v1, 2026-10-08: NO conversion happens here any more — corpora are
+    normalized to canonical UTC once at the corpus SSOT, so callers pass SSOT timestamps and
+    `utc_corrected` is the only label that is true for them; `broker_local` labels a series the
+    caller deliberately supplies on its source clock). `windows` is the
     FM-052 `session_windows_utc` mapping; it is required, because the classifier's no-config path
     falls back to built-in defaults. Reuses the registered FM-052 classifier
     (`features.session_classifier.classify_session_feature`); the contract rule is that classifier.
@@ -156,13 +159,12 @@ def session(timestamps: Sequence, *, basis: str, windows: dict) -> ConditionSeri
     """
     import pandas as pd
 
-    from features import broker_clock
     from features.session_classifier import classify_session_feature
 
     if basis not in ("broker_local", "utc_corrected"):
         raise ValueError(f"MKT-C06 basis {basis!r} is not declared")
     ts = pd.to_datetime(pd.Series(list(timestamps)))
-    clock = broker_clock.mt5_server_to_utc(ts) if basis == "utc_corrected" else ts
+    clock = ts      # the supplied series IS the clock named by `basis`; no conversion
     cfg = {"session_windows_utc": windows}
     vals = tuple(int(classify_session_feature(int(h), cfg)) for h in clock.dt.hour)
     pid = parameterization_id(SESSION, {"session_timestamp_basis": basis}, ("session_timestamp_basis",))

@@ -71,7 +71,9 @@ def _synthetic(n: int = 500, seed: int = 19) -> pd.DataFrame:
 
 def _pipeline_structure(df: pd.DataFrame) -> pd.DataFrame:
     """Structure stage only — preserves row count (no finalize drop)."""
-    fp = FeaturePipeline(df.copy())
+    # certifies the LEGACY sweep identity explicitly (not whatever the active config selects)
+    fp = FeaturePipeline(df.copy(), cfg=dict(get_prod_section("feature_pipeline"),
+                                             sweep_semantics="latest_unconsumed"))
     fp.compute_price_features()
     fp.compute_volume_features()
     fp.compute_indicators()

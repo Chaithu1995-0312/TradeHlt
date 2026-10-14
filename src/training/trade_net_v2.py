@@ -201,6 +201,31 @@ class TradeNetV2:
             return
 
         self._feature_names = list(envelope.get("feature_names") or [])
+        # Dimension and feature_names are not a semantic contract. An
+        # incompatible or absent stamp stays in missing mode: predict()
+        # returns None. It does not substitute a neutral score.
+        from features.semantic_equivalence import (
+            FeatureSemanticIncompatible,
+            require_artifact_compatible,
+        )
+        try:
+            require_artifact_compatible(
+                self._feature_names,
+                envelope.get("semantic_contract"),
+                what="TradeNet v2 envelope",
+            )
+        except FeatureSemanticIncompatible as exc:
+            self._emit_event(
+                "TRADENET_V2_SEMANTIC_INCOMPATIBLE", "CRITICAL",
+                {
+                    "instrument": self.instrument,
+                    "status": exc.status,
+                    "model_path": str(self.model_path),
+                    "detail": str(exc),
+                },
+            )
+            self._enter_missing_mode()
+            return
 
         # Trunk: list of {"type": "linear", "weight", "bias"} interleaved with
         # {"type": "relu"} markers. We collect only linear layers — activation is
@@ -373,22 +398,17 @@ class TradeNetV2:
             "schema_version": SCHEMA_VERSION_V2,
         }
 
-    def _predict_legacy(self, vec: list) -> dict:
-        import torch
-        n = self._v1_n_features or len(vec)
-        if len(vec) > n:
-            vec = vec[:n]
-        elif len(vec) < n:
-            # Mismatched dimensionality — refuse rather than zero-pad.
+    def _predict_legacy(self, vec: list) -> Optional[dict]:
+        n = self._v1_n_features
+        if not n or len(vec) != int(n):
+            # Longer vectors are not sliced. Shorter vectors are not scored
+            # as a neutral 0.5. Length mismatch is missing, same as no model.
             log.error(
-                "TradeNetV2 legacy: feature vector len=%d < model n_features=%d",
+                "TradeNetV2 legacy: feature vector len=%d != model n_features=%s",
                 len(vec), n,
             )
-            return {
-                "tradenet_score": 0.5,
-                "p_tp1": None, "p_tp2": None, "p_survives_be": None,
-                "schema_version": "legacy_v1",
-            }
+            return None
+        import torch
         if self._v1_scaler is not None:
             try:
                 vec = self._v1_scaler.transform_one(vec)

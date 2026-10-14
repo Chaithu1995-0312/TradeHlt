@@ -35,18 +35,21 @@ class Carry:
     cost_source: str
 
 
-def _day(stamp: object) -> date:
+def _day(stamp: object, calendar=None) -> date:
     if isinstance(stamp, datetime):
-        return stamp.date()
+        # canonical UTC -> the market day (swap rolls at the calendar's day boundary)
+        return (calendar.wall(stamp) if calendar is not None else stamp).date()
     if isinstance(stamp, date):
         return stamp
     raise TypeError(f"DEX-08 bar timestamp {stamp!r} is not a datetime")
 
 
-def rollover_dates(fill_timestamp: object, held_bars: Sequence, exit_bar: int) -> list:
-    """Broker dates crossed: distinct bar dates after the fill date, up to the exit bar."""
-    start = _day(fill_timestamp)
-    days = sorted({_day(b.timestamp) for b in held_bars if b.index <= exit_bar and _day(b.timestamp) > start})
+def rollover_dates(fill_timestamp: object, held_bars: Sequence, exit_bar: int, calendar=None) -> list:
+    """Market dates crossed: distinct bar dates after the fill date, up to the exit bar
+    (bars are canonical UTC; `calendar` supplies the market day, None = UTC dates)."""
+    start = _day(fill_timestamp, calendar)
+    days = sorted({_day(b.timestamp, calendar) for b in held_bars
+                   if b.index <= exit_bar and _day(b.timestamp, calendar) > start})
     return days
 
 
@@ -57,6 +60,7 @@ def carry(
     fill_timestamp: object,
     held_bars: Sequence,
     triple_swap_weekday: Optional[int],
+    calendar=None,
 ) -> Optional[Carry]:
     """`held_bars` are the bars after the fill (each with .index and .timestamp).
 
@@ -69,7 +73,7 @@ def carry(
     if not isinstance(source, str) or not source:
         raise ValueError("DEX-08 cost_source is empty")
     pid = parameterization_id(CARRY, {"cost_source": source}, ("cost_source",))
-    days = rollover_dates(fill_timestamp, held_bars, position.exit_bar)
+    days = rollover_dates(fill_timestamp, held_bars, position.exit_bar, calendar)
     if not days:
         return Carry(CARRY, pid, position.exit_bar, 0, 0, 0.0, 0.0, source)
     if triple_swap_weekday is None:

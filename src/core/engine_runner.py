@@ -175,6 +175,32 @@ def _signed_direction(value: float) -> int:
     return 0
 
 
+_REGIME_TREND_CONFIRMATIONS = ("none", "trend_strength_z")
+
+
+def _trend_confirmed(features: dict, cfg: dict) -> bool:
+    """Optional second trend gate (2026-10-07, Set-2 consumer-scale program, Decision 4).
+
+    `dual_engine.regime_trend_confirmation`:
+      none (default; an ABSENT key means "none", the declared legacy arm — same convention as
+            `gate_intelligence.gate_vol_atr_basis`) — no extra condition, byte-identical.
+      trend_strength_z — also require |FM-064 trend_strength_z| > `regime_trend_strength_z_threshold`
+            AND sign(trend_strength_z) == sign(ema_spread). A missing/NaN z fails the gate.
+    Tunability only — grants no authority (§6.5); measured as a shadow arm before any arming.
+    """
+    mode = cfg.get("regime_trend_confirmation", "none")
+    if mode not in _REGIME_TREND_CONFIRMATIONS:
+        raise ValueError(
+            f"dual_engine.regime_trend_confirmation must be one of {_REGIME_TREND_CONFIRMATIONS}, got {mode!r}"
+        )
+    if mode == "none":
+        return True
+    thr = _safe_float(_cfg_require(cfg, "regime_trend_strength_z_threshold", "dual_engine"), 0.0)
+    z = _safe_float(features.get("trend_strength_z"), 0.0)
+    spread = _safe_float(features.get("ema_spread"), 0.0)
+    return abs(z) > thr and _signed_direction(z) == _signed_direction(spread)
+
+
 def detect_regime(features: dict, cfg: dict) -> str:
     # NOTE (2026-07-31): local named `ema_spread_abs`, NOT `trend_strength_z` — this is abs(ema_spread),
     # an unrelated regime-detection quantity distinct from the ontology's registered FM-064
@@ -188,6 +214,7 @@ def detect_regime(features: dict, cfg: dict) -> str:
     if (
         ema_spread_abs >= _safe_float(_cfg_require(cfg, "trend_strength_threshold", "dual_engine"), 0.0)
         and momentum >= _safe_float(_cfg_require(cfg, "momentum_threshold", "dual_engine"), 0.0)
+        and _trend_confirmed(features, cfg)
     ):
         return "trend"
     if volatility <= _safe_float(_cfg_require(cfg, "range_volatility_threshold", "dual_engine"), 0.0):

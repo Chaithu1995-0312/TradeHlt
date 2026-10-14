@@ -28,6 +28,7 @@ from features.feature_schema import (
     CANONICAL_FEATURE_ORDER,
     FEATURE_INDEX_MAP,
     SCHEMA_V4_FEATURE_DIM,
+    SCHEMA_V6_FEATURE_DIM,
     SCHEMA_VERSION,
 )
 
@@ -54,11 +55,19 @@ def test_schema_is_48_dim_v5_with_a_nine_slot_smc_tail():
     Failure mode: a tenth primitive is appended without a schema-version bump, so
     every consumer that trusts SCHEMA_VERSION scores a vector it was not trained on.
     """
-    assert CANONICAL_FEATURE_DIM == 48
-    assert SCHEMA_VERSION == "6.0"
+    # v7.0 (CH-feature-semantic-fixes-v7, 2026-10-08) appended 6 presence flags AFTER the SMC
+    # tail (slots 48-53); the 9-primitive tail itself still sits at 39..47, unmoved. v8.0
+    # (CH-candle-pattern-observations-v8) appended 17 candle-pattern observations at 54..70.
+    # v9.0 (CH-card-identity-census-v9) appended 8 card identities at 71..78.
+    assert CANONICAL_FEATURE_DIM == 79
+    assert SCHEMA_VERSION == "9.0"
     assert SCHEMA_V4_FEATURE_DIM == 39
-    assert CANONICAL_FEATURE_DIM - SCHEMA_V4_FEATURE_DIM == len(SMC_PRIMITIVES)
-    assert tuple(CANONICAL_FEATURE_ORDER[SCHEMA_V4_FEATURE_DIM:]) == SMC_PRIMITIVES
+    assert SCHEMA_V6_FEATURE_DIM - SCHEMA_V4_FEATURE_DIM == len(SMC_PRIMITIVES)
+    assert tuple(CANONICAL_FEATURE_ORDER[SCHEMA_V4_FEATURE_DIM:SCHEMA_V6_FEATURE_DIM]) == SMC_PRIMITIVES
+    assert tuple(CANONICAL_FEATURE_ORDER[SCHEMA_V6_FEATURE_DIM:SCHEMA_V6_FEATURE_DIM + 6]) == (
+        "order_block_present", "fvg_present", "breaker_present", "mitigation_block_present",
+        "eqh_present", "eql_present",
+    )
 
 
 @pytest.mark.parametrize("name", SMC_PRIMITIVES)
@@ -95,7 +104,7 @@ def test_smc_primitives_occupy_the_declared_tail_index(name: str):
     every downstream mu/sigma without changing the dimension count.
     """
     idx = FEATURE_INDEX_MAP[name]
-    assert SCHEMA_V4_FEATURE_DIM <= idx < CANONICAL_FEATURE_DIM
+    assert SCHEMA_V4_FEATURE_DIM <= idx < SCHEMA_V6_FEATURE_DIM
     assert CANONICAL_FEATURE_ORDER[idx] == name
 
 

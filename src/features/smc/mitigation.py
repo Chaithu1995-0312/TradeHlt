@@ -64,6 +64,15 @@ def find_active_mitigation_block(
     return None
 
 
+def mitigation_block_present(
+    window: "Sequence[Candle]", k: int,
+    break_events: Optional[list[tuple[int, bool]]] = None,
+) -> float:
+    """FM-100 (schema v7.0): 1.0 if a live mitigation block exists as of `window[-1]`, else 0.0
+    (mitigation_block_distance reports "none" and "on the edge" identically as 0.0)."""
+    return 1.0 if find_active_mitigation_block(window, k, break_events) is not None else 0.0
+
+
 def mitigation_block_distance(
     window: "Sequence[Candle]", k: int, atr: float,
     break_events: Optional[list[tuple[int, bool]]] = None,

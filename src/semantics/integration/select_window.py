@@ -82,8 +82,10 @@ def read_trades(path: Path) -> list[EngineTrade]:
 
 
 def read_timestamps(corpus: Path) -> list[datetime]:
-    with Path(corpus).open(encoding="utf-8", newline="") as fh:
-        return [datetime.fromisoformat(row["timestamp"]) for row in csv.DictReader(fh)]
+    from data_ingestion.corpus_store import load as _corpus_load   # CH-corpus-ssot
+
+    return [datetime.fromisoformat(row["timestamp"])
+            for row in _corpus_load(corpus, sequence_check=False).records()]
 
 
 def founding_sweeps(events: Sequence[dict]) -> list[datetime]:
@@ -142,8 +144,9 @@ def write_slice(corpus: Path, start_row: int, end_row: int, out_dir: Path) -> Pa
     Never overwrites a file with different content (it may carry a clock declaration for its sha):
     a different cut on the same dates gets `-r<start_row>` before the suffix (no extra underscore,
     so the last-underscore symbol parser still reads XAUUSD)."""
-    with Path(corpus).open(encoding="utf-8", newline="") as fh:
-        lines = fh.read().splitlines()
+    from data_ingestion.corpus_store import load as _corpus_load   # CH-corpus-ssot
+
+    lines = _corpus_load(corpus, sequence_check=False).text.splitlines()
     header, rows = lines[0], lines[1 + start_row: 2 + end_row]
     first = rows[0].split(",", 1)[0][:10]
     last = rows[-1].split(",", 1)[0][:10]

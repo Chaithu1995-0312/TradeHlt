@@ -7,15 +7,15 @@ from typing import Any
 from config_layer.production_config import get_prod_section
 from inout.live_rail.types import ClockBasis, DataVenue, OrderVenue
 
-_TF_SECONDS = {
-    "M1": 60,
-    "M5": 300,
-    "M15": 900,
-    "M30": 1800,
-    "H1": 3600,
-    "H4": 14400,
-    "D1": 86400,
-}
+# CH-timeframe-ssot-v1: derived from the one bar-size table (features.calendar_periods.BAR_MINUTES).
+from features.calendar_periods import BAR_MINUTES
+
+_TF_SECONDS = {k: 60 * m for k, m in BAR_MINUTES.items()}
+
+# The rail floors tick time on epoch seconds (bar_builder._floor_period): that matches the gold market
+# calendar only on the M15 grid. H1/H4/D1 would be bucketed on UTC midnight, not the 17:00 New York day,
+# and the feature pipeline's windows are M15 bar counts. Refused until bar_builder uses the calendar authority.
+_SUPPORTED_TIMEFRAMES = frozenset({"M15"})
 
 _VOLUME_MODES = frozenset({"sum_size", "tick_count"})
 
@@ -32,6 +32,11 @@ def _require(cfg: dict, key: str, *, where: str = "live_rail") -> Any:
 def _tf_seconds(timeframe: str) -> int:
     if timeframe not in _TF_SECONDS:
         raise KeyError(f"live_rail.timeframe={timeframe!r} is not in {_TF_SECONDS}")
+    if timeframe not in _SUPPORTED_TIMEFRAMES:
+        raise ValueError(
+            f"live_rail.timeframe={timeframe!r} is not supported: only {sorted(_SUPPORTED_TIMEFRAMES)} until the "
+            f"rail's bar builder and feature windows are calendar- and timeframe-aware (CH-timeframe-ssot-v1)."
+        )
     return _TF_SECONDS[timeframe]
 
 

@@ -207,6 +207,7 @@ def test_online_causal_matches_batch_on_history():
     # Full 10-column closure parity (audit A6): int flags exact...
     int_cols = [
         "swing_high", "swing_low", "higher_high", "lower_low",
+        "higher_low", "lower_high", "sideways",
         "break_of_structure", "liquidity_sweep",
     ]
     int_cols += ["sweep_detected", "double_sweep"]

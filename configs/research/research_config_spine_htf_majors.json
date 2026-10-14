@@ -39,6 +39,9 @@
     "prod_version": "v2_multi_2026_04",
     "_prod_version_note": "Canonical R1/R2-governed v2 (matches configs/production/ACTIVE_VERSION). v4_multi_2026_06 is NOT loadable on the patch branch (pre-TP3 CRTConfig). The spine measured here is the SAME production composite as research_config_spine_majors.json — only the input timeframe differs.",
     "scorer_mode": "calibrated",
-    "tp_target": "tp2"
+    "tp_target": "tp2",
+    "timeframe": "{TF}",
+    "gap_reset_bars": 8,
+    "_timeframe_note": "CH-timeframe-ssot-v2: the run declares its real timeframe (qualify_htf substitutes {TF}) and a session-gap limit of gap_reset_bars bars (8 = the active 120 minutes at M15, held constant in BARS as Program 3A holds every bar count). The production file declares M15, which FeaturePipeline now refuses on an H1/H4 stream."
   }
 }

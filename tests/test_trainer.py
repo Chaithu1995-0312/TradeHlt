@@ -441,15 +441,27 @@ class TestSaveLoadGaussian:
         assert bundle["schema_name"] == "gaussian"
 
     def test_load_roundtrip_same_predictions(self, tmp_path):
-        from training.trainer import save_gaussian_model, load_gaussian_model
+        from training.trainer import (
+            GaussianNBModel,
+            StandardScaler,
+            load_gaussian_model,
+            save_gaussian_model,
+        )
+        from features.semantic_equivalence import FeatureSemanticIncompatible
         model, scaler, metrics, X = self._trained()
         feature_schema = list(GAUSSIAN_SCHEMA.feature_names)
         with patch("training.trainer.MODELS_DIR", tmp_path):
             save_gaussian_model(model, scaler, metrics, name="rnd.json",
                                 feature_schema=feature_schema)
         with patch("training.trainer.MODELS_DIR", tmp_path):
-            model2, scaler2, _ = load_gaussian_model("rnd.json")
-        # Predictions on the same raw vector must match
+            with pytest.raises(FeatureSemanticIncompatible) as exc_info:
+                load_gaussian_model("rnd.json")
+        assert exc_info.value.status in {"UNMAPPED", "UNVERIFIED", "DRIFT", "AMBIGUOUS"}
+        bundle = json.loads((tmp_path / "rnd.json").read_text(encoding="utf-8"))
+        model2 = GaussianNBModel.from_dict(bundle["model"])
+        scaler2 = StandardScaler.from_dict(bundle["scaler"])
+        # Predictions on the same raw vector must match. The public loader
+        # refuses; numeric IO does not go through that gate.
         x_sc  = scaler.transform_one(X[0])
         x_sc2 = scaler2.transform_one(X[0])
         assert model.predict_proba(x_sc) == pytest.approx(
@@ -476,14 +488,18 @@ class TestSaveLoadGaussian:
                 load_gaussian_model("no_such_model.json")
 
     def test_load_returns_correct_metadata(self, tmp_path):
-        """Loaded metadata dict must contain the original metrics keys."""
+        """Saved metrics stay on disk. Public load refuses an incomplete semantic stamp."""
         from training.trainer import save_gaussian_model, load_gaussian_model
+        from features.semantic_equivalence import FeatureSemanticIncompatible
         model, scaler, metrics, _ = self._trained()
         feature_schema = list(GAUSSIAN_SCHEMA.feature_names)
         with patch("training.trainer.MODELS_DIR", tmp_path):
             save_gaussian_model(model, scaler, metrics, name="meta.json",
                                 feature_schema=feature_schema)
-        with patch("training.trainer.MODELS_DIR", tmp_path):
-            _, _, meta = load_gaussian_model("meta.json")
+        bundle = json.loads((tmp_path / "meta.json").read_text(encoding="utf-8"))
         for key in ("corr_expected_rr", "calibration_error", "n_train", "n_val"):
-            assert key in meta, f"Loaded metadata missing key '{key}'"
+            assert key in bundle["metrics"], f"Saved metrics missing key '{key}'"
+        with patch("training.trainer.MODELS_DIR", tmp_path):
+            with pytest.raises(FeatureSemanticIncompatible) as exc_info:
+                load_gaussian_model("meta.json")
+        assert exc_info.value.status in {"UNMAPPED", "UNVERIFIED", "DRIFT", "AMBIGUOUS"}

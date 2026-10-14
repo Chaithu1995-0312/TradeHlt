@@ -35,7 +35,12 @@ def _frame(n=400, base=100.0, seed=7, k=1.0):
 
 
 def _run(df):
-    enriched, _ = FeaturePipeline(df.copy()).run()
+    # 2026-10-07: the active config now selects atr_absolute (Set-2 consumer-scale activation).
+    # These tests characterise the LEGACY FM-022/023 arm (the defect), so pin it explicitly
+    # instead of inheriting whatever the active config selects.
+    from config_layer.production_config import get_prod_section
+    cfg = {**get_prod_section("feature_pipeline"), "normalization_basis": "atr_relative"}
+    enriched, _ = FeaturePipeline(df.copy(), cfg=cfg).run()
     return enriched
 
 
@@ -180,8 +185,8 @@ def test_canonical_dim_is_39_and_target_slots_pinned():
     disturbed the dimensional-mix features this file governs. The two slots that DID move (in v4)
     are pinned at their new positions.
     """
-    assert CANONICAL_FEATURE_DIM == 48
-    assert len(CANONICAL_FEATURES) == 48
+    assert CANONICAL_FEATURE_DIM == 79
+    assert len(CANONICAL_FEATURES) == 79
     idx = {f: i for i, f in enumerate(CANONICAL_FEATURES)}
     # unchanged by v4 (all precede the index-18 split)
     assert idx["ema_spread"] == 9

@@ -324,8 +324,10 @@ thresholds:
   # and RANGE occupancy collapses (confusion: eng RANGE → res SWEEP/EXPANSION).
   lifecycle:
     htf_reset_enabled: true
-    # backtest.htf_candles_per_range (active prod) — HTFBuilder window size
-    htf_candles_per_range: 4
+    # backtest.htf_candles_per_range (active prod) — HTFBuilder window size. A COPY of that value: it read 4 here while
+    # the active config said 16 (resolver HTF clock four times too fast vs the engine it is compared with, F-069).
+    # CH-timeframe-ssot-v2: aligned to 16 and pinned to the active config by tests/test_resolver_htf_window_alignment.py.
+    htf_candles_per_range: 16
     # Engine: HTF change does NOT interrupt EXPANSION / RETEST active setups
     htf_protect_states: [EXPANSION, RETEST]
     # Also protect EXECUTION (trade open) — engine protects active trades separately
