@@ -1,0 +1,43 @@
+{
+  "change_id": "CH-program12-step2a",
+  "date_utc": "2026-10-06",
+  "objective": "Program 12 Slice 1: Step 2a construction surface for the one-month XAUUSD projector parity check (F-080 method). Raw-CSV load of data/XAUUSD_M15.csv (2,116 bars, 2026-07-07 01:00 → 2026-08-06 23:45), resample to H1/H4 via research.resample, compare to native H1/H4 fetched for the same dates. Certifies the projector. Not the ladder population. Not G001. No active-config edit. No CandleLoader / admit_csv_path on the parent (that rewrite would substitute the 2-year Phase-1 artifact).",
+  "change_classes": [
+    "SCRIPT_LIFECYCLE_CHANGE"
+  ],
+  "change_class_rationale": "New research CLI + src/research/timeframe_ladder/parity.py + SITS overlay + tests. No production config, no engine math, no feature identity, no corpus-authority rewrite. DOCUMENTATION_ONLY is omitted because src/ and scripts/ are touched.",
+  "affected_files": [
+    "docs/governance/build_manifests/CH-program12-step2a.impact.json",
+    "src/research/timeframe_ladder/__init__.py",
+    "src/research/timeframe_ladder/parity.py",
+    "scripts/research/program12_parity_one_month.py",
+    "tests/research/test_program12_parity_one_month.py",
+    "scripts/governance/seed_script_registry.py",
+    "docs/governance/script_registry_stubs.jsonl",
+    "docs/reference/script-matrix.md",
+    "docs/research/preregistration-program-12-timeframe-ladder.md",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_script_registry.py",
+    "tests/test_script_matrix_sync.py",
+    "tests/test_construction_protocol.py",
+    "tests/research/test_program12_parity_one_month.py"
+  ],
+  "unknowns": [
+    {
+      "field": "mt5_terminal_logged_in",
+      "status": "UNKNOWN",
+      "blocking": false,
+      "note": "The probe and native H1/H4 fetch need a logged-in MT5 terminal. Parity library + tests use synthetic candles and do not block. Native compare is skipped until the files exist."
+    }
+  ],
+  "rollback_boundary": "Delete src/research/timeframe_ladder/, scripts/research/program12_parity_one_month.py, tests/research/test_program12_parity_one_month.py, revert the SITS overlay and stub, revert the design-doc amendment. Probe script already on this branch stays. No production config to revert.",
+  "authority_granted": "User 2026-10-06: plan approved (Program 12 Steps 2-6). Path A default. Parity corpus = one-month XAUUSD. Slice 1 = probe + one-month parity package.",
+  "authority_NOT_granted": "No ladder run, no MC seal, no ACTIVE_VERSION edit, no engine stop-floor, no native HTF admission into CandleLoader, no G001, no overwrite of data/mt5/XAUUSD_M15.csv or data/XAUUSD_M15.csv.",
+  "production_behavior_changed": "NO"
+}

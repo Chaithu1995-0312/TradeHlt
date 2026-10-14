@@ -1,0 +1,50 @@
+{
+  "change_id": "CH-program12-slice2",
+  "date_utc": "2026-10-06",
+  "change_classes": [
+    "SCRIPT_LIFECYCLE_CHANGE",
+    "DOCUMENTATION_ONLY"
+  ],
+  "completion_status": "BLOCKED",
+  "completion_status_note": "The Slice 2 walk is recorded. completion_status is not COMPLETE because tests/test_script_registry.py has two pre-existing grandfather failures on this branch (test_grandfather_paths_match_stubs, test_grandfather_ratchet_live_universe). scripts/research/timeframe_ladder.py is not in either failure's unclassified or only_in_stubs list; SCR-514 overlay is applied. repo_state_hash is PENDING because the worktree still holds uncommitted Slice 1 and Slice 2 files and this manifest does not claim a frozen tree hash.",
+  "declared_files": [
+    "CLAUDE.md",
+    "assistant_project.md",
+    "configs/research/ladder_h1.json",
+    "configs/research/ladder_h4.json",
+    "configs/research/measurement_contracts/instances/MC-LADDER-XAUUSD-HTF-V1.json",
+    "docs/current-findings.md",
+    "docs/governance/build_manifests/CH-program12-slice2.completion.json",
+    "docs/governance/build_manifests/CH-program12-slice2.impact.json",
+    "docs/governance/build_manifests/CH-program12-step2a.impact.json",
+    "docs/governance/research_family_registry.json",
+    "docs/governance/script_registry_stubs.jsonl",
+    "docs/reference/script-matrix.md",
+    "docs/research/ladder_clone_diff.md",
+    "docs/research/preregistration-program-12-timeframe-ladder.md",
+    "docs/research/program12-slice2-funnel.md",
+    "scripts/governance/seed_script_registry.py",
+    "scripts/research/program12_parity_one_month.py",
+    "scripts/research/timeframe_ladder.py",
+    "src/research/timeframe_ladder/__init__.py",
+    "src/research/timeframe_ladder/clusters.py",
+    "src/research/timeframe_ladder/config_clone.py",
+    "src/research/timeframe_ladder/controls.py",
+    "src/research/timeframe_ladder/parity.py",
+    "src/research/timeframe_ladder/run.py",
+    "src/research/timeframe_ladder/stop_floor.py",
+    "tests/research/test_program12_parity_one_month.py",
+    "tests/research/test_timeframe_ladder.py"
+  ],
+  "checks_executed": [
+    "WALKED scripts/research/timeframe_ladder.py exit 0 on 2026-10-06 13:59. Parent data/XAUUSD_M15.csv n=2116 sha256 478b075150935c950ccc749925709db783e337c55c886d6dda1e3ee8b9692c5b. H1 projected 528 n_clusters 0 INSUFFICIENT. H4 projected 137 n_clusters 0 INSUFFICIENT. expectancy_published false. An earlier same-day invocation was PLUMBING_FAILURE before any bar walked.",
+    "PASS MC-LADDER-XAUUSD-HTF-V1 jsonschema.validate alone. economic_claims_allowed false.",
+    "PASS tests/test_current_findings.py tests/test_doc_citations.py tests/test_topic_docs.py tests/test_script_matrix_sync.py tests/test_construction_protocol.py tests/research/test_timeframe_ladder.py (inside 127 passed / 4 failed on 2026-10-06). F-121 evidence paths are in the git index. Revalidate-by 2027-04-04 is 180 days after 2026-10-06.",
+    "FAIL_PREEXISTING tests/test_script_registry.py::test_grandfather_paths_match_stubs and test_grandfather_ratchet_live_universe. timeframe_ladder.py is absent from both unclassified lists. SCR-514 overlay is applied.",
+    "FAIL_PREEXISTING tests/test_measurement_contract.py::test_mc_instances_validate_schema_and_cannot_claim_economics_while_unrun rejects MC-VCRT-XAUUSD-M15-V1 root keys multiplicity and visual_audit_corpus_EXCLUDED. Ladder instance validates alone. VCRT was not edited.",
+    "FAIL_PREEXISTING tests/test_research_family_registry.py::test_every_indexed_finding_is_bound_or_explicitly_excluded unbound on this branch: F-096 F-097 F-098 F-099 F-100 F-106 F-109 F-110. F-121 is not in that set. RF-HTF L5 claims F-089 and F-121. Cell status remains UNVERIFIED_HISTORICAL."
+  ],
+  "repo_state_hash": "PENDING",
+  "production_behavior_changed": "NO",
+  "authority_NOT_granted": "No ACTIVE_VERSION edit, no configs/production edit, no engine stop-floor, no G001, no expectancy verdict."
+}

@@ -1,0 +1,71 @@
+{
+  "change_id": "CH-program12-slice2",
+  "date_utc": "2026-10-06",
+  "objective": "Program 12 Slice 2: seal MC-LADDER-XAUUSD-HTF-V1 on the one-month XAUUSD parent (data/XAUUSD_M15.csv, 2116 bars, 2026-07-07 01:00 to 2026-08-06 23:45), clone ladder_h1/ladder_h4 from v2_htfcrt_2026_08 with the pre-registered per-TF knobs, and run the H1/H4 ladder. Measurement/evidence only. economic_claims_allowed stays false. No active-config edit. No D1 ladder. No Path A fetch. No expectancy verdict when n_clusters < 30.",
+  "change_classes": [
+    "SCRIPT_LIFECYCLE_CHANGE",
+    "DOCUMENTATION_ONLY"
+  ],
+  "change_class_rationale": "New research CLI plus src/research/timeframe_ladder runner modules, SITS overlay, and tests (SCRIPT_LIFECYCLE_CHANGE). The pre-registration amendment, sealed MC instance, finding, family-registry claim, and CLAUDE.md index row are documentation. Research JSON clones live under configs/research and are not configs/production, so this is not PRODUCTION_CONFIG_CHANGE. The engine is not edited.",
+  "affected_files": [
+    "docs/governance/build_manifests/CH-program12-slice2.impact.json",
+    "docs/research/preregistration-program-12-timeframe-ladder.md",
+    "configs/research/measurement_contracts/instances/MC-LADDER-XAUUSD-HTF-V1.json",
+    "configs/research/ladder_h1.json",
+    "configs/research/ladder_h4.json",
+    "docs/research/ladder_clone_diff.md",
+    "src/research/timeframe_ladder/__init__.py",
+    "src/research/timeframe_ladder/config_clone.py",
+    "src/research/timeframe_ladder/stop_floor.py",
+    "src/research/timeframe_ladder/clusters.py",
+    "src/research/timeframe_ladder/controls.py",
+    "src/research/timeframe_ladder/run.py",
+    "scripts/research/timeframe_ladder.py",
+    "tests/research/test_timeframe_ladder.py",
+    "scripts/governance/seed_script_registry.py",
+    "docs/governance/script_registry_stubs.jsonl",
+    "docs/reference/script-matrix.md",
+    "docs/current-findings.md",
+    "docs/governance/research_family_registry.json",
+    "CLAUDE.md",
+    "docs/research/program12-slice2-funnel.md",
+    "assistant_project.md",
+    "docs/governance/build_manifests/CH-program12-step2a.impact.json",
+    "scripts/research/program12_parity_one_month.py",
+    "src/research/timeframe_ladder/parity.py",
+    "tests/research/test_program12_parity_one_month.py"
+  ],
+  "affected_feature_ids": ["FM-074"],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "ontology_nodes_added": [],
+  "required_checks_ack": [
+    "tests/test_script_registry.py",
+    "tests/test_script_matrix_sync.py",
+    "tests/test_construction_protocol.py",
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/research/test_timeframe_ladder.py",
+    "tests/test_measurement_contract.py",
+    "tests/test_research_family_registry.py"
+  ],
+  "unknowns": [
+    {
+      "field": "h4_trade_count_on_137_bars",
+      "status": "UNKNOWN",
+      "blocking": false,
+      "note": "137 projected H4 bars with warmup 78 may yield 0 trades. That is a valid INSUFFICIENT funnel, reported as counts, not filled in."
+    },
+    {
+      "field": "path_a_long_m15_fetch",
+      "status": "DEFERRED",
+      "blocking": false,
+      "note": "User 2026-10-06: Path A long fetch is deferred. The one-month slice is the Slice 2/3 corpus. Depth caveat is recorded, not solved."
+    }
+  ],
+  "rollback_boundary": "Delete the ladder modules, CLI, tests, research clones, and MC instance; revert the SITS overlay, the §17 amendment, the F-121 row, and the RF-HTF claim. No production config to revert. Slice 1 parity files stay; they belong to CH-program12-step2a and are still uncommitted in this worktree.",
+  "authority_granted": "User 2026-10-06: one-month XAUUSD slice is the working corpus for Slice 2/3. Amendment, MC freeze, H1/H4 clones, ladder package, and Step 2 run. Expect INSUFFICIENT.",
+  "authority_NOT_granted": "No ACTIVE_VERSION edit, no configs/production edit, no engine stop-floor, no native HTF admission, no D1 ladder, no G001, no expectancy verdict below the cluster floor, no Path A fetch.",
+  "production_behavior_changed": "NO"
+}

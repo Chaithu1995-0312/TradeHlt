@@ -992,6 +992,70 @@ OVERLAYS: list[dict[str, Any]] = [
         "logic_in_script": True,
         "purpose": "Read-only: candidate levels for Sujan's 2026-09-25 XAU chart (red lines vs week/day opens, 1H C1/C2 around BUY 4276.30). Candidates only, UNVALIDATED; drift log Record 9. No authority.",
     },
+    {
+        "path": "scripts/data/mt5_history_probe.py",
+        "category": "DATA",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "LOGIC_IN_SCRIPT",
+        "purpose": (
+            "Program 12 Step 2a: read-only MT5 history-availability probe. Per symbol x "
+            "timeframe: resolved broker symbol, earliest/latest bar (broker-server time), bar "
+            "count, Max-bars truncation flag, gap histogram; per symbol: digits, point, spread, "
+            "contract size, recent tick count, broker clock offset. Writes a JSON report only."
+        ),
+        "task_refs": ["Program-12"],
+        "notes": (
+            "wontfix:reason=one-shot external-data probe; runs only on Windows with a "
+            "MetaTrader 5 terminal. Writes no market data. production_behavior_changed: NO."
+        ),
+    },
+    {
+        "path": "scripts/research/program12_parity_one_month.py",
+        "category": "RESEARCH_RUNNER",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "EXTRACTED_TO_SRC",
+        "logic_in_script": False,
+        "dest_modules": ["src/research/timeframe_ladder/parity.py"],
+        "purpose": (
+            "Program 12 Slice 1: one-month XAUUSD projector parity. Loads "
+            "data/XAUUSD_M15.csv by explicit path (no CandleLoader / admit_csv_path), "
+            "projects H1/H4 with research.resample, compares to native H1/H4 on "
+            "2026-07-07..2026-08-06 using the F-080 method (exact OHLC; daily-open "
+            "slot classified). Certifies the projector. Not the ladder population."
+        ),
+        "task_refs": ["Program-12", "CH-program12-step2a", "F-080"],
+        "tests": ["tests/research/test_program12_parity_one_month.py"],
+        "notes": (
+            "Thin CLI. production_behavior_changed: NO. Grants no G001. Native HTF "
+            "stays FORENSIC."
+        ),
+    },
+    {
+        "path": "scripts/research/timeframe_ladder.py",
+        "category": "RESEARCH_RUNNER",
+        "lifecycle": "ACTIVE",
+        "implementation_status": "EXTRACTED_TO_SRC",
+        "logic_in_script": False,
+        "dest_modules": [
+            "src/research/timeframe_ladder/run.py",
+            "src/research/timeframe_ladder/config_clone.py",
+            "src/research/timeframe_ladder/stop_floor.py",
+            "src/research/timeframe_ladder/clusters.py",
+            "src/research/timeframe_ladder/controls.py",
+        ],
+        "purpose": (
+            "Program 12 Slice 2: H1/H4 ladder on the sealed one-month XAUUSD parent. "
+            "Loads data/XAUUSD_M15.csv by explicit path, projects with research.resample, "
+            "writes ladder_bars.csv, declares that clock, and runs the research clone. "
+            "Reports a funnel. Below 30 clusters the label is INSUFFICIENT."
+        ),
+        "task_refs": ["Program-12", "CH-program12-slice2"],
+        "tests": ["tests/research/test_timeframe_ladder.py"],
+        "notes": (
+            "Thin CLI. production_behavior_changed: NO. Grants no G001. "
+            "economic_claims_allowed stays false. No D1 ladder."
+        ),
+    },
 ]
 
 
