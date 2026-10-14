@@ -1,0 +1,55 @@
+[arm] sl_anchor=displacement target_policy=fixed_r ttl=20 corpus=data/mt5/XAUUSD_M15.csv
+Traceback (most recent call last):
+  File "D:\Tradelatest\scripts\research\setup_grid_s4.py", line 272, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "D:\Tradelatest\scripts\research\setup_grid_s4.py", line 256, in main
+    arms.append(run_arm(tmp, sl_anchor, target_policy, args.ttl, corpus_rel,
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Tradelatest\scripts\research\setup_grid_s4.py", line 154, in run_arm
+    run_dir = run_backtest(REPO, root, corpus_rel, INSTRUMENT)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Tradelatest\src\utils\isolated_config_root.py", line 139, in run_backtest
+    raise RuntimeError(
+RuntimeError: backtest failed in displacement__fixed_r (exit 1)
+
+O] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> DISTRIBUTION_C3 bias=SHORT htf=ACCUMULATION obj=ACHIEVED ts=2024-05-24 20:00:00
+2026-09-28 09:34:52 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 2955min > 120min (2024-05-27 01:00 → 2024-05-27 01:00)
+2026-09-28 09:34:52 [INFO] CRT.ParentFeed | parent_crt H4 DISTRIBUTION_C3 -> RANGE_C1 bias=NONE htf=DISTRIBUTION obj=NONE ts=2024-05-27 00:00:00
+2026-09-28 09:34:53 [INFO] CRT.GapDetector | GAP RESET | Session gap detected: 225min > 120min (2024-05-28 01:00 → 2024-05-28 01:00)
+2026-09-28 09:34:54 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=REVERSAL obj=NONE ts=2024-05-28 04:00:00
+2026-09-28 09:34:54 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> DISTRIBUTION_C3 bias=SHORT htf=EXPANSION obj=ACHIEVED ts=2024-05-28 08:00:00
+2026-09-28 09:34:54 [INFO] CRT.ParentFeed | parent_crt H4 DISTRIBUTION_C3 -> RANGE_C1 bias=NONE htf=DISTRIBUTION obj=NONE ts=2024-05-28 12:00:00
+2026-09-28 09:34:54 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=DISTRIBUTION obj=NONE ts=2024-05-28 16:00:00
+2026-09-28 09:34:54 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> RANGE_C1 bias=NONE htf=ACCUMULATION obj=NONE ts=2024-05-28 20:00:00
+2026-09-28 09:34:54 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=ACCUMULATION obj=NONE ts=2024-05-29 00:00:00
+2026-09-28 09:34:55 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> RANGE_C1 bias=NONE htf=DISTRIBUTION obj=NONE ts=2024-05-29 04:00:00
+2026-09-28 09:34:55 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=REVERSAL obj=NONE ts=2024-05-29 08:00:00
+2026-09-28 09:34:55 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> DISTRIBUTION_C3 bias=SHORT htf=EXPANSION obj=ACHIEVED ts=2024-05-29 12:00:00
+2026-09-28 09:34:55 [INFO] CRT.ParentFeed | parent_crt H4 DISTRIBUTION_C3 -> RANGE_C1 bias=NONE htf=ACCUMULATION obj=NONE ts=2024-05-29 16:00:00
+2026-09-28 09:34:56 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=ACCUMULATION obj=NONE ts=2024-05-30 00:00:00
+2026-09-28 09:34:56 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> RANGE_C1 bias=NONE htf=DISTRIBUTION obj=NONE ts=2024-05-30 04:00:00
+2026-09-28 09:34:56 [INFO] CRT.ParentFeed | parent_crt H4 RANGE_C1 -> MANIPULATION_C2 bias=NONE htf=DISTRIBUTION obj=NONE ts=2024-05-30 08:00:00
+2026-09-28 09:34:56 [INFO] CRT.ParentFeed | parent_crt H4 MANIPULATION_C2 -> DISTRIBUTION_C3 bias=LONG htf=REVERSAL obj=ACHIEVED ts=2024-05-30 12:00:00
+2026-09-28 09:34:56 [INFO] CRT.ParentFeed | parent_crt H4 DISTRIBUTION_C3 -> RANGE_C1 bias=NONE htf=EXPANSION obj=NONE ts=2024-05-30 16:00:00
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "D:\Tradelatest\src\runtime\backtest_v2.py", line 4955, in <module>
+    main()
+  File "D:\Tradelatest\src\runtime\backtest_v2.py", line 4883, in main
+    runner.run(loader.stream(), loader.count(), args.output)
+  File "D:\Tradelatest\src\runtime\backtest_v2.py", line 3541, in run
+    _bar_structure.emit(
+  File "D:\Tradelatest\src\runtime\bar_structure_snapshot.py", line 517, in emit
+    self._write(rec)
+  File "D:\Tradelatest\src\runtime\bar_structure_snapshot.py", line 755, in _write
+    self.flush()
+  File "D:\Tradelatest\src\runtime\bar_structure_snapshot.py", line 767, in flush
+    self._write_manifest()
+  File "D:\Tradelatest\src\runtime\bar_structure_snapshot.py", line 390, in _write_manifest
+    tmp.replace(self._run_dir / "manifest.json")
+  File "C:\Users\Hi\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\pathlib.py", line 1376, in replace
+    os.replace(self, target)
+PermissionError: [WinError 5] Access is denied: 'D:\\Tradelatest\\logs\\bar_structure\\run_20260928_040449\\manifest.json.tmp' -> 'D:\\Tradelatest\\logs\\bar_structure\\run_20260928_040449\\manifest.json'
+

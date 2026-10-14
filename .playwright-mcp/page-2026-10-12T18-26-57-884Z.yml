@@ -1,0 +1,123 @@
+- main [ref=f3e2]:
+  - heading "XAUUSD · July 7, 2026" [level=1] [ref=f3e3]
+  - generic [ref=f3e4]: Read one completed candle at a time. Prior context stays visible; future candles stay outside each frame.
+  - generic [ref=f3e5]:
+    - button "← Previous" [ref=f3e6] [cursor=pointer]
+    - button "Play" [active] [ref=f3e35] [cursor=pointer]
+    - button "First difference" [ref=f3e8] [cursor=pointer]
+    - slider "Replay candle" [ref=f3e9]: "19"
+    - button "Next →" [ref=f3e10] [cursor=pointer]
+    - generic [ref=f3e11]:
+      - text: Jump to
+      - combobox "Jump to time" [ref=f3e12]:
+        - option "01:00"
+        - option "01:15"
+        - option "01:30"
+        - option "01:45"
+        - option "02:00"
+        - option "02:15"
+        - option "02:30"
+        - option "02:45"
+        - option "03:00"
+        - option "03:15"
+        - option "03:30"
+        - option "03:45"
+        - option "04:00"
+        - option "04:15"
+        - option "04:30"
+        - option "04:45"
+        - option "05:00"
+        - option "05:15"
+        - option "05:30"
+        - option "05:45" [selected]
+        - option "06:00"
+        - option "06:15"
+        - option "06:30"
+        - option "06:45"
+        - option "07:00"
+        - option "07:15"
+        - option "07:30"
+        - option "07:45"
+        - option "08:00"
+        - option "08:15"
+        - option "08:30"
+        - option "08:45"
+        - option "09:00"
+        - option "09:15"
+        - option "09:30"
+        - option "09:45"
+        - option "10:00"
+        - option "10:15"
+        - option "10:30"
+        - option "10:45"
+        - option "11:00"
+        - option "11:15"
+        - option "11:30"
+        - option "11:45"
+        - option "12:00"
+        - option "12:15"
+        - option "12:30"
+        - option "12:45"
+        - option "13:00"
+        - option "13:15"
+        - option "13:30"
+        - option "13:45"
+        - option "14:00"
+        - option "14:15"
+        - option "14:30"
+        - option "14:45"
+        - option "15:00"
+        - option "15:15"
+        - option "15:30"
+        - option "15:45"
+        - option "16:00"
+        - option "16:15"
+        - option "16:30"
+        - option "16:45"
+        - option "17:00"
+        - option "17:15"
+        - option "17:30"
+        - option "17:45"
+        - option "18:00"
+        - option "18:15"
+        - option "18:30"
+        - option "18:45"
+        - option "19:00"
+        - option "19:15"
+        - option "19:30"
+        - option "19:45"
+        - option "20:00"
+        - option "20:15"
+        - option "20:30"
+        - option "20:45"
+        - option "21:00"
+        - option "21:15"
+        - option "21:30"
+        - option "21:45"
+        - option "22:00"
+        - option "22:15"
+        - option "22:30"
+        - option "22:45"
+        - option "23:00"
+        - option "23:15"
+        - option "23:30"
+        - option "23:45"
+  - generic [ref=f3e13]: 2026-07-07 05:45:00 broker · candle 20 of 92
+  - paragraph [ref=f3e14]: Completed candle information available at 2026-07-07 06:00:00 broker
+  - generic [ref=f3e15]: OPEN 4139.51 HIGH 4139.75 LOW 4131.45 CLOSE 4136.69
+  - generic [ref=f3e16]:
+    - generic [ref=f3e17]: "Engine: RANGE"
+    - generic [ref=f3e18]: "Resolver: RANGE"
+    - generic [ref=f3e19]: "Parent: RANGE_C1"
+  - generic [ref=f3e20]:
+    - heading "M15 · last 96 available candles" [level=2] [ref=f3e21]
+    - img "M15 candles through the selected cutoff" [ref=f3e23]
+  - generic [ref=f3e24]:
+    - heading "H4 · completed parent candles" [level=2] [ref=f3e25]
+    - img "Closed H4 context available at the selected cutoff" [ref=f3e27]
+    - paragraph [ref=f3e28]: The current unfinished H4 candle is not displayed.
+  - generic [ref=f3e29]:
+    - heading "Market reading" [level=2] [ref=f3e30]
+    - generic [ref=f3e31]: Both observed labels now read RANGE. The engine trace records a count-based HTF reset. This renewed agreement does not establish that the preceding five candles satisfied the same displacement rules.
+  - group [ref=f3e32]:
+    - generic "Data and review record" [ref=f3e33]

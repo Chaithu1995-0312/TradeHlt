@@ -1,0 +1,3 @@
+[arm] sl_anchor=displacement target_policy=fixed_r ttl=20 corpus=data/mt5/XAUUSD_M15.csv
+[report] D:\Tradelatest\results\setup_grid_s4\20260928T040650Z\report.json
+  displacement__fixed_r          trades=   3 net%=-0.016932 rr_net= -1.6923

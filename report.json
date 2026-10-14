@@ -1,0 +1,203 @@
+{
+  "authority": "NONE",
+  "experiment_kind": "comparison",
+  "arms": [
+    {
+      "arm": "displacement__fixed_r",
+      "sl_anchor": "displacement",
+      "target_policy": "fixed_r",
+      "trade_ttl_candles": 20,
+      "decider": "engine",
+      "basis": {
+        "walk_kernel": "backtest_ledger",
+        "cost_model_id": "backtest_g1g2_v2",
+        "fill_model_id": "engine_intrabar",
+        "tie_break": "production",
+        "reference_level": "displacement_extreme",
+        "sl_refloored": null
+      },
+      "approved_trades": 0,
+      "rejected_trades": 0,
+      "total_setups": 0,
+      "win_rate": 0.0,
+      "total_return_pct": 0.0,
+      "annualized_return_pct": 0.0,
+      "max_drawdown_pct": 0.0,
+      "max_drawdown_rr": 0.0,
+      "total_pnl_rr_net": 0.0,
+      "avg_rr_net": 0.0,
+      "equity_basis": {
+        "risk_pct_per_trade": 0.01,
+        "sizing_mode": "fixed_investment_inr",
+        "per_trade_investment_inr": 10000.0
+      },
+      "config_version": "v5_htfcrt_sot_dual_k23_2026_09",
+      "target_policy_stamped": "fixed_r",
+      "trade_ttl_candles_stamped": 20,
+      "run_dir": "C:\\Users\\Hi\\AppData\\Local\\Temp\\setup_grid_s4_cajgm9n1\\displacement__fixed_r\\results\\run_20260927_214822_XAUUSD__20260706..20260807_v5_htfcrt_sot_dual_k23_2026_09_e496a94c"
+    },
+    {
+      "arm": "displacement__structural_tp2",
+      "sl_anchor": "displacement",
+      "target_policy": "structural_tp2",
+      "trade_ttl_candles": 20,
+      "decider": "engine",
+      "basis": {
+        "walk_kernel": "backtest_ledger",
+        "cost_model_id": "backtest_g1g2_v2",
+        "fill_model_id": "engine_intrabar",
+        "tie_break": "production",
+        "reference_level": "displacement_extreme",
+        "sl_refloored": null
+      },
+      "approved_trades": 0,
+      "rejected_trades": 0,
+      "total_setups": 0,
+      "win_rate": 0.0,
+      "total_return_pct": 0.0,
+      "annualized_return_pct": 0.0,
+      "max_drawdown_pct": 0.0,
+      "max_drawdown_rr": 0.0,
+      "total_pnl_rr_net": 0.0,
+      "avg_rr_net": 0.0,
+      "equity_basis": {
+        "risk_pct_per_trade": 0.01,
+        "sizing_mode": "fixed_investment_inr",
+        "per_trade_investment_inr": 10000.0
+      },
+      "config_version": "v5_htfcrt_sot_dual_k23_2026_09",
+      "target_policy_stamped": "structural_tp2",
+      "trade_ttl_candles_stamped": 20,
+      "run_dir": "C:\\Users\\Hi\\AppData\\Local\\Temp\\setup_grid_s4_cajgm9n1\\displacement__structural_tp2\\results\\run_20260927_214841_XAUUSD__20260706..20260807_v5_htfcrt_sot_dual_k23_2026_09_e496a94c"
+    },
+    {
+      "arm": "sweep_extreme__fixed_r",
+      "sl_anchor": "sweep_extreme",
+      "target_policy": "fixed_r",
+      "trade_ttl_candles": 20,
+      "decider": "engine",
+      "basis": {
+        "walk_kernel": "backtest_ledger",
+        "cost_model_id": "backtest_g1g2_v2",
+        "fill_model_id": "engine_intrabar",
+        "tie_break": "production",
+        "reference_level": "sweep_extreme",
+        "sl_refloored": null
+      },
+      "approved_trades": 0,
+      "rejected_trades": 0,
+      "total_setups": 0,
+      "win_rate": 0.0,
+      "total_return_pct": 0.0,
+      "annualized_return_pct": 0.0,
+      "max_drawdown_pct": 0.0,
+      "max_drawdown_rr": 0.0,
+      "total_pnl_rr_net": 0.0,
+      "avg_rr_net": 0.0,
+      "equity_basis": {
+        "risk_pct_per_trade": 0.01,
+        "sizing_mode": "fixed_investment_inr",
+        "per_trade_investment_inr": 10000.0
+      },
+      "config_version": "v5_htfcrt_sot_dual_k23_2026_09",
+      "target_policy_stamped": "fixed_r",
+      "trade_ttl_candles_stamped": 20,
+      "run_dir": "C:\\Users\\Hi\\AppData\\Local\\Temp\\setup_grid_s4_cajgm9n1\\sweep_extreme__fixed_r\\results\\run_20260927_214858_XAUUSD__20260706..20260807_v5_htfcrt_sot_dual_k23_2026_09_e496a94c"
+    },
+    {
+      "arm": "sweep_extreme__structural_tp2",
+      "sl_anchor": "sweep_extreme",
+      "target_policy": "structural_tp2",
+      "trade_ttl_candles": 20,
+      "decider": "engine",
+      "basis": {
+        "walk_kernel": "backtest_ledger",
+        "cost_model_id": "backtest_g1g2_v2",
+        "fill_model_id": "engine_intrabar",
+        "tie_break": "production",
+        "reference_level": "sweep_extreme",
+        "sl_refloored": null
+      },
+      "approved_trades": 0,
+      "rejected_trades": 0,
+      "total_setups": 0,
+      "win_rate": 0.0,
+      "total_return_pct": 0.0,
+      "annualized_return_pct": 0.0,
+      "max_drawdown_pct": 0.0,
+      "max_drawdown_rr": 0.0,
+      "total_pnl_rr_net": 0.0,
+      "avg_rr_net": 0.0,
+      "equity_basis": {
+        "risk_pct_per_trade": 0.01,
+        "sizing_mode": "fixed_investment_inr",
+        "per_trade_investment_inr": 10000.0
+      },
+      "config_version": "v5_htfcrt_sot_dual_k23_2026_09",
+      "target_policy_stamped": "structural_tp2",
+      "trade_ttl_candles_stamped": 20,
+      "run_dir": "C:\\Users\\Hi\\AppData\\Local\\Temp\\setup_grid_s4_cajgm9n1\\sweep_extreme__structural_tp2\\results\\run_20260927_214915_XAUUSD__20260706..20260807_v5_htfcrt_sot_dual_k23_2026_09_e496a94c"
+    }
+  ],
+  "pairwise_basis_comparisons": [
+    {
+      "a": "displacement__fixed_r",
+      "b": "displacement__structural_tp2",
+      "verdict": "ALLOW_SAME_BASIS",
+      "rationale": "all five axes agree"
+    },
+    {
+      "a": "displacement__fixed_r",
+      "b": "sweep_extreme__fixed_r",
+      "verdict": "DENY_REFERENCE_LEVEL_MISMATCH",
+      "rationale": "reference_level differs: 'displacement_extreme' vs 'sweep_extreme' (SEM-017: reference level moves risk_distance, hence every R on the row)"
+    },
+    {
+      "a": "displacement__fixed_r",
+      "b": "sweep_extreme__structural_tp2",
+      "verdict": "DENY_REFERENCE_LEVEL_MISMATCH",
+      "rationale": "reference_level differs: 'displacement_extreme' vs 'sweep_extreme' (SEM-017: reference level moves risk_distance, hence every R on the row)"
+    },
+    {
+      "a": "displacement__structural_tp2",
+      "b": "sweep_extreme__fixed_r",
+      "verdict": "DENY_REFERENCE_LEVEL_MISMATCH",
+      "rationale": "reference_level differs: 'displacement_extreme' vs 'sweep_extreme' (SEM-017: reference level moves risk_distance, hence every R on the row)"
+    },
+    {
+      "a": "displacement__structural_tp2",
+      "b": "sweep_extreme__structural_tp2",
+      "verdict": "DENY_REFERENCE_LEVEL_MISMATCH",
+      "rationale": "reference_level differs: 'displacement_extreme' vs 'sweep_extreme' (SEM-017: reference level moves risk_distance, hence every R on the row)"
+    },
+    {
+      "a": "sweep_extreme__fixed_r",
+      "b": "sweep_extreme__structural_tp2",
+      "verdict": "ALLOW_SAME_BASIS",
+      "rationale": "all five axes agree"
+    }
+  ],
+  "money_basis_ranking_all_arms": [
+    "displacement__fixed_r",
+    "displacement__structural_tp2",
+    "sweep_extreme__fixed_r",
+    "sweep_extreme__structural_tp2"
+  ],
+  "r_basis_ranking_within_anchor": {
+    "displacement": [
+      "displacement__fixed_r",
+      "displacement__structural_tp2"
+    ],
+    "sweep_extreme": [
+      "sweep_extreme__fixed_r",
+      "sweep_extreme__structural_tp2"
+    ]
+  },
+  "caveats": [
+    "trade_ttl_candles=20 is a first-pass exploratory value (F-024-informed), not tuned",
+    "R-basis ranking is valid ONLY within one sl_anchor (reference_level differs across anchors -- can_compare DENY expected there, see pairwise_basis_comparisons)",
+    "no economic claim: authority NONE, this is a comparison arm, not a promotion input"
+  ],
+  "corpus": "data/mt5/XAUUSD_W2026-07-06-to-2026-08-07.csv",
+  "generated_at": "20260927T214806Z"
+}

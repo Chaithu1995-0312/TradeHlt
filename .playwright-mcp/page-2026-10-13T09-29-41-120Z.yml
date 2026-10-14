@@ -1,0 +1,497 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - button [ref=e7]
+    - toolbar [ref=e17]:
+      - generic [ref=e21]:
+        - generic [ref=e22]:
+          - generic [ref=e23]:
+            - button "XAUUSD" [ref=e24]
+            - button "Switch data type" [ref=e26]
+          - button "Compare symbols" [ref=e30]
+        - separator [ref=e36]
+        - button "15 minutes" [ref=e39]:
+          - generic [ref=e40]: 15m
+        - separator [ref=e43]
+        - button "Candles" [ref=e46]
+        - separator [ref=e55]
+        - generic [ref=e56]:
+          - button "Indicators, metrics, and strategies" [ref=e58]:
+            - generic [ref=e63]: Indicators
+          - button "Indicator templates" [ref=e65]
+        - separator [ref=e71]
+        - generic [ref=e72]:
+          - button "Create alert" [ref=e73]:
+            - generic [ref=e78]: Alert
+          - button "Bar replay" [ref=e79]:
+            - generic [ref=e83]: Replay
+        - separator [ref=e85]
+        - generic [ref=e87]:
+          - button [disabled] [ref=e88]
+          - button [disabled] [ref=e92]
+        - generic [ref=e97]:
+          - button "Layout setup" [ref=e98]
+          - generic [ref=e100]:
+            - button "Save all charts for all symbols and intervals on your layout" [ref=e101]:
+              - generic [ref=e103]:
+                - generic [ref=e104]: Save
+                - generic: Save
+            - button "Manage layouts" [ref=e106]
+        - separator [ref=e113]
+        - generic [ref=e114]:
+          - button "Quick search" [ref=e115]
+          - button "Settings" [ref=e120]
+          - button "Fullscreen mode" [ref=e126]
+          - button "Take a snapshot" [ref=e130]
+      - button "Share your idea with the trade community" [ref=e137]
+      - button "Trade" [ref=e145]
+      - button "Upgrade" [ref=e155]
+    - toolbar [ref=e162]:
+      - generic [ref=e166]:
+        - generic [ref=e167]:
+          - generic [ref=e170]:
+            - button "Cross" [ref=e172]
+            - button "Cursors" [pressed] [ref=e178]
+          - generic [ref=e184]:
+            - button "Trendline" [ref=e186]
+            - button "Trend tools" [ref=e192]
+          - generic [ref=e198]:
+            - button "Fib retracement" [ref=e200]
+            - button "Gann and Fibonacci tools" [ref=e209]
+          - generic [ref=e215]:
+            - button "XABCD pattern" [ref=e217]
+            - button "Patterns" [ref=e223]
+          - generic [ref=e229]:
+            - button "Long position" [ref=e231]
+            - button "Forecasting and measurement tools" [ref=e235]
+          - generic [ref=e241]:
+            - button "Brush" [ref=e243]
+            - button "Geometric shapes" [ref=e249]
+          - generic [ref=e255]:
+            - button "Text" [ref=e257]
+            - button "Annotation tools" [ref=e261]
+          - generic [ref=e266]:
+            - button "Icon" [ref=e268]
+            - button "Icons" [ref=e272]
+        - generic [ref=e276]:
+          - button "Measure" [ref=e277]
+          - button "Zoom in" [ref=e281]
+        - generic [ref=e288]:
+          - generic [ref=e291]:
+            - button "Magnet mode snaps drawings placed near price bars to the closest OHLC value" [ref=e293]
+            - button "Magnets" [ref=e299]
+          - button "Keep drawing" [ref=e303]
+          - generic [ref=e308]:
+            - button "Lock drawings and indicators" [ref=e310]
+            - button "Lock options" [ref=e314]
+          - generic [ref=e319]:
+            - button "Hide all drawings" [ref=e321]
+            - button "Hide options" [ref=e325]
+        - generic [ref=e331]:
+          - button "Remove objects" [ref=e333]
+          - button "Remove options" [ref=e337]
+    - generic [ref=e343]:
+      - 'region "Chart #1" [ref=e346]':
+        - generic [ref=e350]:
+          - generic:
+            - generic:
+              - toolbar:
+                - generic:
+                  - generic [ref=e351]:
+                    - generic "Change symbol" [ref=e352]:
+                      - generic [ref=e353]: X
+                      - button "Change symbol" [ref=e357]: Gold Spot / U.S. Dollar
+                    - generic "Change interval" [ref=e358]:
+                      - text: ·
+                      - button "Change interval" [ref=e359]: "15"
+                    - generic [ref=e360]:
+                      - text: ·
+                      - generic [ref=e361]: OANDA
+                  - generic:
+                    - generic:
+                      - button "Flag symbol"
+                      - button "More"
+                  - button "Market open · One update every 5 seconds" [ref=e363]
+                - generic [ref=e371]:
+                  - generic [ref=e372]:
+                    - generic [ref=e373]: O
+                    - generic [ref=e374]: 4,187.060
+                  - generic [ref=e375]:
+                    - generic [ref=e376]: H
+                    - generic [ref=e377]: 4,187.125
+                  - generic [ref=e378]:
+                    - generic [ref=e379]: L
+                    - generic [ref=e380]: 4,182.870
+                  - generic [ref=e381]:
+                    - generic [ref=e382]: C
+                    - generic [ref=e383]: 4,183.105
+                  - generic [ref=e384]: −3.895 (−0.09%)
+              - generic [ref=e388]:
+                - generic [ref=e390]:
+                  - generic: 4,182.750
+                  - generic: Sell
+                - generic "Spread" [ref=e392]: "36.0"
+                - generic [ref=e394]:
+                  - generic: 4,183.110
+                  - generic: Buy
+            - generic:
+              - button "Hide indicator legend" [ref=e395]
+              - generic:
+                - toolbar:
+                  - generic:
+                    - generic "Volume · Ticks" [ref=e400]: Vol · Ticks
+                    - generic:
+                      - generic:
+                        - button "Hide"
+                        - button "Settings"
+                        - button "Remove"
+                        - button "More"
+                  - generic "Volume" [ref=e405]: 2.94 K
+          - generic "Chart for OANDA:XAUUSD, 15 minutes" [ref=e407]
+      - toolbar [ref=e422]:
+        - generic [ref=e424]:
+          - generic [ref=e425]:
+            - button "1 day in 1 minute intervals" [ref=e426]:
+              - generic [ref=e427]: 1D
+            - button "5 days in 5 minutes intervals" [ref=e428]:
+              - generic [ref=e429]: 5D
+            - button "1 month in 30 minutes intervals" [ref=e430]:
+              - generic [ref=e431]: 1M
+            - button "3 months in 1 hour intervals" [ref=e432]:
+              - generic [ref=e433]: 3M
+            - button "6 months in 2 hours intervals" [ref=e434]:
+              - generic [ref=e435]: 6M
+            - button "Year to day in 1 day intervals" [ref=e436]:
+              - generic [ref=e437]: YTD
+            - button "1 year in 1 day intervals" [ref=e438]:
+              - generic [ref=e439]: 1Y
+            - button "5 years in 1 week intervals" [ref=e440]:
+              - generic [ref=e441]: 5Y
+            - button "All data in 1 month intervals" [ref=e442]:
+              - generic [ref=e443]: All
+          - separator [ref=e444]
+          - button "Go to" [ref=e445]
+        - button "Timezone" [ref=e452]:
+          - generic [ref=e453]: 09:29:41 UTC
+    - generic [ref=e455]:
+      - toolbar [ref=e460]:
+        - button "Watchlist, details, and news" [pressed] [ref=e461]
+        - button "Alerts" [ref=e465]
+        - button "Object tree and data window" [ref=e470]
+        - button "AI Copilot" [ref=e476]
+        - button "Screeners" [ref=e481]
+        - button "Pine" [ref=e487]
+        - button "Calendars" [ref=e492]
+        - button "Community" [ref=e496]
+        - button "Notifications" [ref=e503]
+        - button "Chats" [ref=e507]
+        - button "Products" [ref=e511]
+        - separator [ref=e515]
+        - button "Help Center" [ref=e516]
+      - generic [ref=e522]:
+        - generic [ref=e523]:
+          - generic [ref=e526]:
+            - button "Watchlist" [ref=e528]
+            - generic [ref=e538]:
+              - button "Add symbol" [ref=e539]
+              - button "Advanced view" [ref=e543]
+              - button "Settings" [ref=e547]
+          - generic [ref=e554]:
+            - generic [ref=e556]:
+              - button [ref=e558]
+              - button "Symbol" [ref=e563]
+              - button "Last" [ref=e565]
+              - button "Chg" [ref=e567]
+              - button "Chg%" [ref=e569]
+            - generic [ref=e574]:
+              - generic [ref=e577]: Indices
+              - generic [ref=e587]:
+                - generic [ref=e589]:
+                  - generic [ref=e590]: S
+                  - generic [ref=e596]:
+                    - generic [ref=e597]: SPX
+                    - generic "Quotes are delayed by 10 min" [ref=e598]: D
+                    - generic "Market closed" [ref=e599]
+                - generic [ref=e601]: 7,807.24
+                - generic [ref=e603]: −4.30
+                - generic [ref=e605]: −0.06%
+              - generic [ref=e609]:
+                - generic [ref=e611]:
+                  - generic [ref=e612]: "N"
+                  - generic [ref=e618]:
+                    - generic [ref=e619]: NDQ
+                    - generic "Market closed" [ref=e620]
+                - generic [ref=e622]: 30,664.70
+                - generic [ref=e624]: −218.45
+                - generic [ref=e626]: −0.71%
+              - generic [ref=e630]:
+                - generic [ref=e632]:
+                  - generic [ref=e633]: D
+                  - generic [ref=e639]:
+                    - generic [ref=e640]: DJI
+                    - generic "Market closed" [ref=e641]
+                - generic [ref=e643]: 51,856.18
+                - generic [ref=e645]: "196.00"
+                - generic [ref=e647]: 0.38%
+              - generic [ref=e651]:
+                - generic [ref=e653]:
+                  - generic [ref=e654]: V
+                  - generic [ref=e660]:
+                    - generic [ref=e661]: VIX
+                    - generic "Quotes are delayed by 15 min" [ref=e662]: D
+                - generic [ref=e663]: "15.39"
+                - generic [ref=e665]: "0.18"
+                - generic [ref=e667]: 1.18%
+              - generic [ref=e671]:
+                - generic [ref=e673]:
+                  - generic [ref=e674]: D
+                  - generic [ref=e679]: DXY
+                - generic [ref=e682]: "102.359"
+                - generic [ref=e684]: −0.213
+                - generic [ref=e686]: −0.21%
+              - generic [ref=e688]: Stocks
+              - generic [ref=e698]:
+                - generic [ref=e700]:
+                  - generic [ref=e701]: A
+                  - generic [ref=e707]:
+                    - generic [ref=e708]: AAPL
+                    - generic "Pre-market" [ref=e709]
+                - generic [ref=e711]: "340.97"
+                - generic [ref=e713]: "4.33"
+                - generic [ref=e715]: 1.29%
+              - generic [ref=e719]:
+                - generic [ref=e721]:
+                  - generic [ref=e722]: T
+                  - generic [ref=e728]:
+                    - generic [ref=e729]: TSLA
+                    - generic "Pre-market" [ref=e730]
+                - generic [ref=e732]: "378.03"
+                - generic [ref=e734]: −4.67
+                - generic [ref=e736]: −1.22%
+              - generic [ref=e740]:
+                - generic [ref=e742]:
+                  - generic [ref=e743]: "N"
+                  - generic [ref=e749]:
+                    - generic [ref=e750]: NFLX
+                    - generic "Pre-market" [ref=e751]
+                - generic [ref=e753]: "70.61"
+                - generic [ref=e755]: "0.31"
+                - generic [ref=e757]: 0.44%
+              - generic [ref=e759]: Futures
+              - generic [ref=e769]:
+                - generic [ref=e771]:
+                  - generic [ref=e772]: U
+                  - generic [ref=e777]: USOIL
+                - generic [ref=e780]: "92.00"
+                - generic [ref=e782]: −1.17
+                - generic [ref=e784]: −1.26%
+              - generic [ref=e788]:
+                - generic [ref=e790]:
+                  - generic [ref=e791]: G
+                  - generic [ref=e796]: GOLD
+                - generic [ref=e799]: 4,183.068
+                - generic [ref=e801]: "11.698"
+                - generic [ref=e803]: 0.28%
+              - generic [ref=e807]:
+                - generic [ref=e809]:
+                  - generic [ref=e810]: S
+                  - generic [ref=e815]: SILVER
+                - generic [ref=e819]:
+                  - text: "60.45"
+                  - generic [ref=e820]:
+                    - text: "7"
+                    - superscript [ref=e821]: "2"
+                - generic [ref=e822]: "0.1607"
+                - generic [ref=e824]: 0.27%
+              - generic [ref=e826]: Forex
+              - generic [ref=e836]:
+                - generic [ref=e838]:
+                  - generic [ref=e839]: E
+                  - generic [ref=e849]: EURUSD
+                - generic [ref=e853]:
+                  - text: "1.1177"
+                  - superscript [ref=e855]: "9"
+                - generic [ref=e856]: "0.00231"
+                - generic [ref=e858]: 0.21%
+              - generic [ref=e862]:
+                - generic [ref=e864]:
+                  - generic [ref=e865]: G
+                  - generic [ref=e875]: GBPUSD
+                - generic [ref=e879]:
+                  - text: "1.3233"
+                  - superscript [ref=e880]: "9"
+                - generic [ref=e881]: "0.00262"
+                - generic [ref=e883]: 0.20%
+              - generic [ref=e887]:
+                - generic [ref=e889]:
+                  - generic [ref=e890]: U
+                  - generic [ref=e900]: USDJPY
+                - generic [ref=e904]:
+                  - text: "158.09"
+                  - superscript [ref=e906]: "6"
+                - generic [ref=e907]: −0.471
+                - generic [ref=e909]: −0.30%
+              - generic [ref=e911]: Crypto
+              - generic [ref=e921]:
+                - generic [ref=e923]:
+                  - generic [ref=e924]: B
+                  - generic [ref=e929]: BTCUSD
+                - generic [ref=e932]: 83,361
+                - generic [ref=e934]: 1,615
+                - generic [ref=e936]: 1.98%
+              - generic [ref=e940]:
+                - generic [ref=e942]:
+                  - generic [ref=e943]: B
+                  - generic [ref=e948]: BTCUSDT
+                - generic [ref=e951]: 83,458.27
+                - generic [ref=e953]: 1,608.27
+                - generic [ref=e955]: 1.96%
+              - generic [ref=e959]:
+                - generic [ref=e961]:
+                  - generic [ref=e962]: E
+                  - generic [ref=e967]: ETHUSD
+                - generic [ref=e970]: 2,505.0
+                - generic [ref=e972]: "60.6"
+                - generic [ref=e974]: 2.48%
+        - generic [ref=e978]:
+          - generic [ref=e980]:
+            - generic [ref=e981]: X
+            - generic [ref=e986]: XAUUSD
+            - generic [ref=e987]:
+              - button "Metrics" [ref=e988]
+              - generic "Add note" [ref=e992]
+              - generic "Settings" [ref=e997]
+          - generic [ref=e1003]:
+            - generic [ref=e1004]:
+              - generic [ref=e1006]:
+                - link "Gold Spot / U.S. Dollar" [ref=e1007] [cursor=pointer]:
+                  - /url: https://www.tradingview.com/symbols/XAUUSD/?exchange=OANDA
+                - text: OANDA
+              - generic [ref=e1013]: CommodityCfd
+            - generic [ref=e1017]:
+              - generic [ref=e1018]:
+                - generic [ref=e1019]:
+                  - text: 4,182.95
+                  - superscript [ref=e1020]: "0"
+                - generic [ref=e1021]: USD
+              - generic [ref=e1023]:
+                - generic [ref=e1024]: "+11.300"
+                - generic [ref=e1025]: +0.27%
+            - generic [ref=e1026]: Market open
+            - generic [ref=e1034]:
+              - generic [ref=e1035]:
+                - text: News
+                - generic "Oct 13, 2026, 14:49 GMT+5:30" [ref=e1038]
+              - generic [ref=e1039]: Gold gains as oil, dollar retreat; investors brace for US inflation test
+              - generic [ref=e1040]: More events
+            - generic [ref=e1045]:
+              - generic [ref=e1046]: Performance
+              - generic [ref=e1048]:
+                - generic [ref=e1049]:
+                  - generic [ref=e1050]: 0.96%
+                  - generic [ref=e1051]: 1W
+                - generic [ref=e1052]:
+                  - generic [ref=e1053]: −3.23%
+                  - generic [ref=e1054]: 1M
+                - generic [ref=e1055]:
+                  - generic [ref=e1056]: 3.21%
+                  - generic [ref=e1057]: 3M
+                - generic [ref=e1058]:
+                  - generic [ref=e1059]: −12.82%
+                  - generic [ref=e1060]: 6M
+                - generic [ref=e1061]:
+                  - generic [ref=e1062]: −3.31%
+                  - generic [ref=e1063]: YTD
+                - generic [ref=e1064]:
+                  - generic [ref=e1065]: 4.12%
+                  - generic [ref=e1066]: 1Y
+            - generic [ref=e1067]:
+              - generic [ref=e1068]: Seasonals
+              - table [ref=e1072]:
+                - row [ref=e1073]:
+                  - cell
+                  - cell [ref=e1074]
+                  - cell
+                - row [ref=e1078]:
+                  - cell
+                  - cell [ref=e1079]
+                  - cell
+              - generic [ref=e1083]:
+                - generic [ref=e1084]: "2026"
+                - generic [ref=e1086]: "2025"
+                - generic [ref=e1088]: "2024"
+            - button "More seasonals" [ref=e1091]
+            - generic [ref=e1092]:
+              - generic [ref=e1093]: Technicals
+              - generic [ref=e1094]: Sell
+            - button "More technicals" [ref=e1107]
+            - generic [ref=e1109]:
+              - text: Browse community
+              - generic [ref=e1113]: posts
+      - generic "Hide Tab" [ref=e1120]
+    - generic "Trading panel"
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - log:
+                  - list
+              - generic:
+                - log:
+                  - list
+              - generic:
+                - log:
+                  - list
+              - generic:
+                - log:
+                  - list
+              - generic:
+                - log:
+                  - list
+              - generic:
+                - log:
+                  - list
+              - generic:
+                - log:
+                  - list
+              - generic:
+                - log:
+                  - list
+              - generic:
+                - log:
+                  - list
+              - generic:
+                - log:
+                  - list
+              - generic:
+                - log:
+                  - list
+              - generic:
+                - log:
+                  - list
+              - generic:
+                - log:
+                  - list
+              - generic:
+                - log:
+                  - list
+              - generic:
+                - log:
+                  - list
+              - generic:
+                - log:
+                  - list
+              - generic:
+                - log:
+                  - list
+              - generic:
+                - log:
+                  - list
+              - generic:
+                - log:
+                  - list
+              - generic:
+                - log:
+                  - list
