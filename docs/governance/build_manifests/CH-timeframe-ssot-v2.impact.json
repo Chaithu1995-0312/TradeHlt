@@ -1,0 +1,72 @@
+{
+  "change_id": "CH-timeframe-ssot-v2",
+  "date_utc": "2026-10-10",
+  "objective": "Close the three items left open by CH-timeframe-ssot-v1, on the user's decisions of 2026-10-10: (1) the CRT engine's would_expand telemetry score reads the remaining HTF position OUT OF THE HTF WINDOW (it divided by a hard-coded 4 while the active window is 16); (2) align the CRT state resolver's HTF window with the active config (its copy in configs/formulas/market_crt_states.yaml read 4, the active backtest.htf_candles_per_range is 16, the engine having moved 4 -> 16 on 2026-09-09) and remove the resolver's silent default; (3) re-measure the F-027 H1/H4 research runs after those fixes, which requires the spine arm to declare its real timeframe and gap limit and the resampled crypto corpora to carry a reviewed clock.",
+  "change_classes": [
+    "RUNTIME_DECISION_PATH_CHANGE",
+    "TRACE_OBSERVATION_JOIN",
+    "CORPUS_AUTHORITY_CHANGE"
+  ],
+  "change_class_rationale": "The resolver's HTF clock is a decision-surface input of the (disabled, crt_state.enabled=false) resolver and of the F-069 parity instrument: the aligned window changes its output (measured, not inert). would_expand_score / would_expand are telemetry-only (no code consumer). Eight reviewed clock declarations are written to the corpus clock registry (CORPUS_AUTHORITY_CHANGE) on the user's explicit authorisation.",
+  "affected_files": [
+    "src/config_layer/crt_engine_v2.py (EngineState.htf_window_candles; TelemetryCollector.on_reset reads the window)",
+    "src/runtime/backtest_v2.py (sets htf_window_candles)",
+    "src/identity/certify.py (sets htf_window_candles)",
+    "src/research/zone_mapping/collect_trade_opened_features.py (sets htf_window_candles)",
+    "src/research/zone_mapping/crt_zone_crosstab.py (sets htf_window_candles)",
+    "src/research/zone_mapping/gaussian_family_shadow_eval.py (sets htf_window_candles)",
+    "configs/formulas/market_crt_states.yaml (lifecycle.htf_candles_per_range 4 -> 16)",
+    "src/features/crt_state_resolver.py (_load_lifecycle: no default for htf_candles_per_range)",
+    "src/research/adapters/spine_signal_source.py (optional spine.timeframe + gap_reset_bars)",
+    "scripts/research/qualify_htf.py ({TF} substitution in spine.timeframe)",
+    "configs/research/research_config_spine_htf_majors.json (timeframe, gap_reset_bars)",
+    "configs/data_provenance/ohlcv_clock_registry.json (8 records: data/resampled/{BNB,ETH,BTC,SOL}USDT_{H1,H4}.csv -> binance_utc)",
+    "tests/test_resolver_htf_window_alignment.py (new)",
+    "tests/test_crt_threshold_refs.py (snapshot 4 -> 16, measured effect cited)",
+    "docs/governance/build_manifests/CH-timeframe-ssot-v2.impact.json",
+    "docs/governance/build_manifests/CH-timeframe-ssot-v2.completion.json"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none.",
+  "affected_production_config": "none edited. The active config (v2_htfcrt_2026_08) is read, not changed. The resolver YAML is a formulas config, not a production config.",
+  "behavioral_effects": [
+    "crt_telemetry RESET_ATTRIBUTED records: would_expand_score / would_expand change on the active config (remaining term out of 16, not 4); no trade, state or event changes (verified by the before/after backtest).",
+    "CRTStateResolver HTF clock window 4 -> 16: resolver-vs-engine bar agreement on one active-config engine run (injection none, 47,197 bars) 53.07% -> 73.40% (results/tf_ssot/parity_w4.json, parity_w16.json). The resolver is not wired to production (crt_state.enabled=false).",
+    "A thresholds block without lifecycle.htf_candles_per_range now raises instead of silently using 4.",
+    "Spine runs on H1/H4 data declare their timeframe and a gap limit of gap_reset_bars bars; M15 runs (no timeframe key) are unchanged."
+  ],
+  "unverified_or_deferred": [
+    "That the 2026-09-09 engine window change (commit 63562ab, 4 -> 16) is the driver of F-069's baseline not reproducing (88.16% -> 68.69%) is a CANDIDATE explanation only: proving it needs an engine run at window 4, which the existing G1 guard rightly refuses. F-069 is not edited; a proposed Note is left for the user.",
+    "F-027 itself is not edited. The re-measure is reported; any change to the finding needs user approval.",
+    "33 unrelated failures in resolver-adjacent tests (schema v9.0 feature set, census pins) belong to other sessions' uncommitted work."
+  ],
+  "authority_granted": "User 2026-10-10: would_expand out of the window; align the resolver default with the active config; re-measure F-027 after the fixes; declare the 8 resampled crypto clocks as binance_utc (evidence: each equals the H1/H4 rebuilt from the declared binance_utc M5 file, all rows, all prices).",
+  "authority_NOT_granted": "No finding edit, no ACTIVE_VERSION or active-config change, no resolver enablement, no G001/economic claim, no commit.",
+  "blocking_unknowns": [],
+  "unknowns": [],
+  "required_checks_ack": [
+    "tests/test_feature_pipeline.py",
+    "tests/test_candle_patterns.py",
+    "tests/test_calendar_periods.py",
+    "tests/test_parent_candle_builder.py",
+    "tests/test_htf_builder_window.py",
+    "tests/test_resample_completeness.py",
+    "tests/test_construction_protocol.py",
+    "tests/test_script_registry.py",
+    "tests/test_script_matrix_sync.py",
+    "tests/test_timeframe_guards.py",
+    "tests/test_aggregation_authority.py",
+    "tests/test_resolver_htf_window_alignment.py",
+    "tests/test_crt_threshold_refs.py",
+    "tests/test_corpus_authority_decisions.py",
+    "tests/test_crt_construction_trace.py",
+    "tests/test_crt_construction_trace_envelope.py",
+    "tests/test_current_findings.py",
+    "tests/test_dataset_registry.py",
+    "tests/test_feature_math_lint.py",
+    "tests/test_geometry_census.py",
+    "tests/test_resolver_metadata.py",
+    "tests/test_xauusd_phase1_frozen_candidate.py"
+  ],
+  "rollback_boundary": "Code and config reversible: revert the listed files; the 8 registry records can be set back to user_reviewed=false. Baseline for backtest identity: results/tf_ssot/after_final (XAUUSD M15, active config)."
+}

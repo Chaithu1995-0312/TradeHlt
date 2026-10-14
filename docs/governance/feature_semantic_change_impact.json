@@ -1,0 +1,1597 @@
+{
+  "contract_hash": "02ab5280686e767798ba1094f5757e4cddfe9866595b9d874bf487aca00e0818",
+  "note": "A definition change moves definition_hash and contract_hash. Branches listed here are the ones that would have to be re-checked. This report does not migrate them.",
+  "unmapped_slot_count": 0,
+  "impacts": [
+    {
+      "concept_id": "FM-085",
+      "slot_name": "open",
+      "vector_index": 0,
+      "in_frozen_prefix": true,
+      "definition_hash": "1b0deaff5494d9aa208a90383ac69b06b30529a5f8493dd45f8ec67a2bacacc7",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-086",
+      "slot_name": "high",
+      "vector_index": 1,
+      "in_frozen_prefix": true,
+      "definition_hash": "f2d0f577498524b854d5fdb34cd1ec130f47e6b58665233f8712a868e5a81994",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-087",
+      "slot_name": "low",
+      "vector_index": 2,
+      "in_frozen_prefix": true,
+      "definition_hash": "25c9954a1acbe45925b18c544ebd609c0cb3343bfe87c0abe5658a3fbad0826d",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-088",
+      "slot_name": "close",
+      "vector_index": 3,
+      "in_frozen_prefix": true,
+      "definition_hash": "f65c05cd566df6151d0e1ca82fa193f16225ac6c682ed88df687ada68c77c6b3",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-089",
+      "slot_name": "volume",
+      "vector_index": 4,
+      "in_frozen_prefix": true,
+      "definition_hash": "dafff2410982d4391444467f029373a075989e79bfb3e7d5a693b832cb735751",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-062",
+      "slot_name": "volume_ratio",
+      "vector_index": 5,
+      "in_frozen_prefix": true,
+      "definition_hash": "cb277d7272286751b89abe57d45bdc410d1fc8cc94c03e10908ab369bb2149fc",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-060",
+      "slot_name": "double_sweep",
+      "vector_index": 6,
+      "in_frozen_prefix": true,
+      "definition_hash": "04d544377b0fabe4066cd2cd4a6e32d9579e498d967d75403b29df1adbfca98f",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:CRTEngine",
+          "status": "UNVERIFIED",
+          "parent_consumer": "CRTEngine"
+        },
+        {
+          "branch_id": "manifest:BitNet",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BitNet"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        },
+        {
+          "branch_id": "semantics.market.levels.double_sweep_window_1",
+          "status": "DRIFT",
+          "parent_consumer": "semantics.market.levels"
+        },
+        {
+          "branch_id": "semantics.market.conditions.double_sweep_window_param",
+          "status": "UNVERIFIED",
+          "parent_consumer": "semantics.market.conditions"
+        },
+        {
+          "branch_id": "feature_pipeline.double_sweep_legacy_arm",
+          "status": "UNMAPPED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "feature_pipeline.double_sweep_e01_arm",
+          "status": "DRIFT",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "feature_store.missing_value_substitutes",
+          "status": "UNMAPPED",
+          "parent_consumer": "FeatureStore"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-043",
+      "slot_name": "ema_fast",
+      "vector_index": 7,
+      "in_frozen_prefix": true,
+      "definition_hash": "c447be6af103bb6979cdbb07c6a014e757a85bbd351e251ef979a53cdd74c829",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_live_heuristic",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_live_heuristic"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-044",
+      "slot_name": "ema_slow",
+      "vector_index": 8,
+      "in_frozen_prefix": true,
+      "definition_hash": "1e843bcb6e0b68535942caa9226940bf6336c14413e6af76fb5dfc095e224430",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_live_heuristic",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_live_heuristic"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-022",
+      "slot_name": "ema_spread",
+      "vector_index": 9,
+      "in_frozen_prefix": true,
+      "definition_hash": "e61b1d294a308276d8ca4c821b618d91a8d4bdd31b61a7c6c33c8436ebc1a209",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-054",
+      "slot_name": "trend_bias",
+      "vector_index": 10,
+      "in_frozen_prefix": true,
+      "definition_hash": "7ee6e621e6bf264c6e3cf99602c4798c2235012396a216f5213bb7688c73dd73",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-064",
+      "slot_name": "trend_strength_z",
+      "vector_index": 11,
+      "in_frozen_prefix": true,
+      "definition_hash": "469f3c4ab5ff42ce40676a26643048438cabf9f39c382172f53f8a7adc3f8269",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-023",
+      "slot_name": "momentum_score",
+      "vector_index": 12,
+      "in_frozen_prefix": true,
+      "definition_hash": "3aff310981b1e16842f1e7c6e330d099905dabdb1eff7cd3b8cb518b94b180bf",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_live_heuristic",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_live_heuristic"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        },
+        {
+          "branch_id": "gaussian_live_heuristic.names_only",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_live_heuristic"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-041",
+      "slot_name": "atr",
+      "vector_index": 13,
+      "in_frozen_prefix": true,
+      "definition_hash": "69fecf80caca1d6434c5aec68dce8a4e31d64d6b0d78f1bd75c8b5164b98696e",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:BitNet",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BitNet"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-024",
+      "slot_name": "volatility_ratio",
+      "vector_index": 14,
+      "in_frozen_prefix": true,
+      "definition_hash": "ae5802007368f1e8db5357118776a082b35c9ef7765fce28537c2df43b997e1a",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-042",
+      "slot_name": "rsi_14",
+      "vector_index": 15,
+      "in_frozen_prefix": true,
+      "definition_hash": "a504da449bb75e7b228e099ec3cebc6d40d1d3a7efce7ee454af3550704ecfed",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-047",
+      "slot_name": "macd_line",
+      "vector_index": 16,
+      "in_frozen_prefix": true,
+      "definition_hash": "e9a17a3362e14d3dcc86944f6db356cadf9f5129f52f0bfb8c658ffb9741c57c",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-048",
+      "slot_name": "macd_signal",
+      "vector_index": 17,
+      "in_frozen_prefix": true,
+      "definition_hash": "1d2191e02592b1697cba658bb94307ec8843cbfb7cb10b996c35cf69994f3bf0",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-049",
+      "slot_name": "macd_hist_raw",
+      "vector_index": 18,
+      "in_frozen_prefix": true,
+      "definition_hash": "8806ca85da2ff8a08cb39f3d9ab597f12302df5a7e933ef7f4020e1b0749fb24",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-053",
+      "slot_name": "macd_hist_z",
+      "vector_index": 19,
+      "in_frozen_prefix": true,
+      "definition_hash": "7ad7df1b7f8b03bd433e2582cc7ad1bfec8d2e934c301b18d1aa4c30b3c43d99",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-059",
+      "slot_name": "sweep_detected",
+      "vector_index": 20,
+      "in_frozen_prefix": true,
+      "definition_hash": "b34a45d8333620a251520153667df5b721e0c925c99c6da62fe65786e5349eb9",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-058",
+      "slot_name": "liquidity_sweep",
+      "vector_index": 21,
+      "in_frozen_prefix": true,
+      "definition_hash": "0571b7f2b506f09b54e49514b234c99ebee6069038489b05fe3bf27caaf1e3b3",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-057",
+      "slot_name": "break_of_structure",
+      "vector_index": 22,
+      "in_frozen_prefix": true,
+      "definition_hash": "43f3ab570a05c224ba67af42a0825e55fd3f2a3b319c3e74ec849c0cd0305c33",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-045",
+      "slot_name": "swing_high",
+      "vector_index": 23,
+      "in_frozen_prefix": true,
+      "definition_hash": "f762f8e2c3f01e2045513a1acfae9ac85f3a2d94d60786295382cc0b5b69f1a3",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-046",
+      "slot_name": "swing_low",
+      "vector_index": 24,
+      "in_frozen_prefix": true,
+      "definition_hash": "e158726aff8ea98e19b5cc85db785cf56f484f71c5b59857801a95181dc6f825",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-055",
+      "slot_name": "higher_high",
+      "vector_index": 25,
+      "in_frozen_prefix": true,
+      "definition_hash": "539b6803dec8e301c6deaa14aa271058fd90cfed6314800b596598d892b23542",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-056",
+      "slot_name": "lower_low",
+      "vector_index": 26,
+      "in_frozen_prefix": true,
+      "definition_hash": "e4c16b17f1548de9a3662dbe9d575be9d0c22b90c9e6b8ceae75d73f316aa377",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-001",
+      "slot_name": "body_size",
+      "vector_index": 27,
+      "in_frozen_prefix": true,
+      "definition_hash": "43c79d78b9cbd8a6a744715fb442dcdef60b932fdace618e463ab47936ad79f8",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-002",
+      "slot_name": "candle_range",
+      "vector_index": 28,
+      "in_frozen_prefix": true,
+      "definition_hash": "0f97bc71619a66b92810aaaa36c77b6b9cbf542190f08fd6017e57961d4d50bc",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        },
+        {
+          "branch_id": "live_engine_hook.wick_size_local",
+          "status": "DRIFT",
+          "parent_consumer": "live_engine_hook"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-010",
+      "slot_name": "body_ratio",
+      "vector_index": 29,
+      "in_frozen_prefix": true,
+      "definition_hash": "d3948865dbe75e17096790537addce50f963d9e30bc7ffc1832b4e4ff62e549f",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:CRTEngine",
+          "status": "UNVERIFIED",
+          "parent_consumer": "CRTEngine"
+        },
+        {
+          "branch_id": "manifest:BitNet",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BitNet"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        },
+        {
+          "branch_id": "live_engine_hook.historical_body_ratio",
+          "status": "DRIFT",
+          "parent_consumer": "live_engine_hook"
+        },
+        {
+          "branch_id": "live_engine_hook.current_body_ratio",
+          "status": "UNMAPPED",
+          "parent_consumer": "live_engine_hook"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-050",
+      "slot_name": "volatility_regime",
+      "vector_index": 30,
+      "in_frozen_prefix": true,
+      "definition_hash": "d79e294c6606e69a21f9a799b453fec557bf206d8c3acab2109531eb54281630",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-052",
+      "slot_name": "session",
+      "vector_index": 31,
+      "in_frozen_prefix": true,
+      "definition_hash": "4b862595f046bfa5ab83675f55dd1d7d8f8320deb9a5e1cf87b258c44e0eedb7",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:CRTEngine",
+          "status": "UNVERIFIED",
+          "parent_consumer": "CRTEngine"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        },
+        {
+          "branch_id": "live_engine_hook.session_string",
+          "status": "DRIFT",
+          "parent_consumer": "live_engine_hook"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-051",
+      "slot_name": "hour_of_day",
+      "vector_index": 32,
+      "in_frozen_prefix": true,
+      "definition_hash": "cf8fcc844d30345c5d874094d8d8e046a8565eb7fa29f9f9ac013efd0b736c58",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-020",
+      "slot_name": "disp_strength",
+      "vector_index": 33,
+      "in_frozen_prefix": true,
+      "definition_hash": "0f81bd79df53564d3c54731e401ad496d557346918bf9238391f45786d4a01cb",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:BitNet",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BitNet"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-021",
+      "slot_name": "retest_depth",
+      "vector_index": 34,
+      "in_frozen_prefix": true,
+      "definition_hash": "5dd38f0b9c89748a702f2d96e023f5acb264fa9ce92fe71f333c9b53d9bdba11",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:BitNet",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BitNet"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-065",
+      "slot_name": "candles_since_sweep",
+      "vector_index": 35,
+      "in_frozen_prefix": false,
+      "definition_hash": "391f4c36ccef9d5d978ebbdae1280dcdb4ccf7595153a1f37623911f3510e4a3",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:BitNet",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BitNet"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-025",
+      "slot_name": "liquidity_distance",
+      "vector_index": 36,
+      "in_frozen_prefix": false,
+      "definition_hash": "40d1bcc906e698ac0151c01d69b193d41aae184bfef2b5e88e420febb312d254",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-026",
+      "slot_name": "liquidity_pressure_score",
+      "vector_index": 37,
+      "in_frozen_prefix": false,
+      "definition_hash": "8dd10508d1008aec81b233ca7022989df110a2573352af6ecff00374ee5734bd",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-063",
+      "slot_name": "volume_spike",
+      "vector_index": 38,
+      "in_frozen_prefix": false,
+      "definition_hash": "74a43693a0602721b40147ed41c7e7dca60e72fee7bce8827dcf490df177ee4c",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-075",
+      "slot_name": "order_block_distance",
+      "vector_index": 39,
+      "in_frozen_prefix": false,
+      "definition_hash": "05bee211706810cf82cd7690e1b9e0cf42bfb4c9cc55ff5106f638b89f38e11c",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-076",
+      "slot_name": "fvg_distance",
+      "vector_index": 40,
+      "in_frozen_prefix": false,
+      "definition_hash": "648e847f61bb5ddc050af871813e71ddb190baa06a48288ab7697eaf7eec1d5b",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-077",
+      "slot_name": "breaker_distance",
+      "vector_index": 41,
+      "in_frozen_prefix": false,
+      "definition_hash": "b790b0bea77e3faa9601675c3431fd1fdc169f519fc2031acd29d6fb033c1514",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-078",
+      "slot_name": "mitigation_block_distance",
+      "vector_index": 42,
+      "in_frozen_prefix": false,
+      "definition_hash": "c41249655404941f365b435fbc78b677883509cbac4e0a2cbc05403ad591c6d8",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-079",
+      "slot_name": "pdh_distance",
+      "vector_index": 43,
+      "in_frozen_prefix": false,
+      "definition_hash": "8341b3f68aa151ab11def5ab9865272754100bf74d2e2b11da63d40efabc43b3",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-080",
+      "slot_name": "pdl_distance",
+      "vector_index": 44,
+      "in_frozen_prefix": false,
+      "definition_hash": "c36fd5cd7d2fb3a3236640b78a77f64e6c28163f17e37fbab77c06c45f1484ab",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-081",
+      "slot_name": "eqh_distance",
+      "vector_index": 45,
+      "in_frozen_prefix": false,
+      "definition_hash": "4de3d3eac0be73fe05b724d0b822378fc92068578a17168a81c29ea2570bb351",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-082",
+      "slot_name": "eql_distance",
+      "vector_index": 46,
+      "in_frozen_prefix": false,
+      "definition_hash": "ee2b0cc27d897381962e96ab0ce6c98396113f92ab8afeadfb4ebee30199d787",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-083",
+      "slot_name": "change_of_character",
+      "vector_index": 47,
+      "in_frozen_prefix": false,
+      "definition_hash": "aedeb3296664671a26ee01662489944d4293d12ba7c920e49232fd0e9dbcdcf4",
+      "definition_complete": false,
+      "affected_branches": [
+        {
+          "branch_id": "manifest:FeaturePipeline",
+          "status": "UNVERIFIED",
+          "parent_consumer": "FeaturePipeline"
+        },
+        {
+          "branch_id": "manifest:BacktestRunner",
+          "status": "UNVERIFIED",
+          "parent_consumer": "BacktestRunner"
+        },
+        {
+          "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+          "status": "UNVERIFIED",
+          "parent_consumer": "Gaussian_v4_mirrored_38dim"
+        }
+      ]
+    },
+    {
+      "concept_id": "FM-097",
+      "slot_name": "order_block_present",
+      "vector_index": 48,
+      "in_frozen_prefix": false,
+      "definition_hash": "5e3612d22b7b7ac229a4bce8b605b1d3b3ae5520d71f370cc576697e7760a1bc",
+      "definition_complete": false,
+      "affected_branches": []
+    },
+    {
+      "concept_id": "FM-098",
+      "slot_name": "fvg_present",
+      "vector_index": 49,
+      "in_frozen_prefix": false,
+      "definition_hash": "edd8a658c84105476d72f1de7d969ffaa7aa8678f04184a507b6853c8fff6470",
+      "definition_complete": false,
+      "affected_branches": []
+    },
+    {
+      "concept_id": "FM-099",
+      "slot_name": "breaker_present",
+      "vector_index": 50,
+      "in_frozen_prefix": false,
+      "definition_hash": "8dbe1aaf9d2e62db5ecb1b1e223a417752dcba057653d138adee4ea0987c951b",
+      "definition_complete": false,
+      "affected_branches": []
+    },
+    {
+      "concept_id": "FM-100",
+      "slot_name": "mitigation_block_present",
+      "vector_index": 51,
+      "in_frozen_prefix": false,
+      "definition_hash": "6abe1b56532e0fc58b43b4be416e05c5cff48d3771ec31434563190339c7d0f7",
+      "definition_complete": false,
+      "affected_branches": []
+    },
+    {
+      "concept_id": "FM-101",
+      "slot_name": "eqh_present",
+      "vector_index": 52,
+      "in_frozen_prefix": false,
+      "definition_hash": "cfa9050b33ccdc24314fd0fd23513f2b17814366e6f31ded42df92ab9d884ecb",
+      "definition_complete": false,
+      "affected_branches": []
+    },
+    {
+      "concept_id": "FM-102",
+      "slot_name": "eql_present",
+      "vector_index": 53,
+      "in_frozen_prefix": false,
+      "definition_hash": "1ea97b243cf9e3fd1aa32a661b868e2719cc72661c7ef7c22ec9f9299fe8cb88",
+      "definition_complete": false,
+      "affected_branches": []
+    },
+    {
+      "concept_id": "FM-103",
+      "slot_name": "upper_wick_ratio",
+      "vector_index": 54,
+      "in_frozen_prefix": false,
+      "definition_hash": "dcdff2901302cb8569e1948881847a007838bde62e19351a6aba498a4958cec3",
+      "definition_complete": false,
+      "affected_branches": []
+    },
+    {
+      "concept_id": "FM-104",
+      "slot_name": "lower_wick_ratio",
+      "vector_index": 55,
+      "in_frozen_prefix": false,
+      "definition_hash": "4724cd19504180ccd9546ba4fcc2fbfed5a0f6ba02a262a0d51d7ade5bbfb350",
+      "definition_complete": false,
+      "affected_branches": []
+    },
+    {
+      "concept_id": "FM-105",
+      "slot_name": "pin_lower",
+      "vector_index": 56,
+      "in_frozen_prefix": false,
+      "definition_hash": "ed1343e0bec25d669ac7fd00cb7ceeae9b2d9a82f81850d1cb56eeb7e5d6353b",
+      "definition_complete": false,
+      "affected_branches": []
+    },
+    {
+      "concept_id": "FM-106",
+      "slot_name": "pin_upper",
+      "vector_index": 57,
+      "in_frozen_prefix": false,
+      "definition_hash": "449548b556713be717988b3a9cb098dfab7dddc0cfeb0c136e5c0aa297de5cd5",
+      "definition_complete": false,
+      "affected_branches": []
+    },
+    {
+      "concept_id": "FM-107",
+      "slot_name": "hammer",
+      "vector_index": 58,
+      "in_frozen_prefix": false,
+      "definition_hash": "83eab1d47a49542db0485a35c4aeb6f1136f7a71caee5e38de6027726a64afc1",
+      "definition_complete": false,
+      "affected_branches": []
+    },
+    {
+      "concept_id": "FM-108",
+      "slot_name": "shooting_star",
+      "vector_index": 59,
+      "in_frozen_prefix": false,
+      "definition_hash": "73912057ff1ad4df18719fd4e1c6606ff18633b1087785c25d0d621708312718",
+      "definition_complete": false,
+      "affected_branches": []
+    },
+    {
+      "concept_id": "FM-109",
+      "slot_name": "doji_material",
+      "vector_index": 60,
+      "in_frozen_prefix": false,
+      "definition_hash": "91306102ca25e2e82ba090a6e4c00299c89b0494f43fc49b99485f8da8d31606",
+      "definition_complete": false,
+      "affected_branches": []
+    },
+    {
+      "concept_id": "FM-110",
+      "slot_name": "dragonfly_doji",
+      "vector_index": 61,
+      "in_frozen_prefix": false,
+      "definition_hash": "c513bcaa84231ac1a1b1637ff86487ea28ad6653d7dad0adda2dd8512389ad64",
+      "definition_complete": false,
+      "affected_branches": []
+    },
+    {
+      "concept_id": "FM-111",
+      "slot_name": "gravestone_doji",
+      "vector_index": 62,
+      "in_frozen_prefix": false,
+      "definition_hash": "c777e241bb395d3b8ac356dd134dd6e6831d9237bc03976e8edd93ea878ff07d",
+      "definition_complete": false,
+      "affected_branches": []
+    },
+    {
+      "concept_id": "FM-112",
+      "slot_name": "engulfing_bull",
+      "vector_index": 63,
+      "in_frozen_prefix": false,
+      "definition_hash": "cbb6f2bc4354cfb155f81f47ad5f1254b4763d092f79154d5ae6c48781d10811",
+      "definition_complete": false,
+      "affected_branches": []
+    },
+    {
+      "concept_id": "FM-113",
+      "slot_name": "engulfing_bear",
+      "vector_index": 64,
+      "in_frozen_prefix": false,
+      "definition_hash": "9ccfb1036683849dd70b60f84f28599824750c12f0bf2fbc1bc1f14bd3a9fe4d",
+      "definition_complete": false,
+      "affected_branches": []
+    },
+    {
+      "concept_id": "FM-114",
+      "slot_name": "inside_bar",
+      "vector_index": 65,
+      "in_frozen_prefix": false,
+      "definition_hash": "22c42d58ba4e9a35ecd511ad99c4e5bf855dced4cc9fc66e701cd6de87ab32a2",
+      "definition_complete": false,
+      "affected_branches": []
+    },
+    {
+      "concept_id": "FM-115",
+      "slot_name": "compression_ratio",
+      "vector_index": 66,
+      "in_frozen_prefix": false,
+      "definition_hash": "d9c574cd35b4026d14248995cf681b53ed236e051bdb1f98fc43fd814d5220ca",
+      "definition_complete": false,
+      "affected_branches": []
+    },
+    {
+      "concept_id": "FM-116",
+      "slot_name": "rejection_intensity_signed",
+      "vector_index": 67,
+      "in_frozen_prefix": false,
+      "definition_hash": "9c4ff1b4a28a90f255190207e42c6fe39a32f9b7bbd27e9d5dc549dcf82d9b9e",
+      "definition_complete": false,
+      "affected_branches": []
+    },
+    {
+      "concept_id": "FM-117",
+      "slot_name": "rejection_intensity_lower",
+      "vector_index": 68,
+      "in_frozen_prefix": false,
+      "definition_hash": "66fdb053af649123d4a8b72dbeafa50f0057874021db5449be7e4c6b343b7edd",
+      "definition_complete": false,
+      "affected_branches": []
+    },
+    {
+      "concept_id": "FM-118",
+      "slot_name": "engulfing_strength",
+      "vector_index": 69,
+      "in_frozen_prefix": false,
+      "definition_hash": "9690feb8a0455ef4ab0db2186a5db40a83e422bc7707797dcb9aaf33892094a4",
+      "definition_complete": false,
+      "affected_branches": []
+    },
+    {
+      "concept_id": "FM-119",
+      "slot_name": "rejection_intensity_upper",
+      "vector_index": 70,
+      "in_frozen_prefix": false,
+      "definition_hash": "803ba6022b0f69a102260ba9c5a03e92f15f2463b4843602ab3fea3d9e31ef31",
+      "definition_complete": false,
+      "affected_branches": []
+    },
+    {
+      "concept_id": "FM-120",
+      "slot_name": "morning_star",
+      "vector_index": 71,
+      "in_frozen_prefix": false,
+      "definition_hash": "2df9c98b5ce09d8be1a779055262fb33f5a05db259d1c3f371fdb2c6abfbb92f",
+      "definition_complete": false,
+      "affected_branches": []
+    },
+    {
+      "concept_id": "FM-121",
+      "slot_name": "higher_low",
+      "vector_index": 72,
+      "in_frozen_prefix": false,
+      "definition_hash": "8fc7de27b3d08d7eb7691f3f46f574076f4ffccd64665202d0497cbe84287620",
+      "definition_complete": false,
+      "affected_branches": []
+    },
+    {
+      "concept_id": "FM-122",
+      "slot_name": "lower_high",
+      "vector_index": 73,
+      "in_frozen_prefix": false,
+      "definition_hash": "835c663c7fd3b775ffe261907ddea10a03019b92c25fadeea9b696f63548c9e4",
+      "definition_complete": false,
+      "affected_branches": []
+    },
+    {
+      "concept_id": "FM-123",
+      "slot_name": "sideways",
+      "vector_index": 74,
+      "in_frozen_prefix": false,
+      "definition_hash": "e64c366c7b13b9642fe59a9bec2bae51962c2f24c683f1a061886cd6f97ad220",
+      "definition_complete": false,
+      "affected_branches": []
+    },
+    {
+      "concept_id": "FM-124",
+      "slot_name": "rejection_bull_present",
+      "vector_index": 75,
+      "in_frozen_prefix": false,
+      "definition_hash": "71f8d240c793994badcf3fa128e9453ef187960acbb0c3135343884ac0ae90d3",
+      "definition_complete": false,
+      "affected_branches": []
+    },
+    {
+      "concept_id": "FM-125",
+      "slot_name": "rejection_bear_present",
+      "vector_index": 76,
+      "in_frozen_prefix": false,
+      "definition_hash": "1fef671d64b55c901f744e6aa37df3e74f085da49914f46d36cba84231b6f8bc",
+      "definition_complete": false,
+      "affected_branches": []
+    },
+    {
+      "concept_id": "FM-126",
+      "slot_name": "rejection_bull_distance",
+      "vector_index": 77,
+      "in_frozen_prefix": false,
+      "definition_hash": "77de005b8a06466a9764d5ab1915d814dcea1376c2692b5e6b03898bc99d3012",
+      "definition_complete": false,
+      "affected_branches": []
+    },
+    {
+      "concept_id": "FM-127",
+      "slot_name": "rejection_bear_distance",
+      "vector_index": 78,
+      "in_frozen_prefix": false,
+      "definition_hash": "07a149c3a9203d57cb074e69ac4569a1ffed48c3e70bcdff677102a8b313469d",
+      "definition_complete": false,
+      "affected_branches": []
+    }
+  ],
+  "index_size": 111
+}

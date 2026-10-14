@@ -8,10 +8,10 @@
   "active_config_version": "v2_htfcrt_2026_08",
   "prod_version_constant": "v2_htfcrt_2026_08",
   "schema": {
-    "schema_version": "6.0",
-    "schema_hash": "d40e7c7d5b624ef6d27670255ad95a35",
-    "feature_dim": 48,
-    "feature_count": 48,
+    "schema_version": "9.0",
+    "schema_hash": "3883362033ca8cfcc5a263306dd6b5fe",
+    "feature_dim": 79,
+    "feature_count": 79,
     "canonical_features": [
       "open",
       "high",
@@ -60,17 +60,48 @@
       "pdl_distance",
       "eqh_distance",
       "eql_distance",
-      "change_of_character"
+      "change_of_character",
+      "order_block_present",
+      "fvg_present",
+      "breaker_present",
+      "mitigation_block_present",
+      "eqh_present",
+      "eql_present",
+      "upper_wick_ratio",
+      "lower_wick_ratio",
+      "pin_lower",
+      "pin_upper",
+      "hammer",
+      "shooting_star",
+      "doji_material",
+      "dragonfly_doji",
+      "gravestone_doji",
+      "engulfing_bull",
+      "engulfing_bear",
+      "inside_bar",
+      "compression_ratio",
+      "rejection_intensity_signed",
+      "rejection_intensity_lower",
+      "engulfing_strength",
+      "rejection_intensity_upper",
+      "morning_star",
+      "higher_low",
+      "lower_high",
+      "sideways",
+      "rejection_bull_present",
+      "rejection_bear_present",
+      "rejection_bull_distance",
+      "rejection_bear_distance"
     ]
   },
   "source_file_pins": {
     "market_ontology.yaml": {
       "path": "configs/formulas/market_ontology.yaml",
-      "sha256": "bb6f7cd89f69c986762e7d490d338951c1feed2b180ac8174e5f07496d2f373e"
+      "sha256": "2e6f309b13b377d7e860255eba5717d8c538e58e3d34fa3ef9b347934756b28b"
     },
     "active_config": {
       "path": "configs/production/v2_htfcrt_2026_08.json",
-      "sha256": "fbe40700330da01da29385110a8a58d7854cad73a1404b1bbf4cba6f12c96d7d"
+      "sha256": "ded76023c98ee72c438305391ffab5107b9e3d9a3626da03c5d5f34e7ba1441c"
     },
     "ACTIVE_VERSION": {
       "path": "configs/production/ACTIVE_VERSION",
@@ -78,11 +109,11 @@
     },
     "feature_pipeline.py": {
       "path": "src/features/feature_pipeline.py",
-      "sha256": "220575f5ab5ad7f49c0f7a975a99415b6712f058df01055e190ec4a014afd382"
+      "sha256": "e64f695eb516f3ec2ec75e05eae6e683a80da83dd1d57af2ac44db8a497a5143"
     },
     "feature_schema.py": {
       "path": "src/features/feature_schema.py",
-      "sha256": "48a52845f0bce29ca800cd321dc623d5edc2471233595f761e3ef546e10a6ebb"
+      "sha256": "d57699390b5b6948e6e7bc0ad015a373aefcb13ecd9cdde31a3ee144a6c1f731"
     },
     "candle_math.py": {
       "path": "src/features/candle_math.py",
@@ -90,11 +121,11 @@
     },
     "derived_math.py": {
       "path": "src/features/derived_math.py",
-      "sha256": "2739faccef2c15b27e71283a89ec34aaae1321575712c4da84feff4e2f9e508d"
+      "sha256": "e02801cfa34f9c6da78c2128379609f0e0fc5968ca5367979029fed566b33d9c"
     },
     "causal_structure.py": {
       "path": "src/features/causal_structure.py",
-      "sha256": "ce6e0de24a8c4ed37f77bc640419745ae93708ad5a79fe3e09839a37a8da8969"
+      "sha256": "4f2d6826ccd3222ddb1de210e6b156df16dc2d735bd743da67e9f5da40ef9ee2"
     },
     "registry_init.py": {
       "path": "src/features/registry/__init__.py",
@@ -110,14 +141,14 @@
       "drop": 78,
       "vector_shape": [
         3871,
-        48
+        79
       ],
       "vector_dtype": "float32",
-      "vector_sha256": "3d133d81e085f09ba40348c3e42389145a31a3bf58f2da07979cd8e04ce66a49",
-      "vector_nansum": 130777360.0,
+      "vector_sha256": "03d5eb28d8012bbb64f6c874952c41137263902d8c2f51ff0fef61a24987be14",
+      "vector_nansum": 130351592.0,
       "coverage": {
         "benchmark_class": "FEATURE_MATRIX",
-        "contract": "full CSV -> FeaturePipeline.run() -> float32 (N, 48) SHA-256",
+        "contract": "full CSV -> FeaturePipeline.run() -> float32 (N, 79) SHA-256",
         "exercises": {
           "feature_pipeline_batch_run": true,
           "canonical_38_vector_emission": false,
@@ -126,7 +157,14 @@
           "canonical_39_vector_emission": true,
           "schema_v4_dim39": true,
           "schema_v5_dim48": true,
-          "canonical_48_vector_emission": true
+          "canonical_48_vector_emission": true,
+          "schema_v7_dim54": true,
+          "canonical_54_vector_emission": true,
+          "schema_v8_dim71": true,
+          "canonical_71_vector_emission": true,
+          "candle_pattern_observations": true,
+          "schema_v9_dim79": true,
+          "canonical_79_vector_emission": true
         },
         "does_not_exercise": {
           "note": "Matching this vector SHA does NOT imply full trading-path behavioral equivalence. Runtime/filter/planner/partial-TP coverage belongs in the runtime benchmark suite (R-1/R-2).",
@@ -269,6 +307,21 @@
       "id": "E01-LIFECYCLE-RETEST-IDENTITY",
       "phase": "config-gated transitive identities FM-094/095 (default legacy, byte-identical)",
       "note": "user-approved 2026-10-03 ('Plan fm21 fix'): completes E01-LIFECYCLE-SWEEP-IDENTITY; activation NOT authorized"
+    },
+    {
+      "id": "CH-FEATURE-SEMANTIC-FIXES-V7",
+      "phase": "feature semantic fixes + schema v7.0",
+      "note": "user-authorized 2026-10-08 (F-117); waiver_log entry CH-feature-semantic-fixes-v7"
+    },
+    {
+      "id": "CH-CANDLE-PATTERN-OBSERVATIONS-V8",
+      "phase": "candle-pattern observations + schema v8.0",
+      "note": "user-directed 2026-10-08 (F-118); waiver_log entry CH-candle-pattern-observations-v8"
+    },
+    {
+      "id": "CH-card-identity-census-v9",
+      "phase": "card identities + schema v9.0",
+      "note": "user-directed 2026-10-08; waiver_log entry CH-card-identity-census-v9. Vector SHA change is expected (8 appended slots). Not a retrain."
     }
   ],
   "engineering_focus_after_freeze": "docs/implementation_plan/backtest-runtime-roadmap-2026-07-20.md",
@@ -668,6 +721,115 @@
       "new_sha": {
         "market_ontology.yaml": "bb6f7cd89f69c986762e7d490d338951c1feed2b180ac8174e5f07496d2f373e",
         "feature_pipeline.py": "220575f5ab5ad7f49c0f7a975a99415b6712f058df01055e190ec4a014afd382"
+      }
+    },
+    {
+      "date_utc": "2026-10-07",
+      "program_id": "SET2-CONSUMER-SCALE",
+      "source_sha_refresh": [
+        "active_config"
+      ],
+      "what_changed": "Active config v2_htfcrt_2026_08: feature_pipeline.normalization_basis atr_relative -> atr_absolute (FM-022/023 -> FM-030/031 in the SAME slots) and gate_intelligence.gate_vol_atr_basis legacy_relative -> absolute. User-approved. No code change to feature math; params hash unchanged (7de09f62).",
+      "bounding_evidence": "Vector diff on the pinned XAUUSD benchmark input: exactly slots 9 (ema_spread) and 12 (momentum_score) change, the other 46 are bit-identical, shape (3871, 48) float32 unchanged. Vector SHA 3d133d81e085f09b -> 7589d0ea02e2907a. Before/after distributions: results/set2_consumer_scale/*.json.",
+      "not_refreshed": "market_ontology.yaml pin (bb6f7cd8...) was ALREADY stale before this change (disk 4b2aaa4a..., edited by commit 1101777 on 2026-10-05); not re-pinned here because that drift is outside this program.",
+      "previous_sha": {
+        "active_config": "fbe40700330da01da29385110a8a58d7854cad73a1404b1bbf4cba6f12c96d7d",
+        "xauusd_vector_sha256": "3d133d81e085f09ba40348c3e42389145a31a3bf58f2da07979cd8e04ce66a49"
+      },
+      "new_sha": {
+        "active_config": "fe92b055c2d6816acba53880b7617b0b2c22800ed84208ebca61e22ca8e688b3",
+        "xauusd_vector_sha256": "7589d0ea02e2907aa18f7adb1f7351e14d0c50197f3e4a7db89d335fcc1320fa"
+      }
+    },
+    {
+      "date_utc": "2026-10-08",
+      "program_id": "CH-feature-semantic-fixes-v7",
+      "source_sha_refresh": [
+        "market_ontology.yaml",
+        "active_config",
+        "feature_pipeline.py",
+        "feature_schema.py",
+        "derived_math.py"
+      ],
+      "what_changed": "User-authorized feature semantic fixes. (1) FM-096 signed retrace selected over FM-027 by new strict setup.retrace_semantics (CRT episode quantity, not a vector slot). (2) active feature_pipeline.sweep_semantics latest_unconsumed -> e01_lifecycle. (3) active feature_pipeline.session_timestamp_basis broker_local -> utc_corrected (feature AND CRT session filter, user choice). (4) schema 6.0 -> 7.0: +6 SMC presence flags FM-097..102 at slots 48-53.",
+      "bounding_evidence": "Pinned window: under the previous semantic keys the first 48 slots reproduce the previous pin (NOT REPRODUCED: 7589d0ea02e2907a). Against that, slots that change: {'double_sweep': 186, 'sweep_detected': 503, 'liquidity_sweep': 514, 'session': 2357, 'hour_of_day': 3871, 'retest_depth': 577, 'candles_since_sweep': 2771}; every other slot 0-47 bit-identical; slots 48-53 new. Shape [3871, 48] -> [3871, 54].",
+      "pre_existing_drift_declared": "market_ontology.yaml was already stale in the pin before this change (commit 1101777, 2026-10-05, per the 2026-10-07 waiver); its re-pin here therefore also absorbs that earlier edit.",
+      "previous_sha": {
+        "market_ontology.yaml": "bb6f7cd89f69c986762e7d490d338951c1feed2b180ac8174e5f07496d2f373e",
+        "active_config": "fe92b055c2d6816acba53880b7617b0b2c22800ed84208ebca61e22ca8e688b3",
+        "feature_pipeline.py": "220575f5ab5ad7f49c0f7a975a99415b6712f058df01055e190ec4a014afd382",
+        "feature_schema.py": "48a52845f0bce29ca800cd321dc623d5edc2471233595f761e3ef546e10a6ebb",
+        "derived_math.py": "2739faccef2c15b27e71283a89ec34aaae1321575712c4da84feff4e2f9e508d",
+        "xauusd_vector_sha256": "7589d0ea02e2907aa18f7adb1f7351e14d0c50197f3e4a7db89d335fcc1320fa"
+      },
+      "new_sha": {
+        "market_ontology.yaml": "01710405c91c27e5cd03abdcc921b9320e1d3e6c1d7965c6cd362de36abfc391",
+        "active_config": "6fd162c08b8d1495a73d6cf71c99bc9884fee6033b22fa11350a364936a7917b",
+        "feature_pipeline.py": "833e89518edecacc51f51b2ea27625b3258816c3ff7cdfbe89f5ad76e69eb7af",
+        "feature_schema.py": "705e0ca80e886270a4254da6123681f5e18252cab10a0647fcaf5170d454be02",
+        "derived_math.py": "e02801cfa34f9c6da78c2128379609f0e0fc5968ca5367979029fed566b33d9c",
+        "xauusd_vector_sha256": "023180f8a1e753718207a8a4eb8ed8493307b4f1d22053c9e246346f7865d40f"
+      }
+    },
+    {
+      "date_utc": "2026-10-08",
+      "program_id": "CH-candle-pattern-observations-v8",
+      "source_sha_refresh": [
+        "market_ontology.yaml",
+        "active_config",
+        "feature_pipeline.py",
+        "feature_schema.py"
+      ],
+      "what_changed": "User-directed (2026-10-08, 'align the system in linear flow'): schema 7.0 -> 8.0, +17 candle-pattern observations FM-103..FM-119 at slots 54-70 (features.candle_patterns; thresholds in feature_pipeline.candle_patterns; ATR = FM-074 atr_absolute).",
+      "bounding_evidence": "Pinned window: the 54-slot prefix of the new vector reproduces the previous pin exactly (REPRODUCED: 023180f8a1e75371) \u2014 append-only. Pattern fires on the window: {'pin_lower': 109, 'pin_upper': 121, 'hammer': 37, 'shooting_star': 50, 'doji_material': 106, 'dragonfly_doji': 25, 'gravestone_doji': 32, 'engulfing_bull': 354, 'engulfing_bear': 391, 'inside_bar': 592}. Shape [3871, 54] -> [3871, 71].",
+      "previous_sha": {
+        "market_ontology.yaml": "01710405c91c27e5cd03abdcc921b9320e1d3e6c1d7965c6cd362de36abfc391",
+        "active_config": "6fd162c08b8d1495a73d6cf71c99bc9884fee6033b22fa11350a364936a7917b",
+        "feature_pipeline.py": "833e89518edecacc51f51b2ea27625b3258816c3ff7cdfbe89f5ad76e69eb7af",
+        "feature_schema.py": "705e0ca80e886270a4254da6123681f5e18252cab10a0647fcaf5170d454be02",
+        "xauusd_vector_sha256": "023180f8a1e753718207a8a4eb8ed8493307b4f1d22053c9e246346f7865d40f"
+      },
+      "new_sha": {
+        "market_ontology.yaml": "8b276c97fe921389cc5513fb5ae394257c3ba7acbd8cef05c9b38f54ba2a0e24",
+        "active_config": "22279e2f7fb8d14ffb90aaef0b990e60b147bb1a099d21b372f7e8930e229e62",
+        "feature_pipeline.py": "9ad0b5143bd9253643bb7f0d43b1865dcbd37fa5425516ca0fbcd51355d87ddf",
+        "feature_schema.py": "61933af1b17565dc7237531fb23b872d114648e9ce4ba342e1042502a87b578b",
+        "xauusd_vector_sha256": "b2d903246e4e38d0236862d411a7a0345daab7955c5b0fdac2e982f04e1d3676"
+      }
+    },
+    {
+      "date_utc": "2026-10-08",
+      "program_id": "CH-card-identity-census-v9",
+      "source_sha_refresh": [
+        "market_ontology.yaml",
+        "active_config",
+        "feature_pipeline.py",
+        "feature_schema.py",
+        "causal_structure.py"
+      ],
+      "what_changed": "User-directed card-identity census: schema 8.0 -> 9.0, +8 identities at slots 71-78 (morning_star FM-120, higher_low/lower_high/sideways FM-121..123, rejection present/distance FM-124..127). wait_for_next_candle FM-128 and reward_risk_bracket FM-129 stay off the vector. Slots 0-70 unchanged in meaning. min_rr_ratio unchanged.",
+      "bounding_evidence": "Pinned window output_rows=3871 shape=[3871, 79]. Prefix slots 0-70 sha b2d903246e4e38d0236862d411a7a0345daab7955c5b0fdac2e982f04e1d3676 REPRODUCED against previous vector b2d903246e4e38d0236862d411a7a0345daab7955c5b0fdac2e982f04e1d3676. Full vector 03d5eb28d8012bbb64f6c874952c41137263902d8c2f51ff0fef61a24987be14.",
+      "previous_sha": {
+        "market_ontology.yaml": "8b276c97fe921389cc5513fb5ae394257c3ba7acbd8cef05c9b38f54ba2a0e24",
+        "active_config": "22279e2f7fb8d14ffb90aaef0b990e60b147bb1a099d21b372f7e8930e229e62",
+        "feature_pipeline.py": "9ad0b5143bd9253643bb7f0d43b1865dcbd37fa5425516ca0fbcd51355d87ddf",
+        "feature_schema.py": "61933af1b17565dc7237531fb23b872d114648e9ce4ba342e1042502a87b578b",
+        "causal_structure.py": "ce6e0de24a8c4ed37f77bc640419745ae93708ad5a79fe3e09839a37a8da8969",
+        "xauusd_vector_sha256": "b2d903246e4e38d0236862d411a7a0345daab7955c5b0fdac2e982f04e1d3676"
+      },
+      "new_sha": {
+        "market_ontology.yaml": "2e6f309b13b377d7e860255eba5717d8c538e58e3d34fa3ef9b347934756b28b",
+        "active_config": "ded76023c98ee72c438305391ffab5107b9e3d9a3626da03c5d5f34e7ba1441c",
+        "feature_pipeline.py": "e64f695eb516f3ec2ec75e05eae6e683a80da83dd1d57af2ac44db8a497a5143",
+        "feature_schema.py": "d57699390b5b6948e6e7bc0ad015a373aefcb13ecd9cdde31a3ee144a6c1f731",
+        "causal_structure.py": "4f2d6826ccd3222ddb1de210e6b156df16dc2d735bd743da67e9f5da40ef9ee2",
+        "xauusd_vector_sha256": "03d5eb28d8012bbb64f6c874952c41137263902d8c2f51ff0fef61a24987be14"
+      },
+      "unchanged_sha": {
+        "candle_math.py": "5f577d1b7b571c9923d1fa36978b6bbe42cb05ed78cb085745f06f269d262de1",
+        "derived_math.py": "e02801cfa34f9c6da78c2128379609f0e0fc5968ca5367979029fed566b33d9c",
+        "registry_init.py": "d7228bf393d38f94b89bdaf3ff9a5428e3653609680144e6e23f61a0d0aaf3e6",
+        "ACTIVE_VERSION": "23f20fbfb4f5925c729eccb84850dc315647c181af117032fcd8fc30401eb889"
       }
     }
   ],

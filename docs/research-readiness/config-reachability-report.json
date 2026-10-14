@@ -1,11 +1,13 @@
 {
-  "generated_at": "2026-10-03T14:10:26+00:00",
+  "generated_at": "2026-10-08T16:44:53+00:00",
   "active_version": "v2_htfcrt_2026_08",
   "crtconfig_field_count": 53,
   "section_loaded_via_get_prod_section": {
     "setup": [
       "scripts/analysis/session_filter_funnel_probe.py",
       "scripts/research/setup_grid_s4.py",
+      "src/config_layer/crt_engine_v2.py",
+      "src/config_layer/crt_gaussian_scorer.py",
       "src/config_layer/setup.py",
       "src/runtime/backtest_v2.py"
     ],
@@ -176,6 +178,7 @@
       "scripts/analysis/run_zonegate_xauusd_2m.py",
       "scripts/analysis/session_override_scoping_proof.py",
       "scripts/analysis/session_sweep.py",
+      "scripts/analysis/set2_consumer_scale_probe.py",
       "scripts/analysis/update_reachability_golden.py",
       "scripts/analysis/xauusd_excel_feature_state_trace.py",
       "scripts/governance/seed_hypothesis_registry.py",
@@ -225,6 +228,7 @@
       "src/research/oracle/labeler.py"
     ],
     "gate_intelligence": [
+      "scripts/analysis/set2_consumer_scale_probe.py",
       "src/config_layer/execution_planner.py",
       "src/research/model_runners/adapters/execution_plan.py",
       "src/runtime/live_engine_hook.py"
@@ -554,6 +558,7 @@
       "scripts/analysis/blind_label_sample.py",
       "scripts/analysis/crt_episode_number_trace.py",
       "scripts/analysis/feature_38_lineage_census.py",
+      "scripts/analysis/feature_dag_structural_certification.py",
       "scripts/analysis/feature_pipeline_fc05_closure.py",
       "scripts/analysis/feature_trace_report.py",
       "scripts/analysis/fm027_displacement_retrace_certification.py",
@@ -565,6 +570,7 @@
       "scripts/analysis/run_zonegate_xauusd_2m.py",
       "scripts/analysis/semantic_layer_validation.py",
       "scripts/analysis/session_filter_funnel_probe.py",
+      "scripts/analysis/set2_consumer_scale_probe.py",
       "scripts/analysis/trade_intent_ownership_shadow.py",
       "scripts/analysis/xauusd_excel_feature_state_trace.py",
       "scripts/governance/build_fm_ownership_matrix.py",
@@ -572,10 +578,7 @@
       "scripts/research/build_bar_matrix.py",
       "scripts/research/smc_visual_verification.py",
       "scripts/training/train_gaussian_xauusd.py",
-      "src/charts/chart_series.py",
-      "src/config_layer/crt_engine_v2.py",
       "src/features/feature_pipeline.py",
-      "src/inout/live_rail/tickdb_adapter.py",
       "src/runtime/backtest_v2.py",
       "src/semantics/consumers.py",
       "src/semantics/integration/checks.py",
@@ -764,7 +767,8 @@
       "scripts/data/fetch_and_verify_binance.py",
       "scripts/data/fetch_and_verify_mt5.py",
       "src/data_ingestion/corpus_gate.py",
-      "src/data_ingestion/dataset_integrity.py"
+      "src/data_ingestion/dataset_integrity.py",
+      "src/features/market_calendar.py"
     ],
     "live_integration": [
       "src/live/mt5_bridge.py",
@@ -852,9 +856,9 @@
     ]
   },
   "summary": {
-    "READ_AND_USED": 418,
+    "READ_AND_USED": 419,
+    "READ_BUT_INERT": 35,
     "METADATA": 8,
-    "READ_BUT_INERT": 31,
     "SHADOW_ONLY": 21,
     "TOOLING_ONLY": 12
   },
@@ -916,6 +920,23 @@
         "src/config_layer/setup.py",
         "src/runtime/backtest_v2.py"
       ],
+      "note": ""
+    },
+    {
+      "section": "setup",
+      "key": "retrace_semantics",
+      "verdict": "READ_AND_USED",
+      "evidence": [
+        "src/config_layer/crt_engine_v2.py",
+        "src/config_layer/crt_gaussian_scorer.py"
+      ],
+      "note": ""
+    },
+    {
+      "section": "setup",
+      "key": "_comment_retrace_semantics",
+      "verdict": "READ_BUT_INERT",
+      "evidence": [],
       "note": ""
     },
     {
@@ -1265,6 +1286,7 @@
       "key": "dual_engine",
       "verdict": "READ_AND_USED",
       "evidence": [
+        "scripts/analysis/set2_consumer_scale_probe.py",
         "src/core/engine_runner.py",
         "src/research/model_runners/adapters/dual_engine.py",
         "src/research/model_runners/adapters/execution_plan.py"
@@ -1621,9 +1643,17 @@
     },
     {
       "section": "gate_intelligence",
+      "key": "_comment_gate_vol_atr_basis_activation",
+      "verdict": "READ_BUT_INERT",
+      "evidence": [],
+      "note": ""
+    },
+    {
+      "section": "gate_intelligence",
       "key": "gate_vol_atr_basis",
       "verdict": "READ_AND_USED",
       "evidence": [
+        "scripts/analysis/set2_consumer_scale_probe.py",
         "scripts/research/live_path_replay.py",
         "src/core/gate_intelligence.py",
         "src/runtime/live_engine_hook.py"
@@ -2035,7 +2065,10 @@
       "key": "provider",
       "verdict": "READ_AND_USED",
       "evidence": [
-        "src/control_plane/server.py"
+        "src/control_plane/server.py",
+        "src/data_ingestion/clock_contract.py",
+        "src/data_ingestion/clock_registry.py",
+        "src/data_ingestion/dataset_registry.py"
       ],
       "note": ""
     },
@@ -3047,7 +3080,6 @@
         "scripts/analysis/session_filter_funnel_probe.py",
         "scripts/analysis/xauusd_excel_feature_state_trace.py",
         "src/config_layer/crt_engine_v2.py",
-        "src/features/feature_pipeline.py",
         "src/features/session_classifier.py",
         "src/research/zone_mapping/collect_trade_opened_features.py",
         "src/runtime/backtest_v2.py"
@@ -4845,6 +4877,7 @@
         "src/config_layer/production_bundle.py",
         "src/config_layer/stack_version.py",
         "src/data_ingestion/clock_detector.py",
+        "src/data_ingestion/corpus_store.py",
         "src/features/market_reality_contract.py",
         "src/governance/concept_grounding.py",
         "src/governance/hypothesis_registry.py",
@@ -5878,11 +5911,19 @@
     },
     {
       "section": "feature_pipeline",
+      "key": "_comment_normalization_basis_activation",
+      "verdict": "READ_BUT_INERT",
+      "evidence": [],
+      "note": ""
+    },
+    {
+      "section": "feature_pipeline",
       "key": "normalization_basis",
       "verdict": "READ_AND_USED",
       "evidence": [
         "scripts/analysis/b2a_feature_candidate_certification.py",
         "scripts/analysis/feature_trace_report.py",
+        "scripts/analysis/set2_consumer_scale_probe.py",
         "scripts/analysis/xauusd_excel_feature_state_trace.py",
         "scripts/research/build_bar_matrix.py",
         "src/features/feature_pipeline.py",
@@ -5892,27 +5933,16 @@
     },
     {
       "section": "feature_pipeline",
-      "key": "_comment_session_timestamp_basis",
+      "key": "_comment_session_timestamp_basis_retired",
       "verdict": "READ_BUT_INERT",
       "evidence": [],
       "note": ""
     },
     {
       "section": "feature_pipeline",
-      "key": "session_timestamp_basis",
-      "verdict": "READ_AND_USED",
-      "evidence": [
-        "scripts/analysis/xauusd_excel_feature_state_trace.py",
-        "scripts/research/build_bar_matrix.py",
-        "src/charts/chart_series.py",
-        "src/charts/render.py",
-        "src/config_layer/crt_engine_v2.py",
-        "src/features/feature_pipeline.py",
-        "src/inout/live_rail/tickdb_adapter.py",
-        "src/runtime/backtest_v2.py",
-        "src/semantics/integration/checks.py",
-        "src/semantics/market/conditions.py"
-      ],
+      "key": "_comment_sweep_semantics_activation",
+      "verdict": "READ_BUT_INERT",
+      "evidence": [],
       "note": ""
     },
     {
@@ -5941,6 +5971,15 @@
         "src/features/feature_pipeline.py",
         "src/runtime/backtest_v2.py",
         "src/runtime/bar_structure_snapshot.py"
+      ],
+      "note": ""
+    },
+    {
+      "section": "feature_pipeline",
+      "key": "candle_patterns",
+      "verdict": "READ_AND_USED",
+      "evidence": [
+        "src/features/feature_pipeline.py"
       ],
       "note": ""
     },
@@ -6271,6 +6310,7 @@
         "scripts/analysis/run_zonegate_xauusd_2m.py",
         "scripts/analysis/search_xauusd_candidate_window.py",
         "scripts/analysis/session_filter_funnel_probe.py",
+        "scripts/analysis/set2_consumer_scale_probe.py",
         "scripts/analysis/shadow_cross_range_restoration_probe.py",
         "scripts/analysis/soft_conf_ema_double_update_probe.py",
         "scripts/analysis/trade_intent_ownership_shadow.py",
@@ -6387,6 +6427,8 @@
         "src/research/evidence/mother_range_prior.py",
         "src/research/evidence/rnet_overlay.py",
         "src/research/evidence/visual_crt_prior.py",
+        "src/research/ic002_entry_evolution/build_trajectories.py",
+        "src/research/ic002_entry_evolution/io_util.py",
         "src/research/mother_range/driver.py",
         "src/research/ohlcv_open_close_label.py",
         "src/research/ohlcv_tick_attribution.py",
@@ -6395,6 +6437,7 @@
         "src/research/probes/costs_path.py",
         "src/research/probes/excursion.py",
         "src/research/rc003_distinct_object/driver.py",
+        "src/research/secondlow_v1/detector.py",
         "src/research/sujan_crt/driver.py",
         "src/research/visual_crt/measure.py",
         "src/research/zone_mapping/boundary_hypothesis_eval.py",
@@ -6784,6 +6827,7 @@
         "scripts/analysis/run_crt_trace_workflow.py",
         "scripts/analysis/run_msip_shadow.py",
         "scripts/analysis/session_filter_funnel_probe.py",
+        "scripts/analysis/set2_consumer_scale_probe.py",
         "scripts/analysis/shadow_cross_range_restoration_probe.py",
         "scripts/analysis/soft_conf_ema_double_update_probe.py",
         "scripts/analysis/src_business_functionality_inventory.py",
@@ -7133,6 +7177,7 @@
         "src/config_layer/production_bundle.py",
         "src/config_layer/stack_version.py",
         "src/data_ingestion/clock_detector.py",
+        "src/data_ingestion/corpus_store.py",
         "src/features/market_reality_contract.py",
         "src/governance/concept_grounding.py",
         "src/governance/hypothesis_registry.py",
@@ -7517,6 +7562,7 @@
         "src/config_layer/production_bundle.py",
         "src/config_layer/stack_version.py",
         "src/data_ingestion/clock_detector.py",
+        "src/data_ingestion/corpus_store.py",
         "src/features/market_reality_contract.py",
         "src/governance/concept_grounding.py",
         "src/governance/hypothesis_registry.py",

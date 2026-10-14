@@ -248,8 +248,18 @@ EXPECTED_ENGINES: set[str] = {"crt", "gaussian", "zone_gate", "rr"}
 
 ## 4. Feature Schema
 
-### 4.1 Canonical 48-dim vector — `src/features/feature_schema.py`
+### 4.1 Canonical 79-dim vector — `src/features/feature_schema.py`
 
+> **Schema v9.0 = 79 features** (2026-10-08, CH-card-identity-census-v9: 8 card identities
+> appended at 71-78 — `morning_star`, `higher_low`, `lower_high`, `sideways`, and the four
+> rejection-block present/distance slots. `wait_for_next_candle` (FM-128) and
+> `reward_risk_bracket` (FM-129) are identities with an empty vector. Slots 0-70 unchanged
+> by position). Before that:
+> **Schema v8.0 = 71 features** (2026-10-08, F-118 / CH-candle-pattern-observations-v8: 17
+> candle-pattern observations appended at 54-70 from `features/candle_patterns.py`; slots 0-53
+> unchanged by position). Before that:
+> **Schema v7.0 = 54 features** (2026-10-08, F-117 / CH-feature-semantic-fixes-v7: six SMC
+> presence flags appended at 48-53; slots 0-47 unchanged by position). Before that:
 > **Schema v6.0 = 48 features** (`SCHEMA_VERSION`, `CANONICAL_FEATURE_DIM`, source-verified
 > 2026-09-23). Corrected from a stale 39-name/v4.0 table below — this doc had drifted twice:
 > once to 38-dim/v3.0 (corrected 2026-08-07), then again past the v5.0 SMC addition (F-076,
@@ -262,10 +272,13 @@ EXPECTED_ENGINES: set[str] = {"crt", "gaussian", "zone_gate", "rr"}
 > sentinels for models storing an earlier layout.
 
 ```python
-CANONICAL_FEATURE_DIM = 48   # == len(CANONICAL_FEATURES); hard-asserted at import
-SCHEMA_VERSION = "6.0"       # v2.0=35; v3.0=38; v4.0=39 (MACD split + candle_range rename +
+CANONICAL_FEATURE_DIM = 79   # == len(CANONICAL_FEATURES); hard-asserted at import
+SCHEMA_VERSION = "9.0"       # v2.0=35; v3.0=38; v4.0=39 (MACD split + candle_range rename +
                               # FM-052 domain); v5.0=48 (+9 SMC primitives, F-076); v6.0=48
-                              # (NAMES ONLY — F-107, see indices 11 and 35 below)
+                              # (NAMES ONLY — F-107, see indices 11 and 35 below); v7.0=54
+                              # (+6 SMC presence flags, F-117, indices 48-53); v8.0=71
+                              # (+17 candle-pattern observations, F-118, indices 54-70);
+                              # v9.0=79 (+8 card identities, indices 71-78)
 
 CANONICAL_FEATURES: tuple[str, ...] = (
     "open", "high", "low", "close", "volume",             # 0-4
@@ -288,6 +301,19 @@ CANONICAL_FEATURES: tuple[str, ...] = (
     "order_block_distance", "fvg_distance", "breaker_distance",       # 39-41 (v5.0: SMC primitives, F-076)
     "mitigation_block_distance", "pdh_distance", "pdl_distance",      # 42-44 (v5.0: SMC primitives, F-076)
     "eqh_distance", "eql_distance", "change_of_character",            # 45-47 (v5.0: SMC primitives, F-076)
+    "order_block_present", "fvg_present", "breaker_present",          # 48-50 (v7.0: presence flags, F-117 — 1 = a zone exists;
+    "mitigation_block_present", "eqh_present", "eql_present",         # 51-53  the *_distance 0.0 is otherwise ambiguous)
+    "upper_wick_ratio", "lower_wick_ratio",                           # 54-55 (v8.0: candle-pattern observations, F-118 — wick shares of range)
+    "pin_lower", "pin_upper", "hammer", "shooting_star",              # 56-59 (flags; size gate = range >= k * ATR_abs, FM-074)
+    "doji_material", "dragonfly_doji", "gravestone_doji",             # 60-62 (flags)
+    "engulfing_bull", "engulfing_bear", "inside_bar",                 # 63-65 (two-bar flags; never across a session/weekend gap)
+    "compression_ratio", "rejection_intensity_signed",                # 66-67 (range/prev range clipped [0,10]; lower-minus-upper wick share)
+    "rejection_intensity_lower", "engulfing_strength",                # 68-69
+    "rejection_intensity_upper",                                       # 70
+    "morning_star",                                                    # 71 (v9.0: three-bar shape, FM-120)
+    "higher_low", "lower_high", "sideways",                           # 72-74 (v9.0: swing-sequence states, FM-121..123)
+    "rejection_bull_present", "rejection_bear_present",               # 75-76 (v9.0: live rejection block, FM-124..125)
+    "rejection_bull_distance", "rejection_bear_distance",             # 77-78 (v9.0: 0 when no block, FM-126..127)
 )
 
 FEATURE_SCHEMA: dict[str, type]   # name → type (float | int | str | bool | dict)
@@ -306,6 +332,16 @@ SCHEMA_V5_ALIASES: dict[str, str] = {
 ```
 
 Changes to `CANONICAL_FEATURES` or `FEATURE_SCHEMA` **break backward compatibility** — baseline must be re-captured.
+
+### 4.1a Formulas stated by `canonical_feature_atlas.html` (2026-10-12)
+
+`canonical_feature_atlas.html` inventories the live schema 9.0 vector: 79 names in `CANONICAL_FEATURES` order, with `SCHEMA_HASH` `3883362033ca8cfcc5a263306dd6b5fe` and `FEATURE_ORDER_HASH` `79e6c8f97c5d956e` (checked against an import on 2026-10-12). `formulaDefined` stays false. The page states a mathematical formula for one slot. Each of the 79 names shows the FM id whose ontology `vector_key` is that name and which is listed in `fm_id_values.html`. A column titled `gemini feature names` shows the pasted Gemini label for that FM id. A column titled `chatgpt feature names` shows the pasted ChatGPT label for that FM id. A column titled `grok review` names the quantity computed by the `fm_id_values.html` formula for that FM id. A column titled `deepseek feature names` shows the pasted DeepSeek label for that FM id. The Feature name column remains the live `CANONICAL_FEATURES` name. Ontology formula strings are unchanged.
+
+| Slot | Formula the atlas states | Schema identity |
+|---|---|---|
+| `body_ratio` (snapshot index 29) | Pipeline/backtest candidate: `abs(close - open) / (high - low)`. Historical implementation: `abs(close - open) / total_wick`. The live-hook formula is left for source inspection. | Already registered. FM-001 formula is `abs(close - open)`. FM-002 formula is `high - low`. FM-010 numerator is `body_size`, denominator is `candle_range`. `candle_math.body_ratio` returns 0 when range is not positive; the atlas leaves that edge policy unresolved. FM-013 numerator is `body_size`, denominator is `total_wick`, and that identity is not this slot. |
+
+`session` and `double_sweep` have audit text in the same file. The session mapping table is stated as absent. Double-sweep formula ownership is stated as unresolved. No formula was copied onto those slots from this file. The other 45 rows supply a name and a dtype. Their formulas stay the ontology formulas already registered for those names.
 
 ### 4.2 SchemaObject wrapper
 

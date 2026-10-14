@@ -1,0 +1,92 @@
+{
+  "change_id": "CH-corpus-clock-contract-v1",
+  "date_utc": "2026-10-08",
+  "objective": "Every corpus carries an explicit, configured clock identity (provider / broker / clock_id); the Corpus SSOT normalizes it to canonical UTC exactly once (source_timestamp kept); feature_pipeline.session_timestamp_basis retired; day/week/HTF grids follow a separate market-calendar contract selected by instrument.",
+  "completion_status": "IMPLEMENTED_VERIFIED_WITH_RESIDUE",
+  "blockers": [],
+  "validate_completion_result": "BLOCKED - only by UNDECLARED governed surfaces that belong to OTHER change lineages in this shared worktree (configs/formulas/market_ontology.yaml and the v8/v9 candle/card work, configs/production/v2_multi_bitnet_shadow_2026_07.json, scripts/analysis/{b2a_feature_candidate_certification,blind_label_sample,corpus_read_census,crt_episode_number_trace,crt_local_math_authority_probe,crt_state_transition_audit_4m}.py and further SSOT/F-119 script conversions); every surface this change touched is declared above. Not declared on their behalf.",
+  "residue": [
+    "Research artifacts stored in broker time (clean-label surfaces, bar matrices) must be regenerated; not done.",
+    "scripts/analysis/{purge_delay_scan,semantic_layer_validation,mother_range_inside_close}.py still group days raw (not migrated).",
+    "7 reviewed MT5 records without a declared server are refused until a human declares them (EURUSD/GBPUSD/AUDUSD/EURCAD/USDJPY M5, XAUUSD_M5, XAUUSD_mt5_1month_latest).",
+    "Semantic OS parameter name session_timestamp_basis kept as a label bound to the literal utc_corrected (vocabulary migration deferred).",
+    "A subset of the remaining full-suite failures was classified by failure message (v8/v9 schema-dimension drift etc.), not by an A/B against a pre-change tree; tests/test_live_rail_replay_cert.py (3) is UNVERIFIED as to owner."
+  ],
+  "declared_files": [
+    "src/data_ingestion/clock_contract.py", "src/data_ingestion/clock_registry.py",
+    "src/data_ingestion/corpus_store.py", "src/data_ingestion/dataset_registry.py",
+    "src/data_ingestion/ohlcv_schema.py", "src/features/market_calendar.py",
+    "configs/data_provenance/market_calendar.json", "configs/data_provenance/ohlcv_clock_registry.json",
+    "configs/formulas/concept_contracts.yaml", "configs/formulas/representation_registry/feature_pipeline.yaml",
+    "configs/production/v2_dispkill_shadow_2026_08.json", "configs/production/v2_htfcrt_2026_08.json",
+    "configs/production/v2_htfcrt_e01lifecycle_shadow_2026_10.json", "configs/production/v2_htfcrt_k23_shadow_2026_09.json",
+    "configs/production/v2_htfcrt_objgate_shadow_2026_08.json", "configs/production/v2_multi_2026_04.json",
+    "configs/production/v2_multi_2026_04_v3session_probe.json", "configs/production/v2_multi_dimfix_shadow_2026_07.json",
+    "configs/production/v3_unified_market_structure_2026_09.json", "configs/production/v4_crt_sot_2026_08.json",
+    "configs/production/v4_dual_construction_2026_09.json", "configs/production/v5_htfcrt_sot_dual_k23_2026_09.json",
+    "docs/governance/CORPUS_CLOCK_CONTRACT.md", "docs/governance/dataset_identity.schema.json",
+    "docs/governance/datasets/XAUUSD_MT5_PHASE1_20260521.json",
+    "docs/governance/datasets/XAUUSD_MT5_TVWINDOW_20260706_20260807.json",
+    "docs/governance/datasets/XAUUSD_MT5_W20260803_20260923.json",
+    "docs/current-findings.md", "CLAUDE.md", "docs/reference/config-reference.md",
+    "docs/memory/feature-memory.md", "docs/topics/feature-schema.md",
+    "docs/governance/CANONICAL_LAYER_IDENTITY_CONTRACT.md",
+    "docs/research-readiness/config-reachability-report.json", "docs/research-readiness/config-reachability-report.md",
+    "tests/golden/registry_summary.json",
+    "tests/test_corpus_clock_contract.py", "tests/test_ohlcv_clock_provenance.py", "tests/conftest.py"
+  ],
+  "checks_executed": [
+    "tests/test_corpus_clock_contract.py", "tests/test_ohlcv_clock_provenance.py", "tests/test_corpus_ssot.py",
+    "tests/test_session_timestamp_basis.py", "tests/test_crt_session_filter.py", "tests/test_exchange_session_windows.py",
+    "tests/test_chart_series.py", "tests/test_dataset_registry.py", "tests/test_corpus_store.py",
+    "tests/research/test_resample_corpus_parity.py", "tests/research/test_secondlow_sealed_evaluation_set.py",
+    "tests/semantics/integration/test_integration_checks.py", "tests/governance/test_representation_registry.py",
+    "tests/test_fm027_displacement_retrace_certification.py", "tests/test_fc1a_swing_oracle_parity.py",
+    "tests/test_feature_dag_structural_certification.py", "tests/test_feature_structural_states_complex.py",
+    "tests/test_current_findings.py", "tests/test_findings_export.py", "tests/test_identity_spine.py",
+    "tests/runtime/test_replay_determinism.py", "tests/analytics/test_metrics_oracle_parity.py",
+    "scripts/maintenance/check_governance_invariants.py --all",
+    "XAUUSD backtest before/after (results/clock_contract_2026-10-08)"
+  ],
+  "single_authority": "src/data_ingestion/corpus_store.py (F-119 SSOT) joined with src/data_ingestion/clock_registry.py `clocks` + src/data_ingestion/clock_contract.py (the one converter) and configs/data_provenance/market_calendar.json (calendar).",
+  "checks_detail": [
+    {
+      "check": "Clock contract acceptance tests A-N",
+      "result": "PASS",
+      "detail": "tests/test_corpus_clock_contract.py 28 passed: XAUUSD +2/+3h by IANA rules and parity with the independent legacy reference on all 47,275 bars, UTC feed unchanged, US/EU DST-mismatch weeks, DST gap/overlap raise, calendar independent of broker, double normalization refused + static scan, derived-window inheritance and tamper refusal, exact provider/broker/clock_id match, no stored-offset fields, retired config key raises, detector has no authority."
+    },
+    {
+      "check": "Full XAUUSD backtest parity",
+      "result": "PASS",
+      "detail": "results/clock_contract_2026-10-08/backtest_v2 vs results/ssot_regen_2026-10-08/backtest_v2: 7 trades, 7,133 events, win rate 0.2857, PF 0.2497 identical; only opened_at/closed_at moved, by exactly the 2h/3h server offset; session/day_of_week/hour_of_day/entry/exit/pnl identical."
+    },
+    {
+      "check": "Sealed second-low evaluation set",
+      "result": "PASS",
+      "detail": "21 pre-registered events reproduce exactly once converted back to the corpus's declared source clock (market-day grouping via the calendar)."
+    },
+    {
+      "check": "F-117 attributed failures (47 + 13 heavy)",
+      "result": "FIXED 33 + 10; 14 unrelated untouched",
+      "detail": "session-basis group (24) pass; sweep (7) and retrace (2) pass because the certification names the legacy identity; heavy replay/oracle group: 11 passed / 3 failed - the 3 failures differ only in the wall-clock run_id stamped into the ledger CAND rows (F-101 class), not in any clock-dependent value. The 14 non-v7 reds were not touched."
+    },
+    {
+      "check": "SSOT enforcement tests",
+      "result": "PASS",
+      "detail": "tests/test_corpus_ssot.py 20 passed (canonical/source split, own-identity cases moved to constructed files)."
+    },
+    {
+      "check": "Governance floor (29 targets)",
+      "result": "9 failed = 8 baseline + 1 v9 (after fixing 1 red of mine)",
+      "detail": "Remaining: session-log cap, script registry x2, model-path scanner x3, BRIDGE_SCHEMA_VERSION symbol census, corpus_read_lint (24 flagged, unchanged), v9 predicate-supply contract."
+    },
+    {
+      "check": "Full suite (647 files, sharded)",
+      "result": "see residue",
+      "detail": "~230 failures/errors across the shards at first pass; the clock-attributable ones were fixed (basis/session/exchange-window/chart/dataset-registry/corpus_store/resample-parity/secondlow/semantic condition/identity_spine tests, reachability golden regenerated); the rest are v8/v9 schema-dimension drift (54/71/79 vs pins), censuses and registries owned by other lineages."
+    }
+  ],
+  "authority_granted": "User 2026-10-08: configured clocks, no inference, full migration to canonical UTC, retire session_timestamp_basis, certification tests name their identity.",
+  "authority_NOT_granted": "No G001/economic claim; no change to canonical corpus bytes; crypto/FX clocks not reviewed.",
+  "repo_state_hash": "PENDING"
+}

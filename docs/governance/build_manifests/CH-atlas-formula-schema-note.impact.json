@@ -1,0 +1,33 @@
+{
+  "change_id": "CH-atlas-formula-schema-note",
+  "date_utc": "2026-10-12",
+  "objective": "Record the formulas canonical_feature_atlas.html actually states against the live feature schema. The only mathematical pair is body_ratio, and it is already FM-001, FM-002, FM-010, and FM-013. Session and double_sweep stay unresolved because the atlas says so. No formula string, vector order, or hash changes.",
+  "change_classes": ["DOCUMENTATION_ONLY"],
+  "change_class_rationale": "The atlas candidate is the registered body_size/candle_range composition. Writing it again as a new formula string would change the semantic contract hash and manufacture DRIFT against the same identity. The schema reference records the binding. Ontology and feature_schema.py stay byte-unchanged.",
+  "affected_files": [
+    "docs/reference/schemas.md",
+    "docs/topics/feature-schema.md",
+    "assistant_project.md"
+  ],
+  "affected_feature_ids": ["FM-001", "FM-002", "FM-010", "FM-013"],
+  "affected_models": "none",
+  "affected_production_config": "none",
+  "required_checks_ack": [
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert the schema section, the topic bullet, and this manifest. No formula or vector needs restoring.",
+  "authority_granted": "User request to read canonical_feature_atlas.html and update the feature schema with formulas defined in it. Lane: semantic certification.",
+  "authority_NOT_granted": "No production formula change, no ontology rewrite, no schema-order change, no G001, no claim that session or double_sweep gained a formula.",
+  "production_behavior_changed": "no",
+  "declared_files": [
+    "docs/reference/schemas.md",
+    "docs/topics/feature-schema.md",
+    "assistant_project.md"
+  ],
+  "checks_executed": [],
+  "repo_state_hash": "PENDING",
+  "completion_status": "PENDING"
+}

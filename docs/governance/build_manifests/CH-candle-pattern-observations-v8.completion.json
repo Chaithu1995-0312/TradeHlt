@@ -1,0 +1,154 @@
+{
+  "change_id": "CH-candle-pattern-observations-v8",
+  "date_utc": "2026-10-08",
+  "change_classes": [
+    "FEATURE_IDENTITY_CHANGE",
+    "DATASET_SCHEMA_CHANGE",
+    "DERIVED_METRIC_CHANGE",
+    "MODEL_INPUT_CHANGE",
+    "RUNTIME_DECISION_PATH_CHANGE",
+    "PRODUCTION_CONFIG_CHANGE"
+  ],
+  "completion_status": "BLOCKED_BY_CONCURRENT_UNCOMMITTED_WORK",
+  "completion_status_note": "Green floor after the change: 9 failed / 842 passed; 8 = the pre-existing baseline reds; the 9th (test_active_config_has_no_hard_errors: key name doji_wick_balance_max matched the unit registry money pattern \"balance\") was fixed by renaming the key to doji_wick_asymmetry_max (it caps |upper - lower| wick share); rerun green. Vector unchanged by the rename (window SHA re-verified b2d90324...). validate-completion (2026-10-08 ~09:45): BLOCKED by (a) UNDECLARED surfaces that belong to OTHER uncommitted change sets in the same working tree -- CH-feature-semantic-fixes-v7 (derived_math.py, fm_resolve.py, crt_engine_v2.py, crt_gaussian_scorer.py; its own manifest) and the 2026-10-07 SET2/F-115 work (engine_runner.py, set2_consumer_scale_probe.py, seed_script_registry.py, v2_multi_bitnet_shadow_2026_07.json); (b) tests/test_formula_registry.py::test_registry_and_ontology_agree red ONLY because a concurrent session (CH-card-identity-census-v9) is mid-way adding morning_star FM-120 and FM-124..129 on top of this change (ontology entry present, registry impl not yet) -- the same test was green on this change alone (62 passed, ~09:05); (c) SITS acknowledgement for the two edited, already-registered scripts below. That session also added two tests to tests/test_candle_patterns.py at 09:09 (captured in the staged copy; both hold here). Re-run validate-completion once the other change sets are committed or staged separately.",
+  "declared_files": [
+    "src/features/candle_patterns.py",
+    "src/features/feature_pipeline.py",
+    "src/features/feature_schema.py",
+    "src/features/registry/derived_registry.py",
+    "src/features/crt_feature_builder.py",
+    "src/runtime/live_engine_hook.py",
+    "src/research/model_runners/schema_resolver.py",
+    "src/research/clean_labels/builder.py",
+    "src/identity/tokens.py",
+    "src/governance/strategy_backtest.py",
+    "scripts/analysis/feature_dag_layers.py",
+    "scripts/analysis/feature_math_lint.py",
+    "configs/formulas/market_ontology.yaml",
+    "configs/formulas/concept_contracts.yaml",
+    "configs/formulas/representation_registry/feature_pipeline.yaml",
+    "configs/production/v2_dispkill_shadow_2026_08.json",
+    "configs/production/v2_htfcrt_2026_08.json",
+    "configs/production/v2_htfcrt_e01lifecycle_shadow_2026_10.json",
+    "configs/production/v2_htfcrt_k23_shadow_2026_09.json",
+    "configs/production/v2_htfcrt_objgate_shadow_2026_08.json",
+    "configs/production/v2_multi_2026_04.json",
+    "configs/production/v2_multi_2026_04_v3session_probe.json",
+    "configs/production/v2_multi_dimfix_shadow_2026_07.json",
+    "configs/production/v3_unified_market_structure_2026_09.json",
+    "configs/production/v4_crt_sot_2026_08.json",
+    "configs/production/v4_dual_construction_2026_09.json",
+    "configs/production/v5_htfcrt_sot_dual_k23_2026_09.json",
+    "docs/governance/feature-layer-freeze-pin-2026-07-20.json",
+    "docs/governance/schema_version_registry.json",
+    "docs/governance/STORAGE_PRESERVATION_CONTRACT.md",
+    "docs/governance/geometry_census.jsonl",
+    "docs/governance/geometry_census_summary.json",
+    "docs/governance/geometry_semantic_adjudication.jsonl",
+    "docs/governance/geometry_family_registry.json",
+    "docs/research-readiness/config-reachability-report.json",
+    "docs/research-readiness/config-reachability-report.md",
+    "docs/current-findings.md",
+    "CLAUDE.md",
+    "data/findings.jsonl",
+    "active_models.yaml",
+    "docs/reference/schemas.md",
+    "docs/topics/feature-schema.md",
+    "docs/reference/candle_theory/README.md",
+    "tests/test_candle_patterns.py",
+    "tests/Claude/test_K_smc_identity.py",
+    "tests/features/test_liquidity_distance.py",
+    "tests/research/episodes/test_candidate_features.py",
+    "tests/test_b0b1_feature_semantic_migration.py",
+    "tests/test_crt_baseline_trace.py",
+    "tests/test_ema_momentum_kernel_slot.py",
+    "tests/test_schema_v4_artifact_reconciliation.py",
+    "tests/test_model_registry_join.py",
+    "tests/test_feature_layer_freeze.py",
+    "tests/test_feature_semantic_fixes_v7.py",
+    "docs/governance/build_manifests/CH-candle-pattern-observations-v8.impact.json",
+    "docs/governance/build_manifests/CH-candle-pattern-observations-v8.completion.json"
+  ],
+  "incidental_fixes": [
+    "src/governance/strategy_backtest.py fed S02/S05 is_inside_bar=False (constant) and rejection_wick=upper_wick>0.5 (a price-unit wick read as a flag); now the registered observations."
+  ],
+  "residual_not_fixed": [
+    "scripts/analysis/gate2b_adjudication.py's hand table is line-keyed and stale for 52 sites in other files (crt_engine_v2, feature_pipeline, live_engine_hook, tests): a full re-run would drop them from the committed artifact. The 15 new records were appended directly; the generator table itself was not refreshed.",
+    "tests/test_crt_baseline_trace.py::test_artifact_invariants_if_present reads an on-disk 39-dim artifact (red before this change too, at 54).",
+    "Morning/evening star remain unregistered.",
+    "No model consumes slots 54-70; nothing retrained.",
+    "CORRECTED 2026-10-08 10:55 (was implicitly \"no new governance regression\"): the tools/xau_chart copy added 2 direct, ungated corpus reads (tools/xau_chart/zone_edge.py:25, zone_full.py:17 -> pd.read_csv(data/mt5/XAUUSD_M15.csv)) inside the already-red tests/test_corpus_read_lint.py. Same bytes as the gate-admitted dataset today (XAUUSD_MT5_PHASE1_20260521, sha 4d73f5ce...), but unverified. Not fixed: to be routed through corpus_gate with the research-loader authority work."
+  ],
+  "authority_granted": "User 2026-10-08: 'No separate decisions or parity needed ... align the system in linear flow as these are correct designs ... dont break system'; plan approved via ExitPlanMode.",
+  "authority_NOT_granted": "No retrain, no promotion, no ACTIVE_VERSION change, no G001/economic claim, no CRT consumer of the patterns.",
+  "production_behavior_changed": "YES, measured: vector grows 54 -> 71 with slots 0-53 bit-identical; S02/S05 inputs change in strategy_backtest; CRT backtest ledger unchanged.",
+  "checks_detail": [
+    {
+      "check": "Vectorized mirror == scalar identities",
+      "result": "PASS",
+      "detail": "tests/test_candle_patterns.py: 600 synthetic bars incl. zero-range, NaN ATR warmup and a gap; plus definition tests (inclusive equality, current bar excluded, gap, first bar)."
+    },
+    {
+      "check": "Full-corpus vector (data/mt5/XAUUSD_M15.csv, 47,197 rows)",
+      "result": "PASS",
+      "detail": "Slots 0-53 bit-identical to the v7 vector; 0 non-finite in 54-70; 0 inside/engulfing bars across a gap. Fires: pin_lower 1541, pin_upper 1227, hammer 603, shooting_star 514, doji_material 1146, dragonfly 363, gravestone 286, engulfing_bull 4376, engulfing_bear 4214, inside_bar 6853."
+    },
+    {
+      "check": "Freeze pin regenerated",
+      "result": "PASS",
+      "detail": "54-slot prefix reproduces previous pin 023180f8a1e75371 exactly; new vector b2d903246e4e38d0, shape (3871,71); waiver CH-candle-pattern-observations-v8."
+    },
+    {
+      "check": "Backtest before/after (full XAUUSD, active config)",
+      "result": "UNCHANGED",
+      "detail": "7 trades, 7133 events identical; only run ids/execution_intent_id and 17 new feature-snapshot columns differ."
+    },
+    {
+      "check": "Config reachability golden",
+      "result": "REGENERATED",
+      "detail": "Only new verdict: feature_pipeline.candle_patterns READ_AND_USED."
+    },
+    {
+      "check": "Geometry census + Gate-2B adjudication",
+      "result": "PASS",
+      "detail": "15 new governed sites in candle_patterns.compute_all adjudicated (families F1/F2/F3/F4/F6); tests/test_geometry_census.py + test_gate2b_closure.py green."
+    },
+    {
+      "check": "Meaning plane",
+      "result": "PASS",
+      "detail": "Concepts GP-08..GP-11 ACCEPTED; 17 representations; --ground CONCEPT candle_pattern / wick_share and REPRESENTATION feature_pipeline:hammer GROUNDED."
+    },
+    {
+      "check": "Chart tools copy (tools/xau_chart)",
+      "result": "PASS",
+      "detail": "Rebuild from the copied scripts reproduces the published xau_bar_features.html byte-for-byte."
+    },
+    {
+      "check": "Green floor (check_governance_invariants --all)",
+      "result": "BASELINE ONLY",
+      "detail": "8 pre-existing reds (schema symbol census BRIDGE_SCHEMA_VERSION, session-log bound, model-path literals x3, script registry grandfather x2, corpus-read lint); 1 new red fixed in-turn by the key rename, its test rerun green."
+    }
+  ],
+  "checks_executed": [
+    "tests/test_candle_patterns.py",
+    "tests/test_formula_registry.py",
+    "tests/test_feature_lineage.py",
+    "tests/test_geometry_census.py",
+    "tests/test_gate2b_closure.py",
+    "tests/test_feature_pipeline.py",
+    "tests/test_active_models_registry.py",
+    "tests/test_derived_math.py",
+    "tests/test_feature_math_lint.py",
+    "tests/test_current_findings.py",
+    "tests/test_config_reachability.py",
+    "tests/test_reachability_golden.py",
+    "tests/test_feature_layer_freeze.py",
+    "tests/governance/test_schema_version_registry.py",
+    "tests/governance/test_representation_registry.py",
+    "tests/test_feature_dag_layers.py",
+    "tests/test_semantic_registry.py",
+    "scripts/maintenance/check_governance_invariants.py --all"
+  ],
+  "repo_state_hash": "PENDING",
+  "sits_acknowledgement": "scripts/analysis/feature_dag_layers.py and scripts/analysis/feature_math_lint.py are already-registered scripts edited in place (node rows / allowlist entry); tests/test_script_registry.py grandfather tests are red on the pre-change baseline identically."
+}

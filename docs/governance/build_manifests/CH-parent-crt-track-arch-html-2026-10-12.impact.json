@@ -1,0 +1,52 @@
+{
+  "change_id": "CH-parent-crt-track-arch-html-2026-10-12",
+  "objective": "Publish a source-traced static HTML page for ParentCRTTrack in the crt_resolver_arch.html viewer shape, without changing runtime behavior.",
+  "change_classes": ["DOCUMENTATION_ONLY"],
+  "summary": "Replace the incomplete parent_crt_track_arch.html fragment with a full static viewer in the crt_resolver_arch.html shape: C1/C2/C3 walk, shared sweep/impulse predicates, ParentCRTFeed, BacktestRunner caller wire, and the process_candle bias/objective gates. No src/config/formula/runtime behavior is changed.",
+  "authorities_inspected": [
+    "CLAUDE.md",
+    "docs/governance/REPOSITORY_CONSTRUCTION_PROTOCOL.md",
+    "docs/governance/change_contracts.json",
+    "crt_resolver_arch.html",
+    "crt_state_arch.html",
+    "configs/production/ACTIVE_VERSION",
+    "configs/production/v2_htfcrt_2026_08.json",
+    "configs/production/v2_multi_2026_04.json",
+    "src/config_layer/parent_crt.py",
+    "src/config_layer/htf_state.py",
+    "src/config_layer/state_identity.py",
+    "src/config_layer/_crt_state_generated.py",
+    "src/structure/predicates.py",
+    "src/features/parent_candle.py",
+    "src/runtime/parent_crt_feed.py",
+    "src/runtime/backtest_v2.py",
+    "src/config_layer/crt_engine_v2.py"
+  ],
+  "affected_files": [
+    "parent_crt_track_arch.html",
+    "docs/governance/build_manifests/CH-parent-crt-track-arch-html-2026-10-12.impact.json",
+    "assistant_project.md"
+  ],
+  "required_checks_ack": [
+    "tests/test_current_findings.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py"
+  ],
+  "unknowns": [
+    {
+      "question": "Whether research/analysis process_candle mirrors (zone_mapping, crt_state_machine adapter, trail tracers) should also thread parent_state.",
+      "blocking": false,
+      "resolution": "Out of scope. F-075 named the backtest/live runner as the missing caller. Research mirrors stay default parent_state=None; they are not the spine.",
+      "followup": "Optional: thread ParentCRTFeed in analysis scripts that claim to replay the armed HTF-CRT config."
+    }
+  ],
+  "rollback_boundary": "single commit: revert parent_crt_track_arch.html and this manifest together",
+  "planned_files": [
+    "parent_crt_track_arch.html",
+    "docs/governance/build_manifests/CH-parent-crt-track-arch-html-2026-10-12.impact.json",
+    "assistant_project.md"
+  ],
+  "blocking_unknowns": [],
+  "required_checks": [],
+  "notes": "Sibling to crt_resolver_arch.html and crt_state_arch.html. Static documentation/viewer-only. Page rewritten 2026-10-12 from a truncated fragment (missing document shell, corrupted arrows, stale 'push return discarded' line). ACTIVE_VERSION read that day is v2_htfcrt_2026_08 with parent_crt.enabled true, timeframe H4, objective_gate.enabled false. v2_multi_2026_04 keeps enabled false so parent_state stays None. Bias is non-NONE only in DISTRIBUTION_C3. Sweep/impulse arithmetic is structure.predicates; the walk stays in ParentCRTTrack. validate-completion over the whole dirty tree is not claimed."
+}

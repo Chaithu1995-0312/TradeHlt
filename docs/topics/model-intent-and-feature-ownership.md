@@ -6,7 +6,7 @@
 > This is the **canonical authority** the feature-expansion program (plan
 > `d-tradelatest-reports-ohlcv-lineage…`) defers to. Link, don't inline.
 >
-> Created: 2026-06-27 · Updated: 2026-09-23 · Status: living
+> Created: 2026-06-27 · Updated: 2026-10-07 · Status: living
 >
 > **Intent authority (higher than this topic for *why* engines exist):**  
 > [`docs/governance/MODEL_INTENT_AUTHORITY_REGISTER.md`](../governance/MODEL_INTENT_AUTHORITY_REGISTER.md)
@@ -377,6 +377,9 @@ collapses to 0.0. FM-030/031 fix this and are **registered but inactive** — se
 `feature_pipeline.normalization_basis` (`atr_relative` default = the legacy math, byte-identical;
 `atr_absolute` = the corrected pair, reachable only via the non-promoted shadow config). Activation
 needs demonstrated ΔG001 **plus** threshold recalibration; registration grants no authority (§6.5).
+**Update 2026-10-07 (F-114):** the user approved activating `atr_absolute` (and
+`gate_vol_atr_basis=absolute`) on the active config `v2_htfcrt_2026_08` as a unit fix; thresholds
+were NOT recalibrated, and the identities still carry no economic authority.
 
 Three enforcement layers: **parity** ([`tests/test_derived_math.py`](../../tests/test_derived_math.py))
 binds the vectorized pipeline columns to the scalar registry; an **ownership-lint**
@@ -493,3 +496,4 @@ Sits at the engine-scoring layer of [`docs/architecture/signal-flow.md`](../arch
   `gaussian.trained_registry.entries.v4_mirrored`. Declarative only, grants no production
   authority (§6.5). Floor: `tests/test_model_registry_join.py`. Plan:
   `docs/implementation_plan/dont-read-codebase-yet-lovely-clarke.md`.
+- **Enhancements:** 2026-10-07 (F-114, Set-2 consumer-scale program) — active config `v2_htfcrt_2026_08` now selects `feature_pipeline.normalization_basis=atr_absolute` (FM-030/031 replace FM-022/023 in slots 9/12) and `gate_intelligence.gate_vol_atr_basis=absolute`; user-approved unit fix, no threshold recalibration, no economic authority. Freeze pin re-certified (waiver_log). Config-gated `dual_engine.regime_trend_confirmation` arm shipped un-armed. Probe: `scripts/analysis/set2_consumer_scale_probe.py`; floor: `tests/test_set2_consumer_scale.py`.

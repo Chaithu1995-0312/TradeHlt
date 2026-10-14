@@ -248,7 +248,7 @@ A **slot** identity (one feature inside the vector):
 |---|---|
 | `formula_hash` / ontology formula identity | Same name, different math, is a different slot (F-046, F-050) |
 | `normalization_basis` | `atr_relative` (active default) · `atr_absolute` arm (F-061). Changes meaning of FM-022/023 descendants |
-| `session_timestamp_basis` | `broker_local` · `utc_corrected` (F-066). Changes `session` / `hour_of_day` |
+| `session_timestamp_basis` | `broker_local` · `utc_corrected` (F-066). Changes `session` / `hour_of_day`. **CORRECTED 2026-10-08 (F-120): RETIRED** — the clock is a configured corpus identity normalized once at the SSOT (`CORPUS_CLOCK_CONTRACT.md`); identity-bearing clock = canonical UTC |
 | `feature_pipeline` period keys | `rsi_period`, `atr_period`, EMA spans, MACD periods — behavioral, config-owned |
 | `pit_status` | e.g. `PIT_UNCLEAN_CENTERED_SWINGS` (F-051). Contaminates identity of swing-descended slots; does not dissolve the PK |
 | `producer` | `FeaturePipeline` is the canonical producer. Other builders are different identities if they emit a vector |

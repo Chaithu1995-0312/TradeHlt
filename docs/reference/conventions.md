@@ -135,6 +135,28 @@ Do **not** hand-edit stubs for purpose/category — overlays only.
 
 Design: `docs/implementation_plan/script-implementation-traceability-sits-design.md`.
 
+### 2.2 Timeframe and candle-merging authority (CH-timeframe-ssot-v1)
+
+One bar-size table, one measurer, one merging authority pair. Do not write your own.
+
+| Need | Use |
+|---|---|
+| Minutes per timeframe | `features.calendar_periods.BAR_MINUTES` (hour-grid sizes derive from `HOUR_GRID_HOURS`) |
+| The bar size actually in a frame | `features.calendar_periods.modal_bar_minutes(frame["timestamp"])` |
+| Merge M15 into H1/H4/D1 in batch | `research.resample.resample(candles, rule, calendar=corpus.calendar)` |
+| Merge streaming / prior-day levels | `features.parent_candle.ParentCandleBuilder(rule, calendar=corpus.calendar)` |
+
+- `FeaturePipeline(df, timeframe="M15")` raises when the frame's measured bar size differs from the declared
+  timeframe. Its windows are bar counts tuned on M15, so a non-M15 timeframe logs a warning.
+- The backtest raises `TimeframeGuardError` when `gap_reset_minutes` is shorter than one bar (the detector would fire
+  on every bar). The live rail accepts `M15` only.
+- Hand-rolled merging (`df.resample("4h")`, `dt.floor("h")`, `pd.Grouper(freq=...)`, `groupby(...dt.date)`) is blocked by
+  `tests/test_aggregation_authority.py` over `src/`, `scripts/`, `tools/`. Existing instances sit in the shrink-only
+  `docs/governance/aggregation_authority_allowlist.json`. The scanner is syntactic and does not see index arithmetic
+  like `hour // 4`.
+- Features computed on M15 describe an M15 candle. To study an H4 rule, compute the patterns on H4 candles
+  (`candle_patterns.compute_all` on the merged frame), do not read the last M15 bar's values.
+
 ---
 
 ## 3. Error Handling Patterns

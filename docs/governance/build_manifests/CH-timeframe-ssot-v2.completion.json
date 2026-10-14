@@ -1,0 +1,85 @@
+{
+  "change_id": "CH-timeframe-ssot-v2",
+  "date_utc": "2026-10-10",
+  "change_classes": [
+    "RUNTIME_DECISION_PATH_CHANGE",
+    "TRACE_OBSERVATION_JOIN",
+    "CORPUS_AUTHORITY_CHANGE"
+  ],
+  "completion_status": "BLOCKED_BY_CONCURRENT_UNCOMMITTED_WORK",
+  "completion_status_note": "Every declared check executed. validate-completion reports BLOCKED only for governed surfaces other sessions changed and this change did not touch (market_calendar.json, concept_contracts.yaml, market_ontology.yaml, representation_registry/feature_pipeline.yaml, six production configs), plus configs/data_provenance/ohlcv_clock_registry.json whose changes are this session's: one record for the 2026-04-20..10-06 XAUUSD file (2026-10-09, user-authorised, CH-timeframe-ssot-v1 note) and the eight data/resampled crypto records (2026-10-10, user-authorised, declared here).",
+  "declared_files": [
+    "src/config_layer/crt_engine_v2.py",
+    "src/runtime/backtest_v2.py",
+    "src/identity/certify.py",
+    "src/research/zone_mapping/collect_trade_opened_features.py",
+    "src/research/zone_mapping/crt_zone_crosstab.py",
+    "src/research/zone_mapping/gaussian_family_shadow_eval.py",
+    "configs/formulas/market_crt_states.yaml",
+    "src/features/crt_state_resolver.py",
+    "src/research/adapters/spine_signal_source.py",
+    "scripts/research/qualify_htf.py",
+    "configs/research/research_config_spine_htf_majors.json",
+    "configs/research/research_config_spine_htf_majors_active.json",
+    "configs/data_provenance/ohlcv_clock_registry.json",
+    "tests/test_resolver_htf_window_alignment.py",
+    "tests/test_crt_threshold_refs.py",
+    "scripts/maintenance/check_governance_invariants.py",
+    "active_models.yaml",
+    "docs/topics/crt-spine.md",
+    "docs/governance/build_manifests/CH-timeframe-ssot-v2.impact.json",
+    "docs/governance/build_manifests/CH-timeframe-ssot-v2.completion.json"
+  ],
+  "incidental_fixes": [
+    "active_models.yaml: nine crt_engine_v2.py:LINE citations moved to the new definition lines (citation sync, tests/test_doc_citations.py).",
+    "The F-069 confusion tool's default HTF window came from the same stale YAML value (4), so its default reconstruction of the engine's HTF timeline used the wrong window."
+  ],
+  "residual_not_fixed": [
+    "F-027 and F-069 are not edited. Proposed notes are in the session log for the user's decision.",
+    "That the 2026-09-09 engine window change (commit 63562ab, 4 -> 16) drove F-069's baseline not reproducing is a candidate, not proven (needs an engine run at window 4, which the G1 guard refuses).",
+    "The legacy research composite v2_multi_2026_04 cannot construct a BacktestConfig (no backtest.timeframe since EPIC-84); the standing spine research config still points at it.",
+    "33 failures in resolver-adjacent tests belong to other sessions' uncommitted work (schema v9.0 feature set, census pins)."
+  ],
+  "authority_granted": "User 2026-10-10: would_expand out of the window; align the resolver with the active config; re-measure F-027 after the fixes; declare the eight resampled crypto clocks as binance_utc.",
+  "authority_NOT_granted": "No finding edit, no ACTIVE_VERSION or active-config change, no resolver enablement, no G001/economic claim, no commit.",
+  "production_behavior_changed": "NO: XAUUSD backtest on the active config is content-identical to the baseline (7 trades, 7,133 events, summary). Only crt_telemetry would_expand_score changes, on 69 of 2,887 RESET_ATTRIBUTED records, 0 would_expand flag flips. The resolver is disabled (crt_state.enabled=false).",
+  "checks_detail": [
+    {
+      "check": "XAUUSD backtest before/after (active config)",
+      "result": "PASS",
+      "detail": "results/tf_ssot/before vs after_v2: 0 differing trade fields, 0 differing event lines, 0 differing summary keys; telemetry differs only in would_expand_score (69 records), 0 flag flips."
+    },
+    {
+      "check": "Resolver-vs-engine agreement (injection none, 47,197 bars, one active-config engine run)",
+      "result": "MEASURED",
+      "detail": "window 4: 53.07% (25,048); window 16: 73.40% (34,644); edge mismatches 1,132 -> 459. results/tf_ssot/parity_w4.json, parity_w16.json."
+    },
+    {
+      "check": "Governance floor",
+      "result": "AS EXPECTED",
+      "detail": "same 11 failures as the original baseline; 864 passed. tests/test_resolver_htf_window_alignment.py added to the floor afterwards (4 passed)."
+    },
+    {
+      "check": "Resolver/telemetry test files (34 files)",
+      "result": "AS EXPECTED",
+      "detail": "34 failed: 1 was this change's pinned threshold snapshot (4 -> 16, updated with the measured effect cited); 33 unrelated and unchanged."
+    },
+    {
+      "check": "F-027 re-measure",
+      "result": "DONE",
+      "detail": "Step A unchanged driver: toy arm reproduces F-027 exactly at H1 and H4 (0 PROMOTE); spine arm NOT_MEASURABLE (legacy composite lacks backtest.timeframe). Step B active composite with declared timeframe and gap_reset_bars=8: spine MEASURED, H4 pooled n=0, H1 pooled n=1 (BTC), all INSUFFICIENT; zero is genuine (no trades file written)."
+    }
+  ],
+  "checks_executed": [
+    "tests/test_resolver_htf_window_alignment.py",
+    "tests/test_crt_threshold_refs.py",
+    "tests/test_doc_citations.py",
+    "tests/test_topic_docs.py",
+    "tests/test_active_models_registry.py",
+    "tests/test_governance_invariant_check.py",
+    "tests/test_timeframe_guards.py",
+    "tests/test_aggregation_authority.py"
+  ],
+  "repo_state_hash": "PENDING",
+  "_change_classes_note": "Mirrors the impact manifest so validate_completion resolves the required checks."
+}

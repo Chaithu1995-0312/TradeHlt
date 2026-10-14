@@ -1,0 +1,124 @@
+{
+  "ssot": {
+    "corpus_identity": "XAUUSD_MT5_PHASE1_20260521",
+    "dataset_id": "XAUUSD_MT5_PHASE1_20260521",
+    "corpus_sha256": "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56",
+    "corpus_path": "D:/Tradelatest/data/mt5/XAUUSD_M15.csv",
+    "requested_path": "D:/Tradelatest/data/mt5/XAUUSD_M15.csv",
+    "rewritten": false,
+    "bound": true,
+    "instrument": "XAUUSD",
+    "timeframe": "M15",
+    "n_rows": 47275,
+    "start": "2024-05-22 01:00:00",
+    "end": "2026-05-21 23:45:00",
+    "sequence_checked": false,
+    "admission_decision": "IDENTITY_ONLY",
+    "authority": "data_ingestion.corpus_store.load"
+  },
+  "families": {
+    "asymmetry": {
+      "identity_fields": 4,
+      "identity_kinds": [
+        "id",
+        "sha"
+      ],
+      "identity_mismatches": [],
+      "identity_ok": true,
+      "metrics_vs_original": "IDENTICAL",
+      "metric_diffs": []
+    },
+    "backtest_v2": {
+      "identity_fields": 6,
+      "identity_kinds": [
+        "id",
+        "sha"
+      ],
+      "identity_mismatches": [],
+      "identity_ok": true
+    },
+    "context_attribution": {
+      "identity_fields": 2,
+      "identity_kinds": [
+        "id",
+        "sha"
+      ],
+      "identity_mismatches": [],
+      "identity_ok": true,
+      "metrics_vs_original": "IDENTICAL",
+      "metric_diffs": []
+    },
+    "magnitude_prior": {
+      "identity_fields": 2,
+      "identity_kinds": [
+        "id",
+        "sha"
+      ],
+      "identity_mismatches": [],
+      "identity_ok": true,
+      "metrics_vs_original": "IDENTICAL",
+      "metric_diffs": []
+    },
+    "mother_range": {
+      "identity_fields": 4,
+      "identity_kinds": [
+        "id",
+        "sha"
+      ],
+      "identity_mismatches": [],
+      "identity_ok": true,
+      "metrics_vs_original": "IDENTICAL",
+      "metric_diffs": []
+    },
+    "mother_range_prior": {
+      "identity_fields": 2,
+      "identity_kinds": [
+        "id",
+        "sha"
+      ],
+      "identity_mismatches": [],
+      "identity_ok": true,
+      "metrics_vs_original": "IDENTICAL",
+      "metric_diffs": []
+    },
+    "rnet_overlay": {
+      "identity_fields": 2,
+      "identity_kinds": [
+        "id",
+        "sha"
+      ],
+      "identity_mismatches": [],
+      "identity_ok": true,
+      "metrics_vs_original": "IDENTICAL",
+      "metric_diffs": []
+    },
+    "sujan_crt": {
+      "identity_fields": 5,
+      "identity_kinds": [
+        "id",
+        "sha"
+      ],
+      "identity_mismatches": [],
+      "identity_ok": true,
+      "metrics_vs_original": "IDENTICAL",
+      "metric_diffs": []
+    },
+    "vcrt_v2": {
+      "identity_fields": 0,
+      "identity_kinds": [],
+      "identity_mismatches": [],
+      "identity_ok": false
+    },
+    "visual_crt_prior": {
+      "identity_fields": 2,
+      "identity_kinds": [
+        "id",
+        "sha"
+      ],
+      "identity_mismatches": [],
+      "identity_ok": true,
+      "metrics_vs_original": "IDENTICAL",
+      "metric_diffs": []
+    }
+  }
+}

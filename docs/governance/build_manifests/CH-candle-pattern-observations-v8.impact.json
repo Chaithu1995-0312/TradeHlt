@@ -1,0 +1,30 @@
+{
+  "change_id": "CH-candle-pattern-observations-v8",
+  "date_utc": "2026-10-08",
+  "objective": "Bring the user's candle-theory card patterns into the system's linear flow (OHLC -> candle anatomy -> normalized geometry -> pattern observations -> canonical vector -> consumers) under the corrected multi-LLM spec the user adopted ('these are correct designs', no separate decisions): 17 registered observations FM-103..FM-119 appended to the canonical vector (schema 7.0 -> 8.0, 54 -> 71), and the strategy feature dict's dead is_inside_bar / proxy rejection_wick wired to real producers.",
+  "change_classes": ["FEATURE_IDENTITY_CHANGE", "DATASET_SCHEMA_CHANGE", "DERIVED_METRIC_CHANGE", "MODEL_INPUT_CHANGE", "RUNTIME_DECISION_PATH_CHANGE", "PRODUCTION_CONFIG_CHANGE"],
+  "change_class_rationale": "New governed identities FM-103..FM-119 (FEATURE_IDENTITY_CHANGE, DERIVED_METRIC_CHANGE); canonical vector grows 54 -> 71 (DATASET_SCHEMA_CHANGE, MODEL_INPUT_CHANGE); strategy feature dict inputs of S02/S05 change (RUNTIME_DECISION_PATH_CHANGE, strategy layer only); new strict feature_pipeline.candle_patterns block on 12 configs (PRODUCTION_CONFIG_CHANGE, hash-neutral).",
+  "affected_files": [
+    "src/features/candle_patterns.py (new)", "src/features/feature_pipeline.py", "src/features/feature_schema.py",
+    "src/features/registry/derived_registry.py", "src/features/crt_feature_builder.py", "src/runtime/live_engine_hook.py",
+    "src/research/model_runners/schema_resolver.py", "src/research/clean_labels/builder.py", "src/identity/tokens.py",
+    "src/governance/strategy_backtest.py", "scripts/analysis/feature_dag_layers.py", "scripts/analysis/feature_math_lint.py",
+    "configs/formulas/market_ontology.yaml", "configs/formulas/concept_contracts.yaml",
+    "configs/formulas/representation_registry/feature_pipeline.yaml", "configs/production/*.json (12 configs carrying feature_pipeline)",
+    "docs/governance/feature-layer-freeze-pin-2026-07-20.json", "docs/governance/schema_version_registry.json",
+    "docs/governance/STORAGE_PRESERVATION_CONTRACT.md", "docs/governance/geometry_census.jsonl",
+    "docs/governance/geometry_semantic_adjudication.jsonl", "docs/governance/geometry_family_registry.json",
+    "docs/current-findings.md", "CLAUDE.md", "active_models.yaml", "tests/test_candle_patterns.py (new)", "tests (54 -> 71 dimension pins)"
+  ],
+  "affected_feature_ids": ["FM-103", "FM-104", "FM-105", "FM-106", "FM-107", "FM-108", "FM-109", "FM-110", "FM-111", "FM-112", "FM-113", "FM-114", "FM-115", "FM-116", "FM-117", "FM-118", "FM-119", "FM-074"],
+  "affected_models": "No model is trained on slots 54-70. Zone registry aligns by name (38-dim feature_order) -> unaffected; gaussian/rr/rr_fusion/bitnet/tradenet already stale since F-076 -> recorded, not retrained.",
+  "affected_production_config": "All 12 feature_pipeline-bearing configs (incl. ACTIVE v2_htfcrt_2026_08) gain feature_pipeline.candle_patterns with the spec's thresholds. feature_pipeline is a non-params section: params hash unchanged.",
+  "ontology_nodes_added": ["FM-103 upper_wick_ratio", "FM-104 lower_wick_ratio", "FM-105 pin_lower", "FM-106 pin_upper", "FM-107 hammer", "FM-108 shooting_star", "FM-109 doji_material", "FM-110 dragonfly_doji", "FM-111 gravestone_doji", "FM-112 engulfing_bull", "FM-113 engulfing_bear", "FM-114 inside_bar", "FM-115 compression_ratio", "FM-116 rejection_intensity_signed", "FM-117 rejection_intensity_lower", "FM-118 engulfing_strength", "FM-119 rejection_intensity_upper", "concepts GP-08 wick_share, GP-09 candle_pattern, GP-10 rejection_intensity, GP-11 relative_bar_size"],
+  "required_checks_ack": ["tests/test_formula_registry.py", "tests/test_feature_lineage.py", "tests/test_geometry_census.py", "tests/test_gate2b_closure.py", "tests/test_feature_pipeline.py", "tests/test_active_models_registry.py", "tests/test_derived_math.py", "tests/test_feature_math_lint.py", "tests/test_current_findings.py", "tests/test_config_reachability.py", "tests/test_reachability_golden.py"],
+  "required_checks_note": "Plus tests/test_candle_patterns.py (new), tests/test_feature_layer_freeze.py, tests/governance/test_schema_version_registry.py, tests/governance/test_representation_registry.py, tests/test_feature_dag_layers.py, tests/test_semantic_registry.py; then the green floor against the 8 pre-existing reds.",
+  "unknowns": [],
+  "rollback_boundary": "Not config-reversible: the schema 8.0 bump (ontology slots 54-70 + feature_schema + identity tokens + freeze pin + representation shard revert together). strategy_backtest mapping reverts with the code.",
+  "authority_granted": "User 2026-10-08: 'No separate decisions or parity needed ... align the system in linear flow as these are correct designs and plan for necessary modifications ... dont break system'; plan approved via ExitPlanMode.",
+  "authority_NOT_granted": "No retrain, no model promotion, no ACTIVE_VERSION change, no G001/economic claim, no CRT state-machine consumer of the patterns (observations only).",
+  "production_behavior_changed": "YES: vector grows (slots 0-53 bit-identical); S02/S05 confidence inputs change in strategy_backtest. CRT spine does not read the new slots."
+}

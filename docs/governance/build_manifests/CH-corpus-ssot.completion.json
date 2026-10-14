@@ -1,0 +1,85 @@
+{
+  "change_id": "CH-corpus-ssot",
+  "date_utc": "2026-10-08",
+  "objective": "One Corpus Source of Truth for research/backtest/replay/governance: data_ingestion.corpus_store.load() returns an AdmittedCorpus (identity, sha256 of the exact bytes, rows, range, content) that every consumer parses, and every artifact takes corpus identity from. Model: one SSOT, many identified corpora (registered dataset_id or content identity sha256:<hex>); one selected corpus per execution; no silent substitution.",
+  "completion_status": "SSOT_CLOSED",
+  "blockers": [
+    "vcrt_v2 workload input missing (see status_by_scope.research_regeneration) \u2014 not an SSOT blocker",
+    "scripts/analysis/set2_consumer_scale_probe.py \u2014 ownership/worktree item, not an SSOT blocker"
+  ],
+  "single_authority": "src/data_ingestion/corpus_store.py::load / AdmittedCorpus (built on dataset_registry.admit_csv_path identity + corpus_gate.admit_corpus sequence checks; no second authority created).",
+  "consumers_migrated": [
+    "runtime.backtest_v2 CandleLoader + BacktestRunner (features frame, rows, range, sidecar hashes, run identity dataset_hash, manifest corpus.ssot)",
+    "runtime.backtest_bitnet, runtime.unified_replay_harness (window + parent sidecar), governance.strategy_backtest",
+    "research.mc_kit.bars, research.probes.corpus, research.visual_crt driver/measure, research.sujan_crt, research.sujan_manipulation, research.rc003_distinct_object, research.ic002_entry_evolution (fallback removed), research.oracle.labeler, research.secondlow_v1.detector, research.mother_range",
+    "research.evidence: asymmetry_contract, magnitude_prior, rnet_overlay, mother_range_prior, visual_crt_prior, context_attribution (hard-coded CORPUS_SHA removed; fingerprints hash dataset_id + corpus_sha256)",
+    "identity.certify, research.ohlcv_volume_semantics, charts.resolver_overlay/chart_series, semantics.integration.observe/select_window, research.zone_mapping x5, features.bar_feature_frame, research.goal_alignment, research.model_runners.substrate, analytics.sl_tp_comparator, runtime.bar_structure_snapshot.corpus_sha256",
+    "scripts: build_bar_matrix and ~50 analysis/research scripts, tools/xau_chart, _build_run_story.py (see tests/test_corpus_ssot.py allowlist for the reasoned exceptions)"
+  ],
+  "lint_change": "scripts/analysis/corpus_read_census.py: SSOT entry-point names added to GATED_CALLS and corpus_store.py recognised as the authority (corpus_store.build was already the annotated exception). Allowlist NOT grown. Flagged sites 43 -> 24; none reads OHLCV.",
+  "checks_detail": [
+    {
+      "check": "SSOT enforcement tests",
+      "result": "PASS",
+      "detail": "tests/test_corpus_ssot.py 20 passed: open-tracer over 8 consumers (+ negative control proving it can fail), identity/content/provenance, static scans of src/ and scripts/tools/root, BOM + unparseable never clean, alias->dataset, newer corpus keeps own identity, program candidates must be one corpus."
+    },
+    {
+      "check": "Related tests (152 files importing changed modules)",
+      "result": "49 failed / 2146 passed / 27 skipped / 11 setup errors",
+      "detail": "Attributed by assertion/traceback: 25 utc_corrected refuses UTC corpora and 18 certification-vs-legacy-semantics (both F-117 activation fallout, to be pinned/updated), 3 config-key drift and 1 shadow-config drift (other sessions), 2 v9 (FM-121..129), 1 lint (baseline red, 43->24), 2 script-registry baseline, 1 missing EURUSD file, plus baseline reds (F-107 rename pin, freeze drift of data/XAUUSD_M15.csv, kernel imports of research in chart_series/semantic_query/carry, fusion identity-blind). 12 failures that WERE caused by the SSOT (strategy_backtest/model_runners_smoke: empty-instrument forensic misread, sequence check on fixtures) were fixed in corpus_store.load / strategy_backtest."
+    },
+    {
+      "check": "Governance floor (29 targets)",
+      "result": "9 failed = 8 baseline + 1 v9",
+      "detail": "No new red from this change."
+    },
+    {
+      "check": "Workloads (10 families)",
+      "result": "9 OK, 1 blocked",
+      "detail": "backtest_v2 514s, mother_range, sujan_crt, asymmetry, magnitude_prior, rnet_overlay, mother_range_prior, visual_crt_prior, context_attribution OK; vcrt_v2 blocked (missing cost manifest)."
+    },
+    {
+      "check": "Artifact revalidation",
+      "result": "PASS",
+      "detail": "results/ssot_regen_2026-10-08/revalidation.json: every identity field equals the SSOT corpus (dataset_id XAUUSD_MT5_PHASE1_20260521, sha256 4d73f5ce\u2026, 47,275 rows, 2024-05-22 01:00 -> 2026-05-21 23:45); metrics of 8 research families IDENTICAL to originals; backtest ledger identical (7 trades, 7,133 events)."
+    }
+  ],
+  "authority_granted": "User 2026-10-08: SSOT remediation; 'do not preserve historical results'; correction: one SSOT with many identified corpora; keep asset scope separated.",
+  "authority_NOT_granted": "No G001/economic claim; no change to CORPUS_AUTHORITY.md (FROZEN), canonical corpus bytes or pin, sealed contract populations/parameters; no crypto/FX clock review.",
+  "repo_state_hash": "PENDING",
+  "status_by_scope": {
+    "corpus_ssot": {
+      "status": "CLOSED",
+      "evidence": [
+        "20 SSOT enforcement tests pass (tests/test_corpus_ssot.py), incl. a negative control",
+        "no competing OHLCV reader in the scanned surfaces (src/, scripts/, tools/, root); lint 43 -> 24 flagged, none OHLCV",
+        "multiple identified corpora supported; undeclared different files keep their own identity; no silent rewrite",
+        "corpus identity/hash derive from the SSOT bytes, not constants",
+        "regenerated XAUUSD artifacts carry the SSOT identity; metrics identical where workloads completed; backtest ledger identical (7 trades, 7,133 events)",
+        "governance floor: no new red from this change (8 baseline + 1 v9)"
+      ]
+    },
+    "research_regeneration": {
+      "status": "PARTIAL",
+      "completed": "9 of 10 workloads",
+      "reason": "vcrt_v2 cost-calibration manifest (results/research/xauusd_mt5_cost_calibration/*manifest*.json) is absent from this checkout: a workload INPUT-availability issue, not a corpus-authority defect"
+    },
+    "crypto_fx_corpora": {
+      "status": "OUT_OF_SCOPE_FOR_THIS_CLOSURE",
+      "note": "BNBUSDT/BTC/EURUSD corpus semantics are not modified under F-119; separate corpus-identity/clock work"
+    },
+    "v7_utc_corrected_fallout": {
+      "status": "SEPARATE_FINDING_SEPARATE_CHANGE_LINEAGE",
+      "note": "43 of the 49 related-test failures (25 clock guard refuses UTC corpora + 18 certification/entry-chain tests vs legacy semantics) trace to CH-feature-semantic-fixes-v7 (F-117), not to the SSOT. NOT repaired under F-119: no legacy-key pinning, no clock-guard change. Next: establish what v7 intended, what it changed, and why these fail; treat them as evidence about v7."
+    },
+    "set2_consumer_scale_probe": {
+      "status": "OWNERSHIP_WORKTREE_COORDINATION",
+      "note": "another session's staged WIP (scripts/analysis/set2_consumer_scale_probe.py); not modified under F-119 (my one edit was reverted to their staged version); owner converts its raw read"
+    },
+    "repository_baseline": {
+      "status": "NOT_CLEAN",
+      "note": "8 baseline governance reds + 1 v9 predicate-test red + the v7 fallout above; none introduced by the corpus SSOT"
+    }
+  },
+  "completion_status_note": "Corpus SSOT: CLOSED. Full research regeneration: PARTIAL. Repository baseline: NOT CLEAN. These are separate statuses; the SSOT implementation is not blocked by the others."
+}

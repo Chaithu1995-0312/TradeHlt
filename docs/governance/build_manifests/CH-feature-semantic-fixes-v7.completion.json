@@ -1,0 +1,157 @@
+{
+  "change_id": "CH-feature-semantic-fixes-v7",
+  "date_utc": "2026-10-08",
+  "change_classes": [
+    "FEATURE_IDENTITY_CHANGE",
+    "DATASET_SCHEMA_CHANGE",
+    "DERIVED_METRIC_CHANGE",
+    "MODEL_INPUT_CHANGE",
+    "RUNTIME_DECISION_PATH_CHANGE",
+    "PRODUCTION_CONFIG_CHANGE"
+  ],
+  "completion_status": "BLOCKED_BY_CONCURRENT_UNCOMMITTED_WORK",
+  "completion_status_note": "Every declared check executed; green floor after the change = exactly the 8 failures recorded BEFORE any edit (843 passed, no new red). validate-completion still reports BLOCKED only because the working tree also carries ANOTHER session's uncommitted 2026-10-07 SET2-CONSUMER-SCALE / F-115 work (scripts/analysis/set2_consumer_scale_probe.py, scripts/governance/seed_script_registry.py, src/core/engine_runner.py, src/strategies/*.py) which this change did not touch and must not declare. Re-run validate-completion once that work is committed or the two change sets are staged separately.",
+  "declared_files": [
+    "src/features/derived_math.py",
+    "src/features/registry/derived_registry.py",
+    "src/features/fm_resolve.py",
+    "src/config_layer/crt_engine_v2.py",
+    "src/config_layer/crt_gaussian_scorer.py",
+    "src/features/feature_pipeline.py",
+    "src/features/feature_schema.py",
+    "src/features/smc/order_block.py",
+    "src/features/smc/fvg.py",
+    "src/features/smc/breaker.py",
+    "src/features/smc/mitigation.py",
+    "src/features/smc/levels.py",
+    "src/features/crt_feature_builder.py",
+    "src/runtime/live_engine_hook.py",
+    "src/runtime/bar_structure_snapshot.py",
+    "src/research/model_runners/schema_resolver.py",
+    "src/research/clean_labels/builder.py",
+    "src/identity/tokens.py",
+    "scripts/analysis/feature_dag_layers.py",
+    "configs/formulas/market_ontology.yaml",
+    "configs/formulas/representation_registry/feature_pipeline.yaml",
+    "docs/governance/feature-layer-freeze-pin-2026-07-20.json",
+    "docs/governance/schema_version_registry.json",
+    "docs/governance/STORAGE_PRESERVATION_CONTRACT.md",
+    "tests/golden/registry_summary.json",
+    "docs/current-findings.md",
+    "CLAUDE.md",
+    "active_models.yaml",
+    "docs/reference/schemas.md",
+    "docs/topics/feature-schema.md",
+    "tests/test_feature_semantic_fixes_v7.py",
+    "configs/production/v2_htfcrt_2026_08.json",
+    "configs/production/v2_dispkill_shadow_2026_08.json",
+    "configs/production/v2_htfcrt_e01lifecycle_shadow_2026_10.json",
+    "configs/production/v2_htfcrt_k23_shadow_2026_09.json",
+    "configs/production/v2_htfcrt_objgate_shadow_2026_08.json",
+    "configs/production/v2_multi_2026_04.json",
+    "configs/production/v2_multi_2026_04_v3session_probe.json",
+    "configs/production/v2_multi_bitnet_shadow_2026_07.json",
+    "configs/production/v2_multi_dimfix_shadow_2026_07.json",
+    "configs/production/v3_unified_market_structure_2026_09.json",
+    "configs/production/v4_crt_sot_2026_08.json",
+    "configs/production/v4_dual_construction_2026_09.json",
+    "configs/production/v5_htfcrt_sot_dual_k23_2026_09.json",
+    "tests/Claude/test_K_smc_identity.py",
+    "tests/features/test_liquidity_distance.py",
+    "tests/research/episodes/test_candidate_features.py",
+    "tests/test_b0b1_feature_semantic_migration.py",
+    "tests/test_crt_baseline_trace.py",
+    "tests/test_ema_momentum_kernel_slot.py",
+    "tests/test_schema_v4_artifact_reconciliation.py",
+    "tests/test_model_registry_join.py",
+    "tests/test_feature_layer_freeze.py",
+    "tests/test_feature_pipeline.py",
+    "tests/semantics/integration/test_integration_checks.py",
+    "docs/research-readiness/config-reachability-report.json",
+    "docs/research-readiness/config-reachability-report.md",
+    "docs/governance/build_manifests/CH-feature-semantic-fixes-v7.impact.json",
+    "docs/governance/build_manifests/CH-feature-semantic-fixes-v7.completion.json",
+    "docs/memory/feature-memory.md",
+    "data/findings.jsonl"
+  ],
+  "incidental_fixes": [
+    "src/runtime/bar_structure_snapshot.py inferred eqh/eql_present from distance != 0 -- the same 'on the level reads as no cluster' defect; now uses the canonical finder.",
+    "compute_smc_features ran the break-event scan 3x per bar; now once (shared, pinned equivalent by tests/test_smc_break_event_memo.py): full-corpus feature build 400 s -> 227 s, values identical."
+  ],
+  "residual_not_fixed": [
+    "Candle-pattern identities (hammer, shooting star, doji, engulfing, inside bar) remain unregistered.",
+    "Model families (gaussian/rr/rr_fusion/bitnet/tradenet) remain stale since F-076; not retrained.",
+    "Findings whose inputs moved are named in F-117 and NOT revalidated (user's 2026-10-03 'later' intent)."
+  ],
+  "authority_granted": "User 2026-10-08 request + AskUserQuestion choices (all four; session = feature AND filter; presence into the vector) + ExitPlanMode approval.",
+  "authority_NOT_granted": "No retrain, no promotion, no ACTIVE_VERSION change, no G001/economic claim, no CRT re-certification.",
+  "production_behavior_changed": "YES, measured: see checks_detail.",
+  "checks_detail": [
+    {
+      "check": "Pipeline refactor is value-neutral",
+      "result": "PASS",
+      "detail": "Pinned XAUUSD window with the PREVIOUS semantic keys: first 48 slots reproduce the previous freeze-pin vector SHA 7589d0ea... exactly."
+    },
+    {
+      "check": "Full-corpus vector before/after (data/mt5/XAUUSD_M15.csv, 47,275 -> 47,197 rows)",
+      "result": "AS DECLARED",
+      "detail": "41/48 old slots bit-identical. Moved: hour_of_day 100%, candles_since_sweep 71.375%, session 53.353% (F-066 measured 53.36%), retest_depth 17.402%, liquidity_sweep 13.211%, sweep_detected 13.003%, double_sweep 4.998%. New slots 48-53."
+    },
+    {
+      "check": "Presence consistency",
+      "result": "PASS",
+      "detail": "0 bars with *_present==0 and *_distance!=0 (all six). Zone present with distance exactly 0 (previously indistinguishable from 'none'): ob 9, fvg 46, breaker 0, mitigation 0, eqh 11, eql 8. Present rate: ob 94.15%, fvg 91.11%, breaker 66.25%, mitigation 55.15%, eqh 69.60%, eql 64.58%."
+    },
+    {
+      "check": "FM-096 vs FM-027",
+      "result": "PASS",
+      "detail": "Synthetic cases in tests/test_feature_semantic_fixes_v7.py; engine debug on the corpus: bullish disp 4997.52->5009.21, retest 4989.12 (beyond the open) = FM-027 0.719 (pullback band) vs FM-096 1.719."
+    },
+    {
+      "check": "Backtest before/after (full XAUUSD, active config, backtest_v2)",
+      "result": "CHANGED (expected)",
+      "detail": "setups 4 -> 12; trades 3 -> 7; off_session rejects 15 -> 6 (+1 off_session:ASIA); net R -1.855 -> -4.519; PF 0.195 -> 0.250. Counts only; no economic claim."
+    },
+    {
+      "check": "Freeze pin regenerated",
+      "result": "PASS",
+      "detail": "vector 7589d0ea... -> 023180f8a1e75371, shape (3871,48) -> (3871,54); waiver_log CH-feature-semantic-fixes-v7; tests/test_feature_layer_freeze.py 8 passed."
+    },
+    {
+      "check": "Config reachability golden",
+      "result": "REGENERATED",
+      "detail": "New verdicts only: retrace_semantics READ_AND_USED; four _comment_*activation keys READ_BUT_INERT from this change plus two from the 2026-10-07 SET2 program's uncommitted config edits (_comment_gate_vol_atr_basis_activation, _comment_normalization_basis_activation), absorbed and declared here."
+    },
+    {
+      "check": "SITS floor for scripts/analysis/feature_dag_layers.py (edited, not added)",
+      "result": "PRE-EXISTING RED",
+      "detail": "tests/test_script_registry.py grandfather tests fail identically on the baseline captured before any edit; the edit adds 6 _NODES rows to an already-registered script, no new script path."
+    }
+  ],
+  "checks_executed": [
+    "tests/test_formula_registry.py",
+    "tests/test_feature_lineage.py",
+    "tests/test_geometry_census.py",
+    "tests/test_gate2b_closure.py",
+    "tests/test_feature_pipeline.py",
+    "tests/test_active_models_registry.py",
+    "tests/test_derived_math.py",
+    "tests/test_feature_math_lint.py",
+    "tests/test_current_findings.py",
+    "tests/test_config_reachability.py",
+    "tests/test_reachability_golden.py",
+    "tests/test_feature_layer_freeze.py",
+    "tests/governance/test_schema_version_registry.py",
+    "tests/test_feature_dag_layers.py",
+    "tests/test_semantic_registry.py",
+    "tests/test_feature_semantic_fixes_v7.py",
+    "tests/test_fm_resolution_phase2.py",
+    "tests/test_smc_break_event_memo.py",
+    "tests/governance/test_representation_registry.py",
+    "tests/semantics/integration/test_integration_checks.py",
+    "scripts/maintenance/check_governance_invariants.py --all",
+    "tests/test_script_registry.py"
+  ],
+  "repo_state_hash": "PENDING",
+  "_change_classes_note": "Mirrors the impact manifest so validate_completion resolves the required checks."
+}

@@ -1,0 +1,72 @@
+{
+  "_doc": "Shrink-only allowlist of hand-rolled candle merging that pre-dates CH-timeframe-ssot-v1 (census 2026-10-09). Enforced by tests/test_aggregation_authority.py: a new hit fails; a removed hit must be deleted or lowered here. Never add an entry to make a new merge pass: call the authority.",
+  "authority": {
+    "batch": "research.resample.resample",
+    "streaming": "features.parent_candle.ParentCandleBuilder",
+    "grids": "features.calendar_periods (HOUR_GRID_HOURS, BAR_MINUTES) with the corpus calendar (corpus.calendar)",
+    "known_duplicate_emitters": [
+      "research.resample._emit",
+      "features.calendar_periods._emit",
+      "features.parent_candle._aggregate"
+    ],
+    "scanner_limits": "Syntax only (pandas resample/floor with a time-rule literal, pd.Grouper(freq=), groupby on a .dt.date/.dt.normalize() key). Scope src/, scripts/, tools/ excluding archive/ and tests/. Hand-rolled merging elsewhere (e.g. userinvestigation/) and index arithmetic like hour // 4 are not detected."
+  },
+  "generated": "2026-10-09 CH-timeframe-ssot-v1",
+  "entry_count": 9,
+  "entries": [
+    {
+      "path": "scripts/analysis/mother_range_inside_close.py",
+      "kind": "dt_floor",
+      "count": 3,
+      "reason": "Research: N-hour blocks via an epoch-anchored UTC floor (naive, not the 17:00 New York grid). Duplicated under archive/. Migrate to research.resample when next touched."
+    },
+    {
+      "path": "scripts/analysis/mother_range_inside_close.py",
+      "kind": "groupby_day",
+      "count": 1,
+      "reason": "Research: groups bars by UTC calendar date. Migrate to the corpus calendar day (ParentCandleBuilder D1)."
+    },
+    {
+      "path": "scripts/analysis/purge_delay_scan.py",
+      "kind": "pandas_resample",
+      "count": 1,
+      "reason": "Research: daily resample('1D') on UTC midnight for prior-day levels. Migrate to ParentCandleBuilder D1 on the corpus calendar."
+    },
+    {
+      "path": "scripts/analysis/semantic_layer_validation.py",
+      "kind": "groupby_day",
+      "count": 1,
+      "reason": "Counts bars per UTC date as a data-health statistic (bars_per_day); not OHLC merging. Kept for review, may be removed from the list."
+    },
+    {
+      "path": "scripts/data/build_m15_unified.py",
+      "kind": "pandas_resample",
+      "count": 1,
+      "reason": "Data prep: M1 -> M15 base-bar build on the minute grid (calendar-independent); keeps trailing bucket. Base builder, not an HTF consumer."
+    },
+    {
+      "path": "scripts/data/convert_binance_m1_to_m15.py",
+      "kind": "pandas_resample",
+      "count": 1,
+      "reason": "Data prep: Binance M1 -> M15 base-bar build on the minute grid (calendar-independent)."
+    },
+    {
+      "path": "scripts/misc/resample_m1_to_m15.py",
+      "kind": "pandas_resample",
+      "count": 1,
+      "reason": "Data prep: M1 -> M15 base-bar build on the minute grid (calendar-independent)."
+    },
+    {
+      "path": "scripts/research/sujan_trade_decode.py",
+      "kind": "dt_floor",
+      "count": 1,
+      "reason": "Another session's script (untracked at time of listing): H1 window around a trade via UTC hour floor. Owner to migrate to research.resample."
+    },
+    {
+      "path": "src/data_ingestion/clock_detector.py",
+      "kind": "groupby_day",
+      "count": 1,
+      "reason": "Clock-detection statistic over each file's own daily open/close; the file's raw clock is the subject, so the market calendar is deliberately not applied. Not OHLC merging."
+    }
+  ]
+}

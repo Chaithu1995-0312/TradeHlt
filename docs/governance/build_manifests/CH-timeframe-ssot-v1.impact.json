@@ -1,0 +1,68 @@
+{
+  "change_id": "CH-timeframe-ssot-v1",
+  "date_utc": "2026-10-09",
+  "objective": "One timeframe truth. FeaturePipeline, the backtest and the live rail each assumed 15-minute bars without declaring or checking it, so an H4 research check read candle-pattern features that described a 15-minute candle, and an H1/H4 backtest would reset on every bar (gap_reset_minutes=120 < one H4 bar). Add one bar-size table and measurer next to the existing hour-grid authority, make FeaturePipeline and the backtest fail closed when the declared timeframe disagrees with the measured bar size, limit the live rail to M15, name one candle-merging authority and ratchet new hand-rolled merging out, and make three engine telemetry numbers read the declared HTF window and bar size instead of 4 and 15.",
+  "change_classes": [
+    "RUNTIME_DECISION_PATH_CHANGE",
+    "TRACE_OBSERVATION_JOIN",
+    "SCRIPT_LIFECYCLE_CHANGE"
+  ],
+  "change_class_rationale": "New guards in FeaturePipeline.__init__ and BacktestRunner raise before a run on a mismatching or impossible timeframe (fail-closed; no behaviour change on M15 data with consistent config). Three telemetry-only expressions in crt_engine_v2 (would_expand score term, dwell/age hours conversions) and one resolver default change logged numbers, not trades. The research scripts under scripts/research/xau_1009_* are edited and re-registered (SITS).",
+  "affected_files": [
+    "src/features/calendar_periods.py (BAR_MINUTES, modal_bar_minutes)",
+    "src/features/candle_patterns.py (contiguous_mask reuses the measurer)",
+    "src/features/feature_pipeline.py (timeframe declaration + check)",
+    "src/runtime/backtest_v2.py (FeaturePipeline timeframe, G2/G3 guards)",
+    "src/research/adapters/shape_signal_source.py (declares timeframe)",
+    "src/runtime/live_rail_feeder.py (declares timeframe)",
+    "src/inout/live_rail/config.py (M15 only; table derived from BAR_MINUTES)",
+    "src/config_layer/crt_engine_v2.py (telemetry: remaining_htf_candles denominator, bar-minute conversions)",
+    "src/features/crt_state_resolver.py (htf_candles_per_range strict read)",
+    "scripts/research/xau_1009_*.py (H1 grouping via research.resample; H4 pattern columns)",
+    "tests/test_timeframe_guards.py (new)",
+    "tests/test_aggregation_authority.py (new)",
+    "docs/governance/aggregation_authority_allowlist.json (new, shrink-only)",
+    "docs/reference/conventions.md (one subsection naming the merging authority)",
+    "scripts/maintenance/check_governance_invariants.py (GREEN_FLOOR gains the two new tests)"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "none. No feature value, schema, hash or model input changes on M15 data.",
+  "affected_production_config": "none edited. Reads declared backtest.timeframe, backtest.gap_reset_*, backtest.htf_candles_per_range, parent_crt.timeframe.",
+  "behavioral_effects": [
+    "FeaturePipeline(df, timeframe='M15') raises ValueError when the frame's modal bar interval differs from the declared timeframe; a declared non-M15 timeframe logs one warning that indicator windows are bar counts tuned on M15.",
+    "BacktestRunner raises when backtest.timeframe differs from the measured bar size (G3) or when gap reset is enabled with gap_reset_minutes <= one bar (G2). Program 3 H1/H4 qualify_htf runs on a 120-minute gap now stop with an explanatory error instead of resetting on every bar.",
+    "live_rail.timeframe other than M15 is refused at config load.",
+    "crt_engine_v2 telemetry fields that assumed 4-bar windows and 15-minute bars now use the declared window and bar size; on the active config the would_expand score and CLOCK_DRIFT hour figures change, trades and state sequences must not.",
+    "A new test fails on any new hand-rolled OHLC merging in src/, scripts/ or tools/; existing instances sit in a shrink-only allowlist."
+  ],
+  "unverified_or_deferred": [
+    "The three OHLC emitters inside the authorities (research.resample._emit, calendar_periods._emit, parent_candle._aggregate) stay separate; merging them needs a parity proof of their volume handling.",
+    "inout/live_rail/bar_builder._floor_period floors on epoch seconds and is not calendar-aware above M15; guarded by the M15-only limit, not fixed.",
+    "Finding F-027 (H1/H4 spine runs) is not re-measured here; the guard makes its gap-reset behaviour visible but any change to the finding needs user approval.",
+    "Research scripts outside scripts/research/xau_1009_* that hand-roll merging are listed in the allowlist, not migrated."
+  ],
+  "authority_granted": "User 2026-10-09: maintain SSOT and align; clean sweep; fix own scripts, add guards, name one merging authority with a blocking test, fix the telemetry numbers. No commit.",
+  "authority_NOT_granted": "No G001 / economic claim; no active-config or ACTIVE_VERSION edit; no finding changed; no commit.",
+  "blocking_unknowns": [],
+  "unknowns": [],
+  "required_checks_ack": [
+    "tests/test_feature_pipeline.py",
+    "tests/test_candle_patterns.py",
+    "tests/test_calendar_periods.py",
+    "tests/test_parent_candle_builder.py",
+    "tests/test_htf_builder_window.py",
+    "tests/test_resample_completeness.py",
+    "tests/test_construction_protocol.py",
+    "tests/test_script_registry.py",
+    "tests/test_script_matrix_sync.py",
+    "tests/test_timeframe_guards.py",
+    "tests/test_aggregation_authority.py",
+    "tests/test_crt_construction_trace.py",
+    "tests/test_crt_construction_trace_envelope.py",
+    "tests/test_current_findings.py",
+    "tests/test_feature_math_lint.py",
+    "tests/test_geometry_census.py",
+    "tests/test_resolver_metadata.py"
+  ],
+  "rollback_boundary": "Code-only and reversible: revert the listed files. No config, schema, corpus or registry-of-record change. Baseline for byte-identity: results/tf_ssot/before (XAUUSD M15 backtest on the active config)."
+}

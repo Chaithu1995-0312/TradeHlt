@@ -1,0 +1,13 @@
+{
+  "change_id": "CH-entry-capital-html-2026-10-12",
+  "objective": "Move source-traced entry, SL, TP, account capital, per-trade risk and lot sizing producers and consumers into standalone accountmonitor.html, removing the section from the Parent CRT viewer.",
+  "change_classes": ["DOCUMENTATION_ONLY"],
+  "authorities_inspected": ["docs/knowledge-map.md", "src/config_layer/crt_engine_v2.py", "src/config_layer/execution_planner.py", "src/runtime/backtest_v2.py", "src/runtime/live_engine_hook.py", "src/core/position_sizing.py", "src/core/ultron_risk_gate.py", "configs/production/ACTIVE_VERSION", "configs/production/v2_htfcrt_2026_08.json"],
+  "affected_files": ["accountmonitor.html", "parent_crt_track_arch.html", "assistant_project.md", "docs/governance/build_manifests/CH-entry-capital-html-2026-10-12.impact.json"],
+  "planned_files": ["accountmonitor.html", "parent_crt_track_arch.html", "assistant_project.md", "docs/governance/build_manifests/CH-entry-capital-html-2026-10-12.impact.json"],
+  "required_checks_ack": ["tests/test_current_findings.py", "tests/test_doc_citations.py", "tests/test_topic_docs.py"],
+  "blocking_unknowns": [],
+  "unknowns": [],
+  "rollback_boundary": "Revert only this documentation addition.",
+  "notes": "Existing unrelated dirty source/config files are excluded from this task; whole-tree completion may fail on those changes."
+}

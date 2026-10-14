@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-19T21:00:11.494921+00:00",
+  "generated_at": "2026-10-08T15:11:45.927481+00:00",
   "census": "market_language",
   "version": "1.0",
   "authority_files": [
@@ -12,9 +12,9 @@
   "S1_feature_schema": {
     "header": {
       "schema_vector_derived_from": "configs/formulas/market_ontology.yaml",
-      "schema_hash_md5": "d40e7c7d5b624ef6d27670255ad95a35",
-      "feature_order_hash_sha256_16": "7901bb0d34f3d0af",
-      "dim": 48,
+      "schema_hash_md5": "3883362033ca8cfcc5a263306dd6b5fe",
+      "feature_order_hash_sha256_16": "79e6c8f97c5d956e",
+      "dim": 79,
       "schema_hash_formula": "md5(concat(names)) + sha256(json).hex[:16] mirror of src/features/feature_schema.py:237/243-248 (v6.0 generated vector)"
     },
     "rows": [
@@ -211,6 +211,18 @@
         "source_file": "configs/formulas/market_ontology.yaml"
       },
       {
+        "name": "retest_depth_e01",
+        "fm_id": "FM-095",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "clip(abs(close - ema_fast) / (atr * close), <feature_pipeline.retest_depth_clip_low>, <feature_pipeline.retest_depth_clip_high>) if retest_flag_e01==1 and atr>0 and close>0 else 0.0. Emitted at vector slot retest_depth only when <feature_pipeline.sweep_semantics> == 'e01_lifecycle'; the default selects FM-021.",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": [],
+        "vector_index": [],
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
         "name": "ema_spread",
         "fm_id": "FM-022",
         "section": "derived_metrics",
@@ -300,6 +312,18 @@
         "section": "derived_metrics",
         "lifecycle": "registered",
         "formula_or_source": "clip(|retest_close - disp_open| / |disp_close - disp_open|, 0.0, 1.0); disp body 0 -> skip",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": [],
+        "vector_index": [],
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "displacement_retrace_signed",
+        "fm_id": "FM-096",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "(disp_close - retest_close) / (disp_close - disp_open); unclipped; disp body 0 -> 0.0",
         "activation_condition": "",
         "n_states": 0,
         "vector_key": [],
@@ -436,6 +460,354 @@
         "n_states": 0,
         "vector_key": "eql_distance",
         "vector_index": 46,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "order_block_present",
+        "fm_id": "FM-097",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "1.0 if an unmitigated order block exists as of the bar (find_active_order_block) else 0.0",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "order_block_present",
+        "vector_index": 48,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "fvg_present",
+        "fm_id": "FM-098",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "1.0 if an unfilled fair value gap exists as of the bar (find_active_fvg) else 0.0",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "fvg_present",
+        "vector_index": 49,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "breaker_present",
+        "fm_id": "FM-099",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "1.0 if an un-retested breaker exists as of the bar (find_active_breaker) else 0.0",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "breaker_present",
+        "vector_index": 50,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "mitigation_block_present",
+        "fm_id": "FM-100",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "1.0 if a live mitigation block exists as of the bar (find_active_mitigation_block) else 0.0",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "mitigation_block_present",
+        "vector_index": 51,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "eqh_present",
+        "fm_id": "FM-101",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "1.0 if an equal-highs cluster exists as of the bar (levels.find_equal_clusters) else 0.0",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "eqh_present",
+        "vector_index": 52,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "eql_present",
+        "fm_id": "FM-102",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "1.0 if an equal-lows cluster exists as of the bar (levels.find_equal_clusters) else 0.0",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "eql_present",
+        "vector_index": 53,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "upper_wick_ratio",
+        "fm_id": "FM-103",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "upper_wick / candle_range if candle_range > 0 else 0.0",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "upper_wick_ratio",
+        "vector_index": 54,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "lower_wick_ratio",
+        "fm_id": "FM-104",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "lower_wick / candle_range if candle_range > 0 else 0.0",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "lower_wick_ratio",
+        "vector_index": 55,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "pin_lower",
+        "fm_id": "FM-105",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "1 if lower_wick_ratio >= <feature_pipeline.candle_patterns.pin_wick_min> and body_ratio <= <feature_pipeline.candle_patterns.pin_body_max> and upper_wick_ratio <= <feature_pipeline.candle_patterns.pin_opposite_wick_max> and range >= <feature_pipeline.candle_patterns.size_gate_atr_k> * atr_absolute and range > 0 else 0",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "pin_lower",
+        "vector_index": 56,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "pin_upper",
+        "fm_id": "FM-106",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "1 if upper_wick_ratio >= <feature_pipeline.candle_patterns.pin_wick_min> and body_ratio <= <feature_pipeline.candle_patterns.pin_body_max> and lower_wick_ratio <= <feature_pipeline.candle_patterns.pin_opposite_wick_max> and range >= <feature_pipeline.candle_patterns.size_gate_atr_k> * atr_absolute and range > 0 else 0",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "pin_upper",
+        "vector_index": 57,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "hammer",
+        "fm_id": "FM-107",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "1 if lower_wick >= <feature_pipeline.candle_patterns.probe_wick_body_multiple> * body_size and upper_wick_ratio <= <feature_pipeline.candle_patterns.probe_opposite_wick_max> and low <= min(low[i-k..i-1]) (k = <feature_pipeline.candle_patterns.swing_lookback>, current bar excluded) and range >= <feature_pipeline.candle_patterns.size_gate_atr_k> * atr_absolute and range > 0 else 0",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "hammer",
+        "vector_index": 58,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "shooting_star",
+        "fm_id": "FM-108",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "1 if upper_wick >= <feature_pipeline.candle_patterns.probe_wick_body_multiple> * body_size and lower_wick_ratio <= <feature_pipeline.candle_patterns.probe_opposite_wick_max> and high >= max(high[i-k..i-1]) (k = <feature_pipeline.candle_patterns.swing_lookback>, current bar excluded) and range >= <feature_pipeline.candle_patterns.size_gate_atr_k> * atr_absolute and range > 0 else 0",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "shooting_star",
+        "vector_index": 59,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "doji_material",
+        "fm_id": "FM-109",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "1 if body_ratio <= <feature_pipeline.candle_patterns.doji_body_max> and |upper_wick_ratio - lower_wick_ratio| <= <feature_pipeline.candle_patterns.doji_wick_asymmetry_max> and range >= <feature_pipeline.candle_patterns.size_gate_atr_k> * atr_absolute and range > 0 else 0",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "doji_material",
+        "vector_index": 60,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "dragonfly_doji",
+        "fm_id": "FM-110",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "1 if body_ratio <= <feature_pipeline.candle_patterns.doji_extreme_body_max> and lower_wick_ratio >= <feature_pipeline.candle_patterns.doji_extreme_wick_min> and range >= <feature_pipeline.candle_patterns.size_gate_atr_k> * atr_absolute and range > 0 else 0",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "dragonfly_doji",
+        "vector_index": 61,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "gravestone_doji",
+        "fm_id": "FM-111",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "1 if body_ratio <= <feature_pipeline.candle_patterns.doji_extreme_body_max> and upper_wick_ratio >= <feature_pipeline.candle_patterns.doji_extreme_wick_min> and range >= <feature_pipeline.candle_patterns.size_gate_atr_k> * atr_absolute and range > 0 else 0",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "gravestone_doji",
+        "vector_index": 62,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "engulfing_bull",
+        "fm_id": "FM-112",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "1 if contiguous(i-1,i) and close[i-1] < open[i-1] and close > open and open <= close[i-1] and close >= open[i-1] and body_size > body_size[i-1] else 0",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "engulfing_bull",
+        "vector_index": 63,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "engulfing_bear",
+        "fm_id": "FM-113",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "1 if contiguous(i-1,i) and close[i-1] > open[i-1] and close < open and open >= close[i-1] and close <= open[i-1] and body_size > body_size[i-1] else 0",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "engulfing_bear",
+        "vector_index": 64,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "inside_bar",
+        "fm_id": "FM-114",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "1 if contiguous(i-1,i) and high <= high[i-1] and low >= low[i-1] else 0",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "inside_bar",
+        "vector_index": 65,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "compression_ratio",
+        "fm_id": "FM-115",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "candle_range / candle_range[i-1] clipped to [0, <feature_pipeline.candle_patterns.compression_ratio_cap>]; 1.0 when candle_range[i-1] == 0 or not contiguous",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "compression_ratio",
+        "vector_index": 66,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "rejection_intensity_signed",
+        "fm_id": "FM-116",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "clip(lower_wick_ratio - upper_wick_ratio, -1, 1) if range >= <feature_pipeline.candle_patterns.size_gate_atr_k> * atr_absolute and range > 0 else 0.0",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "rejection_intensity_signed",
+        "vector_index": 67,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "rejection_intensity_lower",
+        "fm_id": "FM-117",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "clip(lower_wick_ratio - body_ratio, 0, 1) if range >= <feature_pipeline.candle_patterns.size_gate_atr_k> * atr_absolute and range > 0 else 0.0",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "rejection_intensity_lower",
+        "vector_index": 68,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "engulfing_strength",
+        "fm_id": "FM-118",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "min(body_size / body_size[i-1], <feature_pipeline.candle_patterns.engulfing_strength_cap>) if engulfing_bull or engulfing_bear else 0.0",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "engulfing_strength",
+        "vector_index": 69,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "rejection_intensity_upper",
+        "fm_id": "FM-119",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "clip(upper_wick_ratio - body_ratio, 0, 1) if range >= <feature_pipeline.candle_patterns.size_gate_atr_k> * atr_absolute and range > 0 else 0.0",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "rejection_intensity_upper",
+        "vector_index": 70,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "morning_star",
+        "fm_id": "FM-120",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "close[i-2] < open[i-2] and body_ratio[i-2] >= <feature_pipeline.candle_patterns.morning_star_body_min> and body_ratio[i-1] <= <feature_pipeline.candle_patterns.morning_star_mid_max> and close[i] > open[i] and body_ratio[i] >= <feature_pipeline.candle_patterns.morning_star_body_min>, both joins contiguous; else 0. Middle color is free. No ATR gate. No trend argument. No evening star.",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "morning_star",
+        "vector_index": 71,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "rejection_bull_present",
+        "fm_id": "FM-124",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "1.0 if a live bullish rejection block (lower wick of a confirmed causal swing low) exists else 0.0",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "rejection_bull_present",
+        "vector_index": 75,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "rejection_bear_present",
+        "fm_id": "FM-125",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "1.0 if a live bearish rejection block (upper wick of a confirmed causal swing high) exists else 0.0",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "rejection_bear_present",
+        "vector_index": 76,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "rejection_bull_distance",
+        "fm_id": "FM-126",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "signed_atr_distance(close, bullish_rejection_body_bottom, atr, favorable_sign=1); 0.0 when no block",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "rejection_bull_distance",
+        "vector_index": 77,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "rejection_bear_distance",
+        "fm_id": "FM-127",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "signed_atr_distance(close, bearish_rejection_body_top, atr, favorable_sign=-1); 0.0 when no block",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": "rejection_bear_distance",
+        "vector_index": 78,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "reward_risk_bracket",
+        "fm_id": "FM-129",
+        "section": "derived_metrics",
+        "lifecycle": "registered",
+        "formula_or_source": "abs(target - entry) / abs(entry - stop) >= multiple; false when abs(entry - stop) == 0. The card identity uses multiple = 3. The live gate min_rr_ratio stays 1.5 and is not this function.",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": [],
+        "vector_index": [],
         "source_file": "configs/formulas/market_ontology.yaml"
       },
       {
@@ -655,6 +1027,18 @@
         "source_file": "configs/formulas/market_ontology.yaml"
       },
       {
+        "name": "candles_since_sweep_e01",
+        "fm_id": "FM-093",
+        "section": "rolling_indicators",
+        "lifecycle": "registered",
+        "formula_or_source": "cumcount of bars since the last MKT-E01 event (groupby (liquidity_sweep_e01 != 0).cumsum(); a bar with any lifecycle sweep event resets it to 0); 0 before the first event. Emitted only when <feature_pipeline.sweep_semantics> == 'e01_lifecycle'; the default selects FM-065.",
+        "activation_condition": "",
+        "n_states": 0,
+        "vector_key": [],
+        "vector_index": [],
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
         "name": "last_swing_high_price",
         "fm_id": "FM-066",
         "section": "rolling_indicators",
@@ -787,11 +1171,59 @@
         "source_file": "configs/formulas/market_ontology.yaml"
       },
       {
+        "name": "liquidity_sweep_e01",
+        "fm_id": "FM-090",
+        "section": "structural_states",
+        "lifecycle": "registered",
+        "formula_or_source": "+1 if any ACTIVE UPPER swing_pivot(k) level is swept (high > L and close < L) on the bar; else -1 if any ACTIVE LOWER level is swept (low < L and close > L); else 0 -> int8. A level is ACTIVE from its available_at bar until it is swept (SWEPT) or closed beyond (BROKEN). Emitted only when <feature_pipeline.sweep_semantics> == 'e01_lifecycle'; the default selects FM-058.",
+        "activation_condition": "{-1, 0, 1}",
+        "n_states": 3,
+        "vector_key": [],
+        "vector_index": [],
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "sweep_detected_e01",
+        "fm_id": "FM-091",
+        "section": "structural_states",
+        "lifecycle": "registered",
+        "formula_or_source": "liquidity_sweep_e01 != 0 -> int8 {0, 1}  (= at least one MKT-E01 event on the bar). Emitted only when <feature_pipeline.sweep_semantics> == 'e01_lifecycle'; the default selects FM-059.",
+        "activation_condition": "{0, 1}",
+        "n_states": 2,
+        "vector_key": [],
+        "vector_index": [],
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "double_sweep_e01",
+        "fm_id": "FM-092",
+        "section": "structural_states",
+        "lifecycle": "registered",
+        "formula_or_source": "MKT-C04 v2: at least one UPPER and at least one LOWER MKT-E01 event (FM-090 lifecycle, per side, NOT the signed slot) within rolling(<feature_pipeline.double_sweep_window>) bars, bar i included -> int8 {0, 1}. Emitted only when <feature_pipeline.sweep_semantics> == 'e01_lifecycle'; the default selects FM-060.",
+        "activation_condition": "{0, 1}",
+        "n_states": 2,
+        "vector_key": [],
+        "vector_index": [],
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
         "name": "retest_flag",
         "fm_id": "FM-061",
         "section": "structural_states",
         "lifecycle": "registered",
         "formula_or_source": "rolling_any(liquidity_sweep != 0, <feature_pipeline.retest_lookback>) and abs(close - ema_fast) <= <feature_pipeline.retest_atr_band_mult> * atr * close -> int8 {0, 1}  # defaults 10, 1.0",
+        "activation_condition": "{0, 1}",
+        "n_states": 2,
+        "vector_key": [],
+        "vector_index": [],
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "retest_flag_e01",
+        "fm_id": "FM-094",
+        "section": "structural_states",
+        "lifecycle": "registered",
+        "formula_or_source": "rolling_any(liquidity_sweep_e01 != 0, <feature_pipeline.retest_lookback>) and abs(close - ema_fast) <= <feature_pipeline.retest_atr_band_mult> * atr * close -> int8 {0, 1}. Emitted only when <feature_pipeline.sweep_semantics> == 'e01_lifecycle'; the default selects FM-061.",
         "activation_condition": "{0, 1}",
         "n_states": 2,
         "vector_key": [],
@@ -869,9 +1301,57 @@
         "vector_key": "change_of_character",
         "vector_index": 47,
         "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "higher_low",
+        "fm_id": "FM-121",
+        "section": "structural_states",
+        "lifecycle": "registered",
+        "formula_or_source": "On a causal swing_low confirmation, last_swing_low_price > the same series one bar earlier (strict). 1 persists until the next swing low that is not strictly higher. 0 before the second swing low. Equals are 0.",
+        "activation_condition": "{0, 1}",
+        "n_states": 2,
+        "vector_key": "higher_low",
+        "vector_index": 72,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "lower_high",
+        "fm_id": "FM-122",
+        "section": "structural_states",
+        "lifecycle": "registered",
+        "formula_or_source": "On a causal swing_high confirmation, last_swing_high_price < the same series one bar earlier (strict). 1 persists until the next swing high that is not strictly lower. 0 before the second swing high. Equals are 0.",
+        "activation_condition": "{0, 1}",
+        "n_states": 2,
+        "vector_key": "lower_high",
+        "vector_index": 73,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "sideways",
+        "fm_id": "FM-123",
+        "section": "structural_states",
+        "lifecycle": "registered",
+        "formula_or_source": "1 when both swing pairs are known and the pair is not (higher high and higher low) and not (lower high and lower low). 0 until two swing highs and two swing lows exist. Expanding range and equal swings are sideways.",
+        "activation_condition": "{0, 1}",
+        "n_states": 2,
+        "vector_key": "sideways",
+        "vector_index": 74,
+        "source_file": "configs/formulas/market_ontology.yaml"
+      },
+      {
+        "name": "wait_for_next_candle",
+        "fm_id": "FM-128",
+        "section": "structural_states",
+        "lifecycle": "registered",
+        "formula_or_source": "A setup armed on bar t-1 confirms on contiguous bar t: +1 if close > open and the long arm fired, -1 if close < open and the short arm fired, else 0. A gap expires the setup. close == open confirms neither. If both arms fired, the close side wins.",
+        "activation_condition": "{-1, 0, 1}",
+        "n_states": 3,
+        "vector_key": [],
+        "vector_index": [],
+        "source_file": "configs/formulas/market_ontology.yaml"
       }
     ],
-    "_n": 71
+    "_n": 111
   },
   "S2_state_schema": {
     "vocabularies": {
@@ -1224,6 +1704,62 @@
             "source_file": "configs/formulas/market_ontology.yaml"
           },
           {
+            "state_name": "SellSideSweep",
+            "parent": "liquidity_sweep_e01",
+            "fm_id": "FM-090",
+            "value": -1,
+            "activation_condition": "an ACTIVE LOWER level swept and no ACTIVE UPPER level swept",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "NoSweep",
+            "parent": "liquidity_sweep_e01",
+            "fm_id": "FM-090",
+            "value": 0,
+            "activation_condition": "no ACTIVE level swept on this bar",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "BuySideSweep",
+            "parent": "liquidity_sweep_e01",
+            "fm_id": "FM-090",
+            "value": 1,
+            "activation_condition": "an ACTIVE UPPER level swept (with or without a LOWER one)",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "NoSweep",
+            "parent": "sweep_detected_e01",
+            "fm_id": "FM-091",
+            "value": 0,
+            "activation_condition": "liquidity_sweep_e01 == 0",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "SweepDetected",
+            "parent": "sweep_detected_e01",
+            "fm_id": "FM-091",
+            "value": 1,
+            "activation_condition": "liquidity_sweep_e01 != 0",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "NoDoubleSweep",
+            "parent": "double_sweep_e01",
+            "fm_id": "FM-092",
+            "value": 0,
+            "activation_condition": "events of at most one side in the trailing window",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "DoubleSweep",
+            "parent": "double_sweep_e01",
+            "fm_id": "FM-092",
+            "value": 1,
+            "activation_condition": "an UPPER and a LOWER MKT-E01 event within the trailing window",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
             "state_name": "NoRetest",
             "parent": "retest_flag",
             "fm_id": "FM-061",
@@ -1237,6 +1773,22 @@
             "fm_id": "FM-061",
             "value": 1,
             "activation_condition": "sweep within retest_lookback bars AND |close - ema_fast| <= retest_atr_band_mult * atr * close",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "NoRetest",
+            "parent": "retest_flag_e01",
+            "fm_id": "FM-094",
+            "value": 0,
+            "activation_condition": "no MKT-E01 event within retest_lookback bars, or |close - ema_fast| outside the ATR band",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "RetestActive",
+            "parent": "retest_flag_e01",
+            "fm_id": "FM-094",
+            "value": 1,
+            "activation_condition": "MKT-E01 event within retest_lookback bars AND |close - ema_fast| <= retest_atr_band_mult * atr * close",
             "source_file": "configs/formulas/market_ontology.yaml"
           },
           {
@@ -1374,9 +1926,81 @@
             "value": 1,
             "activation_condition": "break_of_structure > 0 and trend_bias < 0",
             "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "NotHigherLow",
+            "parent": "higher_low",
+            "fm_id": "FM-121",
+            "value": 0,
+            "activation_condition": "fewer than two confirmed swing lows, or the latest pair is not strictly higher",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "HigherLow",
+            "parent": "higher_low",
+            "fm_id": "FM-121",
+            "value": 1,
+            "activation_condition": "latest confirmed swing low price > previous confirmed swing low price",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "NotLowerHigh",
+            "parent": "lower_high",
+            "fm_id": "FM-122",
+            "value": 0,
+            "activation_condition": "fewer than two confirmed swing highs, or the latest pair is not strictly lower",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "LowerHigh",
+            "parent": "lower_high",
+            "fm_id": "FM-122",
+            "value": 1,
+            "activation_condition": "latest confirmed swing high price < previous confirmed swing high price",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "NotSideways",
+            "parent": "sideways",
+            "fm_id": "FM-123",
+            "value": 0,
+            "activation_condition": "fewer than two swing highs or two swing lows, or the sequence is HH+HL or LH+LL",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "Sideways",
+            "parent": "sideways",
+            "fm_id": "FM-123",
+            "value": 1,
+            "activation_condition": "both pairs known and not (seq_hh and higher_low) and not (lower_high and seq_ll)",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "ShortConfirmed",
+            "parent": "wait_for_next_candle",
+            "fm_id": "FM-128",
+            "value": -1,
+            "activation_condition": "contiguous and close < open and the previous bar armed a short setup",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "Unconfirmed",
+            "parent": "wait_for_next_candle",
+            "fm_id": "FM-128",
+            "value": 0,
+            "activation_condition": "gap, close == open, or the previous bar did not arm the side the close takes",
+            "source_file": "configs/formulas/market_ontology.yaml"
+          },
+          {
+            "state_name": "LongConfirmed",
+            "parent": "wait_for_next_candle",
+            "fm_id": "FM-128",
+            "value": 1,
+            "activation_condition": "contiguous and close > open and the previous bar armed a long setup",
+            "source_file": "configs/formulas/market_ontology.yaml"
           }
         ],
-        "_n": 36
+        "_n": 54
       },
       "smc_choch": {
         "note": "SMC structural signal (CHoCH) \u2014 a signed combination, NOT a state machine.",
@@ -1628,6 +2252,10 @@
         "child": "SHADOW_PENDING"
       },
       {
+        "parent": "RANGE",
+        "child": "RETEST"
+      },
+      {
         "parent": "SHADOW_PENDING",
         "child": "SWEEP"
       },
@@ -1783,11 +2411,47 @@
         "child": "DoubleSweep"
       },
       {
+        "parent": "liquidity_sweep_e01",
+        "child": "SellSideSweep"
+      },
+      {
+        "parent": "liquidity_sweep_e01",
+        "child": "NoSweep"
+      },
+      {
+        "parent": "liquidity_sweep_e01",
+        "child": "BuySideSweep"
+      },
+      {
+        "parent": "sweep_detected_e01",
+        "child": "NoSweep"
+      },
+      {
+        "parent": "sweep_detected_e01",
+        "child": "SweepDetected"
+      },
+      {
+        "parent": "double_sweep_e01",
+        "child": "NoDoubleSweep"
+      },
+      {
+        "parent": "double_sweep_e01",
+        "child": "DoubleSweep"
+      },
+      {
         "parent": "retest_flag",
         "child": "NoRetest"
       },
       {
         "parent": "retest_flag",
+        "child": "RetestActive"
+      },
+      {
+        "parent": "retest_flag_e01",
+        "child": "NoRetest"
+      },
+      {
+        "parent": "retest_flag_e01",
         "child": "RetestActive"
       },
       {
@@ -1857,6 +2521,42 @@
       {
         "parent": "change_of_character",
         "child": "BullishCHoCH"
+      },
+      {
+        "parent": "higher_low",
+        "child": "NotHigherLow"
+      },
+      {
+        "parent": "higher_low",
+        "child": "HigherLow"
+      },
+      {
+        "parent": "lower_high",
+        "child": "NotLowerHigh"
+      },
+      {
+        "parent": "lower_high",
+        "child": "LowerHigh"
+      },
+      {
+        "parent": "sideways",
+        "child": "NotSideways"
+      },
+      {
+        "parent": "sideways",
+        "child": "Sideways"
+      },
+      {
+        "parent": "wait_for_next_candle",
+        "child": "ShortConfirmed"
+      },
+      {
+        "parent": "wait_for_next_candle",
+        "child": "Unconfirmed"
+      },
+      {
+        "parent": "wait_for_next_candle",
+        "child": "LongConfirmed"
       }
     ],
     "note": "crt_machine edges are transition edges from crt_state_identity.yaml valid_transitions (implementation-evidence), not an inferred hierarchy."
@@ -2094,7 +2794,7 @@
       },
       {
         "layer": "Features (S1)",
-        "count": 71
+        "count": 111
       },
       {
         "layer": "Feature identities referenced by CRT predicates",
@@ -2156,6 +2856,14 @@
         "word": "DISPLACEMENT",
         "appears_in": [
           "state/crt_machine",
+          "state/feature_enum"
+        ]
+      },
+      {
+        "kind": "exact_name",
+        "word": "SIDEWAYS",
+        "appears_in": [
+          "feature/structural_states",
           "state/feature_enum"
         ]
       }
@@ -2272,6 +2980,18 @@
       },
       {
         "kind": "concept_token",
+        "stem": "candle",
+        "vocabularies": [
+          "feature/primitives",
+          "feature/structural_states"
+        ],
+        "member_words": [
+          "candle_range",
+          "wait_for_next_candle"
+        ]
+      },
+      {
+        "kind": "concept_token",
         "stem": "candles",
         "vocabularies": [
           "feature/derived_metrics",
@@ -2281,6 +3001,7 @@
         "member_words": [
           "candles_since_retest_state",
           "candles_since_sweep",
+          "candles_since_sweep_e01",
           "duration_candles"
         ]
       },
@@ -2300,6 +3021,18 @@
       },
       {
         "kind": "concept_token",
+        "stem": "compression",
+        "vocabularies": [
+          "feature/derived_metrics",
+          "shape/shape_layer"
+        ],
+        "member_words": [
+          "compression",
+          "compression_ratio"
+        ]
+      },
+      {
+        "kind": "concept_token",
         "stem": "detected",
         "vocabularies": [
           "feature/structural_states",
@@ -2307,6 +3040,7 @@
         ],
         "member_words": [
           "sweep_detected",
+          "sweep_detected_e01",
           "sweepdetected"
         ]
       },
@@ -2324,6 +3058,7 @@
           "displacement_atr_ratio",
           "displacement_flag",
           "displacement_retrace",
+          "displacement_retrace_signed",
           "nodisplacement"
         ]
       },
@@ -2337,9 +3072,27 @@
         ],
         "member_words": [
           "double_sweep",
+          "double_sweep_e01",
           "doublesweep",
           "doublesweeptrap",
           "nodoublesweep"
+        ]
+      },
+      {
+        "kind": "concept_token",
+        "stem": "e01",
+        "vocabularies": [
+          "feature/derived_metrics",
+          "feature/rolling_indicators",
+          "feature/structural_states"
+        ],
+        "member_words": [
+          "candles_since_sweep_e01",
+          "double_sweep_e01",
+          "liquidity_sweep_e01",
+          "retest_depth_e01",
+          "retest_flag_e01",
+          "sweep_detected_e01"
         ]
       },
       {
@@ -2401,7 +3154,10 @@
           "higherhigh",
           "highmomentummagnitude",
           "last_swing_high_price",
+          "lower_high",
+          "lowerhigh",
           "nohigherhigh",
+          "notlowerhigh",
           "swing_high"
         ]
       },
@@ -2414,8 +3170,11 @@
         ],
         "member_words": [
           "higher_high",
+          "higher_low",
           "higherhigh",
-          "nohigherhigh"
+          "higherlow",
+          "nohigherhigh",
+          "nothigherlow"
         ]
       },
       {
@@ -2431,6 +3190,7 @@
           "liquidity_distance",
           "liquidity_pressure_score",
           "liquidity_sweep",
+          "liquidity_sweep_e01",
           "sellsideliquiditygrab"
         ]
       },
@@ -2444,6 +3204,8 @@
           "state/feature_enum"
         ],
         "member_words": [
+          "higher_low",
+          "higherlow",
           "last_swing_low_price",
           "low",
           "lowatrmagnitude",
@@ -2452,6 +3214,7 @@
           "lowerlow",
           "lowmomentummagnitude",
           "nolowerlow",
+          "nothigherlow",
           "swing_low"
         ]
       },
@@ -2459,17 +3222,23 @@
         "kind": "concept_token",
         "stem": "lower",
         "vocabularies": [
+          "feature/derived_metrics",
           "feature/feature_compositions",
           "feature/primitives",
           "feature/structural_states",
           "state/feature_enum"
         ],
         "member_words": [
+          "lower_high",
           "lower_low",
           "lower_wick",
           "lower_wick_ratio",
+          "lowerhigh",
           "lowerlow",
-          "nolowerlow"
+          "nolowerlow",
+          "notlowerhigh",
+          "pin_lower",
+          "rejection_intensity_lower"
         ]
       },
       {
@@ -2568,6 +3337,7 @@
         "member_words": [
           "body_ratio",
           "body_to_total_wick_ratio",
+          "compression_ratio",
           "displacement_atr_ratio",
           "lower_wick_ratio",
           "rr_ratio",
@@ -2602,7 +3372,9 @@
           "noretest",
           "retest",
           "retest_depth",
+          "retest_depth_e01",
           "retest_flag",
+          "retest_flag_e01",
           "retestactive"
         ]
       },
@@ -2610,11 +3382,13 @@
         "kind": "concept_token",
         "stem": "risk",
         "vocabularies": [
+          "feature/derived_metrics",
           "trade/geometry",
           "trade/record_field"
         ],
         "member_words": [
           "allocated_risk",
+          "reward_risk_bracket",
           "risk_pct"
         ]
       },
@@ -2670,6 +3444,18 @@
       },
       {
         "kind": "concept_token",
+        "stem": "sideways",
+        "vocabularies": [
+          "feature/structural_states",
+          "state/feature_enum"
+        ],
+        "member_words": [
+          "notsideways",
+          "sideways"
+        ]
+      },
+      {
+        "kind": "concept_token",
         "stem": "since",
         "vocabularies": [
           "feature/derived_metrics",
@@ -2677,7 +3463,8 @@
         ],
         "member_words": [
           "candles_since_retest_state",
-          "candles_since_sweep"
+          "candles_since_sweep",
+          "candles_since_sweep_e01"
         ]
       },
       {
@@ -2702,6 +3489,7 @@
         "member_words": [
           "disp_strength",
           "disp_strength_atr_rescale",
+          "engulfing_strength",
           "trend_strength_raw",
           "trend_strength_z"
         ]
@@ -2720,16 +3508,20 @@
         "member_words": [
           "buysidesweep",
           "candles_since_sweep",
+          "candles_since_sweep_e01",
           "double_sweep",
+          "double_sweep_e01",
           "doublesweep",
           "doublesweeptrap",
           "liq_sweep",
           "liquidity_sweep",
+          "liquidity_sweep_e01",
           "nodoublesweep",
           "nosweep",
           "sellsidesweep",
           "sweep",
           "sweep_detected",
+          "sweep_detected_e01",
           "sweepdetected"
         ]
       },
@@ -2774,10 +3566,13 @@
         "kind": "concept_token",
         "stem": "upper",
         "vocabularies": [
+          "feature/derived_metrics",
           "feature/feature_compositions",
           "feature/primitives"
         ],
         "member_words": [
+          "pin_upper",
+          "rejection_intensity_upper",
           "upper_wick",
           "upper_wick_ratio"
         ]
@@ -2833,44 +3628,76 @@
       "body_size",
       "body_to_total_wick_ratio",
       "breaker_distance",
+      "breaker_present",
       "candle_range",
       "candles_since_retest_state",
       "candles_since_sweep",
+      "candles_since_sweep_e01",
+      "compression_ratio",
       "disp_strength",
       "disp_strength_atr_rescale",
       "displacement_atr_ratio",
       "displacement_retrace",
+      "displacement_retrace_signed",
+      "doji_material",
+      "dragonfly_doji",
       "ema_fast",
       "ema_slow",
       "ema_spread",
       "ema_spread_atr",
+      "engulfing_bear",
+      "engulfing_bull",
+      "engulfing_strength",
       "eqh_distance",
+      "eqh_present",
       "eql_distance",
+      "eql_present",
       "fvg_distance",
+      "fvg_present",
+      "gravestone_doji",
+      "hammer",
       "hour_of_day",
+      "inside_bar",
       "last_swing_high_price",
       "last_swing_low_price",
       "liquidity_distance",
       "liquidity_pressure_score",
       "lower_wick",
       "lower_wick_ratio",
+      "lower_wick_ratio",
       "macd_hist_raw",
       "macd_hist_z",
       "macd_line",
       "macd_signal",
       "mitigation_block_distance",
+      "mitigation_block_present",
       "momentum_score",
       "momentum_score_atr",
+      "morning_star",
       "order_block_distance",
+      "order_block_present",
       "pdh_distance",
       "pdl_distance",
+      "pin_lower",
+      "pin_upper",
+      "rejection_bear_distance",
+      "rejection_bear_present",
+      "rejection_bull_distance",
+      "rejection_bull_present",
+      "rejection_intensity_lower",
+      "rejection_intensity_signed",
+      "rejection_intensity_upper",
       "retest_depth",
+      "retest_depth_e01",
+      "reward_risk_bracket",
       "rsi_14",
+      "shooting_star",
       "total_wick",
       "trend_strength_raw",
       "trend_strength_z",
       "true_range",
       "upper_wick",
+      "upper_wick_ratio",
       "upper_wick_ratio",
       "volatility_ratio",
       "volume_ratio"
@@ -3040,6 +3867,13 @@
       "source_file": "configs/formulas/market_ontology.yaml"
     },
     {
+      "word": "breaker_present",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
       "word": "BREAKOUT",
       "type": "trade",
       "parent": "intent",
@@ -3103,6 +3937,13 @@
       "source_file": "configs/formulas/market_ontology.yaml"
     },
     {
+      "word": "BuySideSweep",
+      "type": "state",
+      "parent": "liquidity_sweep_e01",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
       "word": "candles_since_retest_state",
       "type": "feature",
       "parent": "derived_metrics",
@@ -3111,6 +3952,13 @@
     },
     {
       "word": "candles_since_sweep",
+      "type": "feature",
+      "parent": "rolling_indicators",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "candles_since_sweep_e01",
       "type": "feature",
       "parent": "rolling_indicators",
       "vocabulary": "feature_schema",
@@ -3150,6 +3998,13 @@
       "parent": "Compression",
       "vocabulary": "shape_layer",
       "source_file": "configs/formulas/market_shapes.yaml"
+    },
+    {
+      "word": "compression_ratio",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
     },
     {
       "word": "confidence",
@@ -3208,6 +4063,13 @@
       "source_file": "configs/formulas/market_ontology.yaml"
     },
     {
+      "word": "displacement_retrace_signed",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
       "word": "disp_strength",
       "type": "feature",
       "parent": "derived_metrics",
@@ -3229,9 +4091,23 @@
       "source_file": "configs/formulas/crt_state_identity.yaml"
     },
     {
+      "word": "doji_material",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
       "word": "DoubleSweep",
       "type": "state",
       "parent": "double_sweep",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "DoubleSweep",
+      "type": "state",
+      "parent": "double_sweep_e01",
       "vocabulary": "feature_enum",
       "source_file": "configs/formulas/market_ontology.yaml"
     },
@@ -3246,6 +4122,20 @@
       "word": "double_sweep",
       "type": "feature",
       "parent": "structural_states",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "double_sweep_e01",
+      "type": "feature",
+      "parent": "structural_states",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "dragonfly_doji",
+      "type": "feature",
+      "parent": "derived_metrics",
       "vocabulary": "feature_schema",
       "source_file": "configs/formulas/market_ontology.yaml"
     },
@@ -3299,6 +4189,27 @@
       "source_file": "src/journal/schema.py"
     },
     {
+      "word": "engulfing_bear",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "engulfing_bull",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "engulfing_strength",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
       "word": "entry_price",
       "type": "trade",
       "parent": "Trade",
@@ -3327,7 +4238,21 @@
       "source_file": "configs/formulas/market_ontology.yaml"
     },
     {
+      "word": "eqh_present",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
       "word": "eql_distance",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "eql_present",
       "type": "feature",
       "parent": "derived_metrics",
       "vocabulary": "feature_schema",
@@ -3362,6 +4287,27 @@
       "source_file": "configs/formulas/market_ontology.yaml"
     },
     {
+      "word": "fvg_present",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "gravestone_doji",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "hammer",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
       "word": "high",
       "type": "feature",
       "parent": "source_inputs",
@@ -3390,7 +4336,21 @@
       "source_file": "configs/formulas/market_ontology.yaml"
     },
     {
+      "word": "HigherLow",
+      "type": "state",
+      "parent": "higher_low",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
       "word": "higher_high",
+      "type": "feature",
+      "parent": "structural_states",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "higher_low",
       "type": "feature",
       "parent": "structural_states",
       "vocabulary": "feature_schema",
@@ -3407,6 +4367,13 @@
       "word": "hour_of_day",
       "type": "feature",
       "parent": "temporal_context",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "inside_bar",
+      "type": "feature",
+      "parent": "derived_metrics",
       "vocabulary": "feature_schema",
       "source_file": "configs/formulas/market_ontology.yaml"
     },
@@ -3446,11 +4413,25 @@
       "source_file": "configs/formulas/market_ontology.yaml"
     },
     {
+      "word": "liquidity_sweep_e01",
+      "type": "feature",
+      "parent": "structural_states",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
       "word": "LIQ_SWEEP",
       "type": "trade",
       "parent": "intent",
       "vocabulary": "trade/intent",
       "source_file": "src/config_layer/execution_planner.py"
+    },
+    {
+      "word": "LongConfirmed",
+      "type": "state",
+      "parent": "wait_for_next_candle",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
     },
     {
       "word": "low",
@@ -3474,10 +4455,24 @@
       "source_file": "configs/formulas/market_ontology.yaml"
     },
     {
+      "word": "LowerHigh",
+      "type": "state",
+      "parent": "lower_high",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
       "word": "LowerLow",
       "type": "state",
       "parent": "lower_low",
       "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "lower_high",
+      "type": "feature",
+      "parent": "structural_states",
+      "vocabulary": "feature_schema",
       "source_file": "configs/formulas/market_ontology.yaml"
     },
     {
@@ -3498,6 +4493,13 @@
       "word": "lower_wick_ratio",
       "type": "feature",
       "parent": "feature_compositions",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "lower_wick_ratio",
+      "type": "feature",
+      "parent": "derived_metrics",
       "vocabulary": "feature_schema",
       "source_file": "configs/formulas/market_ontology.yaml"
     },
@@ -3572,6 +4574,13 @@
       "source_file": "configs/formulas/market_ontology.yaml"
     },
     {
+      "word": "mitigation_block_present",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
       "word": "momentum_magnitude",
       "type": "feature",
       "parent": "structural_states",
@@ -3587,6 +4596,13 @@
     },
     {
       "word": "momentum_score_atr",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "morning_star",
       "type": "feature",
       "parent": "derived_metrics",
       "vocabulary": "feature_schema",
@@ -3635,6 +4651,13 @@
       "source_file": "configs/formulas/market_ontology.yaml"
     },
     {
+      "word": "NoDoubleSweep",
+      "type": "state",
+      "parent": "double_sweep_e01",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
       "word": "NoHigherHigh",
       "type": "state",
       "parent": "higher_high",
@@ -3656,6 +4679,13 @@
       "source_file": "configs/formulas/market_ontology.yaml"
     },
     {
+      "word": "NoRetest",
+      "type": "state",
+      "parent": "retest_flag_e01",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
       "word": "NoSweep",
       "type": "state",
       "parent": "liquidity_sweep",
@@ -3670,6 +4700,41 @@
       "source_file": "configs/formulas/market_ontology.yaml"
     },
     {
+      "word": "NoSweep",
+      "type": "state",
+      "parent": "liquidity_sweep_e01",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "NoSweep",
+      "type": "state",
+      "parent": "sweep_detected_e01",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "NotHigherLow",
+      "type": "state",
+      "parent": "higher_low",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "NotLowerHigh",
+      "type": "state",
+      "parent": "lower_high",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "NotSideways",
+      "type": "state",
+      "parent": "sideways",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
       "word": "open",
       "type": "feature",
       "parent": "source_inputs",
@@ -3678,6 +4743,13 @@
     },
     {
       "word": "order_block_distance",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "order_block_present",
       "type": "feature",
       "parent": "derived_metrics",
       "vocabulary": "feature_schema",
@@ -3713,6 +4785,20 @@
     },
     {
       "word": "pdl_distance",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "pin_lower",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "pin_upper",
       "type": "feature",
       "parent": "derived_metrics",
       "vocabulary": "feature_schema",
@@ -3761,6 +4847,55 @@
       "source_file": "src/journal/schema.py"
     },
     {
+      "word": "rejection_bear_distance",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "rejection_bear_present",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "rejection_bull_distance",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "rejection_bull_present",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "rejection_intensity_lower",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "rejection_intensity_signed",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "rejection_intensity_upper",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
       "word": "RESOLUTION",
       "type": "state",
       "parent": "",
@@ -3789,7 +4924,21 @@
       "source_file": "configs/formulas/market_ontology.yaml"
     },
     {
+      "word": "RetestActive",
+      "type": "state",
+      "parent": "retest_flag_e01",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
       "word": "retest_depth",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "retest_depth_e01",
       "type": "feature",
       "parent": "derived_metrics",
       "vocabulary": "feature_schema",
@@ -3803,11 +4952,25 @@
       "source_file": "configs/formulas/market_ontology.yaml"
     },
     {
+      "word": "retest_flag_e01",
+      "type": "feature",
+      "parent": "structural_states",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
       "word": "REVERSAL",
       "type": "trade",
       "parent": "intent",
       "vocabulary": "trade/intent",
       "source_file": "src/config_layer/execution_planner.py"
+    },
+    {
+      "word": "reward_risk_bracket",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
     },
     {
       "word": "risk_pct",
@@ -3859,6 +5022,13 @@
       "source_file": "configs/formulas/market_ontology.yaml"
     },
     {
+      "word": "SellSideSweep",
+      "type": "state",
+      "parent": "liquidity_sweep_e01",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
       "word": "session",
       "type": "feature",
       "parent": "temporal_context",
@@ -3871,6 +5041,34 @@
       "parent": "",
       "vocabulary": "crt_machine",
       "source_file": "configs/formulas/crt_state_identity.yaml"
+    },
+    {
+      "word": "shooting_star",
+      "type": "feature",
+      "parent": "derived_metrics",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "ShortConfirmed",
+      "type": "state",
+      "parent": "wait_for_next_candle",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "sideways",
+      "type": "feature",
+      "parent": "structural_states",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "Sideways",
+      "type": "state",
+      "parent": "sideways",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
     },
     {
       "word": "sl_price",
@@ -3894,7 +5092,21 @@
       "source_file": "configs/formulas/market_ontology.yaml"
     },
     {
+      "word": "SweepDetected",
+      "type": "state",
+      "parent": "sweep_detected_e01",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
       "word": "sweep_detected",
+      "type": "feature",
+      "parent": "structural_states",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "sweep_detected_e01",
       "type": "feature",
       "parent": "structural_states",
       "vocabulary": "feature_schema",
@@ -3992,6 +5204,13 @@
       "source_file": "configs/formulas/market_ontology.yaml"
     },
     {
+      "word": "Unconfirmed",
+      "type": "state",
+      "parent": "wait_for_next_candle",
+      "vocabulary": "feature_enum",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
       "word": "UNKNOWN",
       "type": "trade",
       "parent": "intent",
@@ -4009,6 +5228,13 @@
       "word": "upper_wick_ratio",
       "type": "feature",
       "parent": "feature_compositions",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "upper_wick_ratio",
+      "type": "feature",
+      "parent": "derived_metrics",
       "vocabulary": "feature_schema",
       "source_file": "configs/formulas/market_ontology.yaml"
     },
@@ -4044,6 +5270,13 @@
       "word": "volume_spike",
       "type": "feature",
       "parent": "rolling_indicators",
+      "vocabulary": "feature_schema",
+      "source_file": "configs/formulas/market_ontology.yaml"
+    },
+    {
+      "word": "wait_for_next_candle",
+      "type": "feature",
+      "parent": "structural_states",
       "vocabulary": "feature_schema",
       "source_file": "configs/formulas/market_ontology.yaml"
     },

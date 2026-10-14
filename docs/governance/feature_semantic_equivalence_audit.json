@@ -1,0 +1,742 @@
+{
+  "contract_id": "FEATURE-SEMANTIC-EQUIVALENCE-V1",
+  "contract_version": "1.0.0",
+  "contract_hash": "02ab5280686e767798ba1094f5757e4cddfe9866595b9d874bf487aca00e0818",
+  "schema_prefix_dim": 35,
+  "schema_prefix_order": [
+    "open",
+    "high",
+    "low",
+    "close",
+    "volume",
+    "volume_ratio",
+    "double_sweep",
+    "ema_fast",
+    "ema_slow",
+    "ema_spread",
+    "trend_bias",
+    "trend_strength_z",
+    "momentum_score",
+    "atr",
+    "volatility_ratio",
+    "rsi_14",
+    "macd_line",
+    "macd_signal",
+    "macd_hist_raw",
+    "macd_hist_z",
+    "sweep_detected",
+    "liquidity_sweep",
+    "break_of_structure",
+    "swing_high",
+    "swing_low",
+    "higher_high",
+    "lower_low",
+    "body_size",
+    "candle_range",
+    "body_ratio",
+    "volatility_regime",
+    "session",
+    "hour_of_day",
+    "disp_strength",
+    "retest_depth"
+  ],
+  "architecture_semantically_consistent": false,
+  "economic_claims_allowed": false,
+  "counts": {
+    "MATCH": 0,
+    "DRIFT": 5,
+    "UNMAPPED": 3,
+    "AMBIGUOUS": 0,
+    "UNVERIFIED": 17
+  },
+  "edges": [
+    {
+      "branch_id": "manifest:FeaturePipeline",
+      "parent_consumer": "FeaturePipeline",
+      "role": "authority_batch",
+      "entrypoint": "src/features/feature_pipeline.py:FeaturePipeline.run",
+      "preserved_verdict": "FORMULA_CHANGE",
+      "status": "UNVERIFIED",
+      "reason": "binding-manifest row preserved; its feature list and verdict are not semantic equivalence",
+      "evidence": [
+        {
+          "path": "docs/governance/feature_consumer_binding_manifest_fc05-2026-07-10.json",
+          "kind": "manifest"
+        }
+      ],
+      "surface_names": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "volume_ratio",
+        "double_sweep",
+        "ema_fast",
+        "ema_slow",
+        "ema_spread",
+        "trend_bias",
+        "trend_strength_z",
+        "momentum_score",
+        "atr",
+        "volatility_ratio",
+        "rsi_14",
+        "macd_line",
+        "macd_signal",
+        "macd_hist_raw",
+        "macd_hist_z",
+        "sweep_detected",
+        "liquidity_sweep",
+        "break_of_structure",
+        "swing_high",
+        "swing_low",
+        "higher_high",
+        "lower_low",
+        "body_size",
+        "candle_range",
+        "body_ratio",
+        "volatility_regime",
+        "session",
+        "hour_of_day",
+        "disp_strength",
+        "retest_depth",
+        "candles_since_sweep",
+        "liquidity_distance",
+        "liquidity_pressure_score",
+        "volume_spike",
+        "order_block_distance",
+        "fvg_distance",
+        "breaker_distance",
+        "mitigation_block_distance",
+        "pdh_distance",
+        "pdl_distance",
+        "eqh_distance",
+        "eql_distance",
+        "change_of_character"
+      ]
+    },
+    {
+      "branch_id": "manifest:BacktestRunner",
+      "parent_consumer": "BacktestRunner",
+      "role": "backtest",
+      "entrypoint": "src/runtime/backtest_v2.py:BacktestRunner",
+      "preserved_verdict": "MULTIPLE_CHANGES",
+      "status": "UNVERIFIED",
+      "reason": "binding-manifest row preserved; its feature list and verdict are not semantic equivalence",
+      "evidence": [
+        {
+          "path": "docs/governance/feature_consumer_binding_manifest_fc05-2026-07-10.json",
+          "kind": "manifest"
+        }
+      ],
+      "surface_names": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "volume_ratio",
+        "double_sweep",
+        "ema_fast",
+        "ema_slow",
+        "ema_spread",
+        "trend_bias",
+        "trend_strength_z",
+        "momentum_score",
+        "atr",
+        "volatility_ratio",
+        "rsi_14",
+        "macd_line",
+        "macd_signal",
+        "macd_hist_raw",
+        "macd_hist_z",
+        "sweep_detected",
+        "liquidity_sweep",
+        "break_of_structure",
+        "swing_high",
+        "swing_low",
+        "higher_high",
+        "lower_low",
+        "body_size",
+        "candle_range",
+        "body_ratio",
+        "volatility_regime",
+        "session",
+        "hour_of_day",
+        "disp_strength",
+        "retest_depth",
+        "candles_since_sweep",
+        "liquidity_distance",
+        "liquidity_pressure_score",
+        "volume_spike",
+        "order_block_distance",
+        "fvg_distance",
+        "breaker_distance",
+        "mitigation_block_distance",
+        "pdh_distance",
+        "pdl_distance",
+        "eqh_distance",
+        "eql_distance",
+        "change_of_character"
+      ]
+    },
+    {
+      "branch_id": "manifest:CRTEngine",
+      "parent_consumer": "CRTEngine",
+      "role": "structure_sm",
+      "entrypoint": "src/config_layer/crt_engine_v2.py",
+      "preserved_verdict": "VALUE_COMPATIBLE_IDENTITY_RENAME",
+      "status": "UNVERIFIED",
+      "reason": "binding-manifest row preserved; its feature list and verdict are not semantic equivalence",
+      "evidence": [
+        {
+          "path": "docs/governance/feature_consumer_binding_manifest_fc05-2026-07-10.json",
+          "kind": "manifest"
+        }
+      ],
+      "surface_names": [
+        "body_ratio",
+        "displacement_retrace",
+        "displacement_atr_ratio",
+        "session",
+        "double_sweep"
+      ]
+    },
+    {
+      "branch_id": "manifest:BitNet",
+      "parent_consumer": "BitNet",
+      "role": "trained_model",
+      "entrypoint": "src/engines/live_engine.py BitNetZoneGate",
+      "preserved_verdict": "ARTIFACT_BINDING_UNKNOWN",
+      "status": "UNVERIFIED",
+      "reason": "binding-manifest row preserved; its feature list and verdict are not semantic equivalence",
+      "evidence": [
+        {
+          "path": "docs/governance/feature_consumer_binding_manifest_fc05-2026-07-10.json",
+          "kind": "manifest"
+        }
+      ],
+      "surface_names": [
+        "body_ratio",
+        "retest_depth",
+        "disp_strength",
+        "atr",
+        "candles_since_sweep",
+        "double_sweep"
+      ]
+    },
+    {
+      "branch_id": "manifest:Gaussian_live_heuristic",
+      "parent_consumer": "Gaussian_live_heuristic",
+      "role": "engine",
+      "entrypoint": "src/engines/heuristic_gaussian_engine.py",
+      "preserved_verdict": "EXACT_COMPATIBLE",
+      "status": "UNVERIFIED",
+      "reason": "binding-manifest row preserved; its feature list and verdict are not semantic equivalence",
+      "evidence": [
+        {
+          "path": "docs/governance/feature_consumer_binding_manifest_fc05-2026-07-10.json",
+          "kind": "manifest"
+        }
+      ],
+      "surface_names": [
+        "ema_fast",
+        "ema_slow",
+        "momentum_score"
+      ]
+    },
+    {
+      "branch_id": "manifest:Gaussian_v4_mirrored_38dim",
+      "parent_consumer": "Gaussian_v4_mirrored_38dim",
+      "role": "trained_model",
+      "entrypoint": "models/gaussian_registry.json",
+      "preserved_verdict": "ARTIFACT_BINDING_UNKNOWN",
+      "status": "UNVERIFIED",
+      "reason": "binding-manifest row preserved; its feature list and verdict are not semantic equivalence",
+      "evidence": [
+        {
+          "path": "docs/governance/feature_consumer_binding_manifest_fc05-2026-07-10.json",
+          "kind": "manifest"
+        }
+      ],
+      "surface_names": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "volume_ratio",
+        "double_sweep",
+        "ema_fast",
+        "ema_slow",
+        "ema_spread",
+        "trend_bias",
+        "trend_strength_z",
+        "momentum_score",
+        "atr",
+        "volatility_ratio",
+        "rsi_14",
+        "macd_line",
+        "macd_signal",
+        "macd_hist_raw",
+        "macd_hist_z",
+        "sweep_detected",
+        "liquidity_sweep",
+        "break_of_structure",
+        "swing_high",
+        "swing_low",
+        "higher_high",
+        "lower_low",
+        "body_size",
+        "candle_range",
+        "body_ratio",
+        "volatility_regime",
+        "session",
+        "hour_of_day",
+        "disp_strength",
+        "retest_depth",
+        "candles_since_sweep",
+        "liquidity_distance",
+        "liquidity_pressure_score",
+        "volume_spike",
+        "order_block_distance",
+        "fvg_distance",
+        "breaker_distance",
+        "mitigation_block_distance",
+        "pdh_distance",
+        "pdl_distance",
+        "eqh_distance",
+        "eql_distance",
+        "change_of_character"
+      ]
+    },
+    {
+      "branch_id": "manifest:ZoneGate",
+      "parent_consumer": "ZoneGate",
+      "role": "engine",
+      "entrypoint": "src/engines/zone_gate_engine.py",
+      "preserved_verdict": "NOT_APPLICABLE",
+      "status": "UNVERIFIED",
+      "reason": "binding-manifest row preserved; its feature list and verdict are not semantic equivalence",
+      "evidence": [
+        {
+          "path": "docs/governance/feature_consumer_binding_manifest_fc05-2026-07-10.json",
+          "kind": "manifest"
+        }
+      ],
+      "surface_names": [
+        "zone geometry from registry; not full 38"
+      ]
+    },
+    {
+      "branch_id": "manifest:RR_Engine",
+      "parent_consumer": "RR_Engine",
+      "role": "engine",
+      "entrypoint": "src/engines/rr_engine.py",
+      "preserved_verdict": "NOT_APPLICABLE",
+      "status": "UNVERIFIED",
+      "reason": "binding-manifest row preserved; its feature list and verdict are not semantic equivalence",
+      "evidence": [
+        {
+          "path": "docs/governance/feature_consumer_binding_manifest_fc05-2026-07-10.json",
+          "kind": "manifest"
+        }
+      ],
+      "surface_names": [
+        "candle polarity / structure quality \u2014 not full pipeline vector"
+      ]
+    },
+    {
+      "branch_id": "manifest:rr_fusion",
+      "parent_consumer": "rr_fusion",
+      "role": "trained_model_layer",
+      "entrypoint": "rr_fusion enabled:false",
+      "preserved_verdict": "ARTIFACT_BINDING_UNKNOWN",
+      "status": "UNVERIFIED",
+      "reason": "binding-manifest row preserved; its feature list and verdict are not semantic equivalence",
+      "evidence": [
+        {
+          "path": "docs/governance/feature_consumer_binding_manifest_fc05-2026-07-10.json",
+          "kind": "manifest"
+        }
+      ],
+      "surface_names": [
+        "38-dim Mahalanobis path historically"
+      ]
+    },
+    {
+      "branch_id": "manifest:TradeNet",
+      "parent_consumer": "TradeNet",
+      "role": "trained_model",
+      "entrypoint": "models/tradenet_registry.json",
+      "preserved_verdict": "ARTIFACT_BINDING_UNKNOWN",
+      "status": "UNVERIFIED",
+      "reason": "binding-manifest row preserved; its feature list and verdict are not semantic equivalence",
+      "evidence": [
+        {
+          "path": "docs/governance/feature_consumer_binding_manifest_fc05-2026-07-10.json",
+          "kind": "manifest"
+        }
+      ],
+      "surface_names": [
+        "CANONICAL_FEATURES intended"
+      ]
+    },
+    {
+      "branch_id": "manifest:secondlow",
+      "parent_consumer": "secondlow",
+      "role": "research",
+      "entrypoint": "src/research/secondlow_v1",
+      "preserved_verdict": "NOT_APPLICABLE",
+      "status": "UNVERIFIED",
+      "reason": "binding-manifest row preserved; its feature list and verdict are not semantic equivalence",
+      "evidence": [
+        {
+          "path": "docs/governance/feature_consumer_binding_manifest_fc05-2026-07-10.json",
+          "kind": "manifest"
+        }
+      ],
+      "surface_names": [
+        "raw OHLCV only"
+      ]
+    },
+    {
+      "branch_id": "manifest:HypothesisRunner",
+      "parent_consumer": "HypothesisRunner",
+      "role": "research",
+      "entrypoint": "src/research/runner.py",
+      "preserved_verdict": "MULTIPLE_CHANGES",
+      "status": "UNVERIFIED",
+      "reason": "binding-manifest row preserved; its feature list and verdict are not semantic equivalence",
+      "evidence": [
+        {
+          "path": "docs/governance/feature_consumer_binding_manifest_fc05-2026-07-10.json",
+          "kind": "manifest"
+        }
+      ],
+      "surface_names": [
+        "OHLCV candles; some paths FeaturePipeline"
+      ]
+    },
+    {
+      "branch_id": "manifest:live_engine_hook",
+      "parent_consumer": "live_engine_hook",
+      "role": "live",
+      "entrypoint": "src/runtime/live_engine_hook.py",
+      "preserved_verdict": "MULTIPLE_CHANGES",
+      "status": "UNVERIFIED",
+      "reason": "binding-manifest row preserved; its feature list and verdict are not semantic equivalence",
+      "evidence": [
+        {
+          "path": "docs/governance/feature_consumer_binding_manifest_fc05-2026-07-10.json",
+          "kind": "manifest"
+        }
+      ],
+      "surface_names": [
+        "live feature construction + engines"
+      ]
+    },
+    {
+      "branch_id": "live_engine_hook.historical_body_ratio",
+      "parent_consumer": "live_engine_hook",
+      "role": "producer",
+      "entrypoint": "src/features/candle_math.py",
+      "surface_name": "body_ratio",
+      "concept_id": "FM-010",
+      "status": "DRIFT",
+      "reason": "field comparison against the contracted definition",
+      "evidence": [
+        {
+          "path": "src/features/candle_math.py",
+          "lines": "64-74",
+          "kind": "source",
+          "symbol": "body_to_total_wick_ratio"
+        },
+        {
+          "path": "src/runtime/live_engine_hook.py",
+          "lines": "571-575",
+          "kind": "source",
+          "symbol": "historical body_ratio comment"
+        }
+      ],
+      "alias_used": false,
+      "resolved_by": null,
+      "note": "Historical live emission of FM-013 under the bare name body_ratio (GD-001). The current runtime key at live_engine_hook.py:599 is a separate edge."
+    },
+    {
+      "branch_id": "live_engine_hook.current_body_ratio",
+      "parent_consumer": "live_engine_hook",
+      "role": "producer",
+      "entrypoint": "src/runtime/live_engine_hook.py",
+      "surface_name": "body_ratio",
+      "concept_id": "FM-010",
+      "status": "UNMAPPED",
+      "reason": "field comparison against the contracted definition",
+      "evidence": [
+        {
+          "path": "src/runtime/live_engine_hook.py",
+          "lines": "595-599",
+          "kind": "source",
+          "symbol": "body_ratio"
+        },
+        {
+          "path": "src/features/candle_math.py",
+          "lines": "50-61",
+          "kind": "source",
+          "symbol": "body_ratio"
+        }
+      ],
+      "alias_used": false,
+      "resolved_by": null,
+      "note": "T-16 assigns the runtime key body_ratio from candle_math.body_ratio (FM-010). Incomplete contract fields keep this edge off MATCH."
+    },
+    {
+      "branch_id": "live_engine_hook.wick_size_local",
+      "parent_consumer": "live_engine_hook",
+      "role": "producer",
+      "entrypoint": "src/runtime/live_engine_hook.py",
+      "surface_name": "wick_size",
+      "concept_id": "FM-002",
+      "status": "DRIFT",
+      "reason": "field comparison against the contracted definition",
+      "evidence": [
+        {
+          "path": "src/runtime/live_engine_hook.py",
+          "lines": "588-593",
+          "kind": "source",
+          "symbol": "wick_size"
+        },
+        {
+          "path": "src/features/candle_math.py",
+          "lines": "45-47",
+          "kind": "source",
+          "symbol": "total_wick"
+        }
+      ],
+      "alias_used": true,
+      "resolved_by": null,
+      "note": "Local wick_size is total_wick. It is not inserted into the canonical auxiliary dict. The read-side alias wick_size -> candle_range does not make these formulas the same."
+    },
+    {
+      "branch_id": "live_engine_hook.session_string",
+      "parent_consumer": "live_engine_hook",
+      "role": "producer",
+      "entrypoint": "src/runtime/live_engine_hook.py",
+      "surface_name": "session",
+      "concept_id": "FM-052",
+      "status": "DRIFT",
+      "reason": "field comparison against the contracted definition",
+      "evidence": [
+        {
+          "path": "src/runtime/live_engine_hook.py",
+          "lines": "219-262",
+          "kind": "source",
+          "symbol": "_normalize_session"
+        },
+        {
+          "path": "src/runtime/live_engine_hook.py",
+          "lines": "282-307",
+          "kind": "source",
+          "symbol": "_derive_session"
+        },
+        {
+          "path": "src/runtime/live_engine_hook.py",
+          "lines": "613",
+          "kind": "source",
+          "symbol": "auxiliary.session"
+        }
+      ],
+      "alias_used": false,
+      "resolved_by": null,
+      "note": "Live auxiliary session is a string. The pipeline slot is the int8 nominal FM-052. No coercion."
+    },
+    {
+      "branch_id": "semantics.market.levels.double_sweep_window_1",
+      "parent_consumer": "semantics.market.levels",
+      "role": "producer",
+      "entrypoint": "src/semantics/market/levels.py",
+      "surface_name": "double_sweep",
+      "concept_id": "FM-060",
+      "status": "DRIFT",
+      "reason": "field comparison against the contracted definition",
+      "evidence": [
+        {
+          "path": "src/semantics/market/levels.py",
+          "lines": "79",
+          "kind": "source",
+          "symbol": "swing_levels"
+        }
+      ],
+      "alias_used": false,
+      "resolved_by": null,
+      "note": "causal_structure_series is called with double_sweep_window=1. The caller reads swing flags only. The series is still computed at lookback 1, which is not FM-060 lookback 5."
+    },
+    {
+      "branch_id": "semantics.market.conditions.double_sweep_window_param",
+      "parent_consumer": "semantics.market.conditions",
+      "role": "producer",
+      "entrypoint": "src/semantics/market/conditions.py",
+      "surface_name": "double_sweep",
+      "concept_id": "FM-060",
+      "status": "UNVERIFIED",
+      "reason": "source cited but no implementation fields were declared",
+      "evidence": [
+        {
+          "path": "src/semantics/market/conditions.py",
+          "lines": "53-58",
+          "kind": "source",
+          "symbol": "_series"
+        }
+      ],
+      "alias_used": false,
+      "resolved_by": null,
+      "note": "double_sweep_window is the caller-supplied window argument (default 1). Callers were not enumerated, so this branch stays unclassified."
+    },
+    {
+      "branch_id": "feature_pipeline.double_sweep_legacy_arm",
+      "parent_consumer": "FeaturePipeline",
+      "role": "producer",
+      "entrypoint": "src/features/feature_pipeline.py",
+      "surface_name": "double_sweep",
+      "concept_id": "FM-060",
+      "status": "UNMAPPED",
+      "reason": "field comparison against the contracted definition",
+      "evidence": [
+        {
+          "path": "src/features/feature_pipeline.py",
+          "lines": "1107-1127",
+          "kind": "source",
+          "symbol": "compute_canonical_structure_features"
+        },
+        {
+          "path": "configs/formulas/market_ontology.yaml",
+          "lines": "3479-3515",
+          "kind": "source",
+          "symbol": "FM-060"
+        }
+      ],
+      "alias_used": false,
+      "resolved_by": null,
+      "note": "Else arm of sweep_semantics. Formula and lookback match FM-060. Fields the ontology does not state stay UNMAPPED, so this edge is not MATCH. Active config selects the other arm."
+    },
+    {
+      "branch_id": "feature_pipeline.double_sweep_e01_arm",
+      "parent_consumer": "FeaturePipeline",
+      "role": "producer",
+      "entrypoint": "src/features/feature_pipeline.py",
+      "surface_name": "double_sweep",
+      "concept_id": "FM-060",
+      "status": "DRIFT",
+      "reason": "field comparison against the contracted definition",
+      "evidence": [
+        {
+          "path": "src/features/feature_pipeline.py",
+          "lines": "1108-1111",
+          "kind": "source",
+          "symbol": "SWEEP_E01_LIFECYCLE"
+        },
+        {
+          "path": "configs/formulas/market_ontology.yaml",
+          "lines": "3614-3622",
+          "kind": "source",
+          "symbol": "FM-092"
+        },
+        {
+          "path": "configs/production/v2_htfcrt_2026_08.json",
+          "lines": "682",
+          "kind": "source",
+          "symbol": "sweep_semantics"
+        }
+      ],
+      "alias_used": false,
+      "resolved_by": null,
+      "note": "Active config sweep_semantics is e01_lifecycle, so this arm writes the double_sweep slot. The ontology node FM-092 still says active false. That note was not rewritten. The slot's contracted concept remains FM-060. Same lookback is not the same formula."
+    },
+    {
+      "branch_id": "feature_store.missing_value_substitutes",
+      "parent_consumer": "FeatureStore",
+      "role": "consumer",
+      "entrypoint": "src/core/feature_store.py",
+      "surface_name": "double_sweep",
+      "concept_id": "FM-060",
+      "status": "UNMAPPED",
+      "reason": "field comparison against the contracted definition",
+      "evidence": [
+        {
+          "path": "src/core/feature_store.py",
+          "lines": "108-111",
+          "kind": "source",
+          "symbol": "process"
+        },
+        {
+          "path": "src/core/feature_store.py",
+          "lines": "197-200",
+          "kind": "source",
+          "symbol": "_compute_derived"
+        }
+      ],
+      "alias_used": false,
+      "resolved_by": null,
+      "note": "Deque maxlen max(10, window) is a buffer floor, not a second formula window. The canonical missing-value policy is not stated, so a concrete substitute is not recorded as DRIFT against an undefined policy."
+    },
+    {
+      "branch_id": "gaussian_artifact.dimension_only",
+      "parent_consumer": "Gaussian_v4_mirrored_38dim",
+      "role": "trained_model",
+      "entrypoint": "models/gaussian_registry.json",
+      "surface_name": "gaussian_feature_schema",
+      "concept_id": null,
+      "status": "UNVERIFIED",
+      "reason": "prefix order matches; dimension equality does not establish semantic compatibility",
+      "evidence": [
+        {
+          "path": "src/training/trainer.py",
+          "lines": "414-539",
+          "kind": "dimension"
+        }
+      ],
+      "alias_used": false,
+      "resolved_by": null,
+      "note": "Name width and SCHEMA_V3_ALIASES resolution are not a semantic contract. Manifest compatibility_verdict is preserved on the separate manifest edge and is not copied here as MATCH."
+    },
+    {
+      "branch_id": "tradenet_artifact.dimension_only",
+      "parent_consumer": "TradeNet",
+      "role": "trained_model",
+      "entrypoint": "models/tradenet_registry.json",
+      "surface_name": "tradenet_feature_names",
+      "concept_id": null,
+      "status": "UNVERIFIED",
+      "reason": "prefix order matches; dimension equality does not establish semantic compatibility",
+      "evidence": [
+        {
+          "path": "src/training/trade_net_v2.py",
+          "lines": "182-201",
+          "kind": "dimension"
+        }
+      ],
+      "alias_used": false,
+      "resolved_by": null,
+      "note": "feature_dim equal to the canonical width is not semantic compatibility. F-005 unwired status is unchanged."
+    },
+    {
+      "branch_id": "gaussian_live_heuristic.names_only",
+      "parent_consumer": "Gaussian_live_heuristic",
+      "role": "engine",
+      "entrypoint": "src/engines/heuristic_gaussian_engine.py",
+      "surface_name": "momentum_score",
+      "concept_id": "FM-023",
+      "status": "UNVERIFIED",
+      "reason": "no source evidence; name, width, manifest row, or alias is not equivalence",
+      "evidence": [
+        {
+          "path": "docs/governance/feature_consumer_binding_manifest_fc05-2026-07-10.json",
+          "kind": "manifest"
+        }
+      ],
+      "alias_used": false,
+      "resolved_by": null,
+      "note": "The manifest lists ema_fast, ema_slow, momentum_score and verdict EXACT_COMPATIBLE. That verdict is not field-by-field source evidence, so this edge stays UNVERIFIED. The manifest row remains its own edge."
+    }
+  ]
+}

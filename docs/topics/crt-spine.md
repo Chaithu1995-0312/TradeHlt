@@ -4,7 +4,7 @@
 > approved (or rejected) order. Read this for the grounded picture without loading the whole
 > decision path.
 >
-> Created: 2026-06-01 · Updated: 2026-10-01 · Status: living
+> Created: 2026-06-01 · Updated: 2026-10-10 · Status: living
 > _Updated 2026-06-01: linked the 3 verified downstream spine topic docs._
 > _Updated 2026-06-05: repaired drifted citations (VALID_TRANSITIONS :1021→:1074, enforced :1046→:1099) to the dual `path:line · Symbol` form per §6.3._
 > _Updated 2026-08-04: soft-confirmation double-EMA-update probe + shadow-TTL off-by-one fix (F-067/F-068 — see Discussion)._
@@ -42,6 +42,7 @@ This *is* the spine in [`docs/architecture/signal-flow.md`](../architecture/sign
 authoritative for flow and states; this topic is the human-language entry point that links to them.
 
 ## Discussion (filled in-session)
+- **HTF window truth (CH-timeframe-ssot-v2, 2026-10-10):** the `would_expand_score` telemetry term (`TelemetryCollector.on_reset`) now reads the remaining HTF position OUT OF THE HTF WINDOW (`EngineState.htf_window_candles`, set by the runner next to `htf_remaining_candles`); it divided by a hard-coded 4 while the active window is 16, so it saturated. Telemetry only (no code consumer of `would_expand`; trades, states and events byte-identical on the XAUUSD active-config backtest). The CRT state RESOLVER's HTF window (`configs/formulas/market_crt_states.yaml` `lifecycle.htf_candles_per_range`) was a stale copy (4) of `backtest.htf_candles_per_range` (16; the engine moved 4 -> 16 on 2026-09-09, commit 63562ab); it now reads 16, has no silent default, and `tests/test_resolver_htf_window_alignment.py` pins it to the active config. Measured effect on resolver-vs-engine bar agreement (one active-config engine run, `--injection none`): 53.07% with the stale 4 -> 73.40% with 16. The resolver is not wired to production (`crt_state.enabled=false`). F-069's baseline not reproducing (88.16% -> 68.69%) has this as a CANDIDATE driver, not a proven one.
 - **Trace → Parquet → DuckDB query layer (2026-09-06):** Additive read-only sidecars only. `jsonl_to_parquet.FAMILY_DEFAULTS` maps `_crt_construction.jsonl` → `engine_state_after`. New `src/utils/duckdb_query.open_views` + `scripts/analysis/query_trace.py` query projections under `logs/` and `results/`. JSONL remains system of record; no emitter enable flip; no spine wiring; `query_decision_atlas.py` unchanged. See `docs/reference/schemas.md` §9.17.
 - **Risks:** `2026-06-01` removing/renaming an engine without updating `EXPECTED_ENGINES` produces silent partial fusion (`CLAUDE.md §4`).
 - **Challenges:** `2026-06-01` per-step `tests/` file mapping not yet pinned here — relies on `testing.md` domains.

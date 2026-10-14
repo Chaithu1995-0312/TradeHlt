@@ -10,6 +10,48 @@ It is not a playbook, not a `SEM-*`, not a measurement contract.
 
 ---
 
+## Record 9 — 2026-10-09 — Chart-fact decode of the Record 7 live trade (candidates, bridge-requested)
+
+**Kind:** read-only candidate listing. **Not** a freeze, **not** a proxy approval, **not** an identity certification. No outcome numbers.
+**Requested by:** human bridge, 2026-10-09: "we have codebase cant we decode unknowns?"
+**Script:** `scripts/research/sujan_trade_decode.py` (SCR-509). **Artifact (untracked):** `userinvestigation/sujan_trade_decode/sujan_trade_decode.json`.
+**Corpus:** `data/mt5/XAUUSD_M15_2026-04-20_to_2026-10-06.csv`, `sha256:494e045b…`, clock `mt5_icmarkets_xau`, bars normalized to UTC (F-120), identity-level admission (the full gate REJECTs the file on a filename parse, not on its bars). 912 M15 bars in 2026-09-14..26.
+**Caveat:** his prices carry 3 decimals, this feed 2 → different broker; ±$0.50 used as the match tolerance. Base rate: 23 (line A) and 8 (line B) of 912 unrelated bars also land within it.
+
+| Unknown (Record 7) | Decode result | Status |
+|---|---|---|
+| Red line "WEEKLY OPEN" 4309.273 / 4255.613 | No week-open definition fits: Sun 17:00 NY, broker Monday, Mon 00:00 UTC, Sun 22:00 UTC all give 4331.66 (w/c 14 Sep) or 4373.77 (w/c 21 Sep), $22–118 away. No calendar-day open or day high/low within $0.50 either (nearest: 25 Sep day low 4254.49, −1.12 from line B). | Still UNKNOWN — "weekly open" on this feed is not his red line |
+| C1/C2/C3 for BUY 4276.30 | Only H1 pair with C2 sweeping the **low** and closing back inside C1 that day: C1 = 13:00 UTC (H 4299.55 L 4273.23), C2 = 14:00 UTC (L 4254.49, C 4279.19). Holds under both chat-clock readings (IST / UTC). | Candidate, UNVALIDATED |
+| Target "range high" (TP 4299) | C1 high 4299.55 → TP is 0.55 below it. | Candidate, UNVALIDATED |
+| Stop rule (SL 4269) | Not the C2 wick (4254.49, 14.5 away). Sits 0.77 below the low of the M15 bar that closed C2 (14:45 UTC, L 4269.77) and 1.11 below the 15:45 M15 low (4270.11). | Candidate, UNVALIDATED |
+| Entry 4276.30 | Traded in C3 (15:00–15:45 UTC M15 range 4270.11–4291.45); 2.89 below C2's close. Fill bar not identifiable. | UNKNOWN (which bar) |
+
+Not decodable from data (stay UNKNOWN, `.grok/SUJAN_QUESTIONS.md`): "strong confirmation", wait time, news / no-trade days, screen hours, loss limits, partials. Choices such as buffer or break-even could be backtested, but a backtest shows what works, not what he does (Measurement Firewall).
+
+**Stop.** No proxy approved. The human bridge confirms or rejects each candidate against his chart.
+
+---
+
+## Record 8 — 2026-10-06 — Calendar H4 ParentCRTTrack C1/C2/C3 measured as an entry (proxy, bridge-requested)
+
+**Kind:** bridge-requested measurement of an UNVALIDATED proxy. **Not** a freeze. **Not** an identity certification.
+**Requested by:** human bridge, 2026-10-06: "test calendar H4 C1/C2/C3 as entry on xauusd".
+**Artifacts (untracked, userinvestigation/):** `h4_c1c2c3_entry_xauusd.jsonl`, `h4_c1c2c3_entry_xauusd_summary.json`.
+
+| Sujan concept (Record 7 / 2026-10-06 chat) | Proxy measured | Approved as identity? | Status |
+|---|---|---|---|
+| C1 range | calendar H4 broker-grid candle (`ParentCandleBuilder("H4")`) | N | UNVALIDATED |
+| C2 manipulation, closed inside C1 | `ParentCRTTrack` sweep (`structure.predicates.swept_high/low`); C2 closing beyond the far side skipped | N | UNVALIDATED |
+| entry "on bullish candle close" | arm A: C2 close; arm B: C3 close (`DISTRIBUTION_C3`) | N | UNVALIDATED (1H confirmation DROPPED) |
+| stop | C2 swept extreme, no buffer | N | UNVALIDATED (his stop rule UNKNOWN) |
+| target "range high" | C1 far side | N | UNVALIDATED |
+| HTF location (red line / PDH / PDL / weekly open) | none | — | DROPPED, not proxied |
+| HTF location (rerun 2026-10-06, bridge-requested) | PDH/PDL = previous broker date; red line = weekly open (first M15 open of ISO week, Record 7 already flags it as likely the WRONG object); "at" = level inside C2's swept wick (`touch`) or within 0.5 × prior H4 ATR14 of C2's extreme (`near`) | N | UNVALIDATED |
+
+Measurement Firewall: arm A n=663 gross +0.0755R (CI −0.057…+0.208), arm B n=221 gross −0.038R; key-level rerun `near_any` n=303 gross +0.149R (CI −0.018…+0.316), `touch_any` n=145 +0.068R (artifact `h4_c1c2c3_keylevel_xauusd_summary.json`). **Frozen out-of-sample (2026-10-06, rule sha256 `bf8f9ec4…`, `h4_c1c2c3_near_level_freeze.json`): MT5 2026-05-22..2026-10-06, `near_any` n=47 gross −0.214R CI[−0.565,+0.138], net −0.238R, random draws beat it 76% → verdict FAIL; all arm A n=118 −0.239R.** **1H-confirmation successor (frozen 2026-10-06, sha256 `075aaa99…`, `h4_c1c2c3_1h_confirm_freeze.json`; entry = first 1H close in trade direction inside C3, cancelled if the stop trades first): in-sample near+confirmed n=180 +0.074R (PASS by its rules, design-period number); reused May–Oct holdout n=27 −0.219R (INSUFFICIENT, n<30), all confirmed n=65 −0.080R (FAIL). Holdout was not independent.** Results attach to this proxy only and do **not** travel to "Sujan CRT". Identity: NOT YET FROZEN.
+
+---
+
 ## Record 7 — 2026-09-26 — Five mechanical proxies measured as "Sujan" without identity review (DRIFT)
 
 **Kind:** unapproved semantic replacements, recorded after the fact. **Not** a freeze. **Not** an identity certification.

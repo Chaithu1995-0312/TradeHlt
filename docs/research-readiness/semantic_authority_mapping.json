@@ -1,0 +1,1656 @@
+{
+ "artifact": "semantic_authority_mapping",
+ "change_id": "CH-semantic-authority-mapping",
+ "generated_from": "live authorities 2026-10-08 (venv)",
+ "live_schema_dim": 79,
+ "n_concepts": 62,
+ "n_rows": 55,
+ "validate_all_problems": [],
+ "note": "consumers HEURISTIC (AST name match). PROPOSED concepts bind nothing (I-18).",
+ "rows": [
+  {
+   "word": "liquidity_sweep",
+   "in_79_vector": true,
+   "concept_id": "MKT-E01",
+   "concept_status": "ACCEPTED",
+   "concept_kind": "EVENT",
+   "concept_layer": "MARKET",
+   "rep_verdict": "MAPPED_REPRESENTATION",
+   "representations": [
+    {
+     "producer": "feature_pipeline",
+     "concept_id": "MKT-E01",
+     "slot": 21,
+     "encoding": "signed_side_int {-1 LOWER swept, 0, +1 UPPER swept}; UPPER-first projection when both sides are swept on one bar (declared lossy encoding, MKT-E01 divergence \"feature_pipeline.liquidity_sweep two-sided bar\")"
+    }
+   ],
+   "n_divergences": 6,
+   "divergence_surfaces": [
+    "at least 7 detectors (engine detect_sweep, parent_crt, resolver _detect_htf_range_sweep, FM-058, sujan_crt, visual_crt, weekly_sweep)",
+    "FM-058 tie",
+    "feature_pipeline.liquidity_sweep two-sided bar",
+    "engine SweepEvent.double_confirmed (crt_engine_v2.py:965) + score_sweep double_bonus + adjusted +0.10 + RejectReason.NO_DOUBLE_SWEEP",
+    "config_layer/execution_planner.py:389 _derive_intent LIQ_SWEEP + :441-447 _compute_entry + core/gate_intelligence.py:245-246 _intent_score",
+    "core/gate_intelligence.py:298-311 _liquidity_score sweep-extent half"
+   ],
+   "heuristic_consumers_n": 38,
+   "heuristic_consumers": [
+    "src/analytics/sl_tp_comparator.py",
+    "src/config_layer/crt_engine_v2.py",
+    "src/config_layer/execution_planner.py",
+    "src/core/collector.py",
+    "src/core/engine_runner.py",
+    "src/core/feature_store.py",
+    "src/core/gate_intelligence.py",
+    "src/core/model_registry.py",
+    "src/engines/crt_engine.py",
+    "src/features/bar_feature_frame.py",
+    "src/features/causal_structure.py",
+    "src/features/crt_feature_builder.py",
+    "src/features/feature_pipeline.py",
+    "src/features/level_lifecycle.py",
+    "src/governance/strategy_backtest.py",
+    "src/msip/disagreement.py",
+    "src/msip/interpretation_config.py",
+    "src/msip/market_state_vector.py",
+    "src/regime/market_state_cluster_engine.py",
+    "src/research/evidence/atlases.py",
+    "src/research/ic002_entry_evolution/schema.py",
+    "src/research/k23_table/heuristics.py",
+    "src/research/model_runners/adapters/crt_structure_rule_score.py",
+    "src/research/model_runners/adapters/dual_engine.py",
+    "src/research/model_runners/contracts.py"
+   ]
+  },
+  {
+   "word": "sweep_detected",
+   "in_79_vector": true,
+   "concept_id": "MKT-E01",
+   "concept_status": "ACCEPTED",
+   "concept_kind": "EVENT",
+   "concept_layer": "MARKET",
+   "rep_verdict": "MAPPED_REPRESENTATION",
+   "representations": [
+    {
+     "producer": "feature_pipeline",
+     "concept_id": "MKT-E01",
+     "slot": 20,
+     "encoding": "bool_int8 (abs of liquidity_sweep)"
+    }
+   ],
+   "n_divergences": 6,
+   "divergence_surfaces": [
+    "at least 7 detectors (engine detect_sweep, parent_crt, resolver _detect_htf_range_sweep, FM-058, sujan_crt, visual_crt, weekly_sweep)",
+    "FM-058 tie",
+    "feature_pipeline.liquidity_sweep two-sided bar",
+    "engine SweepEvent.double_confirmed (crt_engine_v2.py:965) + score_sweep double_bonus + adjusted +0.10 + RejectReason.NO_DOUBLE_SWEEP",
+    "config_layer/execution_planner.py:389 _derive_intent LIQ_SWEEP + :441-447 _compute_entry + core/gate_intelligence.py:245-246 _intent_score",
+    "core/gate_intelligence.py:298-311 _liquidity_score sweep-extent half"
+   ],
+   "heuristic_consumers_n": 38,
+   "heuristic_consumers": [
+    "src/analytics/sl_tp_comparator.py",
+    "src/config_layer/crt_engine_v2.py",
+    "src/config_layer/execution_planner.py",
+    "src/core/collector.py",
+    "src/core/engine_runner.py",
+    "src/core/feature_store.py",
+    "src/core/gate_intelligence.py",
+    "src/core/model_registry.py",
+    "src/engines/crt_engine.py",
+    "src/features/bar_feature_frame.py",
+    "src/features/causal_structure.py",
+    "src/features/crt_feature_builder.py",
+    "src/features/feature_pipeline.py",
+    "src/features/level_lifecycle.py",
+    "src/governance/strategy_backtest.py",
+    "src/msip/disagreement.py",
+    "src/msip/interpretation_config.py",
+    "src/msip/market_state_vector.py",
+    "src/regime/market_state_cluster_engine.py",
+    "src/research/evidence/atlases.py",
+    "src/research/ic002_entry_evolution/schema.py",
+    "src/research/k23_table/heuristics.py",
+    "src/research/model_runners/adapters/crt_structure_rule_score.py",
+    "src/research/model_runners/adapters/dual_engine.py",
+    "src/research/model_runners/contracts.py"
+   ]
+  },
+  {
+   "word": "double_sweep",
+   "in_79_vector": true,
+   "concept_id": "MKT-C04",
+   "concept_status": "ACCEPTED",
+   "concept_kind": "CONDITION",
+   "concept_layer": "MARKET",
+   "rep_verdict": "MAPPED_REPRESENTATION",
+   "representations": [
+    {
+     "producer": "feature_pipeline",
+     "concept_id": "MKT-C04",
+     "slot": 6,
+     "encoding": "bool_int8"
+    }
+   ],
+   "n_divergences": 6,
+   "divergence_surfaces": [
+    "name double_sweep",
+    "feature_pipeline.py:281 comment",
+    "inherited FM-058 tie",
+    "FM-060 rule on the liquidity_sweep slot (feature_pipeline.py double_sweep; causal_structure double_sweep; core/feature_store.py liquidity_sweep history)",
+    "config_layer/execution_planner.py:389 (double_sweep alone triggers LIQ_SWEEP) + core/gate_intelligence.py:246 (0.5 bonus)",
+    "FM-060/FM-092 registered interpretation (market_ontology.yaml 'trap / whipsaw ... neither side is in control') vs every consumer's bonus polarity"
+   ],
+   "heuristic_consumers_n": 26,
+   "heuristic_consumers": [
+    "src/analytics/sl_tp_comparator.py",
+    "src/bitnet/defaults.py",
+    "src/bitnet/encoders.py",
+    "src/config_layer/crt_engine_v2.py",
+    "src/config_layer/execution_planner.py",
+    "src/core/collector.py",
+    "src/core/feature_store.py",
+    "src/core/gate_intelligence.py",
+    "src/engines/crt_engine.py",
+    "src/features/causal_structure.py",
+    "src/features/crt_feature_builder.py",
+    "src/features/feature_pipeline.py",
+    "src/features/level_lifecycle.py",
+    "src/governance/strategy_backtest.py",
+    "src/regime/market_state_cluster_engine.py",
+    "src/research/evidence/atlases.py",
+    "src/research/k23_table/heuristics.py",
+    "src/research/model_runners/adapters/crt_structure_rule_score.py",
+    "src/research/model_runners/contracts.py",
+    "src/research/synthetic/stories/liquidity_reversal.py",
+    "src/research/synthetic/story_builder.py",
+    "src/runtime/live_engine_hook.py",
+    "src/strategies/s08_ml_ensemble.py",
+    "src/strategies/s10_trap_strategy.py",
+    "src/uat/uat_runner.py"
+   ]
+  },
+  {
+   "word": "break_of_structure",
+   "in_79_vector": true,
+   "concept_id": "MKT-C01",
+   "concept_status": "ACCEPTED",
+   "concept_kind": "CONDITION",
+   "concept_layer": "MARKET",
+   "rep_verdict": "MAPPED_REPRESENTATION",
+   "representations": [
+    {
+     "producer": "feature_pipeline",
+     "concept_id": "MKT-C01",
+     "slot": 22,
+     "encoding": "signed_int {-1 BELOW_LAST_SWING_LOW, 0 INSIDE, +1 ABOVE_LAST_SWING_HIGH}"
+    }
+   ],
+   "n_divergences": 1,
+   "divergence_surfaces": [
+    "FM-057 break_of_structure slot 22"
+   ],
+   "heuristic_consumers_n": 22,
+   "heuristic_consumers": [
+    "src/core/model_registry.py",
+    "src/features/causal_structure.py",
+    "src/features/crt_feature_builder.py",
+    "src/features/feature_pipeline.py",
+    "src/governance/strategy_backtest.py",
+    "src/msip/interpretation_config.py",
+    "src/msip/market_state_vector.py",
+    "src/regime/market_state_cluster_engine.py",
+    "src/research/evidence/atlases.py",
+    "src/research/ic002_entry_evolution/schema.py",
+    "src/research/k23_table/heuristics.py",
+    "src/research/rc003_distinct_object/driver.py",
+    "src/research/synthetic/stories/breakout.py",
+    "src/research/synthetic/stories/range_rotation.py",
+    "src/runtime/backtest_v2.py",
+    "src/runtime/bar_structure_snapshot.py",
+    "src/runtime/live_engine_hook.py",
+    "src/runtime/live_rail_feeder.py",
+    "src/strategies/s01_crt_wrapper.py",
+    "src/strategies/s03_breakout.py",
+    "src/strategies/s07_news_sentiment.py",
+    "src/uat/uat_runner.py"
+   ]
+  },
+  {
+   "word": "trend_bias",
+   "in_79_vector": true,
+   "concept_id": "MKT-C03",
+   "concept_status": "ACCEPTED",
+   "concept_kind": "CONDITION",
+   "concept_layer": "MARKET",
+   "rep_verdict": "MAPPED_REPRESENTATION",
+   "representations": [
+    {
+     "producer": "feature_pipeline",
+     "concept_id": "MKT-C03",
+     "slot": 10,
+     "encoding": "signed_int {-1,0,1}"
+    }
+   ],
+   "n_divergences": 1,
+   "divergence_surfaces": [
+    "name trend_bias"
+   ],
+   "heuristic_consumers_n": 34,
+   "heuristic_consumers": [
+    "src/core/engine_runner.py",
+    "src/core/model_registry.py",
+    "src/features/crt_feature_builder.py",
+    "src/features/crt_state_resolver.py",
+    "src/features/dataset_builder.py",
+    "src/features/feature_pipeline.py",
+    "src/features/feature_schema.py",
+    "src/governance/strategy_backtest.py",
+    "src/msip/interpretation_config.py",
+    "src/msip/market_state_vector.py",
+    "src/research/episode_propositions.py",
+    "src/research/evidence/asymmetry_contract.py",
+    "src/research/evidence/atlases.py",
+    "src/research/evidence/magnitude_prior.py",
+    "src/research/evidence/mother_range_prior.py",
+    "src/research/evidence/queries.py",
+    "src/research/evidence/rnet_overlay.py",
+    "src/research/evidence/visual_crt_prior.py",
+    "src/research/ic002_entry_evolution/schema.py",
+    "src/research/model_runners/adapters/dual_engine.py",
+    "src/research/model_runners/contracts.py",
+    "src/research/probes/phase1_replay.py",
+    "src/runtime/backtest_v2.py",
+    "src/runtime/bar_structure_snapshot.py",
+    "src/runtime/live_engine_hook.py"
+   ]
+  },
+  {
+   "word": "change_of_character",
+   "in_79_vector": true,
+   "concept_id": "MKT-C07",
+   "concept_status": "ACCEPTED",
+   "concept_kind": "CONDITION",
+   "concept_layer": "MARKET",
+   "rep_verdict": "MAPPED_REPRESENTATION",
+   "representations": [
+    {
+     "producer": "feature_pipeline",
+     "concept_id": "MKT-C07",
+     "slot": 47,
+     "encoding": "signed_int {-1,0,1}"
+    }
+   ],
+   "n_divergences": 2,
+   "divergence_surfaces": [
+    "name change_of_character / CHoCH",
+    "input is MKT-C01 (a condition)"
+   ],
+   "heuristic_consumers_n": 7,
+   "heuristic_consumers": [
+    "src/features/crt_feature_builder.py",
+    "src/features/feature_pipeline.py",
+    "src/research/clean_labels/builder.py",
+    "src/research/k23_table/heuristics.py",
+    "src/research/model_runners/schema_resolver.py",
+    "src/runtime/live_engine_hook.py",
+    "src/runtime/live_rail_feeder.py"
+   ]
+  },
+  {
+   "word": "higher_high",
+   "in_79_vector": true,
+   "concept_id": "MKT-E08",
+   "concept_status": "ACCEPTED",
+   "concept_kind": "EVENT",
+   "concept_layer": "MARKET",
+   "rep_verdict": "MAPPED_REPRESENTATION",
+   "representations": [
+    {
+     "producer": "feature_pipeline",
+     "concept_id": "MKT-E08",
+     "slot": 25,
+     "encoding": "bool_int8 (UPPER side)"
+    }
+   ],
+   "n_divergences": 0,
+   "divergence_surfaces": [],
+   "heuristic_consumers_n": 16,
+   "heuristic_consumers": [
+    "src/core/model_registry.py",
+    "src/features/causal_structure.py",
+    "src/features/crt_feature_builder.py",
+    "src/features/feature_pipeline.py",
+    "src/governance/strategy_backtest.py",
+    "src/msip/interpretation_config.py",
+    "src/msip/market_state_vector.py",
+    "src/research/evidence/atlases.py",
+    "src/research/ic002_entry_evolution/schema.py",
+    "src/research/k23_table/heuristics.py",
+    "src/research/synthetic/stories/breakout.py",
+    "src/runtime/live_engine_hook.py",
+    "src/runtime/live_rail_feeder.py",
+    "src/strategies/s03_breakout.py",
+    "src/strategies/s10_trap_strategy.py",
+    "src/uat/uat_runner.py"
+   ]
+  },
+  {
+   "word": "lower_low",
+   "in_79_vector": true,
+   "concept_id": "MKT-E08",
+   "concept_status": "ACCEPTED",
+   "concept_kind": "EVENT",
+   "concept_layer": "MARKET",
+   "rep_verdict": "MAPPED_REPRESENTATION",
+   "representations": [
+    {
+     "producer": "feature_pipeline",
+     "concept_id": "MKT-E08",
+     "slot": 26,
+     "encoding": "bool_int8 (LOWER side)"
+    }
+   ],
+   "n_divergences": 0,
+   "divergence_surfaces": [],
+   "heuristic_consumers_n": 16,
+   "heuristic_consumers": [
+    "src/core/model_registry.py",
+    "src/features/causal_structure.py",
+    "src/features/crt_feature_builder.py",
+    "src/features/feature_pipeline.py",
+    "src/governance/strategy_backtest.py",
+    "src/msip/interpretation_config.py",
+    "src/msip/market_state_vector.py",
+    "src/research/evidence/atlases.py",
+    "src/research/ic002_entry_evolution/schema.py",
+    "src/research/k23_table/heuristics.py",
+    "src/research/synthetic/stories/breakout.py",
+    "src/runtime/live_engine_hook.py",
+    "src/runtime/live_rail_feeder.py",
+    "src/strategies/s03_breakout.py",
+    "src/strategies/s10_trap_strategy.py",
+    "src/uat/uat_runner.py"
+   ]
+  },
+  {
+   "word": "higher_low",
+   "in_79_vector": true,
+   "concept_id": null,
+   "concept_status": null,
+   "concept_kind": null,
+   "concept_layer": null,
+   "rep_verdict": "UNMAPPED_RATCHET",
+   "representations": [
+    {
+     "producer": "feature_pipeline",
+     "concept_id": null,
+     "slot": null,
+     "encoding": "UNMAPPED: swing-sequence state (FM-121); distinct from the higher_high pierce"
+    }
+   ],
+   "n_divergences": 0,
+   "divergence_surfaces": [],
+   "heuristic_consumers_n": 0,
+   "heuristic_consumers": []
+  },
+  {
+   "word": "lower_high",
+   "in_79_vector": true,
+   "concept_id": null,
+   "concept_status": null,
+   "concept_kind": null,
+   "concept_layer": null,
+   "rep_verdict": "UNMAPPED_RATCHET",
+   "representations": [
+    {
+     "producer": "feature_pipeline",
+     "concept_id": null,
+     "slot": null,
+     "encoding": "UNMAPPED: swing-sequence state (FM-122); distinct from the lower_low pierce"
+    }
+   ],
+   "n_divergences": 0,
+   "divergence_surfaces": [],
+   "heuristic_consumers_n": 0,
+   "heuristic_consumers": []
+  },
+  {
+   "word": "sideways",
+   "in_79_vector": true,
+   "concept_id": null,
+   "concept_status": null,
+   "concept_kind": null,
+   "concept_layer": null,
+   "rep_verdict": "UNMAPPED_RATCHET",
+   "representations": [
+    {
+     "producer": "feature_pipeline",
+     "concept_id": null,
+     "slot": null,
+     "encoding": "UNMAPPED: swing-sequence state (FM-123); 0 until both sides are known"
+    }
+   ],
+   "n_divergences": 0,
+   "divergence_surfaces": [],
+   "heuristic_consumers_n": 0,
+   "heuristic_consumers": []
+  },
+  {
+   "word": "swing_high",
+   "in_79_vector": true,
+   "concept_id": "MKT-L01",
+   "concept_status": "ACCEPTED",
+   "concept_kind": "LEVEL",
+   "concept_layer": "MARKET",
+   "rep_verdict": "MAPPED_REPRESENTATION",
+   "representations": [
+    {
+     "producer": "feature_pipeline",
+     "concept_id": "MKT-L01",
+     "slot": 23,
+     "encoding": "formation_flag (1 on the bar the UPPER swing level becomes available)"
+    }
+   ],
+   "n_divergences": 5,
+   "divergence_surfaces": [
+    "causal_structure _last_swing_*_price",
+    "features.smc._geometry.detect_causal_swings",
+    "liquidity_* features (FM-025/026)",
+    "causal_structure._centered_flags (causal_structure.py:66-69)",
+    "causal_structure FM-025 liquidity_distance (causal_structure.py:179-180)"
+   ],
+   "heuristic_consumers_n": 19,
+   "heuristic_consumers": [
+    "src/core/feature_store.py",
+    "src/core/model_registry.py",
+    "src/features/causal_structure.py",
+    "src/features/crt_feature_builder.py",
+    "src/features/feature_pipeline.py",
+    "src/governance/strategy_backtest.py",
+    "src/research/clean_labels/builder.py",
+    "src/research/evidence/catalog.py",
+    "src/research/evidence/context_attribution.py",
+    "src/research/model_runners/schema_resolver.py",
+    "src/research/synthetic/stories/breakout.py",
+    "src/research/synthetic/stories/range_rotation.py",
+    "src/runtime/bar_structure_snapshot.py",
+    "src/runtime/live_engine_hook.py",
+    "src/runtime/live_rail_feeder.py",
+    "src/strategies/s03_breakout.py",
+    "src/strategies/s05_grid.py",
+    "src/strategies/s10_trap_strategy.py",
+    "src/uat/uat_runner.py"
+   ]
+  },
+  {
+   "word": "swing_low",
+   "in_79_vector": true,
+   "concept_id": "MKT-L01",
+   "concept_status": "ACCEPTED",
+   "concept_kind": "LEVEL",
+   "concept_layer": "MARKET",
+   "rep_verdict": "MAPPED_REPRESENTATION",
+   "representations": [
+    {
+     "producer": "feature_pipeline",
+     "concept_id": "MKT-L01",
+     "slot": 24,
+     "encoding": "formation_flag (1 on the bar the LOWER swing level becomes available)"
+    }
+   ],
+   "n_divergences": 5,
+   "divergence_surfaces": [
+    "causal_structure _last_swing_*_price",
+    "features.smc._geometry.detect_causal_swings",
+    "liquidity_* features (FM-025/026)",
+    "causal_structure._centered_flags (causal_structure.py:66-69)",
+    "causal_structure FM-025 liquidity_distance (causal_structure.py:179-180)"
+   ],
+   "heuristic_consumers_n": 19,
+   "heuristic_consumers": [
+    "src/core/feature_store.py",
+    "src/core/model_registry.py",
+    "src/features/causal_structure.py",
+    "src/features/crt_feature_builder.py",
+    "src/features/feature_pipeline.py",
+    "src/governance/strategy_backtest.py",
+    "src/research/clean_labels/builder.py",
+    "src/research/evidence/catalog.py",
+    "src/research/evidence/context_attribution.py",
+    "src/research/model_runners/schema_resolver.py",
+    "src/research/synthetic/stories/breakout.py",
+    "src/research/synthetic/stories/range_rotation.py",
+    "src/runtime/bar_structure_snapshot.py",
+    "src/runtime/live_engine_hook.py",
+    "src/runtime/live_rail_feeder.py",
+    "src/strategies/s03_breakout.py",
+    "src/strategies/s05_grid.py",
+    "src/strategies/s10_trap_strategy.py",
+    "src/uat/uat_runner.py"
+   ]
+  },
+  {
+   "word": "displacement_flag",
+   "in_79_vector": false,
+   "concept_id": "MKT-E05",
+   "concept_status": "ACCEPTED",
+   "concept_kind": "EVENT",
+   "concept_layer": "MARKET",
+   "rep_verdict": "MAPPED_VIA_NON_VECTOR",
+   "representations": [
+    {
+     "producer": "feature_pipeline(enriched)",
+     "concept_id": "MKT-E05",
+     "slot": null,
+     "encoding": "FM-069 non-canonical col; _NON_VECTOR_PRODUCERS; resolver_supply from_enriched"
+    }
+   ],
+   "n_divergences": 1,
+   "divergence_surfaces": [
+    "name 'displacement'"
+   ],
+   "heuristic_consumers_n": 0,
+   "heuristic_consumers": []
+  },
+  {
+   "word": "retest_flag",
+   "in_79_vector": false,
+   "concept_id": "MKT-E09",
+   "concept_status": "ACCEPTED",
+   "concept_kind": "EVENT",
+   "concept_layer": "MARKET",
+   "rep_verdict": "MAPPED_VIA_NON_VECTOR",
+   "representations": [
+    {
+     "producer": "feature_pipeline(enriched)",
+     "concept_id": "MKT-E09",
+     "slot": null,
+     "encoding": "FM-061 non-canonical col; gates retest_depth; RETEST/EXECUTION.when (band PROPOSED OQ7)"
+    }
+   ],
+   "n_divergences": 1,
+   "divergence_surfaces": [
+    "retest meaning"
+   ],
+   "heuristic_consumers_n": 0,
+   "heuristic_consumers": []
+  },
+  {
+   "word": "rsi_state",
+   "in_79_vector": false,
+   "concept_id": null,
+   "concept_status": null,
+   "concept_kind": null,
+   "concept_layer": null,
+   "rep_verdict": "MAPPED_VIA_NON_VECTOR",
+   "representations": [
+    {
+     "producer": "feature_pipeline(enriched)",
+     "concept_id": null,
+     "slot": null,
+     "encoding": "FM-068 non-canonical col; EXECUTION.when NeutralMomentum; no slice-1 RSI concept"
+    }
+   ],
+   "n_divergences": 0,
+   "divergence_surfaces": [],
+   "heuristic_consumers_n": 0,
+   "heuristic_consumers": []
+  },
+  {
+   "word": "body_commitment",
+   "in_79_vector": false,
+   "concept_id": null,
+   "concept_status": null,
+   "concept_kind": null,
+   "concept_layer": null,
+   "rep_verdict": "UNMAPPED_SHADOW_L2",
+   "representations": [],
+   "n_divergences": 0,
+   "divergence_surfaces": [],
+   "heuristic_consumers_n": 0,
+   "heuristic_consumers": []
+  },
+  {
+   "word": "atr_magnitude",
+   "in_79_vector": false,
+   "concept_id": null,
+   "concept_status": null,
+   "concept_kind": null,
+   "concept_layer": null,
+   "rep_verdict": "UNMAPPED_SHADOW_L2",
+   "representations": [],
+   "n_divergences": 0,
+   "divergence_surfaces": [],
+   "heuristic_consumers_n": 0,
+   "heuristic_consumers": []
+  },
+  {
+   "word": "momentum_magnitude",
+   "in_79_vector": false,
+   "concept_id": null,
+   "concept_status": null,
+   "concept_kind": null,
+   "concept_layer": null,
+   "rep_verdict": "UNMAPPED_SHADOW_L2",
+   "representations": [],
+   "n_divergences": 0,
+   "divergence_surfaces": [],
+   "heuristic_consumers_n": 0,
+   "heuristic_consumers": []
+  },
+  {
+   "word": "liquidity_sweep_e01",
+   "in_79_vector": false,
+   "concept_id": "MKT-E01",
+   "concept_status": "ACCEPTED",
+   "concept_kind": "EVENT",
+   "concept_layer": "MARKET",
+   "rep_verdict": "MAPPED_CONDITIONAL_E01",
+   "representations": [
+    {
+     "producer": "feature_pipeline",
+     "concept_id": "MKT-E01",
+     "slot": 21,
+     "encoding": "signed_side_int {-1 LOWER swept, 0, +1 UPPER swept}; UPPER-first projection when both sides are swept on one bar (declared lossy encoding, MKT-E01 divergence \"feature_pipeline.liquidity_sweep two-sided bar\")"
+    }
+   ],
+   "n_divergences": 6,
+   "divergence_surfaces": [
+    "at least 7 detectors (engine detect_sweep, parent_crt, resolver _detect_htf_range_sweep, FM-058, sujan_crt, visual_crt, weekly_sweep)",
+    "FM-058 tie",
+    "feature_pipeline.liquidity_sweep two-sided bar",
+    "engine SweepEvent.double_confirmed (crt_engine_v2.py:965) + score_sweep double_bonus + adjusted +0.10 + RejectReason.NO_DOUBLE_SWEEP",
+    "config_layer/execution_planner.py:389 _derive_intent LIQ_SWEEP + :441-447 _compute_entry + core/gate_intelligence.py:245-246 _intent_score",
+    "core/gate_intelligence.py:298-311 _liquidity_score sweep-extent half"
+   ],
+   "heuristic_consumers_n": 38,
+   "heuristic_consumers": [
+    "src/analytics/sl_tp_comparator.py",
+    "src/config_layer/crt_engine_v2.py",
+    "src/config_layer/execution_planner.py",
+    "src/core/collector.py",
+    "src/core/engine_runner.py",
+    "src/core/feature_store.py",
+    "src/core/gate_intelligence.py",
+    "src/core/model_registry.py",
+    "src/engines/crt_engine.py",
+    "src/features/bar_feature_frame.py",
+    "src/features/causal_structure.py",
+    "src/features/crt_feature_builder.py",
+    "src/features/feature_pipeline.py",
+    "src/features/level_lifecycle.py",
+    "src/governance/strategy_backtest.py",
+    "src/msip/disagreement.py",
+    "src/msip/interpretation_config.py",
+    "src/msip/market_state_vector.py",
+    "src/regime/market_state_cluster_engine.py",
+    "src/research/evidence/atlases.py",
+    "src/research/ic002_entry_evolution/schema.py",
+    "src/research/k23_table/heuristics.py",
+    "src/research/model_runners/adapters/crt_structure_rule_score.py",
+    "src/research/model_runners/adapters/dual_engine.py",
+    "src/research/model_runners/contracts.py"
+   ]
+  },
+  {
+   "word": "sweep_detected_e01",
+   "in_79_vector": false,
+   "concept_id": "MKT-E01",
+   "concept_status": "ACCEPTED",
+   "concept_kind": "EVENT",
+   "concept_layer": "MARKET",
+   "rep_verdict": "MAPPED_CONDITIONAL_E01",
+   "representations": [
+    {
+     "producer": "feature_pipeline",
+     "concept_id": "MKT-E01",
+     "slot": 20,
+     "encoding": "bool_int8 (abs of liquidity_sweep)"
+    }
+   ],
+   "n_divergences": 6,
+   "divergence_surfaces": [
+    "at least 7 detectors (engine detect_sweep, parent_crt, resolver _detect_htf_range_sweep, FM-058, sujan_crt, visual_crt, weekly_sweep)",
+    "FM-058 tie",
+    "feature_pipeline.liquidity_sweep two-sided bar",
+    "engine SweepEvent.double_confirmed (crt_engine_v2.py:965) + score_sweep double_bonus + adjusted +0.10 + RejectReason.NO_DOUBLE_SWEEP",
+    "config_layer/execution_planner.py:389 _derive_intent LIQ_SWEEP + :441-447 _compute_entry + core/gate_intelligence.py:245-246 _intent_score",
+    "core/gate_intelligence.py:298-311 _liquidity_score sweep-extent half"
+   ],
+   "heuristic_consumers_n": 38,
+   "heuristic_consumers": [
+    "src/analytics/sl_tp_comparator.py",
+    "src/config_layer/crt_engine_v2.py",
+    "src/config_layer/execution_planner.py",
+    "src/core/collector.py",
+    "src/core/engine_runner.py",
+    "src/core/feature_store.py",
+    "src/core/gate_intelligence.py",
+    "src/core/model_registry.py",
+    "src/engines/crt_engine.py",
+    "src/features/bar_feature_frame.py",
+    "src/features/causal_structure.py",
+    "src/features/crt_feature_builder.py",
+    "src/features/feature_pipeline.py",
+    "src/features/level_lifecycle.py",
+    "src/governance/strategy_backtest.py",
+    "src/msip/disagreement.py",
+    "src/msip/interpretation_config.py",
+    "src/msip/market_state_vector.py",
+    "src/regime/market_state_cluster_engine.py",
+    "src/research/evidence/atlases.py",
+    "src/research/ic002_entry_evolution/schema.py",
+    "src/research/k23_table/heuristics.py",
+    "src/research/model_runners/adapters/crt_structure_rule_score.py",
+    "src/research/model_runners/adapters/dual_engine.py",
+    "src/research/model_runners/contracts.py"
+   ]
+  },
+  {
+   "word": "double_sweep_e01",
+   "in_79_vector": false,
+   "concept_id": "MKT-C04",
+   "concept_status": "ACCEPTED",
+   "concept_kind": "CONDITION",
+   "concept_layer": "MARKET",
+   "rep_verdict": "MAPPED_CONDITIONAL_E01",
+   "representations": [
+    {
+     "producer": "feature_pipeline",
+     "concept_id": "MKT-C04",
+     "slot": 6,
+     "encoding": "bool_int8"
+    }
+   ],
+   "n_divergences": 6,
+   "divergence_surfaces": [
+    "name double_sweep",
+    "feature_pipeline.py:281 comment",
+    "inherited FM-058 tie",
+    "FM-060 rule on the liquidity_sweep slot (feature_pipeline.py double_sweep; causal_structure double_sweep; core/feature_store.py liquidity_sweep history)",
+    "config_layer/execution_planner.py:389 (double_sweep alone triggers LIQ_SWEEP) + core/gate_intelligence.py:246 (0.5 bonus)",
+    "FM-060/FM-092 registered interpretation (market_ontology.yaml 'trap / whipsaw ... neither side is in control') vs every consumer's bonus polarity"
+   ],
+   "heuristic_consumers_n": 26,
+   "heuristic_consumers": [
+    "src/analytics/sl_tp_comparator.py",
+    "src/bitnet/defaults.py",
+    "src/bitnet/encoders.py",
+    "src/config_layer/crt_engine_v2.py",
+    "src/config_layer/execution_planner.py",
+    "src/core/collector.py",
+    "src/core/feature_store.py",
+    "src/core/gate_intelligence.py",
+    "src/engines/crt_engine.py",
+    "src/features/causal_structure.py",
+    "src/features/crt_feature_builder.py",
+    "src/features/feature_pipeline.py",
+    "src/features/level_lifecycle.py",
+    "src/governance/strategy_backtest.py",
+    "src/regime/market_state_cluster_engine.py",
+    "src/research/evidence/atlases.py",
+    "src/research/k23_table/heuristics.py",
+    "src/research/model_runners/adapters/crt_structure_rule_score.py",
+    "src/research/model_runners/contracts.py",
+    "src/research/synthetic/stories/liquidity_reversal.py",
+    "src/research/synthetic/story_builder.py",
+    "src/runtime/live_engine_hook.py",
+    "src/strategies/s08_ml_ensemble.py",
+    "src/strategies/s10_trap_strategy.py",
+    "src/uat/uat_runner.py"
+   ]
+  },
+  {
+   "word": "retest_flag_e01",
+   "in_79_vector": false,
+   "concept_id": "MKT-E09",
+   "concept_status": "ACCEPTED",
+   "concept_kind": "EVENT",
+   "concept_layer": "MARKET",
+   "rep_verdict": "MAPPED_VIA_NON_VECTOR",
+   "representations": [
+    {
+     "producer": "feature_pipeline(enriched)",
+     "concept_id": "MKT-E09",
+     "slot": null,
+     "encoding": "FM-094 conditional on sweep_semantics=e01_lifecycle; gates FM-095"
+    }
+   ],
+   "n_divergences": 1,
+   "divergence_surfaces": [
+    "retest meaning"
+   ],
+   "heuristic_consumers_n": 0,
+   "heuristic_consumers": []
+  },
+  {
+   "word": "wait_for_next_candle",
+   "in_79_vector": false,
+   "concept_id": null,
+   "concept_status": null,
+   "concept_kind": null,
+   "concept_layer": null,
+   "rep_verdict": "UNMAPPED_DECISION_STATE_FM128",
+   "representations": [],
+   "n_divergences": 0,
+   "divergence_surfaces": [],
+   "heuristic_consumers_n": 0,
+   "heuristic_consumers": []
+  },
+  {
+   "word": "RANGE",
+   "in_79_vector": false,
+   "concept_id": "MKT-P01.AWAITING_SWEEP",
+   "concept_status": "ACCEPTED",
+   "concept_kind": "EPISODE_STAGE",
+   "concept_layer": "MARKET",
+   "rep_verdict": "MAPPED_REPRESENTATION",
+   "representations": [
+    {
+     "producer": "crt_engine",
+     "concept_id": "MKT-P01.AWAITING_SWEEP",
+     "slot": null,
+     "encoding": "crt_engine:CRTState.RANGE"
+    }
+   ],
+   "n_divergences": 0,
+   "divergence_surfaces": [],
+   "heuristic_consumers_n": 2,
+   "heuristic_consumers": [
+    "src/config_layer/_crt_state_generated.py",
+    "src/config_layer/crt_engine_v2.py"
+   ]
+  },
+  {
+   "word": "SWEEP",
+   "in_79_vector": false,
+   "concept_id": "MKT-P01.SWEPT",
+   "concept_status": "ACCEPTED",
+   "concept_kind": "EPISODE_STAGE",
+   "concept_layer": "MARKET",
+   "rep_verdict": "MAPPED_REPRESENTATION",
+   "representations": [
+    {
+     "producer": "crt_engine",
+     "concept_id": "MKT-P01.SWEPT",
+     "slot": null,
+     "encoding": "crt_engine:CRTState.SWEEP"
+    }
+   ],
+   "n_divergences": 0,
+   "divergence_surfaces": [],
+   "heuristic_consumers_n": 2,
+   "heuristic_consumers": [
+    "src/config_layer/_crt_state_generated.py",
+    "src/config_layer/crt_engine_v2.py"
+   ]
+  },
+  {
+   "word": "DISPLACEMENT",
+   "in_79_vector": false,
+   "concept_id": "MKT-P01.DISPLACED",
+   "concept_status": "ACCEPTED",
+   "concept_kind": "EPISODE_STAGE",
+   "concept_layer": "MARKET",
+   "rep_verdict": "MAPPED_REPRESENTATION",
+   "representations": [
+    {
+     "producer": "crt_engine",
+     "concept_id": "MKT-P01.DISPLACED",
+     "slot": null,
+     "encoding": "crt_engine:CRTState.DISPLACEMENT"
+    }
+   ],
+   "n_divergences": 0,
+   "divergence_surfaces": [],
+   "heuristic_consumers_n": 2,
+   "heuristic_consumers": [
+    "src/config_layer/_crt_state_generated.py",
+    "src/config_layer/crt_engine_v2.py"
+   ]
+  },
+  {
+   "word": "EXPANSION",
+   "in_79_vector": false,
+   "concept_id": "MKT-P01.EXTENDED",
+   "concept_status": "ACCEPTED",
+   "concept_kind": "EPISODE_STAGE",
+   "concept_layer": "MARKET",
+   "rep_verdict": "MAPPED_REPRESENTATION",
+   "representations": [
+    {
+     "producer": "crt_engine",
+     "concept_id": "MKT-P01.EXTENDED",
+     "slot": null,
+     "encoding": "crt_engine:CRTState.EXPANSION"
+    }
+   ],
+   "n_divergences": 1,
+   "divergence_surfaces": [
+    "ResetLogic.should_reset (crt_engine_v2.py:2881-2891)"
+   ],
+   "heuristic_consumers_n": 2,
+   "heuristic_consumers": [
+    "src/config_layer/_crt_state_generated.py",
+    "src/config_layer/crt_engine_v2.py"
+   ]
+  },
+  {
+   "word": "RETEST",
+   "in_79_vector": false,
+   "concept_id": "MKT-P01.RETESTING",
+   "concept_status": "ACCEPTED",
+   "concept_kind": "EPISODE_STAGE",
+   "concept_layer": "MARKET",
+   "rep_verdict": "MAPPED_REPRESENTATION",
+   "representations": [
+    {
+     "producer": "crt_engine",
+     "concept_id": "MKT-P01.RETESTING",
+     "slot": null,
+     "encoding": "crt_engine:CRTState.RETEST"
+    }
+   ],
+   "n_divergences": 0,
+   "divergence_surfaces": [],
+   "heuristic_consumers_n": 2,
+   "heuristic_consumers": [
+    "src/config_layer/_crt_state_generated.py",
+    "src/config_layer/crt_engine_v2.py"
+   ]
+  },
+  {
+   "word": "EXECUTION",
+   "in_79_vector": false,
+   "concept_id": null,
+   "concept_status": null,
+   "concept_kind": null,
+   "concept_layer": null,
+   "rep_verdict": "UNMAPPED_BLOCKED_L3V2",
+   "representations": [
+    {
+     "producer": "crt_engine",
+     "concept_id": null,
+     "slot": null,
+     "encoding": "UNMAPPED crt_engine.yaml: needs L3 v2.0.0 position lifecycle"
+    }
+   ],
+   "n_divergences": 0,
+   "divergence_surfaces": [],
+   "heuristic_consumers_n": 0,
+   "heuristic_consumers": []
+  },
+  {
+   "word": "RESOLUTION",
+   "in_79_vector": false,
+   "concept_id": null,
+   "concept_status": null,
+   "concept_kind": null,
+   "concept_layer": null,
+   "rep_verdict": "UNMAPPED_BLOCKED_L3V2",
+   "representations": [
+    {
+     "producer": "crt_engine",
+     "concept_id": null,
+     "slot": null,
+     "encoding": "UNMAPPED crt_engine.yaml: needs L3 v2.0.0"
+    }
+   ],
+   "n_divergences": 0,
+   "divergence_surfaces": [],
+   "heuristic_consumers_n": 0,
+   "heuristic_consumers": []
+  },
+  {
+   "word": "SHADOW_PENDING",
+   "in_79_vector": false,
+   "concept_id": "MKT-P01.SHADOW_PENDING",
+   "concept_status": "ACCEPTED",
+   "concept_kind": "EPISODE_STAGE",
+   "concept_layer": "MARKET",
+   "rep_verdict": "MAPPED_REPRESENTATION",
+   "representations": [
+    {
+     "producer": "crt_engine",
+     "concept_id": "MKT-P01.SHADOW_PENDING",
+     "slot": null,
+     "encoding": "crt_engine:CRTState.SHADOW_PENDING"
+    }
+   ],
+   "n_divergences": 0,
+   "divergence_surfaces": [],
+   "heuristic_consumers_n": 2,
+   "heuristic_consumers": [
+    "src/config_layer/_crt_state_generated.py",
+    "src/config_layer/crt_engine_v2.py"
+   ]
+  },
+  {
+   "word": "EXPIRED",
+   "in_79_vector": false,
+   "concept_id": null,
+   "concept_status": null,
+   "concept_kind": null,
+   "concept_layer": null,
+   "rep_verdict": "UNMAPPED_BLOCKED_L3V2",
+   "representations": [
+    {
+     "producer": "crt_engine",
+     "concept_id": null,
+     "slot": null,
+     "encoding": "UNMAPPED crt_engine.yaml: TTL soft-archive undecided"
+    }
+   ],
+   "n_divergences": 0,
+   "divergence_surfaces": [],
+   "heuristic_consumers_n": 0,
+   "heuristic_consumers": []
+  },
+  {
+   "word": "DoubleSweepTrap",
+   "in_79_vector": false,
+   "concept_id": null,
+   "concept_status": null,
+   "concept_kind": null,
+   "concept_layer": null,
+   "rep_verdict": "UNMAPPED_SHADOW_LABEL",
+   "representations": [],
+   "n_divergences": 0,
+   "divergence_surfaces": [],
+   "heuristic_consumers_n": 0,
+   "heuristic_consumers": []
+  },
+  {
+   "word": "BuySideLiquidityGrab",
+   "in_79_vector": false,
+   "concept_id": null,
+   "concept_status": null,
+   "concept_kind": null,
+   "concept_layer": null,
+   "rep_verdict": "UNMAPPED_SHADOW_LABEL",
+   "representations": [],
+   "n_divergences": 0,
+   "divergence_surfaces": [],
+   "heuristic_consumers_n": 0,
+   "heuristic_consumers": []
+  },
+  {
+   "word": "SellSideLiquidityGrab",
+   "in_79_vector": false,
+   "concept_id": null,
+   "concept_status": null,
+   "concept_kind": null,
+   "concept_layer": null,
+   "rep_verdict": "UNMAPPED_SHADOW_LABEL",
+   "representations": [],
+   "n_divergences": 0,
+   "divergence_surfaces": [],
+   "heuristic_consumers_n": 0,
+   "heuristic_consumers": []
+  },
+  {
+   "word": "BullishBreakoutExpansion",
+   "in_79_vector": false,
+   "concept_id": null,
+   "concept_status": null,
+   "concept_kind": null,
+   "concept_layer": null,
+   "rep_verdict": "UNMAPPED_SHADOW_LABEL",
+   "representations": [],
+   "n_divergences": 0,
+   "divergence_surfaces": [],
+   "heuristic_consumers_n": 0,
+   "heuristic_consumers": []
+  },
+  {
+   "word": "BearishBreakoutExpansion",
+   "in_79_vector": false,
+   "concept_id": null,
+   "concept_status": null,
+   "concept_kind": null,
+   "concept_layer": null,
+   "rep_verdict": "UNMAPPED_SHADOW_LABEL",
+   "representations": [],
+   "n_divergences": 0,
+   "divergence_surfaces": [],
+   "heuristic_consumers_n": 0,
+   "heuristic_consumers": []
+  },
+  {
+   "word": "BullishStructuralBreak",
+   "in_79_vector": false,
+   "concept_id": null,
+   "concept_status": null,
+   "concept_kind": null,
+   "concept_layer": null,
+   "rep_verdict": "UNMAPPED_SHADOW_LABEL",
+   "representations": [],
+   "n_divergences": 0,
+   "divergence_surfaces": [],
+   "heuristic_consumers_n": 0,
+   "heuristic_consumers": []
+  },
+  {
+   "word": "BearishStructuralBreak",
+   "in_79_vector": false,
+   "concept_id": null,
+   "concept_status": null,
+   "concept_kind": null,
+   "concept_layer": null,
+   "rep_verdict": "UNMAPPED_SHADOW_LABEL",
+   "representations": [],
+   "n_divergences": 0,
+   "divergence_surfaces": [],
+   "heuristic_consumers_n": 0,
+   "heuristic_consumers": []
+  },
+  {
+   "word": "Compression",
+   "in_79_vector": false,
+   "concept_id": null,
+   "concept_status": null,
+   "concept_kind": null,
+   "concept_layer": null,
+   "rep_verdict": "UNMAPPED_SHADOW_LABEL",
+   "representations": [],
+   "n_divergences": 0,
+   "divergence_surfaces": [],
+   "heuristic_consumers_n": 0,
+   "heuristic_consumers": []
+  },
+  {
+   "word": "TrendContinuation",
+   "in_79_vector": false,
+   "concept_id": null,
+   "concept_status": null,
+   "concept_kind": null,
+   "concept_layer": null,
+   "rep_verdict": "UNMAPPED_SHADOW_LABEL",
+   "representations": [],
+   "n_divergences": 0,
+   "divergence_surfaces": [],
+   "heuristic_consumers_n": 0,
+   "heuristic_consumers": []
+  },
+  {
+   "word": "MeanReversion",
+   "in_79_vector": false,
+   "concept_id": null,
+   "concept_status": null,
+   "concept_kind": null,
+   "concept_layer": null,
+   "rep_verdict": "UNMAPPED_SHADOW_LABEL",
+   "representations": [],
+   "n_divergences": 0,
+   "divergence_surfaces": [],
+   "heuristic_consumers_n": 0,
+   "heuristic_consumers": []
+  },
+  {
+   "word": "TrendExhaustion",
+   "in_79_vector": false,
+   "concept_id": null,
+   "concept_status": null,
+   "concept_kind": null,
+   "concept_layer": null,
+   "rep_verdict": "UNMAPPED_SHADOW_LABEL",
+   "representations": [],
+   "n_divergences": 0,
+   "divergence_surfaces": [],
+   "heuristic_consumers_n": 0,
+   "heuristic_consumers": []
+  },
+  {
+   "word": "RangeRotation",
+   "in_79_vector": false,
+   "concept_id": null,
+   "concept_status": null,
+   "concept_kind": null,
+   "concept_layer": null,
+   "rep_verdict": "UNMAPPED_SHADOW_LABEL",
+   "representations": [],
+   "n_divergences": 0,
+   "divergence_surfaces": [],
+   "heuristic_consumers_n": 0,
+   "heuristic_consumers": []
+  },
+  {
+   "word": "SweepReversal",
+   "in_79_vector": false,
+   "concept_id": null,
+   "concept_status": null,
+   "concept_kind": null,
+   "concept_layer": null,
+   "rep_verdict": "UNMAPPED_SHADOW_LABEL",
+   "representations": [],
+   "n_divergences": 0,
+   "divergence_surfaces": [],
+   "heuristic_consumers_n": 0,
+   "heuristic_consumers": []
+  },
+  {
+   "word": "crt_m15_live",
+   "in_79_vector": false,
+   "concept_id": "MKT-L01",
+   "concept_status": "ACCEPTED",
+   "concept_kind": "LEVEL",
+   "concept_layer": "MARKET",
+   "rep_verdict": "MAPPED_AS_FOUNDING_PARAM",
+   "representations": [
+    {
+     "producer": "structure_profiles",
+     "concept_id": "MKT-L01",
+     "slot": null,
+     "encoding": "founding domain value"
+    }
+   ],
+   "n_divergences": 5,
+   "divergence_surfaces": [
+    "causal_structure _last_swing_*_price",
+    "features.smc._geometry.detect_causal_swings",
+    "liquidity_* features (FM-025/026)",
+    "causal_structure._centered_flags (causal_structure.py:66-69)",
+    "causal_structure FM-025 liquidity_distance (causal_structure.py:179-180)"
+   ],
+   "heuristic_consumers_n": 19,
+   "heuristic_consumers": [
+    "src/core/feature_store.py",
+    "src/core/model_registry.py",
+    "src/features/causal_structure.py",
+    "src/features/crt_feature_builder.py",
+    "src/features/feature_pipeline.py",
+    "src/governance/strategy_backtest.py",
+    "src/research/clean_labels/builder.py",
+    "src/research/evidence/catalog.py",
+    "src/research/evidence/context_attribution.py",
+    "src/research/model_runners/schema_resolver.py",
+    "src/research/synthetic/stories/breakout.py",
+    "src/research/synthetic/stories/range_rotation.py",
+    "src/runtime/bar_structure_snapshot.py",
+    "src/runtime/live_engine_hook.py",
+    "src/runtime/live_rail_feeder.py",
+    "src/strategies/s03_breakout.py",
+    "src/strategies/s05_grid.py",
+    "src/strategies/s10_trap_strategy.py",
+    "src/uat/uat_runner.py"
+   ]
+  },
+  {
+   "word": "parent_h4",
+   "in_79_vector": false,
+   "concept_id": "MKT-L01",
+   "concept_status": "ACCEPTED",
+   "concept_kind": "LEVEL",
+   "concept_layer": "MARKET",
+   "rep_verdict": "MAPPED_AS_FOUNDING_PARAM",
+   "representations": [
+    {
+     "producer": "structure_profiles",
+     "concept_id": "MKT-L01",
+     "slot": null,
+     "encoding": "founding domain value"
+    }
+   ],
+   "n_divergences": 5,
+   "divergence_surfaces": [
+    "causal_structure _last_swing_*_price",
+    "features.smc._geometry.detect_causal_swings",
+    "liquidity_* features (FM-025/026)",
+    "causal_structure._centered_flags (causal_structure.py:66-69)",
+    "causal_structure FM-025 liquidity_distance (causal_structure.py:179-180)"
+   ],
+   "heuristic_consumers_n": 19,
+   "heuristic_consumers": [
+    "src/core/feature_store.py",
+    "src/core/model_registry.py",
+    "src/features/causal_structure.py",
+    "src/features/crt_feature_builder.py",
+    "src/features/feature_pipeline.py",
+    "src/governance/strategy_backtest.py",
+    "src/research/clean_labels/builder.py",
+    "src/research/evidence/catalog.py",
+    "src/research/evidence/context_attribution.py",
+    "src/research/model_runners/schema_resolver.py",
+    "src/research/synthetic/stories/breakout.py",
+    "src/research/synthetic/stories/range_rotation.py",
+    "src/runtime/bar_structure_snapshot.py",
+    "src/runtime/live_engine_hook.py",
+    "src/runtime/live_rail_feeder.py",
+    "src/strategies/s03_breakout.py",
+    "src/strategies/s05_grid.py",
+    "src/strategies/s10_trap_strategy.py",
+    "src/uat/uat_runner.py"
+   ]
+  },
+  {
+   "word": "weekly_fx",
+   "in_79_vector": false,
+   "concept_id": "MKT-L01",
+   "concept_status": "ACCEPTED",
+   "concept_kind": "LEVEL",
+   "concept_layer": "MARKET",
+   "rep_verdict": "MAPPED_AS_FOUNDING_PARAM",
+   "representations": [
+    {
+     "producer": "structure_profiles",
+     "concept_id": "MKT-L01",
+     "slot": null,
+     "encoding": "founding domain value"
+    }
+   ],
+   "n_divergences": 5,
+   "divergence_surfaces": [
+    "causal_structure _last_swing_*_price",
+    "features.smc._geometry.detect_causal_swings",
+    "liquidity_* features (FM-025/026)",
+    "causal_structure._centered_flags (causal_structure.py:66-69)",
+    "causal_structure FM-025 liquidity_distance (causal_structure.py:179-180)"
+   ],
+   "heuristic_consumers_n": 19,
+   "heuristic_consumers": [
+    "src/core/feature_store.py",
+    "src/core/model_registry.py",
+    "src/features/causal_structure.py",
+    "src/features/crt_feature_builder.py",
+    "src/features/feature_pipeline.py",
+    "src/governance/strategy_backtest.py",
+    "src/research/clean_labels/builder.py",
+    "src/research/evidence/catalog.py",
+    "src/research/evidence/context_attribution.py",
+    "src/research/model_runners/schema_resolver.py",
+    "src/research/synthetic/stories/breakout.py",
+    "src/research/synthetic/stories/range_rotation.py",
+    "src/runtime/bar_structure_snapshot.py",
+    "src/runtime/live_engine_hook.py",
+    "src/runtime/live_rail_feeder.py",
+    "src/strategies/s03_breakout.py",
+    "src/strategies/s05_grid.py",
+    "src/strategies/s10_trap_strategy.py",
+    "src/uat/uat_runner.py"
+   ]
+  },
+  {
+   "word": "visual_xau",
+   "in_79_vector": false,
+   "concept_id": "MKT-L01",
+   "concept_status": "ACCEPTED",
+   "concept_kind": "LEVEL",
+   "concept_layer": "MARKET",
+   "rep_verdict": "MAPPED_AS_FOUNDING_PARAM",
+   "representations": [
+    {
+     "producer": "structure_profiles",
+     "concept_id": "MKT-L01",
+     "slot": null,
+     "encoding": "founding domain value"
+    }
+   ],
+   "n_divergences": 5,
+   "divergence_surfaces": [
+    "causal_structure _last_swing_*_price",
+    "features.smc._geometry.detect_causal_swings",
+    "liquidity_* features (FM-025/026)",
+    "causal_structure._centered_flags (causal_structure.py:66-69)",
+    "causal_structure FM-025 liquidity_distance (causal_structure.py:179-180)"
+   ],
+   "heuristic_consumers_n": 19,
+   "heuristic_consumers": [
+    "src/core/feature_store.py",
+    "src/core/model_registry.py",
+    "src/features/causal_structure.py",
+    "src/features/crt_feature_builder.py",
+    "src/features/feature_pipeline.py",
+    "src/governance/strategy_backtest.py",
+    "src/research/clean_labels/builder.py",
+    "src/research/evidence/catalog.py",
+    "src/research/evidence/context_attribution.py",
+    "src/research/model_runners/schema_resolver.py",
+    "src/research/synthetic/stories/breakout.py",
+    "src/research/synthetic/stories/range_rotation.py",
+    "src/runtime/bar_structure_snapshot.py",
+    "src/runtime/live_engine_hook.py",
+    "src/runtime/live_rail_feeder.py",
+    "src/strategies/s03_breakout.py",
+    "src/strategies/s05_grid.py",
+    "src/strategies/s10_trap_strategy.py",
+    "src/uat/uat_runner.py"
+   ]
+  },
+  {
+   "word": "swing_pivot",
+   "in_79_vector": false,
+   "concept_id": "MKT-L01",
+   "concept_status": "ACCEPTED",
+   "concept_kind": "LEVEL",
+   "concept_layer": "MARKET",
+   "rep_verdict": "MAPPED_AS_FOUNDING_PARAM",
+   "representations": [
+    {
+     "producer": "structure_profiles",
+     "concept_id": "MKT-L01",
+     "slot": null,
+     "encoding": "founding domain value"
+    }
+   ],
+   "n_divergences": 5,
+   "divergence_surfaces": [
+    "causal_structure _last_swing_*_price",
+    "features.smc._geometry.detect_causal_swings",
+    "liquidity_* features (FM-025/026)",
+    "causal_structure._centered_flags (causal_structure.py:66-69)",
+    "causal_structure FM-025 liquidity_distance (causal_structure.py:179-180)"
+   ],
+   "heuristic_consumers_n": 19,
+   "heuristic_consumers": [
+    "src/core/feature_store.py",
+    "src/core/model_registry.py",
+    "src/features/causal_structure.py",
+    "src/features/crt_feature_builder.py",
+    "src/features/feature_pipeline.py",
+    "src/governance/strategy_backtest.py",
+    "src/research/clean_labels/builder.py",
+    "src/research/evidence/catalog.py",
+    "src/research/evidence/context_attribution.py",
+    "src/research/model_runners/schema_resolver.py",
+    "src/research/synthetic/stories/breakout.py",
+    "src/research/synthetic/stories/range_rotation.py",
+    "src/runtime/bar_structure_snapshot.py",
+    "src/runtime/live_engine_hook.py",
+    "src/runtime/live_rail_feeder.py",
+    "src/strategies/s03_breakout.py",
+    "src/strategies/s05_grid.py",
+    "src/strategies/s10_trap_strategy.py",
+    "src/uat/uat_runner.py"
+   ]
+  },
+  {
+   "word": "prior_day",
+   "in_79_vector": false,
+   "concept_id": "MKT-L01",
+   "concept_status": "ACCEPTED",
+   "concept_kind": "LEVEL",
+   "concept_layer": "MARKET",
+   "rep_verdict": "MAPPED_AS_FOUNDING_PARAM",
+   "representations": [
+    {
+     "producer": "structure_profiles",
+     "concept_id": "MKT-L01",
+     "slot": null,
+     "encoding": "founding domain value"
+    }
+   ],
+   "n_divergences": 5,
+   "divergence_surfaces": [
+    "causal_structure _last_swing_*_price",
+    "features.smc._geometry.detect_causal_swings",
+    "liquidity_* features (FM-025/026)",
+    "causal_structure._centered_flags (causal_structure.py:66-69)",
+    "causal_structure FM-025 liquidity_distance (causal_structure.py:179-180)"
+   ],
+   "heuristic_consumers_n": 19,
+   "heuristic_consumers": [
+    "src/core/feature_store.py",
+    "src/core/model_registry.py",
+    "src/features/causal_structure.py",
+    "src/features/crt_feature_builder.py",
+    "src/features/feature_pipeline.py",
+    "src/governance/strategy_backtest.py",
+    "src/research/clean_labels/builder.py",
+    "src/research/evidence/catalog.py",
+    "src/research/evidence/context_attribution.py",
+    "src/research/model_runners/schema_resolver.py",
+    "src/research/synthetic/stories/breakout.py",
+    "src/research/synthetic/stories/range_rotation.py",
+    "src/runtime/bar_structure_snapshot.py",
+    "src/runtime/live_engine_hook.py",
+    "src/runtime/live_rail_feeder.py",
+    "src/strategies/s03_breakout.py",
+    "src/strategies/s05_grid.py",
+    "src/strategies/s10_trap_strategy.py",
+    "src/uat/uat_runner.py"
+   ]
+  },
+  {
+   "word": "equal_cluster",
+   "in_79_vector": false,
+   "concept_id": "MKT-L01",
+   "concept_status": "ACCEPTED",
+   "concept_kind": "LEVEL",
+   "concept_layer": "MARKET",
+   "rep_verdict": "MAPPED_AS_FOUNDING_PARAM",
+   "representations": [
+    {
+     "producer": "structure_profiles",
+     "concept_id": "MKT-L01",
+     "slot": null,
+     "encoding": "founding domain value"
+    }
+   ],
+   "n_divergences": 5,
+   "divergence_surfaces": [
+    "causal_structure _last_swing_*_price",
+    "features.smc._geometry.detect_causal_swings",
+    "liquidity_* features (FM-025/026)",
+    "causal_structure._centered_flags (causal_structure.py:66-69)",
+    "causal_structure FM-025 liquidity_distance (causal_structure.py:179-180)"
+   ],
+   "heuristic_consumers_n": 19,
+   "heuristic_consumers": [
+    "src/core/feature_store.py",
+    "src/core/model_registry.py",
+    "src/features/causal_structure.py",
+    "src/features/crt_feature_builder.py",
+    "src/features/feature_pipeline.py",
+    "src/governance/strategy_backtest.py",
+    "src/research/clean_labels/builder.py",
+    "src/research/evidence/catalog.py",
+    "src/research/evidence/context_attribution.py",
+    "src/research/model_runners/schema_resolver.py",
+    "src/research/synthetic/stories/breakout.py",
+    "src/research/synthetic/stories/range_rotation.py",
+    "src/runtime/bar_structure_snapshot.py",
+    "src/runtime/live_engine_hook.py",
+    "src/runtime/live_rail_feeder.py",
+    "src/strategies/s03_breakout.py",
+    "src/strategies/s05_grid.py",
+    "src/strategies/s10_trap_strategy.py",
+    "src/uat/uat_runner.py"
+   ]
+  },
+  {
+   "word": "mother_range",
+   "in_79_vector": false,
+   "concept_id": "MKT-L01",
+   "concept_status": "ACCEPTED",
+   "concept_kind": "LEVEL",
+   "concept_layer": "MARKET",
+   "rep_verdict": "MAPPED_AS_FOUNDING_PARAM",
+   "representations": [
+    {
+     "producer": "structure_profiles",
+     "concept_id": "MKT-L01",
+     "slot": null,
+     "encoding": "founding domain value"
+    }
+   ],
+   "n_divergences": 5,
+   "divergence_surfaces": [
+    "causal_structure _last_swing_*_price",
+    "features.smc._geometry.detect_causal_swings",
+    "liquidity_* features (FM-025/026)",
+    "causal_structure._centered_flags (causal_structure.py:66-69)",
+    "causal_structure FM-025 liquidity_distance (causal_structure.py:179-180)"
+   ],
+   "heuristic_consumers_n": 19,
+   "heuristic_consumers": [
+    "src/core/feature_store.py",
+    "src/core/model_registry.py",
+    "src/features/causal_structure.py",
+    "src/features/crt_feature_builder.py",
+    "src/features/feature_pipeline.py",
+    "src/governance/strategy_backtest.py",
+    "src/research/clean_labels/builder.py",
+    "src/research/evidence/catalog.py",
+    "src/research/evidence/context_attribution.py",
+    "src/research/model_runners/schema_resolver.py",
+    "src/research/synthetic/stories/breakout.py",
+    "src/research/synthetic/stories/range_rotation.py",
+    "src/runtime/bar_structure_snapshot.py",
+    "src/runtime/live_engine_hook.py",
+    "src/runtime/live_rail_feeder.py",
+    "src/strategies/s03_breakout.py",
+    "src/strategies/s05_grid.py",
+    "src/strategies/s10_trap_strategy.py",
+    "src/uat/uat_runner.py"
+   ]
+  },
+  {
+   "word": "htf_range_resolver",
+   "in_79_vector": false,
+   "concept_id": "MKT-L01",
+   "concept_status": "ACCEPTED",
+   "concept_kind": "LEVEL",
+   "concept_layer": "MARKET",
+   "rep_verdict": "MAPPED_AS_FOUNDING_PARAM",
+   "representations": [
+    {
+     "producer": "structure_profiles",
+     "concept_id": "MKT-L01",
+     "slot": null,
+     "encoding": "founding domain value"
+    }
+   ],
+   "n_divergences": 5,
+   "divergence_surfaces": [
+    "causal_structure _last_swing_*_price",
+    "features.smc._geometry.detect_causal_swings",
+    "liquidity_* features (FM-025/026)",
+    "causal_structure._centered_flags (causal_structure.py:66-69)",
+    "causal_structure FM-025 liquidity_distance (causal_structure.py:179-180)"
+   ],
+   "heuristic_consumers_n": 19,
+   "heuristic_consumers": [
+    "src/core/feature_store.py",
+    "src/core/model_registry.py",
+    "src/features/causal_structure.py",
+    "src/features/crt_feature_builder.py",
+    "src/features/feature_pipeline.py",
+    "src/governance/strategy_backtest.py",
+    "src/research/clean_labels/builder.py",
+    "src/research/evidence/catalog.py",
+    "src/research/evidence/context_attribution.py",
+    "src/research/model_runners/schema_resolver.py",
+    "src/research/synthetic/stories/breakout.py",
+    "src/research/synthetic/stories/range_rotation.py",
+    "src/runtime/bar_structure_snapshot.py",
+    "src/runtime/live_engine_hook.py",
+    "src/runtime/live_rail_feeder.py",
+    "src/strategies/s03_breakout.py",
+    "src/strategies/s05_grid.py",
+    "src/strategies/s10_trap_strategy.py",
+    "src/uat/uat_runner.py"
+   ]
+  }
+ ]
+}

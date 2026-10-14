@@ -1,0 +1,51 @@
+{
+  "change_id": "CH-feature-semantic-equivalence-v1",
+  "date_utc": "2026-10-11",
+  "objective": "Machine-enforce feature semantic identity across discovered consumer branches. Names, vector length, read-side aliases, and schema hashes are not equivalence. Model load, named training, and inference fail closed when a required feature is not MATCH. The frozen 35-feature prefix is not migrated. Production formulas, ontology math, active config, and model artifacts are not edited.",
+  "change_classes": ["MODEL_INPUT_CHANGE"],
+  "change_class_rationale": "The change is a loader and inference gate on which feature definitions a model may consume. It does not add or rename an FM id, does not change a formula, and does not edit ACTIVE_VERSION. SEMANTIC_REGISTRY_CHANGE is the wrong class.",
+  "affected_files": [
+    "src/features/semantic_equivalence.py",
+    "src/training/trainer.py",
+    "src/training/trade_net_v2.py",
+    "src/engines/ml_gaussian_engine.py",
+    "configs/formulas/feature_consumer_branches_v1.json",
+    "configs/formulas/feature_semantic_contract.schema.json",
+    "tests/test_feature_semantic_equivalence.py",
+    "tests/test_trainer.py",
+    "tests/test_gaussian_nb_schema_contract.py",
+    "tests/test_schema_v4_artifact_reconciliation.py",
+    "tests/test_tradenet_v2_pipeline.py",
+    "tests/test_xauusd_gaussian_econ_units_e0.py"
+  ],
+  "affected_feature_ids": [],
+  "affected_models": "Historical Gaussian bundles and TradeNet v2 envelopes without a semantic_contract block are refused at load. On-disk artifacts are not rewritten. save_gaussian_model may stamp a semantic_contract block; the stamp does not make an incomplete definition MATCH.",
+  "affected_production_config": "none",
+  "required_checks_ack": [
+    "tests/test_active_models_registry.py",
+    "tests/test_feature_lineage.py",
+    "tests/test_geometry_census.py"
+  ],
+  "unknowns": [],
+  "rollback_boundary": "Revert the loader gate and the new checker module. No formula, config hash, schema order, or model file needs to be restored.",
+  "authority_granted": "User task: Enforce Hard Semantic Equivalence for Canonical Features. Lane: semantic certification. No G001.",
+  "authority_NOT_granted": "No production formula change, no ontology rewrite, no ACTIVE_VERSION edit, no model retrain, no finding rewrite, no claim that the architecture is semantically consistent.",
+  "production_behavior_changed": "Loader and inference refusal only. load_gaussian_model raises FeatureSemanticIncompatible unless the artifact binding is MATCH. MLGaussianEngine.compute raises that exception instead of returning 0.5 when the refusal is semantic; other 0.5 fallbacks stay. TradeNet v2 envelopes without a MATCH stamp enter missing mode (predict returns None). Legacy TradeNet length mismatch returns None and does not slice or return 0.5. Feature formulas, ledgers, and the live EmaMomentumKernel slot are unchanged. EngineRunner does not construct MLGaussianEngine.",
+  "declared_files": [
+    "src/features/semantic_equivalence.py",
+    "src/training/trainer.py",
+    "src/training/trade_net_v2.py",
+    "src/engines/ml_gaussian_engine.py",
+    "configs/formulas/feature_consumer_branches_v1.json",
+    "configs/formulas/feature_semantic_contract.schema.json",
+    "tests/test_feature_semantic_equivalence.py",
+    "tests/test_trainer.py",
+    "tests/test_gaussian_nb_schema_contract.py",
+    "tests/test_schema_v4_artifact_reconciliation.py",
+    "tests/test_tradenet_v2_pipeline.py",
+    "tests/test_xauusd_gaussian_econ_units_e0.py"
+  ],
+  "checks_executed": [],
+  "repo_state_hash": "PENDING",
+  "completion_status": "PENDING"
+}

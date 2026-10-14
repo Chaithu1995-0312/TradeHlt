@@ -12,7 +12,7 @@ python scripts/analysis/generate_script_matrix.py
 Authority: **inventory only** (no promote power). Thin-wrapper purity is **not**
 CI-enforced in v1 — rows track `logic_in_script` / `implementation_status` only.
 
-**Records:** 498
+**Records:** 510
 
 | ID | Category | Lifecycle | Impl status | Path | Purpose |
 |---|---|---|---|---|---|
@@ -514,6 +514,18 @@ CI-enforced in v1 — rows track `logic_in_script` / `implementation_status` onl
 | `SCR-496` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/config_fallback_census.py` | AST census of every site in src/ where a value can come from a code literal i... |
 | `SCR-497` | GOVERNANCE | ACTIVE | EXTRACTED_TO_SRC | `scripts/governance/semantic_os_integration.py` | Semantic OS integration run: runs the real backtest twice on one XAUUSD corpu... |
 | `SCR-498` | GOVERNANCE | ACTIVE | EXTRACTED_TO_SRC | `scripts/governance/semantic_os_trade_window.py` | R1-C: from a plain full-corpus XAUUSD backtest (engine trades CSV + events.js... |
+| `SCR-499` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/analysis/set2_consumer_scale_probe.py` | OBSERVATION_ONLY probe (F-061/F-064/F-109, Set-2 consumer-scale program): run... |
+| `SCR-500` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/xau_1009_h4_next_high_walk.py` | Exploratory: every XAUUSD H4 bar walked forward with the stop at its own low/... |
+| `SCR-501` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/xau_1009_mt5_page_extract.py` | Helper: prints the data embedded in a saved XAUUSD Bar Features artifact page... |
+| `SCR-502` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/xau_1009_pattern_info_test.py` | Exploratory: do candle-pattern flags add information beyond random bars match... |
+| `SCR-503` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/xau_1009_pattern_pay_test.py` | Exploratory: does each candle-pattern flag pay alone on XAUUSD M15 (1 ATR sto... |
+| `SCR-504` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/xau_1009_prereg_feature_direction_decode.py` | Pre-registered: all 67 canonical features vs next-4h H1 direction, walk-forwa... |
+| `SCR-505` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/xau_1009_prereg_h1_pdl_sweep_3r.py` | Pre-registered: H1 sweep of prior-day low closing back above, long, 3R; out-o... |
+| `SCR-506` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/xau_1009_prereg_h4_lowerwick_3r.py` | Pre-registered: H4 pin_lower\|hammer long, stop bar low, 3R; out-of-sample 22... |
+| `SCR-507` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/xau_1009_prereg_range_decode.py` | Pre-registered: do 67 features predict next-4h range beyond a 5-feature volat... |
+| `SCR-508` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/xau_1009_prereg_vol_sizing.py` | Pre-registered: long gold in 4h blocks, constant vs forecast-range vs 1/ATR s... |
+| `SCR-509` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/sujan_trade_decode.py` | Read-only: candidate levels for Sujan's 2026-09-25 XAU chart (red lines vs we... |
+| `SCR-510` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/xau_1009_winner_feature_repeat.py` | Descriptive: do the 67 feature values of winning H4 lower-wick 3R trades repe... |
 
 ---
 

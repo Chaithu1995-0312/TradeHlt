@@ -46,8 +46,9 @@ Index the canonical feature surface: schema identity, pipeline emission, geometr
 1. **Schema hash is load-bearing** — name/order/dim changes invalidate baselines/models.  
 2. **Ontology first** for feature meaning; implementations must not re-derive unregistered math.  
 3. Rolling indicator **periods** are config-driven (`feature_pipeline` section); geometric primitives are structural.  
-4. `normalization_basis` / `session_timestamp_basis` are config-gated (defaults byte-identical legacy).  
-5. Pipeline consumers in live vs backtest may differ (e.g. live_engine_hook feature map) — verify the call path.
+4. `normalization_basis` is config-gated (default byte-identical legacy). `session_timestamp_basis` is RETIRED (F-120): the corpus SSOT hands the pipeline canonical UTC (`docs/governance/CORPUS_CLOCK_CONTRACT.md`); day/week/HTF grids follow the market calendar (`features/market_calendar.py`).  
+5. Pipeline consumers in live vs backtest may differ (e.g. live_engine_hook feature map) — verify the call path.  
+6. **Features describe ONE bar of the frame given, and every window is a bar count tuned on M15.** `FeaturePipeline(df, timeframe="M15")` raises if the frame's measured bar size differs from the declared timeframe (`features.calendar_periods.BAR_MINUTES` / `modal_bar_minutes`); a non-M15 timeframe warns. Do not read M15 features at an H4 bar and call them H4 features: compute patterns on the H4 candles. One candle-merging authority: `research.resample` / `ParentCandleBuilder` (`docs/reference/conventions.md` §2.2, ratchet `tests/test_aggregation_authority.py`).
 
 ## Reading order
 
@@ -64,6 +65,7 @@ Index the canonical feature surface: schema identity, pipeline emission, geometr
 |---|---|
 | [`../topics/feature-schema.md`](../topics/feature-schema.md) | Topic index |
 | [`../reference/schemas.md`](../reference/schemas.md) | Schema shapes |
+| [`../reference/candle_theory/README.md`](../reference/candle_theory/README.md) | User candle-theory cards (01-13) mapped to slots/FM ids; vocabulary for chart review and live-chart reading (descriptive, not evidence) |
 | [`../governance/MARKET_ONTOLOGY_EVOLUTION_CONTRACT.md`](../governance/MARKET_ONTOLOGY_EVOLUTION_CONTRACT.md) | Ontology evolution |
 | [`engine-memory.md`](engine-memory.md) | Downstream consumers |
 | [`architecture-memory.md`](architecture-memory.md) | Layer placement |

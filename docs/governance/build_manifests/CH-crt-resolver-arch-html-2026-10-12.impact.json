@@ -1,0 +1,22 @@
+{
+  "change_id": "CH-crt-resolver-arch-html-2026-10-12",
+  "change_classes": ["DOCUMENTATION_ONLY"],
+  "summary": "Create a root static HTML viewer for CRTStateResolver architecture following the existing CRT state architecture page pattern.",
+  "authorities_inspected": [
+    "CLAUDE.md",
+    "docs/governance/REPOSITORY_CONSTRUCTION_PROTOCOL.md",
+    "docs/governance/change_contracts.json",
+    "docs/memory/feature-memory.md",
+    "crt_state_arch.html",
+    "configs/formulas/market_crt_states.yaml",
+    "src/features/crt_state_resolver.py"
+  ],
+  "planned_files": [
+    "crt_resolver_arch.html",
+    "docs/governance/build_manifests/CH-crt-resolver-arch-html-2026-10-12.impact.json",
+    "assistant_project.md"
+  ],
+  "blocking_unknowns": [],
+  "required_checks": [],
+  "notes": "Root static HTML documentation/viewer-only. No src/config/formula/runtime behavior is changed. The repo working tree has many unrelated dirty/untracked files, so validate-completion over the whole dirty tree is not claimed."
+}

@@ -23,8 +23,8 @@
       "declaration": {
         "locator": {"kind": "python_symbol", "module": "features.feature_schema", "symbol": "SCHEMA_VERSION"}
       },
-      "current_version": "6.0",
-      "history": ["2.0", "3.0", "4.0", "5.0", "6.0"],
+      "current_version": "9.0",
+      "history": ["2.0", "3.0", "4.0", "5.0", "6.0", "7.0", "8.0", "9.0"],
       "owning_contract": "docs/governance/STORAGE_PRESERVATION_CONTRACT.md (frozen v1.0.0, 2026-08-23); process doc docs/governance/SCHEMA_EVOLUTION_CONTRACT.md",
       "derived": [
         {
@@ -77,7 +77,7 @@
           "locator": {
             "kind": "text_contains",
             "path": "src/features/feature_schema.py",
-            "pattern": "n_features=len\\(CANONICAL_FEATURES\\),   # 48 \\(schema v6\\.0\\)"
+            "pattern": "n_features=len\\(CANONICAL_FEATURES\\),   # 79 \\(schema v9\\.0\\)"
           },
           "note": "TRADENET_SCHEMA / GAUSSIAN_SCHEMA inline comments. Comment-only (not machine-derived from SCHEMA_VERSION), so this is a plain text_contains check, not a python_symbol one — the dimension itself (48) is DERIVED-stable across v5.0->v6.0 since the bump was names-only, only the version label in the comment needed to move."
         },
