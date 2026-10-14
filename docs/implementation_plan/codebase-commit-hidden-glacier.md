@@ -1,56 +1,67 @@
-# Codebase commit — batch plan (semanticos_impl)
+# Bring program12 + navigator work into semanticos_impl; resolver TTL as a divergence-page branch
 
 ## Context
-User asked for a "codebase commit". Working tree on `semanticos_impl` holds ~276 modified + ~150 untracked
-paths from several lanes (F-117 feature fixes v7, F-118 candle patterns v8, F-119 corpus SSOT, F-120 clock
-contract, timeframe SSOT v1/v2, card identities v9, semantic equivalence / authority mapping, research
-scripts, user investigations). User chose: **commit everything, including scratch and large untracked dirs.**
-Shared src files (feature_pipeline.py, feature_schema.py, backtest_v2.py …) span lanes, so batching is
-by area, not by lane. HEAD is not switched; explicit paths only (never `git add -A`).
+A scan of past Grok sessions found product code that only exists, uncommitted, in two other worktrees of
+this repo (verified with `git status` in each):
+- `D:\Tradelatest-program12` (branch `grok/program12-slice1`, 10 commits not in semanticos_impl + 28 uncommitted
+  paths): timeframe-ladder package, CLI, parity script, tests, ladder configs, `MC-LADDER-XAUUSD-HTF-V1`,
+  program-12 manifests/docs, and a finding written as **F-114** (collides with semanticos_impl's F-114).
+  Its commit `63a6a1d` changes `src/features/crt_state_resolver.py::_check_expired` from `age >= max` to
+  `age > max` (engine parity), plus `tests/test_crt_state_resolver_ttl_boundary.py`.
+- `D:\Tradelatest-wt-navigator` (branch `lane/research-navigator`, 1 commit `3b5af83` SITS grandfather resync +
+  uncommitted `nav_reconcile.py`, its test, `ui_kits/research_navigator/`, manifests, registry edits).
 
-Preconditions already verified: `core.hooksPath=hooks` (hooks active); `assistant_project.md` has
-2026-10-14 SESSION LOG entries (commit-msg hook satisfied); 14 files already staged.
+User decisions: bring both into semanticos_impl; renumber the ladder finding **F-114 → F-121**; keep
+the resolver trunk at `>=` and instead show the `>` change as an **implementation branch on the Divergence
+Branches page** (tools/feature_audit, published artifact AZnzfViBRctbrFARiCdBrt) for the user to pick there;
+leave navigator scratch (`_my*.txt`, `_wt*.txt`, `_verify_experiment*`, two mangled-name PS files) untracked.
 
 ## Steps
-1. **Baseline**: `venv/Scripts/python.exe scripts/maintenance/check_governance_invariants.py --all` — record
-   failed/passed before staging.
-2. **Secret / size scan** on untracked paths: grep for key patterns (`gsk_`, `sk-`, `api_key`, `token=`,
-   `password`) and list any file >5 MB. Stop and report on any hit. Confirm no `data/ logs/ results/ models/`
-   paths are staged.
-3. **Re-check `git status`** immediately before each batch (concurrent sessions); only stage paths seen in
-   this plan's snapshot.
-4. Commit batches in order (each `git add -- <explicit paths>` then `git commit`):
-   - **B1 Data/clock + corpus SSOT (F-119/F-120)**: `src/data_ingestion/**`, `configs/data_provenance/**`,
-     `docs/governance/CORPUS_CLOCK_CONTRACT.md`, `docs/governance/dataset_identity.schema.json`,
-     `docs/governance/datasets/*`, `scripts/governance/review_ohlcv_clocks.py`, `tests/test_corpus_*`,
-     `tests/test_ohlcv_clock_provenance.py`, `tests/test_dataset_registry.py`, `src/research/**` + research
-     scripts that were migrated to `corpus_store.load`.
-   - **B2 Features / schema v7–v8 (F-117/F-118, timeframe SSOT, semantic equivalence)**: `src/features/**`,
-     `configs/formulas/**`, `configs/production/*.json`, `configs/research/*`, `src/config_layer/**`,
-     `src/runtime/**`, `src/core/**`, `src/strategies/**`, `src/engines/**`, `src/training/**`,
-     `src/identity/**`, `src/governance/**`, `src/semantics/**`, `src/charts/**`, `src/inout/**`,
-     `src/analytics/**`, and all modified/new `tests/**`.
-   - **B3 Governance & docs**: `CLAUDE.md`, `active_models.yaml`, `docs/current-findings.md`,
-     `docs/governance/**` (manifests, registries, census, feature_semantic_*), `docs/reference/**`,
-     `docs/memory/**`, `docs/topics/**` (incl. deletion of `feature-schema.md`), `docs/research-readiness/**`,
-     `docs/research/**`, `docs/implementation_plan/*.md`.
-   - **B4 Scripts & tools**: `scripts/analysis/**`, `scripts/research/**` (incl. new xau_1009_* /
-     sujan_trade_decode), `scripts/governance/seed_script_registry.py`, `scripts/maintenance/**`,
-     `scripts/backtest/**`, `scripts/data/**`, `scripts/training/**`, `tools/**`, `_build_run_story.py`,
-     `multi_llm/bridge_layer/_tmp_replay_run1_paths.py`.
-   - **B5 Investigations & artifacts**: `userinvestigation/**`, `docs/artifacts/`, `researcharctitecuredocs/`,
-     `researchtasks/`, `HtmlArtifacts/`, `docs/reference/candle_theory/`, `docs/reference/capital-lot-sizing-reference.html`.
-   - **B6 Scratch + session logs**: `results_xau_*.log`, `scratch_run_logs/`, `.playwright-mcp/`,
-     `day1-initial.png`, `_probe.txt`, `report.json`, `write_html.py`, `docs/**/.grok-write-*.tmp`,
-     `assistant_project.md`, `llm_project_assistant.md`.
-   Pre-commit hook runs the green floor on governed batches. If a batch is blocked **only** by reds that
-   match the step-1 baseline, report and ask before using `--no-verify`; never fix unrelated code.
-   Each message ends with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
-5. New scripts under `scripts/**` are SITS-governed; if the coverage floor flags them unregistered, report
-   it (registration = separate step, not done silently).
-6. Append a SESSION LOG entry for this commit turn to `assistant_project.md` before B6.
+1. **Commit in place, program12 worktree** (`git -C D:/Tradelatest-program12`): stage the uncommitted ladder
+   set explicitly (src/research/timeframe_ladder/*, scripts/research/timeframe_ladder.py,
+   program12_parity_one_month.py, tests/research/test_timeframe_ladder.py + test_program12_parity_one_month.py,
+   configs/research/ladder_h1.json, ladder_h4.json, MC-LADDER instance, CH-program12-* manifests,
+   docs/research/program12-slice2-*.md, ladder_clone_diff.md, preregistration doc, CLAUDE.md,
+   docs/current-findings.md, research_family_registry.json, stubs, matrix, seed_script_registry.py,
+   assistant_project.md). `--no-verify` (shared hooks; floor already red). No push of that branch.
+2. **Commit in place, navigator worktree**: stage nav_reconcile.py, tests/test_nav_reconcile.py,
+   ui_kits/research_navigator/, CH-research-navigator-reconcile-v1 manifests, grandfather json, stubs, matrix,
+   seed, ic-003-shape-narratives.md, assistant_project.md. Junk stays untracked. `--no-verify`.
+3. **Merge `grok/program12-slice1` into semanticos_impl** (`--no-commit`), resolve with a scratchpad script in
+   the style of `resolve_merge.py`:
+   - assistant_project.md: ours + incoming entries appended.
+   - stubs / script-matrix / seed_script_registry.py: incoming new scripts get the next free SCR ids
+     (SCR-512+; overlays are keyed by path), Records count updated.
+   - F-114 → F-121 in incoming text only (current-findings section, CLAUDE.md Truths row,
+     research_family_registry, program-12 manifests/docs that name it) + a "written as F-114 on
+     grok/program12-slice1" note; existing F-114 untouched.
+   - `src/features/crt_state_resolver.py`: restore ours (`git checkout --ours` hunk → keep `>=`);
+     leave `tests/test_crt_state_resolver_ttl_boundary.py` out of the merge (it asserts `>`; stays on the
+     grok branch).
+   - Run `tests/research/test_timeframe_ladder.py`, `test_program12_parity_one_month.py`,
+     `tests/test_current_findings.py`, `tests/test_closure_authority_index.py`. If ladder code breaks on the
+     F-119 corpus_store API, report it rather than silently rewriting it.
+4. **Merge `lane/research-navigator`**: same resolver for session log, stubs/matrix/seed/grandfather
+   (nav_reconcile.py gets the next free SCR id). Run `tests/test_nav_reconcile.py`, `tests/test_script_registry.py`.
+5. **Divergence-page branch for the resolver TTL** (trunk unchanged):
+   - New `tools/feature_audit/resolver_ttl_data.py`: load H4 via `h4_loader.py`, run the active-config
+     `CRTStateResolver` (construction as in `scripts/research/crt_state_confusion_matrix.py:331-360`) twice —
+     trunk as-is, branch = subclass overriding `_check_expired` with strict `>` (no src edit). Count bars whose
+     resolved state differs; write a `crt_state_resolved` entry (group `crt`) into `results/divergence_h4.json`
+     with one `implementation` branch `resolver-expansion-ttl-strict` (formula `age > max_expansion_age_*`,
+     note citing engine `_ttl_exceeded` and commit 63a6a1d; open only if ≥1 bar differs, else closed with numbers).
+     State is categorical → chart as state ordinal or omit the window chart (`window` absent).
+   - `render_divergence.py`: add the `crt` group to `GROUPS`; README rebuild table gets step 8c.
+   - Rebuild (steps 1–9 + new step), copy `results/branch_mockup_rsi.html` →
+     `docs/artifacts/2026-10-14_divergence-branches.html`, republish to the same artifact URL (keeps db picks).
+   - SITS: if `tools/` is census-scoped, register the new script; otherwise note it.
+6. Session log entries (assistant_project.md), commit the two merges + the page work separately,
+   `--no-verify` (floor red), push semanticos_impl only.
 
 ## Verification
-- `git status --porcelain` shows none of the snapshot paths left (other sessions' new files may appear).
-- Re-run the governance floor; report failed/passed delta vs step 1.
-- `git log --oneline -7` to show the batches. No push unless asked.
+- Ladder, parity, nav_reconcile, state-entry tests pass (or failures reported with cause).
+- `git grep -n "F-114"` shows only the original finding + the renumbering note; `git grep "F-121"` resolves.
+- `git show HEAD:src/features/crt_state_resolver.py | grep "age >= max_candles"` still present.
+- Governance floor re-run: report failed/passed vs the 13/866 baseline (navigator's grandfather resync may
+  turn some script-registry reds green; new ids must not add reds).
+- Republished page shows the new CRT section with the branch's bar count and a decision panel.

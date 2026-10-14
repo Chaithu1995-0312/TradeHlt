@@ -2915,3 +2915,56 @@ Belief Update / ROI / Goal: none (integration mechanics).
 Open Questions: none.
 Next Step: resolver TTL branch on the Divergence Branches page.
 ---
+
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-14
+Topic: Explained EMA (exponential moving average) in plain language, tied to its uses in the repo
+Decision/Output: Explanation only. Verified the values on the active config v2_htfcrt_2026_08: crt_engine ema_fast 2 / ema_slow 5 (soft confirmation, lines 315-316); feature_pipeline ema_fast_span 9 / ema_slow_span 21 (feature vector, lines 634-635). Mentioned F-067 (double EMA update), F-061/F-064/F-114 (ema_spread unit mix) and FM-054 trend_bias.
+Belief Update / ROI / Goal: none (pure explanation).
+Open Questions: none.
+Next Step: user's choice; the pending risk/sizing study offer still stands.
+---
+
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-14
+Topic: Decoded EMA "recent", SMA50, ATR14 down to the RR layer on one real H4 bar; GPU check
+Decision/Output: scratchpad decode_numbers.py (replica geometry, data/mt5/XAUUSD_M15.csv 47,275 bars). EMA: about 86.5% of the weight sits in the last N bars for any N; half the weight lies within 0.6/1.7/3.1/7.3/17.3 bars for N=2/5/9/21/50. Example H4 2026-05-21 16:00: EMA9 4520.84, EMA21 4540.75, SMA50 daily 4691.00 (close 4543.62 -> DOWN), ATR14 39.60 (14 TRs listed, matches replica), long E 4519.66, SL 4480.06, D 39.77, TP 1.5R 4579.49; Account A 0.08 lots (INR 26,725 at risk), Account B forced to the 0.01 minimum (INR 3,341, over its INR 3,000 budget). GPU: no nvidia-smi, torch.cuda False; the only GPU mention in the repo is src/retrieval/embedding.py; the 10-03 log left a multi_tp_walk GPU port undecided ("do not write a kernel until asked").
+Belief Update / ROI / Goal: Goal: separate measured numbers from chosen ones before any tuning. Belief: costs (0.09/0.09/0.08) are measured (F-082); 14 / 0.2 / 1.5 / 50 / 9 / 21 are conventions. Tuning them on this history repeats the range_study trap, and the holdout months are already spent. Knowledge ROI: medium. Action: propose a pre-registered parameter grid on CPU; no GPU needed.
+Open Questions: user to confirm the grid and the validation window. Pre-existing: assistant_project.md contains a NUL byte near offset 172116 and duplicated 10-03 entries (not touched).
+Next Step: await the user's choice.
+---
+
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-14
+Topic: Design proposal (chat only): multi-timeframe W1->M1 number validation down to the RR layer, plus a drift-adjusted null equation; GPU-ready
+Decision/Output: No code. Verified inputs: schema SCHEMA_VERSION 9.0 with 79 canonical features (F-118's 71 is no longer current); data/mt5 XAUUSD has M5 (52,199 rows from 2025-10-06), M15 (2y), H1, H4; no M1, D1 or W1 files. Program 12 timeframe ladder (src/research/timeframe_ladder/) exists, prereg DRAFT. torch is installed (CPU). Proposed 5 layers: L0 bars (one aggregation authority, F-120 calendar), L1 79-feature recompute with independent check per timeframe, L2 parameter grid, L3 RR walk tensor (torch, device-switchable, parity against the CPU replica and the multi_tp_walk golden matrix), L4 records (parquet + manifest). Equations: (1) a volatility time-scaling law sigma(T)=sigma(1)*T^H with H measured; (2) a drift-adjusted barrier null P(target first)=(1-e^{nu a})/(e^{-nu b}-e^{nu a}), nu=2mu/sigma^2, giving E_null(m) and value-add = E_obs - E_null.
+Belief Update / ROI / Goal: Goal: stop assuming parameter values and replace the all-bars control with a fit-free equation. Belief: today's results were all drift; a closed-form drift null explains them without spending holdout data. Knowledge ROI: high if confirmed. Action: await user confirmation (design-before-build rule).
+Open Questions: M1 fetch from MT5 (history depth); W1 has about 104 bars (too few for statistics); GPU details; ontology registration of the new quantities before code (§6.6).
+Next Step: user confirms or edits the design; then the declaration and the ontology node first.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-14
+Topic: Equations extracted from Sujan documents
+Decision/Output: Added sourced logical equations to the HTML; distinguished Theory 2 from the August steelman. Source links and anchors checked; no new backtest.
+Belief Update / ROI / Goal: Preserve identity by keeping visual selectors and event-order ambiguities explicit.
+Open Questions: Range, zone, thickness, stop identity and same-candle ordering.
+Next Step: Review the extracted equation against labelled charts.
+---
+
+
+📝 SESSION LOG ENTRY
+Date: 2026-10-14
+Topic: Resolver EXPANSION TTL (>= vs engine >) added as a branch on the Divergence Branches page
+Decision/Output: New tools/feature_audit/resolver_ttl_data.py runs CRTStateResolver twice (trunk >=, subclass with strict >) on XAUUSD H4 (3,017 bars) and the M15 corpus via corpus_store (47,197 bars); no src edit. Result: 0 bars differ on both (H4 never leaves RANGE/SWEEP; on M15 no EXPANSION reaches 495 candles / 124 hours, no EXPIRED states). Sensitivity check with the limit planted at 3 / 8 candles on 8,000 M15 bars: 28 / 18 bars differ, so the override is live. Branch resolver-expansion-ttl-strict listed as a CLOSED implementation branch (page rule: opens for a pick only once a bar differs). render_divergence.py gained the crt group; README step 8c. Republished artifact AZnzfViBRctbrFARiCdBrt (version 11; db picks kept); docs/artifacts copy refreshed.
+Belief Update / ROI / Goal: Goal: decide whether the resolver should match the engine TTL rule. Belief: on the current XAUUSD corpus and limits the >= vs > choice changes no resolved state, so the merge-time exclusion costs nothing today. Knowledge ROI: medium. Action: leave trunk at >=; revisit if TTL limits are lowered.
+Open Questions: none.
+Next Step: push semanticos_impl.
+---

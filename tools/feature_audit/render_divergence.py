@@ -8,12 +8,13 @@ OUT = os.path.join(ROOT, "results", "branch_mockup_rsi.html")    # same file -> 
 esc = html.escape
 W = D["window"]; NB = len(W["c"]); F = D["features"]; NE = D["rows"]
 GROUPS = [("trend", "Trend / EMA"), ("volatility", "Volatility"), ("momentum", "Momentum"), ("volume", "Volume"),
-          ("session", "Session / time"), ("structure", "Sweeps / structure"), ("displacement", "Displacement / retest"), ("liquidity", "Liquidity"), ("smc", "SMC zones"), ("rejection", "Rejection blocks"), ("ohlcv", "Raw OHLCV")]
+          ("session", "Session / time"), ("structure", "Sweeps / structure"), ("displacement", "Displacement / retest"), ("liquidity", "Liquidity"), ("smc", "SMC zones"), ("rejection", "Rejection blocks"), ("ohlcv", "Raw OHLCV"), ("crt", "CRT state resolver")]
 FLAGS01 = {"swing_high", "swing_low", "higher_high", "lower_low", "higher_low", "lower_high", "sideways", "sweep_detected", "double_sweep",
            "order_block_present", "fvg_present", "breaker_present", "mitigation_block_present", "eqh_present", "eql_present",
            "rejection_bull_present", "rejection_bear_present"}
 SIGNED = {"break_of_structure", "liquidity_sweep", "change_of_character"}
-DISCRETE = {"trend_bias", "volatility_regime", "volume_spike", "hour_of_day", "session", "candles_since_sweep"} | FLAGS01 | SIGNED
+DISCRETE = {"trend_bias", "volatility_regime", "volume_spike", "hour_of_day", "session", "candles_since_sweep", "crt_state_resolved"} | FLAGS01 | SIGNED
+CRT_NAMES = D.get("state_orders", {}).get("crt_state_resolved", [])
 SESSION_NAMES = {0: "ASIA", 1: "LONDON", 2: "NY", 3: "OVERLAP", 4: "CLOSED"}
 KIND_LABEL = {"definition": "Definition", "implementation": "Implementation", "data": "Data"}
 
@@ -35,7 +36,7 @@ assert not agrees(1.0001, 1.0, "atr") and agrees(1.0, 1.0, "atr")      # the che
 def chart(col, lines, dots=None, mask=None, candles=True, label=""):
     Wd = 340; top_h = 86 if candles else 0; gap = 8 if candles else 4; bot_h = 104; lab = 15
     H = top_h + gap + bot_h + lab
-    x0, x1 = 6, Wd - (58 if col == "session" else 40); step = (x1 - x0) / NB
+    x0, x1 = 6, Wd - (58 if col == "session" else 76 if col == "crt_state_resolved" else 40); step = (x1 - x0) / NB
     xs = [x0 + step * (i + 0.5) for i in range(NB)]
     out = []
     if candles:
@@ -55,6 +56,9 @@ def chart(col, lines, dots=None, mask=None, candles=True, label=""):
     elif col in SIGNED: vmin, vmax, guides = -1.3, 1.3, [-1.0, 0.0, 1.0]
     elif col == "session": vmin, vmax, guides = -0.4, 4.4, [0.0, 1.0, 2.0, 3.0, 4.0]
     elif col == "hour_of_day": vmin, vmax, guides = -1.0, 24.0, [0.0, 6.0, 12.0, 18.0]
+    elif col == "crt_state_resolved":
+        used = sorted({int(v) for s, _ in lines for v in s if v == v})
+        vmin, vmax, guides = min(used) - 0.4, max(used) + 0.4, [float(u) for u in used]
     else:
         pad = (vmax - vmin) * 0.08 or 1.0; vmin, vmax = vmin - pad, vmax + pad
         if vmin < 0 < vmax: guides = [0.0]
@@ -65,9 +69,10 @@ def chart(col, lines, dots=None, mask=None, candles=True, label=""):
         for i, m in enumerate(mask):
             if m: out.append(f'<rect x="{xs[i]-step/2:.1f}" y="{by}" width="{step:.1f}" height="{bot_h}" class="zdiff"><title>{esc(W["ts"][i][:16])}: decision reading differs</title></rect>')
     for g in guides:
-        lab = SESSION_NAMES.get(int(g), "") if col == "session" else (f"{int(g):02d}h" if col == "hour_of_day" else fmtv(g))
+        lab = (SESSION_NAMES.get(int(g), "") if col == "session" else f"{int(g):02d}h" if col == "hour_of_day"
+               else CRT_NAMES[int(g)] if col == "crt_state_resolved" and int(g) < len(CRT_NAMES) else fmtv(g))
         out.append(f'<line x1="{x0}" y1="{yv(g):.1f}" x2="{x1}" y2="{yv(g):.1f}" class="guide"/><text x="{x1+4}" y="{yv(g)+3:.1f}" class="ax">{esc(lab)}</text>')
-    if not guides or col not in ({"rsi_14", "volatility_regime", "trend_bias", "volume_spike", "session", "hour_of_day"} | FLAGS01 | SIGNED):
+    if not guides or col not in ({"rsi_14", "volatility_regime", "trend_bias", "volume_spike", "session", "hour_of_day", "crt_state_resolved"} | FLAGS01 | SIGNED):
         out.append(f'<text x="{x1+4}" y="{by+9}" class="ax">{fmtv(vmax)}</text><text x="{x1+4}" y="{by+bot_h}" class="ax">{fmtv(vmin)}</text>')
     step_kind = col in DISCRETE
     for series, cls in lines:

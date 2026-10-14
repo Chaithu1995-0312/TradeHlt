@@ -41,6 +41,7 @@ Run in this order; each data step adds its group to `results/divergence_h4.json`
 | 7 | `rejection_data.py` | rejection blocks |
 | 8 | `ohlcv_data.py` | raw OHLCV (identity trunk + file checks: candle validity, H4 vs M15 buckets, short 00:00 bar) |
 | 8b | `candle_images_data.py` | Candle Images workflow: study-card pattern rules vs FM-107..114/120, last month of H4 |
+| 8c | `resolver_ttl_data.py` | CRT state resolver: EXPANSION timeout `>=` (trunk) vs engine `>` (branch from grok/program12-slice1 `63a6a1d`), on H4 plus the M15 corpus, with a planted-limit sensitivity check (about 4 minutes) |
 | 9 | `render_divergence.py` | writes `results/branch_mockup_rsi.html` (uses `divergence.css` / `divergence.js`) |
 
 ```
@@ -53,6 +54,7 @@ venv\Scripts\python.exe tools\feature_audit\smc_data.py
 venv\Scripts\python.exe tools\feature_audit\rejection_data.py
 venv\Scripts\python.exe tools\feature_audit\ohlcv_data.py
 venv\Scripts\python.exe tools\feature_audit\candle_images_data.py
+venv\Scripts\python.exe tools\feature_audit\resolver_ttl_data.py
 venv\Scripts\python.exe tools\feature_audit\render_divergence.py
 ```
 
