@@ -1,0 +1,6 @@
+state,n,spread,excess_vs_range,interpretation
+RETEST,150,-0.48267792,-0.5633,DIFFERS from baseline
+DISPLACEMENT,4674,0.10063618699186988,0.0201,DIFFERS from baseline
+EXPANSION,51870,0.09838564094852512,0.0178,indistinguishable from baseline
+RANGE,132666,0.08058570507891999,0.0,indistinguishable from baseline
+SWEEP,93522,0.04420262612005735,-0.0364,DIFFERS from baseline

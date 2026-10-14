@@ -1,0 +1,30 @@
+{
+  "corpus": "data/mt5/XAUUSD_W2026-07-06-to-2026-08-07.csv",
+  "raw_bars": 2300,
+  "first": "2026-07-06T01:00:00",
+  "last": "2026-08-07T23:45:00",
+  "trading_days_in_file": 25,
+  "pipeline_rows": 2222,
+  "second_low_defined": 460,
+  "second_low_first": "2026-08-03T01:00:00",
+  "purge_bars": 0,
+  "fvg_edge_present": 2133,
+  "pdh_price_present": 2208,
+  "pdl_price_present": 2208,
+  "crt_state_joined": 2222,
+  "rr_gross_long_mean_all": -0.072017,
+  "rr_gross_short_mean_all": -0.057345,
+  "rr_gross_long_mean_defined": 0.123556,
+  "rr_gross_short_mean_defined": -0.151308,
+  "rr_gross_long_mean_purge": null,
+  "rr_gross_short_mean_purge": null,
+  "levels": {
+    "sl_atr_buffer": 0.2,
+    "tp1_mult": 1.0,
+    "tp2_mult": 2.0,
+    "partial_fraction": 0.5,
+    "max_forward": 40,
+    "source": "compute_crt_levels defaults matching v2_htfcrt_2026_08 tp1_atr_multiplier 1.0"
+  },
+  "economic_claims_allowed": false
+}

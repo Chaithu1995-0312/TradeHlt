@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRT State Architecture - Instruction Layer, Producers & Consumers</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --cod: #ff7b72;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+  }
+  header.top {
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 22px 28px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 10px 18px;
+  }
+  header.top .brand { font-size: 18px; font-weight: 700; letter-spacing: 0.2px; }
+  header.top .brand .dot { color: var(--accent); }
+  header.top .sub { color: var(--muted); font-size: 13px; }
+  header.top .meta { margin-left: auto; font-size: 12px; color: var(--muted); }
+  nav.tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 14px auto 0;
+    max-width: 1200px;
+    padding: 0 28px;
+  }
+  nav.tabs a {
+    padding: 6px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 13px;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    transition: 0.15s;
+  }
+  nav.tabs a:hover,
+  nav.tabs a.active {
+    background: var(--panel);
+    color: var(--text);
+    border-color: var(--accent);
+  }
+  main { padding: 18px 28px 40px; max-width: 1200px; margin: 0 auto; }
+  section { margin-bottom: 22px; }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 22px;
+    margin-bottom: 18px;
+  }
+  h1 { font-size: 22px; margin: 6px 0 4px; }
+  p { margin: 6px 0; }
+  .lead { font-size: 14px; color: var(--muted); }
+  code {
+    background: #0f1115;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 12.5px;
+    font-family: "SF Mono", Consolas, monospace;
+    color: var(--cod);
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th,
+  td {
+    border: 1px solid var(--border);
+    padding: 8px 10px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: #1c2129;
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  tr:nth-child(even) td { background: #151a21; }
+  .state-td {
+    font-family: "SF Mono", Consolas, monospace;
+    font-weight: 700;
+    font-size: 12.5px;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .badge,
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    margin-right: 4px;
+  }
+  .badge { background: #238636; }
+  .tag-prod { background: #26a0da; }
+  .tag-cons { background: #2aa198; }
+  .tag-win { background: #9b86f0; }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend .sw {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    display: inline-block;
+  }
+  .diag {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 12px;
+    white-space: pre;
+    background: #0f1115;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    overflow-x: auto;
+    line-height: 1.7;
+    color: var(--text);
+  }
+  footer {
+    margin-top: 30px;
+    padding: 14px 0 0;
+    color: var(--muted);
+    font-size: 12px;
+    border-top: 1px solid var(--border);
+  }
+  @media (max-width: 760px) {
+    header.top { padding: 18px; }
+    nav.tabs { padding: 0 18px; }
+    main { padding: 16px 18px 32px; }
+    .card { padding: 16px; overflow-x: auto; }
+    table { min-width: 760px; }
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="dot">◆</span> CRT State Architecture</div>
+  <div class="sub">Instruction layer · engine states · resolver shadow · parent CRT track</div>
+  <div class="meta">source: <code>src/config_layer/crt_engine_v2.py</code> · <code>config_layer/state_identity.py</code> · <code>config_layer/_crt_state_generated.py</code> · generated from <code>active_models.yaml</code></div>
+</header>
+
+<nav class="tabs">
+  <a href="#state-machine" class="active">State machine</a>
+  <a href="#states-table">States table</a>
+  <a href="#authority-lanes">Authority lanes</a>
+  <a href="#event-layer">Event layer</a>
+  <a href="#consumers-map">Consumers map</a>
+</nav>
+
+<main>
+  <section id="state-machine">
+    <div class="card">
+      <h1>State Machine</h1>
+      <p class="lead">The M15 execution plane is a <strong>9-state</strong> deterministic finite automaton driven by <code>CRTEngine.process_candle()</code> and <code>StateMachine._transition()</code>. The 3 parent-timeframe states (<code>RANGE_C1</code>, <code>MANIPULATION_C2</code>, <code>DISTRIBUTION_C3</code>) form a <strong>disjoint</strong> sub-graph driven by <code>ParentCRTTrack</code>; they never transition into / from the 9 execution states.</p>
+      <div class="diag">RANGE -> SWEEP
+RANGE -> SHADOW_PENDING
+RANGE -> RETEST
+SHADOW_PENDING -> SWEEP
+SHADOW_PENDING -> RANGE
+SWEEP -> DISPLACEMENT
+SWEEP -> EXPANSION
+SWEEP -> RANGE
+DISPLACEMENT -> EXPANSION
+DISPLACEMENT -> RANGE
+EXPANSION -> RETEST
+EXPANSION -> EXPIRED
+EXPANSION -> RANGE
+EXPIRED -> RANGE
+RETEST -> EXECUTION
+RETEST -> RANGE
+EXECUTION -> RESOLUTION
+RESOLUTION -> RANGE</div>
+      <div class="legend">
+        <span><span class="sw" style="background:#6b7280"></span>RANGE</span>
+        <span><span class="sw" style="background:#a78bfa"></span>SHADOW_PENDING</span>
+        <span><span class="sw" style="background:#38bdf8"></span>SWEEP</span>
+        <span><span class="sw" style="background:#f59e0b"></span>DISPLACEMENT</span>
+        <span><span class="sw" style="background:#f97316"></span>EXPANSION</span>
+        <span><span class="sw" style="background:#eab308"></span>RETEST</span>
+        <span><span class="sw" style="background:#22c55e"></span>EXECUTION</span>
+        <span><span class="sw" style="background:#3b82f6"></span>RESOLUTION</span>
+        <span><span class="sw" style="background:#ef4444"></span>EXPIRED</span>
+        <span><span class="badge">EPIC-84</span> no defaults</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="states-table">
+    <div class="card">
+      <h1>States - Producer & Consumer</h1>
+      <p class="lead">Rows below separate the M15 execution engine from the parent-timeframe C1/C2/C3 track. <code>CRTStateResolver</code> is a shadow/declarative resolver over the M15 state vocabulary; it reads <code>configs/formulas/market_crt_states.yaml</code> and should not be confused with the parent track.</p>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:16%">State</th>
+            <th style="width:26%">Producer</th>
+            <th style="width:34%">Consumer</th>
+            <th style="width:24%">Key transition in / out</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-td">RANGE</td>
+            <td><code>CRTEngine.process_candle</code> -> <code>sm.reset_to_range()</code> (terminal sinks)</td>
+            <td><code>charts.crt_overlay</code> / <code>chart_series</code> / <code>fusion_engine</code> / <code>engine_runner</code> / resolver</td>
+            <td>from EXPIRED, RESOLUTION, SHADOW_PENDING<br>to SWEEP, SHADOW_PENDING, RETEST</td>
+          </tr>
+          <tr>
+            <td class="state-td">SHADOW_PENDING</td>
+            <td><code>CRTEngine.process_candle</code> -> <code>sm.try_range_to_shadow_pending()</code></td>
+            <td><code>chart_series</code> / <code>crt_overlay</code> / <code>crt_engine</code> / telemetry</td>
+            <td>from RANGE<br>to SWEEP or RANGE</td>
+          </tr>
+          <tr>
+            <td class="state-td">SWEEP</td>
+            <td><code>CRTEngine.process_candle</code> -> <code>sm.try_range_to_sweep()</code></td>
+            <td><code>chart_series</code> / <code>crt_overlay</code> / <code>sweep_trace_logger</code> / <code>fusion_engine</code> / execution engine</td>
+            <td>from RANGE, SHADOW_PENDING<br>to DISPLACEMENT, EXPANSION, RANGE</td>
+          </tr>
+          <tr>
+            <td class="state-td">DISPLACEMENT</td>
+            <td><code>CRTEngine.process_candle</code> -> <code>sm.try_sweep_to_displacement()</code></td>
+            <td><code>chart_series</code> / <code>crt_overlay</code> / <code>fusion_engine</code> / telemetry / trade logging</td>
+            <td>from SWEEP<br>to EXPANSION, RANGE</td>
+          </tr>
+          <tr>
+            <td class="state-td">EXPANSION</td>
+            <td><code>CRTEngine.process_candle</code> -> <code>sm.try_displacement_to_expansion()</code></td>
+            <td><code>chart_series</code> / <code>crt_overlay</code> / <code>fusion_engine</code> / <code>retest_geometry</code></td>
+            <td>from DISPLACEMENT, SWEEP<br>to RETEST, EXPIRED, RANGE</td>
+          </tr>
+          <tr>
+            <td class="state-td">RETEST</td>
+            <td><code>CRTEngine.process_candle</code> -> <code>sm.try_expansion_to_retest()</code></td>
+            <td><code>chart_series</code> / <code>crt_overlay</code> / <code>engine_runner</code> / <code>llm_episodes</code> / retest stop guard</td>
+            <td>from EXPANSION<br>to EXECUTION, RANGE</td>
+          </tr>
+          <tr>
+            <td class="state-td">EXECUTION</td>
+            <td><code>CRTEngine.process_candle</code> -> <code>sm.try_retest_to_execution()</code></td>
+            <td><code>chart_series</code> / <code>executor.py</code> / <code>engine_runner</code> / <code>trade_logger</code></td>
+            <td>from RETEST<br>to RESOLUTION</td>
+          </tr>
+          <tr>
+            <td class="state-td">RESOLUTION</td>
+            <td><code>CRTEngine.process_candle</code> -> <code>sm.try_execution_to_resolution()</code></td>
+            <td><code>chart_series</code> / <code>crt_overlay</code> / <code>trade_logger</code></td>
+            <td>from EXECUTION<br>to RANGE</td>
+          </tr>
+          <tr>
+            <td class="state-td">EXPIRED</td>
+            <td><code>CRTEngine.process_candle</code> -> <code>sm._transition(EXPIRED)</code></td>
+            <td><code>chart_series</code> / telemetry / <code>engine_runner</code></td>
+            <td>from EXPANSION<br>to RANGE</td>
+          </tr>
+          <tr>
+            <td class="state-td">RANGE_C1</td>
+            <td><code>ParentCRTTrack.on_parent_close()</code> establishes the C1 parent range</td>
+            <td><code>parent_crt_feed</code> / <code>CRTEngine.process_candle(parent_state=...)</code> / chart overlays</td>
+            <td>to MANIPULATION_C2, RANGE_C1</td>
+          </tr>
+          <tr>
+            <td class="state-td">MANIPULATION_C2</td>
+            <td><code>ParentCRTTrack.on_parent_close()</code> detects the C2 parent-scale sweep</td>
+            <td><code>parent_crt_feed</code> / parent CRT diagnostics / chart overlays</td>
+            <td>to DISTRIBUTION_C3, RANGE_C1</td>
+          </tr>
+          <tr>
+            <td class="state-td">DISTRIBUTION_C3</td>
+            <td><code>ParentCRTTrack.on_parent_close()</code> confirms the C3 directional impulse</td>
+            <td><code>parent_crt_feed</code> / <code>CRTEngine.process_candle(parent_state=...)</code> bias gate / chart overlays</td>
+            <td>to RANGE_C1</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="legend">
+        <span><span class="tag tag-prod">●</span> Producer = writes/advances state</span>
+        <span><span class="tag tag-cons">●</span> Consumer = reads/renders state</span>
+        <span><span class="tag tag-win">●</span> Shared tooling / bridge</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="authority-lanes">
+    <div class="card">
+      <h1>Authority Lanes</h1>
+      <table>
+        <thead>
+          <tr>
+            <th>Lane</th>
+            <th>Defines / drives</th>
+            <th>Primary source</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-td">Engine</td>
+            <td>Runtime M15 execution states: RANGE through RESOLUTION.</td>
+            <td><code>src/config_layer/crt_engine_v2.py</code> imports <code>CRTState</code> and <code>VALID_TRANSITIONS</code> from <code>state_identity.py</code>.</td>
+          </tr>
+          <tr>
+            <td class="state-td">Resolver</td>
+            <td>Shadow/declarative M15 state resolution for overlays, parity work, and diagnostics.</td>
+            <td><code>src/features/crt_state_resolver.py</code> reads <code>configs/formulas/market_crt_states.yaml</code>.</td>
+          </tr>
+          <tr>
+            <td class="state-td">Parent Track</td>
+            <td>Parent-timeframe C1/C2/C3 states: RANGE_C1, MANIPULATION_C2, DISTRIBUTION_C3.</td>
+            <td><code>src/config_layer/parent_crt.py</code> drives <code>ParentCRTTrack</code>; the legal states and edges still come from <code>state_identity.py</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="event-layer">
+    <div class="card">
+      <h1>Event Layer</h1>
+      <p class="lead">Primary event surface mentioned by this artifact: <code>STATE_TRANSITION</code> JSONL events emitted as the CRT state machine advances.</p>
+    </div>
+  </section>
+
+  <section id="consumers-map">
+    <div class="card">
+      <h1>Consumers Map</h1>
+      <p class="lead">Consumers listed in the table include chart renderers, overlays, fusion/engine runner surfaces, telemetry, and trade logging.</p>
+    </div>
+  </section>
+
+  <footer>
+    Repaired structure: CSS in <code>&lt;style&gt;</code>, page content in <code>&lt;body&gt;</code>, duplicate malformed copy removed.
+  </footer>
+</main>
+</body>
+</html>

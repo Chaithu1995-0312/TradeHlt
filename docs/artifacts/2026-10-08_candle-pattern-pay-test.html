@@ -1,0 +1,130 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Candle Pattern Pay Test</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: companion to the Candle Theory pages — verdict first, then one bar chart to scale, then the full table, then the method. */
+:root{
+  --bg:#eef0f4; --surface:#ffffff; --rule:#e3e7ef; --ink:#151a24; --muted:#5b6475;
+  --pen:#2743c9; --up:#14965a; --down:#d23a3a; --warn-bg:#fff4dc; --warn-fg:#6b4a00; --band:rgba(39,67,201,.10);
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1218; --surface:#171b23; --rule:#232a36; --ink:#e8ecf3; --muted:#9aa4b6; --pen:#8ea2ff; --up:#34c784; --down:#ff6b6b;
+  --warn-bg:#2b2412; --warn-fg:#f1cf7a; --band:rgba(142,162,255,.14); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1218; --surface:#171b23; --rule:#232a36; --ink:#e8ecf3; --muted:#9aa4b6; --pen:#8ea2ff; --up:#34c784; --down:#ff6b6b;
+  --warn-bg:#2b2412; --warn-fg:#f1cf7a; --band:rgba(142,162,255,.14); color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);padding-block:24px 48px;padding-inline:16px;line-height:1.5}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+.kicker{font:500 .72rem var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--pen)}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(1.6rem,4vw,2.4rem);margin:4px 0 6px;letter-spacing:-.02em;text-wrap:balance}
+h1 em{font-style:normal;color:var(--pen)}
+h2{font-family:var(--f-display);font-size:1.3rem;margin:0;text-wrap:balance}
+p{margin:0;max-width:72ch} .muted{color:var(--muted)} a{color:var(--pen)}
+code{font-family:var(--f-mono);font-size:.86em}
+section{display:flex;flex-direction:column;gap:10px}
+.verdict{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.verdict div{background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:12px 14px;min-width:0}
+.verdict b{display:block;font-family:var(--f-display);font-size:1.7rem;line-height:1.1;font-variant-numeric:tabular-nums}
+.verdict span{color:var(--muted);font-size:.88rem}
+.chart,.tablebox{background:var(--surface);border:1px solid var(--rule);border-radius:8px;overflow-x:auto}
+.chart svg{display:block;width:100%;min-width:560px;height:auto}
+svg text{font-family:var(--f-mono);font-size:11px;fill:var(--muted)}
+svg .lab{fill:var(--ink);font-family:var(--f-body);font-size:12px}
+svg .axis{stroke:var(--rule)} svg .zero{stroke:var(--ink);stroke-width:1.2}
+svg .base{stroke:var(--pen);stroke-width:1.4;stroke-dasharray:5 4}
+svg .neg{fill:var(--down)} svg .pos{fill:var(--up)}
+table{border-collapse:collapse;width:100%;min-width:900px;font-size:.86rem;font-variant-numeric:tabular-nums}
+th,td{text-align:right;padding:8px 10px;border-bottom:1px solid var(--rule);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font:500 .7rem var(--f-mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);position:sticky;top:0;background:var(--surface)}
+td:first-child{font-family:var(--f-mono);color:var(--ink)}
+tr.base td{background:var(--band)}
+tr.sub td{color:var(--muted)}
+.intent{font:500 .66rem var(--f-mono);letter-spacing:.06em;border:1px solid var(--pen);color:var(--pen);border-radius:4px;padding:1px 5px;margin-left:6px}
+td.neg{color:var(--down)} td.pos{color:var(--up)}
+.warn{background:var(--warn-bg);color:var(--warn-fg);border-radius:8px;padding:12px 14px}
+ul.m{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:6px;max-width:72ch}
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="kicker">XAUUSD M15 · 2-year corpus · 47,197 bars · UTC</span>
+    <h1>Does a candle pattern <em>pay on its own?</em></h1>
+    <p class="muted">The cards say a pattern is the weakest read without a level and a confirming candle. This tests that: enter on the pattern bar alone, with the same stop, target and cost the MT5 bar-features page used, and compare against random bars of the same count.</p>
+  </header>
+
+  <div class="verdict" id="verdict"></div>
+
+  <section>
+    <h2>Net result of each pattern, on the side the cards call it</h2>
+    <p class="muted" id="chartnote"></p>
+    <div class="chart"><svg id="bars" viewBox="0 0 760 360" role="img" aria-label="Net R per pattern against the all-bars baseline"></svg></div>
+  </section>
+
+  <section>
+    <h2>Every pattern, both directions</h2>
+    <p class="muted">R is in units of the stop (1 ATR) after the $0.26/oz cost. "vs random" is the share of 2,000 same-size random-bar draws that did at least as well; a pattern that beats luck would show a small value. Halves are the first and second year.</p>
+    <div class="tablebox"><table id="tbl"><thead><tr>
+      <th>Pattern</th><th>Side</th><th>Bars flagged</th><th>Trades</th><th>Win rate</th><th>Net R</th><th>Gross R</th><th>vs random</th><th>1st half R</th><th>2nd half R</th>
+    </tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <section>
+    <h2>How it was run</h2>
+    <ul class="m">
+      <li><b>Data.</b> <code>data/mt5/XAUUSD_M15.csv</code>, 47,275 rows loaded through the corpus loader (times converted to UTC), 78 warm-up bars dropped, 47,197 bars tested, 22 May 2024 to 21 May 2026.</li>
+      <li><b>Patterns.</b> The repo's own definitions from <code>src/features/candle_patterns.py</code>, computed by the feature pipeline, so a flag at bar t uses only bars up to t. Thresholds are the active config's <code>feature_pipeline.candle_patterns</code> block.</li>
+      <li><b>Trade.</b> Enter at the close of the flagged bar. Stop 1 ATR, target 2 ATR, 16 bars. A bar that touches both counts as a stop. A trade that times out is marked to market at bar 16. Cost $0.26/oz round trip, the same fixed figure the MT5 page used. This is the rule from <code>tools/xau_chart/zone_edge.py</code>, unchanged.</li>
+      <li><b>Control.</b> For each row, 2,000 random sets of the same number of bars drawn from all bars; "vs random" is the one-sided share at least as good.</li>
+      <li><b>Side.</b> Hammer, pin_lower, engulfing_bull, dragonfly_doji and morning_star are tested long; shooting_star, pin_upper, engulfing_bear and gravestone_doji short. doji_material and inside_bar have no direction, so both sides are shown. The opposite side of each directional pattern is in the table as a check.</li>
+    </ul>
+  </section>
+
+  <div class="warn" id="caveat"></div>
+</div>
+
+<script>
+const DATA={"corpus": {"path": "D:\\Tradelatest\\data\\mt5\\XAUUSD_M15.csv", "rows": 47275, "bars": 47197, "first": "2024-05-22 17:30:00", "last": "2026-05-21 20:45:00"}, "params": {"stop_atr": 1.0, "target_atr": 2.0, "horizon_bars": 16, "cost": 0.26}, "base": {"long": {"n": 47181, "win": 0.29206672177359533, "R": -0.019555511362345675, "R_gross": 0.0460733833682227, "p_vs_random": 0.9025487256371814, "R_h1": -0.006271874806690368, "n_h1": 23598, "R_h2": -0.032847596993535684, "n_h2": 23583}, "short": {"n": 47181, "win": 0.27424174985693395, "R": -0.11804383408135415, "R_gross": -0.052414939350785776, "p_vs_random": 0.894552723638181, "R_h1": -0.1821640634103103, "n_h1": 23598, "R_h2": -0.053882820991216863, "n_h2": 23583}}, "patterns": {"pin_lower": {"intent": "long", "flag_count": 1541, "long": {"n": 1541, "win": 0.27774172615184944, "R": -0.059078968616541216, "R_gross": 0.006830142384711262, "p_vs_random": 0.881559220389805, "R_h1": -0.045234713047441276, "n_h1": 795, "R_h2": -0.0738325653691343, "n_h2": 746}, "short": {"n": 1541, "win": 0.29136924075275794, "R": -0.06979012209272437, "R_gross": -0.003881011091471928, "p_vs_random": 0.08295852073963018, "R_h1": -0.17010195932726294, "n_h1": 795, "R_h2": 0.0371105623596324, "n_h2": 746}}, "pin_upper": {"intent": "short", "flag_count": 1227, "long": {"n": 1227, "win": 0.2917685411572942, "R": -0.04309061871324083, "R_gross": 0.026364066379682864, "p_vs_random": 0.7346326836581709, "R_h1": 0.04796636786528446, "n_h1": 624, "R_h2": -0.13731874412783415, "n_h2": 603}, "short": {"n": 1227, "win": 0.2795436022819886, "R": -0.12292620246925953, "R_gross": -0.053471517376335834, "p_vs_random": 0.5297351324337831, "R_h1": -0.23907870590559924, "n_h1": 624, "R_h2": -0.0027285869729477778, "n_h2": 603}}, "hammer": {"intent": "long", "flag_count": 603, "long": {"n": 603, "win": 0.2603648424543947, "R": -0.13427098807064783, "R_gross": -0.06860542280188678, "p_vs_random": 0.9810094952523738, "R_h1": -0.07821726822246956, "n_h1": 295, "R_h2": -0.18795880415900038, "n_h2": 308}, "short": {"n": 603, "win": 0.2902155887230514, "R": -0.10203064277009515, "R_gross": -0.0363650775013341, "p_vs_random": 0.38330834582708645, "R_h1": -0.16023934799772194, "n_h1": 295, "R_h2": -0.04627879847740065, "n_h2": 308}}, "shooting_star": {"intent": "short", "flag_count": 514, "long": {"n": 514, "win": 0.301556420233463, "R": -0.014475067356972364, "R_gross": 0.058754074077357867, "p_vs_random": 0.47876061969015493, "R_h1": 0.018724767224263784, "n_h1": 268, "R_h2": -0.05064399283571744, "n_h2": 246}, "short": {"n": 514, "win": 0.2782101167315175, "R": -0.13907694441244514, "R_gross": -0.06584780297811489, "p_vs_random": 0.6531734132933533, "R_h1": -0.25428836888601686, "n_h1": 268, "R_h2": -0.013562059213594602, "n_h2": 246}}, "doji_material": {"intent": "both", "flag_count": 1146, "long": {"n": 1146, "win": 0.3193717277486911, "R": 0.03479106416639858, "R_gross": 0.10332609207162395, "p_vs_random": 0.08695652173913043, "R_h1": 0.10484161523059862, "n_h1": 576, "R_h2": -0.03599686111952987, "n_h2": 570}, "short": {"n": 1146, "win": 0.29930191972076786, "R": -0.08690901251960802, "R_gross": -0.018373984614382655, "p_vs_random": 0.20339830084957522, "R_h1": -0.19143981611746344, "n_h1": 576, "R_h2": 0.0187221153266459, "n_h2": 570}}, "dragonfly_doji": {"intent": "long", "flag_count": 363, "long": {"n": 363, "win": 0.31129476584022037, "R": 0.013082631144918248, "R_gross": 0.08259546748046878, "p_vs_random": 0.33933033483258374, "R_h1": -0.08844705440357124, "n_h1": 188, "R_h2": 0.12215452190558126, "n_h2": 175}, "short": {"n": 363, "win": 0.3085399449035813, "R": -0.04043044026263125, "R_gross": 0.029082396072919278, "p_vs_random": 0.13093453273363317, "R_h1": -0.013447816772225117, "n_h1": 188, "R_h2": -0.0694174872123247, "n_h2": 175}}, "gravestone_doji": {"intent": "short", "flag_count": 286, "long": {"n": 286, "win": 0.3076923076923077, "R": -0.012176312993056512, "R_gross": 0.057117382951609445, "p_vs_random": 0.45527236381809094, "R_h1": 0.07864156455692664, "n_h1": 141, "R_h2": -0.10048886978304014, "n_h2": 145}, "short": {"n": 286, "win": 0.2937062937062937, "R": -0.10950298972443022, "R_gross": -0.04020929377976428, "p_vs_random": 0.4587706146926537, "R_h1": -0.30204775223991115, "n_h1": 141, "R_h2": 0.0777301931354512, "n_h2": 145}}, "engulfing_bull": {"intent": "long", "flag_count": 4376, "long": {"n": 4375, "win": 0.2934857142857143, "R": -0.027444291987676932, "R_gross": 0.04099001788777595, "p_vs_random": 0.6751624187906047, "R_h1": -0.060624773223106915, "n_h1": 2347, "R_h2": 0.0109554069568764, "n_h2": 2028}, "short": {"n": 4375, "win": 0.2838857142857143, "R": -0.08714080696406679, "R_gross": -0.018706497088613917, "p_vs_random": 0.051974012993503245, "R_h1": -0.12020551856064156, "n_h1": 2347, "R_h2": -0.048875087971383895, "n_h2": 2028}}, "engulfing_bear": {"intent": "short", "flag_count": 4214, "long": {"n": 4212, "win": 0.29653371320037986, "R": -0.0058721354564715425, "R_gross": 0.06075184755674798, "p_vs_random": 0.2353823088455772, "R_h1": 0.00875483102901506, "n_h1": 2067, "R_h2": -0.0199672122515768, "n_h2": 2145}, "short": {"n": 4212, "win": 0.2680436847103514, "R": -0.15350681005687716, "R_gross": -0.08688282704365766, "p_vs_random": 0.9610194902548725, "R_h1": -0.19654680729785057, "n_h1": 2067, "R_h2": -0.1120319036246664, "n_h2": 2145}}, "inside_bar": {"intent": "both", "flag_count": 6853, "long": {"n": 6851, "win": 0.29324186250182455, "R": -0.0013505561181539176, "R_gross": 0.062409954137148727, "p_vs_random": 0.12293853073463268, "R_h1": 0.020435467623327444, "n_h1": 3330, "R_h2": -0.021954776242872176, "n_h2": 3521}, "short": {"n": 6851, "win": 0.27032549992701793, "R": -0.12474275713419082, "R_gross": -0.060982246878888154, "p_vs_random": 0.6616691654172914, "R_h1": -0.2034160322897427, "n_h1": 3330, "R_h2": -0.05033718875362058, "n_h2": 3521}}, "morning_star": {"intent": "long", "flag_count": 336, "long": {"n": 336, "win": 0.3005952380952381, "R": 0.0357930729208049, "R_gross": 0.10020765401903826, "p_vs_random": 0.23438280859570215, "R_h1": -0.030371338450150213, "n_h1": 181, "R_h2": 0.11305603071527506, "n_h2": 155}, "short": {"n": 336, "win": 0.22321428571428573, "R": -0.2594667044561198, "R_gross": -0.19505212335788646, "p_vs_random": 0.9735132433783108, "R_h1": -0.30065151945483926, "n_h1": 181, "R_h2": -0.21137346887697006, "n_h2": 155}}}};
+(function(){
+const P=DATA.patterns, B=DATA.base, f=(x,d=3)=>(x>=0?'+':'−')+Math.abs(x).toFixed(d), pc=x=>(x*100).toFixed(1)+'%';
+const dirs=Object.entries(P).filter(([k,v])=>v.intent!=='both');
+const inten=dirs.map(([k,v])=>({k,side:v.intent,r:v[v.intent]}));
+const nPos=inten.filter(d=>d.r.R>0).length, nBeat=inten.filter(d=>d.r.p_vs_random<0.05).length;
+const best=inten.reduce((a,b)=>a.r.R>b.r.R?a:b), worst=inten.reduce((a,b)=>a.r.R<b.r.R?a:b);
+const minp=Math.min(...Object.values(P).flatMap(v=>[v.long.p_vs_random,v.short.p_vs_random]));
+const ntests=Object.keys(P).length*2;
+document.getElementById('verdict').innerHTML=
+ `<div><b>${nBeat} of ${inten.length}</b><span>directional patterns beat random bars at the 5% level on the side the card names</span></div>`+
+ `<div><b>${nPos} of ${inten.length}</b><span>have a positive net R at all (best ${best.k} ${best.side} ${f(best.r.R)}R, worst ${worst.k} ${worst.side} ${f(worst.r.R)}R)</span></div>`+
+ `<div><b>${f(B.long.R)}R / ${f(B.short.R)}R</b><span>net R of entering on every bar, long / short. The patterns are measured against this.</span></div>`+
+ `<div><b>${minp.toFixed(3)}</b><span>smallest "vs random" value of ${ntests} tests. With that many tests, a value near 0.05 is expected by chance.</span></div>`;
+document.getElementById('chartnote').textContent=`Bars show net R of the nine directional patterns on their named side. The dashed line is the all-bars baseline for that side (long ${f(B.long.R)}R, short ${f(B.short.R)}R); the solid line is zero. A pattern pays only if its bar reaches right of zero and beats luck.`;
+// chart
+const rows=inten.slice().sort((a,b)=>b.r.R-a.r.R), W=760,L=170,R=30,T=14,rowH=32,H=T+rows.length*rowH+34;
+const lo=-0.2,hi=0.1,x=v=>L+(v-lo)/(hi-lo)*(W-L-R);
+let s='';
+for(let v=-0.2;v<=0.1001;v+=0.05){s+=`<line class="axis" x1="${x(v)}" x2="${x(v)}" y1="${T}" y2="${H-26}"/><text x="${x(v)}" y="${H-10}" text-anchor="middle">${v.toFixed(2)}</text>`;}
+s+=`<line class="zero" x1="${x(0)}" x2="${x(0)}" y1="${T}" y2="${H-26}"/>`;
+rows.forEach((d,i)=>{const y=T+i*rowH+6,v=d.r.R,bx=Math.min(x(0),x(v)),bw=Math.abs(x(v)-x(0)),bl=B[d.side].R;
+ s+=`<text class="lab" x="${L-10}" y="${y+14}" text-anchor="end">${d.k} · ${d.side}</text>`;
+ s+=`<rect class="${v>=0?'pos':'neg'}" x="${bx}" y="${y}" width="${Math.max(bw,1.5)}" height="18" rx="2"/>`;
+ s+=`<line class="base" x1="${x(bl)}" x2="${x(bl)}" y1="${y-4}" y2="${y+22}"/>`;
+ s+=`<text x="${v>=0?x(v)+6:x(v)-6}" y="${y+13}" text-anchor="${v>=0?'start':'end'}">${f(v)} (n=${d.r.n})</text>`;});
+s+=`<text x="${W-R}" y="${H-10}" text-anchor="end">net R per trade</text>`;
+const svg=document.getElementById('bars'); svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.innerHTML=s;
+// table
+const tb=document.querySelector('#tbl tbody'); let h='';
+const row=(name,side,flags,r,cls,tag)=>`<tr class="${cls||''}"><td>${name}${tag?`<span class="intent">${tag}</span>`:''}</td><td>${side}</td><td>${flags??''}</td><td>${r.n}</td><td>${pc(r.win)}</td><td class="${r.R>=0?'pos':'neg'}">${f(r.R)}</td><td>${f(r.R_gross)}</td><td>${r.p_vs_random.toFixed(3)}</td><td>${r.R_h1==null?'–':f(r.R_h1)}</td><td>${r.R_h2==null?'–':f(r.R_h2)}</td></tr>`;
+h+=row('all bars','long',null,B.long,'base')+row('all bars','short',null,B.short,'base');
+Object.entries(P).forEach(([k,v])=>{['long','short'].forEach(sd=>{const named=v.intent===sd;
+  h+=row(k,sd,sd==='long'?v.flag_count.toLocaleString():'',v[sd],named?'':'sub',named?'card side':'');});});
+tb.innerHTML=h;
+document.getElementById('caveat').innerHTML=`<b>What this does and does not say.</b> It tests each pattern alone, which the cards call the weakest read. It does not test the cards' full method (a level, then confirmation, then entry), which needs a level definition and a confirmation rule that the repo does not yet fix. It covers gold only, one two-year file, one stop and target, and a flat cost. ${ntests} tests were run, so one or two small "vs random" values are expected by luck. This is an observation, not a finding in the repository's findings register, and it grants no authority to any pattern.`;
+})();
+</script>
+
+</body></html>

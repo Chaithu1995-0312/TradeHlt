@@ -1,0 +1,179 @@
+{
+  "object": "UNVALIDATED proxy: calendar H4 ParentCRTTrack C1/C2/C3 as entry (not Sujan identity)",
+  "corpus": "D:\\Tradelatest\\data\\mt5\\XAUUSD_M15.csv",
+  "m15_rows": 47275,
+  "first": "2024-05-22 01:00:00",
+  "last": "2026-05-21 23:45:00",
+  "h4_grid": "broker time, features.calendar_periods H4",
+  "cost_model": "research.costs.xau_measured_cost_model (SEM-015), nights_held=0: overnight swap UNMEASURED, excluded",
+  "skipped": {
+    "A": {
+      "entry_beyond_target": 150
+    },
+    "B": {
+      "entry_beyond_target": 192
+    }
+  },
+  "split_at": "2025-05-21 22:15:00",
+  "A": {
+    "n": 663,
+    "open": 0,
+    "win_rate": 0.4857,
+    "breakeven_win_rate_mean": 0.4567,
+    "planned_rr_median": 1.318,
+    "gross_r_mean": 0.0755,
+    "gross_r_ci95": [
+      -0.0565,
+      0.2075
+    ],
+    "net_r_mean": 0.0229,
+    "cost_r_median": 0.0296,
+    "risk_median": 10.17,
+    "bars_held_median": 7.0,
+    "long_n": 248,
+    "long_gross_r_mean": 0.2292,
+    "short_gross_r_mean": -0.0163,
+    "held_overnight": 99
+  },
+  "A_inside": {
+    "n": 663,
+    "open": 0,
+    "win_rate": 0.4857,
+    "breakeven_win_rate_mean": 0.4567,
+    "planned_rr_median": 1.318,
+    "gross_r_mean": 0.0755,
+    "gross_r_ci95": [
+      -0.0565,
+      0.2075
+    ],
+    "net_r_mean": 0.0229,
+    "cost_r_median": 0.0296,
+    "risk_median": 10.17,
+    "bars_held_median": 7.0,
+    "long_n": 248,
+    "long_gross_r_mean": 0.2292,
+    "short_gross_r_mean": -0.0163,
+    "held_overnight": 99
+  },
+  "B": {
+    "n": 221,
+    "open": 0,
+    "win_rate": 0.6154,
+    "breakeven_win_rate_mean": 0.6285,
+    "planned_rr_median": 0.564,
+    "gross_r_mean": -0.038,
+    "gross_r_ci95": [
+      -0.1615,
+      0.0856
+    ],
+    "net_r_mean": -0.0667,
+    "cost_r_median": 0.0189,
+    "risk_median": 14.86,
+    "bars_held_median": 9.0,
+    "long_n": 86,
+    "long_gross_r_mean": 0.0051,
+    "short_gross_r_mean": -0.0654,
+    "held_overnight": 30
+  },
+  "A_first_half": {
+    "n": 311,
+    "open": 0,
+    "win_rate": 0.4727,
+    "breakeven_win_rate_mean": 0.4405,
+    "planned_rr_median": 1.487,
+    "gross_r_mean": 0.0986,
+    "gross_r_ci95": [
+      -0.114,
+      0.3113
+    ],
+    "net_r_mean": 0.0291,
+    "cost_r_median": 0.0426,
+    "risk_median": 7.05,
+    "bars_held_median": 7.0,
+    "long_n": 117,
+    "long_gross_r_mean": 0.3475,
+    "short_gross_r_mean": -0.0515,
+    "held_overnight": 47
+  },
+  "A_second_half": {
+    "n": 352,
+    "open": 0,
+    "win_rate": 0.4972,
+    "breakeven_win_rate_mean": 0.4709,
+    "planned_rr_median": 1.276,
+    "gross_r_mean": 0.0551,
+    "gross_r_ci95": [
+      -0.1079,
+      0.2182
+    ],
+    "net_r_mean": 0.0173,
+    "cost_r_median": 0.02,
+    "risk_median": 14.72,
+    "bars_held_median": 7.0,
+    "long_n": 131,
+    "long_gross_r_mean": 0.1235,
+    "short_gross_r_mean": 0.0146,
+    "held_overnight": 52
+  },
+  "B_first_half": {
+    "n": 97,
+    "open": 0,
+    "win_rate": 0.567,
+    "breakeven_win_rate_mean": 0.6026,
+    "planned_rr_median": 0.627,
+    "gross_r_mean": -0.0685,
+    "gross_r_ci95": [
+      -0.2549,
+      0.1178
+    ],
+    "net_r_mean": -0.1074,
+    "cost_r_median": 0.0275,
+    "risk_median": 10.14,
+    "bars_held_median": 9.0,
+    "long_n": 42,
+    "long_gross_r_mean": -0.039,
+    "short_gross_r_mean": -0.0911,
+    "held_overnight": 12
+  },
+  "B_second_half": {
+    "n": 124,
+    "open": 0,
+    "win_rate": 0.6532,
+    "breakeven_win_rate_mean": 0.6488,
+    "planned_rr_median": 0.495,
+    "gross_r_mean": -0.014,
+    "gross_r_ci95": [
+      -0.1797,
+      0.1516
+    ],
+    "net_r_mean": -0.0348,
+    "cost_r_median": 0.013,
+    "risk_median": 23.295,
+    "bars_held_median": 8.0,
+    "long_n": 44,
+    "long_gross_r_mean": 0.0472,
+    "short_gross_r_mean": -0.0477,
+    "held_overnight": 18
+  },
+  "economic_claims_allowed": false,
+  "A_random_entry_control_50_draws": {
+    "long": {
+      "real_gross_r": 0.2292,
+      "random_mean": 0.0809,
+      "random_p05_p95": [
+        -0.0558,
+        0.3276
+      ],
+      "share_of_draws_beating_real": 0.12
+    },
+    "short": {
+      "real_gross_r": -0.0163,
+      "random_mean": -0.1325,
+      "random_p05_p95": [
+        -0.2229,
+        -0.0247
+      ],
+      "share_of_draws_beating_real": 0.06
+    }
+  }
+}

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Capital &#183; Lot &amp; Sizing Reference - Tradelatest</title>
+<style>
+:root {
+  --bg: #f4f6f8;
+  --card: #ffffff;
+  --text: #1a1d21;
+  --muted: #5c6470;
+  --border: #d7dde3;
+  --accent: #1f4e79;
+  --accent-soft: #e8f0f8;
+  --tag-bg: #eef4ff;
+}
+* { box-sizing: border-box; }
+body {
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  margin: 0;
+  padding: 2rem 1rem;
+  line-height: 1.55;
+}
+.wrap { max-width: 960px; margin: 0 auto; }
+header.cover {
+  background: var(--accent);
+  color: #fff;
+  padding: 2rem 2.25rem;
+  border-radius: 8px;
+  margin-bottom: 1.75rem;
+}
+header.cover h1 { margin: 0 0 .35rem; font-size: 1.6rem; }
+header.cover .sub { opacity: .9; margin-bottom: .6rem; }
+header.cover .meta { font-size: .85rem; opacity: .8; }
+header.cover code {
+  background: rgba(255,255,255,.18);
+  padding: .05rem .3rem;
+  border-radius: 3px;
+  font-size: .82rem;
+}
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,.04);
+}
+.card h2 {
+  margin: 0 0 .75rem;
+  font-size: 1.12rem;
+  color: var(--accent);
+  border-bottom: 2px solid var(--accent-soft);
+  padding-bottom: .4rem;
+}
+table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+th, td {
+  text-align: left;
+  padding: .5rem .6rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+th { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+tr:last-child td { border-bottom: none; }
+td.k { font-weight: 600; white-space: nowrap; }
+td.v { font-family: "Consolas", "Courier New", monospace; font-size: .85rem; }
+.note {
+  background: #fff8e1;
+  border: 1px solid #f0d9a8;
+  border-radius: 6px;
+  padding: .8rem 1rem;
+  font-size: .85rem;
+  color: #6b5a12;
+  margin-top: .5rem;
+}
+.note strong { color: #7a5c00; }
+footer {
+  margin-top: 2rem;
+  font-size: .78rem;
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+  padding-top: .75rem;
+}
+code {
+  background: var(--tag-bg);
+  padding: .05rem .25rem;
+  border-radius: 3px;
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: .82rem;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="cover">
+<h1>Capital &#183; Lot &amp; Sizing Reference</h1>
+<p class="sub">Production risk-gate config - capital, lot, and per-trade sizing details</p>
+<p class="meta">
+Source: <code>configs/production/v2_htfcrt_k23_shadow_2026_09.json</code> (shadow; identical values on active <code>v2_htfcrt_2026_08</code>) &nbsp;&#183;&nbsp; Active version: <code>v2_htfcrt_2026_08</code> &nbsp;&#183;&nbsp; Currency: INR &nbsp;&#183;&nbsp; USD/INR: 84.0
+</p>
+</header>
+<section class="card">
+<h2>1. Account investment &amp; capital (capital_management)</h2>
+<table>
+<thead>
+<tr><th>Field</th><th>Value</th><th>Meaning</th></tr>
+</thead>
+<tbody>
+<tr><td class="k">total_capital_inr</td><td class="v">100000</td><td>Total capital (1 lakh INR)</td></tr>
+<tr><td class="k">per_trade_investment_inr</td><td class="v">10000</td><td>Capital allocated per trade (notional)</td></tr>
+<tr><td class="k">per_trade_investment_pct</td><td class="v">0.1</td><td>Per-trade investment as % of total capital</td></tr>
+<tr><td class="k">max_risk_per_trade_pct</td><td class="v">0.25</td><td>Max risk per trade as % of capital</td></tr>
+<tr><td class="k">max_risk_per_trade_inr</td><td class="v">25000</td><td>Max risk per trade in INR</td></tr>
+<tr><td class="k">max_monthly_drawdown_pct</td><td class="v">0.25</td><td>Max monthly drawdown as % of capital</td></tr>
+<tr><td class="k">max_monthly_drawdown_inr</td><td class="v">25000</td><td>Max monthly drawdown in INR</td></tr>
+<tr><td class="k">monthly_drawdown_warn_inr</td><td class="v">20000</td><td>Warn threshold for monthly drawdown</td></tr>
+<tr><td class="k">kill_switch_daily_loss_inr</td><td class="v">10000</td><td>Daily loss kill-switch trigger</td></tr>
+<tr><td class="k">usd_to_inr_rate</td><td class="v">84.0</td><td>FX rate for USD to INR conversion</td></tr>
+<tr><td class="k">currency</td><td class="v">INR</td><td>Deposit / sizing currency</td></tr>
+<tr><td class="k">sizing_mode</td><td class="v">fixed_investment_inr</td><td>Sizing mode: fixed investment per trade</td></tr>
+</tbody>
+</table>
+</section>
+<section class="card">
+<h2>2. Lot size &amp; position sizing</h2>
+<table>
+<thead>
+<tr><th>Field</th><th>Value</th><th>Meaning</th></tr>
+</thead>
+<tbody>
+<tr><td class="k">pip_value_per_lot (EURUSD)</td><td class="v">10.0</td><td>INR per pip, standard lot</td></tr>
+<tr><td class="k">pip_value_per_lot (GBPUSD)</td><td class="v">10.0</td><td>INR per pip, standard lot</td></tr>
+<tr><td class="k">pip_value_per_lot (USDJPY)</td><td class="v">9.1</td><td>INR per pip, standard lot</td></tr>
+<tr><td class="k">pip_value_per_lot (USDCHF)</td><td class="v">10.0</td><td>INR per pip, standard lot</td></tr>
+<tr><td class="k">pip_value_per_lot (AUDUSD)</td><td class="v">10.0</td><td>INR per pip, standard lot</td></tr>
+<tr><td class="k">pip_value_per_lot (USDCAD)</td><td class="v">7.7</td><td>INR per pip, standard lot</td></tr>
+<tr><td class="k">pip_value_per_lot (NZDUSD)</td><td class="v">10.0</td><td>INR per pip, standard lot</td></tr>
+<tr><td class="k">lot_min</td><td class="v">0.01</td><td>Minimum lot size</td></tr>
+<tr><td class="k">lot_max</td><td class="v">10.0</td><td>Maximum lot size</td></tr>
+<tr><td class="k">lot_step</td><td class="v">0.01</td><td>Lot rounding step</td></tr>
+<tr><td class="k">XAUUSD contract_size</td><td class="v">100.0 oz/lot</td><td>Contract size (measured via MT5)</td></tr>
+</tbody>
+</table>

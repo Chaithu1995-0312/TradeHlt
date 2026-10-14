@@ -1,0 +1,118 @@
+{
+  "primary": {
+    "cutoff": "2025-10-01",
+    "learn_by_tf": {
+      "M15": {
+        "n": 18,
+        "mean": -0.2083,
+        "ci95": [
+          -0.7461,
+          0.3294
+        ],
+        "total_r": -3.75,
+        "win_share": 0.333
+      },
+      "H1": {
+        "n": 16,
+        "mean": -0.3594,
+        "ci95": [
+          -0.8513,
+          0.1326
+        ],
+        "total_r": -5.75,
+        "win_share": 0.312
+      },
+      "H4": {
+        "n": 9,
+        "mean": 0.1111,
+        "ci95": [
+          -0.7497,
+          0.972
+        ],
+        "total_r": 1.0,
+        "win_share": 0.444
+      }
+    },
+    "chosen_tf": null,
+    "learn_conditions": {},
+    "chosen_condition": null
+  },
+  "secondary_a": {
+    "cutoff": "2025-07-01",
+    "learn_by_tf": {
+      "M15": {
+        "n": 17,
+        "mean": -0.1618,
+        "ci95": [
+          -0.7238,
+          0.4003
+        ],
+        "total_r": -2.75,
+        "win_share": 0.353
+      },
+      "H1": {
+        "n": 15,
+        "mean": -0.3167,
+        "ci95": [
+          -0.8349,
+          0.2016
+        ],
+        "total_r": -4.75,
+        "win_share": 0.333
+      },
+      "H4": {
+        "n": 7,
+        "mean": -0.2857,
+        "ci95": [
+          -1.1894,
+          0.618
+        ],
+        "total_r": -2.0,
+        "win_share": 0.286
+      }
+    },
+    "chosen_tf": null,
+    "learn_conditions": {},
+    "chosen_condition": null
+  },
+  "secondary_b": {
+    "cutoff": "2026-01-01",
+    "learn_by_tf": {
+      "M15": {
+        "n": 18,
+        "mean": -0.2083,
+        "ci95": [
+          -0.7461,
+          0.3294
+        ],
+        "total_r": -3.75,
+        "win_share": 0.333
+      },
+      "H1": {
+        "n": 16,
+        "mean": -0.3594,
+        "ci95": [
+          -0.8513,
+          0.1326
+        ],
+        "total_r": -5.75,
+        "win_share": 0.312
+      },
+      "H4": {
+        "n": 9,
+        "mean": 0.1111,
+        "ci95": [
+          -0.7497,
+          0.972
+        ],
+        "total_r": 1.0,
+        "win_share": 0.444
+      }
+    },
+    "chosen_tf": null,
+    "learn_conditions": {},
+    "chosen_condition": null
+  },
+  "economic_claims_allowed": false,
+  "verdict": "INSUFFICIENT: no timeframe has the pre-declared 20 closed trades before any cutoff (learn side M15 18, H1 16, H4 9 at 2025-10-01); 70% of triggers fall in 2026-Q2/Q3"
+}

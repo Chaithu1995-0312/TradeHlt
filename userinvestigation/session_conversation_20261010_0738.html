@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session conversation — 2026-10-10 07:38</title>
+<style>
+  :root { --bg:#f4f1ea; --ink:#1c1915; --muted:#5c564c; --line:#ddd6c8; --user:#fff; --agent:#eef3f4; --accent:#8c3a2f; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.45 "Segoe UI", Candara, sans-serif; }
+  header, main { max-width:54rem; margin:0 auto; padding:1.25rem; }
+  header { border-bottom:1px solid var(--line); }
+  h1 { font-size:1.4rem; margin:0 0 .35rem; }
+  .meta, #status { color:var(--muted); margin:0; }
+  #status { margin-top:.4rem; }
+  article { margin:1rem 0; padding:.75rem .9rem .9rem; border:1px solid var(--line); border-radius:8px; background:var(--agent); }
+  article.user { background:var(--user); }
+  .who { font-size:.75rem; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); margin-bottom:.35rem; }
+  article.user .who { color:var(--accent); }
+  pre { margin:0; white-space:pre-wrap; word-wrap:break-word; font:15px/1.45 Consolas, "Cascadia Mono", monospace; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Session conversation</h1>
+  <p class="meta">2026-10-10 07:38. This page does not store the messages. It reads <code>session_conversation_20261010_0738.jsonl</code> in this folder.</p>
+  <p id="status">Reading session_conversation_20261010_0738.jsonl...</p>
+</header>
+<main id="log"></main>
+<textarea id="jsonl-fallback" hidden>{&quot;n&quot;: 1, &quot;role&quot;: &quot;user&quot;, &quot;ts&quot;: null, &quot;text&quot;: &quot;walk me through D:\\Tradelatest\\researcharctitecuredocs&quot;}
+{&quot;n&quot;: 2, &quot;role&quot;: &quot;assistant&quot;, &quot;ts&quot;: &quot;2026-10-10 07:38&quot;, &quot;text&quot;: &quot;I now have a complete picture. Here&#x27;s a walkthrough of `D:\\Tradelatest\\researcharctitecuredocs`.\n\n## What this is\n\nIt&#x27;s the documentation/packaging folder for a **\&quot;Research SSOT Framework\&quot;** — a small, **stdlib-only, plan-only Python prototype** that turns a research *intent* into a **dependency DAG** and then produces an **evidence report**. Its whole design philosophy is *fail-closed safety*: it plans analysis but **never executes scripts**, and it refuses to let conclusions outrun evidence.\n\nThe tagline says it best: *\&quot;intent → dependency DAG → evidence report prototype.\&quot;*\n\n## Folder layout (top level)\n\n| Path | What it is |\n|---|---|\n| `research_ssot_framework_v0.1/research_ssot_framework/` | **The canonical package** — everything current lives here |\n| `research_ssot_framework_v0.1.zip` | A zipped copy of the package |\n| `firstreview/` | The round-1 \&quot;hardened\&quot; variant (a zip + `assistant_project.md` session log) |\n| `_archive/` | Old/superseded copies, explicitly kept \&quot;nothing deleted\&quot; (has its own `README.md` explaining why each thing was archived) |\n\nThe `_archive/README.md` is worth reading first — it documents the history: `pre_hardening_v0.1/` (original schema 1.0), `duplicate_docs/` (byte-identical doc copies), and `stale_v1_0/` (an old schema-1.0 example plan). Nothing in `_archive/` is authoritative.\n\n## Inside the canonical package\n\n```\nresearch_ssot_framework/\n├── README.md               # the \&quot;hardened contract\&quot; summary + commands\n├── pyproject.toml          # pip-installable, entry point research-ssot\n├── docs/ARCHITECTURE.md    # the real spec: invariants, schema 1.1, status model\n├── example_final_report.md # sample output (intentionally BLOCKED)\n├── examples/\n│   ├── manifest.json       # the SSOT: intents, nodes, external inputs\n│   └── example_plan.json   # a built plan for the CRT example\n├── src/research_ssot/\n│   ├── __init__.py\n│   ├── core.py             # ~all the logic (inventory, validate, plan, apply, report)\n│   └── cli.py              # argparse CLI: inventory/validate/plan/apply/report\n└── tests/test_core.py      # 16 unit tests\n```\n\n## The core idea (from `docs/ARCHITECTURE.md`)\n\nA **manifest** is the single source of truth describing:\n\n- **`external_inputs`** — everything not produced by a node (dataset/code/config/contract/identity). Anything marked `ref: UNRESOLVED` blocks its consumer.\n- **`nodes`** — units of work with a closed-enum `operation`, `inputs`, `outputs`, `depends_on`, a `reuse_policy`, and a `required` flag.\n- **`intents`** — a named goal with `root_nodes` and `required_claims` that map a claim ID to specific `node.output` references.\n\nThe six hard invariants:\n\n1. **Planning is not execution** — the planner only builds a DAG; runtime status comes only from explicitly supplied results.\n2. **Static intent ≠ runtime truth** — inventory is heuristic AST observation, not verified behavior.\n3. **Input closure fails closed** — every input must be a declared external or a `node.output` from a real ancestor (else `INPUT_UNRESOLVED` / `HIDDEN_DEPENDENCY`).\n4. **State producers can&#x27;t be silently pooled** — identity is exactly `kind@config_ref`; combining two producers needs a `compare` or a `bridge` (bridges need a contract).\n5. **No script deletion / production mutation.**\n6. **Conclusions can&#x27;t exceed evidence** — a claim is `SUPPORTED` only if every mapped output is from a `COMPLETED`/`REUSED` node.\n\n**Status model:** node statuses are `PLANNED / BLOCKED / BLOCKED_UPSTREAM / COMPLETED / REUSED / FAILED / SKIPPED`. Report status is derived by precedence: `BLOCKED &gt; INCOMPLETE &gt; PARTIAL &gt; COMPLETE / PLANNED_NOT_EXECUTED`.\n\n## How the code works (`core.py` + `cli.py`)\n\nThe CLI exposes five subcommands:\n\n- `inventory` — statically AST-scans `scripts/analysis`, `scripts/research`, `src/research` for imports, definitions, and *heuristic* literal read/write paths (e.g. detects `open(..., mode=\&quot;w\&quot;)`). Emits a stable `content_sha256` that **excludes** `generated_at_utc` and the machine-local root, so identity is reproducible across clones.\n- `validate` — runs the full fail-closed checks; exits non-zero on any ERROR.\n- `plan` — topologically orders nodes, computes blocked propagation and claims → writes a plan JSON.\n- `apply` — attaches **externally produced** execution results; **re-hashes every artifact** and rejects hash mismatches. Never executes anything.\n- `report` — renders the Markdown final report (tree table, claims/evidence, blocked reasons, inventory snapshot).\n\n## The example tells the story\n\nThe bundled example intent is `crt_expiry_diagnosis` (\&quot;why CRT states expire\&quot;). It deliberately stays **`BLOCKED`** because three required `contract` refs are `UNRESOLVED`, so all four claims remain `UNSUPPORTED`. This is the design working as intended — you can see exactly this in `example_final_report.md` and `examples/example_plan.json`.\n\n## Tests &amp; history\n\n`tests/test_core.py` covers the safety properties (unresolved inputs, hidden deps, producer pooling rejection, compare-output taint, bridge contracts, failure vs. skip semantics, enum rejection, stable inventory hashing). The `firstreview/assistant_project.md` session log records the hardening round: schema 1.0 → 1.1, 16 passing tests, and a mutation check where 12/12 disabled guards were caught by tests then restored.\n\n**Stated next phase (not done yet):** a *read-only overlap map* against the repo&#x27;s existing script registry/SITS, `MEASUREMENT_CONTRACT`/`MC-*`, `research_family_registry`, Corpus SSOT F-119, and MPA v1 — with an explicit warning not to guess `ref` bindings before that review.&quot;}
+{&quot;n&quot;: 3, &quot;role&quot;: &quot;user&quot;, &quot;ts&quot;: null, &quot;text&quot;: &quot;update in userinvestigation folder&quot;}
+{&quot;n&quot;: 4, &quot;role&quot;: &quot;assistant&quot;, &quot;ts&quot;: &quot;2026-10-10 07:38&quot;, &quot;text&quot;: &quot;Saved as a new dated-stem conversation pair, following this folder&#x27;s schema (no source, config, or results change).\n\n- `userinvestigation/session_conversation_20261010_0738.jsonl` — the store. One object per line, oldest first; `n` / `role` / `ts` / `text`. Line 1 is the walkthrough request, line 2 is the Research SSOT framework walkthrough, line 3 is the update request, line 4 is this reply.\n- `userinvestigation/session_conversation_20261010_0738.html` — the view. It fetches `session_conversation_20261010_0738.jsonl` and draws one block per message, with a hidden HTML-escaped copy in a `&lt;textarea id=\&quot;jsonl-fallback\&quot;&gt;` so it also renders from `file://`.\n\nAlso added one Map row to `userinvestigation/README.md` under Conversation pages. Prior pairs are unchanged. Nothing here promotes a config, changes `ACTIVE_VERSION`, or grants production weight; `economic_claims_allowed` stays `false`.\n\nHow to open: double-click the `.html` (shows the fallback copy), or serve the folder (`python -m http.server`) and the page reads the live `.jsonl`.&quot;}
+</textarea>
+<script>
+const FILE = "session_conversation_20261010_0738.jsonl";
+const status = document.getElementById("status");
+const log = document.getElementById("log");
+
+function render(raw, how) {
+  log.replaceChildren();
+  const lines = raw.split(String.fromCharCode(10)).filter(function (s) { return s.trim(); });
+  lines.forEach(function (line) {
+    const row = JSON.parse(line);
+    const art = document.createElement("article");
+    art.className = row.role === "user" ? "user" : "assistant";
+    const who = document.createElement("div");
+    who.className = "who";
+    who.textContent = row.role + (row.ts ? " - " + row.ts : "");
+    const pre = document.createElement("pre");
+    pre.textContent = row.text;
+    art.append(who, pre);
+    log.append(art);
+  });
+  status.textContent = how + " - " + lines.length + " messages.";
+}
+
+fetch(FILE).then(function (res) {
+  if (!res.ok) throw new Error(String(res.status));
+  return res.text();
+}).then(function (raw) {
+  render(raw, "Read " + FILE);
+}).catch(function () {
+  const raw = document.getElementById("jsonl-fallback").value;
+  render(raw, "Opened as a local file, so the browser did not allow a read of " + FILE + ". Showing the copy written into this page at the same time as that file");
+});
+</script>
+</body>
+</html>

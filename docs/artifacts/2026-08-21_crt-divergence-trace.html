@@ -1,0 +1,273 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}</style></head><body>
+<title>CRT Divergence Trace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@600;700&display=swap">
+
+<style>
+:root{
+  --ground:#FBFAF8; --surface:#F3F2EE; --surface-2:#EAE8E2;
+  --ink:#1B2432; --ink-2:#3D4757; --muted:#6E7787;
+  --rule:#DCD9D1; --rule-2:#C9C5BA;
+  --accent:#8A6420; --accent-soft:#F0E6D2;
+  --neg:#9E3227; --neg-soft:#F6E3E0; --pos:#2C6349;
+  --geo:#8A6420; --geo-soft:#EFE3CC;
+  --struct:#3D4757; --struct-soft:#DFE3E9;
+  --flag:#9E3227; --flag-soft:#F3D9D5;
+  --unk:#9A9FA8; --unk-soft:#ECEBE7;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#12161E; --surface:#1A202B; --surface-2:#232B38;
+    --ink:#E6E8EC; --ink-2:#C2C7D0; --muted:#8B95A5;
+    --rule:#2A323F; --rule-2:#3A4453;
+    --accent:#D3A552; --accent-soft:#2B2418;
+    --neg:#E0796C; --neg-soft:#33201D; --pos:#6FBF9A;
+    --geo:#D3A552; --geo-soft:#332A18;
+    --struct:#9AA6B8; --struct-soft:#242C39;
+    --flag:#E0796C; --flag-soft:#3A211E;
+    --unk:#79818E; --unk-soft:#1F252F;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#12161E; --surface:#1A202B; --surface-2:#232B38;
+  --ink:#E6E8EC; --ink-2:#C2C7D0; --muted:#8B95A5;
+  --rule:#2A323F; --rule-2:#3A4453;
+  --accent:#D3A552; --accent-soft:#2B2418;
+  --neg:#E0796C; --neg-soft:#33201D; --pos:#6FBF9A;
+  --geo:#D3A552; --geo-soft:#332A18;
+  --struct:#9AA6B8; --struct-soft:#242C39;
+  --flag:#E0796C; --flag-soft:#3A211E;
+  --unk:#79818E; --unk-soft:#1F252F;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,-apple-system,sans-serif;font-size:16px;line-height:1.62;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px 72px}
+
+header.mast{border-bottom:1px solid var(--rule);padding:52px 0 28px;margin-bottom:38px}
+.kicker{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--accent);margin:0 0 14px;font-weight:600}
+h1{font-family:"IBM Plex Serif",Georgia,serif;font-weight:700;font-size:clamp(1.9rem,4.2vw,2.9rem);
+  line-height:1.08;letter-spacing:-.02em;margin:0 0 16px;text-wrap:balance}
+.stand{font-family:"IBM Plex Serif",Georgia,serif;font-size:1.12rem;line-height:1.58;color:var(--ink-2);
+  max-width:66ch;margin:0}
+.meta{display:flex;flex-wrap:wrap;gap:8px 26px;margin-top:24px;
+  font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--muted)}
+.meta b{color:var(--ink-2);font-weight:500}
+
+section{margin-bottom:54px;scroll-margin-top:20px}
+h2{font-family:"IBM Plex Serif",Georgia,serif;font-size:1.5rem;font-weight:700;letter-spacing:-.015em;
+  margin:0 0 5px;text-wrap:balance}
+.h2r{height:2px;width:36px;background:var(--accent);margin-bottom:20px;border-radius:1px}
+h3{font-size:1.02rem;font-weight:600;margin:28px 0 9px}
+p{margin:0 0 14px;max-width:68ch}
+code{font-family:"IBM Plex Mono",monospace;font-size:.855em;background:var(--surface-2);
+  padding:1px 5px;border-radius:3px}
+strong{font-weight:600}
+
+/* ── panel ─────────────────────────────────────────── */
+.panel{border:1px solid var(--rule);border-radius:6px;background:var(--surface);overflow:hidden;margin-bottom:14px}
+.phead{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline;padding:14px 18px;
+  border-bottom:1px solid var(--rule);background:var(--surface-2)}
+.pname{font-weight:600;font-size:.98rem}
+.pmeta{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--muted);
+  font-variant-numeric:tabular-nums}
+.scroll{overflow-x:auto;padding:16px 18px 18px}
+.trk{display:flex;align-items:center;gap:10px}
+.tlab{flex:0 0 62px;font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted);text-align:right}
+.tlab.gapl{color:var(--accent);font-weight:600}
+.row{display:flex;gap:2px}
+.row i{font-style:normal;flex:0 0 34px;text-align:center;font-family:"IBM Plex Mono",monospace;
+  font-variant-numeric:tabular-nums}
+.tk{font-size:9.5px;color:var(--muted);padding-bottom:3px}
+.st{font-size:10px;font-weight:600;padding:5px 0;border-radius:3px;
+  background:var(--ground);border:1px solid var(--rule);color:var(--ink-2)}
+.e-exe{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.e-shd{background:var(--flag-soft);border-color:var(--flag);color:var(--flag)}
+.cz{height:9px;margin:3px 0;border-radius:2px;background:transparent;
+  border:1px solid transparent}
+.c-ok{background:transparent;border-color:transparent}
+.c-geo{background:var(--geo-soft);border-color:var(--geo)}
+.c-struct{background:var(--struct-soft);border-color:var(--struct)}
+.c-flag{background:var(--flag);border-color:var(--flag)}
+.c-unk{background:transparent;border-color:var(--unk);border-style:dashed}
+
+/* ── table ─────────────────────────────────────────── */
+.tw{overflow-x:auto;border:1px solid var(--rule);border-radius:6px;margin:0 0 14px}
+table{border-collapse:collapse;width:100%;font-size:12.8px;background:var(--surface);
+  font-variant-numeric:tabular-nums}
+th{text-align:left;font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted);font-weight:600;padding:9px 11px;
+  border-bottom:1px solid var(--rule-2);white-space:nowrap}
+td{padding:5px 11px;border-bottom:1px solid var(--rule);vertical-align:top}
+tbody tr:last-child td{border-bottom:none}
+td.k{font-family:"IBM Plex Mono",monospace;white-space:nowrap}
+td.dim{color:var(--muted)}
+td.ag{text-align:center;font-family:"IBM Plex Mono",monospace;color:var(--muted)}
+td.code{font-size:11px;font-weight:600}
+td.why{color:var(--muted);font-size:11.5px}
+tr.r-geo td.code{color:var(--geo)}
+tr.r-struct td.code{color:var(--struct)}
+tr.r-flag{background:var(--flag-soft)}
+tr.r-flag td.code{color:var(--flag);font-weight:700}
+tr.r-unk td.code{color:var(--unk)}
+tr.r-ok td.ag{color:var(--pos);font-weight:600}
+
+/* ── callouts ──────────────────────────────────────── */
+.find{border:1px solid var(--rule-2);border-top:3px solid var(--accent);background:var(--surface);
+  padding:18px 20px;border-radius:0 0 6px 6px;margin:18px 0}
+.find.hit{border-top-color:var(--flag)}
+.fh{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.13em;text-transform:uppercase;
+  font-weight:600;margin:0 0 8px;color:var(--accent)}
+.find.hit .fh{color:var(--flag)}
+.find p:last-child{margin-bottom:0}
+.big{font-family:"IBM Plex Serif",Georgia,serif;font-size:1.1rem;line-height:1.45;margin-bottom:9px}
+.note{font-size:13.5px;color:var(--muted);border-left:2px solid var(--rule-2);padding-left:14px;
+  margin:14px 0;max-width:66ch}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px}
+.card{border:1px solid var(--rule);border-radius:6px;background:var(--surface);padding:15px 17px}
+.card h4{margin:0 0 7px;font-size:.9rem;font-weight:600}
+.card p{font-size:13.4px;margin:0;color:var(--ink-2)}
+.mono-sm{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--muted);
+  display:block;margin-top:7px;font-variant-numeric:tabular-nums;line-height:1.7}
+
+.legend{display:flex;flex-wrap:wrap;gap:9px 22px;padding:15px 18px;border:1px solid var(--rule);
+  border-radius:6px;background:var(--surface);font-size:12.6px}
+.lg{display:flex;align-items:center;gap:8px}
+.sw{width:24px;height:10px;border-radius:2px;flex:0 0 24px;border:1px solid}
+.sw.geo{background:var(--geo-soft);border-color:var(--geo)}
+.sw.struct{background:var(--struct-soft);border-color:var(--struct)}
+.sw.flag{background:var(--flag);border-color:var(--flag)}
+.sw.unk{background:transparent;border-color:var(--unk);border-style:dashed}
+.sw.ok{background:transparent;border-color:var(--rule)}
+
+footer{border-top:1px solid var(--rule);margin-top:26px;padding:24px 0 0;
+  font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--muted);line-height:1.85}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+<header class="mast">
+  <p class="kicker">Traced against real bars · XAUUSD M15</p>
+  <h1>CRT Divergence Trace</h1>
+  <p class="stand">The illustrative diagram walked one idealised lifecycle over t0–t8. This is the same lifecycle traced against actual bars — and because the predicate lanes describe the <em>resolver</em> while the state track came from the <em>engine</em>, both are drawn. The gap between them is the subject, not an error.</p>
+  <div class="meta">
+    <span><b>Run</b> g001_baseline_f074on · 2026-08-15</span>
+    <span><b>Frame</b> 47,275 raw → 47,197 resolver</span>
+    <span><b>Injection</b> none (F-069-honest)</span>
+    <span><b>Authority</b> observation only</span>
+  </div>
+</header>
+
+<section>
+<h2>What the trace changed</h2><div class="h2r"></div>
+<p>Three things the illustrative version could not have known, all of which survive into the redraw.</p>
+<div class="grid2">
+  <div class="card">
+    <h4>Only one lifecycle completes</h4>
+    <p>Three trades exist in the whole corpus. Two stop out on the next bar. Panel A is the only walk that reaches TP1 and TP2.</p>
+    <span class="mono-sm">TRADE_OPENED ×3 · TP2 ×1</span>
+  </div>
+  <div class="card">
+    <h4>SHADOW_PENDING is not hypothetical</h4>
+    <p>The engine emits it six times. Grey was right about the <em>resolver</em> — <code>when: {}</code> means the declarative language cannot name it — and would be wrong read as “does not occur”.</p>
+    <span class="mono-sm">engine 6 · resolver 0 (unnameable)</span>
+  </div>
+  <div class="card">
+    <h4>EXPIRED never fires</h4>
+    <p>Zero emissions this epoch, consistent with F-068. Drawn as an observed count, not as a path — in a traced diagram a plausible terminal would assert a transition that never happened.</p>
+    <span class="mono-sm">EXPIRED = 0 observed</span>
+  </div>
+</div>
+</section>
+
+<section>
+<h2>Panel A — the golden path</h2><div class="h2r"></div>
+<p>The only complete walk in the corpus: sweep, displacement, expansion, retest, execution, resolution, TP1, TP2. The engine row reproduces the seven transitions read straight from <code>events.jsonl</code>; the resolver row is what the declarative <code>when:</code> machine emits on the same bars.</p>
+<div class="panel"><div class="phead"><span class="pname">Golden path</span><span class="pmeta">raw 18069–18093 · engine 18007–18031 · 2025-02-25 10:15–16:15 · 25 bars · 4 agree / 21 diverge</span></div><div class="scroll"><div class="trk"><span class="tlab">bar</span><div class="row"><i class="tk">69</i><i class="tk">70</i><i class="tk">71</i><i class="tk">72</i><i class="tk">73</i><i class="tk">74</i><i class="tk">75</i><i class="tk">76</i><i class="tk">77</i><i class="tk">78</i><i class="tk">79</i><i class="tk">80</i><i class="tk">81</i><i class="tk">82</i><i class="tk">83</i><i class="tk">84</i><i class="tk">85</i><i class="tk">86</i><i class="tk">87</i><i class="tk">88</i><i class="tk">89</i><i class="tk">90</i><i class="tk">91</i><i class="tk">92</i><i class="tk">93</i></div></div><div class="trk"><span class="tlab">engine</span><div class="row"><i class="st e-swp" title="SWEEP @ 02-25 10:15">SWP</i><i class="st e-dsp" title="DISPLACEMENT @ 02-25 10:30">DSP</i><i class="st e-dsp" title="DISPLACEMENT @ 02-25 10:45">DSP</i><i class="st e-dsp" title="DISPLACEMENT @ 02-25 11:00">DSP</i><i class="st e-dsp" title="DISPLACEMENT @ 02-25 11:15">DSP</i><i class="st e-exp" title="EXPANSION @ 02-25 11:30">EXP</i><i class="st e-exp" title="EXPANSION @ 02-25 11:45">EXP</i><i class="st e-exp" title="EXPANSION @ 02-25 12:00">EXP</i><i class="st e-exp" title="EXPANSION @ 02-25 12:15">EXP</i><i class="st e-exp" title="EXPANSION @ 02-25 12:30">EXP</i><i class="st e-exp" title="EXPANSION @ 02-25 12:45">EXP</i><i class="st e-exp" title="EXPANSION @ 02-25 13:00">EXP</i><i class="st e-exp" title="EXPANSION @ 02-25 13:15">EXP</i><i class="st e-exp" title="EXPANSION @ 02-25 13:30">EXP</i><i class="st e-exp" title="EXPANSION @ 02-25 13:45">EXP</i><i class="st e-exp" title="EXPANSION @ 02-25 14:00">EXP</i><i class="st e-exp" title="EXPANSION @ 02-25 14:15">EXP</i><i class="st e-exp" title="EXPANSION @ 02-25 14:30">EXP</i><i class="st e-exp" title="EXPANSION @ 02-25 14:45">EXP</i><i class="st e-exp" title="EXPANSION @ 02-25 15:00">EXP</i><i class="st e-exp" title="EXPANSION @ 02-25 15:15">EXP</i><i class="st e-rts" title="RETEST @ 02-25 15:30">RTS</i><i class="st e-exe" title="EXECUTION @ 02-25 15:45">EXE</i><i class="st e-rng" title="RANGE @ 02-25 16:00">RNG</i><i class="st e-rng" title="RANGE @ 02-25 16:15">RNG</i></div></div><div class="trk"><span class="tlab gapl">cause</span><div class="row"><i class="cz c-ok" title="agree"></i><i class="cz c-ok" title="agree"></i><i class="cz c-unk" title="D-UNKNOWN"></i><i class="cz c-unk" title="D-UNKNOWN"></i><i class="cz c-unk" title="D-UNKNOWN"></i><i class="cz c-geo" title="C-GEOMETRY"></i><i class="cz c-geo" title="C-GEOMETRY"></i><i class="cz c-geo" title="C-GEOMETRY"></i><i class="cz c-geo" title="C-GEOMETRY"></i><i class="cz c-geo" title="C-GEOMETRY"></i><i class="cz c-geo" title="C-GEOMETRY"></i><i class="cz c-geo" title="C-GEOMETRY"></i><i class="cz c-geo" title="C-GEOMETRY"></i><i class="cz c-geo" title="C-GEOMETRY"></i><i class="cz c-geo" title="C-GEOMETRY"></i><i class="cz c-geo" title="C-GEOMETRY"></i><i class="cz c-geo" title="C-GEOMETRY"></i><i class="cz c-geo" title="C-GEOMETRY"></i><i class="cz c-geo" title="C-GEOMETRY"></i><i class="cz c-geo" title="C-GEOMETRY"></i><i class="cz c-geo" title="C-GEOMETRY"></i><i class="cz c-unk" title="D-UNKNOWN"></i><i class="cz c-struct" title="B-UNREACHABLE-STATE"></i><i class="cz c-ok" title="agree"></i><i class="cz c-ok" title="agree"></i></div></div><div class="trk"><span class="tlab">resolver</span><div class="row"><i class="st e-swp" title="SWEEP">SWP</i><i class="st e-dsp" title="DISPLACEMENT">DSP</i><i class="st e-rng" title="RANGE">RNG</i><i class="st e-swp" title="SWEEP">SWP</i><i class="st e-swp" title="SWEEP">SWP</i><i class="st e-swp" title="SWEEP">SWP</i><i class="st e-rng" title="RANGE">RNG</i><i class="st e-rng" title="RANGE">RNG</i><i class="st e-rng" title="RANGE">RNG</i><i class="st e-rng" title="RANGE">RNG</i><i class="st e-rng" title="RANGE">RNG</i><i class="st e-rng" title="RANGE">RNG</i><i class="st e-rng" title="RANGE">RNG</i><i class="st e-rng" title="RANGE">RNG</i><i class="st e-rng" title="RANGE">RNG</i><i class="st e-rng" title="RANGE">RNG</i><i class="st e-rng" title="RANGE">RNG</i><i class="st e-rng" title="RANGE">RNG</i><i class="st e-rng" title="RANGE">RNG</i><i class="st e-rng" title="RANGE">RNG</i><i class="st e-rng" title="RANGE">RNG</i><i class="st e-rng" title="RANGE">RNG</i><i class="st e-rng" title="RANGE">RNG</i><i class="st e-rng" title="RANGE">RNG</i><i class="st e-rng" title="RANGE">RNG</i></div></div></div></div>
+<div class='tw'><table><thead><tr><th>bar</th><th>time</th><th>engine</th><th></th><th>resolver</th><th>cause</th><th>engine transition reason</th></tr></thead><tbody><tr class="r-ok"><td class="k">18069</td><td class="k dim">02-25 10:15</td><td class="k">SWEEP</td><td class="ag">=</td><td class="k">SWEEP</td><td class="k code"></td><td class="why">Sweep @ 2931.92000 idx=18007</td></tr><tr class="r-ok"><td class="k">18070</td><td class="k dim">02-25 10:30</td><td class="k">DISPLACEMENT</td><td class="ag">=</td><td class="k">DISPLACEMENT</td><td class="k code"></td><td class="why">Displacement | body_ratio=0.815 wick=7.12000</td></tr><tr class="r-unk"><td class="k">18071</td><td class="k dim">02-25 10:45</td><td class="k">DISPLACEMENT</td><td class="ag">≠</td><td class="k">RANGE</td><td class="k code">D-UNKNOWN</td><td class="why"></td></tr><tr class="r-unk"><td class="k">18072</td><td class="k dim">02-25 11:00</td><td class="k">DISPLACEMENT</td><td class="ag">≠</td><td class="k">SWEEP</td><td class="k code">D-UNKNOWN</td><td class="why"></td></tr><tr class="r-unk"><td class="k">18073</td><td class="k dim">02-25 11:15</td><td class="k">DISPLACEMENT</td><td class="ag">≠</td><td class="k">SWEEP</td><td class="k code">D-UNKNOWN</td><td class="why"></td></tr><tr class="r-geo"><td class="k">18074</td><td class="k dim">02-25 11:30</td><td class="k">EXPANSION</td><td class="ag">≠</td><td class="k">SWEEP</td><td class="k code">C-GEOMETRY</td><td class="why">Bullish expansion | close=2942.06000 disp_close=2940.82000</td></tr><tr class="r-geo"><td class="k">18075</td><td class="k dim">02-25 11:45</td><td class="k">EXPANSION</td><td class="ag">≠</td><td class="k">RANGE</td><td class="k code">C-GEOMETRY</td><td class="why"></td></tr><tr class="r-geo"><td class="k">18076</td><td class="k dim">02-25 12:00</td><td class="k">EXPANSION</td><td class="ag">≠</td><td class="k">RANGE</td><td class="k code">C-GEOMETRY</td><td class="why"></td></tr><tr class="r-geo"><td class="k">18077</td><td class="k dim">02-25 12:15</td><td class="k">EXPANSION</td><td class="ag">≠</td><td class="k">RANGE</td><td class="k code">C-GEOMETRY</td><td class="why"></td></tr><tr class="r-geo"><td class="k">18078</td><td class="k dim">02-25 12:30</td><td class="k">EXPANSION</td><td class="ag">≠</td><td class="k">RANGE</td><td class="k code">C-GEOMETRY</td><td class="why"></td></tr><tr class="r-geo"><td class="k">18079</td><td class="k dim">02-25 12:45</td><td class="k">EXPANSION</td><td class="ag">≠</td><td class="k">RANGE</td><td class="k code">C-GEOMETRY</td><td class="why"></td></tr><tr class="r-geo"><td class="k">18080</td><td class="k dim">02-25 13:00</td><td class="k">EXPANSION</td><td class="ag">≠</td><td class="k">RANGE</td><td class="k code">C-GEOMETRY</td><td class="why"></td></tr><tr class="r-geo"><td class="k">18081</td><td class="k dim">02-25 13:15</td><td class="k">EXPANSION</td><td class="ag">≠</td><td class="k">RANGE</td><td class="k code">C-GEOMETRY</td><td class="why"></td></tr><tr class="r-geo"><td class="k">18082</td><td class="k dim">02-25 13:30</td><td class="k">EXPANSION</td><td class="ag">≠</td><td class="k">RANGE</td><td class="k code">C-GEOMETRY</td><td class="why"></td></tr><tr class="r-geo"><td class="k">18083</td><td class="k dim">02-25 13:45</td><td class="k">EXPANSION</td><td class="ag">≠</td><td class="k">RANGE</td><td class="k code">C-GEOMETRY</td><td class="why"></td></tr><tr class="r-geo"><td class="k">18084</td><td class="k dim">02-25 14:00</td><td class="k">EXPANSION</td><td class="ag">≠</td><td class="k">RANGE</td><td class="k code">C-GEOMETRY</td><td class="why"></td></tr><tr class="r-geo"><td class="k">18085</td><td class="k dim">02-25 14:15</td><td class="k">EXPANSION</td><td class="ag">≠</td><td class="k">RANGE</td><td class="k code">C-GEOMETRY</td><td class="why"></td></tr><tr class="r-geo"><td class="k">18086</td><td class="k dim">02-25 14:30</td><td class="k">EXPANSION</td><td class="ag">≠</td><td class="k">RANGE</td><td class="k code">C-GEOMETRY</td><td class="why"></td></tr><tr class="r-geo"><td class="k">18087</td><td class="k dim">02-25 14:45</td><td class="k">EXPANSION</td><td class="ag">≠</td><td class="k">RANGE</td><td class="k code">C-GEOMETRY</td><td class="why"></td></tr><tr class="r-geo"><td class="k">18088</td><td class="k dim">02-25 15:00</td><td class="k">EXPANSION</td><td class="ag">≠</td><td class="k">RANGE</td><td class="k code">C-GEOMETRY</td><td class="why"></td></tr><tr class="r-geo"><td class="k">18089</td><td class="k dim">02-25 15:15</td><td class="k">EXPANSION</td><td class="ag">≠</td><td class="k">RANGE</td><td class="k code">C-GEOMETRY</td><td class="why"></td></tr><tr class="r-unk"><td class="k">18090</td><td class="k dim">02-25 15:30</td><td class="k">RETEST</td><td class="ag">≠</td><td class="k">RANGE</td><td class="k code">D-UNKNOWN</td><td class="why">Retest | depth_abs=0.81000 ceiling=1.80450</td></tr><tr class="r-struct"><td class="k">18091</td><td class="k dim">02-25 15:45</td><td class="k">EXECUTION</td><td class="ag">≠</td><td class="k">RANGE</td><td class="k code">B-UNREACHABLE-STATE</td><td class="why">Risk approved → entering execution</td></tr><tr class="r-ok"><td class="k">18092</td><td class="k dim">02-25 16:00</td><td class="k">RANGE</td><td class="ag">=</td><td class="k">RANGE</td><td class="k code"></td><td class="why">Trade closed: TP1</td></tr><tr class="r-ok"><td class="k">18093</td><td class="k dim">02-25 16:15</td><td class="k">RANGE</td><td class="ag">=</td><td class="k">RANGE</td><td class="k code"></td><td class="why"></td></tr></tbody></table></div>
+<p class="note">The resolver never reaches EXPANSION here. That is the F-069 mechanism made visible: with <code>continuous_disp_to_expansion: false</code> the resolver skips the ATR-extension entry gate entirely and reaches EXPANSION only via a declarative predicate — a different construction behind a shared name, not a mistuned threshold.</p>
+</section>
+
+<section>
+<h2>Panel B — the shadow branch</h2><div class="h2r"></div>
+<p>A different <em>kind</em> of divergence, which is why it earns a second panel. Here the engine reaches a state the declarative language has no vocabulary for — and it does real work getting there, rescuing a displacement across an HTF boundary that would otherwise have been lost to the reset.</p>
+<div class="panel"><div class="phead"><span class="pname">Shadow branch</span><span class="pmeta">raw 10844–10855 · engine 10782–10793 · 2024-11-04 08:00–10:45 · 12 bars · 2 agree / 10 diverge</span></div><div class="scroll"><div class="trk"><span class="tlab">bar</span><div class="row"><i class="tk">44</i><i class="tk">45</i><i class="tk">46</i><i class="tk">47</i><i class="tk">48</i><i class="tk">49</i><i class="tk">50</i><i class="tk">51</i><i class="tk">52</i><i class="tk">53</i><i class="tk">54</i><i class="tk">55</i></div></div><div class="trk"><span class="tlab">engine</span><div class="row"><i class="st e-dsp" title="DISPLACEMENT @ 11-04 08:00">DSP</i><i class="st e-dsp" title="DISPLACEMENT @ 11-04 08:15">DSP</i><i class="st e-dsp" title="DISPLACEMENT @ 11-04 08:30">DSP</i><i class="st e-rng" title="RANGE @ 11-04 08:45">RNG</i><i class="st e-shd" title="SHADOW_PENDING @ 11-04 09:00">SHD</i><i class="st e-exp" title="EXPANSION @ 11-04 09:15">EXP</i><i class="st e-exp" title="EXPANSION @ 11-04 09:30">EXP</i><i class="st e-exp" title="EXPANSION @ 11-04 09:45">EXP</i><i class="st e-exp" title="EXPANSION @ 11-04 10:00">EXP</i><i class="st e-exp" title="EXPANSION @ 11-04 10:15">EXP</i><i class="st e-exp" title="EXPANSION @ 11-04 10:30">EXP</i><i class="st e-rng" title="RANGE @ 11-04 10:45">RNG</i></div></div><div class="trk"><span class="tlab gapl">cause</span><div class="row"><i class="cz c-unk" title="D-UNKNOWN"></i><i class="cz c-unk" title="D-UNKNOWN"></i><i class="cz c-unk" title="D-UNKNOWN"></i><i class="cz c-ok" title="agree"></i><i class="cz c-flag" title="INSUFFICIENT"></i><i class="cz c-geo" title="C-GEOMETRY"></i><i class="cz c-geo" title="C-GEOMETRY"></i><i class="cz c-geo" title="C-GEOMETRY"></i><i class="cz c-geo" title="C-GEOMETRY"></i><i class="cz c-geo" title="C-GEOMETRY"></i><i class="cz c-geo" title="C-GEOMETRY"></i><i class="cz c-ok" title="agree"></i></div></div><div class="trk"><span class="tlab">resolver</span><div class="row"><i class="st e-rng" title="RANGE">RNG</i><i class="st e-swp" title="SWEEP">SWP</i><i class="st e-swp" title="SWEEP">SWP</i><i class="st e-rng" title="RANGE">RNG</i><i class="st e-swp" title="SWEEP">SWP</i><i class="st e-swp" title="SWEEP">SWP</i><i class="st e-swp" title="SWEEP">SWP</i><i class="st e-rng" title="RANGE">RNG</i><i class="st e-swp" title="SWEEP">SWP</i><i class="st e-swp" title="SWEEP">SWP</i><i class="st e-swp" title="SWEEP">SWP</i><i class="st e-rng" title="RANGE">RNG</i></div></div></div></div>
+<div class='tw'><table><thead><tr><th>bar</th><th>time</th><th>engine</th><th></th><th>resolver</th><th>cause</th><th>engine transition reason</th></tr></thead><tbody><tr class="r-unk"><td class="k">10844</td><td class="k dim">11-04 08:00</td><td class="k">DISPLACEMENT</td><td class="ag">≠</td><td class="k">RANGE</td><td class="k code">D-UNKNOWN</td><td class="why">Displacement | body_ratio=0.878 wick=4.11000</td></tr><tr class="r-unk"><td class="k">10845</td><td class="k dim">11-04 08:15</td><td class="k">DISPLACEMENT</td><td class="ag">≠</td><td class="k">SWEEP</td><td class="k code">D-UNKNOWN</td><td class="why"></td></tr><tr class="r-unk"><td class="k">10846</td><td class="k dim">11-04 08:30</td><td class="k">DISPLACEMENT</td><td class="ag">≠</td><td class="k">SWEEP</td><td class="k code">D-UNKNOWN</td><td class="why"></td></tr><tr class="r-ok"><td class="k">10847</td><td class="k dim">11-04 08:45</td><td class="k">RANGE</td><td class="ag">=</td><td class="k">RANGE</td><td class="k code"></td><td class="why"></td></tr><tr class="r-flag"><td class="k">10848</td><td class="k dim">11-04 09:00</td><td class="k">SHADOW_PENDING</td><td class="ag">≠</td><td class="k">SWEEP</td><td class="k code">INSUFFICIENT</td><td class="why">Shadow resume: confirming sweep @ 2744.80000 dir=SHORT</td></tr><tr class="r-geo"><td class="k">10849</td><td class="k dim">11-04 09:15</td><td class="k">EXPANSION</td><td class="ag">≠</td><td class="k">SWEEP</td><td class="k code">C-GEOMETRY</td><td class="why">Shadow resume: displacement carried from prior HTF window — strength check skipped</td></tr><tr class="r-geo"><td class="k">10850</td><td class="k dim">11-04 09:30</td><td class="k">EXPANSION</td><td class="ag">≠</td><td class="k">SWEEP</td><td class="k code">C-GEOMETRY</td><td class="why"></td></tr><tr class="r-geo"><td class="k">10851</td><td class="k dim">11-04 09:45</td><td class="k">EXPANSION</td><td class="ag">≠</td><td class="k">RANGE</td><td class="k code">C-GEOMETRY</td><td class="why"></td></tr><tr class="r-geo"><td class="k">10852</td><td class="k dim">11-04 10:00</td><td class="k">EXPANSION</td><td class="ag">≠</td><td class="k">SWEEP</td><td class="k code">C-GEOMETRY</td><td class="why"></td></tr><tr class="r-geo"><td class="k">10853</td><td class="k dim">11-04 10:15</td><td class="k">EXPANSION</td><td class="ag">≠</td><td class="k">SWEEP</td><td class="k code">C-GEOMETRY</td><td class="why"></td></tr><tr class="r-geo"><td class="k">10854</td><td class="k dim">11-04 10:30</td><td class="k">EXPANSION</td><td class="ag">≠</td><td class="k">SWEEP</td><td class="k code">C-GEOMETRY</td><td class="why"></td></tr><tr class="r-ok"><td class="k">10855</td><td class="k dim">11-04 10:45</td><td class="k">RANGE</td><td class="ag">=</td><td class="k">RANGE</td><td class="k code"></td><td class="why"></td></tr></tbody></table></div>
+</section>
+
+<section>
+<h2>Two predictions, written before the run</h2><div class="h2r"></div>
+<p>The causes are not annotations invented for this drawing — each divergent bar carries a member of the existing <code>CATEGORY_PRECEDENCE</code> taxonomy, which makes the diagram a live test of it. Both predictions were sealed in the plan before the extractor ran.</p>
+
+<div class="find">
+  <p class="fh">Prediction 1 · EXPANSION → C-GEOMETRY · confirmed, after a correction</p>
+  <p class="big">Confirmed — but the first run said <code>D-UNKNOWN</code>, and the cause was mine.</p>
+  <p>The classifier’s A- and C- branches are <strong>declared allowlists, not inference</strong>: <code>C-GEOMETRY</code> fires only for pairs present in <code>known_geometry_divergent_pairs</code>. The first execution passed an empty <code>MismatchContext</code>, collapsing almost everything to the fallthrough — which would have read as a taxonomy gap when it was an under-configured run. Wiring in <code>crt_parity_report</code>’s canonical sets resolved all sixteen EXPANSION bars to <code>C-GEOMETRY</code>.</p>
+</div>
+
+<div class="find hit">
+  <p class="fh">Prediction 2 · SHADOW_PENDING → a taxonomy gap · confirmed</p>
+  <p class="big">SHADOW_PENDING classifies as <code>INSUFFICIENT</code> — “not enough data to say” — when the truth is a deductive certainty.</p>
+  <p><code>STRUCTURALLY_UNREACHABLE_STATES</code> holds exactly three members: <code>EXECUTION</code>, <code>RESOLUTION</code>, <code>EXPIRED</code>. The YAML’s three <code>when: {}</code> states are <code>SHADOW_PENDING</code>, <code>EXPIRED</code>, <code>RESOLUTION</code>. <strong>SHADOW_PENDING is in one list and not the other.</strong> Missing the structural branch, it falls to the power gate — engine occupancy 6, below <code>MIN_CELL_N=15</code> — and is labelled under-powered.</p>
+  <p>This is a mislabel of <em>kind</em>, not degree, and it is <strong>context-independent</strong>: the structural check runs first and reads only a module constant, so no amount of context changes it. The classifier’s own precedence comment explains why that ordering exists — structural unreachability is “a deductive fact from source, Certain even at low n”. SHADOW_PENDING qualifies and was omitted.</p>
+</div>
+
+<p class="note"><code>D-UNKNOWN</code> on DISPLACEMENT and RETEST is <em>not</em> a third gap. It is the classifier’s explicit fallthrough — “investigated, never left silently unlabeled” — and RETEST in particular is a deliberate exclusion from the geometry set, recorded in <code>RETEST_CASCADE_NOTE</code> because its n=17 sits at the power floor. A recorded choice, not an absence.</p>
+</section>
+
+<section>
+<h2>Two hazards this trace surfaced</h2><div class="h2r"></div>
+<div class="grid2">
+  <div class="card">
+    <h4>Bar counts: one frame, two derivations</h4>
+    <p>Not a conflict once written down — but leaving it implicit is how a holdout gets cut against the wrong denominator.</p>
+    <span class="mono-sm">47,275 raw corpus<br>− 78 warmup → 47,197 resolver frame<br>− 40 horizon → 47,157 scan frame</span>
+  </div>
+  <div class="card">
+    <h4>Bar indices: two spaces, not one</h4>
+    <p>An <code>events.jsonl</code> <code>candle_index</code> is the engine’s own counter, not a raw CSV row. Conflating them silently slices the wrong bars — which this extractor did on its first run, producing a plausible-looking and entirely wrong trace.</p>
+    <span class="mono-sm">measured offset +62 (6,991 events)<br>docstring asserts +74 — stale</span>
+  </div>
+</div>
+<p class="note">Both hazards are now recorded in the fixture itself rather than in prose, and the extractor takes <code>--window-space</code> explicitly so the ambiguity cannot be re-entered by accident.</p>
+</section>
+
+<section>
+<h2>Encoding</h2><div class="h2r"></div>
+<div class="legend">
+  <span class="lg"><i class="sw ok"></i> engine and resolver agree</span>
+  <span class="lg"><i class="sw geo"></i> <code>C-GEOMETRY</code> — divergent construction, shared name</span>
+  <span class="lg"><i class="sw struct"></i> <code>B-UNREACHABLE-STATE</code> — deductively unreachable</span>
+  <span class="lg"><i class="sw flag"></i> <code>INSUFFICIENT</code> — power gate <em>(the mislabel)</em></span>
+  <span class="lg"><i class="sw unk"></i> <code>D-UNKNOWN</code> — explicit fallthrough</span>
+</div>
+<p class="note">The cause strip sits <em>between</em> the engine and resolver rows: it belongs to the pair, not to either construction. State codes — RNG, SWP, DSP, EXP, RTS, EXE, SHD — carry their full name on hover.</p>
+</section>
+
+<section>
+<h2>Verification</h2><div class="h2r"></div>
+<div class="tw"><table>
+<thead><tr><th>check</th><th>result</th></tr></thead>
+<tbody>
+<tr><td>Round-trip — engine row reproduces <code>events.jsonl</code></td><td class="k">PASS · 7/7 transitions</td></tr>
+<tr><td>Determinism — two runs byte-identical</td><td class="k">PASS · sha256 7b6908e6ab8fe580</td></tr>
+<tr><td>Non-vacuity — resolver row ≠ engine row</td><td class="k">PASS · 21/25 and 10/12 divergent</td></tr>
+<tr><td>Taxonomy — every emitted code is a real member</td><td class="k">PASS · 4 of 8 members used</td></tr>
+<tr><td>Script registered (SITS overlay)</td><td class="k">PASS · unclassified: []</td></tr>
+</tbody></table></div>
+</section>
+
+<footer>
+  Traced 2026-08-22 · XAUUSD M15 · engine run g001_baseline_f074on (2026-08-15, F-074 directional displacement ON)<br>
+  Engine and resolver are different constructions (F-069: 88.16% agreement, EXPANSION recall 10.77%) — divergence is the subject, not a defect.<br>
+  Observation only. No config, model or production path touched. CRT closure remains OPEN. Grants no authority.<br>
+  Fixture: reports/crt_window_trace_2026_08_22.json · Instrument: scripts/research/crt_state_window_trace.py
+</footer>
+</div>
+
+</body></html>

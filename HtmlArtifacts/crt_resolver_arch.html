@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRT State Resolver Architecture - Predicates, Memory & Shadow State</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --cod: #ff7b72;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+  }
+  header.top {
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 22px 28px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 10px 18px;
+  }
+  header.top .brand { font-size: 18px; font-weight: 700; letter-spacing: 0.2px; }
+  header.top .brand .dot { color: var(--accent); }
+  header.top .sub { color: var(--muted); font-size: 13px; }
+  header.top .meta { margin-left: auto; font-size: 12px; color: var(--muted); }
+  nav.tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 14px auto 0;
+    max-width: 1200px;
+    padding: 0 28px;
+  }
+  nav.tabs a {
+    padding: 6px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 13px;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    transition: 0.15s;
+  }
+  nav.tabs a:hover,
+  nav.tabs a.active {
+    background: var(--panel);
+    color: var(--text);
+    border-color: var(--accent);
+  }
+  main { padding: 18px 28px 40px; max-width: 1200px; margin: 0 auto; }
+  section { margin-bottom: 22px; }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 22px;
+    margin-bottom: 18px;
+  }
+  h1 { font-size: 22px; margin: 6px 0 4px; }
+  h2 { font-size: 16px; margin: 0 0 8px; }
+  p { margin: 6px 0; }
+  .lead { font-size: 14px; color: var(--muted); }
+  code {
+    background: #0f1115;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 12.5px;
+    font-family: "SF Mono", Consolas, monospace;
+    color: var(--cod);
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th,
+  td {
+    border: 1px solid var(--border);
+    padding: 8px 10px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: #1c2129;
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  tr:nth-child(even) td { background: #151a21; }
+  .state-td {
+    font-family: "SF Mono", Consolas, monospace;
+    font-weight: 700;
+    font-size: 12.5px;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .badge,
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    margin-right: 4px;
+  }
+  .badge { background: #238636; }
+  .tag-mem { background: #9b86f0; }
+  .tag-pure { background: #2aa198; }
+  .tag-gate { background: #26a0da; }
+  .tag-note { background: #6b7280; }
+  .diag {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 12px;
+    white-space: pre;
+    background: #0f1115;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    overflow-x: auto;
+    line-height: 1.7;
+    color: var(--text);
+  }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+  footer {
+    margin-top: 30px;
+    padding: 14px 0 0;
+    color: var(--muted);
+    font-size: 12px;
+    border-top: 1px solid var(--border);
+  }
+  @media (max-width: 760px) {
+    header.top { padding: 18px; }
+    nav.tabs { padding: 0 18px; }
+    main { padding: 16px 18px 32px; }
+    .card { padding: 16px; overflow-x: auto; }
+    table { min-width: 820px; }
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="dot">◆</span> CRT State Resolver</div>
+  <div class="sub">Shadow M15 state resolution · predicates · memory · lifecycle gates</div>
+  <div class="meta">source: <code>src/features/crt_state_resolver.py</code> · <code>configs/formulas/market_crt_states.yaml</code></div>
+</header>
+
+<nav class="tabs">
+  <a href="#overview" class="active">Overview</a>
+  <a href="#state-order">State order</a>
+  <a href="#predicates">Predicates</a>
+  <a href="#transitions">Transitions</a>
+  <a href="#feature-states">Feature states</a>
+  <a href="#gates">Gates</a>
+</nav>
+
+<main>
+  <section id="overview">
+    <div class="card">
+      <h1>Resolver Role</h1>
+      <p class="lead"><code>CRTStateResolver</code> is the market-reality / shadow resolver for the M15 CRT state vocabulary. It reads <code>market_crt_states.yaml</code>, classifies each bar's feature values into declared feature states, evaluates state predicates in YAML order, applies lifecycle resets and transition validity, then returns one CRT state name.</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Surface</th>
+            <th>What it owns</th>
+            <th>What it does not own</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-td">Resolver</td>
+            <td>Shadow/declarative M15 state classification, overlays, parity work, diagnostics, and research state tracks.</td>
+            <td>Live execution authority. The CRT engine remains the execution authority for trading.</td>
+          </tr>
+          <tr>
+            <td class="state-td">YAML</td>
+            <td>State order, feature-state predicates, transition list, threshold names/values, and lifecycle knobs.</td>
+            <td>Parent C1/C2/C3 runtime production. Parent-timeframe C1/C2/C3 is driven by <code>ParentCRTTrack</code>.</td>
+          </tr>
+          <tr>
+            <td class="state-td">Code</td>
+            <td>Feature supply checks, HTF/gap reset handling, funnel gates, sticky dwell, transition validity, engine-event injection.</td>
+            <td>A replacement for <code>CRTEngine.process_candle()</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="state-order">
+    <div class="card">
+      <h1>Evaluation Order</h1>
+      <p class="lead">The resolver evaluates YAML states in this first-match order. <code>RANGE</code> is the ground state and final fallthrough.</p>
+      <div class="diag">EXECUTION
+RETEST
+EXPANSION
+DISPLACEMENT
+SHADOW_PENDING
+SWEEP
+EXPIRED
+RESOLUTION
+RANGE</div>
+      <div class="legend">
+        <span><span class="badge">9 M15 states</span></span>
+        <span>Parent C1/C2/C3 edges are present in the YAML for sync/documentation, but the resolver runtime track is M15.</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="predicates">
+    <div class="card">
+      <h1>State Predicate Table</h1>
+      <p class="lead">A row's <code>when</code> block is AND across features and OR within the listed states. Empty <code>when</code> means memory-only or lifecycle-only; it cannot be read from a single feature vector.</p>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:14%">State</th>
+            <th style="width:13%">Memory</th>
+            <th style="width:37%">YAML predicate</th>
+            <th style="width:36%">Resolver notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-td">EXECUTION</td>
+            <td><span class="tag tag-mem">memory</span></td>
+            <td><code>retest_flag=RetestActive</code><br><code>trend_bias=Bullish/Bearish</code><br><code>rsi_state=NeutralMomentum</code><br><code>session=LONDON/NEWYORK/OVERLAP</code></td>
+            <td>Also requires the RETEST/EXECUTION funnel and a score when score fields are present; missing score fails closed.</td>
+          </tr>
+          <tr>
+            <td class="state-td">RETEST</td>
+            <td><span class="tag tag-mem">memory</span></td>
+            <td><code>retest_flag=RetestActive</code><br><code>sweep_detected=SweepDetected</code><br><code>break_of_structure=NoBreak</code></td>
+            <td>Entry is owned by the EXPANSION funnel and <code>evaluate_retest_geometry()</code>, not by the feature predicate alone.</td>
+          </tr>
+          <tr>
+            <td class="state-td">EXPANSION</td>
+            <td><span class="tag tag-mem">memory</span></td>
+            <td><code>displacement_flag=Displacement</code></td>
+            <td>Hard entry is funnel-owned: DISPLACEMENT extension or shadow resume; continuous DISPLACEMENT->EXPANSION is config-gated.</td>
+          </tr>
+          <tr>
+            <td class="state-td">DISPLACEMENT</td>
+            <td><span class="tag tag-mem">memory</span></td>
+            <td><code>displacement_flag=Displacement</code><br><code>change_of_character=BullishCHoCH/BearishCHoCH</code></td>
+            <td>Hard entry is only from SWEEP, with direction, age, ATR body move, body ratio, and candle-range gates.</td>
+          </tr>
+          <tr>
+            <td class="state-td">SHADOW_PENDING</td>
+            <td><span class="tag tag-mem">memory</span></td>
+            <td><code>when: {}</code></td>
+            <td>Stateful cross-window displacement memory; entered from resolver memory, not a single-bar predicate.</td>
+          </tr>
+          <tr>
+            <td class="state-td">SWEEP</td>
+            <td><span class="tag tag-pure">feature + funnel</span></td>
+            <td><code>liquidity_sweep=SellSideSweep/BuySideSweep</code><br><code>break_of_structure=NoBreak</code><br><code>displacement_flag=NoDisplacement</code></td>
+            <td>With <code>sweep_geometry=htf_range</code>, founding uses engine-like HTF range sweep geometry and ignores the pipeline-swing predicate for founding.</td>
+          </tr>
+          <tr>
+            <td class="state-td">EXPIRED</td>
+            <td><span class="tag tag-mem">memory</span></td>
+            <td><code>when: {}</code></td>
+            <td>Temporal state for expansion TTL expiry, then returns to RANGE.</td>
+          </tr>
+          <tr>
+            <td class="state-td">RESOLUTION</td>
+            <td><span class="tag tag-mem">memory</span></td>
+            <td><code>when: {}</code></td>
+            <td>Terminal trade-resolution state; cannot be detected from features alone.</td>
+          </tr>
+          <tr>
+            <td class="state-td">RANGE</td>
+            <td><span class="tag tag-pure">feature</span></td>
+            <td><code>NoSweep</code>, <code>NoBreak</code>, <code>NoDisplacement</code>, <code>NoDoubleSweep</code>, no higher/lower swing, no retest, no swing confirmation</td>
+            <td>Ground state. If no state matches and no sticky dwell applies, resolver falls through to RANGE.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="transitions">
+    <div class="card">
+      <h1>Transition Graph</h1>
+      <p class="lead">Transition validity is applied after predicate/funnel resolution. Parent C1/C2/C3 edges are mirrored in YAML for sync but are not produced by the resolver runtime track.</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Current</th>
+            <th>Allowed next state(s)</th>
+            <th>Resolver interpretation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="state-td">RANGE</td><td>SWEEP, SHADOW_PENDING, RETEST</td><td>RETEST edge is kept in sync with engine records; resolver RETEST entry comes from EXPANSION.</td></tr>
+          <tr><td class="state-td">SHADOW_PENDING</td><td>SWEEP, EXPANSION, RANGE</td><td>Allows shadow collapse into EXPANSION or leak/reset to RANGE.</td></tr>
+          <tr><td class="state-td">SWEEP</td><td>DISPLACEMENT, EXPANSION, RANGE</td><td>Can promote to DISPLACEMENT, shadow-resume into EXPANSION, or expire/reset.</td></tr>
+          <tr><td class="state-td">DISPLACEMENT</td><td>EXPANSION, RANGE</td><td>Continuous expansion is default-off unless injected or explicitly enabled.</td></tr>
+          <tr><td class="state-td">EXPANSION</td><td>RETEST, EXPIRED, RANGE</td><td>Retest geometry, TTL expiry, or lifecycle reset terminates the dwell.</td></tr>
+          <tr><td class="state-td">EXPIRED</td><td>RANGE</td><td>Soft archive returns to ground state.</td></tr>
+          <tr><td class="state-td">RETEST</td><td>EXECUTION, RANGE</td><td>Execution requires score gate when supplied.</td></tr>
+          <tr><td class="state-td">EXECUTION</td><td>RESOLUTION</td><td>Terminal trade lifecycle step.</td></tr>
+          <tr><td class="state-td">RESOLUTION</td><td>RANGE</td><td>Cycle reset.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="feature-states">
+    <div class="card">
+      <h1>Feature State References</h1>
+      <p class="lead">These are the declared feature-state vocabularies in <code>market_crt_states.yaml</code> that predicates may reference.</p>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:28%">Feature</th>
+            <th>Allowed feature states</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="state-td">liquidity_sweep</td><td>NoSweep, SellSideSweep, BuySideSweep</td></tr>
+          <tr><td class="state-td">sweep_detected</td><td>NoSweep, SweepDetected</td></tr>
+          <tr><td class="state-td">double_sweep</td><td>NoDoubleSweep, DoubleSweep</td></tr>
+          <tr><td class="state-td">break_of_structure</td><td>NoBreak, BearishBreak, BullishBreak</td></tr>
+          <tr><td class="state-td">higher_high</td><td>NoHigherHigh, HigherHigh</td></tr>
+          <tr><td class="state-td">lower_low</td><td>NoLowerLow, LowerLow</td></tr>
+          <tr><td class="state-td">retest_flag</td><td>NoRetest, RetestActive</td></tr>
+          <tr><td class="state-td">displacement_flag</td><td>NoDisplacement, Displacement</td></tr>
+          <tr><td class="state-td">volatility_regime</td><td>LowVolatility, NormalVolatility, HighVolatility</td></tr>
+          <tr><td class="state-td">trend_bias</td><td>Bearish, Neutral, Bullish</td></tr>
+          <tr><td class="state-td">rsi_state</td><td>Oversold, NeutralMomentum, Overbought</td></tr>
+          <tr><td class="state-td">swing_high</td><td>NoSwingHigh, SwingHighConfirmed</td></tr>
+          <tr><td class="state-td">swing_low</td><td>NoSwingLow, SwingLowConfirmed</td></tr>
+          <tr><td class="state-td">session</td><td>ASIA, LONDON, NEWYORK, OVERLAP, CLOSED</td></tr>
+          <tr><td class="state-td">volume_spike</td><td>NoSpike, VolumeSpike (declared, not referenced by current <code>when</code> blocks)</td></tr>
+          <tr><td class="state-td">change_of_character</td><td>NoCHoCH, BullishCHoCH, BearishCHoCH</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="gates">
+    <div class="card">
+      <h1>Lifecycle & Special Gates</h1>
+      <p class="lead">The resolver is not a plain YAML lookup. The code adds state memory, lifecycle resets, funnel gates, sticky dwell, and optional engine-event injection.</p>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:24%">Mechanism</th>
+            <th style="width:28%">Source</th>
+            <th>Effect</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-td">Feature supply check</td>
+            <td><code>resolve()</code> before state mutation</td>
+            <td>Fails closed if a <code>when</code>-named feature is missing from the caller's supplied feature dict.</td>
+          </tr>
+          <tr>
+            <td class="state-td">HTF reset</td>
+            <td><code>thresholds.lifecycle</code></td>
+            <td>Forces RANGE on HTF changes except protected states such as EXPANSION/RETEST, and can create pending displacement memory.</td>
+          </tr>
+          <tr>
+            <td class="state-td">Gap / force reset</td>
+            <td><code>resolve(force_reset=...)</code> and gap lifecycle</td>
+            <td>Terminates the active narrative to RANGE; forced engine-event replay can rebuild the active range unless it is a session-gap reset.</td>
+          </tr>
+          <tr>
+            <td class="state-td">HTF-range sweep</td>
+            <td><code>thresholds.sweep_geometry=htf_range</code></td>
+            <td>Uses high/low/close versus frozen HTF range geometry for RANGE->SWEEP founding.</td>
+          </tr>
+          <tr>
+            <td class="state-td">Displacement funnel</td>
+            <td><code>_displacement_entry_allowed()</code></td>
+            <td>Only from SWEEP; checks sweep age, direction, ATR body move, body ratio, and candle range.</td>
+          </tr>
+          <tr>
+            <td class="state-td">Expansion funnel</td>
+            <td><code>_expansion_entry_allowed()</code></td>
+            <td>Allows EXPANSION from DISPLACEMENT with ATR-distance extension or from SWEEP/SHADOW_PENDING with pending displacement memory.</td>
+          </tr>
+          <tr>
+            <td class="state-td">Retest funnel</td>
+            <td><code>_retest_entry_allowed()</code></td>
+            <td>Calls <code>config_layer.retest_geometry.evaluate_retest_geometry()</code>; fail-closed on missing range, direction, close, or ATR.</td>
+          </tr>
+          <tr>
+            <td class="state-td">Sticky dwell</td>
+            <td><code>_resolve_from_features()</code></td>
+            <td>Keeps sticky states alive when no predicate matches, until age/lifecycle exit owns termination.</td>
+          </tr>
+          <tr>
+            <td class="state-td">Engine injection</td>
+            <td><code>engine_state_to</code></td>
+            <td>Research-shadow path can honor engine transitions for SHADOW_PENDING and EXPANSION entry/exit.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    Static documentation viewer. No runtime, config, formula, or production behavior is changed by this file.
+  </footer>
+</main>
+</body>
+</html>

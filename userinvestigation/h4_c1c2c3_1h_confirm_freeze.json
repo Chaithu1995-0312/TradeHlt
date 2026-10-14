@@ -1,0 +1,19 @@
+{
+  "frozen_at": "2026-10-06T22:52:37",
+  "rule_file": "userinvestigation/h4_c1c2c3_1h_confirm_frozen.py",
+  "rule_sha256": "075aaa99f6bcec61c14947a39e6fa261b978c57f47ff8e4b4b4876940445ac65",
+  "predecessor": "h4_c1c2c3_near_level_frozen.py (FAIL out-of-sample 2026-05-22..10-06, not edited)",
+  "change": "entry moved from C2 close to the first 1H close in trade direction inside C3; trade cancelled if stop touched first or no confirmation in C3",
+  "source_words": [
+    "Put 1 hr candle close after sweep, not 15 min ... 1 hr confirmation require (Record 7)",
+    "on bullish candle close - entry trigger (2026-10-06)"
+  ],
+  "smoke_test": "first 3000 in-sample M15 bars only, mechanics check, no stats read",
+  "runs_planned": [
+    "A: in-sample data/mt5/XAUUSD_M15.csv eval 2024-05-22 (data seen before; design-period number)",
+    "B: data/mt5/XAUUSD_M15_2026-04-20_to_2026-10-06.csv eval 2026-05-22 (REUSED holdout: the predecessor's result on it is known; NOT an independent test)"
+  ],
+  "primary": "mean gross R, near_any + confirmed, verdict rules as in the file",
+  "independence_note": "no untouched XAUUSD period remains; a clean test needs data after 2026-10-06 (forward/paper)",
+  "economic_claims_allowed": false
+}

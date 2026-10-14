@@ -1,0 +1,105 @@
+{
+  "rule": "h4_c1c2c3_near_level_frozen.py",
+  "csv": "data/mt5/XAUUSD_M15_2026-04-20_to_2026-10-06.csv",
+  "eval_start": "2026-05-22",
+  "rows": 11148,
+  "first": "2026-04-20 01:00:00",
+  "last": "2026-10-06 19:45:00",
+  "primary_near_any": {
+    "n": 47,
+    "long_n": 23,
+    "win_rate": 0.3617,
+    "breakeven_win_rate": 0.4366,
+    "gross_r_mean": -0.2136,
+    "gross_r_ci95": [
+      -0.5648,
+      0.1375
+    ],
+    "net_r_mean": -0.238,
+    "long_gross_r": -0.2526,
+    "short_gross_r": -0.1763,
+    "worst_r": -1.6424,
+    "random_control": {
+      "random_mean": 0.0086,
+      "share_of_draws_beating_real": 0.76
+    }
+  },
+  "verdict": "FAIL",
+  "open_near_any_in_eval": 0,
+  "eval_all_A": {
+    "n": 118,
+    "long_n": 54,
+    "win_rate": 0.3729,
+    "breakeven_win_rate": 0.4528,
+    "gross_r_mean": -0.239,
+    "gross_r_ci95": [
+      -0.4478,
+      -0.0301
+    ],
+    "net_r_mean": -0.2627,
+    "long_gross_r": -0.2223,
+    "short_gross_r": -0.253,
+    "worst_r": -1.6424
+  },
+  "eval_not_near": {
+    "n": 71,
+    "long_n": 31,
+    "win_rate": 0.3803,
+    "breakeven_win_rate": 0.4635,
+    "gross_r_mean": -0.2557,
+    "gross_r_ci95": [
+      -0.5156,
+      0.0041
+    ],
+    "net_r_mean": -0.279,
+    "long_gross_r": -0.1999,
+    "short_gross_r": -0.299,
+    "worst_r": -1.0
+  },
+  "eval_near_PDH": {
+    "n": 18,
+    "long_n": 2,
+    "win_rate": 0.3889,
+    "breakeven_win_rate": 0.4776,
+    "gross_r_mean": -0.244,
+    "gross_r_ci95": [
+      -0.831,
+      0.343
+    ],
+    "net_r_mean": -0.2639,
+    "long_gross_r": -0.2069,
+    "short_gross_r": -0.2486,
+    "worst_r": -1.6424
+  },
+  "eval_near_PDL": {
+    "n": 18,
+    "long_n": 16,
+    "win_rate": 0.4444,
+    "breakeven_win_rate": 0.4546,
+    "gross_r_mean": -0.0452,
+    "gross_r_ci95": [
+      -0.6051,
+      0.5147
+    ],
+    "net_r_mean": -0.0664,
+    "long_gross_r": -0.0248,
+    "short_gross_r": -0.2089,
+    "worst_r": -1.0
+  },
+  "eval_near_WO": {
+    "n": 17,
+    "long_n": 6,
+    "win_rate": 0.1765,
+    "breakeven_win_rate": 0.3773,
+    "gross_r_mean": -0.5654,
+    "gross_r_ci95": [
+      -1.0642,
+      -0.0666
+    ],
+    "net_r_mean": -0.598,
+    "long_gross_r": -1.0,
+    "short_gross_r": -0.3284,
+    "worst_r": -1.0
+  },
+  "economic_claims_allowed": false
+}

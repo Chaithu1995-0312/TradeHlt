@@ -1,0 +1,399 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found]){display:none!important}</style></head><body>
+<title>Tradelatest Topic Atlas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;450;600&display=swap">
+
+<style>
+  :root{
+    --ink:#0F141B;
+    --surface:#161E28;
+    --surface-2:#1D2733;
+    --line:#2A3644;
+    --grey:#8795A6;
+    --grey-dim:#5E6B7B;
+    --text:#E4EAF1;
+    --accent:#E0A42B;
+    --accent-dim:#8A6518;
+    --covered:#3FA6A0;
+    --gap:#C4553D;
+    --radius:3px;
+    --w:1180px;
+  }
+  /* deliberate single visual world: an instrument panel. Painted explicitly so it holds
+     on either host ground; no naive inversion. */
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background:var(--ink);
+    color:var(--text);
+    font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    font-size:15px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:var(--w);margin:0 auto;padding:0 28px}
+
+  /* ── header ─────────────────────────────────────────────── */
+  header{border-bottom:1px solid var(--line);background:linear-gradient(180deg,#121922 0%,var(--ink) 100%)}
+  .head{display:flex;flex-wrap:wrap;align-items:flex-end;gap:36px;padding:34px 0 26px}
+  .id-block{flex:1 1 340px;min-width:280px}
+  .eyebrow{
+    font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--accent);margin:0 0 10px;
+  }
+  h1{
+    font-family:Archivo,"Helvetica Neue",Arial,sans-serif;
+    font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.05;
+    letter-spacing:-.02em;margin:0;text-wrap:balance;
+  }
+  .sub{color:var(--grey);margin:10px 0 0;max-width:56ch;font-size:14px}
+
+  .readout{flex:0 0 auto;text-align:right}
+  .readout .big{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:clamp(40px,6vw,60px);font-weight:600;line-height:.95;
+    color:var(--accent);font-variant-numeric:tabular-nums;letter-spacing:-.03em;
+  }
+  .readout .cap{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--grey-dim);margin-top:8px;
+  }
+
+  /* denominator strip — load-bearing, so it sits in the frame, not a footnote */
+  .denom{
+    display:flex;flex-wrap:wrap;gap:0;border-top:1px solid var(--line);
+    font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px;
+  }
+  .denom div{padding:11px 20px 11px 0;margin-right:20px;border-right:1px solid var(--line);color:var(--grey)}
+  .denom div:last-child{border-right:0}
+  .denom b{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums}
+
+  /* ── sheet control ──────────────────────────────────────── */
+  nav{display:flex;gap:2px;margin:30px 0 0;border-bottom:1px solid var(--line)}
+  nav button{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:12px;letter-spacing:.08em;text-transform:uppercase;
+    background:none;border:0;border-bottom:2px solid transparent;
+    color:var(--grey);padding:12px 18px;cursor:pointer;margin-bottom:-1px;
+  }
+  nav button:hover{color:var(--text)}
+  nav button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+  nav button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+  nav .count{color:var(--grey-dim);margin-left:7px}
+
+  section.sheet{padding:34px 0 60px}
+  h2{
+    font-family:Archivo,sans-serif;font-weight:600;font-size:19px;
+    letter-spacing:-.01em;margin:0 0 4px;
+  }
+  .note{color:var(--grey);font-size:13.5px;margin:0 0 20px;max-width:74ch}
+  .block{margin-bottom:44px}
+
+  /* ── meter ──────────────────────────────────────────────── */
+  .meter{display:flex;height:34px;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-bottom:10px}
+  .meter i{display:block;height:100%}
+  .meter .m-cov{background:var(--covered)}
+  .meter .m-gap{background:repeating-linear-gradient(135deg,#232E3B 0 7px,#1B242F 7px 14px)}
+  .legend{display:flex;gap:22px;font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--grey)}
+  .legend span::before{content:"";display:inline-block;width:9px;height:9px;margin-right:7px;border-radius:2px;vertical-align:baseline}
+  .legend .l-cov::before{background:var(--covered)}
+  .legend .l-gap::before{background:#232E3B;border:1px solid var(--line)}
+
+  /* ── tables ─────────────────────────────────────────────── */
+  .scroll{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{
+    font-family:"IBM Plex Mono",monospace;font-size:10.5px;font-weight:500;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--grey-dim);
+    text-align:left;padding:12px 16px;border-bottom:1px solid var(--line);white-space:nowrap;
+  }
+  td{padding:12px 16px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  tbody tr:hover{background:var(--surface-2)}
+  .num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+  .tid{font-family:"IBM Plex Mono",monospace;color:var(--accent);font-weight:500;white-space:nowrap}
+  code{
+    font-family:"IBM Plex Mono",monospace;font-size:12.5px;
+    background:#101822;border:1px solid var(--line);border-radius:2px;
+    padding:1px 5px;color:#BFD0E0;white-space:nowrap;
+  }
+  .bar{position:relative;min-width:120px}
+  .bar em{display:block;height:5px;background:var(--covered);border-radius:2px;font-style:normal}
+  tfoot td{border-top:1px solid var(--grey-dim);font-weight:600;background:var(--surface-2)}
+
+  /* ── pills ──────────────────────────────────────────────── */
+  .pill{
+    display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:10px;
+    letter-spacing:.09em;text-transform:uppercase;padding:2.5px 8px;
+    border-radius:10px;border:1px solid;white-space:nowrap;
+  }
+  .p-ver{color:var(--covered);border-color:#2C625F;background:#14262A}
+  .p-obs{color:var(--accent);border-color:var(--accent-dim);background:#241D10}
+  .p-open{color:var(--gap);border-color:#6B3325;background:#26150F}
+  .layers{display:flex;flex-wrap:wrap;gap:5px}
+  .layers span{
+    font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--grey);
+    border:1px solid var(--line);border-radius:2px;padding:1.5px 6px;background:#111922;
+  }
+
+  /* ── callout ────────────────────────────────────────────── */
+  .flag{
+    border-left:2px solid var(--accent);background:#1A1710;
+    padding:14px 18px;margin:18px 0 0;font-size:13.5px;color:#D8CDB4;max-width:82ch;
+  }
+  .flag b{color:var(--accent);font-weight:600}
+  .flag.warn{border-left-color:var(--gap);background:#1D1310;color:#DDBDB2}
+  .flag.warn b{color:var(--gap)}
+
+  footer{border-top:1px solid var(--line);padding:22px 0 40px;color:var(--grey-dim);
+    font-family:"IBM Plex Mono",monospace;font-size:11.5px}
+
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+  @media (max-width:640px){
+    .wrap{padding:0 18px}
+    .head{gap:20px;padding:26px 0 20px}
+    .readout{text-align:left}
+    .denom div{border-right:0;padding:5px 0;margin-right:0;flex:1 0 100%}
+  }
+</style>
+
+<header>
+  <div class="wrap">
+    <div class="head">
+      <div class="id-block">
+        <p class="eyebrow">Codebase Workflow Map · Tradelatest</p>
+        <h1>Topic Atlas</h1>
+        <p class="sub">Mapping every file in the code surface to exactly one topic. Coverage is
+          measured against a stated denominator — never an implied one.</p>
+      </div>
+      <div class="readout">
+        <div class="big">18.5%</div>
+        <div class="cap">308 / 1,665 files · 3 topics</div>
+      </div>
+    </div>
+    <div class="denom">
+      <div>DENOMINATOR <b>1,665</b></div>
+      <div><b>1,582</b> .py — src · tests · scripts · tools</div>
+      <div><b>83</b> .yaml/.json — configs/{formulas, production, research, market_reality}</div>
+      <div>excl. <b>__pycache__ · venvs · .claude · logs · scratch_roots</b></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <nav role="tablist">
+    <button role="tab" id="tab-cov" aria-controls="sheet-cov" aria-selected="true">Coverage Register<span class="count">3</span></button>
+    <button role="tab" id="tab-x" aria-controls="sheet-x" aria-selected="false">Cross-Layer Log<span class="count">5</span></button>
+  </nav>
+
+  <!-- ═══ SHEET 1 ═══ -->
+  <section class="sheet" id="sheet-cov" role="tabpanel" aria-labelledby="tab-cov">
+
+    <div class="block">
+      <h2>Surface coverage</h2>
+      <p class="note">Union of all mapped topics against the full code surface.</p>
+      <div class="meter" role="img" aria-label="308 of 1,665 files mapped, 18.5 percent">
+        <i class="m-cov" style="width:18.5%"></i><i class="m-gap" style="width:81.5%"></i>
+      </div>
+      <div class="legend">
+        <span class="l-cov">mapped · 308 files</span>
+        <span class="l-gap">unmapped · 1,357 files (of which 1,284 are .py)</span>
+      </div>
+    </div>
+
+    <div class="block">
+      <h2>Mapped topics</h2>
+      <p class="note">Per-topic counts are reference footprint: every file that defines or
+        references the topic's symbols.</p>
+      <div class="scroll">
+        <table>
+          <thead><tr>
+            <th>ID</th><th>Topic</th><th>Anchor</th>
+            <th class="num">Files</th><th class="num">%</th><th style="width:150px">Share</th>
+          </tr></thead>
+          <tbody>
+            <tr>
+              <td class="tid">T1</td>
+              <td>Resolver engine</td>
+              <td><code>src/features/crt_state_resolver.py</code></td>
+              <td class="num">54</td><td class="num">3.2%</td>
+              <td class="bar"><em style="width:21%"></em></td>
+            </tr>
+            <tr>
+              <td class="tid">T2</td>
+              <td>Dynamic state config</td>
+              <td><code>configs/formulas/*.yaml</code></td>
+              <td class="num">90</td><td class="num">5.4%</td>
+              <td class="bar"><em style="width:35%"></em></td>
+            </tr>
+            <tr>
+              <td class="tid">T3</td>
+              <td>Static engine</td>
+              <td><code>src/config_layer/crt_engine_v2.py</code></td>
+              <td class="num">255</td><td class="num">15.3%</td>
+              <td class="bar"><em style="width:100%"></em></td>
+            </tr>
+          </tbody>
+          <tfoot><tr>
+            <td class="tid">—</td><td>Union, deduplicated</td>
+            <td style="color:var(--grey)">399 raw − 91 shared</td>
+            <td class="num">308</td><td class="num">18.5%</td><td></td>
+          </tr></tfoot>
+        </table>
+      </div>
+
+      <div class="flag">
+        <b>Union ≠ sum.</b> 54 + 90 + 255 = 399, but the union is 308 — overlaps are
+        T1∩T2 <b>36</b>, T2∩T3 <b>47</b>, T1∩T3 <b>25</b>. These three are one tightly-coupled
+        CRT cluster, not independent slices. Reaching a clean 100% needs a primary-topic
+        assignment rule — one file, one owning topic — or the total will exceed 100% while
+        leaving files unmapped.
+      </div>
+
+      <div class="flag warn">
+        <b>T3's 255 is blast radius, not ownership.</b> It counts every file referencing
+        <code>crt_engine_v2</code> or <code>CRTEngine</code> — 59 src importers plus every test
+        and research script that touches CRT. By ownership, T3 is roughly 10 files. Both numbers
+        are true; they answer different questions.
+      </div>
+    </div>
+
+    <div class="block">
+      <h2>Unmapped backlog</h2>
+      <p class="note">1,284 <code>.py</code> files with no topic. Clusters below are the proposed
+        T4–T16 — roughly 13 topics closes the map.</p>
+      <div class="scroll">
+        <table>
+          <thead><tr>
+            <th class="num">Files</th><th>Cluster</th><th>Proposed topic</th>
+          </tr></thead>
+          <tbody>
+            <tr><td class="num">179</td><td><code>src/research</code></td><td>T4 · Research programs &amp; interpreters</td></tr>
+            <tr><td class="num">142</td><td><code>scripts/research</code></td><td>T5 · Research drivers</td></tr>
+            <tr><td class="num">100</td><td><code>scripts/analysis</code></td><td>T6 · Census &amp; lint tooling</td></tr>
+            <tr><td class="num">64</td><td><code>tests/research</code></td><td>folds into T4 / T5</td></tr>
+            <tr><td class="num">27</td><td><code>src/agent</code></td><td>T7 · Agent layer</td></tr>
+            <tr><td class="num">26</td><td><code>src/features</code></td><td>T8 · Feature pipeline &amp; 48-dim schema</td></tr>
+            <tr><td class="num">48</td><td><code>src/governance</code> + <code>scripts/governance</code></td><td>T9 · Governance, promotion, Semantic OS</td></tr>
+            <tr><td class="num">22</td><td><code>src/bitnet</code></td><td>T10 · BitNet gate</td></tr>
+            <tr><td class="num">21</td><td><code>src/config_layer</code></td><td>T11 · Config, production, validator</td></tr>
+            <tr><td class="num">19</td><td><code>src/core</code></td><td>T12 · Fusion → decision → planner → Ultron</td></tr>
+            <tr><td class="num">18</td><td><code>src/strategies</code></td><td>T13 · Strategy modules</td></tr>
+            <tr><td class="num">31</td><td><code>tests/mt5_analytics</code>, <code>tools/tv_forensic</code></td><td>T14 · MT5 analytics &amp; TV forensics</td></tr>
+            <tr><td class="num">—</td><td><code>src/inout/live_rail</code></td><td>T15 · Live rail <span style="color:var(--grey-dim)">(F-073: no production rail)</span></td></tr>
+            <tr><td class="num">—</td><td><code>src/runtime</code></td><td>T16 · Backtest &amp; live runtime</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ SHEET 2 ═══ -->
+  <section class="sheet" id="sheet-x" role="tabpanel" aria-labelledby="tab-x" hidden>
+    <div class="block">
+      <h2>Cross-layer log</h2>
+      <p class="note">Observations that belong to no single topic — name collisions, generated
+        artifacts, methodology faults, and contradictions between layers. Kept separate on
+        purpose: an entry here is precisely the thing with no owning topic.</p>
+
+      <div class="scroll">
+        <table>
+          <thead><tr>
+            <th style="width:34%">Observation</th><th>Detail</th>
+            <th style="width:150px">Spans</th><th style="width:100px">Status</th>
+          </tr></thead>
+          <tbody>
+            <tr>
+              <td><b>“Population” is a 3-way homonym</b></td>
+              <td>Contract <code>population</code> block (XAUUSD, frozen 9-field schema) ·
+                L-003 <code>Omega_*</code> registry (crypto anatomy rows) ·
+                <code>src/bitnet/population_label_audit.py</code> (trainer class balance,
+                <b>0</b> refs to Ω / <code>population_id</code> / MeasurementContract).
+                Any map assigning one owning file to a “Population” node conflates them.</td>
+              <td class="layers"><span>T2</span><span>T10</span><span>research</span></td>
+              <td><span class="pill p-ver">verified</span></td>
+            </tr>
+            <tr>
+              <td><b>Two different CRT engines share a name</b></td>
+              <td><code>src/config_layer/crt_engine_v2.py</code> (S_t authority, ~2,900 LOC) is
+                <b>not</b> <code>src/engines/crt_engine.py</code> (scoring engine). Distinct
+                objects; the second is where the F-052 weight-fallback work landed.</td>
+              <td class="layers"><span>T3</span><span>T12</span></td>
+              <td><span class="pill p-ver">verified</span></td>
+            </tr>
+            <tr>
+              <td><b>Generated file reads as source</b></td>
+              <td><code>src/config_layer/_crt_state_generated.py</code> is emitted from
+                <code>configs/formulas/crt_state_identity.yaml</code> via
+                <code>scripts/maintenance/gen_crt_state_identity.py</code>. Treat as output —
+                editing it is silently reverted on regeneration.</td>
+              <td class="layers"><span>T2</span><span>T3</span></td>
+              <td><span class="pill p-ver">verified</span></td>
+            </tr>
+            <tr>
+              <td><b>External coverage figures were denominator artifacts</b></td>
+              <td>A reported “86.6% schema coverage / 13 missing words” scanned
+                <code>src·tests·scripts·tools·research·runtime</code>, silently excluding
+                <code>configs/</code> and <code>docs/</code> — where MC instances and design
+                schemas live. <code>exclusion_rule</code> claimed <b>0</b>, actually in
+                <b>12+</b> files; <code>mx_id</code> claimed <b>0</b>, actually present.
+                Direction survived; the numbers did not.</td>
+              <td class="layers"><span>method</span><span>all</span></td>
+              <td><span class="pill p-ver">verified</span></td>
+            </tr>
+            <tr>
+              <td><b>BG-001 contradicted by BG-006, unmarked</b></td>
+              <td>BG-001 states dataset linkage <code>0.0%</code> and “100% requiring a sidecar”.
+                BG-006 measured <b>9/18</b> contracts pinning the dataset by content hash. BG-001
+                carries no superseded marker and its §8 points to BG-005 but not BG-006. Live
+                drift in a committed report.</td>
+              <td class="layers"><span>research</span><span>governance</span></td>
+              <td><span class="pill p-open">open</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="flag">
+        <b>Feasibility notes land here too.</b> When a cross-layer question turns out to be
+        blocked — a frozen schema, an unwired path, a missing referent — the entry records what
+        blocks it rather than moving to a topic sheet. Status stays
+        <span class="pill p-open">open</span> until it is measured, not until it is discussed.
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Counts from <code>topic_coverage.py</code> · measured at HEAD <code>c782803</code> ·
+    read-only, nothing committed
+  </footer>
+</div>
+
+<script>
+  (function () {
+    var tabs = [
+      { btn: document.getElementById('tab-cov'), panel: document.getElementById('sheet-cov'), key: 'cov' },
+      { btn: document.getElementById('tab-x'),   panel: document.getElementById('sheet-x'),   key: 'x'   }
+    ];
+    function select(key) {
+      tabs.forEach(function (t) {
+        var on = t.key === key;
+        t.btn.setAttribute('aria-selected', on ? 'true' : 'false');
+        t.panel.hidden = !on;
+      });
+      try { localStorage.setItem('atlas.sheet', key); } catch (e) {}
+    }
+    tabs.forEach(function (t) {
+      t.btn.addEventListener('click', function () { select(t.key); });
+    });
+    var saved = null;
+    try { saved = localStorage.getItem('atlas.sheet'); } catch (e) {}
+    if (saved === 'x' || saved === 'cov') select(saved);
+  })();
+</script>
+
+</body></html>

@@ -1,0 +1,342 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Candle Formula Audit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: an audit register. Anatomy key on top, verdict summary, then one row per FM-id. */
+:root {
+  --bg: #f4f6f7;
+  --surface: #ffffff;
+  --ink: #12181c;
+  --ink-2: #4a565e;
+  --ink-3: #75828a;
+  --rule: #dde3e6;
+  --accent: #0f6b74;
+  --bull: #1f8a4c;
+  --bear: #c2412d;
+  --ok-bg: #e5f4ea; --ok: #17673a;
+  --ask-bg: #fcefd9; --ask: #8a5300;
+  --doc-bg: #e6eef7; --doc: #2c5a8c;
+  --code-bg: #eef2f4;
+  --f-display: "Barlow Semi Condensed", "Arial Narrow", sans-serif;
+  --f-body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1417; --surface: #172025; --ink: #eef3f5; --ink-2: #b4c0c6; --ink-3: #85939a; --rule: #2a363c;
+    --accent: #4fb3bd; --bull: #3dbd72; --bear: #ec6a55;
+    --ok-bg: #173526; --ok: #7bd8a0; --ask-bg: #3a2a10; --ask: #f2c068; --doc-bg: #182a3d; --doc: #9cc2ec;
+    --code-bg: #1e2a30; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1417; --surface: #172025; --ink: #eef3f5; --ink-2: #b4c0c6; --ink-3: #85939a; --rule: #2a363c;
+  --accent: #4fb3bd; --bull: #3dbd72; --bear: #ec6a55;
+  --ok-bg: #173526; --ok: #7bd8a0; --ask-bg: #3a2a10; --ask: #f2c068; --doc-bg: #182a3d; --doc: #9cc2ec;
+  --code-bg: #1e2a30; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 16px/1.55 var(--f-body); }
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 56px; display: grid; gap: 28px; }
+h1, h2 { font-family: var(--f-display); text-wrap: balance; margin: 0; letter-spacing: 0.005em; }
+h1 { font-size: clamp(28px, 4.2vw, 40px); font-weight: 700; line-height: 1.1; }
+h2 { font-size: 22px; font-weight: 600; }
+p { margin: 0; max-width: 68ch; }
+code, .mono { font-family: var(--f-mono); font-size: 0.86em; }
+.eyebrow { font-family: var(--f-display); text-transform: uppercase; letter-spacing: 0.09em; font-size: 13px; color: var(--accent); font-weight: 600; }
+.lede { color: var(--ink-2); }
+.stamp { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 14px; color: var(--ink-2); }
+.stamp b { color: var(--ink); font-weight: 600; }
+
+.top { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 820px) { .top { grid-template-columns: minmax(0, 1fr); } }
+.anatomy { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 16px; }
+.anatomy svg { width: 100%; height: auto; display: block; }
+.anatomy figcaption { font-size: 13px; color: var(--ink-3); margin-top: 8px; }
+svg text { font-family: var(--f-mono); font-size: 12px; fill: var(--ink-2); }
+svg .lab { fill: var(--ink); font-weight: 500; }
+svg .fm { fill: var(--accent); font-weight: 500; }
+svg .lead { stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 3 3; fill: none; }
+svg .wick { stroke: var(--ink); stroke-width: 2; }
+svg .body-bull { fill: var(--bull); }
+svg .body-bear { fill: var(--bear); }
+svg .brace { stroke: var(--ink-2); stroke-width: 1.2; fill: none; }
+
+.summary { display: grid; gap: 10px; }
+.tally { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.tally > div { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 12px 14px; }
+.tally .n { font-family: var(--f-display); font-size: 30px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.tally .l { font-size: 13px; color: var(--ink-2); margin-top: 4px; }
+.n.ok { color: var(--ok); } .n.ask { color: var(--ask); } .n.doc { color: var(--doc); }
+.scope { font-size: 14px; color: var(--ink-2); display: grid; gap: 6px; }
+.scope ul { margin: 0; padding-left: 18px; }
+
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.controls span { font-size: 14px; color: var(--ink-2); margin-right: 4px; }
+.chip { font: 600 14px var(--f-body); border: 1px solid var(--rule); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 5px 14px; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.chip:focus-visible, .row summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.register { display: grid; gap: 8px; }
+.row { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; }
+.row.flag-ask { border-left: 4px solid var(--ask); }
+.row.flag-doc { border-left: 4px solid var(--doc); }
+.row summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: 76px minmax(0, 1fr) auto; gap: 4px 14px; align-items: center; padding: 12px 14px; }
+.row summary::-webkit-details-marker { display: none; }
+.fmid { font-family: var(--f-mono); font-weight: 500; color: var(--accent); font-size: 14px; }
+.name { min-width: 0; }
+.name strong { font-family: var(--f-mono); font-weight: 500; font-size: 14.5px; }
+.name .formula { display: block; color: var(--ink-2); font-family: var(--f-mono); font-size: 12.5px; overflow-wrap: anywhere; }
+.pill { font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+.pill.ok { background: var(--ok-bg); color: var(--ok); }
+.pill.ask { background: var(--ask-bg); color: var(--ask); }
+.pill.doc { background: var(--doc-bg); color: var(--doc); }
+.detail { border-top: 1px solid var(--rule); padding: 12px 14px 14px; display: grid; gap: 10px; font-size: 14.5px; }
+.detail dl { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 6px 14px; margin: 0; }
+.detail dt { color: var(--ink-3); font-size: 13px; }
+.detail dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.reviewed { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-2); background: var(--code-bg); border-radius: 6px; padding: 3px 8px; }
+.reviewed::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+@media (max-width: 560px) {
+  .row summary { grid-template-columns: minmax(0, 1fr) auto; }
+  .fmid { grid-column: 1 / -1; }
+  .detail dl { grid-template-columns: minmax(0, 1fr); }
+  .detail dt { margin-top: 4px; }
+  .tally { grid-template-columns: minmax(0, 1fr); }
+}
+.trail { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 16px; display: grid; gap: 8px; font-size: 14px; }
+.trail .tablewrap { overflow-x: auto; }
+.trail table { border-collapse: collapse; width: 100%; font-size: 13px; }
+.trail th, .trail td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.trail th { color: var(--ink-3); font-weight: 600; white-space: nowrap; }
+footer { font-size: 13px; color: var(--ink-3); }
+@media (prefers-reduced-motion: no-preference) { .chip { transition: background .15s, color .15s; } }
+</style>
+
+<div class="wrap">
+  <header style="display:grid;gap:10px">
+    <div class="eyebrow">Tradelatest · feature register review</div>
+    <h1>Candle Formula Audit</h1>
+    <p class="lede">Every candle-geometry formula in the feature register, checked against candle anatomy, against the code that computes it, and against XAUUSD M15 data. Each row carries its review stamp so later changes can be traced back to this review.</p>
+    <div class="stamp">
+      <span>Reviewed by <b>Claude (claude-opus-5-5)</b></span>
+      <span>Date <b>2026-10-14</b></span>
+      <span>Review ID <b class="mono">RV-CANDLE-ANATOMY-2026-10-14</b></span>
+      <span>Scope <b id="scope-count">25 FM-ids</b></span>
+    </div>
+  </header>
+
+  <section class="top">
+    <figure class="anatomy" style="margin:0">
+      <svg viewBox="0 0 590 300" role="img" aria-label="Candle anatomy: upper wick from body top to high, body between open and close, lower wick from body bottom to low, each labelled with its FM-id">
+        <!-- bullish candle: low 270, open 200, close 110, high 30 -->
+        <line class="wick" x1="130" y1="30" x2="130" y2="110"/>
+        <rect class="body-bull" x="105" y="110" width="50" height="90" rx="2"/>
+        <line class="wick" x1="130" y1="200" x2="130" y2="270"/>
+        <text x="125" y="22" text-anchor="end" class="lab">high</text>
+        <text x="96" y="114" text-anchor="end">close</text>
+        <text x="96" y="204" text-anchor="end">open</text>
+        <text x="125" y="290" text-anchor="end" class="lab">low</text>
+        <!-- bearish candle: high 60, open 95, close 215, low 255 -->
+        <line class="wick" x1="250" y1="60" x2="250" y2="95"/>
+        <rect class="body-bear" x="225" y="95" width="50" height="120" rx="2"/>
+        <line class="wick" x1="250" y1="215" x2="250" y2="255"/>
+        <text x="284" y="99">open</text>
+        <text x="284" y="219">close</text>
+        <!-- labels for the bullish candle -->
+        <path class="lead" d="M134 70 H316"/>
+        <text x="324" y="66" class="lab">upper wick</text>
+        <text x="324" y="82" class="fm">FM-003 · high − max(open, close)</text>
+        <path class="lead" d="M157 155 H316"/>
+        <text x="324" y="151" class="lab">body</text>
+        <text x="324" y="167" class="fm">FM-001 · |close − open|</text>
+        <path class="lead" d="M134 235 H316"/>
+        <text x="324" y="231" class="lab">lower wick</text>
+        <text x="324" y="247" class="fm">FM-004 · min(open, close) − low</text>
+        <!-- range brace -->
+        <path class="brace" d="M60 30 H52 V270 H60"/>
+        <text x="46" y="150" text-anchor="end" class="fm" transform="rotate(-90 46 150)" style="text-anchor:middle">FM-002 range = high − low</text>
+      </svg>
+      <figcaption>Both wicks are thin lines and only the body is thick. Body share + upper-wick share + lower-wick share = 1 (FM-010, FM-103, FM-104).</figcaption>
+    </figure>
+
+    <div class="summary">
+      <div class="tally">
+        <div><div class="n ok" id="n-ok">–</div><div class="l">match candle anatomy</div></div>
+        <div><div class="n ask" id="n-ask">–</div><div class="l">need your decision</div></div>
+        <div><div class="n doc" id="n-doc">–</div><div class="l">documentation gap</div></div>
+      </div>
+      <div class="scope">
+        <strong style="color:var(--ink)">What the review checked</strong>
+        <ul>
+          <li>Registered formula in <code>configs/formulas/market_ontology.yaml</code> against standard candle anatomy.</li>
+          <li>Code in <code>src/features/candle_math.py</code> and <code>src/features/candle_patterns.py</code> against the registered formula.</li>
+          <li>Measured on XAUUSD M15, 47,197 bars after warm-up (corpus <code>XAUUSD_MT5_PHASE1_20260521</code>).</li>
+          <li><code>tests/test_candle_math.py</code> and <code>tests/test_candle_patterns.py</code>: 20 passed.</li>
+        </ul>
+        <span>No formula, config or register entry was changed. A review stamp records that the check was done. It grants no production authority.</span>
+      </div>
+    </div>
+  </section>
+
+  <section style="display:grid;gap:12px">
+    <h2>Register</h2>
+    <div class="controls" role="group" aria-label="Filter by verdict">
+      <span>Show</span>
+      <button class="chip" type="button" id="f-all" data-f="all" aria-pressed="true">All</button>
+      <button class="chip" type="button" id="f-ask" data-f="ask" aria-pressed="false">Needs decision</button>
+      <button class="chip" type="button" id="f-ok" data-f="ok" aria-pressed="false">Matches anatomy</button>
+      <button class="chip" type="button" id="f-doc" data-f="doc" aria-pressed="false">Documentation gap</button>
+    </div>
+    <div class="register" id="register"></div>
+  </section>
+
+  <section class="trail">
+    <h2>Audit trail</h2>
+    <div class="tablewrap"><table>
+      <tbody>
+        <tr><th>Review ID</th><td class="mono">RV-CANDLE-ANATOMY-2026-10-14</td></tr>
+        <tr><th>Reviewer</th><td>Claude (claude-opus-5-5), at the user's request</td></tr>
+        <tr><th>Register</th><td><code>configs/formulas/market_ontology.yaml</code> (working tree, carries other sessions' uncommitted edits; read, not changed)</td></tr>
+        <tr><th>Code</th><td><code>src/features/candle_math.py</code> · <code>src/features/candle_patterns.py</code></td></tr>
+        <tr><th>Config</th><td><code>configs/production/v2_htfcrt_2026_08.json</code> → <code>feature_pipeline.candle_patterns</code> (active version)</td></tr>
+        <tr><th>Data</th><td><code>data/mt5/XAUUSD_M15.csv</code> via <code>corpus_store.load</code> · sha256 <code>4d73f5cebe33ec91…</code> · 47,275 rows, 47,197 after warm-up · 0 zero-range bars</td></tr>
+        <tr><th>Session log</th><td><code>assistant_project.md</code>, entry dated 2026-10-14 "Candle-anatomy review of the feature register"</td></tr>
+        <tr><th>Limits</th><td>One instrument, one timeframe. The rejection intensities (FM-116, FM-117, FM-119), compression ratio (FM-115), engulfing strength (FM-118) and body-to-wick ratio (FM-013) were checked by formula and code only, not measured separately. The reviewer is the same model that wrote this page, so it is a self-review.</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <footer>To track a later change: re-run the review, update the affected rows and their stamps, and republish this page at the same link.</footer>
+</div>
+
+<script>
+const REVIEW = { by: "Claude (claude-opus-5-5)", date: "2026-10-14", id: "RV-CANDLE-ANATOMY-2026-10-14" };
+// v: ok | ask | doc. Verdict wording follows CLAUDE.md §6.2 (ALIGNED) and §6.8 closing statuses.
+const ROWS = [
+  { id:"FM-001", name:"body_size", f:"abs(close − open)", v:"ok", verdict:"ALIGNED",
+    anatomy:"The thick body: distance between open and close.", code:"candle_math.body_size; vector slot 27.",
+    evidence:"Slot equals |close − open| on all 47,197 bars (max error 0).",
+    note:"Price units. The median XAUUSD M15 range grew from $2.58 (2024) to $10.20 (2026) while relative size only doubled, so raw-dollar size slots drift with the gold price. The ratio forms (FM-010, FM-103, FM-104) do not." },
+  { id:"FM-002", name:"candle_range", f:"high − low", v:"ok", verdict:"ALIGNED",
+    anatomy:"The whole candle: top of upper wick to bottom of lower wick.", code:"candle_math.candle_range; vector slot 28.",
+    evidence:"Slot equals high − low on all bars (max error 0).",
+    note:"Formerly named wick_size, a misnomer retired in schema v4.0 (market_ontology.yaml misnomer_alias). Same price-unit drift as FM-001." },
+  { id:"FM-003", name:"upper_wick", f:"high − max(open, close)", v:"ok", verdict:"ALIGNED",
+    anatomy:"Thin line from the top of the body to the high. Uses max(open, close), so it is correct for green and red candles.", code:"candle_math.upper_wick.",
+    evidence:"Recomputed from OHLC matches the upper-wick share to 3e-8 (float32)." },
+  { id:"FM-004", name:"lower_wick", f:"min(open, close) − low", v:"ok", verdict:"ALIGNED",
+    anatomy:"Thin line from the bottom of the body down to the low.", code:"candle_math.lower_wick.",
+    evidence:"Recomputed from OHLC matches the lower-wick share to 3e-8 (float32)." },
+  { id:"FM-005", name:"total_wick", f:"upper_wick + lower_wick", v:"ok", verdict:"ALIGNED",
+    anatomy:"Both wicks together; equals range − body.", code:"candle_math.total_wick.",
+    evidence:"Follows from the share identity below; not a vector slot." },
+  { id:"FM-010", name:"body_ratio", f:"body_size / candle_range", v:"ok", verdict:"ALIGNED",
+    anatomy:"Share of the candle taken by the body, 0 to 1.", code:"candle_math.body_ratio; vector slot 29.",
+    evidence:"Body share + upper share + lower share = 1 on every bar (max error 4.5e-8); no negative shares." },
+  { id:"FM-013", name:"body_to_total_wick_ratio", f:"body_size / total_wick", v:"ok", verdict:"ALIGNED",
+    anatomy:"Body relative to the wicks; unbounded above 1 when the body is longer than both wicks.", code:"candle_math.body_to_total_wick_ratio. Not a vector slot.",
+    evidence:"Formula and code checked; not measured separately." },
+  { id:"FM-103", name:"upper_wick_ratio", f:"upper_wick / candle_range (0 if range = 0)", v:"ok", verdict:"ALIGNED",
+    anatomy:"Share of the candle taken by the upper wick.", code:"candle_patterns.upper_wick_ratio; vector slot 54.",
+    evidence:"Matches upper wick / range to 3e-8." },
+  { id:"FM-104", name:"lower_wick_ratio", f:"lower_wick / candle_range (0 if range = 0)", v:"ok", verdict:"ALIGNED",
+    anatomy:"Share of the candle taken by the lower wick.", code:"candle_patterns.lower_wick_ratio; vector slot 55.",
+    evidence:"Matches lower wick / range to 3e-8." },
+  { id:"FM-105", name:"pin_lower", f:"lower share ≥ 0.6, body share ≤ 0.25, upper share ≤ 0.15, range ≥ 0.5 × ATR", v:"ok", verdict:"ALIGNED",
+    anatomy:"Long lower wick, small body, short upper wick: a lower pin bar.", code:"candle_patterns.pin_lower; vector slot 56.",
+    evidence:"Fires on 1,541 bars." },
+  { id:"FM-106", name:"pin_upper", f:"upper share ≥ 0.6, body share ≤ 0.25, lower share ≤ 0.15, range ≥ 0.5 × ATR", v:"ok", verdict:"ALIGNED",
+    anatomy:"Long upper wick, small body, short lower wick: an upper pin bar.", code:"candle_patterns.pin_upper; vector slot 57.",
+    evidence:"Fires on 1,227 bars." },
+  { id:"FM-107", name:"hammer", f:"lower wick ≥ 2 × body, upper share ≤ 0.10, low ≤ prior 5-bar low, range ≥ 0.5 × ATR", v:"ok", verdict:"ALIGNED",
+    anatomy:"Textbook hammer: lower wick at least twice the body, little upper wick, after a decline. Here 'after a decline' is a new 5-bar low, a stated design choice.", code:"candle_patterns.hammer; vector slot 58.",
+    evidence:"Fires on 603 bars; 397 of them are also lower pin bars (overlap is expected for observations)." },
+  { id:"FM-108", name:"shooting_star", f:"upper wick ≥ 2 × body, lower share ≤ 0.10, high ≥ prior 5-bar high, range ≥ 0.5 × ATR", v:"ok", verdict:"ALIGNED",
+    anatomy:"Mirror of the hammer at a new 5-bar high.", code:"candle_patterns.shooting_star; vector slot 59.",
+    evidence:"Fires on 514 bars; 344 also upper pin bars." },
+  { id:"FM-109", name:"doji_material", f:"body share ≤ 0.10, |upper share − lower share| ≤ 0.2, range ≥ 0.5 × ATR", v:"ok", verdict:"ALIGNED",
+    anatomy:"Tiny body with roughly equal wicks.", code:"candle_patterns.doji_material; vector slot 60.",
+    evidence:"Fires on 1,146 bars." },
+  { id:"FM-110", name:"dragonfly_doji", f:"body share ≤ 0.05, lower share ≥ 0.75, range ≥ 0.5 × ATR", v:"ask", verdict:"USER AUTHORIZATION REQUIRED",
+    anatomy:"Textbook dragonfly: open, close and high at almost the same price, so there is next to no upper wick. The thresholds allow an upper wick up to 25% of the candle.", code:"candle_patterns.dragonfly_doji; vector slot 61. Formula and code agree; the gap is in the config thresholds.",
+    evidence:"363 fires: 265 (73%) have an upper wick over 10% of the candle; median 14%, max 24%.",
+    note:"Decision: add an upper-wick cap (for example ≤ 0.05) or keep the lenient shape. Changing it moves vector slot 61, so it needs its own approved change." },
+  { id:"FM-111", name:"gravestone_doji", f:"body share ≤ 0.05, upper share ≥ 0.75, range ≥ 0.5 × ATR", v:"ask", verdict:"USER AUTHORIZATION REQUIRED",
+    anatomy:"Textbook gravestone: open, close and low at almost the same price, so next to no lower wick. The thresholds allow a lower wick up to 25%.", code:"candle_patterns.gravestone_doji; vector slot 62. Gap is in the config thresholds.",
+    evidence:"286 fires: 206 (72%) have a lower wick over 10% of the candle; median 15%, max 24%.",
+    note:"Same decision as FM-110, mirrored." },
+  { id:"FM-112", name:"engulfing_bull", f:"prev red, this green, this body covers prev body, this body larger, bars contiguous", v:"ok", verdict:"ALIGNED",
+    anatomy:"Body-to-body engulfing, the standard definition; wicks are ignored.", code:"candle_patterns.engulfing_bull; vector slot 63.",
+    evidence:"Fires on 4,376 bars." },
+  { id:"FM-113", name:"engulfing_bear", f:"prev green, this red, this body covers prev body, this body larger, bars contiguous", v:"ok", verdict:"ALIGNED",
+    anatomy:"Mirror of FM-112.", code:"candle_patterns.engulfing_bear; vector slot 64.",
+    evidence:"Fires on 4,214 bars." },
+  { id:"FM-114", name:"inside_bar", f:"high ≤ prev high and low ≥ prev low, bars contiguous", v:"ok", verdict:"ALIGNED",
+    anatomy:"The whole candle, wicks included, sits inside the previous candle. Uses the wicks, as it should.", code:"candle_patterns.inside_bar; vector slot 65.",
+    evidence:"Fires on 6,853 bars." },
+  { id:"FM-115", name:"compression_ratio", f:"range / prev range, clipped to [0, 10]; 1.0 across a gap", v:"ok", verdict:"ALIGNED",
+    anatomy:"Candle size compared with the previous candle.", code:"candle_patterns.compression_ratio; vector slot 66.",
+    evidence:"Formula and code checked; not measured separately." },
+  { id:"FM-116", name:"rejection_intensity_signed", f:"clip(lower share − upper share, −1, 1) if range ≥ 0.5 × ATR", v:"ok", verdict:"ALIGNED",
+    anatomy:"Positive when the lower wick dominates, negative when the upper wick dominates.", code:"candle_patterns.rejection_intensity_signed; vector slot 67.",
+    evidence:"Formula and code checked; not measured separately." },
+  { id:"FM-117", name:"rejection_intensity_lower", f:"clip(lower share − body share, 0, 1) if range ≥ 0.5 × ATR", v:"ok", verdict:"ALIGNED",
+    anatomy:"How much longer the lower wick is than the body.", code:"candle_patterns.rejection_intensity_lower; vector slot 68.",
+    evidence:"Formula and code checked; not measured separately." },
+  { id:"FM-118", name:"engulfing_strength", f:"min(body / prev body, 3) on an engulfing bar, else 0", v:"ok", verdict:"ALIGNED",
+    anatomy:"Size of the engulfing body against the body it covers.", code:"candle_patterns.engulfing_strength; vector slot 69.",
+    evidence:"Formula and code checked; not measured separately." },
+  { id:"FM-119", name:"rejection_intensity_upper", f:"clip(upper share − body share, 0, 1) if range ≥ 0.5 × ATR", v:"ok", verdict:"ALIGNED",
+    anatomy:"How much longer the upper wick is than the body.", code:"candle_patterns.rejection_intensity_upper; vector slot 70.",
+    evidence:"Formula and code checked; not measured separately." },
+  { id:"FM-120", name:"morning_star", f:"bar 1 red with body share ≥ 0.6, bar 2 body share ≤ 0.25, bar 3 green with body share ≥ 0.6, all contiguous", v:"ask", verdict:"USER AUTHORIZATION REQUIRED",
+    anatomy:"Textbook morning star also needs the third candle to close well into the first candle's body, commonly above its midpoint. The register is shape-only by design and has no such test.", code:"candle_patterns.morning_star; vector slot 71. The module docstring still says it covers FM-103..FM-119, so FM-120 is missing from that line (candle_patterns.py:2).",
+    evidence:"336 fires: none closes below the first candle's close, but 64 (19%) close below the first body's midpoint.",
+    note:"Decision: add a midpoint test or keep shape-only. Separately, the docstring range is a small documentation gap." , extra:"doc" },
+];
+
+const reg = document.getElementById('register');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pill = v => v === 'ok' ? '<span class="pill ok">Matches anatomy</span>'
+                : v === 'ask' ? '<span class="pill ask">Needs your decision</span>'
+                : '<span class="pill doc">Documentation gap</span>';
+reg.innerHTML = ROWS.map(r => `
+  <details class="row ${r.v === 'ask' ? 'flag-ask' : ''}" data-v="${r.v}" data-extra="${r.extra || ''}" ${r.v === 'ask' ? 'open' : ''}>
+    <summary>
+      <span class="fmid">${esc(r.id)}</span>
+      <span class="name"><strong>${esc(r.name)}</strong><span class="formula">${esc(r.f)}</span></span>
+      ${pill(r.v)}
+    </summary>
+    <div class="detail">
+      <dl>
+        <dt>Verdict</dt><dd><code>${esc(r.verdict)}</code>${r.extra === 'doc' ? ' · <code>DOCUMENTATION GAP</code>' : ''}</dd>
+        <dt>Candle anatomy</dt><dd>${esc(r.anatomy)}</dd>
+        <dt>Code</dt><dd>${esc(r.code)}</dd>
+        <dt>Measured</dt><dd>${esc(r.evidence)}</dd>
+        ${r.note ? `<dt>Note</dt><dd>${esc(r.note)}</dd>` : ''}
+        <dt>Review</dt><dd><span class="reviewed">Reviewed by ${esc(REVIEW.by)} · ${esc(REVIEW.date)} · ${esc(REVIEW.id)}</span></dd>
+      </dl>
+    </div>
+  </details>`).join('');
+
+const counts = { ok: ROWS.filter(r => r.v === 'ok').length, ask: ROWS.filter(r => r.v === 'ask').length,
+                 doc: ROWS.filter(r => r.extra === 'doc').length };
+document.getElementById('n-ok').textContent = counts.ok;
+document.getElementById('n-ask').textContent = counts.ask;
+document.getElementById('n-doc').textContent = counts.doc;
+document.getElementById('scope-count').textContent = ROWS.length + ' FM-ids';
+
+document.querySelectorAll('.chip').forEach(btn => btn.addEventListener('click', () => {
+  const f = btn.dataset.f;
+  document.querySelectorAll('.chip').forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
+  reg.querySelectorAll('.row').forEach(row => {
+    const show = f === 'all' || row.dataset.v === f || (f === 'doc' && row.dataset.extra === 'doc');
+    row.hidden = !show;
+  });
+}));
+</script>
+
+</body></html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RR decode - 2026-10-09</title>
+<style>
+  :root { --bg:#f4f1ea; --ink:#1c1915; --muted:#5c564c; --line:#ddd6c8; --user:#fff; --agent:#eef3f4; --accent:#8c3a2f; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.45 "Segoe UI", Candara, sans-serif; }
+  header, main { max-width:54rem; margin:0 auto; padding:1.25rem; }
+  header { border-bottom:1px solid var(--line); }
+  h1 { font-size:1.4rem; margin:0 0 .35rem; }
+  .meta, #status { color:var(--muted); margin:0; }
+  #status { margin-top:.4rem; }
+  article { margin:1rem 0; padding:.75rem .9rem .9rem; border:1px solid var(--line); border-radius:8px; background:var(--agent); }
+  article.user { background:var(--user); }
+  .who { font-size:.75rem; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); margin-bottom:.35rem; }
+  article.user .who { color:var(--accent); }
+  pre { margin:0; white-space:pre-wrap; word-wrap:break-word; font:15px/1.45 Consolas, "Cascadia Mono", monospace; }
+</style>
+</head>
+<body>
+<header>
+  <h1>RR decode</h1>
+  <p class="meta">2026-10-09. This page does not store the messages. It reads <code>rr_decode_20261009.jsonl</code> in this folder.</p>
+  <p id="status">Reading rr_decode_20261009.jsonl...</p>
+</header>
+<main id="log"></main>
+<textarea id="jsonl-fallback" hidden>{&quot;n&quot;: 1, &quot;role&quot;: &quot;user&quot;, &quot;ts&quot;: null, &quot;text&quot;: &quot;decode −0.4389R&quot;}
+{&quot;n&quot;: 2, &quot;role&quot;: &quot;assistant&quot;, &quot;ts&quot;: &quot;2026-10-09 11:32&quot;, &quot;text&quot;: &quot;In this repo `-0.4389R` is an `R-multiple`:\n\n### 1. Literal decode\n\n&gt; **Lost `0.4389 x` what you risked.**\n\n`R = |entry - stop|` in price-per-unit -- the normalization basis for all `R` units.\n\nVerified in `configs/formulas/concept_contracts.yaml`:\n\n* `DEX-01 position_size`: `R = |entry - stop|`, `quantity = risk_fraction * equity / R`\n* `DEX-09 position_result`: `gross R = sum(exit fraction * signed exit move) / R`, `net = gross - TRS-07 cost_r - DEX-08 carry`, `unit: R`\n\n`TradeRecord` in `backtest_v2.py`:\n\n* `pnl_rr_raw: R-multiple on raw prices`\n* `pnl_rr_net: R-multiple on net prices (use this)`\n\ni.e. `pnl_rr_raw = trade.pnl / |entry_fill - SL|`, `pnl_rr_net = pnl_rr_raw * cost_drag_ratio` (slippage+spread).\n\n### 2. What `-0.4389R` means in money\n\n`1R` = your risked amount.\n\nIf `backtest.risk_pct_per_trade = 0.01` on `10,000` equity:\n\n* `1R = $100`\n* `-0.4389R = -$43.89`\n\nGeneral: `loss_cash = 0.4389 * risk_fraction * equity`.\n\n### 3. Why this is NOT a full stop\n\n* Full `SL` hit = `-1.0R` raw, `~-1.05R to -1.1R` net after costs.\n* `TP1 = +1R`, `TP2 = +2R`.\n\n`-0.4389R` is ~44% of a full loss, so it is:\n\n* a single trade scratched / `TIME_STOP` / `RESET_CLOSE` / `BACKTEST_END`, or a partial-close blend, **or**\n* an average: `expectancy_rr / avg_rr_net = -0.4389R` = system loses `0.4389R` per trade on average.\n\n### 4. Governance context\n\n`src/config_layer/config_validator.py` soft gate: `expectancy &lt; -0.5R` warns.\n\nSo as an expectancy, `-0.4389R` is negative but just above that `-0.5R` soft-fail line -- not viable, but not soft-gated.\n\nTo tell you which one yours is, tell me the field name: `pnl_rr_net` (one trade) vs `expectancy_rr / avg_rr_net / total_pnl_rr_net` (aggregate)?&quot;}
+{&quot;n&quot;: 3, &quot;role&quot;: &quot;user&quot;, &quot;ts&quot;: null, &quot;text&quot;: &quot;Update in userinvestigation folder&quot;}
+{&quot;n&quot;: 4, &quot;role&quot;: &quot;assistant&quot;, &quot;ts&quot;: &quot;2026-10-09 11:32&quot;, &quot;text&quot;: &quot;Saved. Two files now sit in `userinvestigation/`, following the folder&#x27;s dated-stem contract.\n\n- `userinvestigation/rr_decode_20261009.jsonl` - the store. One line per message, oldest first; `n` / `role` / `ts` / `text`. Line 1 is `decode -0.4389R`, line 2 is the R-multiple decode, line 3 is the update request, line 4 is this reply.\n- `userinvestigation/rr_decode_20261009.html` - the view. It fetches `rr_decode_20261009.jsonl` and draws one block per message, with a hidden escaped copy in a textarea so it renders from `file://` as well.\n\nNo source or config edit. `src/`, `configs/` and `results/` are untouched; prior pairs are unchanged.\n\nHow to open: double-click the `.html` (it shows the fallback copy), or serve the folder (`python -m http.server`) and the page reads the live `.jsonl`.&quot;}
+</textarea>
+<script>
+const FILE = "rr_decode_20261009.jsonl";
+const status = document.getElementById("status");
+const log = document.getElementById("log");
+
+function render(raw, how) {
+  log.replaceChildren();
+  const lines = raw.split(String.fromCharCode(10)).filter(function (s) { return s.trim(); });
+  lines.forEach(function (line) {
+    const row = JSON.parse(line);
+    const art = document.createElement("article");
+    art.className = row.role === "user" ? "user" : "assistant";
+    const who = document.createElement("div");
+    who.className = "who";
+    who.textContent = row.role + (row.ts ? " - " + row.ts : "");
+    const pre = document.createElement("pre");
+    pre.textContent = row.text;
+    art.append(who, pre);
+    log.append(art);
+  });
+  status.textContent = how + " - " + lines.length + " messages.";
+}
+
+fetch(FILE).then(function (res) {
+  if (!res.ok) throw new Error(String(res.status));
+  return res.text();
+}).then(function (raw) {
+  render(raw, "Read " + FILE);
+}).catch(function () {
+  const raw = document.getElementById("jsonl-fallback").value;
+  render(raw, "Opened as a local file, so the browser did not allow a read of " + FILE + ". Showing the copy written into this page at the same time as that file");
+});
+</script>
+</body>
+</html>

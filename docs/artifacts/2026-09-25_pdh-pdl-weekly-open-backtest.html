@@ -1,0 +1,905 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>PDH–PDL Weekly-Open Backtest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --bg:#f6f7f8; --panel:#ffffff; --ink:#1b2128; --muted:#5a6572; --line:#d9dee3;
+  --accent:#0f6e6a; --accent-soft:#e3f1ef; --pdh:#1b2128; --wo:#d0214a;
+  --good:#1d7a3a; --bad:#b3261e; --warn:#8a5a00; --warn-soft:#fff4dc;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --sans:"Source Sans 3","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#12161a; --panel:#1a2026; --ink:#e6eaee; --muted:#9aa6b2; --line:#2c353e;
+    --accent:#4fbfb8; --accent-soft:#16312f; --pdh:#e6eaee; --wo:#ff5c80;
+    --good:#5fcf80; --bad:#ff7a70; --warn:#e9b44c; --warn-soft:#2e2615; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#12161a; --panel:#1a2026; --ink:#e6eaee; --muted:#9aa6b2; --line:#2c353e;
+  --accent:#4fbfb8; --accent-soft:#16312f; --pdh:#e6eaee; --wo:#ff5c80;
+  --good:#5fcf80; --bad:#ff7a70; --warn:#e9b44c; --warn-soft:#2e2615; color-scheme:dark;
+}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.55;padding-inline:16px;padding-block:28px 56px}
+main{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:34px}
+h1,h2,h3{text-wrap:balance;line-height:1.2;margin:0}
+h1{font-size:2rem;font-weight:700}
+h2{font-size:1.35rem;font-weight:700;padding-bottom:6px;border-bottom:1px solid var(--line)}
+h3{font-size:1.05rem;font-weight:600}
+p{margin:0;max-width:68ch}
+section{display:flex;flex-direction:column;gap:14px}
+.eyebrow{font-family:var(--mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.lede{font-size:1.1rem;color:var(--ink)}
+.muted{color:var(--muted)}
+ul,ol{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:6px;max-width:72ch}
+code,.mono{font-family:var(--mono);font-size:.86em}
+.verdict{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:6px;padding:18px 20px;display:flex;flex-direction:column;gap:10px}
+.note{background:var(--warn-soft);border:1px solid var(--line);border-radius:6px;padding:14px 18px;display:flex;flex-direction:column;gap:8px}
+.note strong{color:var(--warn)}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:.9rem;font-variant-numeric:tabular-nums}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th{font-size:.74rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--bg)}
+td.l,th.l{text-align:left}
+tr:last-child td{border-bottom:none}
+.pos{color:var(--good);font-weight:600}
+.neg{color:var(--bad);font-weight:600}
+.pill{display:inline-block;font-family:var(--mono);font-size:.72rem;padding:2px 7px;border-radius:999px;border:1px solid var(--line)}
+.pill.tp{color:var(--good);border-color:var(--good)}
+.pill.sl{color:var(--bad);border-color:var(--bad)}
+.pill.flag{color:var(--warn);border-color:var(--warn)}
+.legend{display:flex;flex-wrap:wrap;gap:18px;font-size:.92rem}
+.legend span{display:inline-flex;align-items:center;gap:8px}
+.sw{display:inline-block;width:28px;height:0;border-top:2px solid var(--pdh)}
+.sw.wo{border-top-color:var(--wo)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+.src td{font-size:.84rem}
+.src td.l{white-space:normal}
+footer{font-size:.85rem;color:var(--muted)}
+.formula{font-family:var(--mono);font-size:.88rem;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px 16px;line-height:1.75;overflow-x:auto;white-space:pre}
+.part{border-top:2px solid var(--accent);padding-top:14px;display:flex;flex-direction:column;gap:6px}
+tr.hl td{background:var(--accent-soft)}
+</style>
+
+<main>
+<header style="display:flex;flex-direction:column;gap:10px">
+  <div class="eyebrow">XAUUSD · M15 · 22 May 2024 – 21 May 2026 · 1 oz · measured broker costs</div>
+  <h1>PDH / PDL + weekly open: 2-year gold backtest</h1>
+  <p class="lede">This is a mechanical test of the "PDH & PDL range, weekly open as key level" map on gold. Every number below comes from files in our repository, and each trade is listed with a timestamp so you can check it on your own chart.</p>
+</header>
+
+<section class="note">
+  <p><strong>Scope — read this first (corrected 26 Sep 2026).</strong> Every result on this page tests a <em>simplified mechanical version</em> of pieces of Sujan's method. It does not test his complete method, and none of these rules has been confirmed by Sujan as his own. His full chain includes several steps we never measured: the HTF zone, the 5m/15m displacement, the retest, his 5-minute entry, his stop and target rules, the volume signal and his bias indicator. Section 25 lists them. So the results below say "this simplified rule has no edge". They do <strong>not</strong> say "Sujan's method has no edge".</p>
+</section>
+
+<section class="verdict">
+  <div class="eyebrow">Result in one paragraph</div>
+  <p><strong>Sweep branch</strong> (price pokes beyond PDH/PDL and closes back inside, then reverse): over 424 trades the average result before costs is about zero (+0.01R), and no weekly-open filter changes that. <strong>Break + accept branch</strong> (two closes beyond PDH/PDL, then continue) is the only part that beats a coin-flip direction on the same trades. But it makes its money on breaks <em>above</em> PDH (+₹51,851) and loses on breaks <em>below</em> PDL (−₹46,416). Gold rose about 88% in this period, and just holding gold during the same trade windows earned ₹4,000–4,650 per month, against ₹230–1,170 for the strategy.</p>
+  <p class="muted">This tests a simplified version of the map, set out in section 2. It does not test the full discretionary process. Section 7 lists what is missing, and your corrections there matter most.</p>
+</section>
+
+<section>
+  <h2>1 · The levels, as we drew them</h2>
+  <div class="legend">
+    <span><i class="sw"></i> PDH (upper) and PDL (lower): previous day's high and low</span>
+    <span><i class="sw wo"></i> Weekly open (red line)</span>
+  </div>
+  <ul>
+    <li><strong>Day</strong> = broker server day (MT5, ICMarkets). The daily candle closes at 17:00 New York time, the same cut as the usual daily candle for gold. PDH and PDL come only from the finished previous day, so no future data is used.</li>
+    <li><strong>Weekly open</strong> = opening price of the first 15-minute bar of the week (Monday 01:00 broker time = Sunday evening New York).</li>
+    <li>Checked on every one of 47,183 bars against a separate calculation: 0 mismatches for PDH, PDL and weekly open.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>2 · The trade rules (fixed before the run)</h2>
+  <div class="grid2">
+    <div class="card">
+      <h3>Sweep → reversal</h3>
+      <ul>
+        <li><strong>Sweep of PDH:</strong> a 15-min bar trades above PDH and closes back below it, so SHORT.</li>
+        <li><strong>Sweep of PDL:</strong> the mirror image, so LONG.</li>
+        <li><strong>Entry (y):</strong> open of the next bar.</li>
+        <li><strong>Stop (x):</strong> the sweep bar's extreme ± $0.50.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Break → accept → continuation</h3>
+      <ul>
+        <li><strong>Break of PDH:</strong> two 15-min closes in a row above PDH (the first cross of the day), so LONG.</li>
+        <li><strong>Break of PDL:</strong> the mirror image, so SHORT.</li>
+        <li><strong>Entry (y):</strong> open of the next bar.</li>
+        <li><strong>Stop (x):</strong> the far extreme of the two accept bars ± $0.50.</li>
+      </ul>
+    </div>
+  </div>
+  <ul>
+    <li><strong>Target:</strong> either 2× the risk (2R), or, for sweeps only, the other side of the previous day's range.</li>
+    <li><strong>Weekly-open location, three readings, all reported:</strong>
+      <ul>
+        <li><em>none</em>: no filter.</li>
+        <li><em>premium/discount</em>: short only above the weekly open, long only below it.</li>
+        <li><em>trend side</em>: long only above the weekly open, short only below it.</li>
+      </ul>
+    </li>
+    <li><strong>Position rules:</strong> each level is used once per day, and only one position is open at a time.</li>
+    <li><strong>Fills:</strong> if a bar touches both stop and target, we count the stop. If price gaps through the stop, the fill is at the gap price.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>3 · Results over 2 years</h2>
+  <p class="muted">R = profit ÷ the trade's own risk (entry to stop). The 95% range shows where the true average probably sits; a range that crosses zero means "no clear edge". The coin-flip control uses the same entries and the same stop and target distances, with a random direction, repeated 100 times. An arm "beats" it only if its result is above the 95th-best of those 100 runs.</p>
+  <div class="scroll"><table>
+    <thead><tr><th class="l">Branch</th><th class="l">Target</th><th class="l">Weekly open</th><th>Trades</th><th>Win %</th><th>₹ / month</th><th>Avg R after cost</th><th>95% range</th><th>Beats coin flip?</th><th>Hold gold, same windows ₹/mo</th></tr></thead>
+    <tbody>
+      <tr><td class="l">Sweep</td><td class="l">2R</td><td class="l">none</td><td>424</td><td>34.4</td><td class="neg">−320</td><td>−0.05</td><td>−0.19 … +0.08</td><td>No</td><td>−516</td></tr>
+      <tr><td class="l">Sweep</td><td class="l">2R</td><td class="l">premium/discount</td><td>327</td><td>32.7</td><td class="neg">−1,311</td><td>−0.11</td><td>−0.26 … +0.04</td><td>No</td><td>−126</td></tr>
+      <tr><td class="l">Sweep</td><td class="l">2R</td><td class="l">trend side</td><td>100</td><td>39.0</td><td class="pos">+102</td><td>+0.10</td><td>−0.20 … +0.39</td><td>No</td><td>−1,499</td></tr>
+      <tr><td class="l">Sweep</td><td class="l">day range</td><td class="l">none</td><td>388</td><td>13.9</td><td class="pos">+683</td><td>−0.05</td><td>−0.41 … +0.31</td><td>No</td><td>−3,012</td></tr>
+      <tr><td class="l">Sweep</td><td class="l">day range</td><td class="l">premium/discount</td><td>304</td><td>12.8</td><td class="neg">−818</td><td>−0.06</td><td>−0.50 … +0.37</td><td>No</td><td>−1,621</td></tr>
+      <tr><td class="l">Sweep</td><td class="l">day range</td><td class="l">trend side</td><td>99</td><td>15.2</td><td class="pos">+122</td><td>+0.20</td><td>−0.68 … +1.08</td><td>No</td><td>−2,928</td></tr>
+      <tr><td class="l">Break</td><td class="l">2R</td><td class="l">none</td><td>360</td><td>39.7</td><td class="pos">+227</td><td>+0.14</td><td>−0.01 … +0.29</td><td>Yes</td><td>+4,653</td></tr>
+      <tr><td class="l">Break</td><td class="l">2R</td><td class="l">premium/discount</td><td>60</td><td>30.0</td><td class="neg">−1,317</td><td>−0.15</td><td>−0.50 … +0.20</td><td>No</td><td>+526</td></tr>
+      <tr><td class="l">Break</td><td class="l">2R</td><td class="l">trend side</td><td>310</td><td>40.3</td><td class="pos">+1,169</td><td>+0.16</td><td>−0.01 … +0.32</td><td>Yes</td><td>+3,985</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">₹/month and average R can disagree in sign, because ₹ weights trades with wide stops more heavily. Rupee figures assume 1 oz and ₹84 per dollar.</p>
+</section>
+
+<section>
+  <h2>4 · Split into four 6-month blocks (₹ per month)</h2>
+  <div class="scroll"><table>
+    <thead><tr><th class="l">Arm</th><th>May–Nov 2024</th><th>Nov 2024–May 2025</th><th>May–Nov 2025</th><th>Nov 2025–May 2026</th></tr></thead>
+    <tbody>
+      <tr><td class="l">Sweep · 2R · none</td><td class="neg">−404</td><td class="pos">+193</td><td class="neg">−1,776</td><td class="pos">+736</td></tr>
+      <tr><td class="l">Sweep · 2R · premium/discount</td><td class="neg">−1,251</td><td class="pos">+701</td><td class="neg">−3,123</td><td class="neg">−1,534</td></tr>
+      <tr><td class="l">Sweep · 2R · trend side</td><td class="pos">+839</td><td class="neg">−462</td><td class="pos">+1,347</td><td class="neg">−1,350</td></tr>
+      <tr><td class="l">Break · 2R · none</td><td class="pos">+1,849</td><td class="pos">+2,260</td><td class="pos">+383</td><td class="neg">−3,615</td></tr>
+      <tr><td class="l">Break · 2R · trend side</td><td class="pos">+1,050</td><td class="pos">+1,681</td><td class="pos">+1,178</td><td class="pos">+764</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">Only "break · trend side" is positive in all four blocks. Every block is a rising-gold period, so the break-long side and gold's uptrend cannot be separated with this data.</p>
+</section>
+
+<section>
+  <h2>5 · Check it yourself: every trade in the week of 11–15 May 2026</h2>
+  <p>This is the last complete week in the data. We did not pick it for its results, and it happens to be a good week: 6 of 9 trades hit target, well above the usual 34–40% win rate. All trades from the two base arms (2R target, no weekly-open filter) are listed. In TradingView, set the chart timezone to <strong>UTC</strong> and use the UTC column. Weekly open for this week: <strong>4679.06</strong>.</p>
+  <div class="scroll"><table>
+    <thead><tr><th class="l">Branch</th><th class="l">Signal bar (UTC)</th><th class="l">Broker time</th><th>PDH</th><th>PDL</th><th class="l">vs WO</th><th>Entry (y)</th><th>Stop (x)</th><th>Target</th><th class="l">Exit (UTC)</th><th class="l">Result</th><th>₹</th></tr></thead>
+    <tbody>
+      <tr><td class="l">Sweep PDL → long</td><td class="l mono">05-10 22:00</td><td class="l mono">05-11 01:00</td><td>4749.39</td><td>4677.53</td><td class="l">above</td><td>4687.47</td><td>4675.06</td><td>4712.29</td><td class="l mono">05-11 00:45</td><td class="l"><span class="pill sl">SL</span> <span class="pill flag">week-open bar</span></td><td class="neg">−1,072</td></tr>
+      <tr><td class="l">Break PDL → short</td><td class="l mono">05-11 04:15</td><td class="l mono">05-11 07:15</td><td>4749.39</td><td>4677.53</td><td class="l">below</td><td>4671.82</td><td>4680.47</td><td>4654.52</td><td class="l mono">05-11 05:30</td><td class="l"><span class="pill sl">SL</span></td><td class="neg">−756</td></tr>
+      <tr><td class="l">Break PDH → long</td><td class="l mono">05-11 23:00</td><td class="l mono">05-12 02:00</td><td>4748.53</td><td>4648.16</td><td class="l">above</td><td>4751.18</td><td>4743.82</td><td>4765.90</td><td class="l mono">05-11 23:45</td><td class="l"><span class="pill tp">TP</span></td><td class="pos">+1,215</td></tr>
+      <tr><td class="l">Sweep PDH → short</td><td class="l mono">05-12 01:00</td><td class="l mono">05-12 04:00</td><td>4748.53</td><td>4648.16</td><td class="l">above</td><td>4746.28</td><td>4756.02</td><td>4726.80</td><td class="l mono">05-12 01:30</td><td class="l"><span class="pill tp">TP</span></td><td class="pos">+1,614</td></tr>
+      <tr><td class="l">Sweep PDL → long</td><td class="l mono">05-12 15:15</td><td class="l mono">05-12 18:15</td><td>4748.53</td><td>4648.16</td><td class="l">below</td><td>4656.00</td><td>4637.72</td><td>4692.56</td><td class="l mono">05-12 18:30</td><td class="l"><span class="pill tp">TP</span></td><td class="pos">+3,049</td></tr>
+      <tr><td class="l">Sweep PDL → long</td><td class="l mono">05-14 04:00</td><td class="l mono">05-14 07:00</td><td>4726.78</td><td>4669.47</td><td class="l">above</td><td>4682.22</td><td>4668.44</td><td>4709.78</td><td class="l mono">05-14 04:30</td><td class="l"><span class="pill tp">TP</span></td><td class="pos">+2,293</td></tr>
+      <tr><td class="l">Break PDL → short</td><td class="l mono">05-14 19:15</td><td class="l mono">05-14 22:15</td><td>4726.78</td><td>4669.47</td><td class="l">below</td><td>4663.46</td><td>4672.42</td><td>4645.54</td><td class="l mono">05-14 20:30</td><td class="l"><span class="pill tp">TP</span></td><td class="pos">+1,483</td></tr>
+      <tr><td class="l">Sweep PDL → long</td><td class="l mono">05-15 00:00</td><td class="l mono">05-15 03:00</td><td>4718.80</td><td>4644.42</td><td class="l">below</td><td>4650.61</td><td>4642.14</td><td>4667.55</td><td class="l mono">05-15 00:15</td><td class="l"><span class="pill sl">SL</span></td><td class="neg">−741</td></tr>
+      <tr><td class="l">Break PDL → short</td><td class="l mono">05-15 00:30</td><td class="l mono">05-15 03:30</td><td>4718.80</td><td>4644.42</td><td class="l">below</td><td>4619.30</td><td>4658.86</td><td>4540.18</td><td class="l mono">05-15 09:15</td><td class="l"><span class="pill tp">TP</span></td><td class="pos">+6,624</td></tr>
+    </tbody>
+  </table></div>
+  <ul class="muted">
+    <li>Broker time = UTC + 3 hours in May (UTC + 2 in winter; the switch follows US daylight-saving dates).</li>
+    <li>The first row is on the week's opening bar. That bar can differ between price feeds, and an earlier comparison of our feed with TradingView found the only mismatches at the day-open bar. Treat that row as the least reliable.</li>
+    <li>Prices are the ICMarkets MT5 feed. Other feeds (OANDA and others) can differ by a few cents, so a level touched by less than that may look different on your chart.</li>
+    <li>This week is one example for checking the mechanics; it is not evidence of an edge. The 2-year numbers are in sections 3 and 4.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>6 · Correction made before sharing</h2>
+  <div class="note">
+    <p><strong>We found and fixed a bug in our own first run.</strong> On the first bar of each day, the script used the range from two days back instead of yesterday. We fixed it, checked all 47,183 bars (0 mismatches), and re-ran everything. All numbers on this page are from the corrected run. For transparency, here are the three main arms before and after:</p>
+    <div class="scroll"><table>
+      <thead><tr><th class="l">Arm</th><th>Before: trades / ₹ per month</th><th>After: trades / ₹ per month</th></tr></thead>
+      <tbody>
+        <tr><td class="l">Sweep · 2R · none</td><td>422 / −181</td><td>424 / −320</td></tr>
+        <tr><td class="l">Break · 2R · none</td><td>351 / +819</td><td>360 / +227</td></tr>
+        <tr><td class="l">Break · 2R · trend side</td><td>300 / +1,636</td><td>310 / +1,169</td></tr>
+      </tbody>
+    </table></div>
+    <p>The conclusion did not change.</p>
+  </div>
+</section>
+
+<section>
+  <h2>7 · What this test does NOT include (please correct us)</h2>
+  <p>Your XAU reference map has steps that we reduced to simple rules or left out. If any of these is what makes the method work, tell us the exact rule and we will test it.</p>
+  <ul>
+    <li><strong>HTF resistance zone</strong> (for example 4399–4404): not used. We used only PDH/PDL. <em>Which timeframe and which candle define that zone?</em></li>
+    <li><strong>"Bearish reaction → 5m/15m displacement → retest"</strong> after the sweep: not required. We entered on the next bar after the sweep. <em>How big must the displacement be, and where exactly is the retest entry?</em></li>
+    <li><strong>"Break → accept"</strong>: we defined accept as two 15-min closes beyond the level. <em>Is acceptance measured on 15m, 1h or 4h, and how many closes?</em></li>
+    <li><strong>"Vol 100 – sell (distribution)"</strong>: not used. <em>Which volume indicator and threshold?</em></li>
+    <li><strong>Weekly open "location important"</strong>: we tested both readings (premium/discount and trend side). <em>Which one do you use?</em></li>
+    <li><strong>Targets</strong>: we used 2R or the opposite side of the range. The map shows 4045 → 3942. <em>How is the target chosen?</em></li>
+    <li><strong>Pairs</strong>: gold only. EURAUD, EURNZD, NZDCHF, GBPAUD, NZDJPY and AUDUSD are not tested yet.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>8 · Where every number comes from</h2>
+  <div class="scroll"><table class="src">
+    <tbody>
+      <tr><td class="l"><strong>Prices</strong></td><td class="l"><code>data/mt5/XAUUSD_M15.csv</code>: 47,275 bars of 15 minutes, 2024-05-22 to 2026-05-21, ICMarkets MT5, loaded through the project's standard data loader.</td></tr>
+      <tr><td class="l"><strong>Trading costs</strong></td><td class="l"><code>results/research/xauusd_mt5_cost_calibration/…_manifest_LATEST.json</code>, measured from the broker:
+        <ul>
+          <li>half spread $0.045/oz</li>
+          <li>commission $0.04/oz each side</li>
+          <li>stop slippage $0.09. Entry slippage was not measured, so it is set equal to stop slippage.</li>
+        </ul></td></tr>
+      <tr><td class="l"><strong>Overnight fee</strong></td><td class="l">Read from the live MT5 terminal on 25 Sep 2026: long −$0.609/oz/night, short +$0.426, Wednesday counted ×3.</td></tr>
+      <tr><td class="l"><strong>Script and output</strong></td><td class="l"><code>results/pdh_pdl_weekly_open/2026-09-25/pdh_pdl_wo.py</code>, output in <code>tradelog.csv</code> (every trade) and <code>grid.json</code>.</td></tr>
+      <tr><td class="l"><strong>Checks</strong></td><td class="l">
+        <ul>
+          <li>Levels: 0 mismatches on all bars.</li>
+          <li>Totals: the trade log adds up to the table, and the four blocks add up to the 2-year total.</li>
+          <li>Trade-by-trade replays of sample trades match the log to the rupee.</li>
+        </ul></td></tr>
+      <tr><td class="l"><strong>Earlier work</strong></td><td class="l">Previous tests in this project of liquidity-pool sweeps at PDH/PDL on the same gold data also found no edge.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<div class="part">
+  <div class="eyebrow">Part 2 · added 25 Sep 2026 · same run, same files as sections 1–8</div>
+  <p>These sections explain how the numbers above are built: which candles were used, how each entry, stop and target was set, how every rupee figure is calculated, and how the ₹10 lakh capital moved over time.</p>
+</div>
+
+<section>
+  <h2>9 · Timeframe and candle range</h2>
+  <div class="scroll"><table class="src">
+    <tbody>
+      <tr><td class="l"><strong>Candle size</strong></td><td class="l">15-minute candles (M15). Each candle is labelled by its opening time. For example, "04:00" covers 04:00:00 to 04:14:59.</td></tr>
+      <tr><td class="l"><strong>First candle</strong></td><td class="l">22 May 2024, 01:00 broker time (21 May 2024, 22:00 UTC)</td></tr>
+      <tr><td class="l"><strong>Last candle</strong></td><td class="l">21 May 2026, 23:45 broker time (20:45 UTC)</td></tr>
+      <tr><td class="l"><strong>Number of candles</strong></td><td class="l">47,275</td></tr>
+      <tr><td class="l"><strong>Length</strong></td><td class="l">729 days = 23.95 months (days ÷ 30.44). Every "₹ per month" figure is the 2-year total ÷ 23.95.</td></tr>
+      <tr><td class="l"><strong>One trading day</strong></td><td class="l">92 candles, 01:00 to 23:45 broker time (the market closes for one hour a day).</td></tr>
+      <tr><td class="l"><strong>Higher timeframes</strong></td><td class="l">Daily candles (for PDH/PDL) and weekly candles (for the weekly open) are built from these same 15-minute candles. No 5-minute, 1-hour or 4-hour chart was used in Parts 1–2. (Part 3 adds 1-hour candles, built the same way.)</td></tr>
+      <tr><td class="l"><strong>When decisions happen</strong></td><td class="l">A signal is judged only when a 15-minute candle has <em>closed</em>. The entry is the next candle's open. After that, each candle's high and low are checked against the stop and target.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section>
+  <h2>10 · Entry, stop and target, step by step (three real trades)</h2>
+  <p class="muted">Candle prices below are copied from <code>data/mt5/XAUUSD_M15.csv</code>. Times are broker time, with UTC in brackets (broker = UTC + 3 in both May and July).</p>
+
+  <h3>A · Sweep of PDH → short, 12 May 2026 (winner)</h3>
+  <div class="scroll"><table>
+    <thead><tr><th class="l">Candle</th><th>Open</th><th>High</th><th>Low</th><th>Close</th><th class="l">What happens</th></tr></thead>
+    <tbody>
+      <tr><td class="l mono">03:45 (00:45 UTC)</td><td>4757.95</td><td>4761.91</td><td>4748.60</td><td>4749.32</td><td class="l">Above PDH 4748.53 but closes above it, so this is not a sweep</td></tr>
+      <tr class="hl"><td class="l mono">04:00 (01:00 UTC)</td><td>4749.32</td><td>4755.52</td><td>4742.18</td><td>4746.28</td><td class="l">High above PDH, close back below, so this is a <strong>sweep</strong></td></tr>
+      <tr class="hl"><td class="l mono">04:15 (01:15 UTC)</td><td>4746.28</td><td>4751.70</td><td>4733.73</td><td>4735.23</td><td class="l"><strong>Entry</strong> at the open, 4746.28</td></tr>
+      <tr><td class="l mono">04:30 (01:30 UTC)</td><td>4735.23</td><td>4738.95</td><td>4720.43</td><td>4729.51</td><td class="l">Low reaches 4726.80 or below, so the <strong>target is hit</strong></td></tr>
+    </tbody>
+  </table></div>
+  <div class="formula">Entry  (y) = open of candle after the sweep            = 4746.28
+Stop   (x) = sweep candle high 4755.52 + 0.50 buffer      = 4756.02
+Risk       = stop − entry = 4756.02 − 4746.28             = 9.74 $/oz
+Target     = entry − 2 × risk = 4746.28 − 19.48           = 4726.80</div>
+
+  <h3>B · Break of PDH → long, 11 Jul 2024 (winner, held 3 nights)</h3>
+  <div class="scroll"><table>
+    <thead><tr><th class="l">Candle</th><th>Open</th><th>High</th><th>Low</th><th>Close</th><th class="l">What happens</th></tr></thead>
+    <tbody>
+      <tr><td class="l mono">15:15 (12:15 UTC)</td><td>2381.71</td><td>2382.61</td><td>2378.92</td><td>2379.92</td><td class="l">Close below PDH 2386.68</td></tr>
+      <tr class="hl"><td class="l mono">15:30 (12:30 UTC)</td><td>2379.90</td><td>2408.42</td><td>2378.29</td><td>2407.76</td><td class="l">First close above PDH (a single $30 candle)</td></tr>
+      <tr class="hl"><td class="l mono">15:45 (12:45 UTC)</td><td>2407.63</td><td>2409.81</td><td>2404.81</td><td>2406.35</td><td class="l">Second close above PDH, so the break is <strong>accepted</strong></td></tr>
+      <tr class="hl"><td class="l mono">16:00 (13:00 UTC)</td><td>2406.29</td><td>2409.07</td><td>2402.98</td><td>2405.60</td><td class="l"><strong>Entry</strong> at the open, 2406.29</td></tr>
+      <tr><td class="l mono">16 Jul 18:30 (15:30 UTC)</td><td>2460.07</td><td>2464.61</td><td>2459.60</td><td>2464.03</td><td class="l">High reaches 2463.29 or above, so the <strong>target is hit</strong></td></tr>
+    </tbody>
+  </table></div>
+  <div class="formula">Entry  (y) = open after the 2nd accepted close           = 2406.29
+Stop   (x) = lowest low of the 2 accept candles 2378.29 − 0.50 = 2377.79
+Risk       = entry − stop = 2406.29 − 2377.79              = 28.50 $/oz
+Target     = entry + 2 × risk = 2406.29 + 57.00            = 2463.29</div>
+  <p class="muted">The stop is wide here because the breakout itself was one large candle. This is why the break branch has a larger typical risk (median $9.00 per oz, ₹756) than the sweep branch (median $5.32, ₹447). The largest break risk was $171.64 (₹14,418).</p>
+
+  <h3>C · Sweep of PDL → long, 15 May 2026 (stopped in the first candle)</h3>
+  <div class="scroll"><table>
+    <thead><tr><th class="l">Candle</th><th>Open</th><th>High</th><th>Low</th><th>Close</th><th class="l">What happens</th></tr></thead>
+    <tbody>
+      <tr class="hl"><td class="l mono">03:00 (00:00 UTC)</td><td>4652.16</td><td>4653.70</td><td>4642.64</td><td>4650.61</td><td class="l">Low below PDL 4644.42, close back above, so this is a <strong>sweep</strong></td></tr>
+      <tr class="hl"><td class="l mono">03:15 (00:15 UTC)</td><td>4650.61</td><td>4658.36</td><td>4629.04</td><td>4630.17</td><td class="l"><strong>Entry</strong> 4650.61. The low falls to the stop at 4642.14 in the same candle, so the <strong>stop is hit</strong></td></tr>
+    </tbody>
+  </table></div>
+  <div class="formula">Entry  (y) = 4650.61
+Stop   (x) = sweep candle low 4642.64 − 0.50               = 4642.14
+Risk       = 4650.61 − 4642.14                             = 8.47 $/oz
+Target     = 4650.61 + 2 × 8.47                            = 4667.55  (not reached)
+Candle 03:15 touched both 4658.36 (high) and 4629.04 (low): we count the STOP (the cautious choice).</div>
+</section>
+
+<section>
+  <h2>11 · How every rupee figure is calculated</h2>
+  <div class="formula">Profit in $ per oz = direction × (exit price − entry price)          direction: long +1, short −1
+                   − entry costs  $0.175 = half spread 0.045 + commission 0.040 + slippage 0.090
+                   − exit costs   $0.085 = half spread 0.045 + commission 0.040
+                   + overnight fee × nights held   (long −0.609 / short +0.426 per night; a Wednesday night counts 3)
+
+Stop exits are also filled $0.09 worse than the stop price (slippage), inside the exit price.
+Rupees = profit in $ × 1 oz × ₹84 per $</div>
+  <div class="scroll"><table>
+    <thead><tr><th class="l">Step</th><th>A · short, target</th><th>C · long, stop</th><th>B · long, target, 3 nights</th></tr></thead>
+    <tbody>
+      <tr><td class="l">Entry price</td><td>4746.28</td><td>4650.61</td><td>2406.29</td></tr>
+      <tr><td class="l">Exit price</td><td>4726.80 (target)</td><td>4642.05 (stop 4642.14 − 0.09)</td><td>2463.29 (target)</td></tr>
+      <tr><td class="l">Price move for the trade</td><td>+19.48</td><td>−8.56</td><td>+57.00</td></tr>
+      <tr><td class="l">Entry + exit costs</td><td>−0.26</td><td>−0.26</td><td>−0.26</td></tr>
+      <tr><td class="l">Overnight fee</td><td>0 (same day)</td><td>0 (same day)</td><td>−1.83 (3 nights × 0.609)</td></tr>
+      <tr><td class="l"><strong>Profit, $ per oz</strong></td><td><strong>+19.22</strong></td><td><strong>−8.82</strong></td><td><strong>+54.91</strong></td></tr>
+      <tr><td class="l"><strong>× 1 oz × ₹84</strong></td><td class="pos">+₹1,614.48</td><td class="neg">−₹740.88</td><td class="pos">+₹4,612.71</td></tr>
+    </tbody>
+  </table></div>
+  <ul class="muted">
+    <li><strong>₹ per month</strong> = the sum of every trade's rupees over 2 years ÷ 23.95 months.</li>
+    <li><strong>Win %</strong> = the share of trades whose rupees are above zero.</li>
+    <li><strong>R</strong> = profit in $ ÷ risk in $. Example A: 19.22 ÷ 9.74 = +1.97R.</li>
+    <li>₹84 per $ is a fixed assumption, not a market rate.</li>
+    <li>Each of these three results matches the trade log (<code>tradelog.csv</code>) to the paisa.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>12 · Investment and how the capital moved</h2>
+  <h3>What one trade ties up</h3>
+  <div class="scroll"><table class="src">
+    <tbody>
+      <tr><td class="l"><strong>Starting capital</strong></td><td class="l">₹10,00,000</td></tr>
+      <tr><td class="l"><strong>Size of every trade</strong></td><td class="l">1 oz of gold (the broker's minimum, 0.01 lot)</td></tr>
+      <tr><td class="l"><strong>Value of that 1 oz</strong></td><td class="l">price × ₹84: ₹1,93,902 (gold at $2,308) to ₹4,61,192 (gold at $5,490). Median about ₹2.7–2.8 lakh.</td></tr>
+      <tr><td class="l"><strong>Money locked as margin</strong></td><td class="l">
+        <ul>
+          <li>Depends on leverage.</li>
+          <li>At 1:100: about ₹1,900–4,600.</li>
+          <li>At 1:20: about ₹9,700–23,100, which is at most 2.3% of capital.</li>
+          <li>The demo account shows 1:5000.</li>
+        </ul></td></tr>
+      <tr><td class="l"><strong>Money at risk per trade</strong></td><td class="l">
+        <ul>
+          <li>Entry to stop × ₹84.</li>
+          <li>Sweep: median ₹447, largest ₹9,526.</li>
+          <li>Break: median ₹756, largest ₹14,418.</li>
+        </ul></td></tr>
+      <tr><td class="l"><strong>How long a trade lasts</strong></td><td class="l">
+        <ul>
+          <li>Sweep: median 45 minutes, 9 in 10 trades within about 7 hours, 9% held overnight.</li>
+          <li>Break: median 2 hours, 9 in 10 trades within about 17–20 hours, 17% held overnight.</li>
+        </ul></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Capital at the end of each quarter (starting from ₹10,00,000)</h3>
+  <div class="scroll"><table>
+    <thead><tr><th class="l">Quarter end</th><th>Sweep · 2R · none</th><th>Break · 2R · none</th><th>Break · 2R · trend side</th></tr></thead>
+    <tbody>
+      <tr><td class="l">Jun 2024 (from 22 May)</td><td>9,98,714</td><td>9,99,913</td><td>9,96,749</td></tr>
+      <tr><td class="l">Sep 2024</td><td>10,00,121</td><td>10,01,456</td><td>9,97,620</td></tr>
+      <tr><td class="l">Dec 2024</td><td>10,02,123</td><td>10,09,548</td><td>10,05,311</td></tr>
+      <tr><td class="l">Mar 2025</td><td>10,00,770</td><td>10,01,987</td><td>10,01,148</td></tr>
+      <tr><td class="l">Jun 2025</td><td>9,98,367</td><td>10,20,351</td><td>10,13,577</td></tr>
+      <tr><td class="l">Sep 2025</td><td>10,04,998</td><td>10,32,517</td><td>10,27,298</td></tr>
+      <tr><td class="l">Dec 2025</td><td class="neg">9,72,556</td><td>10,24,203</td><td>10,19,705</td></tr>
+      <tr><td class="l">Mar 2026</td><td>9,87,196</td><td>10,28,334</td><td>10,43,131</td></tr>
+      <tr><td class="l">21 May 2026 (end)</td><td><strong>9,92,346</strong></td><td><strong>10,05,435</strong></td><td><strong>10,28,005</strong></td></tr>
+    </tbody>
+  </table></div>
+  <div class="scroll"><table>
+    <thead><tr><th class="l"></th><th>Sweep · 2R · none</th><th>Break · 2R · none</th><th>Break · 2R · trend side</th></tr></thead>
+    <tbody>
+      <tr><td class="l">2-year result</td><td class="neg">−₹7,654 (−0.8%)</td><td class="pos">+₹5,435 (+0.5%)</td><td class="pos">+₹28,005 (+2.8%)</td></tr>
+      <tr><td class="l">Highest capital</td><td>₹10,09,313 (18 Sep 2025)</td><td>₹10,48,551 (28 Jan 2026)</td><td>₹10,56,552 (25 Mar 2026)</td></tr>
+      <tr><td class="l">Largest fall from a high</td><td class="neg">₹38,062 (18 Sep 2025 → 5 Jan 2026)</td><td class="neg">₹47,330 (28 Jan → 11 May 2026)</td><td class="neg">₹32,760 (25 Mar → 11 May 2026)</td></tr>
+      <tr><td class="l">Best / worst month</td><td>+₹28,701 (Jan 2026) / −₹12,981 (Dec 2025)</td><td>+₹14,026 (May 2025) / −₹21,119 (Apr 2026)</td><td>+₹24,411 (Jan 2026) / −₹13,917 (Apr 2026)</td></tr>
+      <tr><td class="l">Months with profit</td><td>10 of 25</td><td>13 of 25</td><td>13 of 25</td></tr>
+      <tr><td class="l">Target hits / stops (gapped stops)</td><td>146 / 278 (4)</td><td>143 / 217 (3)</td><td>125 / 185 (2)</td></tr>
+      <tr><td class="l">Price moves before costs</td><td>+₹1,418</td><td>+₹15,396</td><td>+₹37,380</td></tr>
+      <tr><td class="l">Spread + commission + slippage</td><td>−₹9,260</td><td>−₹7,862</td><td>−₹6,770</td></tr>
+      <tr><td class="l">Overnight fees</td><td>+₹189</td><td>−₹2,098</td><td>−₹2,604</td></tr>
+    </tbody>
+  </table></div>
+  <ul class="muted">
+    <li>Capital is counted when each trade closes, one trade at a time, at 1 oz, without adding profits back into bigger sizes.</li>
+    <li>Quarters and months are grouped by the date a trade closed. The first quarter (from 22 May 2024) and the last month (to 21 May 2026) are partial.</li>
+    <li>What this means: at 1 oz on ₹10 lakh, none of these arms moves the capital by more than about 6% at any point in the 2 years. The sweep branch's price moves are almost exactly zero (+₹1,418 on 424 trades), and costs turn it negative.</li>
+  </ul>
+</section>
+
+<div class="part">
+  <div class="eyebrow">Part 3 · added 25 Sep 2026 · 1-hour candle close, as Sujan asked</div>
+  <p>Same data, costs, targets and weekly-open readings as Parts 1–2. Only the confirmation candle changes, from 15 minutes to 1 hour.</p>
+</div>
+
+<section>
+  <h2>13 · What was asked, and the rules we used</h2>
+  <div class="card">
+    <p><strong>Sujan (25 Sep, 21:02–21:05):</strong> "Put 1 hr candle close after sweep, not 15 min … we are trading daily range acting as a weekly open key level, so 1 hr confirmation required … I think we get more win rate for 1 hr." Also: "15 min data is good 3% per month profitability … with funded account per month 3 lakhs."</p>
+  </div>
+  <ul>
+    <li><strong>1-hour candles</strong> are built from the same 15-minute data, on the clock hour. For example, "04:00" covers 04:00–04:59 broker time. The hour is only used once it has closed, and the entry is the open of the next hour.</li>
+    <li><strong>1H sweep</strong> (reading 1): a 1-hour candle trades beyond PDH/PDL and <em>closes</em> back inside. The stop is that hour's wick ± $0.50.</li>
+    <li><strong>15m sweep → 1H close</strong> (reading 2): the 15-minute sweep as before, then we wait for that hour to close back inside the level. If it closes outside, there is no trade that day. The stop is the extreme from the sweep candle to the end of the hour ± $0.50.</li>
+    <li><strong>1H break</strong>: two 1-hour closes in a row beyond PDH/PDL (the first cross of the day). The stop is the far extreme of the two hours ± $0.50. Both readings use this same break rule, so their break rows are identical.</li>
+    <li><strong>Unchanged:</strong>
+      <ul>
+        <li>exits checked every 15 minutes</li>
+        <li>2R target (and the day-range target for sweeps)</li>
+        <li>the three weekly-open readings</li>
+        <li>once per level per day, one position at a time</li>
+        <li>1 oz, measured costs</li>
+      </ul>
+    </li>
+    <li><strong>Our prediction, written before the run:</strong> the win rate may rise a little, but stops get wider, so the result per unit of risk (R) stays about the same. Only the coin-flip control and holding gold decide whether it is better.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>14 · Results: 15 minutes vs 1 hour (2R target)</h2>
+  <div class="scroll"><table>
+    <thead><tr><th class="l">Confirm on</th><th class="l">Branch · weekly open</th><th>Trades</th><th>Win %</th><th>₹ / month</th><th>Avg R after cost</th><th>95% range</th><th>Coin flip 95th</th><th>Beats?</th><th>Hold gold ₹/mo</th><th>Median risk</th></tr></thead>
+    <tbody>
+      <tr><td class="l">15m</td><td class="l">Sweep · none</td><td>424</td><td>34.4</td><td class="neg">−320</td><td>−0.05</td><td>−0.19 … +0.08</td><td>+0.09</td><td>No</td><td>−516</td><td>$5.32</td></tr>
+      <tr class="hl"><td class="l">1H</td><td class="l">Sweep · none</td><td>353</td><td><strong>36.0</strong></td><td class="pos">+2,528</td><td>+0.02</td><td>−0.13 … +0.17</td><td>+0.14</td><td>No</td><td>−2,108</td><td>$9.30</td></tr>
+      <tr class="hl"><td class="l">15m → 1H</td><td class="l">Sweep · none</td><td>307</td><td><strong>36.8</strong></td><td class="pos">+2,516</td><td>+0.03</td><td>−0.13 … +0.20</td><td>+0.09</td><td>No</td><td>−2,013</td><td>$7.39</td></tr>
+      <tr><td class="l">15m</td><td class="l">Sweep · premium/discount</td><td>327</td><td>32.7</td><td class="neg">−1,311</td><td>−0.11</td><td>−0.26 … +0.04</td><td>+0.06</td><td>No</td><td>−126</td><td>$5.17</td></tr>
+      <tr class="hl"><td class="l">1H</td><td class="l">Sweep · premium/discount</td><td>276</td><td><strong>37.0</strong></td><td class="pos">+2,969</td><td>+0.05</td><td>−0.12 … +0.22</td><td>+0.18</td><td>No</td><td>−617</td><td>$8.42</td></tr>
+      <tr class="hl"><td class="l">15m → 1H</td><td class="l">Sweep · premium/discount</td><td>239</td><td><strong>36.8</strong></td><td class="pos">+1,970</td><td>+0.03</td><td>−0.16 … +0.21</td><td>+0.16</td><td>No</td><td>−1,833</td><td>$6.75</td></tr>
+      <tr><td class="l">15m</td><td class="l">Sweep · trend side</td><td>100</td><td>39.0</td><td class="pos">+102</td><td>+0.10</td><td>−0.20 … +0.39</td><td>+0.13</td><td>No</td><td>−1,499</td><td>$5.89</td></tr>
+      <tr class="hl"><td class="l">1H</td><td class="l">Sweep · trend side</td><td>101</td><td><strong>31.7</strong></td><td class="neg">−1,469</td><td>−0.09</td><td>−0.37 … +0.18</td><td>+0.06</td><td>No</td><td>−1,289</td><td>$10.43</td></tr>
+      <tr class="hl"><td class="l">15m → 1H</td><td class="l">Sweep · trend side</td><td>87</td><td><strong>35.6</strong></td><td class="neg">−191</td><td>+0.02</td><td>−0.28 … +0.32</td><td>+0.08</td><td>No</td><td>−273</td><td>$9.72</td></tr>
+      <tr><td class="l">15m</td><td class="l">Break · none</td><td>360</td><td>39.7</td><td class="pos">+227</td><td>+0.14</td><td>−0.01 … +0.29</td><td>+0.08</td><td>Yes</td><td>+4,653</td><td>$8.99</td></tr>
+      <tr class="hl"><td class="l">1H</td><td class="l">Break · none</td><td>238</td><td><strong>39.9</strong></td><td class="pos">+5,316</td><td>+0.17</td><td>−0.02 … +0.35</td><td>+0.21</td><td>No</td><td>+2,404</td><td>$17.64</td></tr>
+      <tr><td class="l">15m</td><td class="l">Break · trend side</td><td>310</td><td>40.3</td><td class="pos">+1,169</td><td>+0.16</td><td>−0.01 … +0.32</td><td>+0.11</td><td>Yes</td><td>+3,985</td><td>$8.83</td></tr>
+      <tr class="hl"><td class="l">1H</td><td class="l">Break · trend side</td><td>214</td><td><strong>38.3</strong></td><td class="pos">+3,839</td><td>+0.11</td><td>−0.08 … +0.31</td><td>+0.16</td><td>No</td><td>+3,192</td><td>$16.81</td></tr>
+      <tr class="hl"><td class="l">1H</td><td class="l">Break · premium/discount</td><td>42</td><td>38.1</td><td class="pos">+995</td><td>+0.13</td><td>−0.31 … +0.58</td><td>+0.33</td><td>No</td><td>−814</td><td>$16.67</td></tr>
+    </tbody>
+  </table></div>
+  <div class="verdict">
+    <div class="eyebrow">What the 1-hour close changed</div>
+    <ul>
+      <li><strong>Win rate:</strong> sweeps with no filter rose by 1.6–2.4 points (34.4% → 36.0% / 36.8%), and by up to 4.3 points with the premium/discount reading. With the trend-side reading they fell (39.0% → 31.7% / 35.6%). Breaks did not rise (39.7% → 39.9%; trend side 40.3% → 38.3%). So "more win rate" holds a little for sweeps, and not for breaks.</li>
+      <li><strong>₹ per month rose a lot</strong>: sweep −₹320 → about +₹2,500, break +₹227 → +₹5,316. But the result per unit of risk barely moved (sweep −0.05R → +0.02/+0.03R; break +0.14R → +0.17R), and every 95% range still crosses zero. The rupees rose mainly because <strong>the stops roughly doubled</strong> (median sweep risk $5.32 → $9.30; break $8.99 → $17.64). Rupees = R × risk, so the same R on a wider stop is more rupees, and also bigger losses.</li>
+      <li><strong>Coin flip:</strong> none of the 2R arms on 1H beats it. For the 1H break, random directions on the same entries average +0.08R, so part of the result comes from <em>when</em> the trades are taken (volatile moments), not from the direction.</li>
+      <li><strong>New on 1H:</strong> the break branch now makes money in both directions (breaks above PDH +₹94,565, breaks below PDL +₹32,744; at 15m the shorts lost −₹46,416). It also beats holding gold over the same windows (+₹5,316 vs +₹2,404 a month).</li>
+      <li><strong>One day-range-target arm beats the coin flip:</strong> 15m→1H · sweep · trend side (83 trades, +0.23R, +₹1,152/month). It is 1 of 15 distinct new arms, and about 1 in 20 would pass by chance alone, so treat it as a lead, not a result.</li>
+      <li><strong>Overlap:</strong> the two sweep readings share 293 of their trades (353 and 307 in total), so they are mostly the same trades.</li>
+    </ul>
+  </div>
+
+  <h3>Split into four 6-month blocks (₹ per month)</h3>
+  <div class="scroll"><table>
+    <thead><tr><th class="l">Arm</th><th>May–Nov 2024</th><th>Nov 2024–May 2025</th><th>May–Nov 2025</th><th>Nov 2025–May 2026</th></tr></thead>
+    <tbody>
+      <tr><td class="l">1H · sweep · none</td><td class="pos">+2,117</td><td class="pos">+1,150</td><td class="neg">−2,597</td><td class="pos">+9,518</td></tr>
+      <tr><td class="l">15m→1H · sweep · none</td><td class="pos">+1,577</td><td class="pos">+3,123</td><td class="neg">−1,118</td><td class="pos">+6,543</td></tr>
+      <tr><td class="l">1H · break · none</td><td class="pos">+4,577</td><td class="pos">+4,450</td><td class="pos">+1,089</td><td class="pos">+11,201</td></tr>
+      <tr><td class="l">1H · break · trend side</td><td class="pos">+2,726</td><td class="pos">+3,094</td><td class="pos">+1,749</td><td class="pos">+7,817</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">The last block (Nov 2025–May 2026) is the biggest in every row. That was gold's most volatile period in the data, including a fall of about 19% from late January to late March 2026. The 1H break is positive in all four blocks, which the 15m break · none was not.</p>
+</section>
+
+<section>
+  <h2>15 · Check it yourself: 1-hour trades, 11–15 May 2026</h2>
+  <p>These are all trades from the 1H reading (2R target, no weekly-open filter) in the same week as section 5. Set TradingView to the <strong>1-hour chart in UTC</strong>. The "signal hour" is the hour whose close gave the signal; for breaks, it is the first of the two hours.</p>
+  <div class="scroll"><table>
+    <thead><tr><th class="l">Branch</th><th class="l">Signal hour (UTC)</th><th class="l">Broker</th><th>PDH</th><th>PDL</th><th class="l">vs WO</th><th>Entry (y)</th><th>Stop (x)</th><th>Target</th><th class="l">Exit (UTC)</th><th class="l">Result</th><th>₹</th></tr></thead>
+    <tbody>
+      <tr><td class="l">Sweep PDL → long</td><td class="l mono">05-10 22:00</td><td class="l mono">05-11 01:00</td><td>4749.39</td><td>4677.53</td><td class="l">above</td><td>4691.82</td><td>4675.06</td><td>4725.34</td><td class="l mono">05-11 00:45</td><td class="l"><span class="pill sl">SL</span> <span class="pill flag">week-open hour</span></td><td class="neg">−1,437</td></tr>
+      <tr><td class="l">Break PDL → short</td><td class="l mono">05-11 04:00</td><td class="l mono">05-11 07:00</td><td>4749.39</td><td>4677.53</td><td class="l">below</td><td>4652.34</td><td>4681.25</td><td>4594.52</td><td class="l mono">05-11 12:15</td><td class="l"><span class="pill sl">SL</span></td><td class="neg">−2,458</td></tr>
+      <tr><td class="l">Break PDH → long</td><td class="l mono">05-11 22:00</td><td class="l mono">05-12 01:00</td><td>4748.53</td><td>4648.16</td><td class="l">above</td><td>4767.50</td><td>4734.71</td><td>4833.08</td><td class="l mono">05-12 01:15</td><td class="l"><span class="pill sl">SL</span></td><td class="neg">−2,784</td></tr>
+      <tr><td class="l">Sweep PDH → short</td><td class="l mono">05-12 01:00</td><td class="l mono">05-12 04:00</td><td>4748.53</td><td>4648.16</td><td class="l">above</td><td>4727.28</td><td>4756.02</td><td>4669.80</td><td class="l mono">05-12 14:45</td><td class="l"><span class="pill tp">TP</span></td><td class="pos">+4,806</td></tr>
+      <tr><td class="l">Sweep PDL → long</td><td class="l mono">05-12 15:00</td><td class="l mono">05-12 18:00</td><td>4748.53</td><td>4648.16</td><td class="l">below</td><td>4666.15</td><td>4637.72</td><td>4723.01</td><td class="l mono">05-12 23:00</td><td class="l"><span class="pill tp">TP</span></td><td class="pos">+4,703</td></tr>
+      <tr><td class="l">Sweep PDL → long</td><td class="l mono">05-14 04:00</td><td class="l mono">05-14 07:00</td><td>4726.78</td><td>4669.47</td><td class="l">above</td><td>4702.54</td><td>4668.44</td><td>4770.74</td><td class="l mono">05-14 13:30</td><td class="l"><span class="pill sl">SL</span></td><td class="neg">−2,894</td></tr>
+      <tr><td class="l">Break PDL → short</td><td class="l mono">05-14 19:00</td><td class="l mono">05-14 22:00</td><td>4726.78</td><td>4669.47</td><td class="l">below</td><td>4651.34</td><td>4672.42</td><td>4609.18</td><td class="l mono">05-15 01:00</td><td class="l"><span class="pill tp">TP</span></td><td class="pos">+3,520</td></tr>
+      <tr><td class="l">Break PDL → short</td><td class="l mono">05-15 00:00</td><td class="l mono">05-15 03:00</td><td>4718.80</td><td>4644.42</td><td class="l">below</td><td>4614.03</td><td>4658.86</td><td>4524.37</td><td class="l mono">05-15 13:30</td><td class="l"><span class="pill tp">TP</span></td><td class="pos">+7,510</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">This week: 4 of 8 hit target. At 15 minutes the same week had 6 of 9.</p>
+
+  <h3>Same sweep, two confirmations: 12 May 2026, PDH 4748.53 (winner both ways)</h3>
+  <div class="scroll"><table>
+    <thead><tr><th class="l"></th><th>15-minute close</th><th>1-hour close</th></tr></thead>
+    <tbody>
+      <tr><td class="l">Signal candle (broker time)</td><td>04:00–04:14: O 4749.32 H 4755.52 L 4742.18 C 4746.28</td><td>04:00–04:59: O 4749.32 H 4755.52 L 4720.43 C 4727.28</td></tr>
+      <tr><td class="l">Entry (y)</td><td>04:15 open = 4746.28</td><td>05:00 open = 4727.28</td></tr>
+      <tr><td class="l">Stop (x)</td><td>4755.52 + 0.50 = 4756.02</td><td>4755.52 + 0.50 = 4756.02</td></tr>
+      <tr><td class="l">Risk</td><td>9.74</td><td>28.74</td></tr>
+      <tr><td class="l">Target (2R)</td><td>4746.28 − 19.48 = 4726.80</td><td>4727.28 − 57.48 = 4669.80</td></tr>
+      <tr><td class="l">Exit</td><td>04:30, low 4720.43 → target</td><td>17:45 broker (14:45 UTC), low 4669.54 → target</td></tr>
+      <tr><td class="l">₹ = (move − 0.26) × 84</td><td>(19.48 − 0.26) × 84 = <strong>+₹1,614.48</strong></td><td>(57.48 − 0.26) × 84 = <strong>+₹4,806.48</strong></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Same sweep, two confirmations: 14 May 2026, PDL 4669.47 (15m wins, 1H loses)</h3>
+  <div class="scroll"><table>
+    <thead><tr><th class="l"></th><th>15-minute close</th><th>1-hour close</th></tr></thead>
+    <tbody>
+      <tr><td class="l">Signal candle (broker time)</td><td>07:00–07:14: O 4675.09 H 4682.64 L 4668.94 C 4682.22</td><td>07:00–07:59: O 4675.09 H 4712.71 L 4668.94 C 4702.54</td></tr>
+      <tr><td class="l">Entry (y)</td><td>07:15 open = 4682.22</td><td>08:00 open = 4702.54</td></tr>
+      <tr><td class="l">Stop (x)</td><td>4668.94 − 0.50 = 4668.44</td><td>4668.94 − 0.50 = 4668.44</td></tr>
+      <tr><td class="l">Risk</td><td>13.78</td><td>34.10</td></tr>
+      <tr><td class="l">Target (2R)</td><td>4682.22 + 27.56 = 4709.78</td><td>4702.54 + 68.20 = 4770.74</td></tr>
+      <tr><td class="l">Exit</td><td>07:30, high 4712.71 → target</td><td>16:30 broker (13:30 UTC), low 4666.70 → stop, filled 4668.35</td></tr>
+      <tr><td class="l">₹</td><td>(27.56 − 0.26) × 84 = <strong>+₹2,293.20</strong></td><td>(−34.19 − 0.26) × 84 = <strong>−₹2,893.80</strong></td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">What the two examples show: waiting for the hour to close means entering <em>after</em> much of the reaction has already happened (19–20 dollars later here), with the same stop, so the risk is 2.5–3× wider. A win pays more rupees and a loss costs more. The target is 2× a larger risk, so it is farther away. Each ₹ figure matches the trade log to the paisa.</p>
+</section>
+
+<section>
+  <h2>16 · Capital path for the 1H break (the strongest 1-hour arm in ₹)</h2>
+  <div class="scroll"><table>
+    <thead><tr><th class="l">Quarter end</th><th>Capital (₹)</th><th>Quarter ₹</th><th>Trades</th></tr></thead>
+    <tbody>
+      <tr><td class="l">Jun 2024 (from 22 May)</td><td>9,98,529</td><td class="neg">−1,471</td><td>6</td></tr>
+      <tr><td class="l">Sep 2024</td><td>10,04,533</td><td class="pos">+6,004</td><td>23</td></tr>
+      <tr><td class="l">Dec 2024</td><td>10,27,987</td><td class="pos">+23,454</td><td>32</td></tr>
+      <tr><td class="l">Mar 2025</td><td>10,26,824</td><td class="neg">−1,163</td><td>35</td></tr>
+      <tr><td class="l">Jun 2025</td><td>10,42,287</td><td class="pos">+15,463</td><td>27</td></tr>
+      <tr><td class="l">Sep 2025</td><td>10,57,726</td><td class="pos">+15,439</td><td>27</td></tr>
+      <tr><td class="l">Dec 2025</td><td>10,70,269</td><td class="pos">+12,542</td><td>41</td></tr>
+      <tr><td class="l">Mar 2026</td><td>11,57,049</td><td class="pos">+86,780</td><td>28</td></tr>
+      <tr><td class="l">21 May 2026 (end)</td><td><strong>11,27,309</strong></td><td class="neg">−29,740</td><td>19</td></tr>
+    </tbody>
+  </table></div>
+  <ul>
+    <li><strong>2-year result:</strong> +₹1,27,309 (+12.7% on ₹10L) at 1 oz. The price moves made +₹1,36,126, less −₹5,198 in trading costs and −₹3,619 in overnight fees.</li>
+    <li><strong>Concentration:</strong> the single quarter Jan–Mar 2026 made +₹86,780, which is 68% of the whole 2-year profit.</li>
+    <li><strong>Highest capital:</strong> ₹11,79,533 on 23 Mar 2026. <strong>Largest fall:</strong> ₹62,462 (23 Mar → 12 May 2026). <strong>Worst month:</strong> −₹32,325 (Apr 2026). <strong>Months with profit:</strong> 16 of 25.</li>
+    <li><strong>Per trade:</strong> median risk ₹1,482, median hold about 10 hours, worst trade −₹13,203.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>17 · What ₹3 lakh a month, or 3% a month, would take</h2>
+  <p>Profit per month at 1 oz, measured, then scaled to the size needed. We assume profit grows in a straight line with size, which ignores worse fills on bigger orders. The losses at that size are the <em>same measured history</em>, multiplied by the same number.</p>
+  <div class="scroll"><table>
+    <thead><tr><th class="l">Arm</th><th>₹/month at 1 oz</th><th>% of ₹10L per month</th><th>Size for ₹30k/mo (3% of ₹10L)</th><th>Size for ₹3L/mo</th><th>At ₹3L size: largest fall</th><th>Worst month</th><th>Worst trade</th><th>Median risk per trade</th></tr></thead>
+    <tbody>
+      <tr><td class="l">15m · break · trend side</td><td>1,169</td><td>0.12%</td><td>25.7 oz</td><td>256.5 oz</td><td class="neg">₹84.0 L</td><td class="neg">−₹35.7 L (Apr 26)</td><td class="neg">−₹36.3 L</td><td>₹1.90 L</td></tr>
+      <tr><td class="l">1H · sweep · none</td><td>2,528</td><td>0.25%</td><td>11.9 oz</td><td>118.7 oz</td><td class="neg">₹52.7 L</td><td class="neg">−₹24.0 L (Dec 25)</td><td class="neg">−₹11.6 L</td><td>₹92.7 k</td></tr>
+      <tr><td class="l">15m→1H · sweep · none</td><td>2,516</td><td>0.25%</td><td>11.9 oz</td><td>119.2 oz</td><td class="neg">₹34.6 L</td><td class="neg">−₹22.2 L (Mar 26)</td><td class="neg">−₹9.4 L</td><td>₹74.0 k</td></tr>
+      <tr class="hl"><td class="l">1H · break · none</td><td>5,316</td><td>0.53%</td><td>5.6 oz</td><td>56.4 oz</td><td class="neg">₹35.3 L</td><td class="neg">−₹18.2 L (Apr 26)</td><td class="neg">−₹7.5 L</td><td>₹83.6 k</td></tr>
+      <tr><td class="l">1H · break · trend side</td><td>3,839</td><td>0.38%</td><td>7.8 oz</td><td>78.2 oz</td><td class="neg">₹48.0 L</td><td class="neg">−₹19.8 L (Apr 26)</td><td class="neg">−₹10.3 L</td><td>₹1.10 L</td></tr>
+    </tbody>
+  </table></div>
+  <ul>
+    <li><strong>3% a month is not what we measured.</strong> At 1 oz on ₹10 lakh the best arm makes 0.53% a month (1H break), and the best 15-minute arm makes 0.12%.</li>
+    <li><strong>To make 3% a month (₹30,000) with the 1H break</strong> you would trade about 5.6 oz. At that size the same history would have produced:
+      <ul>
+        <li>a largest fall of ₹3.53 lakh, which is 35% of ₹10 lakh</li>
+        <li>a worst month of −₹1.82 lakh, which is 18%</li>
+      </ul>
+    </li>
+    <li><strong>For ₹3 lakh a month</strong> the 1H break needs about 56 oz per trade. At that size the same history would have produced:
+      <ul>
+        <li>a largest fall of ₹35 lakh</li>
+        <li>a worst month of −₹18 lakh</li>
+      </ul>
+      Before relying on this, compare those numbers with the funded account's daily and total loss limits; we don't have those rules.
+    </li>
+    <li><strong>Question for Sujan:</strong> what is the 3% measured against — the account balance, the margin used, or the risk per trade? A figure on margin or on risk can be many times larger than the same profit on the account balance.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>18 · Where the Part 3 numbers come from</h2>
+  <div class="scroll"><table class="src">
+    <tbody>
+      <tr><td class="l"><strong>Script</strong></td><td class="l"><code>pdh_pdl_wo.py --confirm-tf H1</code> and <code>--confirm-tf M15H1</code>. The default 15-minute mode still gives byte-identical output to Parts 1–2.</td></tr>
+      <tr><td class="l"><strong>Output</strong></td><td class="l"><code>grid_h1.json</code>, <code>tradelog_h1.csv</code>, <code>grid_m15h1.json</code>, <code>tradelog_m15h1.csv</code> in <code>results/pdh_pdl_weekly_open/2026-09-25/</code></td></tr>
+      <tr><td class="l"><strong>Checks</strong></td><td class="l">
+        <ul>
+          <li>All 11,827 one-hour candles match a separate calculation (0 mismatches).</li>
+          <li>Every entry is on the first 15-minute bar of a new hour.</li>
+          <li>Trade logs add up to the tables, and the four blocks add up to the totals.</li>
+          <li>The four worked trades match the log to the paisa.</li>
+        </ul></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section>
+  <h2>19 · Review of the 1-hour check: bar ranges and code</h2>
+  <p>After Part 3 was published, we re-checked the 1-hour code and every 1-hour trade using a separate calculation (pandas, not the backtest script).</p>
+  <h3>What one 1-hour candle contains</h3>
+  <div class="scroll"><table class="src">
+    <tbody>
+      <tr><td class="l"><strong>Bar range</strong></td><td class="l">Four 15-minute candles, labelled by the hour: "07:00" = the 07:00, 07:15, 07:30 and 07:45 candles, covering 07:00:00–07:59:59 broker time. Open = first candle's open, high/low = the extremes of the four, close = the 07:45 candle's close.</td></tr>
+      <tr><td class="l"><strong>Hours in the data</strong></td><td class="l">
+        <ul>
+          <li>11,828 hours in total.</li>
+          <li>11,808 have all four candles.</li>
+          <li>20 are short hours, mostly early closes on holidays (15 of them at 21:00).</li>
+          <li><strong>No trade used a short hour</strong> as its signal.</li>
+        </ul></td></tr>
+      <tr><td class="l"><strong>A trading day</strong></td><td class="l">
+        <ul>
+          <li>23 hours, from the 01:00 hour to the 23:00 hour (broker time).</li>
+          <li>The 01:00 hour starts at the day-open candle, where price feeds can differ (see section 5).</li>
+          <li>38 of the 591 trades in the 2R / no-filter rows are signalled by that hour.</li>
+        </ul></td></tr>
+      <tr><td class="l"><strong>When the hour is used</strong></td><td class="l">Only after its last candle has closed. The entry is the open of the first 15-minute candle of the next hour.</td></tr>
+    </tbody>
+  </table></div>
+  <h3>Independent re-check of every 1-hour trade</h3>
+  <div class="scroll"><table>
+    <thead><tr><th class="l">Check</th><th>1H reading (1,941 trade rows)</th><th>15m → 1H reading (1,736 rows)</th></tr></thead>
+    <tbody>
+      <tr><td class="l">PDH/PDL used = previous day's high/low</td><td>0 errors</td><td>0 errors</td></tr>
+      <tr><td class="l">Signal hour really is a sweep / two closes beyond</td><td>0 errors</td><td>0 errors</td></tr>
+      <tr><td class="l">Entry = open of the next hour's first candle</td><td>0 errors</td><td>0 errors</td></tr>
+      <tr><td class="l">Stop = hour wick ± $0.50 (or sweep-to-hour-end extreme)</td><td>0 errors</td><td>0 errors</td></tr>
+      <tr><td class="l">Target = entry ± 2 × risk</td><td>0 errors</td><td>0 errors</td></tr>
+      <tr><td class="l">Two trades open at the same time</td><td>0</td><td>0</td></tr>
+    </tbody>
+  </table></div>
+  <h3>What the review found</h3>
+  <ul>
+    <li><strong>Entries across a close.</strong>
+      <ul>
+        <li>A signal in the day's last hour (23:00) is entered at the next day's 01:00 open, after the one-hour daily close. On Fridays, that means Monday's open, after the weekend.</li>
+        <li>With 15-minute signals this almost never happens (2 of 424 sweep trades, 0 break trades). With 1-hour signals it is 4–5 trades per arm, but they carry a large share of the profit.</li>
+        <li>The rule was fixed before the run, so the numbers in section 14 stay. The same arms without these trades are below. Whether Sujan would take a trade from the previous evening's last hour at the next open is his call.</li>
+      </ul>
+    </li>
+  </ul>
+  <div class="scroll"><table>
+    <thead><tr><th class="l">Arm (2R)</th><th>Trades entered across a close</th><th>Their total ₹</th><th>₹/month, all trades</th><th>₹/month, without them</th><th>Win %, without them</th></tr></thead>
+    <tbody>
+      <tr><td class="l">1H · sweep · none</td><td>4 of 353</td><td class="pos">+11,532</td><td>+2,528</td><td>+2,046</td><td>36.1</td></tr>
+      <tr><td class="l">15m→1H · sweep · none</td><td>4 of 307</td><td class="pos">+10,904</td><td>+2,516</td><td>+2,061</td><td>37.0</td></tr>
+      <tr><td class="l">1H · break · none</td><td>5 of 238</td><td class="pos">+17,378</td><td>+5,316</td><td>+4,590</td><td>39.5</td></tr>
+      <tr><td class="l">1H · break · trend side</td><td>5 of 214</td><td class="pos">+17,378</td><td>+3,839</td><td>+3,113</td><td>37.8</td></tr>
+      <tr><td class="l">15m · sweep · none (for comparison)</td><td>2 of 424</td><td class="neg">−1,431</td><td>−320</td><td>−260</td><td>34.6</td></tr>
+    </tbody>
+  </table></div>
+  <ul>
+    <li><strong>A signal candle can start while the previous trade is still open.</strong>
+      <ul>
+        <li>The hour is judged at its close, which always comes after the earlier trade has finished, so no future data is used and no two trades overlap.</li>
+        <li>But part of the signal hour happened while we were still in the previous trade: 13 of 353 sweeps and 28 of 238 breaks.</li>
+        <li>A trader watching the chart would see the same candle, so we kept these trades.</li>
+      </ul>
+    </li>
+    <li><strong>Hours that sweep both PDH and PDL.</strong> Only 2 hours in 2 years do this. The code takes the PDH short in that case.</li>
+    <li><strong>Break rows are the same in both readings.</strong> This is by design (section 13), so the two 1H break rows are one test, not two.</li>
+    <li><strong>No change</strong> to the conclusions in section 14. The 1-hour arms still don't beat the coin flip, and the H1 break's ₹/month falls from +₹5,316 to +₹4,590 without the across-the-close entries.</li>
+  </ul>
+</section>
+
+<div class="part">
+  <div class="eyebrow">Part 4 · added 25 Sep 2026 · a mechanical version of Sujan's 1-hour 3-candle description (not confirmed as his rule)</div>
+  <p>Sujan (25 Sep, 21:29–21:36): "1 hr CRT happening in XAU gold … C1 accumulation, C2 manipulation done &amp; closed inside first range … &amp; C3 distribution candle … that's all we need to automate. C2 manipulation must occur at HTF location." He took the trade live, and the target hit within 15 minutes.</p>
+</div>
+
+<section>
+  <h2>20 · The live trade on 25 Sep 2026, candle by candle</h2>
+  <p class="muted">These prices come from our MT5 feed (ICMarkets), fetched on 25 Sep. Times are broker time, with UTC and India time (IST) alongside: IST = broker + 2:30. His TradingView lines match our candles to within 1–9 cents: C1 high 4299.540 vs 4299.55, C1 low 4273.237 vs 4273.23, day low 4254.58 vs 4254.49.</p>
+  <div class="scroll"><table>
+    <thead><tr><th class="l">Candle (1 hour)</th><th class="l">Broker / UTC / IST</th><th>Open</th><th>High</th><th>Low</th><th>Close</th><th class="l">Role</th></tr></thead>
+    <tbody>
+      <tr class="hl"><td class="l">C1 accumulation</td><td class="l mono">16:00 / 13:00 / 18:30</td><td>4298.18</td><td>4299.55</td><td>4273.23</td><td>4275.84</td><td class="l">Sets the range: 4273.23 – 4299.55</td></tr>
+      <tr class="hl"><td class="l">C2 manipulation</td><td class="l mono">17:00 / 14:00 / 19:30</td><td>4275.83</td><td>4280.75</td><td>4254.49</td><td>4279.19</td><td class="l">Low goes $18.74 below C1's low, and the close is back inside C1 → <strong>LONG setup</strong></td></tr>
+      <tr class="hl"><td class="l">C3 distribution</td><td class="l mono">18:00 / 15:00 / 20:30</td><td>4279.17</td><td>4291.45</td><td>4270.11</td><td>4291.28</td><td class="l">Entry at its open, 4279.17</td></tr>
+      <tr><td class="l">Next hour</td><td class="l mono">19:00 / 16:00 / 21:30</td><td>4291.28</td><td>4300.36</td><td>4279.27</td><td>…</td><td class="l">High 4300.36 reaches C1's high of 4299.55 → <strong>target</strong></td></tr>
+    </tbody>
+  </table></div>
+  <div class="grid2">
+    <div class="card">
+      <h3>Our mechanical rule (1 oz)</h3>
+      <div class="formula">Entry  = C3 open                      = 4279.17
+Stop S1 = C2 low 4254.49 − 0.50        = 4253.99  (risk 25.18)
+Stop S2 = midpoint of entry and C2 low = 4266.83  (risk 12.34)
+Target = C1 high                      = 4299.55
+Result = target hit at 19:00 broker, both stops
+₹      = (20.38 − 0.26) × 84           = +₹1,690.08 per oz
+At his 40 oz                          = +₹67,603</div>
+    </div>
+    <div class="card">
+      <h3>His actual trade (from his screenshot)</h3>
+      <div class="formula">BUY 0.4 lot = 40 oz
+Entry  4276.30   Stop 4269.00   Target 4299.00
+Risk   7.30 × 40 = $292      = ₹24,528
+Target 22.70 × 40 = $908     = ₹76,272 (before costs)
+Lowest price before target: 4270.11 (18:45 candle)
+Distance from his stop: $1.11</div>
+    </div>
+  </div>
+  <ul>
+    <li><strong>HTF location check for this C2</strong> (C2 low 4254.49, close 4279.19):
+      <ul>
+        <li><strong>Previous day's low</strong> (24 Sep): 4244.18. C2 stayed $10.31 above it, so this is not a PDL sweep.</li>
+        <li><strong>Day open</strong> (25 Sep, 01:00 broker): 4274.91. C2 went below it and closed above it, so this <strong>is</strong> a sweep of the day open.</li>
+        <li><strong>Weekly open</strong> (Mon 21 Sep, 01:00 broker): 4373.77, far away.</li>
+      </ul>
+      So under our location sets it counts in L2 (day open), not in L1 (PDH/PDL).</li>
+    <li><strong>The red lines on his chart</strong> (4309.273 and 4255.613) are <strong>not</strong> the weekly open by our definition. We need to know what they are. C2's low 4254.49 did go $1.12 below 4255.613.</li>
+    <li><strong>The same rule on the same day:</strong> without the location gate it took 5 trades on 25 Sep (+₹59, −₹258, −₹340, +₹743, +₹1,690; net +₹1,894 at 1 oz). With the PDH/PDL gate it took only the 15:00 short (+₹743). With L2 it took that short and his long.</li>
+    <li><strong>His two screenshots at 21:29:</strong> 4285.79 on TradingView and 4290.77 on MT5. They were taken about 47 seconds apart during a fast rise (the 18:45 candle went from 4270.11 to 4291.45), so this is not evidence of a feed gap.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>21 · The mechanical 1-hour CRT rule over 2 years (a simplified version, not his full method)</h2>
+  <p><strong>Rules, fixed before the run:</strong></p>
+  <ul>
+    <li><strong>The engine:</strong> the repository's existing 3-candle CRT construct (<code>ParentCRTTrack</code>, unchanged), fed closed 1-hour candles.</li>
+    <li><strong>C2</strong> must sweep C1's high or low and close strictly inside C1.</li>
+    <li><strong>Entry</strong> at the C3 open. <strong>Target</strong> at C1's far side.</li>
+    <li><strong>Stops:</strong> S1 = C2's wick ± $0.50; S2 = the midpoint between entry and C2's wick, a tight stop like his.</li>
+    <li><strong>Location sets:</strong>
+      <ul>
+        <li>L0 = no gate</li>
+        <li>L1 = C2's wick swept PDH/PDL and closed back</li>
+        <li>L2 = L1 plus the weekly open or day open</li>
+      </ul>
+    </li>
+    <li><strong>Our prediction:</strong> close to zero R, with a possibly high win rate because the target is near.</li>
+  </ul>
+  <div class="scroll"><table>
+    <thead><tr><th class="l">Stop · location</th><th>Trades</th><th>Win %</th><th>Avg win ₹</th><th>Avg loss ₹</th><th>₹ / month</th><th>Avg R after cost</th><th>95% range</th><th>Coin flip 95th</th><th>Beats?</th><th>Largest fall ₹</th></tr></thead>
+    <tbody>
+      <tr><td class="l">S1 · L0 (no location)</td><td>1,954</td><td>45.6</td><td>+680</td><td>−634</td><td class="neg">−2,849</td><td>−0.06</td><td>−0.12 … +0.01</td><td>−0.04</td><td>No</td><td>77,539</td></tr>
+      <tr class="hl"><td class="l">S1 · L1 (PDH/PDL)</td><td>136</td><td><strong>61.8</strong></td><td>+589</td><td>−1,046</td><td class="neg">−206</td><td>+0.07</td><td>−0.11 … +0.24</td><td>+0.11</td><td>No</td><td>14,252</td></tr>
+      <tr class="hl"><td class="l">S1 · L2 (+ weekly/day open)</td><td>411</td><td><strong>56.9</strong></td><td>+567</td><td>−833</td><td class="neg">−620</td><td>+0.02</td><td>−0.09 … +0.13</td><td>−0.00</td><td>Yes</td><td>33,799</td></tr>
+      <tr><td class="l">S2 · L0</td><td>2,163</td><td>30.8</td><td>+636</td><td>−308</td><td class="neg">−1,569</td><td>−0.20</td><td>−0.32 … −0.09</td><td>−0.19</td><td>No</td><td>43,371</td></tr>
+      <tr><td class="l">S2 · L1</td><td>139</td><td>39.6</td><td>+576</td><td>−509</td><td class="neg">−460</td><td>−0.09</td><td>−0.39 … +0.21</td><td>+0.04</td><td>No</td><td>16,992</td></tr>
+      <tr><td class="l">S2 · L2</td><td>433</td><td>37.4</td><td>+537</td><td>−399</td><td class="neg">−886</td><td>−0.17</td><td>−0.33 … −0.02</td><td>−0.14</td><td>No</td><td>30,719</td></tr>
+    </tbody>
+  </table></div>
+  <h3>Fresh data: 22 May – 25 Sep 2026 (4.1 months, not used before)</h3>
+  <div class="scroll"><table>
+    <thead><tr><th class="l">Stop · location</th><th>Trades</th><th>Win %</th><th>₹ / month</th><th>Avg R after cost</th><th>95% range</th><th>Beats coin flip?</th></tr></thead>
+    <tbody>
+      <tr><td class="l">S1 · L0</td><td>357</td><td>46.2</td><td class="pos">+537</td><td>−0.01</td><td>−0.16 … +0.14</td><td>No</td></tr>
+      <tr><td class="l">S1 · L1</td><td>26</td><td>57.7</td><td class="pos">+773</td><td>+0.18</td><td>−0.29 … +0.65</td><td>No</td></tr>
+      <tr><td class="l">S1 · L2</td><td>74</td><td>52.7</td><td class="pos">+173</td><td>+0.04</td><td>−0.23 … +0.31</td><td>No</td></tr>
+      <tr><td class="l">S2 · L0</td><td>399</td><td>29.6</td><td class="neg">−3,197</td><td>−0.18</td><td>−0.35 … −0.01</td><td>No</td></tr>
+      <tr><td class="l">S2 · L1</td><td>26</td><td>34.6</td><td class="neg">−1,580</td><td>−0.12</td><td>−0.71 … +0.47</td><td>No</td></tr>
+      <tr><td class="l">S2 · L2</td><td>76</td><td>39.5</td><td class="neg">−941</td><td>−0.00</td><td>−0.35 … +0.34</td><td>No</td></tr>
+    </tbody>
+  </table></div>
+  <h3>6-month blocks, S1 (₹ per month)</h3>
+  <div class="scroll"><table>
+    <thead><tr><th class="l">Location</th><th>May–Nov 2024</th><th>Nov 2024–May 2025</th><th>May–Nov 2025</th><th>Nov 2025–May 2026</th></tr></thead>
+    <tbody>
+      <tr><td class="l">L0</td><td class="neg">−1,808</td><td class="neg">−1,561</td><td class="neg">−1,294</td><td class="neg">−6,761</td></tr>
+      <tr><td class="l">L1</td><td class="pos">+534</td><td class="neg">−89</td><td class="pos">+429</td><td class="neg">−1,719</td></tr>
+      <tr><td class="l">L2</td><td class="pos">+286</td><td class="pos">+589</td><td class="pos">+1,833</td><td class="neg">−5,241</td></tr>
+    </tbody>
+  </table></div>
+  <div class="verdict">
+    <div class="eyebrow">What this shows</div>
+    <ul>
+      <li><strong>Location matters, and Sujan is right about that.</strong> Without it the rule loses in every block (−₹2,849/month, 45.6% wins). With a PDH/PDL location the win rate is 61.8%, and with the weekly/day-open set it is 56.9%.</li>
+      <li><strong>A high win rate is still not profit.</strong> The target (C1's far side) is usually closer than the stop (C2's wick), so the average loss is 1.5–1.8× the average win. With L1, the win rate needed just to break even is 1,046 ÷ (589 + 1,046) = <strong>64%</strong>, against 61.8% achieved. With L2 it is 59.5% needed against 56.9%. Both miss by about 2–3 points.</li>
+      <li><strong>Only L2 with the wide stop beats the coin flip</strong>, but its R range still crosses zero and its rupee result is negative. It is a lead, not an edge.</li>
+      <li><strong>A tight stop like his cuts the win rate to 31–40%</strong>, because price often dips back through the middle before reaching the target. On 25 Sep his stop survived by $1.11.</li>
+      <li><strong>Fresh 2026 data</strong> points the same way (L1 57.7% wins, +₹773/month), but with only 26 trades it is too few to judge.</li>
+      <li><strong>Entries across the daily close</strong> barely matter here: 2 of 136 trades for L1, 5 of 411 for L2.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>22 · Check it yourself: CRT trades, 11–15 May 2026</h2>
+  <p>This is the same week as sections 5 and 15, with the S1 stop.</p>
+  <ul>
+    <li><strong>L1 (PDH/PDL):</strong> no trades that week.</li>
+    <li><strong>L0 (no location):</strong> 23 trades, 10 hit target, net +₹1,404.</li>
+    <li><strong>L2:</strong> the 4 trades below, 3 hit target, net +₹1,924.</li>
+  </ul>
+  <p>Set the chart to 1 hour, in UTC. Weekly open that week = 4679.06.</p>
+  <div class="scroll"><table>
+    <thead><tr><th class="l">C2 hour (UTC)</th><th class="l">Broker</th><th class="l">Side</th><th>C1 high</th><th>C1 low</th><th>C2 wick</th><th class="l">Level swept</th><th>Entry</th><th>Stop</th><th>Target</th><th class="l">Exit (UTC)</th><th class="l">Result</th><th>₹</th></tr></thead>
+    <tbody>
+      <tr><td class="l mono">05-13 13:00</td><td class="l mono">05-13 16:00</td><td class="l">Long</td><td>4701.68</td><td>4675.60</td><td>4669.47</td><td class="l">weekly open 4679.06</td><td>4679.41</td><td>4668.97</td><td>4701.68</td><td class="l mono">05-13 16:00</td><td class="l"><span class="pill tp">TP</span></td><td class="pos">+1,849</td></tr>
+      <tr><td class="l mono">05-14 06:00</td><td class="l mono">05-14 09:00</td><td class="l">Long</td><td>4704.22</td><td>4688.78</td><td>4686.14</td><td class="l">day open 4692.27</td><td>4700.27</td><td>4685.64</td><td>4704.22</td><td class="l mono">05-14 07:15</td><td class="l"><span class="pill tp">TP</span></td><td class="pos">+310</td></tr>
+      <tr><td class="l mono">05-14 09:00</td><td class="l mono">05-14 12:00</td><td class="l">Long</td><td>4706.70</td><td>4692.04</td><td>4688.52</td><td class="l">day open 4692.27</td><td>4699.62</td><td>4688.02</td><td>4706.70</td><td class="l mono">05-14 12:15</td><td class="l"><span class="pill tp">TP</span></td><td class="pos">+573</td></tr>
+      <tr><td class="l mono">05-14 15:00</td><td class="l mono">05-14 18:00</td><td class="l">Long</td><td>4700.85</td><td>4677.12</td><td>4677.06</td><td class="l">weekly open 4679.06</td><td>4685.83</td><td>4676.56</td><td>4700.85</td><td class="l mono">05-14 16:00</td><td class="l"><span class="pill sl">SL</span></td><td class="neg">−808</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">The second row shows the problem from section 21 in one trade. The target was $3.95 away and the stop $14.63 away, so the win paid ₹310, while a loss would have cost about ₹1,250.</p>
+</section>
+
+<section>
+  <h2>23 · Questions for Sujan (these decide the next test)</h2>
+  <ul>
+    <li><strong>Entry inside C3:</strong> you entered at 4276.30, below the C3 open (4279.17). Which 5-minute signal did you use?</li>
+    <li><strong>Stop:</strong> your stop at 4269 was far tighter than C2's low (4254.49). What is the rule for it?</li>
+    <li><strong>Target:</strong> always C1's opposite end, or sometimes further?</li>
+    <li><strong>HTF location:</strong> which levels count? What are the two red lines (4309.273 and 4255.613)? Neither matches the weekly open in our data (4373.77).</li>
+    <li><strong>The TradingView indicator</strong> "1H-1D Model · Bias: Bullish": what are its rules? Should the bias filter the direction?</li>
+    <li><strong>Win rate needed:</strong> with a target at C1's far side, you need about 60–64% winners just to break even. Does your stop or entry change that ratio?</li>
+  </ul>
+</section>
+
+<section>
+  <h2>24 · Where the Part 4 numbers come from</h2>
+  <div class="scroll"><table class="src">
+    <tbody>
+      <tr><td class="l"><strong>Rule code</strong></td><td class="l">
+        <ul>
+          <li><code>pdh_pdl_wo.py --crt</code> uses the repository's <code>ParentCRTTrack</code> (<code>src/config_layer/parent_crt.py</code>) unchanged.</li>
+          <li>The earlier modes still give byte-identical output.</li>
+          <li>Output: <code>grid_crt.json</code>, <code>tradelog_crt.csv</code>, <code>grid_crt_fresh.json</code>, <code>tradelog_crt_fresh.csv</code>.</li>
+        </ul></td></tr>
+      <tr><td class="l"><strong>Fresh data</strong></td><td class="l">
+        <ul>
+          <li>Fetched read-only on 25 Sep from the MT5 terminal on this PC (ICMarkets demo), using the project's existing fetcher: 8,388 fifteen-minute candles, 21 May – 25 Sep 2026.</li>
+          <li>The last, still-forming candle was dropped.</li>
+          <li>7 of the 92 days have fewer than 92 candles.</li>
+          <li>It is a research-only file, not a registered dataset.</li>
+        </ul></td></tr>
+      <tr><td class="l"><strong>Checks</strong></td><td class="l">
+        <ul>
+          <li>Every CRT trade (5,236 rows over 2 years, 958 fresh) was re-derived from separately built hour candles, with 0 errors in each of: C1/C2 geometry, close inside C1, location sweep, entry at the C3 open, stop, target, no overlap.</li>
+          <li>Trade logs add up to the tables.</li>
+          <li>The live trade's C1/C2/C3 match his TradingView chart to within 9 cents.</li>
+        </ul></td></tr>
+      <tr><td class="l"><strong>Earlier work</strong></td><td class="l">The repository's 3-candle CRT was built earlier (F-075). As a filter on the old engine, it changed no trades on gold (F-089). A stricter mechanical version of Sujan's method on 15-minute data also failed its test (F-095). This 1-hour version with a location gate is new.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<div class="part">
+  <div class="eyebrow">Part 5 · added 26 Sep 2026 · what has not been tested yet</div>
+  <p>The tests so far rule out several simplified versions of the idea. They have not tested the complete cause-and-effect chain Sujan describes. This part maps that chain, marks what was measured and how, and lists what we need from Sujan before the full chain can be tested fairly.</p>
+</div>
+
+<section>
+  <h2>25 · Sujan's full chain vs what we measured</h2>
+  <div class="scroll"><table>
+    <thead><tr><th class="l">#</th><th class="l">Step in Sujan's chain (his words)</th><th class="l">What we used instead</th><th class="l">Status</th></tr></thead>
+    <tbody>
+      <tr><td class="l">1</td><td class="l">HTF bias / context ("1H-1D Model · Bias", "Up/down – weekly open")</td><td class="l">Not used (only as the weekly-open "trend side" reading)</td><td class="l"><span class="pill flag">not tested</span></td></tr>
+      <tr><td class="l">2</td><td class="l">HTF location / resistance zone ("HTF resistance 4399–4404", PDH/PDL, red lines)</td><td class="l">Previous day's high/low, weekly open, day open. His red lines don't match our weekly open.</td><td class="l"><span class="pill flag">simplified, may be wrong object</span></td></tr>
+      <tr><td class="l">3</td><td class="l">C1 accumulation</td><td class="l">Any closed 1-hour candle</td><td class="l"><span class="pill flag">simplified</span></td></tr>
+      <tr><td class="l">4</td><td class="l">C2 manipulation, closed inside C1, at HTF location / "sweep"</td><td class="l">C2 wick beyond C1 and a level, close back inside</td><td class="l"><span class="pill flag">simplified</span></td></tr>
+      <tr><td class="l">5</td><td class="l">"Bearish reaction → 5m/15m displacement"</td><td class="l">Not required</td><td class="l"><span class="pill sl">not tested</span></td></tr>
+      <tr><td class="l">6</td><td class="l">"Retest"</td><td class="l">Not required</td><td class="l"><span class="pill sl">not tested</span></td></tr>
+      <tr><td class="l">7</td><td class="l">Entry (his live trade: 5-minute entry inside C3)</td><td class="l">Open of C3, or next bar after the sweep</td><td class="l"><span class="pill sl">not tested</span></td></tr>
+      <tr><td class="l">8</td><td class="l">Stop (his: 4269, tight)</td><td class="l">C2's wick ± $0.50, or the midpoint</td><td class="l"><span class="pill sl">his rule unknown</span></td></tr>
+      <tr><td class="l">9</td><td class="l">Target (map: 4045 → 3942; live: 4299 ≈ C1 high)</td><td class="l">2R, the day range, or C1's far side</td><td class="l"><span class="pill flag">partly</span></td></tr>
+      <tr><td class="l">10</td><td class="l">"Vol 100 – sell (distribution)"</td><td class="l">Not used</td><td class="l"><span class="pill sl">not tested</span></td></tr>
+      <tr><td class="l">11</td><td class="l">SMT (shown on his indicator)</td><td class="l">Not used</td><td class="l"><span class="pill sl">not tested</span></td></tr>
+      <tr><td class="l">12</td><td class="l">When NOT to trade / invalidation</td><td class="l">Not used</td><td class="l"><span class="pill sl">not tested</span></td></tr>
+    </tbody>
+  </table></div>
+  <h3>How the full chain would be tested fairly</h3>
+  <ul>
+    <li><strong>1 · His words first.</strong> For each of steps 1–12, Sujan answers in his own words (questions below). No guessing on our side.</li>
+    <li><strong>2 · His own examples.</strong> 10–20 of his past trades on gold with date and time: winners <em>and</em> losers, plus a few setups he skipped and why. These show how he applies the rules.</li>
+    <li><strong>3 · Agree the written rules before any test.</strong> We write each step as an exact rule and replay it on his examples. He confirms each one ("yes, that's my trade" or "no"). The rules are then frozen.</li>
+    <li><strong>4 · Test only the frozen rules</strong>, on data that includes a falling market and his 5-minute entry. Rules fixed in advance, same cost and control checks as above, and no changes after seeing the results.</li>
+  </ul>
+  <h3>Questions for Sujan (please answer each in your own words)</h3>
+  <ol>
+    <li>How do you find the HTF location or resistance zone (for example 4399–4404)? Which timeframe and which candles?</li>
+    <li>What are the two red lines on your chart (4309.273 and 4255.613)?</li>
+    <li>What does the "1H-1D Model" bias tell you? Do you only trade in its direction?</li>
+    <li>Is any hour a valid C1, or does C1 have to be a certain kind of candle?</li>
+    <li>What exactly makes C2 "at the HTF location"? Must its wick touch the level, cross it, or just be near it?</li>
+    <li>After C2, what is the "displacement" on 5m/15m? How big must it be?</li>
+    <li>What is being retested, and what counts as a retest?</li>
+    <li>What is your exact entry signal? In the live trade you bought at 4276.30.</li>
+    <li>How do you place the stop? In the live trade it was 4269.</li>
+    <li>How do you pick the target: C1's far side, a level, or something else?</li>
+    <li>What does "Vol 100 – sell (distribution)" mean? Which volume?</li>
+    <li>What is SMT on your indicator, and does it change the decision?</li>
+    <li>When do you skip a setup that otherwise looks valid?</li>
+  </ol>
+</section>
+
+<footer>Limits: one market (gold), one 2-year period of rising prices, and results from the same data the rules were written on. Past results are not a promise of future results, and this is not financial advice.</footer>
+</main>
+
+</body></html>

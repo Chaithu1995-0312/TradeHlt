@@ -1,0 +1,413 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRT Engine v2 State Funnel</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #1a1a1a;
+      --border: #d0d0d0;
+      --range: #e3f2fd;
+      --sweep: #fff3e0;
+      --disp: #fce4ec;
+      --exp: #f3e5f5;
+      --retest: #e8f5e9;
+      --exec: #e0f2f1;
+      --res: #ede7f6;
+      --expired: #ffebee;
+      --shadow: #f1f8e9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1e1e1e;
+        --text: #e8e8e8;
+        --border: #404040;
+        --range: #1a237e;
+        --sweep: #664d33;
+        --disp: #5d1c47;
+        --exp: #311b92;
+        --retest: #1b5e20;
+        --exec: #004d40;
+        --res: #3d2c6d;
+        --expired: #7f0000;
+        --shadow: #33691e;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    h1, h2 { margin-top: 0; }
+    .funnel-section {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .state-card {
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      background: var(--bg);
+      font-size: 14px;
+    }
+    .state-card.range { background: var(--range); }
+    .state-card.sweep { background: var(--sweep); }
+    .state-card.disp { background: var(--disp); }
+    .state-card.exp { background: var(--exp); }
+    .state-card.retest { background: var(--retest); }
+    .state-card.exec { background: var(--exec); }
+    .state-card.res { background: var(--res); }
+    .state-card.expired { background: var(--expired); }
+    .state-card.shadow { background: var(--shadow); }
+    .state-name {
+      font-weight: 700;
+      font-size: 16px;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid rgba(0,0,0,0.1);
+    }
+    @media (prefers-color-scheme: dark) {
+      .state-name { border-bottom-color: rgba(255,255,255,0.1); }
+    }
+    .entry { font-size: 12px; color: #666; margin-top: 8px; font-style: italic; }
+    @media (prefers-color-scheme: dark) {
+      .entry { color: #aaa; }
+    }
+    .transition {
+      font-size: 12px;
+      margin: 8px 0;
+      padding: 8px;
+      background: rgba(0,0,0,0.05);
+      border-left: 3px solid #2196f3;
+      border-radius: 2px;
+    }
+    @media (prefers-color-scheme: dark) {
+      .transition { background: rgba(255,255,255,0.05); }
+    }
+    .guard {
+      font-size: 11px;
+      color: #d32f2f;
+      font-weight: 500;
+      margin-top: 6px;
+    }
+    @media (prefers-color-scheme: dark) {
+      .guard { color: #ff6b6b; }
+    }
+    .flow {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 24px 0;
+      padding: 16px;
+      background: rgba(0,0,0,0.02);
+      border-radius: 8px;
+      border-left: 4px solid #1976d2;
+    }
+    @media (prefers-color-scheme: dark) {
+      .flow { background: rgba(255,255,255,0.02); }
+    }
+    .flow-title {
+      grid-column: 1 / -1;
+      font-weight: 600;
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+    .flow-item {
+      font-size: 13px;
+      padding: 8px;
+    }
+    .flow-item strong { color: #1565c0; }
+    @media (prefers-color-scheme: dark) {
+      .flow-item strong { color: #64b5f6; }
+    }
+    code {
+      background: rgba(0,0,0,0.08);
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: "Monaco", "Courier New", monospace;
+      font-size: 12px;
+    }
+    @media (prefers-color-scheme: dark) {
+      code { background: rgba(255,255,255,0.08); }
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .metric {
+      font-size: 12px;
+      padding: 8px;
+      background: rgba(0,0,0,0.04);
+      border-radius: 4px;
+    }
+    @media (prefers-color-scheme: dark) {
+      .metric { background: rgba(255,255,255,0.04); }
+    }
+    .metric-label { font-weight: 600; font-size: 11px; color: #666; }
+    @media (prefers-color-scheme: dark) {
+      .metric-label { color: #aaa; }
+    }
+    .metric-value { font-size: 13px; margin-top: 3px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>CRT Engine v2 — State Funnel Logic</h1>
+    <p><strong>Golden path:</strong> RANGE → SWEEP → DISPLACEMENT → EXPANSION → RETEST → EXECUTION → RESOLUTION</p>
+
+    <h2>Core States (9-Member Execution Timeframe)</h2>
+
+    <div class="funnel-section">
+      <!-- RANGE -->
+      <div class="state-card range">
+        <div class="state-name">RANGE</div>
+        <p>Initial state. Waiting for a sweep on the active range boundary (h_ref / l_ref).</p>
+        <div class="entry">Entry: On reset via HTF boundary or timeout.</div>
+        <div class="transition">
+          <strong>→ SWEEP</strong><br>
+          <code>RangeDetector.detect_sweep()</code> fires: candle crosses the range boundary.
+        </div>
+        <div class="transition">
+          <strong>→ SHADOW_PENDING</strong><br>
+          Pending displacement memory active + sweep confirms its direction.
+        </div>
+        <div class="guard">Guard: Sweep age TTL countdown (SHADOW_PENDING only)</div>
+      </div>
+
+      <!-- SWEEP -->
+      <div class="state-card sweep">
+        <div class="state-name">SWEEP</div>
+        <p>Liquidity sweep confirmed at range boundary. Waiting for impulse confirmation.</p>
+        <div class="entry">Entry: Range breakthrough detected.</div>
+        <div class="transition">
+          <strong>→ DISPLACEMENT</strong><br>
+          <code>try_sweep_to_displacement()</code>: bar is directional and closes beyond the sweep price; |close−open| ≥ 1.2×ATR; body_ratio = |close−open|/(high−low) ≥ 0.65; (high−low) ≥ 1.0×ATR; sweep age ≤ 20 bars.
+        </div>
+        <div class="transition">
+          <strong>→ RANGE</strong><br>
+          Sweep expires (age &gt; <code>max_sweep_age_candles</code>).
+        </div>
+        <div class="guard">Guard: Directional impulse required (F-074); unsigned energy not legal</div>
+        <div class="guard">Guard: Max sweep age constraint (PATCH 2)</div>
+      </div>
+
+      <!-- DISPLACEMENT -->
+      <div class="state-card disp">
+        <div class="state-name">DISPLACEMENT</div>
+        <p>Directional impulse away from sweep confirms. Waiting for extension beyond impulse.</p>
+        <div class="entry">Entry: Close after sweep with proper impulse.</div>
+        <div class="transition">
+          <strong>→ EXPANSION</strong><br>
+          <code>try_displacement_to_expansion()</code>: directional bar, close beyond displacement close, and |close − disp_close| ≥ 0.3 × ATR (<code>expansion_atr_min_distance</code>).
+        </div>
+        <div class="guard">Guard: Strengthened expansion gate (PATCH 3): requires directional bar AND ATR distance</div>
+      </div>
+
+      <!-- EXPANSION -->
+      <div class="state-card exp">
+        <div class="state-name">EXPANSION</div>
+        <p>Price extended beyond impulse. Waiting for retracement (retest) or TTL expiry.</p>
+        <div class="entry">Entry: Sustained move beyond displacement.</div>
+        <div class="transition">
+          <strong>→ RETEST</strong><br>
+          <code>try_expansion_to_retest()</code>: depth = close − l_ref (LONG) or h_ref − close (SHORT); 0.1×ATR ≤ depth ≤ max(0.15×(h_ref−l_ref), 0.3×ATR); and displacement range/ATR (FM-028) ≤ 2.0. Soft confirmation is evaluated on the bars AFTER this.
+        </div>
+        <div class="transition">
+          <strong>→ EXPIRED</strong><br>
+          TTL exceeded: age &gt; max_expansion_age_candles OR hours &gt; max_expansion_age_hours.
+        </div>
+        <div class="transition">
+          <strong>→ RANGE</strong><br>
+          Stop breach: close at/through the stop a trade would use (entry_semantics guard).
+        </div>
+        <div class="guard">Guard: Adaptive retest ceiling (PATCH 5) = max(range-based, ATR-based), plus a 0.1×ATR minimum-depth floor</div>
+        <div class="guard">Guard: TTL uses &gt;, not ≥ (resolver parity)</div>
+        <div class="guard">Guard: Stop breach check (F-110); retest has priority over TTL on same bar</div>
+      </div>
+
+      <!-- RETEST -->
+      <div class="state-card retest">
+        <div class="state-name">RETEST</div>
+        <p>Retest geometry passed on the previous bar; soft confirmation now evaluates each following bar (up to 3).</p>
+        <div class="entry">Entry: retest geometry passed (see EXPANSION). Entry price = RETEST close.</div>
+        <div class="transition">
+          <strong>→ EXECUTION</strong><br>
+          S = G^0.7 × C^0.3 ≥ 0.3 (tier 1 at ≥ 0.75), where C = max(0.2, 0.7·Σ w·f + 0.3·min(f_body, f_mom)); then discount/premium zone vs range midpoint, parent bias, objective and session filters.
+        </div>
+        <div class="transition">
+          <strong>→ RANGE</strong><br>
+          Soft-conf timeout: no qualifying manifold within soft_conf_max_candles OR filter rejection.
+        </div>
+        <div class="guard">Guard: Soft-confirmation manifold: EMA2/EMA5 momentum, Gaussian depth decay, body ratio, displacement strength</div>
+        <div class="guard">Guard: Parent-timeframe bias (C3 distribution veto)</div>
+        <div class="guard">Guard: Session window filter</div>
+        <div class="guard">Guard: Range position (discount/premium zone required)</div>
+      </div>
+
+      <!-- EXECUTION -->
+      <div class="state-card exec">
+        <div class="state-name">EXECUTION</div>
+        <p>Trade approved and opened. Managing fills: SL, TP1 partial, TP2 runner.</p>
+        <div class="entry">Entry: Trade object created; SL/TP levels locked from entry bar.</div>
+        <div class="transition">
+          <strong>→ RESOLUTION</strong><br>
+          Any exit fires: STOPPED (SL), TP1 (partial 50%), TP2 (runner), timeout.
+        </div>
+        <div class="guard">Guard: Multi-TP walk (SEM-017): SL-first tie-break, not declared order</div>
+        <div class="guard">Guard: Displacement-origin kill (SEM-021): close at/through origin before TP2 forces exit</div>
+        <div class="guard">Guard: Trade TTL: closure if age ≥ trade_ttl_candles on quiet bar</div>
+      </div>
+
+      <!-- RESOLUTION -->
+      <div class="state-card res">
+        <div class="state-name">RESOLUTION</div>
+        <p>Trade closed. Record outcome and prepare for next cycle.</p>
+        <div class="entry">Entry: Any exit event (SL, TP1, TP2, timeout, structural kill).</div>
+        <div class="transition">
+          <strong>→ RANGE</strong><br>
+          Post-resolution reset: clears all geometry, resets phase counters, seeds new range.
+        </div>
+        <div class="guard">Guard: None (terminal state); reset is deterministic</div>
+      </div>
+    </div>
+
+    <h2>Archive & Defer States</h2>
+
+    <div class="funnel-section">
+      <!-- EXPIRED -->
+      <div class="state-card expired">
+        <div class="state-name">EXPIRED</div>
+        <p>One-candle soft-archive state. EXPANSION TTL exhausted before RETEST fired.</p>
+        <div class="entry">Entry: EXPANSION → EXPIRED when age &gt; TTL.</div>
+        <div class="transition">
+          <strong>→ RANGE</strong><br>
+          Automatic reset on the same candle (or next bar).
+        </div>
+        <div class="guard">Guard: Phase 3b soft archive; records episode label (candidate_id) before reset</div>
+      </div>
+
+      <!-- SHADOW_PENDING -->
+      <div class="state-card shadow">
+        <div class="state-name">SHADOW_PENDING</div>
+        <p>HTF displacement memory active; awaiting matching M15 sweep to resume.</p>
+        <div class="entry">Entry: HTF reset creates pending_displacement; M15 enters RANGE with pending.</div>
+        <div class="transition">
+          <strong>→ SWEEP</strong><br>
+          (Internal: M15 sweep detected; memory consumed)
+        </div>
+        <div class="transition">
+          <strong>→ EXPANSION</strong><br>
+          <code>try_shadow_pending_to_expansion()</code>: resume cross-window setup (collapse SWEEP).
+        </div>
+        <div class="transition">
+          <strong>→ RANGE</strong><br>
+          SHADOW_LEAK: stored sweep direction ≠ pending direction OR integrity failure.
+        </div>
+        <div class="guard">Guard: TTL countdown on creation (separate from EXPANSION TTL)</div>
+        <div class="guard">Guard: Direction match required on resume</div>
+      </div>
+    </div>
+
+    <h2>Critical Logic Flows</h2>
+
+    <div class="flow">
+      <div class="flow-title">Entry-Bar Lookahead Guard (F-110)</div>
+      <div class="flow-item">
+        <strong>RETEST bar:</strong> entry price = RETEST close in both entry semantics.
+      </div>
+      <div class="flow-item">
+        <strong>Legacy approval-bar semantics:</strong> the trade object (SL/TP from that bar's ATR) is built on the approval bar, one or more bars later, and that bar is not walked for SL/TP (F-110). <code>resting_order</code> semantics instead fills at the RETEST close and walks the soft-confirmation bars. Which one is active was not verified.
+      </div>
+    </div>
+
+    <div class="flow">
+      <div class="flow-title">TTL Boundary Condition (>= vs >)</div>
+      <div class="flow-item">
+        <strong>Engine rule:</strong> age <code>&gt;</code> max_age (strict exceeded, not at-or-exceeded).
+      </div>
+      <div class="flow-item">
+        <strong>Resolver parity:</strong> changed from <code>&gt;=</code> to <code>&gt;</code> to match engine (F-068).
+      </div>
+      <div class="flow-item">
+        <strong>Example:</strong> age==495 stays EXPANSION; age==496 expires (max=495).
+      </div>
+    </div>
+
+    <div class="flow">
+      <div class="flow-title">Displacement-Origin Kill (SEM-021)</div>
+      <div class="flow-item">
+        <strong>Precedence: absolute</strong> — structural kill runs before update_trade (TP2/SL).
+      </div>
+      <div class="flow-item">
+        <strong>Precedence: after_resting_fills</strong> — SL/TP resolve first; kill only fires on TP1 bar (result="UNCHANGED"/"TP1").
+      </div>
+      <div class="flow-item">
+        <strong>Rule:</strong> If close at/through origin (displacement candle close breached), force-exit the runner before TP2 can fire.
+      </div>
+    </div>
+
+    <div class="flow">
+      <div class="flow-title">Soft-Confirmation Manifold (RETEST → EXECUTION)</div>
+      <div class="flow-item">
+        <strong>Trigger:</strong> RETEST locked; evaluating_soft_conf=True.
+      </div>
+      <div class="flow-item">
+        <strong>Gate:</strong> f_body = min(1, body_ratio/0.6); f_mom = clip((EMA2−EMA5)·dir/ATR, 0, 1); f_dist = exp(−(depth/ceiling)²); f_disp = min(1, |disp move|/(1.5·ATR)).
+      </div>
+      <div class="flow-item">
+        <strong>Window:</strong> soft_conf_max_candles = 3 (active config) before timeout reset.
+      </div>
+      <div class="flow-item">
+        <strong>Outcome:</strong> Approved → EXECUTION; rejected → RANGE.
+      </div>
+    </div>
+
+    <h2>Formulas (source-verified)</h2>
+    <div class="flow">
+      <div class="flow-title">Building blocks</div>
+      <div class="flow-item"><strong>True range:</strong> TR = max(H−L, |H−C<sub>prev</sub>|, |L−C<sub>prev</sub>|)</div>
+      <div class="flow-item"><strong>ATR:</strong> simple mean of the last 14 TRs (not Wilder), absolute price units; differs from the close-relative canonical <code>atr</code> (FM-041).</div>
+      <div class="flow-item"><strong>body_ratio (FM-010):</strong> |close−open| / (high−low); 0 if high−low ≤ 0.</div>
+      <div class="flow-item"><strong>Range:</strong> h_ref = max high, l_ref = min low of last 14 candles at reset; equilibrium = (h_ref+l_ref)/2.</div>
+      <div class="flow-item"><strong>Sweep:</strong> SHORT if high &gt; h_ref and close &lt; h_ref; LONG if low &lt; l_ref and close &gt; l_ref (strict).</div>
+      <div class="flow-item"><strong>FM-027 displacement_retrace:</strong> clip(|retest_close − disp_open| / |disp_close − disp_open|, 0, 1).</div>
+      <div class="flow-item"><strong>FM-028 displacement_atr_ratio:</strong> (disp high−low) / ATR.</div>
+      <div class="flow-item"><strong>Fusion:</strong> S = G<sup>0.7</sup> × C<sup>0.3</sup>, G = 0.35·sweep + 0.25·breakout + 0.20·retest + 0.20·time.</div>
+      <div class="flow-item"><strong>Stop / targets:</strong> SL = disp_low − 0.2·ATR (LONG) or disp_high + 0.2·ATR (SHORT) for the default anchor; TP1 = entry ± m·risk (m 0.8–1.5 by intent); TP2 = entry ± 2·risk.</div>
+    </div>
+    <p><em>Values are from active config v2_htfcrt_2026_08; per-instrument overrides not checked. Funnel rate statistics were removed: the earlier figures came from resolver state occupancy, not engine transitions.</em></p>
+
+    <h2>Key Patches & Fixes</h2>
+    <ul>
+      <li><strong>PATCH 1:</strong> Bounded ATR buffer (atr_period × 3) to prevent stale data</li>
+      <li><strong>PATCH 2:</strong> Sweep age constraint inside try_sweep_to_displacement; moved from RANGE branch</li>
+      <li><strong>PATCH 3:</strong> Strengthened expansion guard: close &gt; disp_close + close_distance ≥ 0.2×ATR</li>
+      <li><strong>PATCH 4:</strong> Event timestamping on every transition; auto-assign candle.index</li>
+      <li><strong>PATCH 5:</strong> Adaptive retest depth (ceiling = max of range% or ATR%)</li>
+      <li><strong>PATCH 6:</strong> Time-decay scoring (exp decay since retest, shadow age penalty)</li>
+      <li><strong>F-068:</strong> Shadow TTL off-by-one fixed (pending_displacement_created_idx guard)</li>
+      <li><strong>F-110:</strong> Entry-chain timing: entry at RETEST close, approval next bar</li>
+      <li><strong>F-074:</strong> Directional displacement (unsigned energy no longer legal)</li>
+    </ul>
+  </div>
+</body>
+</html>
+
+</body></html>

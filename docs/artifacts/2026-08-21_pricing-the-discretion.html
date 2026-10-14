@@ -1,0 +1,320 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}</style></head><body>
+<title>Pricing the Discretion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+
+<style>
+:root{
+  --ground:#FBFAF8; --surface:#F2F1ED; --surface-2:#E7E6E0;
+  --ink:#1B2432; --ink-2:#3D4757; --muted:#6E7787;
+  --rule:#DCD9D1; --rule-2:#C7C3B9;
+  --accent:#1B5E6B; --accent-soft:#DCEAEC;
+  --neg:#9E3227; --neg-soft:#F6E3E0; --pos:#2C6349;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#12161E; --surface:#1A202B; --surface-2:#232B38;
+    --ink:#E6E8EC; --ink-2:#C2C7D0; --muted:#8B95A5;
+    --rule:#2A323F; --rule-2:#3A4453;
+    --accent:#63B9C6; --accent-soft:#122F35;
+    --neg:#E0796C; --neg-soft:#33201D; --pos:#6FBF9A;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#12161E; --surface:#1A202B; --surface-2:#232B38;
+  --ink:#E6E8EC; --ink-2:#C2C7D0; --muted:#8B95A5;
+  --rule:#2A323F; --rule-2:#3A4453;
+  --accent:#63B9C6; --accent-soft:#122F35;
+  --neg:#E0796C; --neg-soft:#33201D; --pos:#6FBF9A;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+  font-size:16.5px; line-height:1.65; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+
+header.mast{border-bottom:1px solid var(--rule);padding:56px 0 30px;margin-bottom:44px}
+.kicker{font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--accent);margin:0 0 16px;font-weight:500}
+h1{font-family:"IBM Plex Serif",Georgia,serif;font-weight:700;
+  font-size:clamp(2rem,4.6vw,3.1rem);line-height:1.08;letter-spacing:-.02em;
+  margin:0 0 18px;text-wrap:balance}
+.standfirst{font-family:"IBM Plex Serif",Georgia,serif;font-size:1.16rem;line-height:1.6;
+  color:var(--ink-2);max-width:64ch;margin:0}
+.mast-meta{display:flex;flex-wrap:wrap;gap:10px 26px;margin-top:26px;
+  font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted)}
+.mast-meta b{color:var(--ink-2);font-weight:500}
+
+.cols{display:grid;grid-template-columns:214px minmax(0,1fr);gap:56px;align-items:start}
+@media(max-width:900px){.cols{grid-template-columns:1fr;gap:0}nav.toc{position:static;margin-bottom:40px}}
+nav.toc{position:sticky;top:24px;font-size:13.5px;border-left:2px solid var(--rule);padding-left:16px}
+nav.toc p{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+nav.toc a{display:block;color:var(--ink-2);text-decoration:none;padding:4px 0;line-height:1.4}
+nav.toc a:hover,nav.toc a:focus-visible{color:var(--accent)}
+
+main{min-width:0;max-width:72ch}
+section{margin-bottom:64px;scroll-margin-top:20px}
+h2{font-family:"IBM Plex Serif",Georgia,serif;font-size:1.72rem;font-weight:700;
+  letter-spacing:-.015em;line-height:1.2;margin:0 0 6px;text-wrap:balance}
+.h2-rule{height:2px;background:var(--accent);width:38px;margin-bottom:22px;border-radius:1px}
+h3{font-size:1.09rem;font-weight:600;margin:34px 0 10px;letter-spacing:-.005em}
+h4{font-size:.95rem;font-weight:600;margin:24px 0 8px;color:var(--ink-2)}
+p{margin:0 0 15px;max-width:68ch}
+ul,ol{margin:0 0 15px;padding-left:22px;max-width:68ch}
+li{margin-bottom:8px}
+strong{font-weight:600}
+code{font-family:"IBM Plex Mono",monospace;font-size:.855em;background:var(--surface-2);
+  padding:1px 5px;border-radius:3px;color:var(--ink)}
+
+.tw{overflow-x:auto;margin:0 0 18px;border:1px solid var(--rule);border-radius:5px}
+table{border-collapse:collapse;width:100%;font-size:13.6px;
+  font-variant-numeric:tabular-nums;background:var(--surface)}
+th{text-align:left;font-family:"IBM Plex Mono",monospace;font-size:10.5px;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600;
+  padding:10px 13px;border-bottom:1px solid var(--rule-2);white-space:nowrap}
+td{padding:9px 13px;border-bottom:1px solid var(--rule);vertical-align:top}
+tbody tr:last-child td{border-bottom:none}
+td.num{text-align:right;font-family:"IBM Plex Mono",monospace;white-space:nowrap}
+td.k{font-family:"IBM Plex Mono",monospace;font-size:12.6px;white-space:nowrap}
+.neg{color:var(--neg)} .pos{color:var(--pos)}
+tr.flag{background:var(--neg-soft)}
+tr.flag td.num{color:var(--neg);font-weight:600}
+
+.verdict{border:1px solid var(--rule-2);border-top:3px solid var(--accent);
+  background:var(--surface);padding:20px 22px;margin:22px 0;border-radius:0 0 5px 5px}
+.verdict .vh{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--accent);margin:0 0 9px;font-weight:600}
+.verdict p:last-child{margin-bottom:0}
+.verdict .big{font-family:"IBM Plex Serif",Georgia,serif;font-size:1.2rem;
+  line-height:1.45;color:var(--ink);margin-bottom:10px}
+
+.corr{border:1px dashed var(--neg);padding:18px 20px;margin:22px 0;border-radius:5px}
+.corr .ch{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--neg);margin:0 0 9px;font-weight:600}
+.corr p:last-child{margin-bottom:0}
+.corr .big{font-family:"IBM Plex Serif",Georgia,serif;font-size:1.14rem;
+  line-height:1.45;margin-bottom:10px}
+
+.stage{display:flex;gap:14px;align-items:baseline;margin:32px 0 8px}
+.stage .sn{font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;
+  color:var(--ground);background:var(--accent);width:24px;height:24px;
+  display:flex;align-items:center;justify-content:center;border-radius:3px;flex:0 0 24px;
+  transform:translateY(2px)}
+.stage h3{margin:0}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;
+  background:var(--rule);border:1px solid var(--rule);margin:22px 0;border-radius:5px;overflow:hidden}
+.stat{background:var(--surface);padding:15px 16px}
+.stat .v{font-family:"IBM Plex Mono",monospace;font-size:1.32rem;font-weight:600;
+  line-height:1.15;letter-spacing:-.02em;display:block;margin-bottom:5px}
+.stat .l{font-size:11.5px;color:var(--muted);line-height:1.4;display:block}
+
+.formula{font-family:"IBM Plex Mono",monospace;font-size:1.05rem;background:var(--accent-soft);
+  color:var(--ink);padding:14px 18px;border-radius:5px;margin:0 0 15px;
+  border:1px solid var(--rule-2);display:inline-block}
+
+.note{font-size:14px;color:var(--muted);border-left:2px solid var(--rule-2);
+  padding-left:14px;margin:16px 0;max-width:66ch}
+footer{border-top:1px solid var(--rule);margin-top:20px;padding:26px 0 60px;
+  font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--muted);line-height:1.8}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+<header class="mast">
+  <p class="kicker">Method review &middot; FX crosses &middot; 1h&ndash;3h</p>
+  <h1>Pricing the Discretion</h1>
+  <p class="standfirst">A four-step sweep-and-reclaim method was described as &ldquo;something that could be coded.&rdquo; It can. But writing the function signature forces roughly a dozen decisions that nobody has stated, one step&rsquo;s own examples contradict its rule, and the finished program would not test the method at all &mdash; it would put a number on what the trader&rsquo;s judgement has to be worth.</p>
+  <div class="mast-meta">
+    <span><b>Subject</b> AUDCHF &middot; NZDUSD &middot; NZDCAD</span>
+    <span><b>Validation set</b> 5 hand-picked trades</span>
+    <span><b>Status</b> Nothing built &mdash; scoping only</span>
+  </div>
+</header>
+
+<div class="cols">
+<nav class="toc">
+  <p>Contents</p>
+  <a href="#params">1 &middot; Count the free parameters</a>
+  <a href="#step3">2 &middot; The step-3 discrepancy</a>
+  <a href="#family">3 &middot; A family, not a strategy</a>
+  <a href="#test">4 &middot; The one robust test</a>
+  <a href="#order">5 &middot; Build order</a>
+  <a href="#traps">6 &middot; Three traps</a>
+  <a href="#settle">7 &middot; What code can settle</a>
+  <a href="#prior">8 &middot; A prior, stated to be wrong</a>
+</nav>
+
+<main>
+
+<section id="params">
+<h2>Count the free parameters</h2><div class="h2-rule"></div>
+<p>&ldquo;Could be coded&rdquo; is true in a way that misleads. Anything can be coded. The real question is what you must <em>decide</em> before it will run &mdash; and here that is about a dozen things, none of which appear in the screenshots.</p>
+
+<h3>Step 1 &mdash; &ldquo;sweep of a prior swing extreme&rdquo;</h3>
+<div class="tw"><table>
+<thead><tr><th>Decision</th><th>Why it changes everything</th></tr></thead>
+<tbody>
+<tr><td class="k">Swing definition</td><td>Fractal with N bars left, M right. N=2 and N=5 produce disjoint sets of levels.</td></tr>
+<tr><td class="k">Confirmation lag</td><td>A swing high is not <em>knowable</em> until M bars later. Ignore that and you have lookahead.</td></tr>
+<tr><td class="k">Eligible level</td><td>All of them? Only unswept? Only the most recent? Only older than K bars?</td></tr>
+<tr><td class="k">Penetration threshold</td><td>One point beyond, or &ge;X points, or &ge;X&middot;ATR. A graze and a poke are different populations.</td></tr>
+<tr><td class="k">Duration</td><td>Must the sweep complete within one candle, or may it span several?</td></tr>
+<tr><td class="k">Lookback horizon</td><td>40 bars back, or 400?</td></tr>
+</tbody></table></div>
+<p>Six decisions. The level picked on each chart is one draw from the set those six define.</p>
+
+<h3>Step 2 &mdash; &ldquo;enter where price closes back inside, at the swept level&rdquo;</h3>
+<p>This step contains a contradiction, not merely a parameter. <strong>&ldquo;Closes back inside&rdquo; is a candle-close event; &ldquo;at the swept level&rdquo; is a price.</strong> Those are two different fills:</p>
+<ul>
+  <li><strong>Market on the reclaim close</strong> &mdash; entry is the close, which sits some distance inside the level. The extracted entries would not match.</li>
+  <li><strong>Limit resting at the level</strong> &mdash; entry matches the extraction, but the fill is conditional. You are filled only on setups that return to the level after reclaiming, and the ones that run away without you are disproportionately the winners. That is adverse selection built into the entry rule.</li>
+</ul>
+<p>The extracted entries are clean boundary prices, which points at the limit reading. If so, the coded version must model non-fills, and the tradeable population is a biased subset of the signal population. Two further unknowns ride along: how many bars may pass before the reclaim, and does it require a <em>close</em> inside or only a touch?</p>
+
+<h3>Step 4 &mdash; &ldquo;opposite end of the prior daily range&rdquo;</h3>
+<p>Nearly parameter-free, which makes it the good one. Still unresolved: which day boundary &mdash; broker midnight, New York 5pm, UTC? On a 1h&ndash;3h chart that choice shifts the range, and daylight saving shifts it twice a year. And what is the rule when price is already outside the prior range as the setup forms?</p>
+
+<div class="stats">
+  <div class="stat"><span class="v">12&ndash;14</span><span class="l">Undeclared decisions across the four steps</span></div>
+  <div class="stat"><span class="v">5</span><span class="l">Hand-picked trades available to validate against</span></div>
+  <div class="stat"><span class="v">~3</span><span class="l">Of the twelve that the charts actually constrain</span></div>
+</div>
+</section>
+
+<section id="step3">
+<h2>The step-3 discrepancy</h2><div class="h2-rule"></div>
+<p>Step 3 &mdash; &ldquo;stop just past the sweep wick&rdquo; &mdash; is the least specified step, and it is the one that sets reward-to-risk, which sets everything else. &ldquo;Just past&rdquo; is a number nobody has stated: fixed points, a fraction of ATR, a fraction of the wick?</p>
+<p>But before choosing among those, check the arithmetic on the three cited examples.</p>
+
+<div class="tw"><table>
+<thead><tr><th>Pair</th><th>Dir</th><th class="num">Swept extreme</th><th class="num">Stop</th><th class="num">Offset</th><th>Placement</th></tr></thead>
+<tbody>
+<tr class="flag"><td class="k">AUDCHF</td><td>Long</td><td class="num">0.56688</td><td class="num">0.56707</td><td class="num">+19 pts</td><td>Above the low &mdash; <strong>inside the wick</strong></td></tr>
+<tr class="flag"><td class="k">NZDUSD</td><td>Short</td><td class="num">0.59643</td><td class="num">0.59636</td><td class="num">&minus;7 pts</td><td>Below the high &mdash; <strong>inside the wick</strong></td></tr>
+<tr><td class="k">NZDCAD</td><td>Short</td><td class="num">0.82238</td><td class="num">0.82249</td><td class="num">+11 pts</td><td class="pos">Above the high &mdash; past the wick</td></tr>
+</tbody></table></div>
+
+<div class="corr">
+  <p class="ch">Discrepancy &mdash; the examples contradict the stated rule</p>
+  <p class="big">Two of the three exemplar stops sit <em>inside</em> the swept extreme, at a price the market has already traded through.</p>
+  <p>For the AUDCHF long, &ldquo;past the wick&rdquo; means <em>below</em> 0.56688 &mdash; the stop is 19 points above it. For the NZDUSD short, &ldquo;past&rdquo; means <em>above</em> 0.59643 &mdash; the stop is 7 points below it. Only NZDCAD matches the description.</p>
+  <p>Exactly one of two things is true, and both matter:</p>
+  <p><strong>1. The stated rule is wrong.</strong> The stops really are placed inside the sweep, where a simple retest removes them. That is a materially different &mdash; and far more fragile &mdash; risk model than the one described.</p>
+  <p><strong>2. The cited extremes are the pre-sweep labelled levels,</strong> and the true wick extremes were never extracted. Then the reference point step 3 needs is not in the data at all, and step 3 cannot be coded from these screenshots.</p>
+  <p>Either branch lands in the same place: <strong>the step carrying all the leverage is the step whose own examples disagree.</strong> This is a discrepancy in the source material, not a resolved defect &mdash; resolving it requires going back to the charts.</p>
+</div>
+</section>
+
+<section id="family">
+<h2>A family, not a strategy</h2><div class="h2-rule"></div>
+<p>This is the thing to internalise before any code is written. Twelve parameters measured against five hand-picked trades is not a test &mdash; it is a search. Some member of that family will look excellent on any sample you hand it, and the fact that the rules &ldquo;came from the charts&rdquo; offers no protection, because the charts pin down perhaps three of the twelve.</p>
+<div class="verdict">
+  <p class="vh">The trap</p>
+  <p class="big">Codeability that feels like rigour is the entry point to overfitting.</p>
+  <p>Code this in order to find the parameterisation that works, and you will find one. It will mean nothing.</p>
+</div>
+</section>
+
+<section id="test">
+<h2>The one test that survives the parameter problem</h2><div class="h2-rule"></div>
+<p>There is a way out, and it falls straight out of the fixed-target structure. For any parameterisation, the geometric baseline is known exactly &mdash; the hit rate a coin would produce at that reward-to-risk:</p>
+<p class="formula">P_null = r / (r + R)</p>
+<p>So instead of asking &ldquo;does this configuration make money,&rdquo; ask:</p>
+<div class="verdict">
+  <p class="vh">The question to ask instead</p>
+  <p class="big">Does the realised hit rate exceed <code>r/(r+R)</code> &mdash; and does it do so across the parameter space, rather than at one chosen point?</p>
+  <p>This works because it is <strong>self-normalising</strong>. Move the stop and both the realised rate and the baseline move together. Change the swing definition and both move together. You stop measuring a parameterisation and start measuring whether sweep-reclaim carries information at all.</p>
+</div>
+<p>Report the <strong>distribution</strong> across cells &mdash; the median, and the fraction of cells above their own baseline. Never the maximum. If the sweep means something, most of the space beats its baseline by a consistent margin. If it is a thin ridge, it is a fit.</p>
+</section>
+
+<section id="order">
+<h2>Build order: ascending parameter count</h2><div class="h2-rule"></div>
+<p>Do the cheap, decisive things first. This inverts the natural instinct, which is to start with the sweep detector because it is the interesting part.</p>
+
+<div class="stage"><span class="sn">1</span><h3>The control &mdash; blind range-boundary reversion</h3></div>
+<p>Enter at the prior-day range boundary, target the opposite side, stop at X% of the range. <strong>~2 parameters.</strong> Answers: is unconditional range reversion positive? This sets the bar step 1 must clear, and it is the highest-information, lowest-cost test on the list &mdash; probably an afternoon.</p>
+
+<div class="stage"><span class="sn">2</span><h3>Step 4 alone &mdash; range and session definition</h3></div>
+<p><strong>~2 parameters.</strong> Answers: does the target rule reproduce the labelled boundaries on the charts? This validates the extraction itself before anything is built on top of it.</p>
+
+<div class="stage"><span class="sn">3</span><h3>Step 3 as a swept parameter, not a rule</h3></div>
+<p><strong>1 parameter.</strong> Answers: where does cost-adjusted reward-to-risk actually optimise? Treating the least-specified step as a sweep dimension is more honest than inventing a number for it.</p>
+
+<div class="stage"><span class="sn">4</span><h3>Steps 1&ndash;2 &mdash; sweep and reclaim, added on top</h3></div>
+<p><strong>~8 parameters.</strong> Answers the only real question: <strong>is there lift over the control?</strong></p>
+
+<p class="note">Step 1 is the entire hypothesis and it goes last, because everything before it is the null it must beat. If the control at stage 1 is already negative and step 1 has to manufacture the whole edge, you know the size of the miracle required before writing a single line of the sweep detector.</p>
+</section>
+
+<section id="traps">
+<h2>Three traps specific to this trade shape</h2><div class="h2-rule"></div>
+
+<h3>Intrabar ambiguity is severe here, and biased in one direction</h3>
+<p>The stop is 8&ndash;35 pips; the target is 70&ndash;150. On 1h bars an enormous fraction of candles contain the stop distance, and many contain both stop and target. OHLC cannot tell you which came first. With the stop at roughly 12% of the target distance, resolving that ambiguity optimistically does not add a little noise &mdash; <strong>it manufactures an edge out of nothing, systematically.</strong> Either use sub-minute data, or assume stop-first, and state which.</p>
+
+<h3>Lookahead enters through the swing definition</h3>
+<p>A fractal extreme confirmed by M right-side bars is invisible until M bars after it forms. Mark swings across the full series and you have used the future to choose the level. This is the single most common way a coded sweep strategy produces a spurious result.</p>
+
+<h3>Costs must be per-instrument</h3>
+<p>Spread-to-risk runs from about 4% on USDCHF to roughly 35% on NZDCAD. A flat cost assumption is not a simplification &mdash; it is a thumb on the scale, and it presses in the flattering direction on exactly the trades that look best.</p>
+</section>
+
+<section id="settle">
+<h2>What coding can and cannot settle</h2><div class="h2-rule"></div>
+<p>Worth being clear-eyed about, because it determines whether the exercise ends an argument or starts one.</p>
+<p>A coded steps 1&ndash;4 generates the <strong>unfiltered</strong> population. His record is the <strong>filtered</strong> one &mdash; after the sweep-validity judgement, after voiding. These are different objects. So if the code loses and he is winning, he can say &ldquo;your version takes bad setups,&rdquo; and he would be <em>technically correct</em>, because the discretionary gate is precisely the difference between the two populations.</p>
+
+<div class="verdict">
+  <p class="vh">The actual deliverable</p>
+  <p class="big">Coding steps 1&ndash;4 does not test his method. It prices his discretion.</p>
+  <p>If the mechanical core returns &minus;0.12R per trade net, then his sweep-validity judgement must be worth +0.12R merely to break even, and more than that to be worth doing. An unfalsifiable claim &mdash; &ldquo;I only take the good ones&rdquo; &mdash; becomes a quantified burden of proof with a number attached.</p>
+</div>
+
+<p>Two questions, two instruments, and they do not substitute for each other:</p>
+<div class="tw"><table>
+<thead><tr><th>Question</th><th>Instrument</th><th>Character</th></tr></thead>
+<tbody>
+<tr><td>Is there a substrate?</td><td class="k">backtest the mechanical core</td><td>Large n, fast, answerable</td></tr>
+<tr><td>Is the discretion worth anything?</td><td class="k">forward pre-registration</td><td>Small n, slow, no shortcut exists</td></tr>
+</tbody></table></div>
+<p>Conflating the two is how every one of these conversations goes in circles.</p>
+</section>
+
+<section id="prior">
+<h2>A prior, stated so it can be wrong</h2><div class="h2-rule"></div>
+<p>Pre-registered before any code runs, since that is the discipline being asked of him.</p>
+
+<div class="tw"><table>
+<thead><tr><th>Quantity</th><th class="num">Predicted</th></tr></thead>
+<tbody>
+<tr><td>Gross expectancy of the mechanical core</td><td class="num">within &plusmn;0.05R of zero</td></tr>
+<tr><td>Net after real per-pair spreads</td><td class="num neg">&minus;0.05R to &minus;0.20R</td></tr>
+<tr><td>Realised hit rate vs <code>r/(r+R)</code></td><td class="num">within ~2pp across most cells</td></tr>
+<tr><td>Fraction of cells beating their own baseline</td><td class="num">near 50% &mdash; coin-flip</td></tr>
+</tbody></table></div>
+
+<p><strong>Reasoning:</strong> the geometric null is exactly zero by construction; costs run 4&ndash;35% of the risk budget; and the stop sits in or beside the densest retest zone on the chart. For this to come out positive, sweep-reclaim must lift the hit rate by several points <em>and</em> pay the spread.</p>
+
+<p>If the realised rate comes in clearly above <code>r/(r+R)</code> across most cells, the prior is wrong and there is something real in step 1 &mdash; and that would be worth knowing precisely because the fixed-target structure makes it unambiguous.</p>
+</section>
+
+</main>
+</div>
+
+<footer>
+  Scoping review &middot; 2026-08-22 &middot; AUDCHF / NZDUSD / NZDCAD on 1h&ndash;3h<br>
+  Standalone: an external discretionary method, sharing no corpus, instrument or code path with any other work. Not a repository finding.<br>
+  Nothing built, nothing measured, no data touched. Every number here is read from the described trades or derived from the stated geometry.<br>
+  The step-3 placement discrepancy is unresolved and requires the original charts to settle.
+</footer>
+</div>
+
+</body></html>

@@ -1,0 +1,70 @@
+{
+  "rule": "h4_c1c2c3_1h_confirm_insample",
+  "csv": "data/mt5/XAUUSD_M15.csv",
+  "eval_start": "2024-05-22",
+  "rows": 47275,
+  "first": "2024-05-22 01:00:00",
+  "last": "2026-05-21 23:45:00",
+  "skipped": {
+    "eval:entry_beyond_target": 194,
+    "eval:no_confirm_in_c3": 11,
+    "eval:stop_before_confirm": 206
+  },
+  "primary_near_any_confirmed": {
+    "n": 180,
+    "long_n": 67,
+    "win_rate": 0.6056,
+    "breakeven_win_rate": 0.5769,
+    "gross_r_mean": 0.0738,
+    "gross_r_ci95": [
+      -0.0785,
+      0.2261
+    ],
+    "net_r_mean": 0.0426,
+    "long_gross_r": 0.2087,
+    "short_gross_r": -0.0062,
+    "worst_r": -1.0,
+    "random_control": {
+      "random_mean": -0.0336,
+      "share_of_draws_beating_real": 0.06
+    }
+  },
+  "verdict": "PASS",
+  "secondary_all_confirmed": {
+    "n": 402,
+    "long_n": 162,
+    "win_rate": 0.5746,
+    "breakeven_win_rate": 0.5714,
+    "gross_r_mean": 0.0261,
+    "gross_r_ci95": [
+      -0.0815,
+      0.1337
+    ],
+    "net_r_mean": -0.0024,
+    "long_gross_r": 0.1015,
+    "short_gross_r": -0.0247,
+    "worst_r": -1.0,
+    "random_control": {
+      "random_mean": -0.0367,
+      "share_of_draws_beating_real": 0.12
+    }
+  },
+  "secondary_verdict": "INCONCLUSIVE",
+  "eval_not_near": {
+    "n": 222,
+    "long_n": 95,
+    "win_rate": 0.5495,
+    "breakeven_win_rate": 0.5669,
+    "gross_r_mean": -0.0126,
+    "gross_r_ci95": [
+      -0.1634,
+      0.1383
+    ],
+    "net_r_mean": -0.0388,
+    "long_gross_r": 0.0258,
+    "short_gross_r": -0.0412,
+    "worst_r": -1.0
+  },
+  "open_in_eval": 0,
+  "economic_claims_allowed": false
+}

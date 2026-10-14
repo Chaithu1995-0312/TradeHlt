@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parent CRT Track Architecture - C1/C2/C3, Feed, and Bias Gate</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --cod: #ff7b72;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+  }
+  header.top {
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 22px 28px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 10px 18px;
+  }
+  header.top .brand { font-size: 18px; font-weight: 700; letter-spacing: 0.2px; }
+  header.top .brand .dot { color: var(--accent); }
+  header.top .sub { color: var(--muted); font-size: 13px; }
+  header.top .meta { margin-left: auto; font-size: 12px; color: var(--muted); }
+  nav.tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 14px auto 0;
+    max-width: 1200px;
+    padding: 0 28px;
+  }
+  nav.tabs a {
+    padding: 6px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 13px;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    transition: 0.15s;
+  }
+  nav.tabs a:hover,
+  nav.tabs a.active {
+    background: var(--panel);
+    color: var(--text);
+    border-color: var(--accent);
+  }
+  main { padding: 18px 28px 40px; max-width: 1200px; margin: 0 auto; }
+  section { margin-bottom: 22px; }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 22px;
+    margin-bottom: 18px;
+  }
+  h1 { font-size: 22px; margin: 6px 0 4px; }
+  h2 { font-size: 16px; margin: 0 0 8px; }
+  p { margin: 6px 0; }
+  .lead { font-size: 14px; color: var(--muted); }
+  code {
+    background: #0f1115;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 12.5px;
+    font-family: "SF Mono", Consolas, monospace;
+    color: var(--cod);
+  }
+  a { color: var(--accent); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th,
+  td {
+    border: 1px solid var(--border);
+    padding: 8px 10px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: #1c2129;
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  tr:nth-child(even) td { background: #151a21; }
+  .state-td {
+    font-family: "SF Mono", Consolas, monospace;
+    font-weight: 700;
+    font-size: 12.5px;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .badge,
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    margin-right: 4px;
+  }
+  .badge { background: #238636; }
+  .tag-mem { background: #9b86f0; }
+  .tag-pure { background: #2aa198; }
+  .tag-gate { background: #26a0da; }
+  .tag-note { background: #6b7280; }
+  .diag {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 12px;
+    white-space: pre;
+    background: #0f1115;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    overflow-x: auto;
+    line-height: 1.7;
+    color: var(--text);
+  }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+  footer {
+    margin-top: 30px;
+    padding: 14px 0 0;
+    color: var(--muted);
+    font-size: 12px;
+    border-top: 1px solid var(--border);
+  }
+  @media (max-width: 760px) {
+    header.top { padding: 18px; }
+    nav.tabs { padding: 0 18px; }
+    main { padding: 16px 18px 32px; }
+    .card { padding: 16px; overflow-x: auto; }
+    table { min-width: 820px; }
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="dot">◆</span> Parent CRT Track</div>
+  <div class="sub">Calendar parent C1/C2/C3 · feed · M15 bias gate</div>
+  <div class="meta">source: <code>src/config_layer/parent_crt.py</code> · <code>src/runtime/parent_crt_feed.py</code> · companions <a href="crt_state_arch.html">crt_state_arch.html</a> · <a href="crt_resolver_arch.html">crt_resolver_arch.html</a></div>
+</header>
+
+<nav class="tabs">
+  <a href="#overview" class="active">Overview</a>
+  <a href="#walk">C1/C2/C3 walk</a>
+  <a href="#predicates">Predicates</a>
+  <a href="#feed">Feed</a>
+  <a href="#caller">Caller wire</a>
+  <a href="#config">Config</a>
+</nav>
+
+<main>
+  <section id="overview">
+    <div class="card">
+      <h1>Parent track role</h1>
+      <p class="lead"><code>ParentCRTTrack</code> classifies a stream of already-closed calendar parent candles into the disjoint 3-state sub-graph <code>RANGE_C1</code> / <code>MANIPULATION_C2</code> / <code>DISTRIBUTION_C3</code>. The M15 execution machine stays <code>CRTEngine</code>. The parent track reaches that machine only as <code>process_candle(parent_state=bias, parent_objective=status)</code>.</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Surface</th>
+            <th>What it owns</th>
+            <th>What it does not own</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-td">ParentCRTTrack</td>
+            <td>One legal C1/C2/C3 edge per closed parent. <code>ParentRange</code> (C1 high/low) and <code>ParentSweepEvent</code>. <code>bias</code> is the sweep direction only while the state is <code>DISTRIBUTION_C3</code>.</td>
+            <td>The M15 9-state machine. A clock. HTF posture. The objective enum. Any import of <code>crt_engine_v2</code> at runtime.</td>
+          </tr>
+          <tr>
+            <td class="state-td">ParentCandleBuilder</td>
+            <td>Calendar-true closed parents for <code>H1</code>, <code>H4</code>, <code>D1</code>, <code>W1</code>, <code>MN1</code>. A close is reported on the first child of the next period. The in-progress accumulator stays private.</td>
+            <td>The C1/C2/C3 classifier. <code>HTFBuilder</code>, which is the separate count-window clock that supplies <code>htf_candle_id</code>.</td>
+          </tr>
+          <tr>
+            <td class="state-td">ParentCRTFeed</td>
+            <td>One instance per instrument and parent rule. On each child bar: builder, then track, then <code>classify_htf_state</code> and <code>resolve_objective</code>. Exposes <code>bias</code>, <code>state</code>, <code>htf_state</code>, <code>objective</code>, <code>last_range_ratio</code>.</td>
+            <td>A second copy of the walk. When <code>parent_crt.enabled</code> is false, <code>from_prod_config()</code> returns <code>None</code> and the engine keeps <code>parent_state=None</code>.</td>
+          </tr>
+          <tr>
+            <td class="state-td">CRTEngine</td>
+            <td>M15 execution. After an approved retest, the parent-bias elif can reject a direction that disagrees with a non-<code>NONE</code> <code>parent_state</code>. A later elif can apply the objective gate when that gate is enabled.</td>
+            <td>The parent state names. <code>HTFState</code> is a second dimension and is never a <code>CRTState</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="legend">
+        <span><span class="badge">Disjoint graph</span> no edge joins the 9 M15 states and the 3 parent states</span>
+        <span>Legal edges live in <code>_crt_state_generated.VALID_TRANSITIONS</code>, re-exported by <code>state_identity.py</code>.</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="walk">
+    <div class="card">
+      <h1>C1 / C2 / C3 walk</h1>
+      <p class="lead"><code>on_parent_close(parent)</code> takes exactly one closed parent and moves exactly one legal edge. The arriving candle becomes the new C1 on the first candle, on a C1 roll, on a failed C2, and on every candle after C3. A successful sweep keeps the existing C1 range. A confirmed impulse keeps that range and the sweep.</p>
+      <div class="diag">start: state RANGE_C1, range is None, bias NONE
+
+first closed parent
+  -> RANGE_C1                         bias NONE
+     h_ref / l_ref = this candle
+
+RANGE_C1
+  boundary sweep, close back inside  -> MANIPULATION_C2   bias NONE
+  otherwise                          -> RANGE_C1 (roll)    bias NONE
+
+MANIPULATION_C2
+  F-074 impulse away from swept side -> DISTRIBUTION_C3   bias = sweep direction
+  otherwise                          -> RANGE_C1          bias NONE
+                                        sweep cleared
+
+DISTRIBUTION_C3
+  next closed parent                 -> RANGE_C1          bias NONE
+     this is the only legal edge</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Current</th>
+            <th>Allowed next</th>
+            <th>Track behaviour</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-td">RANGE_C1</td>
+            <td>MANIPULATION_C2, RANGE_C1</td>
+            <td>Sweep stores a <code>ParentSweepEvent</code> and leaves the C1 range in place. No sweep calls <code>_become_c1</code> and clears any sweep.</td>
+          </tr>
+          <tr>
+            <td class="state-td">MANIPULATION_C2</td>
+            <td>DISTRIBUTION_C3, RANGE_C1</td>
+            <td>Impulse confirmation changes only the state. Failure restarts C1 on this candle.</td>
+          </tr>
+          <tr>
+            <td class="state-td">DISTRIBUTION_C3</td>
+            <td>RANGE_C1</td>
+            <td>The next close always restarts. <code>bias</code> is live only during the child bars between the confirming close and that next close.</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="legend">
+        <span><span class="badge">C1</span> reference parent high/low</span>
+        <span><span class="tag tag-pure">C2</span> sweep recorded, bias still NONE</span>
+        <span><span class="tag tag-gate">C3</span> the only state with a non-NONE bias</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="predicates">
+    <div class="card">
+      <h1>Sweep and impulse</h1>
+      <p class="lead">The parent range object stays in <code>parent_crt.py</code>. The comparisons are the shared predicates <code>structure.predicates.swept_high</code>, <code>swept_low</code>, and <code>directional_impulse</code> (SP-001 / SP-002). A bar that only touches the level, or that closes exactly on it, is not a sweep.</p>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:22%">Test</th>
+            <th style="width:38%">Rule</th>
+            <th>Result on the track</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-td">swept_high</td>
+            <td><code>high &gt; h_ref</code> and <code>close &lt; h_ref</code></td>
+            <td><code>Direction.SHORT</code>. Sweep price is the candle high.</td>
+          </tr>
+          <tr>
+            <td class="state-td">swept_low</td>
+            <td><code>low &lt; l_ref</code> and <code>close &gt; l_ref</code></td>
+            <td><code>Direction.LONG</code>. Sweep price is the candle low.</td>
+          </tr>
+          <tr>
+            <td class="state-td">both sides</td>
+            <td><code>swept_high</code> is tested first</td>
+            <td>The event is SHORT. LONG is used only when the high was not swept.</td>
+          </tr>
+          <tr>
+            <td class="state-td">impulse LONG</td>
+            <td><code>close &gt; open</code> and <code>close &gt; sweep price</code></td>
+            <td>Inherited from a low sweep. The impulse bar does not re-decide the side.</td>
+          </tr>
+          <tr>
+            <td class="state-td">impulse SHORT</td>
+            <td><code>close &lt; open</code> and <code>close &lt; sweep price</code></td>
+            <td>Inherited from a high sweep. An unsigned large bar does not confirm.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="feed">
+    <div class="card">
+      <h1>ParentCRTFeed</h1>
+      <p class="lead">The feed is the streaming adapter beside the backtest loop. <code>config_layer</code> does not import <code>features</code>. <code>push(child)</code> returns true only when a parent just closed and the track advanced on that closed candle.</p>
+      <div class="diag">each child candle
+  ParentCandleBuilder.push(child)
+    same period  -> False, track unchanged
+    new period   -> close the previous buffer as one parent
+                    classify_htf_state(previous parent, this parent)
+                      first close stays HTFState.UNKNOWN
+                    ParentCRTTrack.on_parent_close(closed parent)
+                    resolve_objective(bias, C1 range, closed close)
+                    remember this parent as previous</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Readout</th>
+            <th>Meaning after push</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-td">bias</td>
+            <td><code>ParentCRTTrack.bias</code>. <code>LONG</code> or <code>SHORT</code> only in <code>DISTRIBUTION_C3</code>. Otherwise <code>NONE</code>, including the whole of <code>MANIPULATION_C2</code>.</td>
+          </tr>
+          <tr>
+            <td class="state-td">state</td>
+            <td>Current parent <code>CRTState</code>: <code>RANGE_C1</code>, <code>MANIPULATION_C2</code>, or <code>DISTRIBUTION_C3</code>.</td>
+          </tr>
+          <tr>
+            <td class="state-td">htf_state</td>
+            <td>Second dimension from <code>classify_htf_state</code>: <code>UNKNOWN</code>, <code>REVERSAL</code>, <code>EXPANSION</code>, <code>DISTRIBUTION</code>, <code>ACCUMULATION</code>. This <code>DISTRIBUTION</code> is a range-ratio posture. It is a different object from <code>DISTRIBUTION_C3</code>.</td>
+          </tr>
+          <tr>
+            <td class="state-td">objective</td>
+            <td><code>resolve_objective</code>. <code>NONE</code> until a C3 bias exists. Then <code>EXISTS</code>, <code>ACHIEVED</code>, or <code>INVALIDATED</code> against the C1 bounds and the closed parent's close. Recomputed on parent closes, then held across the following child bars.</td>
+          </tr>
+          <tr>
+            <td class="state-td">last_range_ratio</td>
+            <td>Observation only: <code>(curr.high - curr.low) / (prev.high - prev.low)</code> of the last two closed parents. <code>None</code> before two closes. <code>1.0</code> when the previous range is not positive. The decision path does not read it.</td>
+          </tr>
+        </tbody>
+      </table>
+      <h2 style="margin-top:16px">HTF posture on two closed parents</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Condition, in code order</th>
+            <th>HTFState</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Previous candle is bullish and this close is below its low, or previous is not bullish and this close is above its high</td>
+            <td class="state-td">REVERSAL</td>
+          </tr>
+          <tr>
+            <td>Close is outside the previous high or low. Both the ratio branch and the following branch return the same enum.</td>
+            <td class="state-td">EXPANSION</td>
+          </tr>
+          <tr>
+            <td>Close stays inside and <code>range ratio &gt;= distribution_min_range_ratio</code></td>
+            <td class="state-td">DISTRIBUTION</td>
+          </tr>
+          <tr>
+            <td>Close stays inside, including the band between the accumulation and distribution ratios</td>
+            <td class="state-td">ACCUMULATION</td>
+          </tr>
+        </tbody>
+      </table>
+      <h2 style="margin-top:16px">Objective versus the C1 range</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Bias</th>
+            <th>Target</th>
+            <th>Invalidate</th>
+            <th>Status from the closed parent's close</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-td">LONG</td>
+            <td>C1 high</td>
+            <td>C1 low</td>
+            <td><code>ACHIEVED</code> at or above the high. <code>INVALIDATED</code> below the low. Otherwise <code>EXISTS</code>.</td>
+          </tr>
+          <tr>
+            <td class="state-td">SHORT</td>
+            <td>C1 low</td>
+            <td>C1 high</td>
+            <td><code>ACHIEVED</code> at or below the low. <code>INVALIDATED</code> above the high. Otherwise <code>EXISTS</code>.</td>
+          </tr>
+          <tr>
+            <td class="state-td">NONE</td>
+            <td></td>
+            <td></td>
+            <td><code>NONE</code>. Also <code>NONE</code> when the C1 range or the close is absent.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="caller">
+    <div class="card">
+      <h1>Caller wire</h1>
+      <p class="lead">On each backtest bar the feed is pushed before warmup handling and before <code>process_candle</code>. Warmup and the initialisation bar still advance the parent track. They return before the engine call. After initialisation, the engine receives the bias and the objective status that the feed is holding for the current child bar.</p>
+      <div class="diag">BacktestRunner bar
+  HTFBuilder.push(candle)                  count-window id
+  parent_feed.push(candle)                 if the feed exists
+    _parent_closed is kept for the bar-structure snapshot
+    the trade path does not branch on that flag
+  warmup or initialise -> continue
+  else process_candle(
+        candle, htf.current_htf_id,
+        parent_state     = feed.bias or None,
+        parent_objective = feed.objective.status or None)</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Actor</th>
+            <th>Contract</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-td">BacktestRunner</td>
+            <td><code>ParentCRTFeed.from_prod_config(self.calendar)</code> runs once, before <code>HTFBuilder</code>. <code>htf_clock_basis="calendar"</code> requires the feed. The calendar argument is the run's market calendar. <code>None</code> buckets timestamps as given.</td>
+          </tr>
+          <tr>
+            <td class="state-td">identity.certify</td>
+            <td>The L3 engine walk pushes the same feed and passes the same two keywords into <code>process_candle</code>.</td>
+          </tr>
+          <tr>
+            <td class="state-td">research mirrors</td>
+            <td><code>src/research/zone_mapping/*</code> and <code>crt_state_machine.py</code> call <code>process_candle</code> without <code>parent_state</code>. The default stays <code>None</code>.</td>
+          </tr>
+          <tr>
+            <td class="state-td">bias veto</td>
+            <td>Reached on the approved-retest path, after the discount/premium zone filters. Requires <code>parent_crt.enabled</code>, a caller bias other than <code>None</code> and <code>NONE</code>, and an M15 <code>state.direction</code> different from that bias. Records <code>FILTER_REJECTED</code> with reason <code>Against parent-timeframe bias (...)</code>, replays the retest as <code>PARENT_BIAS</code>, resets to <code>RANGE</code>. Action is <code>TRADE_UNCONFIRMED</code> when a resting order is flattened, otherwise <code>FILTER_REJECTED</code>.</td>
+          </tr>
+          <tr>
+            <td class="state-td">objective veto</td>
+            <td>The next elif. Requires <code>objective_gate.enabled</code>. <code>allow_exists_only</code> admits only <code>ObjectiveStatus.EXISTS</code>. The active file below has this gate off, so the branch is closed on that config.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="lead">F-089 records one XAUUSD gate-on versus gate-off comparison: the CRT event sequence and the trade set stayed the same, 4 of 19 rejection reasons changed from <code>off_session</code> to the parent-bias reason, and 0 outcomes changed. That is a recorded measurement on that corpus. It is not a new run of this page.</p>
+    </div>
+  </section>
+
+  <section id="config">
+    <div class="card">
+      <h1>Config that arms the gate</h1>
+      <p class="lead"><code>configs/production/ACTIVE_VERSION</code> read on 2026-10-12 contains <code>v2_htfcrt_2026_08</code>. <code>from_prod_config</code> is fail-fast: a missing <code>parent_crt</code> key raises. <code>bias_gate_mode</code> must be <code>reject_on_mismatch</code>. <code>objective_gate.mode</code> must be <code>allow_exists_only</code>. Any other mode raises, including when the section is disabled, because those keys are read before the enabled check.</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Key</th>
+            <th>v2_htfcrt_2026_08</th>
+            <th>v2_multi_2026_04</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-td">parent_crt.enabled</td>
+            <td>true. Feed is constructed. Bias veto can fire.</td>
+            <td>false. Feed is <code>None</code>. <code>parent_state</code> stays <code>None</code>. Engine flag also skips the veto.</td>
+          </tr>
+          <tr>
+            <td class="state-td">timeframe</td>
+            <td>H4</td>
+            <td>H4</td>
+          </tr>
+          <tr>
+            <td class="state-td">bias_gate_mode</td>
+            <td>reject_on_mismatch</td>
+            <td>reject_on_mismatch</td>
+          </tr>
+          <tr>
+            <td class="state-td">htf_state ratios</td>
+            <td>expansion 1.2, accumulation 0.7, distribution 1.0</td>
+            <td>same three numbers</td>
+          </tr>
+          <tr>
+            <td class="state-td">objective_gate</td>
+            <td>enabled false, mode allow_exists_only</td>
+            <td>enabled false, mode allow_exists_only</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="legend">
+        <span><span class="badge">Active file</span> v2_htfcrt_2026_08</span>
+        <span><span class="tag tag-note">Live</span> F-073: no production live <code>process_candle</code> loop. The backtest and the identity certify walk are the callers that thread the bias.</span>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Static documentation viewer. Traced from <code>parent_crt.py</code>, <code>parent_crt_feed.py</code>, <code>htf_state.py</code>, <code>structure/predicates.py</code>, <code>parent_candle.py</code>, <code>backtest_v2.py</code>, and <code>crt_engine_v2.process_candle</code>. No runtime, config, formula, or production behavior is changed by this file.
+  </footer>
+</main>
+</body>
+</html>

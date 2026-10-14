@@ -1,0 +1,952 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found]){display:none!important}</style></head><body>
+<title>Tradelatest Capability Gaps</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#F1F4F3;
+    --surface:#FFFFFF;
+    --surface-2:#E8EDEC;
+    --border:#D3DBD8;
+    --border-soft:#E2E8E6;
+    --ink:#12201C;
+    --ink-soft:#4C5C57;
+    --ink-faint:#7C8B85;
+    --accent:#0F6E6A;
+    --accent-ink:#0B4E4B;
+    --accent-soft:#E1F0EE;
+    --gold:#9B6F27;
+    --gold-soft:#F4ECD9;
+    --sev-crit:#AD3B33;
+    --sev-crit-bg:#FBEAE8;
+    --sev-warn:#A06A1B;
+    --sev-warn-bg:#FBF0DC;
+    --sev-slate:#5B6870;
+    --sev-slate-bg:#ECEFEF;
+    --shadow:0 1px 2px rgba(18,32,28,0.04), 0 6px 20px -8px rgba(18,32,28,0.10);
+    --font-display:'Zilla Slab', Georgia, 'Iowan Old Style', serif;
+    --font-body:'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono:'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0D1614;
+      --surface:#131F1C;
+      --surface-2:#192723;
+      --border:#283A35;
+      --border-soft:#213330;
+      --ink:#E6EFEC;
+      --ink-soft:#9FB4AD;
+      --ink-faint:#6E8580;
+      --accent:#54D9CB;
+      --accent-ink:#8FEDE2;
+      --accent-soft:#15302C;
+      --gold:#D9AE5D;
+      --gold-soft:#2A2313;
+      --sev-crit:#E58179;
+      --sev-crit-bg:#331714;
+      --sev-warn:#E0AC55;
+      --sev-warn-bg:#2C2210;
+      --sev-slate:#9AAAA4;
+      --sev-slate-bg:#1B2724;
+      --shadow:0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -10px rgba(0,0,0,0.5);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0D1614;
+    --surface:#131F1C;
+    --surface-2:#192723;
+    --border:#283A35;
+    --border-soft:#213330;
+    --ink:#E6EFEC;
+    --ink-soft:#9FB4AD;
+    --ink-faint:#6E8580;
+    --accent:#54D9CB;
+    --accent-ink:#8FEDE2;
+    --accent-soft:#15302C;
+    --gold:#D9AE5D;
+    --gold-soft:#2A2313;
+    --sev-crit:#E58179;
+    --sev-crit-bg:#331714;
+    --sev-warn:#E0AC55;
+    --sev-warn-bg:#2C2210;
+    --sev-slate:#9AAAA4;
+    --sev-slate-bg:#1B2724;
+    --shadow:0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -10px rgba(0,0,0,0.5);
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;} }
+
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--font-body);
+    font-size:15.5px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  h1,h2,h3{font-family:var(--font-display); text-wrap:balance; color:var(--ink); margin:0;}
+  p{margin:0;}
+  a{color:var(--accent-ink);}
+  ::selection{background:var(--accent-soft); color:var(--accent-ink);}
+
+  .mono{font-family:var(--font-mono);}
+  .eyebrow{
+    font-family:var(--font-mono);
+    font-size:11.5px;
+    letter-spacing:0.09em;
+    text-transform:uppercase;
+    color:var(--accent);
+    font-weight:500;
+  }
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    position:sticky; top:0; z-index:40;
+    background:color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter:blur(10px) saturate(1.1);
+    border-bottom:1px solid var(--border-soft);
+  }
+  .topbar-inner{
+    max-width:1180px; margin:0 auto; padding:12px 28px;
+    display:flex; align-items:center; gap:22px;
+  }
+  .topbar-title{
+    font-family:var(--font-mono); font-size:12.5px; font-weight:600;
+    color:var(--ink); white-space:nowrap; letter-spacing:0.01em;
+  }
+  .topbar-title span{color:var(--accent);}
+  .topnav{
+    display:flex; gap:2px; overflow-x:auto; scrollbar-width:none;
+    font-family:var(--font-mono); font-size:12px;
+  }
+  .topnav::-webkit-scrollbar{display:none;}
+  .topnav a{
+    text-decoration:none; color:var(--ink-soft); white-space:nowrap;
+    padding:7px 10px; border-radius:6px; transition:background .15s, color .15s;
+  }
+  .topnav a:hover{background:var(--surface-2); color:var(--ink);}
+  .topnav a.active{background:var(--accent-soft); color:var(--accent-ink);}
+
+  /* ---------- shell ---------- */
+  .wrap{max-width:1180px; margin:0 auto; padding:0 28px;}
+  .prose{max-width:700px;}
+
+  /* ---------- hero / intro ---------- */
+  .intro{padding:56px 0 40px;}
+  .intro .eyebrow{margin-bottom:14px; display:block;}
+  .intro h1{font-size:clamp(30px, 4.4vw, 44px); font-weight:600; line-height:1.08; letter-spacing:-0.01em;}
+  .intro h1 em{font-style:italic; color:var(--accent-ink);}
+  .intro .dek{margin-top:18px; font-size:17px; line-height:1.6; color:var(--ink-soft); max-width:680px;}
+
+  .source-strip{
+    margin-top:32px; display:flex; flex-wrap:wrap; gap:10px;
+  }
+  .source-chip{
+    display:flex; align-items:baseline; gap:6px;
+    border:1px solid var(--border); background:var(--surface);
+    border-radius:8px; padding:8px 12px; box-shadow:var(--shadow);
+    font-size:12.5px;
+  }
+  .source-chip .n{font-family:var(--font-mono); color:var(--accent); font-weight:600;}
+  .source-chip .t{color:var(--ink-soft);}
+
+  .rule-note{
+    margin-top:28px; padding:14px 16px; border-radius:10px;
+    background:var(--surface-2); border:1px solid var(--border-soft);
+    font-size:13px; color:var(--ink-soft); max-width:680px;
+  }
+  .rule-note b{color:var(--ink); font-weight:600;}
+
+  /* ---------- section headers ---------- */
+  section{padding:52px 0; border-top:1px solid var(--border-soft);}
+  .sec-head{margin-bottom:30px;}
+  .sec-head .eyebrow{margin-bottom:10px; display:block;}
+  .sec-head h2{font-size:clamp(24px, 3vw, 30px); font-weight:600;}
+  .sec-head .dek{margin-top:10px; color:var(--ink-soft); font-size:15px; max-width:640px;}
+
+  /* ---------- architecture diagram ---------- */
+  .arch-flow{
+    display:flex; align-items:stretch; gap:0; overflow-x:auto; padding:6px 2px 18px;
+    margin-top:8px;
+  }
+  .arch-box{
+    flex:0 0 auto; min-width:150px; max-width:170px;
+    background:var(--surface); border:1px solid var(--border); border-radius:10px;
+    padding:13px 14px; box-shadow:var(--shadow);
+    display:flex; flex-direction:column; gap:4px; justify-content:center;
+  }
+  .arch-box .k{font-family:var(--font-mono); font-size:10px; color:var(--accent); letter-spacing:0.06em; text-transform:uppercase;}
+  .arch-box .v{font-size:13px; font-weight:600; line-height:1.25;}
+  .arch-box.dim{opacity:0.55;}
+  .arch-box.stop{border-style:dashed; border-color:var(--sev-crit); background:var(--sev-crit-bg);}
+  .arch-box.stop .k{color:var(--sev-crit);}
+  .arch-arrow{
+    flex:0 0 auto; width:34px; display:flex; align-items:center; justify-content:center;
+    color:var(--ink-faint); font-size:16px;
+  }
+  .feeders{
+    margin-top:22px; display:grid; grid-template-columns:repeat(auto-fit, minmax(190px,1fr)); gap:10px;
+  }
+  .feeder{
+    border:1px dashed var(--border); border-radius:10px; padding:12px 14px;
+    background:var(--surface-2);
+  }
+  .feeder .k{font-family:var(--font-mono); font-size:10px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:0.06em;}
+  .feeder .v{font-size:13px; margin-top:3px; color:var(--ink-soft); line-height:1.4;}
+
+  .drift-grid{margin-top:26px; display:grid; grid-template-columns:repeat(auto-fit, minmax(280px,1fr)); gap:14px;}
+  .drift-card{
+    border:1px solid var(--border); background:var(--surface); border-radius:10px;
+    padding:16px 18px; box-shadow:var(--shadow);
+  }
+  .drift-card .tag{
+    display:inline-block; font-family:var(--font-mono); font-size:10.5px; font-weight:600;
+    color:var(--sev-warn); background:var(--sev-warn-bg); padding:2px 8px; border-radius:999px;
+    letter-spacing:0.04em; text-transform:uppercase; margin-bottom:9px;
+  }
+  .drift-card p{font-size:13.5px; color:var(--ink-soft); line-height:1.55;}
+  .drift-card p + p{margin-top:6px;}
+  .drift-card .src{font-family:var(--font-mono); font-size:11.5px; color:var(--ink-faint);}
+
+  /* ---------- filter bar ---------- */
+  .filterbar{
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    margin:36px 0 -8px;
+  }
+  .filterbar .label{font-family:var(--font-mono); font-size:11px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:0.07em; margin-right:4px;}
+  .filter-btn{
+    font-family:var(--font-mono); font-size:12px; border:1px solid var(--border);
+    background:var(--surface); color:var(--ink-soft); border-radius:999px;
+    padding:6px 13px; cursor:pointer; transition:all .15s;
+  }
+  .filter-btn:hover{border-color:var(--accent);}
+  .filter-btn.on{background:var(--ink); color:var(--bg); border-color:var(--ink);}
+  :root[data-theme="dark"] .filter-btn.on{background:var(--accent); color:#08120F; border-color:var(--accent);}
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .filter-btn.on{background:var(--accent); color:#08120F; border-color:var(--accent);} }
+  .filter-btn .dot{display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:6px; vertical-align:middle;}
+
+  /* ---------- gap cards ---------- */
+  .gap-grid{margin-top:22px; display:grid; grid-template-columns:repeat(auto-fit, minmax(320px,1fr)); gap:16px;}
+  .gap-card{
+    border:1px solid var(--border); background:var(--surface); border-radius:12px;
+    padding:20px 20px 18px; box-shadow:var(--shadow);
+    display:flex; flex-direction:column; gap:12px;
+    transition:opacity .2s, transform .2s;
+  }
+  .gap-card.hide{display:none;}
+  .gap-head{display:flex; justify-content:space-between; align-items:flex-start; gap:10px;}
+  .gap-head h3{font-size:16.5px; font-weight:600; line-height:1.25;}
+  .chip{
+    flex:0 0 auto; font-family:var(--font-mono); font-size:10px; font-weight:600;
+    letter-spacing:0.04em; text-transform:uppercase; padding:3px 8px; border-radius:999px;
+    white-space:nowrap;
+  }
+  .chip.crit{color:var(--sev-crit); background:var(--sev-crit-bg);}
+  .chip.warn{color:var(--sev-warn); background:var(--sev-warn-bg);}
+  .chip.slate{color:var(--sev-slate); background:var(--sev-slate-bg);}
+
+  .gap-field{display:flex; gap:10px; align-items:baseline;}
+  .gap-field .fk{
+    flex:0 0 68px; font-family:var(--font-mono); font-size:10px; color:var(--ink-faint);
+    text-transform:uppercase; letter-spacing:0.06em; padding-top:1px;
+  }
+  .gap-field .fv{font-size:13.5px; color:var(--ink-soft); line-height:1.5;}
+  .gap-field .fv b{color:var(--ink); font-weight:600;}
+  .gap-field.evidence .fv{font-family:var(--font-mono); font-size:11.5px; color:var(--ink-faint); line-height:1.6;}
+
+  /* ---------- closing synthesis ---------- */
+  .synthesis{
+    background:linear-gradient(180deg, var(--surface-2), var(--surface));
+    border:1px solid var(--border); border-radius:16px; padding:36px;
+  }
+  .synth-roots{display:grid; grid-template-columns:repeat(auto-fit, minmax(230px,1fr)); gap:16px; margin-top:26px;}
+  .root-card{
+    background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:18px;
+    box-shadow:var(--shadow);
+  }
+  .root-card .num{font-family:var(--font-mono); font-size:11px; color:var(--gold); font-weight:600;}
+  .root-card h4{font-family:var(--font-display); font-size:16px; font-weight:600; margin-top:6px;}
+  .root-card p{font-size:13px; color:var(--ink-soft); margin-top:8px; line-height:1.5;}
+
+  footer{padding:40px 0 64px; border-top:1px solid var(--border-soft);}
+  footer p{font-size:12.5px; color:var(--ink-faint); max-width:640px; line-height:1.6;}
+  footer .mono{color:var(--ink-faint);}
+
+  @media (max-width:640px){
+    .wrap{padding:0 18px;}
+    .gap-field{flex-direction:column; gap:2px;}
+    .gap-field .fk{flex:none;}
+  }
+</style>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="topbar-title">TRADELATEST <span>/</span> CAPABILITY&nbsp;GAPS</div>
+    <nav class="topnav" id="topnav">
+      <a href="#architecture">§0 Architecture</a>
+      <a href="#infra">§1 Infra</a>
+      <a href="#control">§2 Control</a>
+      <a href="#observability">§3 Observability</a>
+      <a href="#automation">§4 Automation</a>
+      <a href="#semantic">§5 Semantic</a>
+      <a href="#research">§6 Research</a>
+      <a href="#production">§7 Production</a>
+      <a href="#synthesis">§8 Synthesis</a>
+    </nav>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="intro">
+    <span class="eyebrow">Orient — capability audit, 2026-09-02</span>
+    <h1>What Tradelatest has built<br><em>and what it still can't do.</em></h1>
+    <p class="dek">
+      Tradelatest scores every M15 candle through four engines, plans an execution, and gates capital through
+      one risk authority — and around that spine it has built governance, research, and meaning-tracking
+      infrastructure well beyond a typical backtest project. This audit reads five of its own artifacts as
+      authoritative and asks a narrower question than "is the code good": which capabilities the platform's
+      own documentation says it needs are still missing, half-built, or disconnected — and what unlocks
+      the moment each one lands.
+    </p>
+    <div class="source-strip">
+      <div class="source-chip"><span class="n">01</span><span class="t">Infrastructure Inventory.xlsx — 80 assets</span></div>
+      <div class="source-chip"><span class="n">02</span><span class="t">src_business_functionality.xlsx — 564 modules</span></div>
+      <div class="source-chip"><span class="n">03</span><span class="t">current-findings.md — F-001…F-097</span></div>
+      <div class="source-chip"><span class="n">04</span><span class="t">CRT State Identity Ontology (design doc)</span></div>
+      <div class="source-chip"><span class="n">05</span><span class="t">Semantic OS Contract + V1 Design</span></div>
+    </div>
+    <div class="rule-note">
+      <b>Closure is boundary-scoped, never transitive</b> — a subsystem marked CLOSED in this repo's own
+      governance index does not make its neighbors closed. Every gap below is graded by evidence already
+      on record, not by inference: an F-id, an INV-id, a file:line, or a named doc backs each claim.
+    </div>
+  </div>
+
+  <section id="architecture">
+    <div class="sec-head">
+      <span class="eyebrow">§0 — Architecture snapshot</span>
+      <h2>A single-instrument, file-backed spine</h2>
+      <p class="dek">No database, no broker, no cloud. One candle enters, one decision leaves — everything
+      else is a kitchen feeding that line, or a room the line never enters.</p>
+    </div>
+
+    <div class="arch-flow">
+      <div class="arch-box"><span class="k">Ingest</span><span class="v">OHLCV&nbsp;CSV<br><span class="mono" style="font-size:11px;color:var(--ink-faint)">data/ (gitignored)</span></span></div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box"><span class="k">Features</span><span class="v">48-dim vector<br><span class="mono" style="font-size:11px;color:var(--ink-faint)">v5.0, F-076</span></span></div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box"><span class="k">Score</span><span class="v">CRT · Gaussian<br>ZoneGate · RR</span></div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box"><span class="k">Fuse</span><span class="v">Fusion →<br>Decision</span></div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box"><span class="k">Plan</span><span class="v">Execution<br>Planner</span></div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box"><span class="k">Gate</span><span class="v">Ultron<br>Risk Gate</span></div>
+      <div class="arch-arrow">⇢</div>
+      <div class="arch-box stop"><span class="k">No caller</span><span class="v">Live bridges<br>MT5 / Telegram</span></div>
+    </div>
+
+    <div class="feeders">
+      <div class="feeder"><div class="k">Governance</div><div class="v">Only path to production config — approve, hash, promote, log</div></div>
+      <div class="feeder"><div class="k">Training</div><div class="v">Model artifacts, Phase-5 calibration gate, async to the hot path</div></div>
+      <div class="feeder"><div class="k">Agent</div><div class="v">LLM-assisted operator automation — confirm-gated, never in-loop</div></div>
+      <div class="feeder"><div class="k">Inout</div><div class="v">Now candle fetchers + an unwired paper live-rail — strategy code archived</div></div>
+    </div>
+
+    <p class="mono" style="font-size:11.5px; color:var(--ink-faint); margin-top:18px;">
+      Orphaned on disk, unreached at runtime: TradeNet v2 fusion slot (F-005) · scan→rank→allocate→ExecutionLoop
+      + PortfolioAllocator (F-013) · ReplayMemory / CognitiveBus / ClusterEngine / HMF, write-only (F-012) ·
+      BitNet, inert while <span class="mono">use_bitnet:false</span> (F-004) · the Research platform, ~175 files,
+      deliberately isolated from promotion.
+    </p>
+
+    <div class="drift-grid">
+      <div class="drift-card">
+        <span class="tag">Doc vs runtime</span>
+        <p><b>architecture.md still names <span class="mono">v1_multi_2026_03</span></b> as the active
+        production config.</p>
+        <p>The real pointer, read this session: <span class="mono">configs/production/ACTIVE_VERSION →
+        v2_htfcrt_2026_08</span>.</p>
+      </div>
+      <div class="drift-card">
+        <span class="tag">Doc vs disk</span>
+        <p><b>signal-flow.md describes INOUT as a live parallel rail</b> with a state machine, scanner,
+        controller, and executor joining the spine at Step 6.</p>
+        <p>On disk those files live under <span class="mono">archive/inout_legacy/ARCHIVED_2026_05_02/</span>.
+        <span class="mono">src/inout/</span> today holds only candle fetchers and the paper live-rail.</p>
+      </div>
+      <div class="drift-card">
+        <span class="tag">Doc vs code</span>
+        <p><b>JSONL_CLAIM_SURFACE.md says "implementation not started, design only."</b></p>
+        <p>The grounding code it describes is live at <span class="mono">semantic_grounding.py:966-1499</span>
+        and CLAUDE.md §6.7 documents it as shipped. Detail in §5.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="infra">
+    <div class="sec-head">
+      <span class="eyebrow">§1 — Missing infrastructure</span>
+      <h2>Foundations the spine assumes but doesn't have</h2>
+      <p class="dek">Structural layers the rest of the platform is built to sit on top of, that either
+      don't exist yet or exist as a stub with no live consumer.</p>
+    </div>
+    <div class="gap-grid" data-section="1">
+
+      <div class="gap-card" data-sev="crit">
+        <div class="gap-head"><h3>No logical→physical OHLCV corpus resolver</h3><span class="chip crit">Blocked</span></div>
+        <div class="gap-field"><span class="fk">Why</span><span class="fv">Nine logical corpora (per-instrument, per-source) resolve to <b>different bytes</b>
+          across the mt5 / binance / yfinance families with nothing in code deciding which is canonical for a given claim.</span></div>
+        <div class="gap-field"><span class="fk">Connects</span><span class="fv">Data Ingestion + Integrity (INV-012), the OHLCV Data Corpus (INV-050), every
+          backtest and research driver that reads a CSV by instrument name.</span></div>
+        <div class="gap-field"><span class="fk">Unlocks</span><span class="fv">A single answer to "which file is the truth for XAUUSD M15" — today six
+          separate blocker candidates (BC-1…BC-6) stand between the corpus and an admission gate.</span></div>
+        <div class="gap-field evidence"><span class="fk">Evidence</span><span class="fv">docs/governance/layer-audit-manifest.json — OHLCV phase_status
+          PASS_B_ADJUDICATED_BLOCKED, closure_verdict BLOCKED:BC-1..BC-6</span></div>
+      </div>
+
+      <div class="gap-card" data-sev="crit">
+        <div class="gap-head"><h3>No production live execution rail</h3><span class="chip crit">Unwired</span></div>
+        <div class="gap-field"><span class="fk">Why</span><span class="fv">Every economic conclusion in the repo — every F-id, every measurement — is
+          calibrated against backtest or paper fills. Nothing has ever traded with real money.</span></div>
+        <div class="gap-field"><span class="fk">Connects</span><span class="fv">Live Rail (INV-014, PR-1 contracts + adapters), Live Bridges (INV-015, MT5 +
+          Telegram), the Feature Store fix (F-085) that has no live loop left to prove itself against.</span></div>
+        <div class="gap-field"><span class="fk">Unlocks</span><span class="fv">The one thing F-010 has stayed OPEN for since June: a verified live P&L,
+          instead of a backtest ceiling standing in for it.</span></div>
+        <div class="gap-field evidence"><span class="fk">Evidence</span><span class="fv">F-073 (OPEN) · configs/production/ACTIVE_VERSION has no live_rail key ·
+          paper TickDB run: process_calls=0, 2× FeatureStore FEATURE_REJECT</span></div>
+      </div>
+
+      <div class="gap-card" data-sev="warn">
+        <div class="gap-head"><h3>No git-tracked data/model/telemetry lineage</h3><span class="chip warn">Untracked</span></div>
+        <div class="gap-field"><span class="fk">Why</span><span class="fv">The entire OHLC → Feature → CRTState → Geometry → Outcome chain that every
+          finding depends on lives only on the local filesystem. Clone the repo fresh and none of it comes with you.</span></div>
+        <div class="gap-field"><span class="fk">Connects</span><span class="fv">data/, models/, results/, logs/ (INV-050…053) — all gitignored or mixed;
+          the Identity Store (INV-040) that was built specifically to make preservation legal.</span></div>
+        <div class="gap-field"><span class="fk">Unlocks</span><span class="fv">Reproducibility across machines and sessions — right now "re-derive from
+          HEAD" and "recover the original evidence" are silently the same action, which the repo's own invariant
+          (RECOMPUTE ≠ RECOVER) says they must not be.</span></div>
+        <div class="gap-field evidence"><span class="fk">Evidence</span><span class="fv">.gitignore:3 ignores logs/, data/, results/, models/ — confirmed via
+          git check-ignore on logs/crt_transitions.jsonl and logs/trade_lifecycle.jsonl</span></div>
+      </div>
+
+      <div class="gap-card" data-sev="warn">
+        <div class="gap-head"><h3>TradeNet v2's fusion socket stays empty</h3><span class="chip warn">Unwired</span></div>
+        <div class="gap-field"><span class="fk">Why</span><span class="fv">A complete 3-head survival classifier was trained and shipped, and the exact
+          socket built to receive it in production fusion has never been connected.</span></div>
+        <div class="gap-field"><span class="fk">Connects</span><span class="fv">src/training/trade_net_v2.py (the model), src/core/fusion_engine.py:8
+          ("stubbed; plug TradeNet GGUF here"), EngineRunner's neural_fn parameter (always None).</span></div>
+        <div class="gap-field"><span class="fk">Unlocks</span><span class="fv">A neural adaptive layer in fusion — currently the risk isn't building
+          TradeNet, it's the cost of rebuilding it once the qualification protocol finally runs.</span></div>
+        <div class="gap-field evidence"><span class="fk">Evidence</span><span class="fv">F-005 (Certain) · active_models.yaml:915-944 wiring:unwired,
+          status:orphaned, "until TN_QUAL_V1"</span></div>
+      </div>
+
+    </div>
+  </section>
+
+  <section id="control">
+    <div class="sec-head">
+      <span class="eyebrow">§2 — Missing control planes</span>
+      <h2>Nobody's steering the orchestration layers</h2>
+      <p class="dek">Loops and surfaces built to coordinate the spine from above it — scanning, allocating,
+      overriding, deploying — that exist on disk with no live caller reaching them.</p>
+    </div>
+    <div class="gap-grid" data-section="2">
+
+      <div class="gap-card" data-sev="warn">
+        <div class="gap-head"><h3>ExecutionLoop has zero callers</h3><span class="chip warn">Orphaned</span></div>
+        <div class="gap-field"><span class="fk">Why</span><span class="fv">The only designed human-in-the-loop override surface — scan → rank → regime →
+          allocate → gate → alert → override — is unreachable. Live trading has no equivalent control point.</span></div>
+        <div class="gap-field"><span class="fk">Connects</span><span class="fv">src/execution/loop.py (ExecutionLoop), Scanner/SignalPool (INV-017),
+          Portfolio Allocator (INV-018) — all designed to feed it, none of them consumed live.</span></div>
+        <div class="gap-field"><span class="fk">Unlocks</span><span class="fv">A real pause/resume/override control for a human operator once live trading
+          exists — today that lever has no wire running to it.</span></div>
+        <div class="gap-field evidence"><span class="fk">Evidence</span><span class="fv">F-013 (Certain) · src/execution/loop.py:31 · zero callers confirmed</span></div>
+      </div>
+
+      <div class="gap-card" data-sev="warn">
+        <div class="gap-head"><h3>No cross-symbol or cross-position control</h3><span class="chip warn">Orphaned</span></div>
+        <div class="gap-field"><span class="fk">Why</span><span class="fv">Scanner/SignalPool was built to rank opportunities across a universe of
+          symbols; PortfolioAllocator was built to size across open positions. Live runs a single-candle spine instead.</span></div>
+        <div class="gap-field"><span class="fk">Connects</span><span class="fv">src/scanner/ (INV-017), src/portfolio/ (INV-018, ExposureTracker +
+          CorrelationEngine + CapitalPolicy) — designed to sit before Ultron, never invoked.</span></div>
+        <div class="gap-field"><span class="fk">Unlocks</span><span class="fv">Multi-symbol operation and correlation-aware sizing — right now Ultron
+          approves or rejects one trade at a time with no view of what else is open.</span></div>
+        <div class="gap-field evidence"><span class="fk">Evidence</span><span class="fv">F-013 · src/portfolio/allocator.py docstring names Ultron as "final
+          authority" for a path the live spine doesn't route through</span></div>
+      </div>
+
+      <div class="gap-card" data-sev="crit">
+        <div class="gap-head"><h3>A control-plane command silently no-ops</h3><span class="chip crit">Broken</span></div>
+        <div class="gap-field"><span class="fk">Why</span><span class="fv"><span class="mono">live.inout_runner</span> is registered in the control-plane
+          catalog as a runnable command — but the module it points to has been archived. It will fail or do nothing,
+          not warn that it's stale.</span></div>
+        <div class="gap-field"><span class="fk">Connects</span><span class="fv">src/control_plane/registry.py (44 CommandSpec entries), the archived
+          src/inout/runner.py now under archive/inout_legacy/.</span></div>
+        <div class="gap-field"><span class="fk">Unlocks</span><span class="fv">Trustworthy control-plane listings — an operator scanning the 44 registered
+          commands has no way to tell this one is dead without reading source.</span></div>
+        <div class="gap-field evidence"><span class="fk">Evidence</span><span class="fv">docs/architecture/entry-exit-map.md (DRIFT-DOC) · INV-003 notes column</span></div>
+      </div>
+
+      <div class="gap-card" data-sev="slate">
+        <div class="gap-head"><h3>Deployment control plane is half-built</h3><span class="chip slate">Partial</span></div>
+        <div class="gap-field"><span class="fk">Why</span><span class="fv">A health-check endpoint exists shaped exactly for Docker/K8s liveness and
+          readiness probes, port 8788 — but nothing confirms a production binder exists, and there are no k8s manifests
+          alongside the repo's Dockerfile.</span></div>
+        <div class="gap-field"><span class="fk">Connects</span><span class="fv">src/monitoring/health_checker.py (INV-045), Dockerfile at repo root, the
+          kill-switch state it reads.</span></div>
+        <div class="gap-field"><span class="fk">Unlocks</span><span class="fv">An actual deploy path — right now the primitive a orchestrator would probe
+          exists, but nothing orchestrates.</span></div>
+        <div class="gap-field evidence"><span class="fk">Evidence</span><span class="fv">INV-045 (Confidence: MEDIUM) — "production use UNKNOWN"</span></div>
+      </div>
+
+    </div>
+  </section>
+
+  <section id="observability">
+    <div class="sec-head">
+      <span class="eyebrow">§3 — Missing observability</span>
+      <h2>Telemetry that can't be trusted to fold</h2>
+      <p class="dek">Streams and dashboards the platform needs to see itself clearly — some don't exist,
+      some exist but will quietly mislead whoever aggregates them.</p>
+    </div>
+    <div class="gap-grid" data-section="3">
+
+      <div class="gap-card" data-sev="crit">
+        <div class="gap-head"><h3>The largest CRT stream is unsafe to fold</h3><span class="chip crit">Unsafe</span></div>
+        <div class="gap-field"><span class="fk">Why</span><span class="fv"><span class="mono">logs/crt_transitions.jsonl</span> (2.59&nbsp;GB) drops every
+          RESET event. Aggregating it produces a <b>wrong</b> state series, not an incomplete one — only the
+          run-scoped events.jsonl is fold-complete.</span></div>
+        <div class="gap-field"><span class="fk">Connects</span><span class="fv">Event Fabric (INV-027), CRT State Machine telemetry, any research driver
+          that has ever globbed logs/crt_transitions.jsonl for a state census.</span></div>
+        <div class="gap-field"><span class="fk">Unlocks</span><span class="fv">A telemetry stream a researcher can fold without silently corrupting the
+          answer — today that requires already knowing not to touch the obvious file.</span></div>
+        <div class="gap-field evidence"><span class="fk">Evidence</span><span class="fv">Memory: semantic-lineage-persistence-census, 2026-08-23</span></div>
+      </div>
+
+      <div class="gap-card" data-sev="slate">
+        <div class="gap-head"><h3>Two unreconciled execution-telemetry trees</h3><span class="chip slate">Unresolved</span></div>
+        <div class="gap-field"><span class="fk">Why</span><span class="fv"><span class="mono">exec_telemetry/</span> and
+          <span class="mono">runtime/exec_telemetry/</span> both hold execution-quality reporting logic. Which is
+          canonical, and whether they diverge, was not resolved by this inventory pass.</span></div>
+        <div class="gap-field"><span class="fk">Connects</span><span class="fv">Exec Telemetry Report (INV-046), the ExecutionEvents it reads,
+          analytics.metrics_oracle.</span></div>
+        <div class="gap-field"><span class="fk">Unlocks</span><span class="fv">One place to answer "was this fill good" instead of two trees an operator
+          has to know to compare.</span></div>
+        <div class="gap-field evidence"><span class="fk">Evidence</span><span class="fv">INV-046 notes column — "relationship between the two trees UNKNOWN"</span></div>
+      </div>
+
+      <div class="gap-card" data-sev="warn">
+        <div class="gap-head"><h3>Institutional memory writes, never reads back</h3><span class="chip warn">Write-only</span></div>
+        <div class="gap-field"><span class="fk">Why</span><span class="fv">ReplayMemory, CognitiveBus, the MarketStateCluster engine, and
+          HierarchicalMetaFusion form a persistent-memory sidecar — and by hard rule, none of it ever returns to the
+          execution plane. It observes; nothing observes whether it would have helped.</span></div>
+        <div class="gap-field"><span class="fk">Connects</span><span class="fv">src/replay/ (INV-025), src/cognitive/ (INV-026), Core Decision Spine
+          (INV-004) which emits into it one-way.</span></div>
+        <div class="gap-field"><span class="fk">Unlocks</span><span class="fv">A measured answer to whether the "institutional memory" concept is worth
+          its build cost — currently there's no observability loop to find out.</span></div>
+        <div class="gap-field evidence"><span class="fk">Evidence</span><span class="fv">F-012 (Certain) · src/cognitive/cognitive_bus.py HARD RULES
+          — "never returns to execution plane"</span></div>
+      </div>
+
+      <div class="gap-card" data-sev="slate">
+        <div class="gap-head"><h3>Event envelope backbone is incomplete</h3><span class="chip slate">Partial</span></div>
+        <div class="gap-field"><span class="fk">Why</span><span class="fv">The canonical cross-component event envelope exists and is documented as
+          the observability backbone — but not every trade writer emits through it yet.</span></div>
+        <div class="gap-field"><span class="fk">Connects</span><span class="fv">src/events/event_fabric.py (INV-027), Trade Journal (INV-028), any
+          service that should fan out through make_event_envelope but doesn't.</span></div>
+        <div class="gap-field"><span class="fk">Unlocks</span><span class="fv">One consistent shape for every telemetry consumer to read, instead of a
+          backbone with known gaps in it.</span></div>
+        <div class="gap-field evidence"><span class="fk">Evidence</span><span class="fv">docs/architecture/service-boundary-map.md S7 — Trd-M1 note</span></div>
+      </div>
+
+      <div class="gap-card" data-sev="warn">
+        <div class="gap-head"><h3>No standing claim-coverage dashboard</h3><span class="chip warn">Missing</span></div>
+        <div class="gap-field"><span class="fk">Why</span><span class="fv">The JSONL claim catalog defines exactly which streams may support which
+          claims (CC-* classes, CAN/CANNOT) — but that discipline only fires inside individual Semantic OS grounding
+          calls, not as something an operator can browse.</span></div>
+        <div class="gap-field"><span class="fk">Connects</span><span class="fv">docs/governance/jsonl_claim_catalog.yaml (29 streams, 29 classes),
+          Semantic OS grounding (§5), Logs/JSONL Streams (INV-053).</span></div>
+        <div class="gap-field"><span class="fk">Unlocks</span><span class="fv">"What is every stream in logs/ allowed to prove, at a glance" — today
+          that answer only surfaces when someone asks the grounder about one specific stream.</span></div>
+        <div class="gap-field evidence"><span class="fk">Evidence</span><span class="fv">CLAUDE.md §6.7 · jsonl_claim_catalog.yaml — 29 streams / 29 CC-* classes</span></div>
+      </div>
+
+    </div>
+  </section>
+
+  <section id="automation">
+    <div class="sec-head">
+      <span class="eyebrow">§4 — Missing automation</span>
+      <h2>Gates that were designed but never wired to run themselves</h2>
+      <p class="dek">Frozen schemas, sealed contracts, and registered checks waiting on the automated
+      step that would actually enforce them.</p>
+    </div>
+    <div class="gap-grid" data-section="4">
+
+      <div class="gap-card" data-sev="crit">
+        <div class="gap-head"><h3>No automated OHLCV admission gate</h3><span class="chip crit">Missing</span></div>
+        <div class="gap-field"><span class="fk">Why</span><span class="fv">The OHLCV layer audit landed R0 (freeze) and R1-R2 (authority schema +
+          XAUUSD adjudication package) — R3, the actual admission gate that would let a corpus pass or fail
+          automatically, was never built.</span></div>
+        <div class="gap-field"><span class="fk">Connects</span><span class="fv">docs/governance/layer-audit-manifest.json, the corpus resolver gap (§1),
+          scripts/analysis/ohlcv_census.py.</span></div>
+        <div class="gap-field"><span class="fk">Unlocks</span><span class="fv">A corpus that's automatically rejected when it fails BC-1…BC-6, instead
+          of a human having to remember the blocker list.</span></div>
+        <div class="gap-field evidence"><span class="fk">Evidence</span><span class="fv">layer-audit-manifest.json — "R0-R2 landed... no R3 admission gate"</span></div>
+      </div>
+
+      <div class="gap-card" data-sev="crit">
+        <div class="gap-head"><h3>0 of 27 measurement probes exist</h3><span class="chip crit">0/27</span></div>
+        <div class="gap-field"><span class="fk">Why</span><span class="fv">The Measurement Contract's 27-seed adversarial mutation matrix (E-MT-00 /
+          E-MT-01) has been frozen since 2026-07-10 — and even though 10 sealed MC-* instances now exist on disk,
+          none has ever passed the probes that would make it admissible.</span></div>
+        <div class="gap-field"><span class="fk">Connects</span><span class="fv">Research Measurement Contracts (INV-023), every finding F-090 through
+          F-097 that cites a sealed instance and still carries economic_claims_allowed:false.</span></div>
+        <div class="gap-field"><span class="fk">Unlocks</span><span class="fv">The difference between "a contract exists" and "a contract's claim is
+          admissible" — right now those are indistinguishable from the outside.</span></div>
+        <div class="gap-field evidence"><span class="fk">Evidence</span><span class="fv">docs/governance/MEASUREMENT_CONTRACT.md §9-10 · closure index —
+          MEASUREMENT_LAYER_STATUS=OPEN, "0/27 probes built"</span></div>
+      </div>
+
+      <div class="gap-card" data-sev="warn">
+        <div class="gap-head"><h3>An integrity gate with an untriaged backlog</h3><span class="chip warn">Untriaged</span></div>
+        <div class="gap-field"><span class="fk">Why</span><span class="fv">After the F-071 tree restoration, GREEN_FLOOR still carries 9 pre-existing
+          failures and 1,077 untracked paths — recorded as "unrelated / out of scope, not yet triaged," with no
+          automated process burning that backlog down.</span></div>
+        <div class="gap-field"><span class="fk">Connects</span><span class="fv">hooks/ + .github/workflows/governance.yml (INV-062), the GREEN_FLOOR test
+          subset, Git Hooks + CI.</span></div>
+        <div class="gap-field"><span class="fk">Unlocks</span><span class="fv">A gate that trends toward zero known debt, instead of one that stays
+          static at "9 failures, noted, untouched."</span></div>
+        <div class="gap-field evidence"><span class="fk">Evidence</span><span class="fv">F-071 — "9 pre-existing GREEN_FLOOR failures + 1,077 untracked
+          paths remain, unrelated/out of scope, not yet triaged"</span></div>
+      </div>
+
+      <div class="gap-card" data-sev="slate">
+        <div class="gap-head"><h3>AI Feedback never closes its own loop</h3><span class="chip slate">Open-loop</span></div>
+        <div class="gap-field"><span class="fk">Why</span><span class="fv">Suggestions flow AI Feedback → ExpansionEngine by design, human-gated on
+          purpose — but nothing automatically tracks a suggestion through to a measured outcome or a
+          promoted/rejected verdict. A suggestion can go in and simply never resolve.</span></div>
+        <div class="gap-field"><span class="fk">Connects</span><span class="fv">src/feedback/ai_feedback.py (INV-034), src/expansion/ (INV-029),
+          Governance / Promotion (INV-010).</span></div>
+        <div class="gap-field"><span class="fk">Unlocks</span><span class="fv">Visibility into whether the feedback loop is actually producing decisions
+          — not automating the human gate, just making its backlog legible.</span></div>
+        <div class="gap-field evidence"><span class="fk">Evidence</span><span class="fv">src/feedback/ai_feedback.py HARD RULES — "starting point only"</span></div>
+      </div>
+
+    </div>
+  </section>
+
+  <section id="semantic">
+    <div class="sec-head">
+      <span class="eyebrow">§5 — Missing semantic connections</span>
+      <h2>The meaning layer doesn't yet cover what it means to cover</h2>
+      <p class="dek">Places where the platform's own truth-grounding apparatus — the ontology, the
+      Semantic OS, the CRT identity graph — is thinner than the code it's meant to explain.</p>
+    </div>
+    <div class="gap-grid" data-section="5">
+
+      <div class="gap-card" data-sev="crit">
+        <div class="gap-head"><h3>CRT state identity has five simultaneous owners</h3><span class="chip crit">Split-brain</span></div>
+        <div class="gap-field"><span class="fk">Why</span><span class="fv">active_models.yaml, market_ontology.yaml, market_crt_states.yaml (via the
+          resolver), crt_engine_v2.py, and a stale file_identities.yaml claim all assert ownership of "what a CRT
+          state is" at once. A full fix is designed — and explicitly not implemented.</span></div>
+        <div class="gap-field"><span class="fk">Connects</span><span class="fv">CRT State Machine (INV-006), the 17 name-matched dispatch sites in
+          crt_engine_v2.py + parent_crt.py, CRTStateResolver.</span></div>
+        <div class="gap-field"><span class="fk">Unlocks</span><span class="fv">Adding a new CRT state without a multi-file ritual across five files —
+          the design doc's own stated goal.</span></div>
+        <div class="gap-field evidence"><span class="fk">Evidence</span><span class="fv">docs/implementation_plan/crt-state-identity-ontology-2026-09.md
+          — "Status: Draft... not implemented"</span></div>
+      </div>
+
+      <div class="gap-card" data-sev="warn">
+        <div class="gap-head"><h3>Resolver and engine can't be reconciled by tuning</h3><span class="chip warn">88% ceiling</span></div>
+        <div class="gap-field"><span class="fk">Why</span><span class="fv">CRTStateResolver agrees with the live engine on only 88.16% of bars. The
+          residual isn't a mistuned threshold — it's a structurally different construction that no coordinate-descent
+          sweep can close.</span></div>
+        <div class="gap-field"><span class="fk">Connects</span><span class="fv">src/features/crt_state_resolver.py, the CRT State Machine (INV-006),
+          the diagnostic-only role market_crt_states.yaml is confined to.</span></div>
+        <div class="gap-field"><span class="fk">Unlocks</span><span class="fv">Knowing where the ceiling actually is — so future work stops re-sweeping
+          thresholds against a structural gap.</span></div>
+        <div class="gap-field evidence"><span class="fk">Evidence</span><span class="fv">F-069 (Certain) · docs/governance/crt_semantic_parity_report.md
+          — 41,607/47,197 bars, 96.1% of residual = "divergent construction"</span></div>
+      </div>
+
+      <div class="gap-card" data-sev="crit">
+        <div class="gap-head"><h3>The meaning layer covers a sliver of the codebase</h3><span class="chip crit">4.8% / 0.0%</span></div>
+        <div class="gap-field"><span class="fk">Why</span><span class="fv">The Semantic OS's own coverage dashboard reads journey_coverage 4.8%
+          (RED) and attribution_coverage 0.0% (RED), against ~564 src/ modules and 849 objects on disk.</span></div>
+        <div class="gap-field"><span class="fk">Connects</span><span class="fv">Semantic OS (INV-041), the Concept/Boundary/Journey registries (15 / 10
+          / 1 entries respectively), semantic_objects.py (the generated Object layer).</span></div>
+        <div class="gap-field"><span class="fk">Unlocks</span><span class="fv">The stated purpose of the whole subsystem — grounding claims about how
+          the repo actually behaves, not just what nouns exist in it.</span></div>
+        <div class="gap-field evidence"><span class="fk">Evidence</span><span class="fv">REPOSITORY_COVERAGE_DASHBOARD.md — overall verdict NOT_YET,
+          journey_coverage 4.8%, attribution_coverage 0.0%</span></div>
+      </div>
+
+      <div class="gap-card" data-sev="crit">
+        <div class="gap-head"><h3>The blast-radius engine doesn't exist</h3><span class="chip crit">Missing file</span></div>
+        <div class="gap-field"><span class="fk">Why</span><span class="fv">semantic_impact.py — the L6 engine meant to answer "what does changing X
+          semantically touch" — is flagged "Missing file" in the design doc's own skeleton-vs-target table.</span></div>
+        <div class="gap-field"><span class="fk">Connects</span><span class="fv">Semantic OS L0-L6 stack (INV-041), the PR plan (PR-7, still open, not
+          marked SHIPPED unlike PR-1…5).</span></div>
+        <div class="gap-field"><span class="fk">Unlocks</span><span class="fv">Change-impact answers ahead of an edit, instead of only after — the one
+          capability the rest of the Semantic OS is scaffolding for.</span></div>
+        <div class="gap-field evidence"><span class="fk">Evidence</span><span class="fv">SEMANTIC_OS_V1_DESIGN.md §9 "Now (skeleton) vs v1 target" table,
+          §18 PR plan</span></div>
+      </div>
+
+      <div class="gap-card" data-sev="warn">
+        <div class="gap-head"><h3>The truth-grounding subsystem has its own drift</h3><span class="chip warn">Stale doc</span></div>
+        <div class="gap-field"><span class="fk">Why</span><span class="fv">JSONL_CLAIM_SURFACE.md's header still reads "implementation not started —
+          spec only," while semantic_grounding.py already fully implements JSONL-kind grounding and CLAUDE.md
+          documents it as live. The subsystem built to catch documentation drift has an instance of it.</span></div>
+        <div class="gap-field"><span class="fk">Connects</span><span class="fv">Semantic OS (INV-041), the JSONL claim catalog (§3), the Documentation
+          Drift Protocol (CLAUDE.md §6.2) that would normally catch exactly this.</span></div>
+        <div class="gap-field"><span class="fk">Unlocks</span><span class="fv">One header edit resolves it — flagged here because it's evidence the
+          drift-detection discipline has a blind spot even inside the tool built to enforce it.</span></div>
+        <div class="gap-field evidence"><span class="fk">Evidence</span><span class="fv">JSONL_CLAIM_SURFACE.md:7-8,14 vs semantic_grounding.py:966-1499
+          vs CLAUDE.md §6.7</span></div>
+      </div>
+
+      <div class="gap-card" data-sev="warn">
+        <div class="gap-head"><h3>97% of src/ has no curated purpose statement</h3><span class="chip warn">Uncurated</span></div>
+        <div class="gap-field"><span class="fk">Why</span><span class="fv">Of roughly 564 modules in the business-functionality census, the large
+          majority carry a machine-generated tier-3 "DERIVED" / "UNKNOWN" identity rather than a human-curated one
+          — meaning nobody has confirmed what most of the codebase is actually for.</span></div>
+        <div class="gap-field"><span class="fk">Connects</span><span class="fv">results/analysis/src_business_functionality.xlsx (the "src" sheet, 564
+          rows), Semantic OS FileIdentity registry (98 hand-authored of ~700+ paths).</span></div>
+        <div class="gap-field"><span class="fk">Unlocks</span><span class="fv">A reliable answer to "what does this file do" from the registry itself,
+          instead of from re-reading source every time.</span></div>
+        <div class="gap-field evidence"><span class="fk">Evidence</span><span class="fv">results/analysis/src_business_functionality.xlsx — "src" sheet,
+          curation column: ~550+ rows DERIVED/UNKNOWN of 564</span></div>
+      </div>
+
+    </div>
+  </section>
+
+  <section id="research">
+    <div class="sec-head">
+      <span class="eyebrow">§6 — Missing research capabilities</span>
+      <h2>The lab can measure, but can't yet certify</h2>
+      <p class="dek">The research platform is large and disciplined — falsification controls, sealed
+      contracts, an evidence layer — but several capabilities it needs to turn a finding into an admissible
+      claim are still absent.</p>
+    </div>
+    <div class="gap-grid" data-section="6">
+
+      <div class="gap-card" data-sev="crit">
+        <div class="gap-head"><h3>No finding can claim economic admissibility</h3><span class="chip crit">Open</span></div>
+        <div class="gap-field"><span class="fk">Why</span><span class="fv">Every finding that cites a sealed MC-* instance — F-090 through F-097 —
+          still carries economic_claims_allowed:false, because the mt00/mt01 probes that would certify the contract
+          have never run (same gap as §4's 0/27, viewed from the research side).</span></div>
+        <div class="gap-field"><span class="fk">Connects</span><span class="fv">Research Measurement Contracts (INV-023), the Evidence layer
+          (src/research/evidence/), the Findings ledger (INV-056).</span></div>
+        <div class="gap-field"><span class="fk">Unlocks</span><span class="fv">The first economically-admissible research claim the platform has ever
+          registered.</span></div>
+        <div class="gap-field evidence"><span class="fk">Evidence</span><span class="fv">F-090…F-097, each carrying "economic_claims_allowed: false"</span></div>
+      </div>
+
+      <div class="gap-card" data-sev="warn">
+        <div class="gap-head"><h3>Cost models have no live fills to check against</h3><span class="chip warn">Unvalidated</span></div>
+        <div class="gap-field"><span class="fk">Why</span><span class="fv">Every cost/exit-model finding — the SEM-015 broker cost calibration, the
+          SEM-016 adverse-fill model, the multi_tp_walk trade-object correction — is calibrated from historical or
+          paper data. With no live rail (§1), none of it has ever been checked against a real fill.</span></div>
+        <div class="gap-field"><span class="fk">Connects</span><span class="fv">src/research/costs.py, src/research/oracle/multi_tp_walk.py, the Live
+          Rail gap (§1).</span></div>
+        <div class="gap-field"><span class="fk">Unlocks</span><span class="fv">Ground truth for the models the whole exit-economics research line
+          (F-082, F-087, F-088) currently has to trust by construction.</span></div>
+        <div class="gap-field evidence"><span class="fk">Evidence</span><span class="fv">F-082, F-087, F-088 — all measured, none against live fills</span></div>
+      </div>
+
+      <div class="gap-card" data-sev="slate">
+        <div class="gap-head"><h3>The OSS comparative-benchmark lab can't run yet</h3><span class="chip slate">Blocked</span></div>
+        <div class="gap-field"><span class="fk">Why</span><span class="fv">A comparative benchmark laboratory against qlib, nautilus, finrlx, lean,
+          and vectorbt is architecture-approved and staged — but blocked on a Codebase-Memory pin/security gate
+          before its first real benchmark can run.</span></div>
+        <div class="gap-field"><span class="fk">Connects</span><span class="fv">oss_lab/ (INV-058, ~37 files), the T3 default trust ceiling it operates
+          under, tools/oss_lab/codebase-memory/.</span></div>
+        <div class="gap-field"><span class="fk">Unlocks</span><span class="fv">An external reference point for whether the platform's own edge claims
+          hold up against established frameworks.</span></div>
+        <div class="gap-field evidence"><span class="fk">Evidence</span><span class="fv">INV-058 — "blocked on Codebase-Memory pin/security gate before
+          first real benchmark"</span></div>
+      </div>
+
+      <div class="gap-card" data-sev="slate">
+        <div class="gap-head"><h3>RAG's contribution to research is unmeasured</h3><span class="chip slate">Unknown</span></div>
+        <div class="gap-field"><span class="fk">Why</span><span class="fv">A full retrieval/embedding/vector-store pipeline exists for agent context
+          — but whether it materially improves agent-assisted research today, or sits dormant, wasn't established by
+          this inventory pass.</span></div>
+        <div class="gap-field"><span class="fk">Connects</span><span class="fv">src/retrieval/ (INV-031, ~9 files), Agent (INV-001) as its intended
+          consumer.</span></div>
+        <div class="gap-field"><span class="fk">Unlocks</span><span class="fv">A measured case for keeping, extending, or retiring the RAG stack —
+          right now that's a judgment call with no data behind it.</span></div>
+        <div class="gap-field evidence"><span class="fk">Evidence</span><span class="fv">INV-031 (Confidence: LOW) — "live call-site wiring UNKNOWN"</span></div>
+      </div>
+
+    </div>
+  </section>
+
+  <section id="production">
+    <div class="sec-head">
+      <span class="eyebrow">§7 — Missing production capabilities</span>
+      <h2>What's absent between "backtest works" and "trading live"</h2>
+      <p class="dek">The gap this whole audit keeps returning to from different angles: the platform has
+      never traded, and several of the guardrails a live cutover would need aren't confirmed to exist yet.</p>
+    </div>
+    <div class="gap-grid" data-section="7">
+
+      <div class="gap-card" data-sev="crit">
+        <div class="gap-head"><h3>Zero live P&amp;L, ever</h3><span class="chip crit">Zero</span></div>
+        <div class="gap-field"><span class="fk">Why</span><span class="fv">F-010 has stayed OPEN since the finding was first registered: headline ROI
+          is backtest-only, and live PnL through ExecutionPlanner + UltronRiskGate remains unverified.</span></div>
+        <div class="gap-field"><span class="fk">Connects</span><span class="fv">Every engine, gate, and finding upstream of it — the entire economic
+          case for the platform currently rests one layer short of the thing it's meant to prove.</span></div>
+        <div class="gap-field"><span class="fk">Unlocks</span><span class="fv">The actual answer the platform exists to produce.</span></div>
+        <div class="gap-field evidence"><span class="fk">Evidence</span><span class="fv">F-010 (Likely, OPEN)</span></div>
+      </div>
+
+      <div class="gap-card" data-sev="warn">
+        <div class="gap-head"><h3>Kill-switch state lives at a hardcoded path</h3><span class="chip warn">Hardcoded</span></div>
+        <div class="gap-field"><span class="fk">Why</span><span class="fv">UltronRiskGate's kill-switch path is a hardcoded literal
+          (<span class="mono">logs/kill_switch_state.json</span>), not config-governed — a safety mechanism built
+          fragile exactly where it would matter most: mid-incident, live.</span></div>
+        <div class="gap-field"><span class="fk">Connects</span><span class="fv">Ultron Risk Gate (INV-077), KillSwitch (src/uat/kill_switch.py), the
+          production ultron_risk_gate config section it should live in instead.</span></div>
+        <div class="gap-field"><span class="fk">Unlocks</span><span class="fv">A kill-switch path that can be relocated, tested, or overridden per
+          environment without a code change.</span></div>
+        <div class="gap-field evidence"><span class="fk">Evidence</span><span class="fv">docs/architecture/service-boundary-map.md S4 blockers list</span></div>
+      </div>
+
+      <div class="gap-card" data-sev="slate">
+        <div class="gap-head"><h3>The pre-live acceptance gate is unverified</h3><span class="chip slate">Low confidence</span></div>
+        <div class="gap-field"><span class="fk">Why</span><span class="fv">UAT — the runner, Monte Carlo engine, and kill switch meant to be the
+          acceptance gate before any live cutover — is the lowest-confidence row in the entire inventory. Its
+          internals were not read or verified this pass.</span></div>
+        <div class="gap-field"><span class="fk">Connects</span><span class="fv">src/uat/ (INV-043), the kill-switch it hosts (also cited above),
+          Strategy Orchestrator as one of its documented callers.</span></div>
+        <div class="gap-field"><span class="fk">Unlocks</span><span class="fv">Confidence that "UAT passed" would mean something specific, before it's
+          ever asked to gate a real decision.</span></div>
+        <div class="gap-field evidence"><span class="fk">Evidence</span><span class="fv">INV-043 (Confidence: LOW) — "one-line package comment + listing
+          only"</span></div>
+      </div>
+
+      <div class="gap-card" data-sev="warn">
+        <div class="gap-head"><h3>No cross-position capital governance, live</h3><span class="chip warn">Orphaned</span></div>
+        <div class="gap-field"><span class="fk">Why</span><span class="fv">Ultron gates one trade at a time. The Portfolio / Correlation / Capital
+          Policy stack that would provide exposure- and correlation-aware sizing across open positions is the same
+          orphaned stack flagged in §2 — it simply never reaches the live decision this stack would govern.</span></div>
+        <div class="gap-field"><span class="fk">Connects</span><span class="fv">Ultron Risk Gate (INV-077), Portfolio Allocator (INV-018) — see §2 for
+          the control-plane framing of the same gap.</span></div>
+        <div class="gap-field"><span class="fk">Unlocks</span><span class="fv">Capital discipline that scales past one instrument — a precondition
+          for the multi-symbol control plane in §2 to matter economically.</span></div>
+        <div class="gap-field evidence"><span class="fk">Evidence</span><span class="fv">F-013 · src/core/ultron_risk_gate.py — single-trade fixed-order
+          checks only</span></div>
+      </div>
+
+      <div class="gap-card" data-sev="slate">
+        <div class="gap-head"><h3>Deployment automation stops short of a pipeline</h3><span class="chip slate">Partial</span></div>
+        <div class="gap-field"><span class="fk">Why</span><span class="fv">A Dockerfile exists and a health-check endpoint is shaped for
+          orchestrator probes — but no k8s manifests, deploy scripts, or release pipeline were found connecting them
+          to an actual environment.</span></div>
+        <div class="gap-field"><span class="fk">Connects</span><span class="fv">Health Checker (INV-045, §2), Packaging / Environment (INV-070,
+          pyproject.toml + Dockerfile).</span></div>
+        <div class="gap-field"><span class="fk">Unlocks</span><span class="fv">A repeatable path from "code is ready" to "code is running somewhere,"
+          which today is a manual, undocumented step.</span></div>
+        <div class="gap-field evidence"><span class="fk">Evidence</span><span class="fv">INV-070, INV-045 — no k8s manifests found alongside Dockerfile</span></div>
+      </div>
+
+    </div>
+  </section>
+
+  <section id="synthesis">
+    <div class="synthesis">
+      <span class="eyebrow">§8 — Synthesis</span>
+      <h2 style="font-size:26px; font-weight:600; margin-top:12px;">Three root gaps, not thirty-two symptoms</h2>
+      <p style="margin-top:16px; color:var(--ink-soft); font-size:15px; max-width:680px; line-height:1.6;">
+        Most of the thirty-two gaps above are downstream of a small number of missing root capabilities.
+        Building any one of these three would collapse several other cards at once — which is the point of
+        naming them separately from the full list.
+      </p>
+      <div class="synth-roots">
+        <div class="root-card">
+          <span class="num">ROOT 01</span>
+          <h4>No production live rail</h4>
+          <p>Directly causes §1's "zero live P&L," §6's "no live-fill validation," and §7's entire section.
+          The paper rail and Feature Store fix already exist — this is the single highest-leverage build.</p>
+        </div>
+        <div class="root-card">
+          <span class="num">ROOT 02</span>
+          <h4>No git-tracked lineage</h4>
+          <p>Underlies §3's unsafe-to-fold telemetry, §1's reproducibility gap, and the fact that every
+          finding's evidence trail lives only on one machine. A resolver + tracking policy fixes both at once.</p>
+        </div>
+        <div class="root-card">
+          <span class="num">ROOT 03</span>
+          <h4>CRT identity split-brain</h4>
+          <p>Feeds §5's parity ceiling and its own multi-file-ritual cost, and is the concrete first
+          instance of the coverage gap the whole Semantic OS exists to eventually close. A design already
+          exists — only the implementation is missing.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="filterbar" style="margin-top:44px; margin-bottom:4px;">
+    <span class="label">Filter all sections</span>
+    <button class="filter-btn on" data-filter="all">All 32</button>
+    <button class="filter-btn" data-filter="crit"><span class="dot" style="background:var(--sev-crit)"></span>Critical</button>
+    <button class="filter-btn" data-filter="warn"><span class="dot" style="background:var(--sev-warn)"></span>Partial</button>
+    <button class="filter-btn" data-filter="slate"><span class="dot" style="background:var(--sev-slate)"></span>Unresolved</button>
+  </div>
+
+  <footer>
+    <p>
+      Compiled 2026-09-02 from the five artifacts listed above, read in full this session, plus direct
+      reads of <span class="mono">docs/governance/layer-audit-manifest.json</span> and prior session
+      memory. No code was reviewed and no new abstractions are proposed — every gap names an existing,
+      evidenced capability the platform's own documentation says it needs. Closure is boundary-scoped:
+      resolving one card does not imply its neighbors resolve with it.
+    </p>
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  var links = Array.prototype.slice.call(document.querySelectorAll('.topnav a'));
+  var sections = links.map(function(a){ return document.querySelector(a.getAttribute('href')); }).filter(Boolean);
+  function onScroll(){
+    var y = window.scrollY + 90;
+    var current = sections[0];
+    sections.forEach(function(s){ if (s.offsetTop <= y) current = s; });
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + current.id);
+    });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  var buttons = Array.prototype.slice.call(document.querySelectorAll('.filter-btn'));
+  var cards = Array.prototype.slice.call(document.querySelectorAll('.gap-card'));
+  buttons.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      buttons.forEach(function(b){ b.classList.remove('on'); });
+      btn.classList.add('on');
+      var f = btn.getAttribute('data-filter');
+      cards.forEach(function(c){
+        c.classList.toggle('hide', f !== 'all' && c.getAttribute('data-sev') !== f);
+      });
+    });
+  });
+})();
+</script>
+
+</body></html>

@@ -1,0 +1,69 @@
+{
+  "schema_version": "1.0",
+  "manifest_id": "research-analysis-ssot-v0.1",
+  "policy": {
+    "unknown_is_fail": true,
+    "execution_mode": "plan_only",
+    "production_authority": false,
+    "auto_delete_scripts": false
+  },
+  "intents": {
+    "crt_expiry_diagnosis": {
+      "description": "Explain why CRT states expire, distinguishing clock/session resets from geometry and confirmation failures.",
+      "required_claims": ["state_producer_identity", "expiry_reason_counts", "population_identity", "measurement_contract"],
+      "root_nodes": ["assemble_crt_expiry_report"]
+    }
+  },
+  "nodes": [
+    {
+      "node_id": "resolve_run_identity",
+      "purpose": "Pin dataset, code, configuration, schema, timeframe, and state producer before analysis.",
+      "operation": "contract_check",
+      "inputs": ["dataset_identity", "code_identity", "config_identity", "schema_identity", "state_producer_id"],
+      "outputs": ["run_identity_record"],
+      "depends_on": [],
+      "reuse_policy": "REUSE_ONLY_EXACT_IDENTITY",
+      "required": true
+    },
+    {
+      "node_id": "load_crt_transition_trace",
+      "purpose": "Locate or generate the canonical CRT transition trace for the pinned run.",
+      "operation": "artifact_resolve",
+      "inputs": ["run_identity_record", "transition_trace_contract"],
+      "outputs": ["crt_transition_trace"],
+      "depends_on": ["resolve_run_identity"],
+      "reuse_policy": "REUSE_IF_CONTRACT_AND_HASH_MATCH",
+      "required": true
+    },
+    {
+      "node_id": "measure_expiry_reasons",
+      "purpose": "Count expiry causes by state, reason, and eligible population without pooling distinct state producers.",
+      "operation": "measurement",
+      "inputs": ["crt_transition_trace", "expiry_reason_contract"],
+      "outputs": ["expiry_reason_measurement", "population_counts"],
+      "depends_on": ["load_crt_transition_trace"],
+      "reuse_policy": "REUSE_IF_CONTRACT_AND_HASH_MATCH",
+      "required": true
+    },
+    {
+      "node_id": "measure_state_persistence",
+      "purpose": "Measure state duration and transition survival under a declared censoring rule.",
+      "operation": "measurement",
+      "inputs": ["crt_transition_trace", "persistence_contract"],
+      "outputs": ["state_persistence_measurement"],
+      "depends_on": ["load_crt_transition_trace"],
+      "reuse_policy": "REUSE_IF_CONTRACT_AND_HASH_MATCH",
+      "required": true
+    },
+    {
+      "node_id": "assemble_crt_expiry_report",
+      "purpose": "Assemble validated measurements, provenance, disagreements, and unresolved gaps into one output.",
+      "operation": "evidence_assembly",
+      "inputs": ["run_identity_record", "expiry_reason_measurement", "population_counts", "state_persistence_measurement"],
+      "outputs": ["final_report.md", "run_record.json"],
+      "depends_on": ["resolve_run_identity", "measure_expiry_reasons", "measure_state_persistence"],
+      "reuse_policy": "NEVER_REUSE_FINAL_REPORT_WITHOUT_REVALIDATION",
+      "required": true
+    }
+  ]
+}

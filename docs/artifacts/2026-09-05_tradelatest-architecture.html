@@ -1,0 +1,921 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found]){display:none!important}</style></head><body>
+<title>Tradelatest Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:ital,wght@0,400;0,500;1,400&display=swap">
+
+<style>
+:root{
+  --ground:#f6f7f8;
+  --panel:#ffffff;
+  --panel-2:#eef0f2;
+  --ink:#1b1f24;
+  --ink-2:#4a525c;
+  --ink-3:#767f8a;
+  --rule:#d8dde2;
+  --rule-2:#e8ebee;
+  --accent:#a8761f;
+  --accent-soft:#f0e3cc;
+  --live:#2f7d5b;
+  --live-soft:#dcece4;
+  --inert:#6b7280;
+  --inert-soft:#e6e8ea;
+  --dead:#a14a5c;
+  --dead-soft:#f2e0e3;
+  --shadow:0 1px 2px rgba(20,23,28,.06),0 8px 24px -12px rgba(20,23,28,.18);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#14171c;
+    --panel:#1b1f26;
+    --panel-2:#232830;
+    --ink:#e7eaee;
+    --ink-2:#aab3bd;
+    --ink-3:#7f8a96;
+    --rule:#2c333c;
+    --rule-2:#232a32;
+    --accent:#d9a441;
+    --accent-soft:#3a2f1a;
+    --live:#5fb98d;
+    --live-soft:#1d3830;
+    --inert:#8d97a3;
+    --inert-soft:#272d35;
+    --dead:#d1798a;
+    --dead-soft:#3a2229;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#14171c;
+  --panel:#1b1f26;
+  --panel-2:#232830;
+  --ink:#e7eaee;
+  --ink-2:#aab3bd;
+  --ink-3:#7f8a96;
+  --rule:#2c333c;
+  --rule-2:#232a32;
+  --accent:#d9a441;
+  --accent-soft:#3a2f1a;
+  --live:#5fb98d;
+  --live-soft:#1d3830;
+  --inert:#8d97a3;
+  --inert-soft:#272d35;
+  --dead:#d1798a;
+  --dead-soft:#3a2229;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--ground);
+  color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:15px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+code,.mono{font-family:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+
+/* ---------- shell ---------- */
+.shell{display:grid;grid-template-columns:236px minmax(0,1fr);gap:0;max-width:1360px;margin:0 auto}
+.rail{
+  position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;
+  border-right:1px solid var(--rule);padding:28px 20px 40px;
+  background:var(--ground);
+}
+.rail-brand{font-weight:700;font-size:14px;letter-spacing:.01em;margin-bottom:2px}
+.rail-sub{font-size:11.5px;color:var(--ink-3);margin-bottom:22px;font-family:"IBM Plex Mono",monospace}
+.rail nav{display:flex;flex-direction:column;gap:1px}
+.rail a{
+  display:flex;gap:9px;align-items:baseline;
+  color:var(--ink-2);text-decoration:none;font-size:13px;
+  padding:5px 8px;border-radius:4px;line-height:1.35;
+}
+.rail a:hover{background:var(--panel-2);color:var(--ink)}
+.rail a .n{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-3);min-width:15px}
+.rail a:focus-visible,main a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+main{padding:0 40px 100px;min-width:0}
+
+/* ---------- masthead ---------- */
+.mast{padding:56px 0 30px;border-bottom:1px solid var(--rule)}
+.eyebrow{
+  font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:14px;
+}
+h1{
+  font-size:clamp(30px,4.4vw,44px);line-height:1.08;margin:0 0 16px;
+  font-weight:600;letter-spacing:-.021em;text-wrap:balance;max-width:19ch;
+}
+.dek{
+  font-family:"IBM Plex Serif",Georgia,serif;font-size:17.5px;line-height:1.6;
+  color:var(--ink-2);max-width:64ch;margin:0;
+}
+.mast-meta{
+  display:flex;flex-wrap:wrap;gap:0;margin-top:28px;
+  border:1px solid var(--rule);border-radius:6px;overflow:hidden;background:var(--panel);
+}
+.mm{padding:11px 16px;border-right:1px solid var(--rule);flex:1 1 auto;min-width:150px}
+.mm:last-child{border-right:0}
+.mm dt{
+  font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-3);margin:0 0 3px;
+}
+.mm dd{margin:0;font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:500}
+
+/* ---------- sections ---------- */
+section{padding-top:52px;scroll-margin-top:16px}
+h2{
+  font-size:23px;font-weight:600;letter-spacing:-.012em;margin:0 0 6px;
+  display:flex;align-items:baseline;gap:11px;text-wrap:balance;
+}
+h2 .h2n{
+  font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:500;
+  color:var(--accent);letter-spacing:0;
+}
+.lede{
+  font-family:"IBM Plex Serif",Georgia,serif;font-size:16px;color:var(--ink-2);
+  max-width:66ch;margin:0 0 24px;line-height:1.62;
+}
+h3{font-size:15px;font-weight:600;margin:32px 0 10px;letter-spacing:-.005em}
+p{max-width:68ch;margin:0 0 14px}
+main a{color:var(--accent);text-underline-offset:2px}
+strong{font-weight:600}
+ul{max-width:68ch;padding-left:19px;margin:0 0 14px}
+li{margin-bottom:7px}
+
+/* ---------- citation chip ---------- */
+.cite{
+  font-family:"IBM Plex Mono",monospace;font-size:12.5px;
+  background:var(--panel-2);border:1px solid var(--rule-2);
+  padding:1px 5px;border-radius:3px;white-space:nowrap;color:var(--ink);
+}
+
+/* ---------- tables ---------- */
+.tw{overflow-x:auto;margin:0 0 20px;border:1px solid var(--rule);border-radius:6px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{
+  text-align:left;font-family:"IBM Plex Mono",monospace;font-size:10.5px;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:500;
+  padding:10px 14px;border-bottom:1px solid var(--rule);white-space:nowrap;
+  background:var(--panel-2);
+}
+td{padding:8px 14px;border-bottom:1px solid var(--rule-2);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right;font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
+td.pkg{font-family:"IBM Plex Mono",monospace;font-weight:500;white-space:nowrap}
+tbody tr:hover{background:var(--panel-2)}
+
+/* ---------- status pills ---------- */
+.pill{
+  display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:10.5px;
+  letter-spacing:.05em;text-transform:uppercase;font-weight:500;
+  padding:2px 7px;border-radius:3px;white-space:nowrap;
+}
+.p-spine{background:var(--live-soft);color:var(--live);box-shadow:inset 0 0 0 1px var(--live)}
+.p-plat{background:var(--accent-soft);color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.p-side{background:var(--inert-soft);color:var(--inert);box-shadow:inset 0 0 0 1px var(--inert)}
+.p-dead{background:var(--dead-soft);color:var(--dead);box-shadow:inset 0 0 0 1px var(--dead)}
+
+/* ---------- callout ---------- */
+.note{
+  border-left:3px solid var(--accent);background:var(--panel);
+  padding:14px 18px;margin:22px 0;border-radius:0 5px 5px 0;
+  box-shadow:var(--shadow);max-width:72ch;
+}
+.note.warn{border-left-color:var(--dead)}
+.note h4{
+  margin:0 0 7px;font-size:11px;font-family:"IBM Plex Mono",monospace;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-weight:600;
+}
+.note.warn h4{color:var(--dead)}
+.note p{margin:0 0 9px;font-size:14px;max-width:none}
+.note p:last-child{margin-bottom:0}
+.note ul{margin-bottom:0;max-width:none;font-size:14px}
+
+/* ---------- figures ---------- */
+figure{margin:26px 0 30px;max-width:100%}
+.figbox{
+  border:1px solid var(--rule);border-radius:6px;background:var(--panel);
+  padding:22px 20px 14px;overflow-x:auto;
+}
+figure svg{display:block;max-width:100%;height:auto;margin:0 auto;color:var(--ink-2)}
+figcaption{
+  font-size:12.5px;color:var(--ink-3);margin-top:11px;line-height:1.5;max-width:72ch;
+  font-family:"IBM Plex Serif",Georgia,serif;font-style:italic;
+}
+.dgm-t{font-family:"IBM Plex Sans",sans-serif;font-size:12px;font-weight:500;fill:var(--ink)}
+.dgm-s{font-family:"IBM Plex Mono",monospace;font-size:10px;fill:var(--ink-3)}
+.dgm-l{font-family:"IBM Plex Mono",monospace;font-size:10px;fill:var(--ink-2)}
+.dgm-band{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.09em;fill:var(--ink-3)}
+.bx{fill:var(--panel-2);stroke:var(--rule);stroke-width:1}
+.bx-live{fill:var(--live-soft);stroke:var(--live);stroke-width:1.2}
+.bx-acc{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.2}
+.bx-dead{fill:var(--dead-soft);stroke:var(--dead);stroke-width:1.2;stroke-dasharray:4 3}
+.ln{stroke:var(--ink-3);stroke-width:1.3;fill:none}
+.ln-acc{stroke:var(--accent);stroke-width:1.6;fill:none}
+.ln-dash{stroke:var(--ink-3);stroke-width:1.2;fill:none;stroke-dasharray:4 3}
+.band-r{fill:none;stroke:var(--rule);stroke-width:1;stroke-dasharray:3 3}
+
+/* ---------- key/legend ---------- */
+.legend{display:flex;flex-wrap:wrap;gap:16px;margin:0 0 20px;font-size:12.5px;color:var(--ink-2)}
+.legend span{display:flex;align-items:center;gap:6px}
+.sw{width:11px;height:11px;border-radius:2px;flex:none}
+
+/* ---------- stat strip ---------- */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:6px;overflow:hidden;margin:0 0 24px}
+.stat{background:var(--panel);padding:13px 15px}
+.stat .v{font-family:"IBM Plex Mono",monospace;font-size:21px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat .k{font-size:11.5px;color:var(--ink-3);margin-top:3px;line-height:1.35}
+
+hr{border:0;border-top:1px solid var(--rule);margin:44px 0 0}
+.foot{margin-top:44px;padding-top:22px;border-top:1px solid var(--rule);font-size:12.5px;color:var(--ink-3);max-width:72ch}
+
+@media (max-width:900px){
+  .shell{grid-template-columns:1fr}
+  .rail{position:static;height:auto;border-right:0;border-bottom:1px solid var(--rule);padding:20px 22px}
+  .rail nav{flex-direction:row;flex-wrap:wrap;gap:3px}
+  .rail a{font-size:12px;padding:4px 7px;background:var(--panel-2)}
+  main{padding:0 22px 70px}
+  .mast{padding-top:32px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="shell">
+<aside class="rail">
+  <div class="rail-brand">Tradelatest</div>
+  <div class="rail-sub">architecture &amp; infrastructure</div>
+  <nav>
+    <a href="#glance"><span class="n">01</span><span>System at a glance</span></a>
+    <a href="#spine"><span class="n">02</span><span>Runtime spine</span></a>
+    <a href="#rails"><span class="n">03</span><span>Backtest vs live</span></a>
+    <a href="#features"><span class="n">04</span><span>Feature construction</span></a>
+    <a href="#infra"><span class="n">05</span><span>Process topology</span></a>
+    <a href="#modules"><span class="n">06</span><span>Module inventory</span></a>
+    <a href="#config"><span class="n">07</span><span>Config &amp; promotion</span></a>
+    <a href="#data"><span class="n">08</span><span>Data &amp; persistence</span></a>
+    <a href="#build"><span class="n">09</span><span>Build, test, CI</span></a>
+    <a href="#drift"><span class="n">10</span><span>Drift &amp; observations</span></a>
+  </nav>
+</aside>
+
+<main>
+
+<header class="mast">
+  <div class="eyebrow">Measured 2026-09-05 · branch feature/truth-registry-v2</div>
+  <h1>Tradelatest system architecture</h1>
+  <p class="dek">A file-backed quantitative trading system: M15 candles enter a CRT state machine, four engines score each committed setup, a fusion gate arbitrates, and a governance layer decides what may ever reach production. No database, no broker, no cloud dependency. This page is the map — every figure below was measured from source in one session, never copied from the existing docs.</p>
+  <dl class="mast-meta">
+    <div class="mm"><dt>Active config</dt><dd>v2_htfcrt_2026_08</dd></div>
+    <div class="mm"><dt>Feature schema</dt><dd>v5.0 · 48 dims</dd></div>
+    <div class="mm"><dt>src modules</dt><dd>596 · 148,294 LOC</dd></div>
+    <div class="mm"><dt>Interpreter</dt><dd>venv 3.12.10</dd></div>
+  </dl>
+</header>
+
+<!-- ============ 01 ============ -->
+<section id="glance">
+<h2><span class="h2n">01</span>System at a glance</h2>
+<p class="lede">Four things make this codebase unusual, and they explain most of its shape: everything is a file, the trading spine is small relative to the research and governance around it, most code is deliberately not on the live path, and nothing reaches production without passing a validator that writes an append-only audit line.</p>
+
+<div class="stats">
+  <div class="stat"><div class="v">596</div><div class="k">Python modules in <code>src/</code>, across 40 code packages</div></div>
+  <div class="stat"><div class="v">178</div><div class="k">of those reachable from any entrypoint (30%)</div></div>
+  <div class="stat"><div class="v">44</div><div class="k">control-plane commands a human can launch</div></div>
+  <div class="stat"><div class="v">48</div><div class="k">canonical feature dimensions (schema v5.0)</div></div>
+  <div class="stat"><div class="v">25</div><div class="k">pytest targets in the CI green floor</div></div>
+  <div class="stat"><div class="v">44&nbsp;GB</div><div class="k">of local logs, results and corpora — none of it in git</div></div>
+</div>
+
+<p>The system ingests M15 OHLCV candles, runs them through the CRT state machine (<code class="cite">config_layer/crt_engine_v2.py</code>), and when that machine commits to a setup, scores the bar through four independent engines — CRT, Gaussian, ZoneGate, RR. A fusion step weights them, a decision step vetoes or approves, and only then does a caller plan the entry and clear it through a risk gate.</p>
+
+<p>Governance sits above all of it. A config cannot become active without an <code class="cite">APPROVE</code> from <code class="cite">ConfigValidator.validate()</code>, a SHA-256 hash, and a line in <code class="cite">configs/promotion_log.jsonl</code>. That discipline is the reason the repo carries ~100 numbered findings (<code class="cite">F-001</code>…<code class="cite">F-100</code>) recording what has been proven, disproven, or explicitly left unknown.</p>
+
+<h3>Where this page sits among the existing docs</h3>
+<p>The repo has ~35 architecture documents. They are good, but fragmented — and the two that call themselves master references contain no diagrams. This page is the missing top-level entry point; it routes into them rather than replacing them.</p>
+<div class="tw"><table>
+<thead><tr><th>When you want…</th><th>Go to</th></tr></thead>
+<tbody>
+<tr><td>The per-candle narrative, step by step</td><td><code class="cite">docs/architecture/signal-flow.md</code></td></tr>
+<tr><td>Deep file-level contracts and glossary</td><td><code class="cite">docs/architecture/architecture-memory.md</code></td></tr>
+<tr><td>Which doc owns which question</td><td><code class="cite">docs/knowledge-map.md</code></td></tr>
+<tr><td>What is currently believed true, with evidence</td><td><code class="cite">docs/current-findings.md</code></td></tr>
+<tr><td>The full import graph, per package</td><td><code class="cite">docs/architecture/code-map.generated.md</code></td></tr>
+</tbody></table></div>
+</section>
+
+<!-- ============ 02 ============ -->
+<section id="spine">
+<h2><span class="h2n">02</span>The runtime spine: candle to order</h2>
+<p class="lede">One decision core is shared by both rails. Everything upstream of it differs between backtest and live; everything downstream of it lives in the caller, not the core.</p>
+
+<div class="legend">
+  <span><span class="sw" style="background:var(--live-soft);box-shadow:inset 0 0 0 1.2px var(--live)"></span>on the live path</span>
+  <span><span class="sw" style="background:var(--accent-soft);box-shadow:inset 0 0 0 1.2px var(--accent)"></span>gate / arbiter</span>
+  <span><span class="sw" style="background:var(--panel-2);box-shadow:inset 0 0 0 1px var(--rule)"></span>inert on the active config</span>
+</div>
+
+<figure>
+<div class="figbox">
+<svg viewBox="0 0 900 690" role="img" aria-label="The candle-to-order spine: ingest and features feed a CRT state machine; on a committed setup the nine-step EngineRunner decision core runs; the caller then plans the entry and clears it through the risk gate.">
+  <!-- Band A -->
+  <rect class="band-r" x="8" y="26" width="884" height="112" rx="5"/>
+  <text class="dgm-band" x="18" y="20">A · INGEST &amp; FEATURES</text>
+  <rect class="bx-live" x="24" y="48" width="150" height="52" rx="4"/>
+  <text class="dgm-t" x="99" y="70" text-anchor="middle">CandleLoader</text>
+  <text class="dgm-s" x="99" y="86" text-anchor="middle">backtest_v2.py:723</text>
+
+  <rect class="bx-live" x="222" y="48" width="150" height="52" rx="4"/>
+  <text class="dgm-t" x="297" y="70" text-anchor="middle">Feature build</text>
+  <text class="dgm-s" x="297" y="86" text-anchor="middle">48 canonical dims</text>
+
+  <rect class="bx-live" x="420" y="48" width="184" height="52" rx="4"/>
+  <text class="dgm-t" x="512" y="70" text-anchor="middle">CRT state machine</text>
+  <text class="dgm-s" x="512" y="86" text-anchor="middle">crt_engine_v2.py:2841</text>
+
+  <rect class="bx-acc" x="652" y="48" width="164" height="52" rx="4"/>
+  <text class="dgm-t" x="734" y="70" text-anchor="middle">TRADE_OPENED</text>
+  <text class="dgm-s" x="734" y="86" text-anchor="middle">12 CRT states</text>
+
+  <line class="ln" x1="174" y1="74" x2="216" y2="74" marker-end="url(#ar)"/>
+  <line class="ln" x1="372" y1="74" x2="414" y2="74" marker-end="url(#ar)"/>
+  <line class="ln" x1="604" y1="74" x2="646" y2="74" marker-end="url(#ar)"/>
+  <text class="dgm-l" x="734" y="122" text-anchor="middle">only a committed setup continues</text>
+  <line class="ln-acc" x1="734" y1="100" x2="734" y2="132" marker-end="url(#ar-a)"/>
+
+  <!-- Band B -->
+  <rect class="band-r" x="8" y="150" width="884" height="366" rx="5"/>
+  <text class="dgm-band" x="18" y="144">B · ENGINERUNNER.RUN — SHARED DECISION CORE · core/engine_runner.py:640</text>
+
+  <rect class="bx" x="24" y="172" width="176" height="46" rx="4"/>
+  <text class="dgm-t" x="112" y="192" text-anchor="middle">1 · Trap adapter</text>
+  <text class="dgm-s" x="112" y="207" text-anchor="middle">hard reject if score ≤ 0</text>
+
+  <!-- four engines -->
+  <rect class="bx-live" x="24" y="240" width="128" height="44" rx="4"/>
+  <text class="dgm-t" x="88" y="259" text-anchor="middle">CRT</text>
+  <text class="dgm-s" x="88" y="273" text-anchor="middle">:720</text>
+  <rect class="bx" x="164" y="240" width="128" height="44" rx="4"/>
+  <text class="dgm-t" x="228" y="259" text-anchor="middle">Gaussian</text>
+  <text class="dgm-s" x="228" y="273" text-anchor="middle">≈const · F-060</text>
+  <rect class="bx" x="304" y="240" width="128" height="44" rx="4"/>
+  <text class="dgm-t" x="368" y="259" text-anchor="middle">ZoneGate</text>
+  <text class="dgm-s" x="368" y="273" text-anchor="middle">non-pivotal · F-036</text>
+  <rect class="bx" x="444" y="240" width="128" height="44" rx="4"/>
+  <text class="dgm-t" x="508" y="259" text-anchor="middle">RR</text>
+  <text class="dgm-s" x="508" y="273" text-anchor="middle">fusion off · F-038</text>
+
+  <text class="dgm-l" x="596" y="258">2 · all four run</text>
+  <text class="dgm-l" x="596" y="272">unconditionally</text>
+
+  <line class="ln" x1="112" y1="218" x2="112" y2="234" marker-end="url(#ar)"/>
+
+  <rect class="bx-acc" x="24" y="306" width="548" height="40" rx="4"/>
+  <text class="dgm-t" x="298" y="325" text-anchor="middle">3 · completeness — EXPECTED_ENGINES must all be present</text>
+  <text class="dgm-s" x="298" y="339" text-anchor="middle">engine_runner.py:827 · a missing engine rejects rather than fusing partially</text>
+  <line class="ln" x1="298" y1="284" x2="298" y2="300" marker-end="url(#ar)"/>
+
+  <rect class="bx-acc" x="24" y="368" width="264" height="44" rx="4"/>
+  <text class="dgm-t" x="156" y="387" text-anchor="middle">4 · FusionEngine.compute</text>
+  <text class="dgm-s" x="156" y="401" text-anchor="middle">:856 — regime-weighted</text>
+
+  <rect class="bx" x="308" y="368" width="264" height="44" rx="4"/>
+  <text class="dgm-t" x="440" y="387" text-anchor="middle">5 · score floor · belief · regime</text>
+  <text class="dgm-s" x="440" y="401" text-anchor="middle">belief gate inert — no config section</text>
+  <line class="ln" x1="156" y1="346" x2="156" y2="362" marker-end="url(#ar)"/>
+  <line class="ln" x1="288" y1="390" x2="302" y2="390" marker-end="url(#ar)"/>
+
+  <rect class="bx-acc" x="24" y="434" width="548" height="46" rx="4"/>
+  <text class="dgm-t" x="298" y="454" text-anchor="middle">7 · DecisionEngine.evaluate — the only emitter of execute / reject</text>
+  <text class="dgm-s" x="298" y="469" text-anchor="middle">engine_runner.py:1049 → decision_engine.py:120 · no economic RR gate here (F-048)</text>
+  <line class="ln" x1="298" y1="412" x2="298" y2="428" marker-end="url(#ar)"/>
+
+  <rect class="bx" x="612" y="368" width="256" height="112" rx="4"/>
+  <text class="dgm-t" x="740" y="392" text-anchor="middle">8–9 · telemetry</text>
+  <text class="dgm-s" x="740" y="410" text-anchor="middle">Collector → logs/collector.jsonl</text>
+  <text class="dgm-s" x="740" y="426" text-anchor="middle">AcceptanceController</text>
+  <text class="dgm-s" x="740" y="442" text-anchor="middle">ConvergenceController</text>
+  <text class="dgm-s" x="740" y="458" text-anchor="middle">SignalAudit · CognitiveBus</text>
+  <line class="ln-dash" x1="572" y1="457" x2="606" y2="424" marker-end="url(#ar)"/>
+
+  <!-- Band C -->
+  <rect class="band-r" x="8" y="528" width="884" height="146" rx="5"/>
+  <text class="dgm-band" x="18" y="522">C · THE CALLER — NOT PART OF ENGINERUNNER</text>
+
+  <rect class="bx-live" x="24" y="552" width="196" height="52" rx="4"/>
+  <text class="dgm-t" x="122" y="574" text-anchor="middle">ExecutionPlannerV1_2</text>
+  <text class="dgm-s" x="122" y="590" text-anchor="middle">config_layer/…:132 · entry only</text>
+
+  <rect class="bx-live" x="268" y="552" width="196" height="52" rx="4"/>
+  <text class="dgm-t" x="366" y="574" text-anchor="middle">compute_crt_levels</text>
+  <text class="dgm-s" x="366" y="590" text-anchor="middle">SL / TP1 / TP2 / RR</text>
+
+  <rect class="bx-acc" x="512" y="552" width="196" height="52" rx="4"/>
+  <text class="dgm-t" x="610" y="574" text-anchor="middle">UltronRiskGate</text>
+  <text class="dgm-s" x="610" y="590" text-anchor="middle">8 checks · ultron_risk_gate.py:160</text>
+
+  <rect class="bx-live" x="756" y="552" width="112" height="52" rx="4"/>
+  <text class="dgm-t" x="812" y="580" text-anchor="middle">order</text>
+
+  <line class="ln" x1="220" y1="578" x2="262" y2="578" marker-end="url(#ar)"/>
+  <line class="ln" x1="464" y1="578" x2="506" y2="578" marker-end="url(#ar)"/>
+  <line class="ln" x1="708" y1="578" x2="750" y2="578" marker-end="url(#ar)"/>
+  <line class="ln-acc" x1="298" y1="480" x2="298" y2="510" marker-end="url(#ar-a)"/>
+  <text class="dgm-l" x="310" y="502">execute →</text>
+  <text class="dgm-l" x="24" y="638">Backtest never enters band C — it books the trade from the CRT engine's own</text>
+  <text class="dgm-l" x="24" y="653">ExecutionEngine.build_trade instead, so backtest and live use two independent</text>
+  <text class="dgm-l" x="24" y="668">SL/TP implementations of the same doctrine.</text>
+
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,1 L9,5 L0,9 z" fill="currentColor"/>
+    </marker>
+    <marker id="ar-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,1 L9,5 L0,9 z" fill="var(--accent)"/>
+    </marker>
+  </defs>
+</svg>
+</div>
+<figcaption>The nine steps of <code>EngineRunner.run</code> are shared verbatim by backtest and live. Four of the boxes are drawn inert because the active config disables them — that is a configuration state, not dead code.</figcaption>
+</figure>
+
+<h3>What the shaded boxes mean</h3>
+<p>Several engines in the diagram are drawn as inert. That is a measured state of the active config, and each has a recorded finding behind it:</p>
+<div class="tw"><table>
+<thead><tr><th>Component</th><th>State on <code>v2_htfcrt_2026_08</code></th><th>Finding</th></tr></thead>
+<tbody>
+<tr><td>Gaussian engine</td><td>Registry entries lack <code>mu</code>/<code>sigma</code>, so the score degenerates to a near-constant ≈0.8825</td><td><code class="cite">F-060</code></td></tr>
+<tr><td>ZoneGate</td><td>Reachable and passing, but byte-identical entries across every weight tested — redundant, not weak</td><td><code class="cite">F-036</code></td></tr>
+<tr><td>RR fusion layer</td><td><code>enabled:false</code> — the confidence gate bypassed to Gaussian, making RR a duplicate</td><td><code class="cite">F-038</code>, <code class="cite">F-044</code></td></tr>
+<tr><td>BitNet gate</td><td><code>use_bitnet:false</code>; shadow A/B showed no improvement</td><td><code class="cite">F-004</code>, <code class="cite">F-055</code></td></tr>
+<tr><td>Belief gate (step 5b)</td><td>No <code>signal_belief</code> section in config → no-op</td><td>—</td></tr>
+<tr><td>Fusion gate as a whole</td><td>Vetoes 0 of 30 CRT-committed entries across four crypto majors</td><td><code class="cite">F-070</code></td></tr>
+</tbody></table></div>
+<p>The practical reading: the CRT state machine is doing nearly all of the selection work, and the surrounding fusion apparatus is currently non-pivotal. That is a well-evidenced conclusion in this repo, not a criticism of the design.</p>
+</section>
+
+<!-- ============ 03 ============ -->
+<section id="rails">
+<h2><span class="h2n">03</span>Backtest and live are two rails around one core</h2>
+<p class="lede">They share <code>EngineRunner</code> and nothing else. The differences are not incidental — they change what a ledger means.</p>
+
+<figure>
+<div class="figbox">
+<svg viewBox="0 0 880 470" role="img" aria-label="Backtest and live rails share the EngineRunner decision core but differ in entry point, feature construction, gate optionality, failure mode and downstream planning.">
+  <text class="dgm-band" x="150" y="20" text-anchor="middle">BACKTEST RAIL</text>
+  <text class="dgm-band" x="730" y="20" text-anchor="middle">LIVE RAIL (PAPER ONLY)</text>
+
+  <rect class="bx" x="24" y="34" width="252" height="46" rx="4"/>
+  <text class="dgm-t" x="150" y="54" text-anchor="middle">backtest_v2.main</text>
+  <text class="dgm-s" x="150" y="69" text-anchor="middle">CLI · :3420</text>
+
+  <rect class="bx" x="604" y="34" width="252" height="46" rx="4"/>
+  <text class="dgm-t" x="730" y="54" text-anchor="middle">run_live_rail.py --paper</text>
+  <text class="dgm-s" x="730" y="69" text-anchor="middle">LiveRailOrchestrator :65</text>
+
+  <rect class="bx" x="24" y="102" width="252" height="46" rx="4"/>
+  <text class="dgm-t" x="150" y="122" text-anchor="middle">FeaturePipeline.run</text>
+  <text class="dgm-s" x="150" y="137" text-anchor="middle">whole corpus, vectorised</text>
+
+  <rect class="bx" x="604" y="102" width="252" height="46" rx="4"/>
+  <text class="dgm-t" x="730" y="122" text-anchor="middle">FeatureStore.process</text>
+  <text class="dgm-s" x="730" y="137" text-anchor="middle">per bar, fail-closed</text>
+
+  <rect class="bx" x="24" y="170" width="252" height="46" rx="4"/>
+  <text class="dgm-t" x="150" y="190" text-anchor="middle">CRTEngine.process_candle</text>
+  <text class="dgm-s" x="150" y="205" text-anchor="middle">:2545</text>
+
+  <rect class="bx" x="604" y="170" width="252" height="46" rx="4"/>
+  <text class="dgm-t" x="730" y="190" text-anchor="middle">HookedLiveEngine.process</text>
+  <text class="dgm-s" x="730" y="205" text-anchor="middle">live_engine_hook.py:817</text>
+
+  <!-- shared core -->
+  <rect class="bx-acc" x="316" y="238" width="248" height="72" rx="5"/>
+  <text class="dgm-t" x="440" y="264" text-anchor="middle">EngineRunner.run</text>
+  <text class="dgm-s" x="440" y="281" text-anchor="middle">the only shared code</text>
+  <text class="dgm-s" x="440" y="296" text-anchor="middle">core/engine_runner.py:640</text>
+
+  <path class="ln" d="M150 216 L150 274 L310 274" marker-end="url(#ar2)"/>
+  <path class="ln" d="M730 216 L730 274 L570 274" marker-end="url(#ar2)"/>
+  <text class="dgm-l" x="160" y="266">optional · :2824</text>
+  <text class="dgm-l" x="592" y="266" text-anchor="end">always · :996</text>
+
+  <!-- divergence table -->
+  <line x1="24" y1="336" x2="856" y2="336" stroke="var(--rule)" stroke-width="1"/>
+  <text class="dgm-band" x="24" y="356">WHERE THEY DIVERGE — AND WHY IT MATTERS</text>
+
+  <text class="dgm-l" x="24" y="382">Gate optionality</text>
+  <text class="dgm-l" x="230" y="382">config-gated, can be off</text>
+  <text class="dgm-l" x="520" y="382">always runs</text>
+
+  <text class="dgm-l" x="24" y="404">Exception handling</text>
+  <text class="dgm-l" x="230" y="404" fill="var(--dead)">fail-open — trade allowed</text>
+  <text class="dgm-l" x="520" y="404" fill="var(--live)">fail-closed — raises</text>
+
+  <text class="dgm-l" x="24" y="426">SL / TP authority</text>
+  <text class="dgm-l" x="230" y="426">ExecutionEngine.build_trade</text>
+  <text class="dgm-l" x="520" y="426">compute_crt_levels</text>
+
+  <text class="dgm-l" x="24" y="448">zone_gate_invalid rejects</text>
+  <text class="dgm-l" x="230" y="448">discarded (bypass flag)</text>
+  <text class="dgm-l" x="520" y="448">enforced</text>
+
+  <defs>
+    <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,1 L9,5 L0,9 z" fill="currentColor"/>
+    </marker>
+  </defs>
+</svg>
+</div>
+<figcaption>The bottom four rows are the reason a backtest ledger and a live ledger are not directly comparable on reject classes or on fill geometry.</figcaption>
+</figure>
+
+<div class="note warn">
+<h4>There is no production live rail</h4>
+<p>The live path exists and is exercised, but only on paper. <code>LiveRailOrchestrator.from_config</code> hard-gates on <code>order_venue is PAPER</code>, and the <code>live_rail</code> section is <strong>absent from the active config entirely</strong> — so the orchestrator can only be constructed from an experimental JSON passed on the command line. Recorded as <code class="cite">F-073</code>, still open. Every headline return figure in this repo is therefore a backtest figure (<code class="cite">F-010</code>).</p>
+</div>
+</section>
+
+<!-- ============ 04 ============ -->
+<section id="features">
+<h2><span class="h2n">04</span>Three feature paths, one schema</h2>
+<p class="lede">The 48-dimension canonical schema is the contract that holds the system together. Three separate implementations produce it, and only the schema constant binds them.</p>
+
+<figure>
+<div class="figbox">
+<svg viewBox="0 0 860 330" role="img" aria-label="Three independent feature construction paths — the batch pipeline, the live feature store, and the live rail feeder — all converge on the same 48-dimension canonical schema constant.">
+  <rect class="bx" x="24" y="34" width="212" height="66" rx="4"/>
+  <text class="dgm-t" x="130" y="58" text-anchor="middle">FeaturePipeline.run</text>
+  <text class="dgm-s" x="130" y="75" text-anchor="middle">pandas / numpy, whole corpus</text>
+  <text class="dgm-s" x="130" y="90" text-anchor="middle">feature_pipeline.py:1437</text>
+
+  <rect class="bx" x="324" y="34" width="212" height="66" rx="4"/>
+  <text class="dgm-t" x="430" y="58" text-anchor="middle">FeatureStore.process</text>
+  <text class="dgm-s" x="430" y="75" text-anchor="middle">per bar + causal structure</text>
+  <text class="dgm-s" x="430" y="90" text-anchor="middle">core/feature_store.py:70</text>
+
+  <rect class="bx" x="624" y="34" width="212" height="66" rx="4"/>
+  <text class="dgm-t" x="730" y="58" text-anchor="middle">LiveRailFeeder</text>
+  <text class="dgm-s" x="730" y="75" text-anchor="middle">re-runs the full pipeline</text>
+  <text class="dgm-s" x="730" y="90" text-anchor="middle">every single bar</text>
+
+  <text class="dgm-l" x="130" y="122" text-anchor="middle">backtest</text>
+  <text class="dgm-l" x="430" y="122" text-anchor="middle">live hook</text>
+  <text class="dgm-l" x="730" y="122" text-anchor="middle">live rail</text>
+
+  <path class="ln" d="M130 100 L130 150 L430 150" marker-end="url(#ar3)"/>
+  <path class="ln" d="M430 100 L430 150"/>
+  <path class="ln" d="M730 100 L730 150 L430 150" marker-end="url(#ar3)"/>
+  <line class="ln-acc" x1="430" y1="150" x2="430" y2="182" marker-end="url(#ar3a)"/>
+
+  <rect class="bx-acc" x="256" y="186" width="348" height="62" rx="5"/>
+  <text class="dgm-t" x="430" y="211" text-anchor="middle">CANONICAL_FEATURES — 48 names, schema v5.0</text>
+  <text class="dgm-s" x="430" y="228" text-anchor="middle">features/feature_schema.py:88 · SCHEMA_HASH · FEATURE_ORDER_HASH</text>
+  <text class="dgm-s" x="430" y="242" text-anchor="middle">the only thing the three paths share</text>
+
+  <text class="dgm-l" x="24" y="284">The hashes are computed over the feature NAMES, so any rename invalidates every</text>
+  <text class="dgm-l" x="24" y="300">trained artifact. v5.0 appended 9 SMC primitives to v4.0's 39 — a pure append,</text>
+  <text class="dgm-l" x="24" y="316">which is why all six model families are now stale on a ≤39-dim schema (F-076).</text>
+
+  <defs>
+    <marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,1 L9,5 L0,9 z" fill="currentColor"/>
+    </marker>
+    <marker id="ar3a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,1 L9,5 L0,9 z" fill="var(--accent)"/>
+    </marker>
+  </defs>
+</svg>
+</div>
+<figcaption>Three implementations, one contract. The live rail is the odd one: it builds features with the batch pipeline, then hands the dict to the hook, which re-validates it through <code>FeatureStore</code>.</figcaption>
+</figure>
+
+<p>The schema constant is load-bearing in a strict sense: <code class="cite">SCHEMA_HASH</code> and <code class="cite">FEATURE_ORDER_HASH</code> are computed over the ordered feature <em>names</em>, so any rename or reorder invalidates the training baseline and requires a fresh capture before any model can be retrained.</p>
+</section>
+
+<!-- ============ 05 ============ -->
+<section id="infra">
+<h2><span class="h2n">05</span>Process topology — what actually runs</h2>
+<p class="lede">Almost nothing is a long-lived process. The system is a large library plus a command launcher, and the launcher runs everything as a fresh subprocess.</p>
+
+<figure>
+<div class="figbox">
+<svg viewBox="0 0 880 400" role="img" aria-label="The control plane HTTP server supervises command runs as fresh subprocesses; separate small processes are the health checker, the agent REPL and the paper live rail. The trading library itself is imported, never resident.">
+  <rect class="bx-acc" x="24" y="40" width="240" height="86" rx="5"/>
+  <text class="dgm-t" x="144" y="65" text-anchor="middle">Control plane server</text>
+  <text class="dgm-s" x="144" y="83" text-anchor="middle">127.0.0.1:8787 · stdlib only</text>
+  <text class="dgm-s" x="144" y="98" text-anchor="middle">ThreadingHTTPServer</text>
+  <text class="dgm-s" x="144" y="113" text-anchor="middle">44 CommandSpec · ~44 routes</text>
+
+  <rect class="bx" x="336" y="40" width="216" height="86" rx="5"/>
+  <text class="dgm-t" x="444" y="65" text-anchor="middle">JobManager</text>
+  <text class="dgm-s" x="444" y="83" text-anchor="middle">subprocess.Popen</text>
+  <text class="dgm-s" x="444" y="98" text-anchor="middle">fresh interpreter per run</text>
+  <text class="dgm-s" x="444" y="113" text-anchor="middle">jobs.py:79</text>
+
+  <rect class="bx-live" x="624" y="40" width="232" height="86" rx="5"/>
+  <text class="dgm-t" x="740" y="65" text-anchor="middle">Command process</text>
+  <text class="dgm-s" x="740" y="83" text-anchor="middle">one of 409 scripts</text>
+  <text class="dgm-s" x="740" y="98" text-anchor="middle">imports src/ · exits</text>
+  <text class="dgm-s" x="740" y="113" text-anchor="middle">stdout/stderr → logs/</text>
+
+  <line class="ln" x1="264" y1="83" x2="330" y2="83" marker-end="url(#ar4)"/>
+  <line class="ln" x1="552" y1="83" x2="618" y2="83" marker-end="url(#ar4)"/>
+
+  <text class="dgm-l" x="24" y="162">Other resident processes — each independent, none importing the others</text>
+  <line x1="24" y1="172" x2="856" y2="172" stroke="var(--rule)" stroke-width="1"/>
+
+  <rect class="bx" x="24" y="188" width="196" height="76" rx="4"/>
+  <text class="dgm-t" x="122" y="212" text-anchor="middle">Health checker</text>
+  <text class="dgm-s" x="122" y="229" text-anchor="middle">:8788 · /health /status</text>
+  <text class="dgm-s" x="122" y="245" text-anchor="middle">the Dockerfile CMD</text>
+
+  <rect class="bx" x="244" y="188" width="196" height="76" rx="4"/>
+  <text class="dgm-t" x="342" y="212" text-anchor="middle">Agent REPL</text>
+  <text class="dgm-s" x="342" y="229" text-anchor="middle">python -m src.agent.cli</text>
+  <text class="dgm-s" x="342" y="245" text-anchor="middle">36 tools · 22 intents</text>
+
+  <rect class="bx" x="464" y="188" width="196" height="76" rx="4"/>
+  <text class="dgm-t" x="562" y="212" text-anchor="middle">Live rail loop</text>
+  <text class="dgm-s" x="562" y="229" text-anchor="middle">asyncio · paper only</text>
+  <text class="dgm-s" x="562" y="245" text-anchor="middle">not on active config</text>
+
+  <rect class="bx" x="684" y="188" width="172" height="76" rx="4"/>
+  <text class="dgm-t" x="770" y="212" text-anchor="middle">Streamlit</text>
+  <text class="dgm-s" x="770" y="229" text-anchor="middle">mt5_analytics sidecar</text>
+  <text class="dgm-s" x="770" y="245" text-anchor="middle">read-only</text>
+
+  <text class="dgm-l" x="24" y="304">Consequence worth stating plainly: because commands run as subprocesses, a package</text>
+  <text class="dgm-l" x="24" y="320">that no entrypoint imports is not necessarily dead — governance, training and analysis</text>
+  <text class="dgm-l" x="24" y="336">are reachable only through CommandSpec.script. Import-reachability alone would</text>
+  <text class="dgm-l" x="24" y="352">misclassify them. The inventory in §06 distinguishes the two cases.</text>
+
+  <defs>
+    <marker id="ar4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,1 L9,5 L0,9 z" fill="currentColor"/>
+    </marker>
+  </defs>
+</svg>
+</div>
+<figcaption>The control plane is a stdlib HTTP server with an inline single-page dashboard; it never runs trading code in-process.</figcaption>
+</figure>
+
+<h3>External integrations</h3>
+<p>Every one is behind an optional-import guard, and <code>pyproject.toml</code> declares <strong>zero base dependencies</strong>. That is a deliberate stance: the governance census modules are stdlib-only specifically so a CI floor can never fail for environment reasons.</p>
+<div class="tw"><table>
+<thead><tr><th>Integration</th><th>Where</th><th>Guard / note</th></tr></thead>
+<tbody>
+<tr><td>MetaTrader 5</td><td><code class="cite">live/mt5_bridge.py</code>, <code class="cite">inout/mt5_candle_fetcher.py</code></td><td><code>try/except ImportError</code> → <code>None</code>; corpus acquisition is offline, disjoint from the runtime rail</td></tr>
+<tr><td>llama.cpp (local)</td><td><code class="cite">config_layer/llm_inference_client.py</code></td><td><code>127.0.0.1:8080</code>, 2 s timeout, circuit breaker at 10 failures; stdlib <code>urllib</code>, no client library</td></tr>
+<tr><td>Groq (cloud)</td><td>3 separate callers — inference, agent, report API</td><td>Missing key disables silently with a log line; hand-rolled <code>.env</code> reader that never overwrites existing env vars</td></tr>
+<tr><td>Anthropic</td><td><code class="cite">control_plane/context_report.py</code></td><td>Optional import; provider defaults to a zero-cost <code>export</code> mode</td></tr>
+<tr><td>BitNet</td><td><code class="cite">src/bitnet/</code> and <code class="cite">governance/bitnet_governance_executor.py</code></td><td><strong>Two unrelated things share the name</strong> — a homegrown ternary net in numpy over JSON weights, and a shell-out to an external GGUF binary</td></tr>
+<tr><td>Binance WS · LongPort · TickDB</td><td><code class="cite">inout/live_rail/</code></td><td>Pluggable ports; paper data only, no orders. Shared <code>CircuitBreaker</code> + <code>ReconnectPolicy</code></td></tr>
+<tr><td>Hummingbot · AlphaVantage · Telegram · ChromaDB</td><td>fetchers, bridge, RAG sidecar</td><td>All optional extras</td></tr>
+</tbody></table></div>
+</section>
+
+<!-- ============ 06 ============ -->
+<section id="modules">
+<h2><span class="h2n">06</span>Module inventory — all 40 packages</h2>
+<p class="lede">The status column is the part no existing document has correctly. It separates four genuinely different conditions, because "not imported by the spine" means something different for governance than it does for a dead package.</p>
+
+<div class="legend">
+  <span><span class="pill p-spine">spine</span> on the live decision path</span>
+  <span><span class="pill p-plat">platform</span> its own process</span>
+  <span><span class="pill p-side">sidecar</span> off-spine by design, invoked as a subprocess or own entrypoint</span>
+  <span><span class="pill p-dead">dead</span> no reachable caller anywhere</span>
+</div>
+
+<div class="tw"><table>
+<thead><tr><th>Package</th><th class="num">Files</th><th class="num">LOC</th><th>Role</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td class="pkg">research/</td><td class="num">200</td><td class="num">41,280</td><td>Edge Discovery Program — 24 sub-packages (oracle, visual_crt, sujan_crt, mother_range, measurement…)</td><td><span class="pill p-side">sidecar</span></td></tr>
+<tr><td class="pkg">config_layer/</td><td class="num">34</td><td class="num">12,925</td><td>Config resolution, CRT engine v2, execution planner, state identity, LLM clients</td><td><span class="pill p-spine">spine</span> 25/34</td></tr>
+<tr><td class="pkg">governance/</td><td class="num">29</td><td class="num">11,958</td><td>Promotion gate, registries, Semantic OS, provenance spine</td><td><span class="pill p-side">sidecar</span> 0/29 by design</td></tr>
+<tr><td class="pkg">features/</td><td class="num">42</td><td class="num">11,147</td><td>Feature pipeline, canonical schema, SMC/structure, formula registry, lineage</td><td><span class="pill p-spine">spine</span> 27/42</td></tr>
+<tr><td class="pkg">runtime/</td><td class="num">15</td><td class="num">8,401</td><td><code>backtest_v2</code> (192 KB, largest file), live hook, live-rail orchestrator, baseline capture</td><td><span class="pill p-spine">spine</span> 6/15</td></tr>
+<tr><td class="pkg">core/</td><td class="num">21</td><td class="num">7,122</td><td>EngineRunner, FusionEngine, DecisionEngine, UltronRiskGate, FeatureStore, model registry</td><td><span class="pill p-spine">spine</span> 17/21</td></tr>
+<tr><td class="pkg">control_plane/</td><td class="num">11</td><td class="num">6,653</td><td>HTTP server, CommandSpec registry, JobManager, 4 API objects, monitors</td><td><span class="pill p-plat">platform</span></td></tr>
+<tr><td class="pkg">bitnet/</td><td class="num">23</td><td class="num">5,424</td><td>Ternary NN inference + parameter discovery, forward tester, zone validators</td><td><span class="pill p-spine">spine</span> 12/23</td></tr>
+<tr><td class="pkg">agent/</td><td class="num">28</td><td class="num">4,736</td><td>Intent router, plan compiler, executor, goal loop, 36 tools, REPL</td><td><span class="pill p-side">sidecar</span></td></tr>
+<tr><td class="pkg">utils/</td><td class="num">19</td><td class="num">4,479</td><td><code>jsonl_writer</code> (canonical), <code>parquet_store</code>, telemetry, integrity events</td><td><span class="pill p-spine">spine</span> 12/19</td></tr>
+<tr><td class="pkg">training/</td><td class="num">8</td><td class="num">4,251</td><td>Trainer, evaluator, dataset builders, calibration</td><td><span class="pill p-spine">spine</span> 3/8</td></tr>
+<tr><td class="pkg">data_ingestion/</td><td class="num">10</td><td class="num">3,691</td><td>Dataset integrity gates, clock detection, corpus admission, historical fetch</td><td><span class="pill p-spine">spine</span> 7/10</td></tr>
+<tr><td class="pkg">strategies/</td><td class="num">18</td><td class="num">3,385</td><td>10 strategies S1–S10 + orchestrator + <code>BaseStrategy</code> ABC</td><td><span class="pill p-spine">spine</span> 17/18</td></tr>
+<tr><td class="pkg">engines/</td><td class="num">13</td><td class="num">3,036</td><td>CRT, Gaussian (3 variants), ZoneGate, RR, TradeNet meta, trap validator</td><td><span class="pill p-spine">spine</span> 11/13</td></tr>
+<tr><td class="pkg">inout/</td><td class="num">14</td><td class="num">2,507</td><td>Candle fetchers + <code>live_rail/</code> (Binance WS, LongPort, TickDB, BarBuilder)</td><td><span class="pill p-spine">spine</span> 8/14</td></tr>
+<tr><td class="pkg">retrieval/</td><td class="num">9</td><td class="num">1,841</td><td>RAG over the codebase — chunking, embedding, ChromaDB, hybrid retrieval</td><td><span class="pill p-side">sidecar</span> 0/9</td></tr>
+<tr><td class="pkg">replay/</td><td class="num">6</td><td class="num">1,563</td><td>Replay memory, similarity index, drift governor, timing reconstructor</td><td><span class="pill p-spine">spine</span> 1/6</td></tr>
+<tr><td class="pkg">identity/</td><td class="num">8</td><td class="num">1,442</td><td>Phase 4/5 layer-identity store, Identity Check, query/replay</td><td><span class="pill p-side">sidecar</span> 0/8 by design</td></tr>
+<tr><td class="pkg">analytics/</td><td class="num">5</td><td class="num">1,169</td><td>Offline SL/TP comparison, loss clustering, performance metrics</td><td><span class="pill p-side">sidecar</span></td></tr>
+<tr><td class="pkg">msip/</td><td class="num">6</td><td class="num">1,055</td><td>Shadow continuous market state — <code>OBSERVATION_ONLY</code></td><td><span class="pill p-side">sidecar</span> 0/6 by design</td></tr>
+<tr><td class="pkg">uat/</td><td class="num">4</td><td class="num">962</td><td>UAT runner, Monte Carlo engine, kill switch</td><td><span class="pill p-spine">spine</span> 1/4</td></tr>
+<tr><td class="pkg">charts/</td><td class="num">4</td><td class="num">937</td><td>Own-corpus OHLC rendering with CRT-state colouring</td><td><span class="pill p-side">sidecar</span></td></tr>
+<tr><td class="pkg">interpreters/</td><td class="num">6</td><td class="num">820</td><td>Level-4 behaviour-agnostic event producers (point &amp; figure, regime observer)</td><td><span class="pill p-side">sidecar</span> 0/6</td></tr>
+<tr><td class="pkg">validation_access/</td><td class="num">3</td><td class="num">784</td><td>Sequential validation ladder — grants no runtime or promotion authority</td><td><span class="pill p-side">sidecar</span> 0/3 by design</td></tr>
+<tr><td class="pkg">llm_research/</td><td class="num">5</td><td class="num">759</td><td>Offline LLM pattern extraction → policy generation → forward validation</td><td><span class="pill p-dead">dead</span> 0/5</td></tr>
+<tr><td class="pkg">portfolio/</td><td class="num">6</td><td class="num">751</td><td>ExposureTracker, CorrelationEngine, CapitalPolicy</td><td><span class="pill p-dead">dead</span> 0/6</td></tr>
+<tr><td class="pkg">expansion/</td><td class="num">6</td><td class="num">692</td><td>Expansion Engine — controlled trade-frequency scaling</td><td><span class="pill p-side">sidecar</span> via governance bridge</td></tr>
+<tr><td class="pkg">regime/</td><td class="num">4</td><td class="num">684</td><td>RegimeClassifier + ConfigRouter (SAFE / BALANCED / AGGRESSIVE)</td><td><span class="pill p-spine">spine</span> 3/4</td></tr>
+<tr><td class="pkg">live/</td><td class="num">4</td><td class="num">642</td><td>MT5 order bridge, Telegram bridge, OrderManager</td><td><span class="pill p-spine">spine</span> 3/4</td></tr>
+<tr><td class="pkg">scanner/</td><td class="num">6</td><td class="num">493</td><td>Multi-symbol scanner + opportunity ranker</td><td><span class="pill p-side">sidecar</span> via CommandSpec</td></tr>
+<tr><td class="pkg">multi_llm/</td><td class="num">5</td><td class="num">459</td><td>Hand-operated cross-model coordination — isolated from the spine</td><td><span class="pill p-side">sidecar</span> 0/5</td></tr>
+<tr><td class="pkg">execution/</td><td class="num">5</td><td class="num">458</td><td>ExecutionLoop, AlertManager, OverrideHandler, ExecutionIntentV1</td><td><span class="pill p-dead">dead</span> tests only</td></tr>
+<tr><td class="pkg">search/</td><td class="num">1</td><td class="num">396</td><td><code>regime_weight_searcher</code> — no <code>__init__.py</code>, not a real package</td><td><span class="pill p-dead">dead</span> 0/1</td></tr>
+<tr><td class="pkg">cognitive/</td><td class="num">2</td><td class="num">381</td><td>CognitiveBus / DecisionSnapshot — async advisory plane</td><td><span class="pill p-side">sidecar</span> 1/2</td></tr>
+<tr><td class="pkg">journal/</td><td class="num">6</td><td class="num">357</td><td>Trade identity tiers 0A/0B, TradeRecord, logger</td><td><span class="pill p-spine">spine</span> 1/6</td></tr>
+<tr><td class="pkg">events/</td><td class="num">2</td><td class="num">203</td><td>Canonical Event Fabric — universal event envelope</td><td><span class="pill p-spine">spine</span> 1/2</td></tr>
+<tr><td class="pkg">monitoring/</td><td class="num">2</td><td class="num">196</td><td>Health checker — stdlib HTTP on :8788, the Docker CMD</td><td><span class="pill p-plat">platform</span></td></tr>
+<tr><td class="pkg">structure/</td><td class="num">2</td><td class="num">129</td><td>Governed CRT structural kernel — one shared geometry implementation</td><td><span class="pill p-spine">spine</span> 1/2</td></tr>
+<tr><td class="pkg">feedback/</td><td class="num">2</td><td class="num">126</td><td>AI feedback layer — offline LLM suggestions only</td><td><span class="pill p-dead">dead</span> 0/2</td></tr>
+<tr><td class="pkg">ui/</td><td class="num">1</td><td class="num">0</td><td>A single comment line, no code — superseded by the inline dashboard and <code>ui_kits/</code></td><td><span class="pill p-dead">dead</span></td></tr>
+</tbody></table></div>
+
+<div class="note">
+<h4>How status was determined, and its limit</h4>
+<p>Reachability is a static AST import closure from four entrypoint roots: the trading spine, the control-plane server, the agent CLI, and the live-rail orchestrator. That gives <strong>178 of 596 modules (30%)</strong>.</p>
+<p>The closure cannot see subprocess invocation. Governance, training, analysis and scanner packages are launched by <code>CommandSpec.script</code> as fresh processes, so they show 0 imports while being fully in use — hence <span class="pill p-side">sidecar</span> rather than <span class="pill p-dead">dead</span>. The <span class="pill p-dead">dead</span> label is reserved for packages with no reachable caller by any route.</p>
+<p><code>src/logs/</code> is not a package at all — it holds two stray JSONL files sitting inside the source tree.</p>
+</div>
+</section>
+
+<!-- ============ 07 ============ -->
+<section id="config">
+<h2><span class="h2n">07</span>Configuration and promotion</h2>
+<p class="lede">Version truth is file-driven and branch-scoped, never inferred. One pointer file decides what the system is.</p>
+
+<figure>
+<div class="figbox">
+<svg viewBox="0 0 860 320" role="img" aria-label="A candidate config passes through ConfigValidator hard and soft gates; only an APPROVE decision lets PromotionManager write the config, append the promotion log and flip the ACTIVE_VERSION pointer.">
+  <rect class="bx" x="24" y="46" width="176" height="60" rx="4"/>
+  <text class="dgm-t" x="112" y="70" text-anchor="middle">Candidate config</text>
+  <text class="dgm-s" x="112" y="87" text-anchor="middle">tuner checkpoint or hand-written</text>
+
+  <rect class="bx-acc" x="248" y="46" width="192" height="60" rx="4"/>
+  <text class="dgm-t" x="344" y="70" text-anchor="middle">ConfigValidator.validate</text>
+  <text class="dgm-s" x="344" y="87" text-anchor="middle">per-instrument backtest</text>
+
+  <rect class="bx-acc" x="488" y="46" width="176" height="60" rx="4"/>
+  <text class="dgm-t" x="576" y="70" text-anchor="middle">PromotionManager</text>
+  <text class="dgm-s" x="576" y="87" text-anchor="middle">requires APPROVE</text>
+
+  <rect class="bx-live" x="712" y="46" width="144" height="60" rx="4"/>
+  <text class="dgm-t" x="784" y="70" text-anchor="middle">ACTIVE_VERSION</text>
+  <text class="dgm-s" x="784" y="87" text-anchor="middle">the only runtime truth</text>
+
+  <line class="ln" x1="200" y1="76" x2="242" y2="76" marker-end="url(#ar5)"/>
+  <line class="ln-acc" x1="440" y1="76" x2="482" y2="76" marker-end="url(#ar5a)"/>
+  <line class="ln-acc" x1="664" y1="76" x2="706" y2="76" marker-end="url(#ar5a)"/>
+
+  <path class="ln-dash" d="M344 106 L344 140 L112 140 L112 112" marker-end="url(#ar5)"/>
+  <text class="dgm-l" x="352" y="132" fill="var(--dead)">REJECT — hard gate failed</text>
+
+  <text class="dgm-l" x="248" y="176">Hard gates: ≥10 trades · drawdown ≤35% · fitness ≥0.15</text>
+  <text class="dgm-l" x="248" y="192">Soft gates: win rate &lt;35% · expectancy &lt;−0.5R · cross-instrument variance</text>
+
+  <rect class="bx" x="488" y="212" width="368" height="76" rx="4"/>
+  <text class="dgm-t" x="672" y="235" text-anchor="middle">promotion_log.jsonl — append-only</text>
+  <text class="dgm-s" x="672" y="253" text-anchor="middle">PROMOTED · REGISTERED · PROMOTION_FAILED</text>
+  <text class="dgm-s" x="672" y="269" text-anchor="middle">SHA-256 config_hash per entry · 17 lines today</text>
+  <line class="ln" x1="576" y1="106" x2="576" y2="206" marker-end="url(#ar5)"/>
+
+  <text class="dgm-l" x="24" y="235">Truth precedence</text>
+  <text class="dgm-s" x="24" y="253">0 ACTIVE_VERSION · 1 in-code schema</text>
+  <text class="dgm-s" x="24" y="269">2 promotion log · 3 docs · 4 memory</text>
+  <text class="dgm-s" x="24" y="285">A lower tier never overrides a higher one.</text>
+
+  <defs>
+    <marker id="ar5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,1 L9,5 L0,9 z" fill="currentColor"/>
+    </marker>
+    <marker id="ar5a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,1 L9,5 L0,9 z" fill="var(--accent)"/>
+    </marker>
+  </defs>
+</svg>
+</div>
+<figcaption>Promotion is the only path to production. <code>get_active_version()</code> fail-fasts with a <code>RuntimeError</code> if the pointer is missing, so the runtime cannot silently fall back to a default.</figcaption>
+</figure>
+
+<h3>What is active, and what merely exists</h3>
+<div class="tw"><table>
+<thead><tr><th>Version</th><th class="num">Sections</th><th>State</th></tr></thead>
+<tbody>
+<tr><td class="pkg">v2_htfcrt_2026_08</td><td class="num">46</td><td><span class="pill p-spine">active</span> promoted 2026-08-15 — what the system runs on this branch</td></tr>
+<tr><td class="pkg">v3_unified_market_structure_2026_09</td><td class="num">49</td><td><span class="pill p-side">registered</span> adds bar-structure snapshot, parquet, context attribution</td></tr>
+<tr><td class="pkg">v4_crt_sot_2026_08</td><td class="num">—</td><td><span class="pill p-side">registered</span> not promoted</td></tr>
+<tr><td class="pkg">v2_multi_2026_04</td><td class="num">—</td><td><span class="pill p-side">active on branch <code>patch</code></span> — this is why ~15 docs cite it</td></tr>
+</tbody></table></div>
+<p>25 config JSONs sit in <code class="cite">configs/production/</code>, including timestamped archives and shadow variants used for A/B measurement. Editing anything inside the <code>params</code> block changes the config hash and requires a re-hash; new top-level sections are hash-neutral.</p>
+
+<div class="note">
+<h4>Config-first doctrine — tunability is not authority</h4>
+<p>Behavioural constants live in config, structural ones stay in code. A knob becoming config-driven grants the ability to tune it; it never grants the right to influence production. Only a measured improvement against the system's goal metric does that. This is why several engines above are config-tunable and simultaneously recorded as having no authority.</p>
+</div>
+</section>
+
+<!-- ============ 08 ============ -->
+<section id="data">
+<h2><span class="h2n">08</span>Data and persistence</h2>
+<p class="lede">Append-only JSONL is the system of record. Everything else — Parquet, registries, reports — is a derived, regenerable projection.</p>
+
+<div class="stats">
+  <div class="stat"><div class="v">26&nbsp;GB</div><div class="k"><code>logs/</code> — 1,108 JSONL telemetry streams</div></div>
+  <div class="stat"><div class="v">16&nbsp;GB</div><div class="k"><code>results/</code> — run state, identity certification</div></div>
+  <div class="stat"><div class="v">1.6&nbsp;GB</div><div class="k"><code>data/</code> — OHLCV corpora and registries</div></div>
+  <div class="stat"><div class="v">3,549</div><div class="k">JSONL files total; 23 of them tracked in git</div></div>
+</div>
+
+<h3>The projection contract</h3>
+<p>The Parquet layer states its own rules: the JSONL file stays the system of record, and a projection is lossless (key <em>absence</em> is distinguished from explicit null), never stale (a sidecar manifest pins source size, mtime and SHA-256 — a mismatch is ignored and reads fall back to JSONL), and optional (absent <code>pyarrow</code> degrades, never raises).</p>
+
+<h3>Layer identity — seven layers, five statuses</h3>
+<p><code class="cite">src/identity/</code> implements a content-addressed store under three frozen contracts. Its governing invariant is worth quoting because it shapes the whole persistence design:</p>
+<p style="font-family:'IBM Plex Mono',monospace;font-size:15px;padding:12px 16px;background:var(--panel);border-left:3px solid var(--accent);border-radius:0 4px 4px 0;max-width:none;display:inline-block">RECOMPUTE != RECOVER</p>
+<p>Re-running today's pipeline over yesterday's CSV produces a <em>new</em> object, not the old one. So the Identity Check compares caller-supplied snapshot bytes and never HEAD declarations, and it deliberately refuses to import <code>feature_pipeline</code>, <code>crt_engine</code>, or any walk or cost kernel — importing them would let recomputation masquerade as recovery. Layers are <code>L0</code> bars, <code>L1</code> features, <code>L2</code> feature states, <code>L3</code> occupancy and events, <code>L4</code> trade geometry, <code>L5</code> outcome. Statuses are <code>PRESERVED</code>, <code>UNIDENTIFIED</code>, <code>IDENTITY_MISMATCH</code>, <code>IDENTITY_INCOMPLETE</code>, <code>UNJOINABLE</code>.</p>
+
+<div class="note warn">
+<h4>A clone does not have the lineage</h4>
+<p><code>data/</code> and <code>logs/</code> are both gitignored by design, classified <code>LOCAL_BLOB</code> and <code>LOCAL_TELEMETRY</code>. The stated consequence: a clone recaptures telemetry but cannot recover a historical occupancy series from git. The 2.0 GB identity certification store under <code>results/identity_cert/</code> is the largest single artifact in the tree and is, by contract, not recoverable from the repository.</p>
+</div>
+</section>
+
+<!-- ============ 09 ============ -->
+<section id="build">
+<h2><span class="h2n">09</span>Build, test and CI</h2>
+<p class="lede">The full test suite is explicitly not the gate. A curated floor is — and the reasoning behind that choice is itself recorded as doctrine.</p>
+
+<div class="tw"><table>
+<thead><tr><th>Surface</th><th>What it is</th></tr></thead>
+<tbody>
+<tr><td><code class="cite">check_governance_invariants.py --all</code></td><td><strong>The authoritative floor.</strong> 25 curated pytest targets. The pre-commit hook and CI call this same script, so hook and CI cannot drift.</td></tr>
+<tr><td><code class="cite">.github/workflows/governance.yml</code></td><td>Runs the green floor on Python 3.10.</td></tr>
+<tr><td><code class="cite">.github/workflows/erp-test-harness.yml</code></td><td>Path-scoped green subset with <code>-m "not slow"</code>. Has to <code>pip install pandas pyyaml numpy</code> manually because the project declares no base deps.</td></tr>
+<tr><td><code class="cite">hooks/pre-commit</code></td><td>Runs the floor when a governed path is staged. Install once with <code>git config core.hooksPath hooks</code>.</td></tr>
+<tr><td><code class="cite">hooks/commit-msg</code></td><td>A commit touching <code>src/**</code> or <code>configs/production/**</code> needs a same-day session-log entry, or <code>[nolog]</code>.</td></tr>
+<tr><td><code>pytest</code> (whole)</td><td>Diagnostic only. Carries ~66 known failures; last full run 1:04:28.</td></tr>
+</tbody></table></div>
+
+<div class="note">
+<h4>Why the gate is curated rather than complete</h4>
+<p>Stated directly in the workflow YAML: a permanently-red gate enforces nothing and is itself decorative wiring. The floor grows monotonically as failures are genuinely fixed, and is never replaced by the whole suite. There is no <code>--strict-markers</code> for the same reason — strict mode would break collection on the known reds.</p>
+</div>
+
+<h3>Environment</h3>
+<p><code>pyproject.toml</code> declares <strong>zero base dependencies</strong> — only five optional extras (<code>parquet</code>, <code>charts</code>, <code>live_rail</code>, <code>mt5_analytics</code>, <code>hummingbot</code>). Ten pytest markers carry graduated risk, up to <code>capital_micro: owner-gated real capital — never default</code>.</p>
+
+<div class="note warn">
+<h4>Three interpreters, one intended</h4>
+<p><code>venv/</code> is Python <strong>3.12.10</strong> with pytest and the scientific stack — the one the session-start hook asserts and the one to use. <code>.venv/</code> is a stray Python 3.14 environment with no pytest, so every floor above is unrunnable under it. CI pins 3.10. Bare <code>python</code> on PATH is the Windows Store shim, neither of them. Always invoke the interpreter by path.</p>
+</div>
+</section>
+
+<!-- ============ 10 ============ -->
+<section id="drift">
+<h2><span class="h2n">10</span>Known drift and open observations</h2>
+<p class="lede">Stated with evidence so a reader is not misled by the older documents, and so nothing here is mistaken for an adjudicated conclusion.</p>
+
+<h3>Documentation drift</h3>
+<div class="tw"><table>
+<thead><tr><th>Claim in the docs</th><th>Measured</th><th>Class</th></tr></thead>
+<tbody>
+<tr><td>206 modules / 31 packages — <code class="cite">code-map.md</code></td><td rowspan="3">596 <code>.py</code> across 40 code packages</td><td rowspan="3">stale generated artifact — <code>gen_code_map.py</code> would refresh it</td></tr>
+<tr><td>351 / 36 — <code class="cite">codebase-wiring-guide.md</code>, <code class="cite">three-layer-codebase-atlas.md</code></td></tr>
+<tr><td>504 / 38 — <code class="cite">code-map.generated.md</code></td></tr>
+<tr><td>~15 docs anchored to <code>v2_multi_2026_04</code></td><td>True on branch <code>patch</code>; this branch is <code>v2_htfcrt_2026_08</code></td><td>not an error — truth is branch-scoped. The gap is that no doc states which branch it describes</td></tr>
+<tr><td><code>PLAN_REGISTRY</code> docstring says "All 14 intents"</td><td>22 entries</td><td>stale comment</td></tr>
+<tr><td><code class="cite">live_rail/__init__.py</code>: "Unwired — no HookedLiveEngine caller"</td><td><code>live_rail_orchestrator.py:258</code> is now that caller</td><td>stale comment</td></tr>
+</tbody></table></div>
+
+<h3>Two observations from this pass</h3>
+
+<div class="note warn">
+<h4>A · Sixty source modules are untracked, including load-bearing ones</h4>
+<p><code class="cite">config_layer/state_identity.py:71</code> imports from <code>config_layer/_crt_state_generated.py</code>, and that file is <strong>not tracked by git</strong> — and not gitignored either; it is simply absent from the commit. Also untracked: <code>data_ingestion/corpus_gate.py</code> (called by the backtest preflight), <code>governance/semantic_grounding.py</code>, and the entire <code>src/identity/</code> package.</p>
+<p>A fresh clone of this branch therefore cannot import <code>state_identity</code>, which means no <code>CRTState</code> and no <code>VALID_TRANSITIONS</code> — the CRT spine will not load. This is the same failure mode as <code class="cite">F-071</code> ("the committed repository was not the running system"), which was recorded as resolved on 2026-08-09 and has recurred at 60 modules.</p>
+</div>
+
+<div class="note">
+<h4>B · Config-declared fusion weights do not reach behaviour</h4>
+<p><code>EngineRunner.__init__</code> strictly reads <code>weight_crt/gaussian/zone_gate/rr</code> into <code>FusionConfig</code> — the active config declares <code>0.40/0.20/0.20/0.20</code>. But it does not pass <code>regime_fusion_weights</code>, so the hardcoded per-regime table stands; <code>run()</code> always calls <code>compute(…, regime=…)</code>; and <code>compute()</code> prefers the regime table whenever a regime is passed. <code>regime_fusion_weights</code> appears <strong>zero times</strong> in the active config.</p>
+<p>This is deliberately <em>not</em> labelled a defect here. The <code>compute()</code> docstring documents that priority order, so the mechanism is intentional. What is notable is config declaring tunable weights that never reach behaviour — the same lesson as <code class="cite">F-056</code>: presence and a strict read are not governance until the value reaches behaviour. Adjudicating it is a separate, authorised piece of work.</p>
+</div>
+
+<h3>What this page does not claim</h3>
+<ul>
+<li>Nothing here grants authority to any component. Recorded findings are cited by their identifier as existing conclusions, not re-derived.</li>
+<li>Module status is reachability, not correctness. A package marked <span class="pill p-spine">spine</span> is on the path; whether its decisions are good is a separate, and largely open, question (<code class="cite">F-010</code>).</li>
+<li>Every figure was measured on branch <code>feature/truth-registry-v2</code> on 2026-09-05. Counts on another branch will differ, and that is expected rather than a contradiction.</li>
+</ul>
+
+<div class="foot">
+Measured from source in a single session: package census by <code>find</code>/<code>wc</code>, schema dimension by importing <code>CANONICAL_FEATURES</code>, command and tool counts by importing the registries, citations verified line by line. Reachability is a static AST import closure from four entrypoint roots and cannot see subprocess invocation — see §06.
+</div>
+</section>
+
+</main>
+</div>
+
+</body></html>

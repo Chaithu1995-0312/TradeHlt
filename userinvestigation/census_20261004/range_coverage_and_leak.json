@@ -1,0 +1,60 @@
+{
+  "run_id": "run_20260930_163142",
+  "bars": 47197,
+  "impulse_gate": {
+    "body_atr": 1.2,
+    "range_atr": 1.5,
+    "body_ratio": 0.65
+  },
+  "impulse_pass": 2649,
+  "pct": 5.61,
+  "per_month": 110.4,
+  "engine_sweep_detected": 1792,
+  "engine_displacement_confirmed": 399,
+  "overlap_with_sweep": 175,
+  "overlap_pct": 6.61,
+  "by_state_before": [
+    {
+      "state_before": "RANGE",
+      "impulse_bars": 1185,
+      "pct": 44.73,
+      "swept": 175,
+      "conv_pct": 14.77
+    },
+    {
+      "state_before": "SWEEP",
+      "impulse_bars": 901,
+      "pct": 34.01,
+      "swept": 0,
+      "conv_pct": 0.0
+    },
+    {
+      "state_before": "EXPANSION",
+      "impulse_bars": 494,
+      "pct": 18.65,
+      "swept": 0,
+      "conv_pct": 0.0
+    },
+    {
+      "state_before": "DISPLACEMENT",
+      "impulse_bars": 64,
+      "pct": 2.42,
+      "swept": 0,
+      "conv_pct": 0.0
+    },
+    {
+      "state_before": "RETEST",
+      "impulse_bars": 4,
+      "pct": 0.15,
+      "swept": 0,
+      "conv_pct": 0.0
+    },
+    {
+      "state_before": "EXECUTION",
+      "impulse_bars": 1,
+      "pct": 0.04,
+      "swept": 0,
+      "conv_pct": 0.0
+    }
+  ]
+}

@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FM id and value</title>
+<style>
+body { margin: 24px; font: 14px/1.45 ui-sans-serif, system-ui, sans-serif; color: #142033; background: #f6f8fb; }
+table { border-collapse: collapse; width: 100%; background: #fff; }
+th, td { border: 1px solid #d5deea; padding: 8px 10px; text-align: left; vertical-align: top; }
+th { background: #e8eef6; font-size: 12px; letter-spacing: .04em; text-transform: uppercase; }
+td:first-child { font-family: ui-monospace, monospace; white-space: nowrap; font-weight: 700; }
+td:last-child { font-family: ui-monospace, monospace; font-size: 12px; white-space: pre-wrap; }
+.count { margin: 0 0 12px; font-size: 18px; font-weight: 700; }
+</style>
+</head>
+<body>
+<p class="count">Total FM: 111</p>
+<table>
+<thead><tr><th>FM id</th><th>Value</th></tr></thead>
+<tbody>
+<tr><td>FM-001</td><td>abs(close - open)</td></tr>
+<tr><td>FM-002</td><td>high - low</td></tr>
+<tr><td>FM-003</td><td>high - max(open, close)</td></tr>
+<tr><td>FM-004</td><td>min(open, close) - low</td></tr>
+<tr><td>FM-005</td><td>upper_wick + lower_wick</td></tr>
+<tr><td>FM-010</td><td>body_size / candle_range</td></tr>
+<tr><td>FM-011</td><td>upper_wick / candle_range</td></tr>
+<tr><td>FM-012</td><td>lower_wick / candle_range</td></tr>
+<tr><td>FM-013</td><td>body_size / total_wick</td></tr>
+<tr><td>FM-020</td><td>clip(body_size / (atr * close), &lt;feature_pipeline.disp_strength_clip_low&gt;, &lt;feature_pipeline.disp_strength_clip_high&gt;) if atr&gt;0 and close&gt;0 else nan # defaults 0.0, 3.0</td></tr>
+<tr><td>FM-021</td><td>clip(abs(close - ema_fast) / (atr * close), &lt;feature_pipeline.retest_depth_clip_low&gt;, &lt;feature_pipeline.retest_depth_clip_high&gt;) if retest_flag==1 and atr&gt;0 and close&gt;0 else 0.0 # defaults 0.0, 1.0</td></tr>
+<tr><td>FM-022</td><td>(ema_fast - ema_slow) / atr if atr&gt;0 else nan # emitted only when &lt;feature_pipeline.normalization_basis&gt; == 'atr_relative' (the default); 'atr_absolute' selects FM-030 instead</td></tr>
+<tr><td>FM-023</td><td>close_delta / atr if atr&gt;0 else nan # close_delta = close.diff(); emitted only when &lt;feature_pipeline.normalization_basis&gt; == 'atr_relative' (the default); 'atr_absolute' selects FM-031 instead</td></tr>
+<tr><td>FM-024</td><td>(high - low) / (atr * close) if atr&gt;0 and close&gt;0 else 1.0</td></tr>
+<tr><td>FM-025</td><td>min over levels of abs(close - level) / (atr * close), clipped &gt;= 0; nan if atr*close&lt;=0 or no finite level</td></tr>
+<tr><td>FM-026</td><td>clip(exp(&lt;feature_pipeline.liquidity_decay_coeff&gt; * liquidity_distance), 0.0, 1.0); nan distance -&gt; treated as &lt;feature_pipeline.liquidity_nan_sentinel&gt; # defaults -0.5, 10.0</td></tr>
+<tr><td>FM-027</td><td>clip(|retest_close - disp_open| / |disp_close - disp_open|, 0.0, 1.0); disp body 0 -&gt; skip</td></tr>
+<tr><td>FM-028</td><td>candle_range / atr_abs; atr_abs&lt;=0 -&gt; 0.0 # atr_abs = SMA(period) of true_range, ABSOLUTE price units (state.atr_abs, now registered as FM-074 atr_absolute), NOT the close-relative FM-041 `atr`</td></tr>
+<tr><td>FM-029</td><td>disp_strength / atr; atr&lt;=0 -&gt; 0.0</td></tr>
+<tr><td>FM-030</td><td>(ema_fast - ema_slow) / (atr * close) if atr&gt;0 and close&gt;0 else nan # emitted only when &lt;feature_pipeline.normalization_basis&gt; == 'atr_absolute'; the default 'atr_relative' selects FM-022 instead</td></tr>
+<tr><td>FM-031</td><td>close_delta / (atr * close) if atr&gt;0 and close&gt;0 else nan # close_delta = close.diff(); emitted only when &lt;feature_pipeline.normalization_basis&gt; == 'atr_absolute'; the default 'atr_relative' selects FM-023 instead</td></tr>
+<tr><td>FM-040</td><td>max(high - low, abs(high - prev_close), abs(low - prev_close))</td></tr>
+<tr><td>FM-041</td><td>SMA(&lt;feature_pipeline.atr_period&gt;) of true_range, close-relative: atr_14_raw / close (atr_14_raw = true_range.rolling(&lt;feature_pipeline.atr_period&gt;).mean()) # default 14</td></tr>
+<tr><td>FM-042</td><td>100 - 100/(1+RS); RS = SMA(&lt;feature_pipeline.rsi_period&gt;) gain / (SMA(&lt;feature_pipeline.rsi_period&gt;) loss + 1e-9); clipped [0,100] # default period 14</td></tr>
+<tr><td>FM-043</td><td>close.ewm(span=&lt;feature_pipeline.ema_fast_span&gt;, adjust=False).mean() # default 9</td></tr>
+<tr><td>FM-044</td><td>close.ewm(span=&lt;feature_pipeline.ema_slow_span&gt;, adjust=False).mean() # default 21</td></tr>
+<tr><td>FM-045</td><td>causal DELAYED publication of a centered rolling-max swing high over width 2k+1 (FC1-A: math at t, published with k-bar delay, available_at = t+k); k = &lt;feature_pipeline.swing_window&gt; # default 2</td></tr>
+<tr><td>FM-046</td><td>causal DELAYED publication of a centered rolling-min swing low over width 2k+1 (FC1-A); k = &lt;feature_pipeline.swing_window&gt; # default 2</td></tr>
+<tr><td>FM-047</td><td>close.ewm(span=&lt;feature_pipeline.macd_fast&gt;, adjust=False).mean() - close.ewm(span=&lt;feature_pipeline.macd_slow&gt;, adjust=False).mean() # defaults 12, 26</td></tr>
+<tr><td>FM-048</td><td>macd_line.ewm(span=&lt;feature_pipeline.macd_signal&gt;, adjust=False).mean() # default 9</td></tr>
+<tr><td>FM-049</td><td>macd_line - macd_signal</td></tr>
+<tr><td>FM-050</td><td>tercile(atr_14.rolling(&lt;feature_pipeline.volatility_percentile_window&gt;, min_periods=1).rank(pct=True)); atr_14 = SMA(14) of true_range (ABSOLUTE); cuts at &lt;feature_pipeline.volatility_tercile_low&gt;/&lt;feature_pipeline.volatility_tercile_high&gt; -&gt; int8 {0,1,2} # defaults 200, 0.33/0.66</td></tr>
+<tr><td>FM-051</td><td>timestamp.dt.hour -&gt; int8</td></tr>
+<tr><td>FM-052</td><td>window model over &lt;feature_pipeline.session_windows_utc&gt;, half-open [start, end): OVERLAP if in LONDON and NEWYORK; else NEWYORK; else LONDON; else ASIA; else CLOSED -&gt; int8 # defaults ASIA [0,9) LONDON [7,16) NEWYORK [12,21)</td></tr>
+<tr><td>FM-053</td><td>rolling(&lt;feature_pipeline.zscore_window&gt;) z-score of macd_hist_raw # default 50</td></tr>
+<tr><td>FM-054</td><td>sign(ema_fast - ema_slow) -&gt; float32 {-1, 0, +1}</td></tr>
+<tr><td>FM-055</td><td>high &gt; prev(last_swing_high_price) -&gt; int8 {0, 1}; NaN reference compares False</td></tr>
+<tr><td>FM-056</td><td>low &lt; prev(last_swing_low_price) -&gt; int8 {0, 1}; NaN reference compares False</td></tr>
+<tr><td>FM-057</td><td>+1 if close &gt; prev(last_swing_high_price); -1 if close &lt; prev(last_swing_low_price); else 0 -&gt; int8</td></tr>
+<tr><td>FM-058</td><td>+1 if high &gt; ref_high and close &lt;= ref_high; -1 if low &lt; ref_low and close &gt;= ref_low; else 0 -&gt; int8 # ref_* = prev(last_swing_*_price)</td></tr>
+<tr><td>FM-059</td><td>liquidity_sweep != 0 -&gt; int8 {0, 1}</td></tr>
+<tr><td>FM-060</td><td>any(liquidity_sweep &gt; 0) and any(liquidity_sweep &lt; 0) over rolling(&lt;feature_pipeline.double_sweep_window&gt;, min_periods=1) -&gt; int8 {0, 1} # default 5</td></tr>
+<tr><td>FM-061</td><td>rolling_any(liquidity_sweep != 0, &lt;feature_pipeline.retest_lookback&gt;) and abs(close - ema_fast) &lt;= &lt;feature_pipeline.retest_atr_band_mult&gt; * atr * close -&gt; int8 {0, 1} # defaults 10, 1.0</td></tr>
+<tr><td>FM-062</td><td>volume / SMA(volume, &lt;feature_pipeline.volume_ma_window&gt;); 1.0 where the moving average is &lt;= 0 # default 20</td></tr>
+<tr><td>FM-063</td><td>volume_ratio &gt; rolling(&lt;feature_pipeline.volume_spike_adaptive_window&gt;, min_periods=&lt;feature_pipeline.volume_spike_min_samples&gt;).quantile(&lt;feature_pipeline.volume_spike_percentile&gt;/100); where that threshold is NaN fall back to &lt;feature_pipeline.volume_spike_fixed_fallback&gt; -&gt; int8 {0, 1} # defaults 50, 20, 75, 1.5</td></tr>
+<tr><td>FM-064</td><td>rolling(&lt;feature_pipeline.zscore_window&gt;) z-score of SMA(&lt;feature_pipeline.trend_strength_window&gt;) of diff(SMA(&lt;feature_pipeline.ma_periods[0]&gt;) of close) # defaults 50, 10, 20</td></tr>
+<tr><td>FM-065</td><td>cumcount of bars since the last liquidity_sweep event (groupby (liquidity_sweep != 0).cumsum()); 0 before the first sweep. Falls back to a retest_flag-keyed grouping ONLY when liquidity_sweep is absent from the frame (feature_pipeline.py:988-991) — non-authoritative, unreachable in production per the certification ledger.</td></tr>
+<tr><td>FM-066</td><td>forward-fill of high where the centered swing-high pivot fired, then shifted by k = &lt;feature_pipeline.swing_window&gt; (FC1-A causal publication) # default 2</td></tr>
+<tr><td>FM-067</td><td>forward-fill of low where the centered swing-low pivot fired, then shifted by k = &lt;feature_pipeline.swing_window&gt; (FC1-A causal publication) # default 2</td></tr>
+<tr><td>FM-068</td><td>+1 if rsi_14 &gt; &lt;feature_pipeline.rsi_overbought&gt;; -1 if rsi_14 &lt; &lt;feature_pipeline.rsi_oversold&gt;; else 0 -&gt; int8 # defaults 70, 30</td></tr>
+<tr><td>FM-069</td><td>body_size &gt; candle_range * &lt;feature_pipeline.displacement_strong_body_mult&gt; and atr &gt; 0 -&gt; int8 {0, 1} # default 0.6</td></tr>
+<tr><td>FM-070</td><td>current_candle_index - retest_candle_index</td></tr>
+<tr><td>FM-071</td><td>bin(body_ratio; band_edges) -&gt; int8 {0,1,2} # identity transform; edges ontology-owned</td></tr>
+<tr><td>FM-072</td><td>bin(percentile_rank(atr | series); band_edges) -&gt; int8 {0,1,2} # series percentile of FM-041 relative atr</td></tr>
+<tr><td>FM-073</td><td>bin(percentile_rank(|momentum_score| | series); band_edges) -&gt; int8 {0,1,2} # F-061: never fixed abs edges on legacy FM-023</td></tr>
+<tr><td>FM-074</td><td>SMA(&lt;feature_pipeline.atr_period&gt;) of true_range, ABSOLUTE price units (no division by close): true_range.rolling(&lt;feature_pipeline.atr_period&gt;).mean() # default 14</td></tr>
+<tr><td>FM-075</td><td>tanh(sign * (close - order_block_zone_edge) / atr); 0.0 if no active OB or atr&lt;=0</td></tr>
+<tr><td>FM-076</td><td>tanh(sign * (close - fvg_zone_edge) / atr); 0.0 if no active FVG or atr&lt;=0</td></tr>
+<tr><td>FM-077</td><td>tanh(sign * (close - breaker_zone_edge) / atr); 0.0 if no active breaker or atr&lt;=0</td></tr>
+<tr><td>FM-078</td><td>tanh(sign * (close - mitigation_zone_edge) / atr); 0.0 if no live mitigation block or atr&lt;=0</td></tr>
+<tr><td>FM-079</td><td>tanh(-(close - prev_day_high) / atr); 0.0 if no closed D1 parent yet or atr&lt;=0</td></tr>
+<tr><td>FM-080</td><td>tanh((close - prev_day_low) / atr); 0.0 if no closed D1 parent yet or atr&lt;=0</td></tr>
+<tr><td>FM-081</td><td>tanh(-(close - eqh_level) / atr); 0.0 if no equal-highs cluster found or atr&lt;=0</td></tr>
+<tr><td>FM-082</td><td>tanh((close - eql_level) / atr); 0.0 if no equal-lows cluster found or atr&lt;=0</td></tr>
+<tr><td>FM-083</td><td>break_of_structure if sign(break_of_structure) != sign(trend_bias) and both nonzero, else 0</td></tr>
+<tr><td>FM-084</td><td>SMA(&lt;feature_pipeline.trend_strength_window&gt;) of diff(SMA(&lt;feature_pipeline.ma_periods[0]&gt;) of close) # defaults 10, 20</td></tr>
+<tr><td>FM-085</td><td>identity — raw bar-open price as ingested from the broker/data feed; no transform</td></tr>
+<tr><td>FM-086</td><td>identity — raw bar-high price as ingested from the broker/data feed; no transform</td></tr>
+<tr><td>FM-087</td><td>identity — raw bar-low price as ingested from the broker/data feed; no transform</td></tr>
+<tr><td>FM-088</td><td>identity — raw bar-close price as ingested from the broker/data feed; no transform</td></tr>
+<tr><td>FM-089</td><td>identity — raw bar volume as ingested from the broker/data feed; no transform</td></tr>
+<tr><td>FM-090</td><td>+1 if any ACTIVE UPPER swing_pivot(k) level is swept (high &gt; L and close &lt; L) on the bar; else -1 if any ACTIVE LOWER level is swept (low &lt; L and close &gt; L); else 0 -&gt; int8. A level is ACTIVE from its available_at bar until it is swept (SWEPT) or closed beyond (BROKEN). Emitted only when &lt;feature_pipeline.sweep_semantics&gt; == 'e01_lifecycle'; the default selects FM-058.</td></tr>
+<tr><td>FM-091</td><td>liquidity_sweep_e01 != 0 -&gt; int8 {0, 1} (= at least one MKT-E01 event on the bar). Emitted only when &lt;feature_pipeline.sweep_semantics&gt; == 'e01_lifecycle'; the default selects FM-059.</td></tr>
+<tr><td>FM-092</td><td>MKT-C04 v2: at least one UPPER and at least one LOWER MKT-E01 event (FM-090 lifecycle, per side, NOT the signed slot) within rolling(&lt;feature_pipeline.double_sweep_window&gt;) bars, bar i included -&gt; int8 {0, 1}. Emitted only when &lt;feature_pipeline.sweep_semantics&gt; == 'e01_lifecycle'; the default selects FM-060.</td></tr>
+<tr><td>FM-093</td><td>cumcount of bars since the last MKT-E01 event (groupby (liquidity_sweep_e01 != 0).cumsum(); a bar with any lifecycle sweep event resets it to 0); 0 before the first event. Emitted only when &lt;feature_pipeline.sweep_semantics&gt; == 'e01_lifecycle'; the default selects FM-065.</td></tr>
+<tr><td>FM-094</td><td>rolling_any(liquidity_sweep_e01 != 0, &lt;feature_pipeline.retest_lookback&gt;) and abs(close - ema_fast) &lt;= &lt;feature_pipeline.retest_atr_band_mult&gt; * atr * close -&gt; int8 {0, 1}. Emitted only when &lt;feature_pipeline.sweep_semantics&gt; == 'e01_lifecycle'; the default selects FM-061.</td></tr>
+<tr><td>FM-095</td><td>clip(abs(close - ema_fast) / (atr * close), &lt;feature_pipeline.retest_depth_clip_low&gt;, &lt;feature_pipeline.retest_depth_clip_high&gt;) if retest_flag_e01==1 and atr&gt;0 and close&gt;0 else 0.0. Emitted at vector slot retest_depth only when &lt;feature_pipeline.sweep_semantics&gt; == 'e01_lifecycle'; the default selects FM-021.</td></tr>
+<tr><td>FM-096</td><td>(disp_close - retest_close) / (disp_close - disp_open); unclipped; disp body 0 -&gt; 0.0</td></tr>
+<tr><td>FM-097</td><td>1.0 if an unmitigated order block exists as of the bar (find_active_order_block) else 0.0</td></tr>
+<tr><td>FM-098</td><td>1.0 if an unfilled fair value gap exists as of the bar (find_active_fvg) else 0.0</td></tr>
+<tr><td>FM-099</td><td>1.0 if an un-retested breaker exists as of the bar (find_active_breaker) else 0.0</td></tr>
+<tr><td>FM-100</td><td>1.0 if a live mitigation block exists as of the bar (find_active_mitigation_block) else 0.0</td></tr>
+<tr><td>FM-101</td><td>1.0 if an equal-highs cluster exists as of the bar (levels.find_equal_clusters) else 0.0</td></tr>
+<tr><td>FM-102</td><td>1.0 if an equal-lows cluster exists as of the bar (levels.find_equal_clusters) else 0.0</td></tr>
+<tr><td>FM-103</td><td>upper_wick / candle_range if candle_range &gt; 0 else 0.0</td></tr>
+<tr><td>FM-104</td><td>lower_wick / candle_range if candle_range &gt; 0 else 0.0</td></tr>
+<tr><td>FM-105</td><td>1 if lower_wick_ratio &gt;= &lt;feature_pipeline.candle_patterns.pin_wick_min&gt; and body_ratio &lt;= &lt;feature_pipeline.candle_patterns.pin_body_max&gt; and upper_wick_ratio &lt;= &lt;feature_pipeline.candle_patterns.pin_opposite_wick_max&gt; and range &gt;= &lt;feature_pipeline.candle_patterns.size_gate_atr_k&gt; * atr_absolute and range &gt; 0 else 0</td></tr>
+<tr><td>FM-106</td><td>1 if upper_wick_ratio &gt;= &lt;feature_pipeline.candle_patterns.pin_wick_min&gt; and body_ratio &lt;= &lt;feature_pipeline.candle_patterns.pin_body_max&gt; and lower_wick_ratio &lt;= &lt;feature_pipeline.candle_patterns.pin_opposite_wick_max&gt; and range &gt;= &lt;feature_pipeline.candle_patterns.size_gate_atr_k&gt; * atr_absolute and range &gt; 0 else 0</td></tr>
+<tr><td>FM-107</td><td>1 if lower_wick &gt;= &lt;feature_pipeline.candle_patterns.probe_wick_body_multiple&gt; * body_size and upper_wick_ratio &lt;= &lt;feature_pipeline.candle_patterns.probe_opposite_wick_max&gt; and low &lt;= min(low[i-k..i-1]) (k = &lt;feature_pipeline.candle_patterns.swing_lookback&gt;, current bar excluded) and range &gt;= &lt;feature_pipeline.candle_patterns.size_gate_atr_k&gt; * atr_absolute and range &gt; 0 else 0</td></tr>
+<tr><td>FM-108</td><td>1 if upper_wick &gt;= &lt;feature_pipeline.candle_patterns.probe_wick_body_multiple&gt; * body_size and lower_wick_ratio &lt;= &lt;feature_pipeline.candle_patterns.probe_opposite_wick_max&gt; and high &gt;= max(high[i-k..i-1]) (k = &lt;feature_pipeline.candle_patterns.swing_lookback&gt;, current bar excluded) and range &gt;= &lt;feature_pipeline.candle_patterns.size_gate_atr_k&gt; * atr_absolute and range &gt; 0 else 0</td></tr>
+<tr><td>FM-109</td><td>1 if body_ratio &lt;= &lt;feature_pipeline.candle_patterns.doji_body_max&gt; and |upper_wick_ratio - lower_wick_ratio| &lt;= &lt;feature_pipeline.candle_patterns.doji_wick_asymmetry_max&gt; and range &gt;= &lt;feature_pipeline.candle_patterns.size_gate_atr_k&gt; * atr_absolute and range &gt; 0 else 0</td></tr>
+<tr><td>FM-110</td><td>1 if body_ratio &lt;= &lt;feature_pipeline.candle_patterns.doji_extreme_body_max&gt; and lower_wick_ratio &gt;= &lt;feature_pipeline.candle_patterns.doji_extreme_wick_min&gt; and range &gt;= &lt;feature_pipeline.candle_patterns.size_gate_atr_k&gt; * atr_absolute and range &gt; 0 else 0</td></tr>
+<tr><td>FM-111</td><td>1 if body_ratio &lt;= &lt;feature_pipeline.candle_patterns.doji_extreme_body_max&gt; and upper_wick_ratio &gt;= &lt;feature_pipeline.candle_patterns.doji_extreme_wick_min&gt; and range &gt;= &lt;feature_pipeline.candle_patterns.size_gate_atr_k&gt; * atr_absolute and range &gt; 0 else 0</td></tr>
+<tr><td>FM-112</td><td>1 if contiguous(i-1,i) and close[i-1] &lt; open[i-1] and close &gt; open and open &lt;= close[i-1] and close &gt;= open[i-1] and body_size &gt; body_size[i-1] else 0</td></tr>
+<tr><td>FM-113</td><td>1 if contiguous(i-1,i) and close[i-1] &gt; open[i-1] and close &lt; open and open &gt;= close[i-1] and close &lt;= open[i-1] and body_size &gt; body_size[i-1] else 0</td></tr>
+<tr><td>FM-114</td><td>1 if contiguous(i-1,i) and high &lt;= high[i-1] and low &gt;= low[i-1] else 0</td></tr>
+<tr><td>FM-115</td><td>candle_range / candle_range[i-1] clipped to [0, &lt;feature_pipeline.candle_patterns.compression_ratio_cap&gt;]; 1.0 when candle_range[i-1] == 0 or not contiguous</td></tr>
+<tr><td>FM-116</td><td>clip(lower_wick_ratio - upper_wick_ratio, -1, 1) if range &gt;= &lt;feature_pipeline.candle_patterns.size_gate_atr_k&gt; * atr_absolute and range &gt; 0 else 0.0</td></tr>
+<tr><td>FM-117</td><td>clip(lower_wick_ratio - body_ratio, 0, 1) if range &gt;= &lt;feature_pipeline.candle_patterns.size_gate_atr_k&gt; * atr_absolute and range &gt; 0 else 0.0</td></tr>
+<tr><td>FM-118</td><td>min(body_size / body_size[i-1], &lt;feature_pipeline.candle_patterns.engulfing_strength_cap&gt;) if engulfing_bull or engulfing_bear else 0.0</td></tr>
+<tr><td>FM-119</td><td>clip(upper_wick_ratio - body_ratio, 0, 1) if range &gt;= &lt;feature_pipeline.candle_patterns.size_gate_atr_k&gt; * atr_absolute and range &gt; 0 else 0.0</td></tr>
+<tr><td>FM-120</td><td>close[i-2] &lt; open[i-2] and body_ratio[i-2] &gt;= &lt;feature_pipeline.candle_patterns.morning_star_body_min&gt; and body_ratio[i-1] &lt;= &lt;feature_pipeline.candle_patterns.morning_star_mid_max&gt; and close[i] &gt; open[i] and body_ratio[i] &gt;= &lt;feature_pipeline.candle_patterns.morning_star_body_min&gt;, both joins contiguous; else 0. Middle color is free. No ATR gate. No trend argument. No evening star.</td></tr>
+<tr><td>FM-121</td><td>On a causal swing_low confirmation, last_swing_low_price &gt; the same series one bar earlier (strict). 1 persists until the next swing low that is not strictly higher. 0 before the second swing low. Equals are 0.</td></tr>
+<tr><td>FM-122</td><td>On a causal swing_high confirmation, last_swing_high_price &lt; the same series one bar earlier (strict). 1 persists until the next swing high that is not strictly lower. 0 before the second swing high. Equals are 0.</td></tr>
+<tr><td>FM-123</td><td>1 when both swing pairs are known and the pair is not (higher high and higher low) and not (lower high and lower low). 0 until two swing highs and two swing lows exist. Expanding range and equal swings are sideways.</td></tr>
+<tr><td>FM-124</td><td>1.0 if a live bullish rejection block (lower wick of a confirmed causal swing low) exists else 0.0</td></tr>
+<tr><td>FM-125</td><td>1.0 if a live bearish rejection block (upper wick of a confirmed causal swing high) exists else 0.0</td></tr>
+<tr><td>FM-126</td><td>signed_atr_distance(close, bullish_rejection_body_bottom, atr, favorable_sign=1); 0.0 when no block</td></tr>
+<tr><td>FM-127</td><td>signed_atr_distance(close, bearish_rejection_body_top, atr, favorable_sign=-1); 0.0 when no block</td></tr>
+<tr><td>FM-128</td><td>A setup armed on bar t-1 confirms on contiguous bar t: +1 if close &gt; open and the long arm fired, -1 if close &lt; open and the short arm fired, else 0. A gap expires the setup. close == open confirms neither. If both arms fired, the close side wins.</td></tr>
+<tr><td>FM-129</td><td>abs(target - entry) / abs(entry - stop) &gt;= multiple; false when abs(entry - stop) == 0. The card identity uses multiple = 3. The live gate min_rr_ratio stays 1.5 and is not this function.</td></tr>
+</tbody>
+</table>
+</body>
+</html>

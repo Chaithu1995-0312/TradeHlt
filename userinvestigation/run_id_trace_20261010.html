@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>XAUUSD run_id trace - 2026-10-10</title>
+<style>
+  :root { --bg:#f4f1ea; --ink:#1c1915; --muted:#5c564c; --line:#ddd6c8; --user:#fff; --agent:#eef3f4; --accent:#8c3a2f; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.45 "Segoe UI", Candara, sans-serif; }
+  header, main { max-width:54rem; margin:0 auto; padding:1.25rem; }
+  header { border-bottom:1px solid var(--line); }
+  h1 { font-size:1.4rem; margin:0 0 .35rem; }
+  .meta, #status { color:var(--muted); margin:0; }
+  #status { margin-top:.4rem; }
+  article { margin:1rem 0; padding:.75rem .9rem .9rem; border:1px solid var(--line); border-radius:8px; background:var(--agent); }
+  article.user { background:var(--user); }
+  .who { font-size:.75rem; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); margin-bottom:.35rem; }
+  article.user .who { color:var(--accent); }
+  pre { margin:0; white-space:pre-wrap; word-wrap:break-word; font:15px/1.45 Consolas, "Cascadia Mono", monospace; }
+</style>
+</head>
+<body>
+<header>
+  <h1>XAUUSD run_id trace</h1>
+  <p class="meta">2026-10-10. This page does not store the messages. It reads <code>run_id_trace_20261010.jsonl</code> in this folder.</p>
+  <p id="status">Reading run_id_trace_20261010.jsonl...</p>
+</header>
+<main id="log"></main>
+<textarea id="jsonl-fallback" hidden>{&quot;n&quot;: 1, &quot;role&quot;: &quot;user&quot;, &quot;ts&quot;: null, &quot;text&quot;: &quot;trace run_id of latest xauuusd run&quot;}
+{&quot;n&quot;: 2, &quot;role&quot;: &quot;assistant&quot;, &quot;ts&quot;: &quot;2026-10-10 05:35&quot;, &quot;text&quot;: &quot;**Canonical `run_id`: `run_20261009_215217`** (`identity_status: VERIFIED`)\n\nLatest XAUUSD backtest by filesystem mtime is:\n\n`results/tf_ssot/after_v2/run_20261009_215217_XAUUSD__20240521..20260521_v2_htfcrt_2026_08_7de09f62`\n\nmtime 2026-10-10 03:26 local. Config `v2_htfcrt_2026_08`, corpus `XAUUSD_MT5_PHASE1_20260521` (47,275 bars, 2024-05-21 → 2026-05-21).\n\n## F-101 family (recorded, not clock-joined)\n\n| Slot | Value | Clock | Mint site |\n|---|---|---|---|\n| **canonical / ReportWriter** | `run_20261009_215217` | UTC | `BacktestRunner.run()` once, then passed into `ReportWriter` |\n| **config dump** | `run_20261009_215216` | UTC | 1s earlier, start of `run()` |\n| **layer_trace** | `lt_20261009_215217_XAUUSD` | UTC | `layer_trace.mint_run_id` |\n| **logging `RUN_ID`** | `20261010_031804` | naive local (IST) | `logging_config.py` import time |\n\nFolder name and content id are the same string. Logging `RUN_ID` is a different clock: 03:18 local ≈ 21:48 UTC vs canonical 21:52 UTC (~4 min process-start gap). Do not equate them by arithmetic.\n\n## Where the canonical id is stamped\n\n- `run_identity.json`, `run_manifest.json` (`run_id` + `run_ids` map)\n- `XAUUSD_summary.json` line 230\n- `XAUUSD_trades.csv` (`run_id` column, all 7 trades)\n- `XAUUSD_events.jsonl` every line\n- `XAUUSD_crt_telemetry.jsonl` envelope (`run_id` + `corpus_sha256`)\n- `XAUUSD_report.txt` identity header\n- `logs/index/run_id_last_ran.json` keyed by `run_20261009_215217`\n- layer-trace rows carry `preexisting_run_ids` pointing back to canonical + logging ids\n\nConfig dump file: `logs/config_dumps/XAUUSD_run_20261009_215216_config.json`\nFlow logs: `logs/run_20261010_031804/XAUUSD/`\n\nJoin key for ledger/summary/events/telemetry: **`run_20261009_215217`**. Alias the others only through `run_manifest.json` `run_ids`.\n\nMint sites (source):\n- `src/runtime/backtest_v2.py` `_canonical_run_id = datetime.now(timezone.utc).strftime(\&quot;run_%Y%m%d_%H%M%S\&quot;)` then `ReportWriter(..., run_id=_canonical_run_id)`\n- config dump at start of `BacktestRunner.run()`: `datetime.now(timezone.utc)`\n- `src/utils/logging_config.py` `RUN_ID: str = datetime.now().strftime(\&quot;%Y%m%d_%H%M%S\&quot;)` at import\n- `src/runtime/layer_trace.py` `mint_run_id` → `lt_{UTC}_{instrument}`\n\nBook on this run (descriptive, no G001): 7 trades, 6 rejected, WR 28.6%, avg RR net −0.65R, total PnL net −4.52R, G001 FAIL.&quot;}
+{&quot;n&quot;: 3, &quot;role&quot;: &quot;user&quot;, &quot;ts&quot;: null, &quot;text&quot;: &quot;update as new one in userinvestigation folder&quot;}
+{&quot;n&quot;: 4, &quot;role&quot;: &quot;assistant&quot;, &quot;ts&quot;: &quot;2026-10-10 10:11&quot;, &quot;text&quot;: &quot;Saved as a new pair in `userinvestigation/`, following the folder dated-stem contract. Prior stems are unchanged.\n\n- `userinvestigation/run_id_trace_20261010.jsonl` — the store. One line per message, oldest first; `n` / `role` / `ts` / `text`. Line 1 is `trace run_id of latest xauuusd run`, line 2 is the F-101 family trace, line 3 is the update request, line 4 is this reply.\n- `userinvestigation/run_id_trace_20261010.html` — the view. It fetches that JSONL and draws one block per message, with a hidden escaped copy in a textarea so it renders from `file://` as well.\n\nCanonical join key remains `run_20261009_215217`. No source or config edit. `src/`, `configs/` and `results/` are untouched.\n\nHow to open: double-click the `.html` (it shows the fallback copy), or serve the folder (`python -m http.server`) and the page reads the live `.jsonl`.&quot;}</textarea>
+<script>
+const FILE = "run_id_trace_20261010.jsonl";
+const status = document.getElementById("status");
+const log = document.getElementById("log");
+
+function render(raw, how) {
+  log.replaceChildren();
+  const lines = raw.split(String.fromCharCode(10)).filter(function (s) { return s.trim(); });
+  lines.forEach(function (line) {
+    const row = JSON.parse(line);
+    const art = document.createElement("article");
+    art.className = row.role === "user" ? "user" : "assistant";
+    const who = document.createElement("div");
+    who.className = "who";
+    who.textContent = row.role + (row.ts ? " - " + row.ts : "");
+    const pre = document.createElement("pre");
+    pre.textContent = row.text;
+    art.append(who, pre);
+    log.append(art);
+  });
+  status.textContent = how + " - " + lines.length + " messages.";
+}
+
+fetch(FILE).then(function (res) {
+  if (!res.ok) throw new Error(String(res.status));
+  return res.text();
+}).then(function (raw) {
+  render(raw, "Read " + FILE);
+}).catch(function () {
+  const raw = document.getElementById("jsonl-fallback").value;
+  render(raw, "Opened as a local file, so the browser did not allow a read of " + FILE + ". Showing the copy written into this page at the same time as that file");
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,355 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Tradelatest System Blueprint</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --paper:#f3f6f9; --sheet:#fbfcfd; --ink:#16324f; --ink-soft:#4a6480; --rule:#c9d6e3; --grid:#e3ebf2;
+  --accent:#1f5fa8; --runtime:#1d7a4f; --static:#b7791f; --gap:#b83a3a; --absent:#8a96a3; --shadow:#7a4bb0;
+  --chip-bg:#eef3f8;
+  --display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --body:"IBM Plex Sans",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0c1826; --sheet:#10202f; --ink:#dbe7f3; --ink-soft:#93abc3; --rule:#2a4259; --grid:#162b3e;
+    --accent:#6fa8e8; --runtime:#4fbf8a; --static:#e0a84a; --gap:#ec7474; --absent:#7b8a99; --shadow:#b18ae6;
+    --chip-bg:#16293b; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0c1826; --sheet:#10202f; --ink:#dbe7f3; --ink-soft:#93abc3; --rule:#2a4259; --grid:#162b3e;
+  --accent:#6fa8e8; --runtime:#4fbf8a; --static:#e0a84a; --gap:#ec7474; --absent:#7b8a99; --shadow:#b18ae6;
+  --chip-bg:#16293b; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.5;margin:0;padding-inline:16px;padding-block:24px 48px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1,h2,h3{font-family:var(--display);letter-spacing:.02em;text-wrap:balance;margin:0}
+h1{font-size:40px;font-weight:700;line-height:1.05}
+h2{font-size:26px;font-weight:600}
+h3{font-size:18px;font-weight:600}
+p{margin:0;max-width:72ch}
+.mono{font-family:var(--mono)}
+.sheet{background:var(--sheet);border:1.5px solid var(--ink);padding:20px;display:flex;flex-direction:column;gap:16px;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px}
+.titleblock{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:end;border-bottom:1.5px solid var(--ink);padding-bottom:14px}
+.tb-meta{display:grid;grid-template-columns:auto auto;gap:2px 14px;font-family:var(--mono);font-size:12px;color:var(--ink-soft)}
+.tb-meta b{color:var(--ink);font-weight:500}
+.sheethead{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--rule);padding-bottom:8px}
+.sheetno{font-family:var(--mono);font-size:12px;color:var(--ink-soft);letter-spacing:.06em;text-transform:uppercase}
+.lede{color:var(--ink-soft)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:12px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:12px;height:12px;display:inline-block;border-radius:2px}
+.scroll{overflow-x:auto}
+table.matrix{border-collapse:collapse;width:100%;min-width:860px;background:var(--sheet)}
+.matrix th,.matrix td{border:1px solid var(--rule);padding:8px 10px;vertical-align:top;text-align:left}
+.matrix thead th{font-family:var(--display);font-size:16px;font-weight:600;background:var(--chip-bg)}
+.matrix thead th small{display:block;font-family:var(--mono);font-size:11px;font-weight:400;color:var(--ink-soft)}
+.matrix th.layer{width:130px;font-family:var(--mono);font-size:12px;font-weight:500;background:var(--chip-bg)}
+.matrix th.layer b{display:block;font-family:var(--display);font-size:17px;font-weight:600}
+.cell{border-left:4px solid var(--absent);padding-left:8px;font-size:13px}
+.cell .tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;font-weight:500}
+.runtime{border-color:var(--runtime)} .runtime .tag{color:var(--runtime)}
+.static{border-color:var(--static)} .static .tag{color:var(--static)}
+.gap{border-color:var(--gap)} .gap .tag{color:var(--gap)}
+.absent{border-color:var(--absent)} .absent .tag{color:var(--absent)}
+.shadowc{border-color:var(--shadow)} .shadowc .tag{color:var(--shadow)}
+.target{border-color:var(--accent)} .target .tag{color:var(--accent)}
+.cite{font-family:var(--mono);font-size:11px;color:var(--ink-soft)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.stat{border:1px solid var(--rule);background:var(--sheet);padding:10px 12px}
+.stat .n{font-family:var(--display);font-size:30px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+.stat .l{font-size:12px;color:var(--ink-soft)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.panel{border:1px solid var(--rule);background:var(--sheet);padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.panel ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
+.kv{display:grid;grid-template-columns:minmax(120px,auto) 1fr;gap:4px 12px;font-size:13px}
+.kv dt{font-family:var(--mono);font-size:12px;color:var(--accent)}
+.kv dd{margin:0}
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-family:var(--mono);font-size:12px}
+.flow .n{border:1px solid var(--ink);padding:4px 8px;background:var(--sheet)}
+.flow .n.hot{border-color:var(--accent);color:var(--accent);font-weight:500}
+.flow .ar{color:var(--ink-soft)}
+.pill{font-family:var(--mono);font-size:10.5px;padding:1px 7px;border-radius:9px;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;border:1px solid currentColor}
+.p-prog{color:var(--static)} .p-pend{color:var(--absent)} .p-done{color:var(--runtime)} .p-user{color:var(--accent)}
+table.waves{border-collapse:collapse;width:100%;min-width:760px;font-size:13px;background:var(--sheet)}
+.waves th,.waves td{border-bottom:1px solid var(--rule);padding:7px 8px;text-align:left;vertical-align:top}
+.waves th{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);font-weight:500}
+.waves td.w{font-family:var(--display);font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
+.band{display:grid;grid-template-columns:130px 1fr;border:1px solid var(--rule);background:var(--sheet)}
+.band > div{padding:8px 10px}
+.band .lbl{font-family:var(--mono);font-size:12px;background:var(--chip-bg);border-right:1px solid var(--rule)}
+.band .lbl b{display:block;font-family:var(--display);font-size:17px;font-weight:600}
+.note{font-size:12px;color:var(--ink-soft)}
+@media (max-width:640px){ h1{font-size:30px} .titleblock{grid-template-columns:1fr} .band{grid-template-columns:1fr} .band .lbl{border-right:0;border-bottom:1px solid var(--rule)} }
+</style>
+
+<div class="wrap">
+
+<header class="titleblock">
+  <div style="display:flex;flex-direction:column;gap:6px">
+    <span class="sheetno">Drawing set · XAUUSD M15 · design only, not SYSTEM_FLOW.md yet</span>
+    <h1>Tradelatest System Blueprint</h1>
+    <p class="lede">The candle-to-outcome system as it runs today, the target agreed in this session, and where the build stands. Rows use the repo's own layer_trace vocabulary L0–L9, with L10 above it.</p>
+  </div>
+  <dl class="tb-meta">
+    <span>Revision</span><b>B · 2026-09-28</b>
+    <span>Branch</span><b>grokbotchanges</b>
+    <span>Head</span><b>a2611270</b>
+    <span>Active</span><b>v2_htfcrt_2026_08</b>
+    <span>Sheets</span><b>3</b>
+  </dl>
+</header>
+
+<div class="legend" aria-label="Legend">
+  <span><i class="sw" style="background:var(--runtime)"></i>RUNTIME, a trace row or run artifact exists</span>
+  <span><i class="sw" style="background:var(--static)"></i>STATIC, import or call graph only</span>
+  <span><i class="sw" style="background:var(--gap)"></i>GAP, producer missing or never emitted</span>
+  <span><i class="sw" style="background:var(--absent)"></i>Absent by rail design</span>
+  <span><i class="sw" style="background:var(--shadow)"></i>SHADOW, research re-implements the layer</span>
+  <span><i class="sw" style="background:var(--accent)"></i>Target</span>
+</div>
+
+<!-- SHEET 1 -->
+<section class="sheet" aria-labelledby="s1">
+  <div class="sheethead"><h2 id="s1">Current system flow</h2><span class="sheetno">Sheet 1 of 3 · as built</span></div>
+  <p class="lede">Two execution rails that reach different layers, plus a research lane that mostly re-implements production layers instead of running them. No single rail runs L0 through L9 end to end.</p>
+
+  <div class="stats">
+    <div class="stat"><div class="n">7 / 20</div><div class="l">rail×layer cells with runtime proof</div></div>
+    <div class="stat"><div class="n">5 / 20</div><div class="l">static only (Engine rail)</div></div>
+    <div class="stat"><div class="n">8 / 20</div><div class="l">gaps or not reached</div></div>
+    <div class="stat"><div class="n">0</div><div class="l">rails traced end to end L0→L9</div></div>
+    <div class="stat"><div class="n">342</div><div class="l">system entry points (Grok census; 331 research)</div></div>
+  </div>
+
+  <div class="scroll">
+  <table class="matrix">
+    <thead><tr>
+      <th>Layer</th>
+      <th>CRT rail<small>backtest_v2 · historical_csv · CRT state machine decides</small></th>
+      <th>Engine rail<small>live_rail_orchestrator → live_engine_hook · paper only (F-073)</small></th>
+      <th>Research lane<small>scripts/research + src/research</small></th>
+    </tr></thead>
+    <tbody>
+    <tr><th class="layer"><b>L0</b>OHLCV corpus</th>
+      <td><div class="cell runtime"><div class="tag">runtime</div>CandleLoader inside backtest_v2, XAUUSD phase-1 guard pins the corpus (sha 4d73f5ce, 47,275 rows)</div></td>
+      <td><div class="cell static"><div class="tag">static</div>TickDB → BarBuilder / OhlcvTickReplayPort. Row schema checked; replay has no clock-registry or corpus_gate check</div></td>
+      <td><div class="cell shadowc"><div class="tag">shadow · rev B</div>53 loaders, 31 bypass every shared loader. The 2 label loaders now pass the corpus gate before reading (83.7); frozen ungated reads 217 → 215. Both had read unreviewed BNBUSDT data (83.2)</div></td></tr>
+    <tr><th class="layer"><b>L1</b>Feature values</th>
+      <td><div class="cell runtime"><div class="tag">runtime</div>FeaturePipeline, 48 canonical dims (schema v6.0)</div></td>
+      <td><div class="cell static"><div class="tag">static</div>LiveEngineHook → FeatureStore boundary (fixed by F-085)</div></td>
+      <td><div class="cell shadowc"><div class="tag">shadow</div>feature_pipeline used by 84 importers, plus 17+ private ATR copies</div></td></tr>
+    <tr><th class="layer"><b>L2</b>Feature states</th>
+      <td><div class="cell gap"><div class="tag">gap</div>FeatureStateEncoder exists (feature_states.py:62) but no rail emits it</div></td>
+      <td><div class="cell gap"><div class="tag">gap</div>Not emitted</div></td>
+      <td><div class="cell static"><div class="tag">static</div>Resolver reads 14 feature states through its <span class="mono">when:</span> blocks</div></td></tr>
+    <tr><th class="layer"><b>L3</b>CRT state</th>
+      <td><div class="cell runtime"><div class="tag">runtime</div>crt_engine_v2.process_candle. Reads OHLC only: 0 of 48 features</div></td>
+      <td><div class="cell absent"><div class="tag">absent</div>No CRT state machine on this rail (F-103)</div></td>
+      <td><div class="cell static"><div class="tag">static</div>CRTStateResolver agrees with the engine on 68.69% of bars (F-069); Sujan and mother_range declared independent</div></td></tr>
+    <tr><th class="layer"><b>L4</b>Parent / HTF</th>
+      <td><div class="cell runtime"><div class="tag">runtime</div>ParentCRTFeed, calendar-true H4 bias gate. Fires, changes no decision (F-089)</div></td>
+      <td><div class="cell absent"><div class="tag">absent</div>Not reached (F-103)</div></td>
+      <td><div class="cell shadowc"><div class="tag">shadow</div>Count-based HTF id computed in 3 places</div></td></tr>
+    <tr><th class="layer"><b>L5</b>Engine scoring</th>
+      <td><div class="cell runtime"><div class="tag">runtime</div>EngineRunner called at TRADE_OPENED only</div></td>
+      <td><div class="cell static"><div class="tag">static</div>CRT, Gaussian, ZoneGate, RR. Gaussian is near-constant (F-060), zone redundant (F-036)</div></td>
+      <td><div class="cell static"><div class="tag">static</div>model_runners run the production engines off-spine (no re-implementation)</div></td></tr>
+    <tr><th class="layer"><b>L6</b>Fusion + decision</th>
+      <td><div class="cell runtime"><div class="tag">runtime</div>Veto only: 0 of 30 entries vetoed (F-070); fails open on exception (F-102)</div></td>
+      <td><div class="cell static"><div class="tag">static</div>Fusion + DecisionEngine decide</div></td>
+      <td><div class="cell absent"><div class="tag">—</div>Reached only through model_runners</div></td></tr>
+    <tr><th class="layer"><b>L7</b>Plan + risk</th>
+      <td><div class="cell absent"><div class="tag">not reached</div>Planner and Ultron never imported, by rail design (F-103)</div></td>
+      <td><div class="cell static"><div class="tag">static</div>ExecutionPlannerV1_2 + UltronRiskGate. 26 of 27 replayed trades rejected by the planner gate (F-109)</div></td>
+      <td><div class="cell shadowc"><div class="tag">shadow · rev B</div>execution_planner_replay now admits its corpus and runs multi_tp_walk beside the TP2-first comparator (83.8). The comparator is not archived yet</div></td></tr>
+    <tr><th class="layer"><b>L8</b>Trade birth / ledger</th>
+      <td><div class="cell runtime"><div class="tag">runtime</div>Trade → TradeRecord ledger. One run mints 3 different run ids (F-101)</div></td>
+      <td><div class="cell gap"><div class="tag">gap</div>No ledger</div></td>
+      <td><div class="cell shadowc"><div class="tag">shadow</div>4 trade objects; 2 different classes named TradeRecord</div></td></tr>
+    <tr><th class="layer"><b>L9</b>Outcome</th>
+      <td><div class="cell gap"><div class="tag">no trace rows</div>update_trade: stop checked first, 50% off at TP1, half-way trail, no time-stop</div></td>
+      <td><div class="cell gap"><div class="tag">gap</div>No outcome</div></td>
+      <td><div class="cell static"><div class="tag">static · rev B</div>forward_walk and multi_tp_walk are the authorities. Of the 3 qualification copies checked (83.2), all match on exit reason and R; one hard-codes exit bar 0, two leave time fields empty</div></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="cols">
+    <div class="panel"><h3>Layers with more than one producer</h3>
+      <ul>
+        <li><b>L0 read:</b> CandleLoader, corpus_gate, live replay port, 217 frozen ungated reads</li>
+        <li><b>L3:</b> engine state machine and resolver, 68.69% agreement</li>
+        <li><b>L4:</b> count-based HTFBuilder and calendar ParentCandleBuilder</li>
+        <li><b>L9:</b> engine exits, forward_walk, multi_tp_walk, comparator, 8 shadows</li>
+        <li><b>M1→M15 aggregation:</b> at least 5 places</li>
+      </ul></div>
+    <div class="panel"><h3>Known silent defects on the path</h3>
+      <ul>
+        <li>Soft-confirmation EMA updated twice per bar (F-067)</li>
+        <li><span class="mono">open_candle_index</span> declared for a time-stop, never set</li>
+        <li>Intent pullback branch unreachable; keys it reads never exist</li>
+        <li>Planner volume score divides dollars by relative ATR (F-109)</li>
+        <li>Management hardcodes the 0.5 partial and half-way trail</li>
+      </ul></div>
+  </div>
+</section>
+
+<!-- SHEET 2 -->
+<section class="sheet" aria-labelledby="s2">
+  <div class="sheethead"><h2 id="s2">Target system flow</h2><span class="sheetno">Sheet 2 of 3 · decided 2026-09-27</span></div>
+  <p class="lede">One L0–L9 path. What differs between production and research is only the <b>Setup</b>: the v5 shadow config plus a small declared overlay. Production is one promoted Setup; the lab runs many Setups on the same path and adds three lab-only functions on top.</p>
+
+  <div class="cols">
+    <div class="panel"><h3>v5 base: built and proven identical</h3>
+      <p><span class="mono">v5_htfcrt_sot_dual_k23_2026_09</span> is a shadow config: every engine setting equals active (53 of 53 CRTConfig fields). Full XAUUSD corpus, v5 against active:</p>
+      <dl class="kv">
+        <dt>engine states</dt><dd>7,112 / 7,112 identical</dd>
+        <dt>resolver states</dt><dd>47,197 / 47,197 identical</dd>
+        <dt>layer_trace rows</dt><dd>94,406 / 94,406 identical</dd>
+        <dt>oracle labels</dt><dd>565,884 / 565,884 identical</dd>
+        <dt>trades</dt><dd>3 / 3 identical except a per-trade random id</dd>
+      </dl></div>
+    <div class="panel"><h3>Setup overlay: your 9 open questions</h3>
+      <ul>
+        <li><b>Q1</b> new keys in one <span class="mono">setup</span> section, or spread over <span class="mono">backtest</span></li>
+        <li><b>Q2</b> structural TP2: does TP1 move too; what if the range side is not beyond entry</li>
+        <li><b>Q3</b> trade TTL: N, exit price at expiry, counting the entry bar, flat = loss</li>
+        <li><b>Q4</b> resolver decider: live in the walk or from cached states</li>
+        <li><b>Q5</b> fixed risk: risk_pct 1% or fixed INR investment</li>
+        <li><b>Q6</b> the overlay's identity name</li>
+        <li><b>Q7</b> who owns the overlay parity harness</li>
+        <li><b>Q8</b> what goes in the first grid</li>
+        <li><b>Q9</b> does a Setup restate the K23 keys or inherit them</li>
+      </ul>
+      <p class="note">From the DeepSeek spec, docs/implementation_plan/setup-overlay-spec-2026-09.md §10. Story 83.11 waits on these answers.</p></div>
+  </div>
+
+  <div class="flow" aria-label="Target flow">
+    <span class="n">MT5 corpus</span><span class="ar">→</span>
+    <span class="n">corpus_gate</span><span class="ar">→</span>
+    <span class="n">FeaturePipeline</span><span class="ar">→</span>
+    <span class="n">FeatureStates</span><span class="ar">→</span>
+    <span class="n hot">Decider: engine | resolver</span><span class="ar">→</span>
+    <span class="n">HTF / Parent</span><span class="ar">→</span>
+    <span class="n">EngineRunner</span><span class="ar">→</span>
+    <span class="n">Planner + Ultron</span><span class="ar">→</span>
+    <span class="n">One trade object</span><span class="ar">→</span>
+    <span class="n">multi_tp_walk outcome</span>
+  </div>
+
+  <div class="band"><div class="lbl"><b>L10</b>Operator plane</div><div>LLM operator drives the rails through the existing CommandSpec registry and PLAN_REGISTRY. Built only after the system is frozen. Execution may use research outputs only through L10, never by import.</div></div>
+
+  <div class="scroll">
+  <table class="matrix">
+    <thead><tr><th>Layer</th><th>One path, all lanes<small>what every rail and every lab run executes</small></th><th>Controlled by the Setup overlay<small>defaults equal today's behaviour</small></th></tr></thead>
+    <tbody>
+    <tr><th class="layer"><b>L0</b></th><td><div class="cell target"><div class="tag">target</div>MT5 is the only feed. Every reader goes through the corpus_gate seam (identity → sequence → plausibility), the Engine-rail replay included. CandleLoader becomes a thin streamer over it.</div></td><td><div class="cell target">Corpus and time range</div></td></tr>
+    <tr><th class="layer"><b>L1</b></th><td><div class="cell target"><div class="tag">target</div>FeaturePipeline with one ATR: FM-041 relative, FM-074 absolute. Private copies removed.</div></td><td><div class="cell target">K23 F2 session basis</div></td></tr>
+    <tr><th class="layer"><b>L2</b></th><td><div class="cell target"><div class="tag">target</div>Feature states emitted. Features split into STATE-BUILDING (named in a <span class="mono">when:</span> block) and MONITOR (logged, never decides).</div></td><td><div class="cell target">—</div></td></tr>
+    <tr><th class="layer"><b>L3</b></th><td><div class="cell target"><div class="tag">target</div>Engine state = market state. Engine and resolver share one number per threshold, the production key (P-1).</div></td><td><div class="cell target"><b>decider</b>: engine | resolver (mode C hands over range, sweep, displacement candle, retest candle) · K23 F1 retrace reset</div></td></tr>
+    <tr><th class="layer"><b>L4</b></th><td><div class="cell target"><div class="tag">target</div>HTFBuilder (count-based) is the authority now; calendar-true once the system is stable. ParentCRT stays calendar.</div></td><td><div class="cell target">K23 F4 HTF reset exemption</div></td></tr>
+    <tr><th class="layer"><b>L5–L6</b></th><td><div class="cell target"><div class="tag">target</div>EngineRunner scoring and veto, unchanged.</div></td><td><div class="cell target">—</div></td></tr>
+    <tr><th class="layer"><b>L7</b></th><td><div class="cell target"><div class="tag">target</div>Planner + Ultron on the Engine rail. The CRT rail keeps its own decider (rail bridge: only S3 differs).</div></td><td><div class="cell target">—</div></td></tr>
+    <tr><th class="layer"><b>L8</b></th><td><div class="cell target"><div class="tag">target</div>One trade object with canonical names: entry_price, sl_price, tp1_price, tp2_price … pnl_rr_net; outcome STOPPED / TP1_BE_STOP / TP1_TP2 / TIMEOUT.</div></td><td><div class="cell target"><b>sl_anchor</b>: displacement | sweep_extreme (K23 F3)</div></td></tr>
+    <tr><th class="layer"><b>L9</b></th><td><div class="cell target"><div class="tag">target</div>multi_tp_walk, production-shaped, stop checked first. <span class="mono">optimistic</span> only as a labelled option.</div></td><td><div class="cell target"><b>target policy</b>: fixed R | structural TP2 · <b>trade TTL</b> in candles → TIMEOUT (on)</div></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="cols">
+    <div class="panel"><h3>Lab-only rows</h3>
+      <dl class="kv">
+        <dt>R0 substrate</dt><dd>provenance, contracts, costs, walks, qualification, controls</dd>
+        <dt>R1 data</dt><dd>datasets, labels, episodes</dd>
+        <dt>R4 attribution</dt><dd>controls, permutation, BH-FDR, qualification</dd>
+        <dt>R5 validation</dt><dd>independent twins and parity checks; kept separate on purpose</dd>
+      </dl></div>
+    <div class="panel"><h3>Lab rules</h3>
+      <ul>
+        <li>Run a layer, never re-implement it. Exceptions: R5 twins, F-077 independent objects.</li>
+        <li>Research imports execution; execution never imports research.</li>
+        <li>Run unit: ExperimentSpec = N Setups × corpus, authority NONE.</li>
+        <li>Compare on equity at a fixed risk_pct. R is never ranked across stop anchors (can_compare denies it).</li>
+      </ul></div>
+  </div>
+</section>
+
+<!-- SHEET 3 -->
+<section class="sheet" aria-labelledby="s3">
+  <div class="sheethead"><h2 id="s3">Current state of the build</h2><span class="sheetno">Sheet 3 of 3 · EPIC-83</span></div>
+  <p class="lede">Each agent works in its own worktree on its own branch with a fixed file list. Claude reviews and merges. 9 of 13 stories done; S0, S1 and S2 are complete, S2b is two-thirds done, S3 has started.</p>
+
+  <div class="stats">
+    <div class="stat"><div class="n">9 / 13</div><div class="l">stories done</div></div>
+    <div class="stat"><div class="n">1</div><div class="l">in progress (83.10)</div></div>
+    <div class="stat"><div class="n">2</div><div class="l">waiting on you (83.4, 83.11)</div></div>
+    <div class="stat"><div class="n">PASS</div><div class="l">v5 five-way parity, full corpus</div></div>
+  </div>
+
+  <div class="scroll">
+  <table class="waves">
+    <thead><tr><th>Wave</th><th>Story</th><th>Agent</th><th>Step</th><th>Work</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td class="w">1</td><td class="mono">83.1</td><td>Grok coding</td><td>S0</td><td>v4 config's version name fixed</td><td><span class="pill p-done">done</span></td></tr>
+      <tr><td class="w">1</td><td class="mono">83.2</td><td>Grok bot</td><td>—</td><td>Both label loaders read unreviewed data; 3 qualification copies match forward_walk on exit and R</td><td><span class="pill p-done">done</span></td></tr>
+      <tr><td class="w">1</td><td class="mono">83.3</td><td>DeepSeek</td><td>S3/S4 spec</td><td>Setup overlay and ExperimentSpec spec written; 9 questions for you</td><td><span class="pill p-done">done</span></td></tr>
+      <tr><td class="w">1</td><td class="mono">83.4</td><td>Claude</td><td>—</td><td>Ontology prose fixed; F-002/F-010 notes wait for your yes</td><td><span class="pill p-user">needs you</span></td></tr>
+      <tr><td class="w">2</td><td class="mono">83.5</td><td>Grok coding</td><td>S1</td><td>v5 shadow config built; engine settings equal active</td><td><span class="pill p-done">done</span></td></tr>
+      <tr><td class="w">3</td><td class="mono">83.6</td><td>Grok coding</td><td>S2</td><td>Five-way parity on the full corpus: PASS</td><td><span class="pill p-done">done</span></td></tr>
+      <tr><td class="w">3</td><td class="mono">83.13</td><td>Claude</td><td>S0</td><td>K23 completion manifests written; validator blocked by pre-existing reds</td><td><span class="pill p-done">done</span></td></tr>
+      <tr><td class="w">4</td><td class="mono">83.7</td><td>Grok coding</td><td>S2b</td><td>Label loaders go through the corpus gate</td><td><span class="pill p-done">done</span></td></tr>
+      <tr><td class="w">4</td><td class="mono">83.8</td><td>DeepSeek</td><td>S2b</td><td>Replay gated; multi_tp_walk arm added beside the comparator</td><td><span class="pill p-done">done</span></td></tr>
+      <tr><td class="w">4</td><td class="mono">83.9</td><td>Grok coding</td><td>S2b</td><td>One ATR: 17 private copies inventoried, 3 truly different formulas</td><td><span class="pill p-pend">deferred</span></td></tr>
+      <tr><td class="w">5</td><td class="mono">83.10</td><td>Grok coding</td><td>S3</td><td>Resolver reads the shared production keys; states must stay byte-identical</td><td><span class="pill p-prog">in progress</span></td></tr>
+      <tr><td class="w">5</td><td class="mono">83.11</td><td>one owner</td><td>S3</td><td>Setup overlay code (target policy, trade TTL, decider)</td><td><span class="pill p-user">needs Q1–Q9</span></td></tr>
+      <tr><td class="w">6</td><td class="mono">83.12</td><td>Grok bot</td><td>S4</td><td>First grid: stop anchor × target, TTL on</td><td><span class="pill p-pend">pending</span></td></tr>
+      <tr><td class="w">—</td><td class="mono">S5</td><td>You + Claude</td><td>S5</td><td>Promote one Setup by hand registration</td><td><span class="pill p-user">your call</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="cols">
+    <div class="panel"><h3>Decided</h3>
+      <ul>
+        <li>MT5 only; one reader through corpus_gate</li>
+        <li>Resolver is the Feature States → CRT States link</li>
+        <li>Shared thresholds coupled to one production key</li>
+        <li>Stop anchors and targets compared as reports; trade TTL on</li>
+        <li>One ladder L0–L9 plus R1, R4, R5</li>
+        <li>Comparator retired; its replay re-run with the optimistic option</li>
+        <li>Cleanup after v5 parity</li>
+      </ul></div>
+    <div class="panel"><h3>Open</h3>
+      <ul>
+        <li>F-002 / F-010 note text</li>
+        <li>Setup overlay questions Q1–Q9</li>
+        <li>Comparator archive step still to do (arm added, code kept)</li>
+        <li>Research Lab design card DC-RESEARCH-LAB-01 (Grok draft r8, untracked) not yet reviewed by Claude</li>
+        <li>Decider mode A / B / C choice after stabilisation</li>
+        <li>46 unclassified entry points to rebucket</li>
+        <li>Which rail supplies mfe / mae</li>
+        <li>Calibration round 1 paused (July shot corpus)</li>
+      </ul></div>
+    <div class="panel"><h3>Guards</h3>
+      <ul>
+        <li>ACTIVE_VERSION and the active config are never edited</li>
+        <li>No promote_* calls</li>
+        <li>XAUUSD only; subset first, then full corpus</li>
+        <li>Worktree runs set PYTHONPATH to the worktree's src</li>
+        <li>Remove the data\mt5 junction before removing a worktree</li>
+        <li>Nothing is deleted; old code and data are archived</li>
+      </ul></div>
+    <div class="panel"><h3>Incident, resolved</h3>
+      <p>Removing a worktree followed its data\mt5 link and deleted the real XAUUSD corpus. It was restored; the file hash matches the frozen value again (4d73f5ce…, checked 2026-09-28). A pinned copy is kept in copiedSrcFiles.</p></div>
+  </div>
+  <p class="note">Evidence grades come from the session's Step 0 census and file reads. The research-lane counts (53 loaders, 31 bypasses, 17 ATR copies) and the 83.2 verdicts are Grok measurements and were not re-run by Claude. This page is a design drawing; the repo document SYSTEM_FLOW.md is written after the layer-by-layer decisions are complete.</p>
+</section>
+
+</div>
+
+</body></html>

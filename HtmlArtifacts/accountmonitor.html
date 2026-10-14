@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Account Monitor - Entry, SL, TP, Capital and Lot Sizing</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --cod: #ff7b72;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+  }
+  header.top {
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 22px 28px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 10px 18px;
+  }
+  header.top .brand { font-size: 18px; font-weight: 700; letter-spacing: 0.2px; }
+  header.top .brand .dot { color: var(--accent); }
+  header.top .sub { color: var(--muted); font-size: 13px; }
+  header.top .meta { margin-left: auto; font-size: 12px; color: var(--muted); }
+  nav.tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 14px auto 0;
+    max-width: 1200px;
+    padding: 0 28px;
+  }
+  nav.tabs a {
+    padding: 6px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 13px;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    transition: 0.15s;
+  }
+  nav.tabs a:hover,
+  nav.tabs a.active {
+    background: var(--panel);
+    color: var(--text);
+    border-color: var(--accent);
+  }
+  main { padding: 18px 28px 40px; max-width: 1200px; margin: 0 auto; }
+  section { margin-bottom: 22px; }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 22px;
+    margin-bottom: 18px;
+  }
+  h1 { font-size: 22px; margin: 6px 0 4px; }
+  h2 { font-size: 16px; margin: 0 0 8px; }
+  p { margin: 6px 0; }
+  .lead { font-size: 14px; color: var(--muted); }
+  code {
+    background: #0f1115;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 12.5px;
+    font-family: "SF Mono", Consolas, monospace;
+    color: var(--cod);
+  }
+  a { color: var(--accent); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th,
+  td {
+    border: 1px solid var(--border);
+    padding: 8px 10px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: #1c2129;
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  tr:nth-child(even) td { background: #151a21; }
+  .state-td {
+    font-family: "SF Mono", Consolas, monospace;
+    font-weight: 700;
+    font-size: 12.5px;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .badge,
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    margin-right: 4px;
+  }
+  .badge { background: #238636; }
+  .tag-mem { background: #9b86f0; }
+  .tag-pure { background: #2aa198; }
+  .tag-gate { background: #26a0da; }
+  .tag-note { background: #6b7280; }
+  .diag {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 12px;
+    white-space: pre;
+    background: #0f1115;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    overflow-x: auto;
+    line-height: 1.7;
+    color: var(--text);
+  }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+  footer {
+    margin-top: 30px;
+    padding: 14px 0 0;
+    color: var(--muted);
+    font-size: 12px;
+    border-top: 1px solid var(--border);
+  }
+  @media (max-width: 760px) {
+    header.top { padding: 18px; }
+    nav.tabs { padding: 0 18px; }
+    main { padding: 16px 18px 32px; }
+    .card { padding: 16px; overflow-x: auto; }
+    table { min-width: 820px; }
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">Account Monitor<span class="dot">.</span></div>
+  <div class="sub">Entry / SL / TP / account investment / per-trade capital / lot size</div>
+  <div class="meta">Source snapshot: 2026-10-12 · Static reference</div>
+</header>
+<main>
+  <section id="trade-capital">
+    <div class="card">
+      <h1>Entry, SL, TP and capital — producers and consumers</h1>
+      <p class="lead">Source snapshot: 2026-10-12. These are downstream execution and money flows. ParentCRTTrack supplies the parent bias to the CRT admission gate; the trade-level and sizing producers below supply the execution values. No individual trade or account statement was supplied, so prices and actual live balances remain runtime inputs.</p>
+      <h2>Backtest path</h2>
+      <p><code>CRT process_candle → ExecutionEngine.build_trade → TradeJournal → CapitalCurve → TradeRecord / reports</code></p>
+      <table>
+        <thead><tr><th>Detail / field</th><th>Producer / source</th><th>Consumers / purpose</th></tr></thead>
+        <tbody>
+          <tr><td>Entry: <code>Trade.entry_price</code></td><td><a href="src/config_layer/crt_engine_v2.py">crt_engine_v2.py</a>: process_candle selects the retest close on the approved-retest path (line 4181); <code>ExecutionEngine.build_trade</code> writes the supplied entry (2603–2732).</td><td><a href="src/runtime/backtest_v2.py">TradeJournal</a> adds entry slippage and spread to produce <code>entry_price_fill</code> (1385). Raw and filled entries are retained in the trade record and CSV.</td></tr>
+          <tr><td>SL: <code>Trade.sl_price</code></td><td><code>ExecutionEngine.stop_price(state)</code> (crt_engine_v2.py, 2515), consumed by <code>build_trade</code> (2641). Inverted stops reject the build.</td><td>TradeJournal may widen the stop to the configured ATR minimum against the filled entry (backtest_v2.py, 1391–1409). This effective SL feeds sizing and <code>TradeRecord.sl_price</code>.</td></tr>
+          <tr><td>TP: <code>tp1_price</code>, <code>tp2_price</code></td><td><code>ExecutionEngine.build_trade</code> uses actual entry-to-SL risk distance and the intent TP1 / TP2 multipliers (2663–2680). With <code>structural_tp2</code>, TP2 becomes the frozen opposite range boundary and is guarded against invalid geometry.</td><td><code>ExecutionEngine.update_trade</code> handles trade exits; TradeJournal retains target prices for records and reports.</td></tr>
+          <tr><td>Account investment / starting capital</td><td><code>backtest.initial_capital</code> initializes <code>CapitalCurve.initial_capital</code> and <code>current_capital</code> (backtest_v2.py, 669–679).</td><td><code>current_risk_amount</code> uses current capital when compounding is enabled, otherwise initial capital. <code>apply_trade</code> updates capital from closed-trade P&amp;L (697–738).</td></tr>
+          <tr><td>Per-trade risk capital</td><td><code>CapitalCurve.current_risk_amount = capital basis × risk_pct_per_trade</code> (697–700). This config uses a fraction: <code>0.01 = 1%</code>.</td><td><code>CapitalCurve.position_size</code> passes this INR budget and the filled-entry/effective-SL distance into <code>size_trade_lots</code>. The ledger sizes from this budget; <code>Trade.risk_pct</code> is a separate trade field.</td></tr>
+          <tr><td>Size: <code>TradeRecord.position_size</code></td><td><code>CapitalCurve.position_size</code> calls the shared sizing bridge (702–720); TradeJournal writes the result (1412–1432).</td><td><code>CapitalCurve.apply_trade</code> converts price movement × contract size × lots into INR P&amp;L when an instrument spec is present; CSV exports position_size (1566). Without the spec/rate, the backtest has an explicitly stamped <code>legacy_oz</code> path, so that size must not be read as lots.</td></tr>
+        </tbody>
+      </table>
+      <h2>Live hook path</h2>
+      <p><code>ExecutionPlannerV1_2 → live hook CRT levels → UltronRiskGate → MT5 order</code></p>
+      <table>
+        <thead><tr><th>Detail / field</th><th>Producer / source</th><th>Consumers / purpose</th></tr></thead>
+        <tbody>
+          <tr><td>Entry: <code>trade_plan.entry_price</code></td><td><a href="src/config_layer/execution_planner.py">ExecutionPlannerV1_2._compute_entry</a>, called at 271 and emitted at 323.</td><td>The live hook uses entry for CRT levels, economic RR and stop distance; Ultron checks risk geometry.</td></tr>
+          <tr><td>SL / TP1 / TP2</td><td><a href="src/runtime/live_engine_hook.py">live_engine_hook.py</a> calls <code>core.gate_intelligence.compute_crt_levels</code> with entry, direction, high/low, price-unit ATR and CRT config, then writes <code>stop_loss</code>, <code>take_profit_1</code>, <code>take_profit_2</code> (1174–1187).</td><td>Ultron consumes SL and the derived RR. The MT5 order construction reads SL and TP1 (896–900); TP2 remains in the plan.</td></tr>
+          <tr><td>Live account balance</td><td>Caller-supplied <code>trade_data.account_balance</code>; missing balance raises (1116–1126). Deposit currency used by sizing is INR.</td><td>The live hook computes a lot hint; <a href="src/core/ultron_risk_gate.py">UltronRiskGate.evaluate</a> receives balance in portfolio_state and computes the authorized risk budget.</td></tr>
+          <tr><td>Per-trade risk capital</td><td>Live hint: balance × <code>execution_planner.risk_percent / 100</code> (1204–1225). Ultron: balance × <code>allowed_risk / 100</code>, where allowed_risk is the minimum of requested risk and its per-trade cap (368, 405–406).</td><td>Shared lot sizing. Live <code>risk_percent = 1.0</code> means 1%; this differs in representation from backtest's <code>0.01</code>.</td></tr>
+          <tr><td>Lot size</td><td><a href="src/core/position_sizing.py">size_trade_lots</a> produces broker lots. Ultron returns <code>final_position_size</code>; an optional <code>position_size_hint</code> can only reduce it (ultron_risk_gate.py, 443–488).</td><td>The live hook requires approved positive <code>final_position_size</code> and passes it as order <code>lot_size</code> (886–900).</td></tr>
+        </tbody>
+      </table>
+      <h2>Declared capital and XAUUSD sizing inputs</h2>
+      <p>In <a href="configs/production/v2_htfcrt_2026_08.json">v2_htfcrt_2026_08.json</a>: <code>backtest.initial_capital = ₹100,000</code>, <code>risk_pct_per_trade = 0.01</code>, <code>use_compounding = true</code> (598–600); <code>execution_planner.risk_percent = 1.0</code> (71); <code>capital_management.usd_to_inr_rate = 84.0</code> (783). XAUUSD declares <code>contract_size = 100</code>, <code>lot_step = 0.01</code>, <code>lot_min = 0.01</code>, <code>lot_max = 10.0</code> (803–806). These are repository settings, not a current exchange-rate quote or a measured live account balance.</p>
+      <p><code>INR risk budget → divide by USD/INR rate → divide by stop distance → divide by contract size → floor to lot_step → reject below lot_min / cap at lot_max</code>. Authority: <code>position_sizing.py:size_trade_lots</code> (94–147).</p>
+      <p>Illustration only: ₹100,000 × 1% = ₹1,000 risk budget. With a hypothetical $5 stop distance, the declared rate 84 and 100 oz/lot give approximately 0.02381 raw lots, floored to <strong>0.02 lots</strong>. Stop-loss exposure is then ₹840 before costs. No single fixed lot size follows from account capital alone; stop distance and the broker contract also determine it.</p>
+      <p class="lead">Per-trade risk capital is the loss budget at the stop. Account investment is the total balance basis. Margin and position notional are separate quantities; this section reports the risk-sizing inputs and outputs, not a broker margin allocation.</p>
+    </div>
+  </section>
+  <footer>Static source-traced reference. Producers and consumers cover the backtest and live hook paths. Account balances and trade prices are runtime inputs; this page does not connect to a live account.</footer>
+</main>
+</body>
+</html>

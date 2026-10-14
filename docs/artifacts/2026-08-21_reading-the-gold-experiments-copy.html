@@ -1,0 +1,622 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}</style></head><body>
+<title>Reading the Gold Experiments (Copy)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+
+<style>
+:root{
+  --ground:#FBFAF8; --surface:#F3F2EE; --surface-2:#EAE8E2;
+  --ink:#1B2432; --ink-2:#3D4757; --muted:#6E7787;
+  --rule:#DCD9D1; --rule-2:#C9C5BA;
+  --accent:#8A6420; --accent-soft:#F0E6D2;
+  --neg:#9E3227; --pos:#2C6349;
+  --shadow:rgba(27,36,50,.07);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#12161E; --surface:#1A202B; --surface-2:#232B38;
+    --ink:#E6E8EC; --ink-2:#C2C7D0; --muted:#8B95A5;
+    --rule:#2A323F; --rule-2:#3A4453;
+    --accent:#D3A552; --accent-soft:#2B2418;
+    --neg:#E0796C; --pos:#6FBF9A;
+    --shadow:rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#12161E; --surface:#1A202B; --surface-2:#232B38;
+  --ink:#E6E8EC; --ink-2:#C2C7D0; --muted:#8B95A5;
+  --rule:#2A323F; --rule-2:#3A4453;
+  --accent:#D3A552; --accent-soft:#2B2418;
+  --neg:#E0796C; --pos:#6FBF9A;
+  --shadow:rgba(0,0,0,.3);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+  font-size:16.5px; line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+
+/* ---- masthead ---- */
+header.mast{border-bottom:1px solid var(--rule);padding:56px 0 30px;margin-bottom:44px}
+.kicker{
+  font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--accent);margin:0 0 16px;font-weight:500;
+}
+h1{
+  font-family:"IBM Plex Serif",Georgia,serif;font-weight:700;
+  font-size:clamp(2rem,4.6vw,3.1rem);line-height:1.08;letter-spacing:-.02em;
+  margin:0 0 18px;text-wrap:balance;
+}
+.standfirst{
+  font-family:"IBM Plex Serif",Georgia,serif;font-size:1.16rem;line-height:1.6;
+  color:var(--ink-2);max-width:64ch;margin:0;
+}
+.mast-meta{
+  display:flex;flex-wrap:wrap;gap:10px 26px;margin-top:26px;
+  font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted);
+}
+.mast-meta b{color:var(--ink-2);font-weight:500}
+
+/* ---- layout ---- */
+.cols{display:grid;grid-template-columns:212px minmax(0,1fr);gap:56px;align-items:start}
+@media(max-width:900px){.cols{grid-template-columns:1fr;gap:0}nav.toc{position:static;margin-bottom:40px}}
+nav.toc{position:sticky;top:24px;font-size:13.5px;border-left:2px solid var(--rule);padding-left:16px}
+nav.toc p{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+nav.toc a{display:block;color:var(--ink-2);text-decoration:none;padding:4px 0;line-height:1.4}
+nav.toc a:hover,nav.toc a:focus-visible{color:var(--accent)}
+nav.toc .sub{padding-left:12px;font-size:12.5px;color:var(--muted)}
+
+main{min-width:0;max-width:72ch}
+section{margin-bottom:64px;scroll-margin-top:20px}
+h2{
+  font-family:"IBM Plex Serif",Georgia,serif;font-size:1.72rem;font-weight:700;
+  letter-spacing:-.015em;line-height:1.2;margin:0 0 6px;text-wrap:balance;
+}
+.h2-rule{height:2px;background:var(--accent);width:38px;margin-bottom:22px;border-radius:1px}
+h3{font-size:1.09rem;font-weight:600;margin:34px 0 10px;letter-spacing:-.005em;color:var(--ink)}
+h4{font-size:.95rem;font-weight:600;margin:24px 0 8px;color:var(--ink-2)}
+p{margin:0 0 15px;max-width:68ch}
+ul,ol{margin:0 0 15px;padding-left:22px;max-width:68ch}
+li{margin-bottom:8px}
+a{color:var(--accent)}
+strong{font-weight:600}
+code,.mono{font-family:"IBM Plex Mono",monospace;font-size:.855em}
+code{background:var(--surface-2);padding:1px 5px;border-radius:3px;color:var(--ink)}
+
+/* ---- definition block: the document's core job ---- */
+.def{
+  border-left:3px solid var(--accent);background:var(--surface);
+  padding:13px 18px;margin:0 0 16px;border-radius:0 4px 4px 0;
+}
+.def dt{
+  font-weight:600;font-size:.97rem;display:inline;
+}
+.def dd{display:inline;margin:0;color:var(--ink-2)}
+.def dt::after{content:" — ";color:var(--muted);font-weight:400}
+dl{margin:0}
+
+/* ---- evidence chip ---- */
+.ev{
+  display:block;margin:16px 0;padding:12px 16px;background:var(--surface);
+  border:1px solid var(--rule);border-radius:5px;font-size:13.5px;
+}
+.ev .lbl{
+  font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--accent);display:block;margin-bottom:6px;font-weight:600;
+}
+.ev .path{font-family:"IBM Plex Mono",monospace;font-size:12.4px;color:var(--ink-2);
+  display:block;word-break:break-all;line-height:1.75}
+
+/* ---- tables ---- */
+.tw{overflow-x:auto;margin:0 0 18px;border:1px solid var(--rule);border-radius:5px}
+table{border-collapse:collapse;width:100%;font-size:13.6px;
+  font-variant-numeric:tabular-nums;background:var(--surface)}
+th{
+  text-align:left;font-family:"IBM Plex Mono",monospace;font-size:10.5px;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600;
+  padding:10px 13px;border-bottom:1px solid var(--rule-2);white-space:nowrap;
+}
+td{padding:9px 13px;border-bottom:1px solid var(--rule);vertical-align:top}
+tbody tr:last-child td{border-bottom:none}
+td.num{text-align:right;font-family:"IBM Plex Mono",monospace;white-space:nowrap}
+.neg{color:var(--neg)} .pos{color:var(--pos)}
+td.k{font-family:"IBM Plex Mono",monospace;font-size:12.6px}
+
+/* ---- verdict callout ---- */
+.verdict{
+  border:1px solid var(--rule-2);border-top:3px solid var(--accent);
+  background:var(--surface);padding:20px 22px;margin:22px 0;border-radius:0 0 5px 5px;
+}
+.verdict .vh{
+  font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--accent);margin:0 0 9px;font-weight:600;
+}
+.verdict p:last-child{margin-bottom:0}
+.verdict .big{font-family:"IBM Plex Serif",Georgia,serif;font-size:1.2rem;
+  line-height:1.45;color:var(--ink);margin-bottom:10px}
+
+/* ---- correction block ---- */
+.corr{
+  border:1px dashed var(--neg);background:transparent;padding:18px 20px;
+  margin:22px 0;border-radius:5px;
+}
+.corr .ch{
+  font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--neg);margin:0 0 9px;font-weight:600;
+}
+.corr p:last-child{margin-bottom:0}
+
+/* ---- stage marker (real sequence, not decoration) ---- */
+.stage{display:flex;gap:14px;align-items:baseline;margin:32px 0 8px}
+.stage .sn{
+  font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;
+  color:var(--ground);background:var(--accent);width:24px;height:24px;
+  display:flex;align-items:center;justify-content:center;border-radius:3px;flex:0 0 24px;
+  transform:translateY(2px);
+}
+.stage h3{margin:0}
+
+/* ---- pull stat ---- */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:1px;
+  background:var(--rule);border:1px solid var(--rule);margin:22px 0;border-radius:5px;overflow:hidden}
+.stat{background:var(--surface);padding:15px 16px}
+.stat .v{font-family:"IBM Plex Mono",monospace;font-size:1.32rem;font-weight:600;
+  line-height:1.15;letter-spacing:-.02em;display:block;margin-bottom:5px}
+.stat .l{font-size:11.5px;color:var(--muted);line-height:1.4;display:block}
+
+.note{font-size:14px;color:var(--muted);border-left:2px solid var(--rule-2);
+  padding-left:14px;margin:16px 0;max-width:66ch}
+footer{border-top:1px solid var(--rule);margin-top:20px;padding:26px 0 60px;
+  font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--muted);line-height:1.8}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+<header class="mast">
+  <p class="kicker">Domain briefing · XAUUSD M15</p>
+  <h1>Reading the Gold Experiments</h1>
+  <p class="standfirst">Two research programs ran against this codebase. One asked whether the system can tell <em>when</em> to enter a trade. The other asked whether smarter <em>exits</em> could rescue it. Here is what each one did, what it concluded, and exactly which file on disk proves it — with every trading term defined as it appears.</p>
+  <div class="mast-meta">
+    <span><b>Instrument</b> Gold vs US Dollar</span>
+    <span><b>Bar size</b> 15 minutes</span>
+    <span><b>Corpus</b> 47,157 bars · ~2 years</span>
+    <span><b>Authority</b> Research only — nothing shipped</span>
+  </div>
+</header>
+
+<div class="cols">
+<nav class="toc">
+  <p>Contents</p>
+  <a href="#life">1 · A trade, end to end</a>
+  <a href="#object">2 · Your specific trade object</a>
+  <a href="#measure">3 · How we measure</a>
+  <a href="#p1">4 · Program one: entries</a>
+  <a href="#p2">5 · Program two: exits</a>
+  <a href="#map">6 · Evidence map</a>
+  <a href="#not">7 · What we did not prove</a>
+  <a href="#gloss">8 · Glossary</a>
+</nav>
+
+<main>
+
+<section id="life">
+<h2>A trade, end to end</h2><div class="h2-rule"></div>
+<p>Before any of the findings make sense, here is the object everything else is about. Your system watches gold prices and occasionally decides to buy or sell. Each decision has a fixed anatomy.</p>
+
+<dl class="def"><dt>Candle (or bar)</dt><dd>A summary of all price activity in a fixed time window, recorded as four numbers: the open, the high, the low, and the close.</dd></dl>
+<dl class="def"><dt>M15</dt><dd>Fifteen-minute candles — each row in your data covers a quarter hour of trading.</dd></dl>
+<dl class="def"><dt>OHLCV</dt><dd>The five columns of a candle: Open, High, Low, Close, Volume.</dd></dl>
+
+<p>Critically, a candle tells you the <em>extremes</em> reached during those 15 minutes but not the <em>order</em> they were reached in. That single limitation causes real problems later, and one of this session's findings is entirely about it.</p>
+
+<dl class="def"><dt>Long / Short</dt><dd>Long means you profit if the price rises; short means you profit if it falls.</dd></dl>
+<dl class="def"><dt>Entry</dt><dd>The price at which you actually open the position.</dd></dl>
+<dl class="def"><dt>Stop loss (SL)</dt><dd>A pre-set price at which you automatically close a losing trade to cap the damage.</dd></dl>
+<dl class="def"><dt>Take profit (TP)</dt><dd>A pre-set price at which you automatically close a winning trade to bank the gain.</dd></dl>
+<dl class="def"><dt>Risk distance</dt><dd>The gap in price between your entry and your stop loss — how much you lose per unit if the stop is hit.</dd></dl>
+<dl class="def"><dt>R (R-multiple)</dt><dd>Profit or loss expressed as a multiple of the risk distance, so "+2R" means you made twice what you were risking.</dd></dl>
+
+<p><strong>R is the unit everything in both programs is reported in.</strong> It exists so trades with different stop widths can be compared on one scale. A 1R loss is the same "size" of loss whether your stop was $2 or $20 away, because you would have sized the position smaller in the second case.</p>
+
+<dl class="def"><dt>Position sizing</dt><dd>Choosing how many units to buy so that a stop-loss hit costs a fixed amount of money regardless of how far away the stop sits.</dd></dl>
+<dl class="def"><dt>Expectancy</dt><dd>The average R you earn per trade across many trades — positive means the strategy makes money, negative means it bleeds.</dd></dl>
+
+<div class="verdict">
+  <p class="vh">The one number that matters</p>
+  <p>Every conclusion below reduces to: <strong>is expectancy above zero?</strong> Both programs answered no, and the interesting part is <em>why</em> — the two programs give different reasons, and the second rules out the explanation most people would reach for first.</p>
+</div>
+</section>
+
+<section id="object">
+<h2>Your specific trade object</h2><div class="h2-rule"></div>
+<p>Most trading literature assumes one stop and one target. Your production code does something more elaborate, and this matters enormously because <strong>the repository had been measuring the wrong shape of trade for its entire history.</strong></p>
+
+<dl class="def"><dt>Partial fill / partial exit</dt><dd>Closing only part of your position and letting the rest keep running.</dd></dl>
+<dl class="def"><dt>Runner</dt><dd>The portion of a position you deliberately leave open after taking partial profit, hoping for a larger move.</dd></dl>
+<dl class="def"><dt>Trailing stop</dt><dd>A stop loss that moves in your favour as the trade goes your way, locking in gains.</dd></dl>
+<dl class="def"><dt>Breakeven stop</dt><dd>A stop moved to exactly your entry price, so the trade can no longer lose money.</dd></dl>
+
+<p>Your engine runs this sequence:</p>
+<ol>
+  <li>Enter at the close of a specific candle.</li>
+  <li>Place the stop just beyond that candle's low (for a long), plus a small buffer.</li>
+  <li>Set <strong>TP1</strong> and <strong>TP2</strong> as multiples of the risk distance.</li>
+  <li>If TP1 is reached, sell <strong>50%</strong> and move the stop to the <strong>half-way point</strong> between entry and TP1.</li>
+  <li>Let the remaining 50% run to TP2.</li>
+</ol>
+
+<div class="corr">
+  <p class="ch">A naming trap in your own config</p>
+  <p>The config key is called <code>partial_tp_breakeven_enabled</code>, which reads as "move the stop to breakeven." <strong>The code does not do that.</strong> It moves the stop to the half-way point, which is <em>already in profit</em>. The key name and the behaviour disagree, and the code is what runs. This is documented as ontology node <code>SEM-017</code> so nobody re-reads the key name and assumes breakeven again.</p>
+</div>
+
+<p>The consequence: your research tool <code>forward_walk</code> models one target, no partial, no trail. Your production trades two targets, a partial, and a trail. Every outcome-bearing result in the repo's history was measured on a different object than the one that actually trades. The new kernel <code>multi_tp_walk</code> closes that gap.</p>
+
+<div class="ev">
+  <span class="lbl">Evidence — the object is real, not assumed</span>
+  <span class="path">src/config_layer/crt_engine_v2.py · ExecutionEngine.update_trade (the stop reassignment)</span>
+  <span class="path">src/runtime/backtest_v2.py · three exit-price blend sites keyed on partial_tp_fraction</span>
+  <span class="path">Ledger fixture: entry 2318.21 → tp1 2319.3401428571 reproduced to 1e-10</span>
+</div>
+</section>
+
+<section id="measure">
+<h2>How we measure, and why it is hard</h2><div class="h2-rule"></div>
+
+<h3>Costs are not optional</h3>
+<dl class="def"><dt>Spread</dt><dd>The gap between the price you can buy at and the price you can sell at — you cross it on the way in and again on the way out.</dd></dl>
+<dl class="def"><dt>Commission</dt><dd>The broker's per-trade fee.</dd></dl>
+<dl class="def"><dt>Slippage</dt><dd>The difference between the price you asked for and the price you actually got, because the market moved while your order travelled.</dd></dl>
+<dl class="def"><dt>Swap / overnight financing</dt><dd>A daily charge or credit for holding a position past the market's rollover time.</dd></dl>
+<dl class="def"><dt>Gross vs net</dt><dd>Gross is the raw price movement you captured; net is what survives after all the costs above.</dd></dl>
+
+<p>A crucial mechanical fact, and it drives the entire second program:</p>
+<div class="verdict">
+  <p class="vh">Cost in R depends on your stop width</p>
+  <p class="big"><code>cost_r = cost_price ÷ risk_distance</code></p>
+  <p>Costs are a roughly fixed number of dollars. If your stop is tight, the risk distance is small, so that fixed dollar cost is a <em>large</em> fraction of your R. Tight stops pay several times more cost, measured in R, than wide stops do — for the identical broker.</p>
+</div>
+
+<h3>Overlapping measurements</h3>
+<dl class="def"><dt>Lookahead (or look-ahead bias)</dt><dd>Accidentally using information from the future to make a decision in the past, which makes backtests look brilliant and live trading fail.</dd></dl>
+<dl class="def"><dt>Block bootstrap</dt><dd>A statistical technique that resamples data in contiguous chunks rather than individual rows, because neighbouring rows are not independent.</dd></dl>
+
+<p>If you simulate a trade at every candle with a 40-bar horizon, the trade starting at bar 100 and the one starting at bar 101 share 39 of their 40 forward bars. They are almost the same measurement. Treating 47,157 of these as independent would make results look about <strong>√40 ≈ 6× more certain</strong> than they are. Every interval in both programs is a block bootstrap sized to the horizon.</p>
+
+<div class="ev">
+  <span class="lbl">Evidence — the overlap is measured, not assumed</span>
+  <span class="path">Label autocorrelation: +0.292 at lag 1 → +0.164 at lag 2 → +0.003 by lag 20</span>
+  <span class="path">Effective independent sample: 941 per direction, not 47,157</span>
+  <span class="path">tests/research/test_oracle_labeler.py::test_block_bootstrap_is_wider_than_iid_on_autocorrelated_data</span>
+</div>
+
+<h3>The trap of the drifting instrument</h3>
+<dl class="def"><dt>Drift</dt><dd>A persistent directional tendency in a market over a period — gold rose across this two-year corpus.</dd></dl>
+<dl class="def"><dt>Beta (in this context)</dt><dd>Returns you get simply from being exposed to the market's direction, as opposed to skill in choosing when to trade.</dd></dl>
+<dl class="def"><dt>Control / benchmark</dt><dd>A deliberately dumb strategy your clever strategy must beat, to prove the cleverness added something.</dd></dl>
+
+<p>Because gold rose, <em>any</em> strategy that is long often enough will look profitable. So the benchmark is not zero — it is <strong>passive same-direction exposure</strong>: just buy and hold for the same number of bars. This control changed conclusions repeatedly in both programs.</p>
+</section>
+
+<section id="p1">
+<h2>Program one — can the system pick entries?</h2><div class="h2-rule"></div>
+
+<p>Every prior program in this repo was <strong>entry-first</strong>: propose a detection rule, measure what it caught. That couples statistical power to how often the detector fires, and it produced samples too small to conclude anything — one prior program got 47 trades, another got 1.</p>
+
+<p>This inverted it. Simulate a trade at <em>every single bar, both directions</em>, keep the profitable ones, then ask what the system's indicators were saying at those moments.</p>
+
+<dl class="def"><dt>Feature</dt><dd>A number computed from price history that the system uses to describe market conditions — a moving average, a volatility reading, a candle shape.</dd></dl>
+<dl class="def"><dt>State</dt><dd>A categorical label the system assigns, like "trending" or "compressed" or "sweep detected."</dd></dl>
+<dl class="def"><dt>AUC</dt><dd>A score from 0 to 1 measuring how well a number separates winners from losers, where 0.5 means no ability whatsoever.</dd></dl>
+
+<div class="stage"><span class="sn">0</span><h3>Build the measurement surface</h3></div>
+<p>One row per bar carrying every feature and state the repository declares — 47,197 rows × 124 columns. No such artifact existed; each layer previously lived in a different script at a different cadence.</p>
+
+<div class="stage"><span class="sn">½</span><h3>Prove the instrument works — a hard gate</h3></div>
+<p>This step matters more than it sounds. <strong>A null result from a broken detector looks identical to a null result from an efficient market.</strong> So before measuring anything real, we planted fake signals of known strength and checked they were found.</p>
+
+<div class="tw"><table>
+<thead><tr><th>Check</th><th>Result</th></tr></thead>
+<tbody>
+<tr><td>Planted signal at AUC 0.60 / 0.55 / 0.53</td><td class="k">recovered 0.606 / 0.549 / 0.532</td></tr>
+<tr><td>Label shifted a full horizon must collapse</td><td class="k">0.596 → 0.499 / 0.502</td></tr>
+<tr><td>Exact per-bar identities hold</td><td class="k">max error 2.8e-14</td></tr>
+<tr><td>Same identities under a 1-bar shift must break</td><td class="k">error 176 / 162</td></tr>
+<tr><td>Shuffled label returns the base rate</td><td class="k">−0.26914 vs −0.26914</td></tr>
+</tbody></table></div>
+
+<div class="corr">
+  <p class="ch">The gate failed first — on my own bad test</p>
+  <p>I originally asserted that shifting labels by ±1 bar should collapse the signal to chance. <strong>It cannot.</strong> Adjacent labels share 39 of 40 forward bars, so they are genuinely correlated. My criterion assumed label independence — the exact assumption the whole program exists to reject. Rewritten to shift a full horizon; the ±1 behaviour is now reported as the autocorrelation measurement it always was.</p>
+</div>
+
+<div class="stage"><span class="sn">1</span><h3>Label every bar</h3></div>
+<p>377,256 simulated trades: 47,157 bars × 2 directions × 2 stop geometries × 2 tie-break conventions.</p>
+
+<dl class="def"><dt>Tie-break</dt><dd>The rule deciding what happened when one candle touched both your stop and your target, since the candle cannot tell you which came first.</dd></dl>
+
+<div class="corr">
+  <p class="ch">Source correction — I read the tie-break backwards</p>
+  <p>I read a comment in <code>update_trade</code> saying <code>TP2 &gt; SL &gt; TP1</code> and took it as the effective rule. Checking the actual source, <code>_intrabar_trigger_price</code> collapses each bar to a single price and tests the <strong>stop first</strong> — inline comment: <em>"conservative: SL before TP1 on a spanning bar."</em> The backtest path was already conservative. The optimistic ordering exists only in an analytics sidecar the backtest never calls. Fixed in the source and the ontology, not just noted in chat.</p>
+</div>
+
+<div class="stage"><span class="sn">3</span><h3>Look for the pattern</h3></div>
+
+<div class="stats">
+  <div class="stat"><span class="v">0.048</span><span class="l">Best AUC lift of any single feature — and it is on a feature already known to be broken</span></div>
+  <div class="stat"><span class="v">0 / 84</span><span class="l">State cells clearing zero profit, across all 8 configurations</span></div>
+  <div class="stat"><span class="v">7.6×</span><span class="l">Excess over a permuted null for beating the <em>base rate</em></span></div>
+</div>
+
+<dl class="def"><dt>Permutation null</dt><dd>Shuffling your labels randomly and re-running the whole analysis, to see how many "discoveries" pure chance produces.</dd></dl>
+<dl class="def"><dt>Base rate</dt><dd>The average outcome across all trades, which any conditional rule must beat to have added anything.</dd></dl>
+
+<p>The result splits cleanly in two, and the two halves disagree in a useful way:</p>
+
+<div class="tw"><table>
+<thead><tr><th>Direction</th><th class="num">Beat base</th><th>Permuted draws</th><th class="num">Excess</th><th class="num">Clear zero</th><th>Permuted</th></tr></thead>
+<tbody>
+<tr><td>Long</td><td class="num">12,898</td><td class="k">1,592 / 1,942 / 1,549</td><td class="num pos">7.6×</td><td class="num">6</td><td class="k">1 / 3 / 0</td></tr>
+<tr><td>Short</td><td class="num">13,068</td><td class="k">2,099 / 1,477 / 2,729</td><td class="num pos">6.2×</td><td class="num">5</td><td class="k">0 / 0 / 0</td></tr>
+</tbody></table></div>
+
+<div class="verdict">
+  <p class="vh">Program one verdict</p>
+  <p class="big">The vocabulary carries real information, and none of it is economically usable.</p>
+  <p><strong>Information exists:</strong> combinations of states beat the average outcome at 6–8× what random shuffling produces. That is not a multiple-comparisons artifact — the permutation draws are tight and the gap is an order of magnitude.</p>
+  <p><strong>Value does not:</strong> zero of 84 state cells clear actual profitability on any configuration. The handful of combinations that do clear zero are indistinguishable from the permuted noise.</p>
+</div>
+
+<p class="note">Note the distinction that does all the work here: <strong>beating the base rate</strong> means losing less than average. <strong>Clearing zero</strong> means making money. The base rate is around −0.29R, so a rule can beat it convincingly and still lose on every trade.</p>
+
+<div class="ev">
+  <span class="lbl">Evidence for program one</span>
+  <span class="path">results/research/oracle_scan/XAUUSD_M15/scan_report_train.json — headline numbers, permutation draws</span>
+  <span class="path">results/research/oracle_scan/XAUUSD_M15/l2_states_{long,short}_train.csv — the 84 state cells</span>
+  <span class="path">results/research/oracle_scan/XAUUSD_M15/l1_marginal_{long,short}_train.csv — per-feature AUC</span>
+  <span class="path">results/research/oracle_labels/XAUUSD_M15/labels.csv — all 377,256 simulated trades (81 MB)</span>
+  <span class="path">docs/analysis/profitable-entry-oracle-2026-08-21.md — the write-up</span>
+</div>
+</section>
+
+<section id="p2">
+<h2>Program two — could better exits rescue it?</h2><div class="h2-rule"></div>
+
+<p>Program one left one question: the information is real but does not cross zero. Is that because the <strong>exit</strong> is throwing it away, because <strong>costs</strong> eat it, or because the information is simply <strong>too small</strong>?</p>
+
+<p>This is the natural place to look. Your production system has exactly one dynamic stop rule — the half-way trail — and whether it helps had never been measured in either direction. The entire rest of the category did not exist for your two-target trade.</p>
+
+<div class="stage"><span class="sn">A</span><h3>Compute the ceiling before searching</h3></div>
+<dl class="def"><dt>MFE (Maximum Favourable Excursion)</dt><dd>The best unrealised profit a trade reached at any point, regardless of where it actually exited.</dd></dl>
+<dl class="def"><dt>Capture ratio</dt><dd>What fraction of the available profit your exit rule actually converted into realised gain.</dd></dl>
+
+<p>If even a perfect, all-knowing exit could not profit, no rule could, and the search would be pointless. So that was computed first — 35 seconds, before any policy existed.</p>
+
+<div class="tw"><table>
+<thead><tr><th>Cell</th><th class="num">Avg MFE</th><th class="num">Gross</th><th class="num">Net</th><th class="num">Capture (median)</th><th class="num">Passive</th></tr></thead>
+<tbody>
+<tr><td class="k">disp_bar/long/h40</td><td class="num">7.54R</td><td class="num neg">−0.093</td><td class="num neg">−0.269</td><td class="num neg">−0.050</td><td class="num pos">+1.063</td></tr>
+<tr><td class="k">fixed_atr/long/h40</td><td class="num">4.03R</td><td class="num pos">+0.006</td><td class="num neg">−0.099</td><td class="num pos">+0.037</td><td class="num pos">+0.566</td></tr>
+<tr><td class="k">fixed_atr/long/h96</td><td class="num">6.74R</td><td class="num pos">+0.007</td><td class="num neg">−0.098</td><td class="num pos">+0.023</td><td class="num pos">+1.368</td></tr>
+</tbody></table></div>
+
+<p>Two things jump out. <strong>Median capture ratio is negative on 10 of 12 cells</strong> — more often than not, the exit turns a trade that <em>was</em> in profit into a loss. And on the third row, holding the position passively returns <strong>+1.368R</strong> where the actual exit machinery returns <strong>+0.007R</strong>.</p>
+
+<p class="note">The gate itself opened on 12 of 12 cells — but I reported it as <strong>near-vacuous</strong>. When you simulate at every bar, every bar has favourable movement in <em>some</em> direction, so this gate can essentially never close on an unselected population. It ran, it was cheap, and it establishes only that the axis did not close.</p>
+
+<div class="stage"><span class="sn">B</span><h3>Build the stop-policy class</h3></div>
+<dl class="def"><dt>Ratchet</dt><dd>A stop that follows the price up (for a long) but never moves back down.</dd></dl>
+<dl class="def"><dt>Chandelier stop</dt><dd>A trailing stop placed a fixed volatility distance below the highest price reached.</dd></dl>
+<dl class="def"><dt>Causal</dt><dd>Using only information that existed at the time — no peeking at the bar you are about to be tested against.</dd></dl>
+
+<p>Twelve policies plus your production trail, plus a <strong>do-nothing control</strong> — the last being essential, since without it there is no way to know whether the whole category helps at all.</p>
+
+<div class="stage"><span class="sn">C</span><h3>Sweep 390 configurations</h3></div>
+<p>5 stop widths × 13 policies × 3 horizons × 2 directions, every cell over all 47,157 bars, with entries held identical everywhere so any difference is attributable to the exit alone.</p>
+
+<h4>The decomposition, in one table</h4>
+<div class="tw"><table>
+<thead><tr><th>Stop width</th><th class="num">Gross</th><th class="num">Cost</th><th class="num">Net</th></tr></thead>
+<tbody>
+<tr><td class="k">disp_bar (production)</td><td class="num neg">−0.1097</td><td class="num">0.1707</td><td class="num neg">−0.2804</td></tr>
+<tr><td class="k">fixed_0.5</td><td class="num neg">−0.1119</td><td class="num">0.1755</td><td class="num neg">−0.2874</td></tr>
+<tr><td class="k">fixed_1</td><td class="num neg">−0.0332</td><td class="num">0.0940</td><td class="num neg">−0.1272</td></tr>
+<tr><td class="k">fixed_2</td><td class="num neg">−0.0099</td><td class="num">0.0510</td><td class="num neg">−0.0609</td></tr>
+<tr><td class="k">fixed_3</td><td class="num pos">+0.0010</td><td class="num">0.0349</td><td class="num neg">−0.0339</td></tr>
+</tbody></table></div>
+
+<p>Read the last row carefully. At the widest stop, <strong>gross expectancy is +0.0010R — indistinguishable from zero</strong> — and net is almost exactly minus the cost. The exit is not creating or destroying edge. It is deciding how much of a zero-mean quantity gets converted into cost.</p>
+
+<h4>Cost is ~12× the entire policy question</h4>
+<div class="tw"><table>
+<thead><tr><th>Horizon</th><th class="num">Policy spread</th><th class="num">Stop-width spread</th><th class="num">Ratio</th></tr></thead>
+<tbody>
+<tr><td class="k">h20</td><td class="num">0.0198R (0.49 CI)</td><td class="num">0.2540R (6.35 CI)</td><td class="num">12.8×</td></tr>
+<tr><td class="k">h40</td><td class="num">0.0212R (0.41 CI)</td><td class="num">0.2521R (4.93 CI)</td><td class="num">11.9×</td></tr>
+<tr><td class="k">h96</td><td class="num">0.0205R (0.33 CI)</td><td class="num">0.2545R (4.14 CI)</td><td class="num">12.4×</td></tr>
+</tbody></table></div>
+
+<dl class="def"><dt>Confidence interval (CI)</dt><dd>The range your measurement could plausibly be, given how much data you have — if an effect is smaller than the interval, you cannot tell it apart from noise.</dd></dl>
+
+<p><strong>The entire span from best to worst of twelve stop policies is a third to a half of one confidence interval.</strong> Below the noise floor, at three horizons independently. Stop width, by contrast, moves things 4–6 interval widths — real, and it works almost purely through cost.</p>
+
+<h4>Your production trail, audited</h4>
+<div class="tw"><table>
+<thead><tr><th>Horizon</th><th>Direction</th><th class="num">Production</th><th class="num">Do nothing</th><th class="num">Delta</th></tr></thead>
+<tbody>
+<tr><td class="k">h20</td><td>long</td><td class="num neg">−0.26948</td><td class="num neg">−0.25704</td><td class="num neg">−0.01244</td></tr>
+<tr><td class="k">h20</td><td>short</td><td class="num neg">−0.31850</td><td class="num neg">−0.30819</td><td class="num neg">−0.01032</td></tr>
+<tr><td class="k">h40</td><td>long</td><td class="num neg">−0.26914</td><td class="num neg">−0.25663</td><td class="num neg">−0.01251</td></tr>
+<tr><td class="k">h40</td><td>short</td><td class="num neg">−0.31960</td><td class="num neg">−0.31027</td><td class="num neg">−0.00933</td></tr>
+</tbody></table></div>
+
+<p>On <code>disp_bar</code> — the geometry production actually uses — the half-way trail ranks <strong>12th of 12 arms in all four combinations</strong>, and 12/12 again on the other tight geometry. Eight of eight, worst every time, with a delta stable to three decimals across horizons.</p>
+
+<p><strong>And it is still not significant.</strong> The delta is roughly 15–25% of one confidence interval, and the combinations share the same bars, so no p-value is computed from their agreement. The defensible statement: <em>consistently the worst point estimate, on a grid that is entirely below the noise floor.</em> Nothing was changed in your config.</p>
+
+<div class="corr">
+  <p class="ch">Correction — I had the intrabar bias backwards</p>
+  <p>I wrote in a docstring and in the ontology that letting a stop update from the current bar's own high "manufactures free money at scale." <strong>Measurably wrong.</strong> Arming a stop sooner makes it <em>tighter</em> sooner — so the very spike that arms a ratchet becomes the bar that exits on it. On 4,000 synthetic paths, <code>ratchet_0.5r</code> was worse on 920 and better on 248; <code>breakeven_at_1r</code> was <strong>never</strong> better. Fixed in three source files and the ontology, and pinned by a test asserting the <em>direction</em>, so it cannot silently revert.</p>
+</div>
+
+<h4>Then the correction produced a bigger finding</h4>
+<p>I had carried that as a synthetic estimate and re-measured it on the real corpus. Real candles have much fatter wicks relative to their close-to-close moves than random walks do, and the gap grew 2–3×:</p>
+
+<div class="stats">
+  <div class="stat"><span class="v">0.196R</span><span class="l">Mean ambiguity band from not knowing intrabar order</span></div>
+  <div class="stat"><span class="v">0.0212R</span><span class="l">Total spread across all twelve policies</span></div>
+  <div class="stat"><span class="v">9–15×</span><span class="l">The ambiguity is larger than what it would measure</span></div>
+</div>
+
+<p>Because a 15-minute candle cannot tell you whether the high came before or after the low, any policy that reacts to the <em>running extreme</em> — every ratchet, every breakeven trigger — has an unresolvable range of possible outcomes 9 to 15 times wider than the difference between policies.</p>
+
+<div class="verdict">
+  <p class="vh">A ranking restriction, applied rather than noted</p>
+  <p><strong>Not rankable from 15-minute candles:</strong> all ratchets, all breakeven rules. Distinguishing them needs tick data.</p>
+  <p><strong>Rankable:</strong> do-nothing, your production trail, and time-decay rules — all triggered by levels or elapsed time, never by the running extreme. Time-decay's ambiguity band is <code>+0.0003R</code>, essentially zero, which mechanically confirms the cause.</p>
+  <p>This does not rescue anything: the causal arm is the <em>optimistic</em> end in 14 of 16 cases, and every policy already fails. True values sit at or below what was measured.</p>
+</div>
+
+<div class="stage"><span class="sn">D</span><h3>Does the exit interact with the entry information?</h3></div>
+<p>The decisive test. Two possibilities:</p>
+<ul>
+  <li><strong>Level shift</strong> — a better exit lifts every market condition equally, so it never unlocks the information.</li>
+  <li><strong>Interaction</strong> — some conditions respond differently, meaning a combined entry+exit configuration exists.</li>
+</ul>
+
+<dl class="def"><dt>Paired test</dt><dd>Comparing two options measured on the exact same samples, so shared randomness cancels out instead of being mistaken for a real difference.</dd></dl>
+
+<p>Since every exit was measured on the same bars, the question collapses to something simple: take the difference between two exits on each bar, and ask whether the market state <em>predicts that difference</em>. If the state tells you which exit wins, that is interaction.</p>
+
+<div class="verdict">
+  <p class="vh">Result</p>
+  <p class="big">0 of 16 comparisons show interaction.</p>
+  <p>Ten came back as clean level shifts, six were indeterminate, none showed interaction. The smallest p-value anywhere was <strong>0.10</strong>, against an attainable floor of 0.05 given 19 permutations.</p>
+</div>
+
+<div class="verdict">
+  <p class="vh">Program two verdict</p>
+  <p class="big">The exit is not the binding constraint.</p>
+  <p><strong>1.</strong> Gross expectancy is ≈0 at the every-bar level (+0.0010R). An exit cannot create edge the entry did not contain.<br>
+  <strong>2.</strong> Net = gross − cost, and cost dominates, set by stop <em>width</em>.<br>
+  <strong>3.</strong> The dynamic-stop axis is inert, and most of it is unmeasurable from 15-minute candles anyway.<br>
+  <strong>4.</strong> No interaction with the entry information.</p>
+  <p>So of the three candidate explanations — exit, cost, information size — it is <strong>not the exit</strong>. Between the other two it is both, and they are the same statement: the information is not large enough to clear the cost any real stop placement incurs.</p>
+</div>
+
+<h4>The uncomfortable observation</h4>
+<p>Zero of 156 long configurations beat simply holding the position. The widest stop minimises cost <em>and</em> has gross ≈ 0, so "widen the stop" converges toward "hold" — whose limit on this corpus is gold's own drift: <strong>+0.23R over 96 bars where the best exit configuration returned +0.058R</strong>.</p>
+
+<p class="note">This is a measurement about this corpus, not a recommendation. Holding without a stop has unbounded drawdown — a risk the R-normalised comparison deliberately does not price. What it establishes is that the exit machinery subtracted from a passive baseline over this period, which is a fact about where engineering effort has been going.</p>
+
+<div class="ev">
+  <span class="lbl">Evidence for program two</span>
+  <span class="path">results/research/exit_geometry/XAUUSD_M15/ceilings_report.json — the three ceilings, capture ratios, passive control</span>
+  <span class="path">results/research/exit_geometry/XAUUSD_M15/sweep_cells.csv — all 390 configurations with CIs</span>
+  <span class="path">results/research/exit_geometry/XAUUSD_M15/same_bar_band.csv — the 16-cell intrabar ambiguity measurement</span>
+  <span class="path">results/research/exit_geometry/XAUUSD_M15/interaction_report.json — 16 paired tests, 19 permutations each</span>
+  <span class="path">docs/analysis/exit-geometry-decomposition-2026-08-21.md — the write-up</span>
+</div>
+</section>
+
+<section id="map">
+<h2>Evidence map</h2><div class="h2-rule"></div>
+<p>Every conclusion above, against the file that proves it.</p>
+
+<div class="tw"><table>
+<thead><tr><th>Conclusion</th><th>Where it is proven</th></tr></thead>
+<tbody>
+<tr><td>Production trades a two-target partial-exit object, not a single TP</td><td class="k">crt_engine_v2.py · update_trade; ontology SEM-017</td></tr>
+<tr><td>The tie-break is stop-first, not target-first</td><td class="k">crt_engine_v2.py · _intrabar_trigger_price</td></tr>
+<tr><td>New exit kernel is correct</td><td class="k">tests/research/test_multi_tp_walk_parity.py (18 tests) + naive twin on 20,000 paths + ledger row to 1e-10</td></tr>
+<tr><td>The detector can find signal that is really there</td><td class="k">scripts/research/validate_oracle_harness.py — 5 blocking checks</td></tr>
+<tr><td>Entry information exists but does not clear zero</td><td class="k">oracle_scan/scan_report_train.json</td></tr>
+<tr><td>Gross expectancy ≈ 0; net = −cost</td><td class="k">exit_geometry/sweep_cells.csv, grouped by stop width</td></tr>
+<tr><td>Stop policy is inert; stop width is not</td><td class="k">exit_geometry/sweep_cells.csv — spread vs CI width, 3 horizons</td></tr>
+<tr><td>Production trail is the worst licensed arm</td><td class="k">exit_geometry/sweep_cells.csv — 8 of 8 tight-geometry combos</td></tr>
+<tr><td>Ratchets cannot be ranked from M15 candles</td><td class="k">exit_geometry/same_bar_band.csv</td></tr>
+<tr><td>Exit does not interact with entry information</td><td class="k">exit_geometry/interaction_report.json</td></tr>
+<tr><td>The additions changed nothing that was already running</td><td class="k">377,256 labels regenerate byte-identically, sha256 3027ea97…; vector regression + schema pins pass</td></tr>
+</tbody></table></div>
+
+<p class="note">Two ontology nodes — <code>SEM-019</code> (dynamic stop policy) and <code>SEM-020</code> (exit capture decomposition) — were registered <em>before</em> the code that implements them, and mutation-tested 6/6 to confirm the registry actually rejects malformed entries rather than merely storing them.</p>
+</section>
+
+<section id="not">
+<h2>What we did not prove</h2><div class="h2-rule"></div>
+<p>The limits matter as much as the findings, and I would rather you know them before you build on any of this.</p>
+<ul>
+  <li><strong>One instrument, one timeframe.</strong> Everything is gold on 15-minute candles under one broker's measured costs.</li>
+  <li><strong>Drift contaminated three separate readings.</strong> Gold rose across the corpus, which makes tightening stops help shorts and hurt longs — I mistook that for a policy effect once and caught it by testing across all groups. A non-drifting instrument is the obvious decontamination.</li>
+  <li><strong>The holdout is unspent.</strong> 236 non-overlapping bars were reserved and never read. Thin for validating anything, but honestly quantified before mining rather than discovered afterwards.</li>
+  <li><strong>Nothing was changed in production.</strong> No config, no promotion, no live behaviour. The production trail was measured, not modified.</li>
+  <li><strong>Selecting bars by their outcome is lookahead by construction.</strong> These programs describe the past; they are not an edge and cannot become one without forward validation.</li>
+  <li><strong>No finding was formally registered.</strong> Both write-ups are point-in-time analyses pending your sign-off.</li>
+</ul>
+</section>
+
+<section id="gloss">
+<h2>Glossary</h2><div class="h2-rule"></div>
+<p>Every term above, in one place.</p>
+
+<div class="tw"><table>
+<thead><tr><th>Term</th><th>One-sentence meaning</th></tr></thead>
+<tbody>
+<tr><td class="k">AUC</td><td>A 0–1 score for how well a number separates winners from losers; 0.5 is no ability.</td></tr>
+<tr><td class="k">Base rate</td><td>The average outcome across all trades, which any conditional rule must beat.</td></tr>
+<tr><td class="k">Beta</td><td>Returns from simply being exposed to the market's direction rather than from skill.</td></tr>
+<tr><td class="k">Block bootstrap</td><td>Resampling data in contiguous chunks because neighbouring rows are not independent.</td></tr>
+<tr><td class="k">Breakeven stop</td><td>A stop moved to your entry price so the trade can no longer lose.</td></tr>
+<tr><td class="k">Candle / bar</td><td>Price activity in a fixed window as open, high, low, close.</td></tr>
+<tr><td class="k">Capture ratio</td><td>The fraction of available profit your exit actually converted.</td></tr>
+<tr><td class="k">Causal</td><td>Using only information that existed at the time, with no peeking ahead.</td></tr>
+<tr><td class="k">Chandelier stop</td><td>A trailing stop a fixed volatility distance below the highest price reached.</td></tr>
+<tr><td class="k">Commission</td><td>The broker's per-trade fee.</td></tr>
+<tr><td class="k">Confidence interval</td><td>The range your measurement could plausibly occupy given your sample size.</td></tr>
+<tr><td class="k">Control</td><td>A deliberately dumb benchmark your strategy must beat to prove it added value.</td></tr>
+<tr><td class="k">Drift</td><td>A persistent directional tendency in a market over a period.</td></tr>
+<tr><td class="k">Entry</td><td>The price at which you open the position.</td></tr>
+<tr><td class="k">Expectancy</td><td>Average R earned per trade across many trades.</td></tr>
+<tr><td class="k">Feature</td><td>A number computed from price history describing market conditions.</td></tr>
+<tr><td class="k">Gross vs net</td><td>Raw price movement captured, versus what survives after costs.</td></tr>
+<tr><td class="k">Long / short</td><td>Profiting from a rise, versus profiting from a fall.</td></tr>
+<tr><td class="k">Lookahead</td><td>Using future information in a past decision, which fakes backtest success.</td></tr>
+<tr><td class="k">MFE</td><td>The best unrealised profit a trade reached, regardless of where it exited.</td></tr>
+<tr><td class="k">M15 / OHLCV</td><td>Fifteen-minute bars; the five columns open, high, low, close, volume.</td></tr>
+<tr><td class="k">Paired test</td><td>Comparing options on identical samples so shared randomness cancels out.</td></tr>
+<tr><td class="k">Partial exit</td><td>Closing part of a position and letting the rest run.</td></tr>
+<tr><td class="k">Permutation null</td><td>Shuffling labels and re-running, to see how many "findings" chance produces.</td></tr>
+<tr><td class="k">Position sizing</td><td>Choosing quantity so a stop-loss hit costs a fixed amount regardless of stop width.</td></tr>
+<tr><td class="k">R-multiple</td><td>Profit or loss as a multiple of the risk distance.</td></tr>
+<tr><td class="k">Ratchet</td><td>A stop that follows price in your favour and never moves back.</td></tr>
+<tr><td class="k">Risk distance</td><td>The price gap between entry and stop loss.</td></tr>
+<tr><td class="k">Runner</td><td>The portion left open after taking partial profit.</td></tr>
+<tr><td class="k">Slippage</td><td>The gap between the price you asked for and the price you got.</td></tr>
+<tr><td class="k">Spread</td><td>The gap between buy and sell price, crossed on entry and exit.</td></tr>
+<tr><td class="k">State</td><td>A categorical market label like "trending" or "compressed".</td></tr>
+<tr><td class="k">Stop loss</td><td>A preset price that automatically closes a losing trade.</td></tr>
+<tr><td class="k">Swap</td><td>A daily charge or credit for holding a position overnight.</td></tr>
+<tr><td class="k">Take profit</td><td>A preset price that automatically closes a winning trade.</td></tr>
+<tr><td class="k">Tie-break</td><td>The rule for when one candle touched both stop and target.</td></tr>
+<tr><td class="k">Trailing stop</td><td>A stop that moves in your favour as the trade progresses.</td></tr>
+</tbody></table></div>
+</section>
+
+<footer>
+  Point-in-time briefing · 2026-08-21 · XAUUSD M15 · 47,157 bars<br>
+  Research and diagnostic only. economic_claims_allowed: false. No promotion, no fusion weight, no G001, no ACTIVE_VERSION change.<br>
+  Corpus, costs and conclusions are scoped to this instrument, this timeframe and this broker calibration.
+</footer>
+
+</main>
+</div>
+</div>
+
+</body></html>

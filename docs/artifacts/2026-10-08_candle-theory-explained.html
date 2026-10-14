@@ -1,0 +1,321 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Candle Theory Explained</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a study-notebook "screen" (ruled stage) with a player bar under it, then the chapter list. */
+:root{
+  --bg:#eef0f4; --surface:#ffffff; --rule:#e3e7ef; --ink:#151a24; --muted:#5b6475;
+  --pen:#2743c9; --up:#14965a; --down:#d23a3a; --zup:rgba(20,150,90,.16); --zdown:rgba(210,58,58,.16);
+  --zgap:rgba(39,67,201,.14); --track:#d7dce6; --warn-bg:#fff4dc; --warn-fg:#6b4a00;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1218; --surface:#171b23; --rule:#232a36; --ink:#e8ecf3; --muted:#9aa4b6;
+  --pen:#8ea2ff; --up:#34c784; --down:#ff6b6b; --zup:rgba(52,199,132,.18); --zdown:rgba(255,107,107,.18);
+  --zgap:rgba(142,162,255,.18); --track:#2c3442; --warn-bg:#2b2412; --warn-fg:#f1cf7a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1218; --surface:#171b23; --rule:#232a36; --ink:#e8ecf3; --muted:#9aa4b6;
+  --pen:#8ea2ff; --up:#34c784; --down:#ff6b6b; --zup:rgba(52,199,132,.18); --zdown:rgba(255,107,107,.18);
+  --zgap:rgba(142,162,255,.18); --track:#2c3442; --warn-bg:#2b2412; --warn-fg:#f1cf7a; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);padding-block:24px 48px;padding-inline:16px}
+.wrap{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+header{display:flex;flex-direction:column;gap:6px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(1.6rem,4vw,2.4rem);margin:0;letter-spacing:-.02em;text-wrap:balance}
+h1 em{font-style:normal;color:var(--pen)}
+.lede{margin:0;color:var(--muted);max-width:65ch;line-height:1.5}
+.player{background:var(--surface);border:1px solid var(--rule);border-radius:10px;overflow:hidden}
+.stage{position:relative;aspect-ratio:16/9;max-width:100%;
+  background-image:repeating-linear-gradient(to bottom,transparent 0 31px,var(--rule) 31px 32px);background-position:0 12px}
+.stage svg,.stage .card{position:absolute;inset:0;width:100%;height:100%}
+.stage .card{display:flex;flex-direction:column;justify-content:center;gap:12px;padding:6% 7%;box-sizing:border-box}
+.kicker{font:500 .72rem var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--pen)}
+.scene-title{position:absolute;left:3.5%;top:4%;font-family:var(--f-display);font-weight:700;font-size:clamp(.95rem,2.6vw,1.5rem);margin:0;z-index:2}
+.scene-title small{display:block;font:500 clamp(.6rem,1.4vw,.72rem) var(--f-mono);letter-spacing:.12em;color:var(--pen);text-transform:uppercase;margin-bottom:2px}
+.caption{padding:14px 18px;border-top:1px solid var(--rule);min-height:5.2em;display:flex;flex-direction:column;gap:8px}
+.caption p{margin:0;line-height:1.5;max-width:75ch}
+.chip{align-self:flex-start;font:500 .74rem var(--f-mono);color:var(--muted);border:1px solid var(--rule);border-radius:4px;padding:3px 8px;line-height:1.5}
+.chip b{color:var(--pen);font-weight:500}
+.controls{display:flex;align-items:center;gap:10px;padding:10px 14px;border-top:1px solid var(--rule);flex-wrap:wrap}
+.controls button.ctl{font:500 .82rem var(--f-mono);background:var(--surface);color:var(--ink);border:1px solid var(--ink);border-radius:6px;padding:6px 12px;cursor:pointer;min-width:2.6em}
+.controls button.ctl.primary{background:var(--ink);color:var(--surface)}
+.track{flex:1;min-width:180px;display:flex;gap:3px;height:22px;align-items:center}
+.track button{flex:1;height:8px;border:0;padding:0;background:var(--track);border-radius:2px;cursor:pointer;position:relative;overflow:hidden}
+.track button span{position:absolute;inset:0 auto 0 0;width:0;background:var(--pen)}
+.track button:hover{height:12px}
+.count{font:500 .78rem var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums}
+button:focus-visible{outline:2px solid var(--pen);outline-offset:2px}
+.warn{background:var(--warn-bg);color:var(--warn-fg);border-radius:8px;padding:12px 14px;line-height:1.5;font-size:.92rem}
+.warn b{font-weight:700}
+h2{font-family:var(--f-display);font-size:1.15rem;margin:8px 0 0}
+ol.chapters{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
+ol.chapters button{width:100%;text-align:left;background:var(--surface);color:var(--ink);border:1px solid var(--rule);border-radius:8px;padding:10px 12px;cursor:pointer;display:grid;grid-template-columns:2.4em 1fr;gap:2px 8px;font:inherit}
+ol.chapters button[aria-current="true"]{border-color:var(--pen);box-shadow:inset 0 0 0 1px var(--pen)}
+ol.chapters .n{font:500 .8rem var(--f-mono);color:var(--pen);grid-row:span 2}
+ol.chapters .t{font-weight:700}
+ol.chapters .d{color:var(--muted);font-size:.85rem;line-height:1.4}
+.src{color:var(--muted);font-size:.82rem;margin:0}
+.src code{font-family:var(--f-mono);font-size:.78rem}
+/* drawing */
+svg text{font-family:var(--f-body);fill:var(--ink)}
+svg .lb{font-size:14px}
+svg .sm{font-size:12px;fill:var(--muted)}
+svg .hd{font-family:var(--f-display);font-weight:700;font-size:15px;fill:var(--pen)}
+svg .tag{font-family:var(--f-mono);font-size:12px;font-weight:500}
+.u{fill:var(--up);stroke:var(--up)} .d{fill:var(--down);stroke:var(--down)}
+.wk{stroke-width:1.6} .tu{fill:var(--up)} .td{fill:var(--down)} .tp{fill:var(--pen)}
+.ln{stroke:var(--ink);stroke-width:1.4;fill:none}
+.dash{stroke:var(--muted);stroke-width:1.4;stroke-dasharray:5 4;fill:none}
+.pen{stroke:var(--pen);stroke-width:1.8;fill:none}
+.zu{fill:var(--zup)} .zd{fill:var(--zdown)} .zg{fill:var(--zgap);stroke:var(--pen);stroke-dasharray:4 3}
+.a{opacity:0;animation:pop .45s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:var(--dl,0s);transform-box:fill-box;transform-origin:50% 100%}
+@keyframes pop{from{opacity:0;transform:translateY(6px) scaleY(.6)}to{opacity:1;transform:none}}
+.paused .a{animation-play-state:paused}
+@media (prefers-reduced-motion: reduce){.a{animation:none;opacity:1}}
+.card .a{transform-origin:0 50%}
+.card h3{font-family:var(--f-display);font-size:clamp(1.3rem,4vw,2.4rem);margin:0;line-height:1.1;text-wrap:balance}
+.card p{margin:0;font-size:clamp(.8rem,1.9vw,1.05rem);line-height:1.5;color:var(--muted);max-width:60ch}
+.steps{display:flex;flex-direction:column;gap:clamp(4px,1.2vw,10px);margin:0;padding:0;list-style:none}
+.steps li{display:grid;grid-template-columns:2em 1fr;gap:8px;font-size:clamp(.78rem,1.9vw,1.05rem);line-height:1.35}
+.steps li b{font-family:var(--f-mono);color:var(--pen)}
+.steps li span small{color:var(--muted)}
+@media (max-width:560px){.stage{aspect-ratio:4/3} .stage .card{padding:5% 5%}}
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="kicker">docs/reference/candle_theory · 13 study cards</span>
+    <h1>Candle theory, <em>one card at a time</em></h1>
+    <p class="lede">A short animated walk through the reference cards: from one candle, to market structure, to a planned trade. Each scene redraws a card in plain English and names the feature in this repository that measures the same thing.</p>
+  </header>
+
+  <div class="player" id="player">
+    <div class="stage" id="stage" aria-live="polite"></div>
+    <div class="caption" id="caption"></div>
+    <div class="controls">
+      <button class="ctl" id="prev" type="button" aria-label="Previous scene">◀</button>
+      <button class="ctl primary" id="play" type="button" aria-label="Pause">Pause</button>
+      <button class="ctl" id="next" type="button" aria-label="Next scene">▶</button>
+      <div class="track" id="track" role="group" aria-label="Scenes"></div>
+      <span class="count" id="count"></span>
+    </div>
+  </div>
+
+  <div class="warn"><b>Teaching material, not evidence.</b> These patterns have not been shown to give an edge on XAUUSD. The repo's measured results say the opposite so far: F-086 (the feature and state vocabulary does not mark a profitable entry bar), F-097 (no context family adds expectancy beyond CRT state alone), and the 2026-10-08 profitable-zone study (entering on zone-start features loses money after cost). Use the cards to name what you see, never as the reason a trade will work.</div>
+
+  <h2>Chapters</h2>
+  <ol class="chapters" id="chapters"></ol>
+  <p class="src">Source: <code>docs/reference/candle_theory/README.md</code> and cards 01–13. Some cards are partly written in Hausa; the English here follows the README. Keys: Space play/pause, ← → change scene.</p>
+</div>
+
+<script>
+(function(){
+/* ---------- drawing helpers (viewBox 640 x 360) ---------- */
+const S=(y0,h,lo,hi)=>p=>y0+h-(p-lo)/(hi-lo)*h;
+let D=0; const st=(d)=>`style="--dl:${d.toFixed(2)}s"`;
+function candle(y,x,[o,h,l,c],bw,d){
+  const up=c>=o, cls=up?'u':'d', top=y(Math.max(o,c)), bh=Math.max(2,Math.abs(y(o)-y(c)));
+  return `<g class="a" ${st(d)}><line class="${cls} wk" x1="${x}" x2="${x}" y1="${y(h)}" y2="${y(l)}"/><rect class="${cls}" x="${x-bw/2}" y="${top}" width="${bw}" height="${bh}" rx="1.5"/></g>`;
+}
+function gen(start,closes,w=1.2){let p=start;return closes.map((c,i)=>{const o=p;p=c;const wv=w*(0.6+((i*7)%5)/6);return [o,Math.max(o,c)+wv,Math.min(o,c)-wv,c];});}
+function interp(piv,n){const out=[];for(let i=0;i<piv.length-1;i++){for(let k=1;k<=n;k++){const t=k/n;out.push(piv[i]+(piv[i+1]-piv[i])*t+(k<n?((k%2)?-1.2:1.2):0));}}return out;}
+function series(y,x0,dx,arr,bw,d0,step){return arr.map((c,i)=>candle(y,x0+i*dx,c,bw,d0+i*step)).join('');}
+const T=(x,y,t,cls='lb',d=0,anchor='start')=>`<text class="a ${cls}" ${st(d)} x="${x}" y="${y}" text-anchor="${anchor}">${t}</text>`;
+const L=(x1,y1,x2,y2,cls='ln',d=0)=>`<line class="a ${cls}" ${st(d)} x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;
+const R=(x,y,w,h,cls,d=0)=>`<rect class="a ${cls}" ${st(d)} x="${x}" y="${y}" width="${w}" height="${h}" rx="2"/>`;
+const AR=(x1,y1,x2,y2,d=0)=>{const a=Math.atan2(y2-y1,x2-x1),s=8;return `<g class="a" ${st(d)}><line class="pen" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/><path class="pen" d="M${x2-s*Math.cos(a-0.45)} ${y2-s*Math.sin(a-0.45)} L${x2} ${y2} L${x2-s*Math.cos(a+0.45)} ${y2-s*Math.sin(a+0.45)}"/></g>`;};
+const svg=inner=>`<svg viewBox="0 0 640 360" role="img" preserveAspectRatio="xMidYMid meet">${inner}</svg>`;
+
+/* ---------- scenes ---------- */
+const scenes=[
+{t:'How to watch',k:'Intro',d:'What the cards cover and how to use them.',dur:9000,
+ html:()=>`<div class="card"><span class="kicker a" ${st(.1)}>13 cards · 15 scenes · about 2 minutes</span>
+ <h3 class="a" ${st(.3)}>From one candle, to market structure, to a planned trade.</h3>
+ <p class="a" ${st(.8)}>Each scene redraws one card. Green candles closed higher than they opened; red closed lower. The chip under each caption names the repository feature that measures the same idea.</p>
+ <p class="a" ${st(1.4)}>The cards teach a vocabulary for reading charts. They are not proof that any pattern makes money.</p></div>`,
+ cap:'Press Pause any time, or click a segment in the bar to jump to that card.',repo:null},
+
+{t:'Candle anatomy',k:'Card 01',d:'Body = open to close; wicks = high and low.',
+ draw:()=>{const y=S(60,270,0,100);return candle(y,250,[30,90,10,70],64,.2)+candle(y,430,[70,85,15,30],64,.5)
+ +T(208,y(90)+5,'High','lb',.9,'end')+T(208,y(70)+5,'Close','lb',1.1,'end')+T(208,y(30)+5,'Open','lb',1.3,'end')+T(208,y(10)+5,'Low','lb',1.5,'end')
+ +T(472,y(85)+5,'High','lb',.9)+T(472,y(70)+5,'Open','lb',1.1)+T(472,y(30)+5,'Close','lb',1.3)+T(472,y(15)+5,'Low','lb',1.5)
+ +T(340,y(80)+4,'upper wick','sm',1.9,'middle')+T(340,y(50)+4,'body','hd',2.1,'middle')+T(340,y(20)+4,'lower wick','sm',2.3,'middle')
+ +T(250,345,'bullish','tag tu',2.6,'middle')+T(430,345,'bearish','tag td',2.6,'middle');},
+ cap:'The body runs from the open to the close. The upper wick reaches the high and the lower wick reaches the low. A long body means a strong move. A long wick means price went there and was pushed back.',
+ repo:'body_size FM-001 · candle_range FM-002 · upper_wick FM-003 · lower_wick FM-004 · body_ratio FM-010'},
+
+{t:'Buyers and sellers',k:'Card 02',d:'Colour shows who won the bar; size shows how hard.',
+ draw:()=>{const y=S(70,240,38,82);return series(y,60,34,gen(50,[52,51,54,56,55,58,72],1.4),20,.2,.18)
+ +T(60,y(80),'Buyers in control','hd',1.6)+T(264,y(74),'big body = strong pressure','sm',1.9,'end')
+ +series(y,370,34,gen(70,[68,69,66,64,65,62,46],1.4),20,2.2,.18)
+ +T(370,y(80),'Sellers in control','hd',3.6)+T(580,y(42),'big body = strong pressure','sm',3.9,'end');},
+ cap:'Green: the close is above the open, so buyers won the bar. Red: the close is below the open, so sellers won. A big candle shows strong pressure. The card says to wait for a confirming candle before entering.',
+ repo:'raw slots 0–3 open/high/low/close · size via body_size and disp_strength'},
+
+{t:'Hammer',k:'Card 03',d:'Small body on top, long lower wick, after a fall.',
+ draw:()=>{const y=S(60,270,40,100),dn=gen(94,[88,90,84,79,81,75,70,66,68,61],1.2),up=gen(60,[64,68,67,72,77],1.2);
+ return R(30,y(51),580,y(46)-y(51),'zu',.1)+T(36,y(46)+16,'support','sm',.2)
+ +series(y,50,30,dn,16,.3,.12)+candle(y,350,[58,61,45,60.5],18,1.6)
+ +series(y,380,30,up,16,2.4,.15)+AR(300,y(35)+0,343,y(46)+8,1.9)
+ +T(296,y(35)+4,'hammer','hd',2.0,'end')+T(360,y(66),'lower wick ≥ 2× body','sm',2.1,'middle');},
+ cap:'A small body near the top and a long lower wick. Sellers pushed price down, then buyers drove it back up before the close. After a downtrend or at support it can mark a bullish turn. In the repo, trend context is not part of the definition.',
+ repo:'hammer FM-107 (slot 58) · pin_lower FM-105 · lower_wick_ratio FM-104 · rejection_intensity_lower FM-117'},
+
+{t:'Shooting star',k:'Card 04',d:'Small body at the bottom, long upper wick, after a rise.',
+ draw:()=>{const y=S(60,270,40,100),up=gen(48,[53,51,57,62,60,66,71,69,75,79],1.2),dn=gen(79.5,[76,71,72,66,61],1.2);
+ return R(30,y(95),580,y(89)-y(95),'zd',.1)+T(36,y(95)-6,'resistance','sm',.2)
+ +series(y,50,30,up,16,.3,.12)+candle(y,350,[80.5,95,78.5,79.5],18,1.6)
+ +series(y,380,30,dn,16,2.4,.15)+AR(300,y(98),343,y(92),1.9)
+ +T(296,y(98)+4,'shooting star','hd',2.0,'end');},
+ cap:'The mirror of the hammer: a small body near the bottom and a long upper wick. Buyers pushed up and sellers rejected it. After an uptrend or at resistance it can mark a bearish turn.',
+ repo:'shooting_star FM-108 (slot 59) · pin_upper FM-106 · upper_wick_ratio FM-103 · rejection_intensity_upper FM-119'},
+
+{t:'Doji',k:'Card 05',d:'Open almost equals close: indecision.',
+ draw:()=>{const y=S(60,270,0,100),r=S(110,180,35,75),rng=[[50,58,44,54],[54,60,48,50.3],[50,57,45,55],[55,62,49,51],[51,57,46,51.4],[51,58,44,56],[56,63,50,52],[52,58,45,52.3],[52,59,47,57],[57,62,49,53]];
+ return candle(y,150,[50,82,18,50.6],70,.2)+T(198,y(50)+5,'open ≈ close','lb',.8)
+ +T(150,y(84)-6,'long wick up','sm',1.0,'middle')+T(150,y(14)+4,'long wick down','sm',1.1,'middle')
+ +L(330,r(64),620,r(64),'dash',1.3)+L(330,r(42),620,r(42),'dash',1.3)
+ +series(r,350,28,rng,13,1.5,.12)+T(475,r(68)-4,'inside a range: dojis say little','sm',2.8,'middle');},
+ cap:'Open and close are almost equal, so neither side won. At support or resistance it can warn of a turn. Inside a range it means little. Either way it needs a confirming candle. The repo only counts a doji as material when its range is at least half an ATR.',
+ repo:'doji_material FM-109 · dragonfly_doji FM-110 · gravestone_doji FM-111'},
+
+{t:'Confirmation candles',k:'Card 06',d:'Engulfing, pin bar, morning star, doji.',dur:11000,
+ draw:()=>{const y=S(80,220,0,100);let s='';const col=(i,title,d)=>T(80+i*160,52,title,'hd',d,'middle');
+ s+=col(0,'Engulfing',.1)+candle(y,64,[60,62,48,50],18,.3)+candle(y,96,[48,68,44,66],24,.7)+R(50,y(70),60,y(44)-y(70),'zg',1.0)+T(80,330,'body swallows the last','sm',1.1,'middle');
+ s+=col(1,'Pin bar',1.4)+candle(y,240,[42,82,38,40],18,1.6)+T(240,330,'long wick = rejected','sm',1.9,'middle');
+ s+=col(2,'Morning star',2.3)+candle(y,370,[76,79,48,50],18,2.5)+candle(y,400,[44,47,39,45],14,2.8)+candle(y,430,[48,74,46,72],18,3.1)+T(400,330,'fall, pause, rise','sm',3.4,'middle');
+ s+=col(3,'Doji',3.8)+candle(y,560,[50,74,26,50.5],18,4.0)+T(560,330,'open = close','sm',4.3,'middle');
+ return s;},
+ cap:'Four candles traders wait for after price reaches a level. Engulfing: one body fully covers the previous one. Pin bar: a long wick shows the price was rejected. Morning star: a fall, a small pause candle, then a strong rise. Doji: indecision. The card\'s method: find support or resistance, wait for confirmation, then enter.',
+ repo:'engulfing_bull FM-112 / engulfing_bear FM-113 + engulfing_strength FM-118 · pin FM-105/106 · doji FM-109..111 · morning star: not registered'},
+
+{t:'Reversal signals',k:'Card 07',d:'Hammer, star and engulfing in context.',dur:11000,
+ draw:()=>{const y=S(80,220,0,100);let s='';const col=(i,title,cls,d)=>T(80+i*160,52,title,'hd',d,'middle');
+ s+=col(0,'Hammer',0,.1)+series(y,30,22,gen(84,[76,70,63],1),12,.2,.12)+candle(y,96,[57,60,38,59],14,.7)+AR(118,y(60),140,y(78),.9);
+ s+=col(1,'Shooting star',0,1.2)+series(y,190,22,gen(18,[26,32,39],1),12,1.3,.12)+candle(y,256,[43,64,41,42],14,1.8)+AR(278,y(40),300,y(22),2.0);
+ s+=col(2,'Bull engulfing',0,2.3)+series(y,350,22,gen(70,[64,58],1),12,2.4,.12)+candle(y,394,[58,60,49,51],12,2.7)+candle(y,418,[49,70,47,68],16,3.0)+AR(436,y(70),456,y(86),3.2);
+ s+=col(3,'Bear engulfing',0,3.5)+series(y,510,22,gen(30,[36,42],1),12,3.6,.12)+candle(y,554,[42,51,40,49],12,3.9)+candle(y,578,[51,53,30,32],16,4.2)+AR(596,y(30),614,y(14),4.4);
+ return s+T(320,335,'each one only means something at a level, after a move','sm',4.8,'middle');},
+ cap:'The same signals shown after a move. A hammer or bullish engulfing after a fall points up. A shooting star or bearish engulfing after a rise points down. Without the prior move and a level, the shape alone says much less.',
+ repo:'same features as cards 03, 04 and 06'},
+
+{t:'Trend: highs and lows',k:'Card 08',d:'Up = higher highs and higher lows; down = the reverse.',dur:10000,
+ draw:()=>{const y=S(70,240,20,95),n=4,up=interp([30,55,45,70,60,85],n),dn=interp([85,60,70,45,55,30],n),dx=13;let s='';
+ s+=T(30,52,'Bull market','hd',.1)+series(y,30,dx,gen(28,up,1),8,.2,.05);
+ const lu=[['HH',1,55,-1],['HL',2,45,1],['HH',3,70,-1],['HL',4,60,1],['HH',5,85,-1]];
+ lu.forEach(([t,i,p,dir],j)=>{s+=T(30+(i*n-1)*dx,y(p)+(dir<0?-12:22),t,'tag '+(dir<0?'tu':'tp'),1.4+j*.15,'middle');});
+ s+=T(340,52,'Bear market','hd',2.3)+series(y,340,dx,gen(87,dn,1),8,2.4,.05);
+ const ld=[['LL',1,60,1],['LH',2,70,-1],['LL',3,45,1],['LH',4,55,-1],['LL',5,30,1]];
+ ld.forEach(([t,i,p,dir],j)=>{s+=T(340+(i*n-1)*dx,y(p)+(dir<0?-12:22),t,'tag '+(dir<0?'tp':'td'),3.6+j*.15,'middle');});
+ return s;},
+ cap:'A bull market makes higher highs (HH) and higher lows (HL). A bear market makes lower highs (LH) and lower lows (LL). Anything else is sideways. The card says not to chase a move: wait for confirmation.',
+ repo:'higher_high FM-055 · lower_low FM-056 · trend_bias FM-054 (EMA-based, not swing-based)'},
+
+{t:'Break of structure and change of character',k:'Card 09',d:'BOS continues a trend; CHoCH is the first break against it.',dur:11000,
+ draw:()=>{const y=S(70,240,20,95),n=4,dx=13;let s='';
+ const a=interp([30,70,50,88],n);s+=T(30,52,'Break of structure (BOS)','hd',.1)+series(y,30,dx,gen(28,a,1),8,.2,.06);
+ const bi=a.findIndex((c,i)=>i>n*2&&c>70);s+=L(30+(n-1)*dx,y(70),300,y(70),'dash',1.2)+T(300,y(70)-6,'previous high','sm',1.3,'end')
+ +T(30+bi*dx,y(a[bi])-22,'BOS','tag tu',1.8,'middle');
+ const b=interp([30,82,45,64,36,80],3);s+=T(340,52,'Change of character (CHoCH)','hd',2.3)+series(y,340,dx-1,gen(28,b,1),7,2.4,.06);
+ const ci=b.findIndex((c,i)=>i>11&&c>64);s+=L(340+8*(dx-1),y(64),620,y(64),'dash',3.6)+T(620,y(64)-6,'last lower high','sm',3.7,'end')
+ +T(340+ci*(dx-1),y(b[ci])-22,'CHoCH','tag tp',4.2,'middle');return s;},
+ cap:'Break of structure (BOS): in an uptrend, price closes above the previous high and the trend continues. Change of character (CHoCH): after a run of lower highs, price breaks above the last lower high. It is the first sign the trend may be turning. The card\'s tip: understand structure before you enter.',
+ repo:'break_of_structure FM-057 · change_of_character FM-083 · swing_high/low FM-045/046 (causal, k = swing_window)'},
+
+{t:'Support and resistance',k:'Card 10',d:'Levels where buyers or sellers keep showing up.',dur:10000,
+ draw:()=>{const y=S(70,240,15,95),dx=13;let s='';
+ s+=R(30,y(36),280,y(26)-y(36),'zu',.1)+T(36,y(26)+16,'support zone','sm',.2)+T(30,52,'Support','hd',.1);
+ s+=series(y,40,dx,gen(86,interp([84,33,60,34,82],5),1.1),8,.3,.05);
+ s+=R(340,y(80),280,y(70)-y(80),'zd',2.0)+T(346,y(80)-6,'resistance zone','sm',2.1)+T(340,52,'Resistance','hd',2.0);
+ s+=series(y,350,dx,gen(24,interp([26,76,50,75,28],5),1.1),8,2.2,.05);return s;},
+ cap:'Support is a level where buyers defend price, so falls stop and turn up. Resistance is where sellers defend it, so rises stop and turn down. The card: look to buy near support and sell near resistance, and only with a confirming candle.',
+ repo:'swing levels FM-045/046 · pdh/pdl_distance FM-079/080 · eqh/eql_distance FM-081/082 + present FM-101/102 · sweeps: liquidity_sweep FM-058, sweep_detected FM-059'},
+
+{t:'Fair value gap',k:'Card 11',d:'A three-candle gap that price often comes back to.',dur:11000,
+ draw:()=>{const y=S(70,250,0,100);let s='';
+ s+=T(30,52,'Bullish FVG','hd',.1)+candle(y,60,[30,46,26,42],20,.3)+candle(y,92,[42,80,40,78],20,.6)+candle(y,124,[76,92,58,88],20,.9)
+ +R(70,y(58),230,y(46)-y(58),'zg',1.3)+T(60,345,'1','tag',1.0,'middle')+T(92,345,'2','tag',1.0,'middle')+T(124,345,'3','tag',1.0,'middle')
+ +T(200,y(52)+4,'gap: candle 1 high < candle 3 low','sm',1.5)
+ +series(y,156,22,gen(88,[82,74,64,60,67,75,84],1.6),12,1.8,.15);
+ s+=T(340,52,'Bearish FVG','hd',3.2)+candle(y,370,[70,74,54,58],20,3.4)+candle(y,402,[58,60,20,22],20,3.7)+candle(y,434,[24,42,8,12],20,4.0)
+ +R(380,y(54),240,y(42)-y(54),'zg',4.4)
+ +series(y,466,22,gen(12,[18,26,36,41,34,26,17],1.6),12,4.7,.15);return s;},
+ cap:'A fair value gap is a three-candle imbalance. In the bullish case, the high of candle 1 stays below the low of candle 3, leaving a gap the big middle candle jumped across. Price often comes back into the gap and is rejected there. The bearish case is the mirror. The card says it works best together with liquidity and order blocks.',
+ repo:'fvg_distance FM-076 + fvg_present FM-098 (same 3-candle rule) · order_block_distance/present FM-075/097'},
+
+{t:'Entry confirmations',k:'Card 12',d:'Inside bar, breakout, momentum, rejection.',dur:11000,
+ draw:()=>{const y=S(80,220,0,100);let s='';const col=(i,t,d)=>T(80+i*160,52,t,'hd',d,'middle');
+ s+=col(0,'Inside bar',.1)+candle(y,62,[30,85,20,75],24,.3)+candle(y,100,[62,66,44,48],14,.7)+R(48,y(85),68,y(20)-y(85),'zg',1.0)+T(80,330,'small bar inside a big one','sm',1.1,'middle');
+ s+=L(180,y(62),300,y(62),'dash',1.3)+col(1,'Breakout',1.3)+series(y,190,18,gen(55,[48,44,50,56,58],1),10,1.4,.12)+candle(y,284,[58,80,57,76],14,2.2)+T(240,330,'closes through resistance','sm',2.4,'middle');
+ s+=col(2,'Momentum',2.7)+candle(y,400,[18,90,14,85],32,2.9)+T(400,330,'big body, small wicks','sm',3.2,'middle');
+ s+=L(500,y(30),620,y(30),'dash',3.5)+col(3,'Rejection',3.5)+candle(y,560,[36,42,10,40],16,3.7)+T(560,330,'wick through support, close back above','sm',4.0,'middle');
+ return s;},
+ cap:'Four ways to confirm an entry. Inside bar: a small candle within the previous candle\'s range (a pause). Breakout: a close through resistance. Momentum: a large body with small wicks. Rejection: a wick through support that closes back above it. The card: find the key level, wait for confirmation, then enter.',
+ repo:'inside_bar FM-114 + compression_ratio FM-115 · break_of_structure FM-057 · disp_strength, momentum_score · pin FM-105/106, rejection_intensity FM-116..119'},
+
+{t:'Risk management',k:'Card 13',d:'Stop below support, target above, reward bigger than risk.',dur:11000,
+ draw:()=>{const y=S(60,270,20,95),piv=interp([52,80,44],5),c=gen(50,piv,1.1),dx=16,x0=40,ex=x0+(c.length-1)*dx;
+ let s=series(y,x0,dx,c,10,.2,.08)+L(30,y(41),620,y(41),'ln',1.2)+T(36,y(41)+16,'support','sm',1.3);
+ s+=R(ex,y(44),230,y(36)-y(44),'zd',1.8)+R(ex,y(68),230,y(44)-y(68),'zu',2.2);
+ s+=L(ex,y(44),ex+230,y(44),'pen',1.6)+T(ex+236,y(44)+4,'entry 44','tag tp',1.7)
+ +T(ex+236,y(36)+4,'stop 36','tag td',2.0)+T(ex+236,y(68)+4,'target 68','tag tu',2.4)
+ +T(ex+115,y(56)+5,'reward 24','lb',2.7,'middle')+T(ex+115,y(40)+5,'risk 8','sm',2.9,'middle')
+ +T(ex+115,y(78),'1 : 3','hd',3.2,'middle');return s;},
+ cap:'Put the stop loss beyond the level (below support for a buy) and the take-profit near the next resistance. Here the trade risks 8 to make 24, a 1:3 reward-to-risk. Never risk more than 1–2% of the account on one trade, and do not over-leverage: a single large candle can wipe out an oversized position.',
+ repo:'ExecutionPlannerV1_2 (SL/TP) · UltronRiskGate min_rr_ratio · risk_percent (F-111: 1% live) · backtest.sl_anchor'},
+
+{t:'Reading a live chart',k:'Putting it together',d:'Structure, levels, the candle, confirmation, risk.',dur:12000,
+ html:()=>`<div class="card"><span class="kicker a" ${st(.1)}>The README's five steps</span>
+ <ol class="steps">
+ <li class="a" ${st(.4)}><b>1</b><span>Structure first: trend and the last BOS or CHoCH. <small>cards 08, 09</small></span></li>
+ <li class="a" ${st(1.2)}><b>2</b><span>Levels: support/resistance, prior-day high/low, equal highs/lows, open FVGs and order blocks. <small>cards 10, 11</small></span></li>
+ <li class="a" ${st(2.0)}><b>3</b><span>The candle at the level: body versus wicks. Long wick = rejection, doji = indecision, big body = pressure. <small>cards 01, 03–05</small></span></li>
+ <li class="a" ${st(2.8)}><b>4</b><span>Confirmation: wait for the next candle. One pattern alone is the weakest read. <small>cards 06, 07, 12</small></span></li>
+ <li class="a" ${st(3.6)}><b>5</b><span>Risk: decide the stop beyond the level and a target with reward bigger than risk before entering. <small>card 13</small></span></li>
+ </ol>
+ <p class="a" ${st(4.6)}>These steps name what you see. On XAUUSD the repo has not found that they pick winning trades.</p></div>`,
+ cap:'The five-step order from the README, which turns the cards into a checklist. Treat it as a way to describe a chart, not as a trading edge: F-086 and F-097 found none in this vocabulary on gold.',
+ repo:'still unregistered: morning/evening star; breakout and momentum candles as named patterns'}
+];
+
+/* ---------- player ---------- */
+const stage=document.getElementById('stage'),cap=document.getElementById('caption'),track=document.getElementById('track'),
+ count=document.getElementById('count'),playBtn=document.getElementById('play'),player=document.getElementById('player'),list=document.getElementById('chapters');
+const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+let cur=0,playing=!reduce,elapsed=0,last=null;
+scenes.forEach((sc,i)=>{
+  const b=document.createElement('button');b.type='button';b.setAttribute('aria-label',`Scene ${i+1}: ${sc.t}`);b.innerHTML='<span></span>';b.onclick=()=>go(i);track.appendChild(b);
+  const li=document.createElement('li');li.innerHTML=`<button type="button"><span class="n">${String(i).padStart(2,'0')}</span><span class="t">${sc.t}</span><span class="d">${sc.k} · ${sc.d}</span></button>`;
+  li.firstChild.onclick=()=>{go(i);player.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});};list.appendChild(li);
+});
+function render(){
+  const sc=scenes[cur];
+  stage.innerHTML=(sc.html?sc.html():`<p class="scene-title"><small>${sc.k}</small>${sc.t}</p>`+svg(sc.draw()));
+  cap.innerHTML=`<p>${sc.cap}</p>`+(sc.repo?`<span class="chip"><b>In the repo:</b> ${sc.repo}</span>`:'');
+  count.textContent=`${cur+1} / ${scenes.length}`;
+  [...list.querySelectorAll('button')].forEach((b,i)=>b.setAttribute('aria-current',i===cur?'true':'false'));
+  paint();
+}
+function paint(){
+  const dur=scenes[cur].dur||9000;
+  [...track.children].forEach((b,i)=>{b.firstChild.style.width=i<cur?'100%':i===cur?Math.min(100,elapsed/dur*100)+'%':'0';});
+}
+function go(i){cur=Math.max(0,Math.min(scenes.length-1,i));elapsed=0;render();}
+function setPlay(p){playing=p;player.classList.toggle('paused',!p);playBtn.textContent=p?'Pause':'Play';playBtn.setAttribute('aria-label',p?'Pause':'Play');last=null;}
+playBtn.onclick=()=>{if(!playing&&cur===scenes.length-1&&elapsed>=(scenes[cur].dur||9000)){go(0);}setPlay(!playing);};
+document.getElementById('prev').onclick=()=>go(cur-1);
+document.getElementById('next').onclick=()=>go(cur+1);
+document.addEventListener('keydown',e=>{if(e.target.closest&&e.target.closest('input,select,textarea'))return;
+  if(e.code==='Space'){e.preventDefault();playBtn.click();}else if(e.key==='ArrowRight')go(cur+1);else if(e.key==='ArrowLeft')go(cur-1);});
+function tick(ts){
+  if(playing){if(last!=null)elapsed+=ts-last;last=ts;const dur=scenes[cur].dur||9000;
+    if(elapsed>=dur){if(cur<scenes.length-1)go(cur+1);else{elapsed=dur;setPlay(false);}}paint();}
+  requestAnimationFrame(tick);
+}
+setPlay(playing);render();requestAnimationFrame(tick);
+})();
+</script>
+
+</body></html>
