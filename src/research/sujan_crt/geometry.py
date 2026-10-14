@@ -81,15 +81,16 @@ def body_bias(bar: Bar) -> str:
     return "none"
 
 
-def closed_parents(bars: Sequence[Bar], rule: str) -> list[Bar]:
-    """Calendar-true closed parents. The in-progress bucket is dropped."""
+def closed_parents(bars: Sequence[Bar], rule: str, calendar=None) -> list[Bar]:
+    """Calendar-true closed parents. The in-progress bucket is dropped. Bars are canonical UTC;
+    `calendar` (features.market_calendar) defines the market day (None = UTC grid)."""
     if not bars:
         return []
     groups: list[tuple[object, list[Bar]]] = []
     current_key = None
     bucket: list[Bar] = []
     for b in bars:
-        key = period_key(b.timestamp, rule)
+        key = period_key(b.timestamp, rule, calendar)
         if current_key is None:
             current_key = key
             bucket = [b]
@@ -102,7 +103,7 @@ def closed_parents(bars: Sequence[Bar], rule: str) -> list[Bar]:
             bucket.append(b)
     out: list[Bar] = []
     for i, (key, chunk) in enumerate(groups):
-        ts = period_start(key, rule)
+        ts = period_start(key, rule, calendar)
         out.append(
             Bar(
                 timestamp=ts,

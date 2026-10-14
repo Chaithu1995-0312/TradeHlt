@@ -66,6 +66,20 @@ _V4_ONLY_FEATURE = "macd_hist_raw"
 _V5_ONLY_FEATURES = frozenset({
     "order_block_distance", "fvg_distance", "breaker_distance", "mitigation_block_distance",
     "pdh_distance", "pdl_distance", "eqh_distance", "eql_distance", "change_of_character",
+    # v7.0 (CH-feature-semantic-fixes-v7, 2026-10-08): the 6 presence flags (48 -> 54) are
+    # likewise post-v3 additions and must not leak into the frozen 38-dim schema.
+    "order_block_present", "fvg_present", "breaker_present", "mitigation_block_present",
+    "eqh_present", "eql_present",
+    # v8.0 (CH-candle-pattern-observations-v8, 2026-10-08): the 17 candle-pattern observations
+    # (54 -> 71), same reason.
+    "upper_wick_ratio", "lower_wick_ratio", "pin_lower", "pin_upper", "hammer", "shooting_star",
+    "doji_material", "dragonfly_doji", "gravestone_doji", "engulfing_bull", "engulfing_bear",
+    "inside_bar", "compression_ratio", "rejection_intensity_signed", "rejection_intensity_lower",
+    "engulfing_strength", "rejection_intensity_upper",
+    # v9.0 (CH-card-identity-census-v9, 2026-10-08): 8 card identities (71 -> 79).
+    "morning_star", "higher_low", "lower_high", "sideways",
+    "rejection_bull_present", "rejection_bear_present",
+    "rejection_bull_distance", "rejection_bear_distance",
 })
 
 

@@ -48,7 +48,10 @@ def test_resampled_m5_matches_fetched_file(group, symbol, rule):
     if not (m5_path.exists() and ref_path.exists()):
         pytest.skip(f"corpus not on disk: {m5_path} / {ref_path}")
 
-    resampled = resample(_load(m5_path, symbol), rule)
+    # CH-corpus-clock-contract-v1: candles are canonical UTC; buckets follow the instrument's
+    # MARKET calendar (the reference H4 file is on the same market grid once normalized).
+    from features.market_calendar import calendar_for_instrument
+    resampled = resample(_load(m5_path, symbol), rule, calendar_for_instrument(symbol))
     ref = _load(ref_path, symbol)[:-1]      # resampler drops the trailing bucket
 
     # STRICT over the coverage INTERSECTION (provider ladders have different depths:

@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import Any, Sequence
 
 from data_ingestion.dataset_integrity import validate_dataset
+from research.mc_kit.bars import as_corpus as _ssot
 
 from research.sujan_manipulation.bulk_proxy import (
     FROZEN_TOP_N,
@@ -72,8 +73,12 @@ def _sha256(path: Path) -> str:
     return h.hexdigest()
 
 
-def load_bars(path: Path) -> list[Bar]:
-    rows = list(csv.DictReader(path.open(encoding="utf-8")))
+def load_bars(source: "Path | object") -> list[Bar]:
+    # CH-corpus-ssot (2026-10-08): rows from the corpus SSOT (corpus_store.load), never a
+    # separate CSV open; a path resolves through the same process-cached SSOT object.
+    from research.mc_kit.bars import as_corpus
+
+    rows = as_corpus(source).records()
     return [
         Bar(
             timestamp=_parse_ts(row["timestamp"]),
@@ -154,7 +159,7 @@ def run(
         "run_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "corpus": {
             "path": corpus.as_posix(),
-            "sha256": _sha256(corpus),
+            "sha256": _ssot(corpus).sha256, "dataset_id": _ssot(corpus).dataset_id,
             "n_bars": len(bars),
             "first_timestamp": bars[0].timestamp.isoformat(sep=" "),
             "last_timestamp": bars[-1].timestamp.isoformat(sep=" "),
@@ -313,7 +318,7 @@ def run_candidates(
         "run_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "corpus": {
             "path": corpus.as_posix(),
-            "sha256": _sha256(corpus),
+            "sha256": _ssot(corpus).sha256, "dataset_id": _ssot(corpus).dataset_id,
             "n_bars": len(bars),
             "first_timestamp": bars[0].timestamp.isoformat(sep=" "),
             "last_timestamp": bars[-1].timestamp.isoformat(sep=" "),

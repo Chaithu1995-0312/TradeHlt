@@ -139,16 +139,20 @@ def _tp1_multiplier(crt_cfg: dict, intent: str) -> float:
     return float(crt_cfg["tp1_atr_multiplier"])
 
 
-def _nights_held(entry_ts, exit_ts) -> int:
+def _nights_held(entry_ts, exit_ts, calendar=None) -> int:
     """Calendar-date boundaries crossed between entry and exit, as a declared proxy.
 
     The broker's true rollover hour is not recorded anywhere in this repository, so this
-    counts stamped date changes instead. Declared as a proxy rather than presented as a
+    counts market-calendar date changes instead (timestamps are canonical UTC; `calendar` maps
+    them to the market day, whose boundary — 17:00 New York for FX/metals — is where swap
+    rolls). None = UTC dates. Declared as a proxy rather than presented as a
     measurement; the count of affected trades is reported in the manifest so the
     assumption is visible rather than buried.
     """
     if entry_ts is None or exit_ts is None:
         return 0
+    if calendar is not None:
+        entry_ts, exit_ts = calendar.wall(entry_ts), calendar.wall(exit_ts)
     return max(0, (exit_ts.date() - entry_ts.date()).days)
 
 
@@ -167,6 +171,7 @@ def label_corpus(
     crt_cfg: dict | None = None,
     charge_swap: bool = True,
     sweep_lookback: int | None = None,
+    calendar=None,
 ) -> tuple[pd.DataFrame, dict]:
     """Label every (bar, direction, sl_geom, tie_break) unit. Returns (labels, stats)."""
     t0 = time.time()
@@ -275,7 +280,7 @@ def label_corpus(
                     nights = 0
                     if charge_swap:
                         exit_ts = ts_by_pos[min(p + o.duration_candles, n_raw - 1)]
-                        nights = _nights_held(entry_ts, exit_ts)
+                        nights = _nights_held(entry_ts, exit_ts, calendar)
                         swap_nights[nights] += 1
                     cost_r = cost_model.cost_r(
                         entry, risk, exit_kind=o.exit_kind,
@@ -403,7 +408,17 @@ def main(argv=None) -> int:
         return 2
     if args.limit_bars:
         matrix = matrix.head(args.limit_bars)
-    raw = pd.read_csv(Path(bm_manifest["corpus_path"]), parse_dates=["timestamp"])
+    # CH-corpus-ssot (2026-10-08): the labeler consumes the SAME authoritative corpus the bar
+    # matrix was built from — loaded through the SSOT and required to carry the matrix
+    # manifest's corpus_sha256 — instead of re-reading whatever file sits at that path.
+    from data_ingestion.corpus_store import load as corpus_load
+
+    corpus = corpus_load(bm_manifest["corpus_path"], bm_manifest.get("instrument", ""))
+    if bm_manifest.get("corpus_sha256") and corpus.sha256 != bm_manifest["corpus_sha256"]:
+        print(f"[FATAL] SSOT corpus {corpus.sha256} != bar-matrix corpus "
+              f"{bm_manifest['corpus_sha256']} -- labels would describe a different corpus")
+        return 2
+    raw = corpus.frame(parse_dates=["timestamp"])
     raw["_pos"] = range(len(raw))
 
     crt_cfg = get_prod_section("crt_engine")
@@ -429,14 +444,9 @@ def main(argv=None) -> int:
 
     # ── [Phase 3] label-lineage identity: dataset_hash (registered formula, single
     # authority — never re-inlined), one run_id per label invocation, and the UTC stamp.
-    from governance.run_identity import dataset_hash as _rh_dataset_hash
     _label_run_id = f"LABEL_{tag}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
     _label_generated_utc = datetime.now(timezone.utc).isoformat()
-    try:
-        _corpus_file = Path(bm_manifest["corpus_path"])
-        _ds_hash = _rh_dataset_hash(_corpus_file) if _corpus_file.exists() else "NO_CORPUS_FILE"
-    except Exception:  # noqa: BLE001 — lineage is provenance, never a label quantity
-        _ds_hash = "NO_CORPUS_FILE"
+    _ds_hash = corpus.sha256   # CH-corpus-ssot: identity of the bytes actually labelled
 
     labels, stats = label_corpus(
         matrix, raw,
@@ -450,6 +460,7 @@ def main(argv=None) -> int:
         trail_fraction=0.5,
         crt_cfg=crt_cfg,
         sweep_lookback=sweep_lookback,
+        calendar=corpus.calendar,
     )
 
     # [Phase 3] label-lineage columns appended at the END (never shifting an existing

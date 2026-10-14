@@ -37,16 +37,30 @@ class SecondLowEvent:
     close_disp_atr: float | None
 
 
+def _ssot(path: Path):
+    from data_ingestion.corpus_store import load as corpus_load
+
+    return corpus_load(path, "XAUUSD", sequence_check=False)
+
+
 def sha256_prefix(path: Path) -> str:
+    # CH-corpus-ssot (2026-10-08): a CSV corpus's identity comes from the SSOT; the xlsx
+    # regression fixture is not an MT5 corpus and keeps its own byte hash.
+    path = Path(path)
+    if path.suffix.lower() == ".csv":
+        return _ssot(path).sha256[:16]
     return hashlib.sha256(path.read_bytes()).hexdigest()[:16]
 
 
 def load_ohlcv(path: Path | str) -> pd.DataFrame:
     path = Path(path)
+    calendar = None
     if path.suffix.lower() in {".xlsx", ".xls"}:
         df = pd.read_excel(path)
     else:
-        df = pd.read_csv(path)
+        corpus = _ssot(path)
+        df = corpus.frame()   # CH-corpus-ssot: the SSOT's bytes (canonical UTC), no separate read
+        calendar = corpus.calendar
     df["timestamp"] = pd.to_datetime(df["timestamp"])
     df = df.set_index("timestamp").sort_index()
     df = df.rename(columns={c: c.lower() for c in df.columns})
@@ -55,7 +69,11 @@ def load_ohlcv(path: Path | str) -> pd.DataFrame:
     if missing:
         raise ValueError(f"OHLCV missing columns: {sorted(missing)}")
     cols = list(required | ({"volume"} & set(df.columns)))
-    return df[cols]
+    out = df[cols]
+    # CH-corpus-clock-contract-v1: timestamps are canonical UTC; a "trading day" is a CALENDAR
+    # concept (the market day), carried with the frame for compute_trading_day_second_low.
+    out.attrs["calendar"] = calendar
+    return out
 
 
 def compute_true_range_atr(df: pd.DataFrame, period: int = ATR_PERIOD) -> pd.Series:
@@ -68,9 +86,24 @@ def compute_true_range_atr(df: pd.DataFrame, period: int = ATR_PERIOD) -> pd.Ser
     return tr.rolling(period, min_periods=max(1, period // 2)).mean()
 
 
-def compute_trading_day_second_low(df: pd.DataFrame, lookback: int = LOOKBACK_TRADING_DAYS) -> pd.Series:
-    daily = df.groupby(df.index.normalize()).agg(Low=("low", "min"))
-    daily.index = pd.DatetimeIndex(daily.index)
+def daily_low(df: pd.DataFrame, calendar=None) -> pd.DataFrame:
+    """Per-MARKET-day low, indexed by the day's UTC start. Bars are canonical UTC; the trading
+    day is a calendar concept (`calendar` argument, else `df.attrs["calendar"]`, else UTC days)."""
+    cal = calendar if calendar is not None else df.attrs.get("calendar")
+    if cal is not None and not cal.is_identity:
+        # market-day buckets: group on the calendar wall date, then map the day starts back to UTC
+        wall = cal.wall_series(pd.Series(df.index, index=df.index))
+        daily = df.groupby(wall.dt.normalize().to_numpy()).agg(Low=("low", "min"))
+        daily.index = pd.DatetimeIndex(cal.to_utc_series(pd.Series(pd.DatetimeIndex(daily.index))))
+    else:
+        daily = df.groupby(df.index.normalize()).agg(Low=("low", "min"))
+        daily.index = pd.DatetimeIndex(daily.index)
+    return daily
+
+
+def compute_trading_day_second_low(df: pd.DataFrame, lookback: int = LOOKBACK_TRADING_DAYS,
+                                   calendar=None) -> pd.Series:
+    daily = daily_low(df, calendar)
     second_low = daily["Low"].rolling(lookback, min_periods=lookback).apply(
         lambda x: sorted(x.dropna())[1] if len(x.dropna()) >= 2 else np.nan,
         raw=False,

@@ -91,7 +91,12 @@ def test_full_corpus_read_matches_candleloader_byte_identical():
         assert (a.timestamp, a.open, a.high, a.low, a.close, a.volume) == (
             b.timestamp, b.open, b.high, b.low, b.close, b.volume,
         )
-    assert store_read.resolved == (PHASE1_START, PHASE1_END)
+    # PHASE1_START/END are the registry's SOURCE-clock range; the cache and the loader both serve
+    # canonical UTC (CH-corpus-clock-contract-v1), so compare in the SSOT's own UTC range.
+    from data_ingestion.corpus_store import load as _ssot_load
+    c = _ssot_load(_CANONICAL, "XAUUSD", sequence_check=False)
+    assert c.source_start.replace("T", " ") == PHASE1_START.strftime("%Y-%m-%d %H:%M:%S")
+    assert store_read.resolved == (datetime.fromisoformat(c.start), datetime.fromisoformat(c.end))
 
 
 def test_windowed_read_honors_lead_in_and_window_flags():

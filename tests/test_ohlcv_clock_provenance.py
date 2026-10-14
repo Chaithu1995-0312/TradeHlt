@@ -6,9 +6,12 @@ MEAN: a corpus may not be read until a human has DECLARED its timezone and REVIE
 declaration. `mt5_candle_fetcher.py:186` stamps MT5 broker-server time as UTC, so a file's own
 claim about its clock is not evidence (F-066).
 
-These tests pin the fail-closed behaviour, the double-conversion guard, and — via
-`test_every_file_backed_reader_is_gated` — the structural property that a NEW OHLCV reader cannot
-silently skip the gate.
+These tests pin the fail-closed behaviour and — via `test_every_file_backed_reader_is_gated` — the
+structural property that a NEW OHLCV reader cannot silently skip the gate.
+
+CH-corpus-clock-contract-v1 (2026-10-08): a record must name a CONFIGURED clock (provider/broker/
+clock_id); the former `basis=` double-conversion guard is retired (nothing downstream converts any
+more). The contract's own acceptance tests live in tests/test_corpus_clock_contract.py.
 """
 from __future__ import annotations
 
@@ -75,7 +78,13 @@ def corpus(tmp_path: Path) -> Path:
 @pytest.fixture
 def registry(tmp_path: Path) -> Path:
     p = tmp_path / "registry.json"
-    p.write_text(json.dumps({"schema_version": cr.REGISTRY_SCHEMA_VERSION, "records": []}),
+    p.write_text(json.dumps({"schema_version": cr.REGISTRY_SCHEMA_VERSION, "records": [],
+                             "clocks": {
+                                 "mt5x": {"provider": "mt5", "broker": "ICMarkets",
+                                          "timezone": "America/New_York",
+                                          "server_midnight_local": "17:00"},
+                                 "utcx": {"provider": "binance", "broker": "Binance",
+                                          "timezone": "UTC", "server_midnight_local": "00:00"}}}),
                  encoding="utf-8")
     return p
 
@@ -83,7 +92,7 @@ def registry(tmp_path: Path) -> Path:
 def _record(corpus: Path, registry: Path, **over) -> None:
     base = dict(path=cr.normalize_key(corpus), sha256=cr.sha256_file(corpus),
                 timezone=cr.TZ_MT5_SERVER_NY_DST, user_reviewed=True, reviewed_by="tester",
-                reviewed_at=cr.utcnow_iso())
+                reviewed_at=cr.utcnow_iso(), provider="mt5", broker="ICMarkets", clock_id="mt5x")
     base.update(over)
     cr.save_registry({base["path"]: cr.ClockRecord(**base)}, registry)
 
@@ -102,9 +111,9 @@ def test_unreviewed_record_raises(corpus, registry):
 
 def test_reviewed_and_matching_sha_passes(corpus, registry):
     _record(corpus, registry)
-    rec = cr.require_reviewed_clock(corpus, registry=registry)
-    assert rec.user_reviewed is True
-    assert rec.timezone == cr.TZ_MT5_SERVER_NY_DST
+    res = cr.require_reviewed_clock(corpus, registry=registry)
+    assert res.record.user_reviewed is True
+    assert res.clock.clock_id == "mt5x" and res.origin == "registry"
 
 
 def test_sha_drift_reopens_review(corpus, registry):
@@ -152,30 +161,26 @@ def test_non_boolean_user_reviewed_rejected():
         )
 
 
-# ── double-conversion guard ────────────────────────────────────────────────────
-def test_utc_corpus_under_utc_corrected_basis_raises(corpus, registry):
-    """broker_clock's SCOPE: a genuinely-UTC corpus must NEVER take the MT5->UTC conversion."""
-    _record(corpus, registry, timezone=cr.TZ_UTC)
-    with pytest.raises(ClockProvenanceError, match="DOUBLE CONVERSION"):
-        cr.require_reviewed_clock(corpus, registry=registry, basis=cr.BASIS_UTC_CORRECTED)
-
-
-def test_utc_corpus_under_broker_local_basis_passes(corpus, registry):
-    _record(corpus, registry, timezone=cr.TZ_UTC)
-    assert cr.require_reviewed_clock(
-        corpus, registry=registry, basis=cr.BASIS_BROKER_LOCAL
-    ).timezone == cr.TZ_UTC
-
-
-def test_mt5_corpus_under_utc_corrected_basis_passes(corpus, registry):
-    _record(corpus, registry, timezone=cr.TZ_MT5_SERVER_NY_DST)
-    cr.require_reviewed_clock(corpus, registry=registry, basis=cr.BASIS_UTC_CORRECTED)
-
-
-def test_unknown_basis_rejected(corpus, registry):
+# ── the double-conversion guard is retired; identity is exact ──────────────────
+def test_basis_guard_is_retired(corpus, registry):
+    """`require_reviewed_clock(basis=)` / `require_basis_compatible` no longer exist: the SSOT
+    normalizes once, so there is no second conversion to guard."""
     _record(corpus, registry)
-    with pytest.raises(ClockProvenanceError, match="is not one of"):
-        cr.require_reviewed_clock(corpus, registry=registry, basis="local_time")
+    with pytest.raises(TypeError):
+        cr.require_reviewed_clock(corpus, registry=registry, basis="utc_corrected")
+    assert not hasattr(cr, "require_basis_compatible")
+
+
+def test_utc_corpus_needs_no_basis_and_is_never_converted(corpus, registry):
+    _record(corpus, registry, timezone=cr.TZ_UTC, provider="binance", broker="Binance", clock_id="utcx")
+    res = cr.require_reviewed_clock(corpus, registry=registry)
+    assert res.clock.is_identity
+
+
+def test_reviewed_record_without_clock_identity_is_refused(corpus, registry):
+    _record(corpus, registry, clock_id=None, provider=None, broker=None)
+    with pytest.raises(ClockProvenanceError, match="MISSING"):
+        cr.require_reviewed_clock(corpus, registry=registry)
 
 
 # ── detector: advisory, deterministic, honest without a reference ──────────────
@@ -231,7 +236,7 @@ def test_detector_self_alignment_is_zero_shift(corpus):
 
 # ── structural: the gate cannot be skipped by a new reader ─────────────────────
 FILE_BACKED_READERS = (
-    "src/runtime/backtest_v2.py",
+    "src/data_ingestion/corpus_store.py",      # the SSOT: every research/backtest read goes through load()
     "src/data_ingestion/dataset_integrity.py",
     "src/data_ingestion/historical_fetcher.py",
     "src/analytics/sl_tp_comparator.py",
@@ -249,7 +254,7 @@ def test_every_file_backed_reader_is_gated(rel):
     obligation sits on the readers and this test is what keeps it honest.
     """
     src = (REPO_ROOT / rel).read_text(encoding="utf-8")
-    assert "require_reviewed_clock" in src, (
+    assert "require_reviewed_clock" in src or "resolve_clock(" in src, (
         f"{rel} reads OHLCV from disk but never calls require_reviewed_clock(). "
         f"Phase 3 is not optional - see data_ingestion/clock_registry.py."
     )
@@ -274,13 +279,16 @@ def test_no_production_module_declares_in_process():
     )
 
 
-def test_in_process_declaration_still_enforces_double_conversion(tmp_path):
-    """The synthetic escape relaxes REVIEW, never the basis-compatibility invariant."""
+def test_in_process_declaration_names_a_configured_clock(tmp_path):
+    """The synthetic escape relaxes REVIEW, never the requirement of a configured clock."""
     c = _write_corpus(tmp_path / "IP_M15.csv", days=2)
-    cr.declare_in_process(c, cr.TZ_UTC, reason="unit test")
+    cr.declare_in_process(c, "constructed_utc", reason="unit test")
     try:
-        with pytest.raises(ClockProvenanceError, match="DOUBLE CONVERSION"):
-            cr.require_reviewed_clock(c, basis=cr.BASIS_UTC_CORRECTED)
+        assert cr.require_reviewed_clock(c).clock.clock_id == "constructed_utc"
+        cr.clear_in_process_declarations()
+        cr.declare_in_process(c, "no_such_clock", reason="unit test")
+        with pytest.raises(ClockProvenanceError, match="not a configured clock"):
+            cr.require_reviewed_clock(c)
     finally:
         cr.clear_in_process_declarations()
 

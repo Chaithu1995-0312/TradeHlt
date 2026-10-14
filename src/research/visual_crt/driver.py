@@ -109,11 +109,17 @@ class LedgerRow:
     status: str = "CURRENT"
 
 
-def load_bars(path: str | Path) -> list[Bar]:
-    """Parse an OHLCV CSV into local Bars. Chronological order is asserted, not assumed."""
+def load_bars(source: "AdmittedCorpus | str | Path") -> list[Bar]:
+    """Parse the authoritative corpus into local Bars. Chronological order is asserted.
+
+    CH-corpus-ssot (2026-10-08): rows come from `data_ingestion.corpus_store.load` (the corpus
+    SSOT) — an AdmittedCorpus passes through, a path resolves through the same SSOT. No
+    independent CSV open."""
+    from research.mc_kit.bars import as_corpus
+
     rows: list[Bar] = []
-    with open(path, newline="", encoding="utf-8") as fh:
-        for i, rec in enumerate(csv.DictReader(fh)):
+    if True:
+        for i, rec in enumerate(as_corpus(source).records()):
             ts_raw = rec.get("timestamp") or rec.get("time") or rec.get("date")
             rows.append(
                 Bar(
@@ -188,6 +194,7 @@ def run_arm(
     cost_model=None,
     adverse_fill: "AdverseFill | None" = None,
     contract_id: str = CONTRACT_ID,
+    calendar=None,
 ) -> list[LedgerRow]:
     """Walk the corpus once for one arm. Pure w.r.t. the filesystem.
 
@@ -199,8 +206,9 @@ def run_arm(
     if arm not in ARMS:
         raise ValueError(f"run_arm: unknown arm {arm!r} (expected one of {ARMS})")
 
-    h4 = ParentCandleBuilder(rule="H4", keep=max(2, N_PRIOR_H4 + 1))
-    d1 = ParentCandleBuilder(rule="D1", keep=2)
+    # CH-corpus-clock-contract-v1: bars are canonical UTC; `calendar` = the corpus's market calendar
+    h4 = ParentCandleBuilder(rule="H4", keep=max(2, N_PRIOR_H4 + 1), calendar=calendar)
+    d1 = ParentCandleBuilder(rule="D1", keep=2, calendar=calendar)
 
     rows: list[LedgerRow] = []
     fired: set[tuple] = set()          # one-shot per (pool identity, direction)

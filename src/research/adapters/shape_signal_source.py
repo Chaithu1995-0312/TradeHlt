@@ -40,7 +40,8 @@ class ShapeSignalSourceProto(Protocol):
 class ShapeSignalSource:
     """Classify every bar's MarketShape once per instrument; return {stream_index: direction}."""
 
-    def __init__(self, classifier=None):
+    def __init__(self, classifier=None, timeframe: str = "M15"):
+        self._timeframe = timeframe                 # CH-timeframe-ssot-v1: FeaturePipeline refuses a frame of another bar size
         self._clf = classifier                      # lazy: MarketShapeClassifier built on first use
         self._cache: dict[str, dict[int, str]] = {}
 
@@ -76,7 +77,7 @@ class ShapeSignalSource:
             "volume": [c.volume for c in candles],
         })
         df_in["_pos"] = range(n)                    # == CandleLoader stream index == runner c.index
-        feat_df, vectors = FeaturePipeline(df_in).run()
+        feat_df, vectors = FeaturePipeline(df_in, timeframe=self._timeframe).run()
         if "_pos" not in feat_df.columns:
             raise RuntimeError("ShapeSignalSource: _pos did not survive FeaturePipeline.run()")
         pos = feat_df["_pos"].to_numpy()

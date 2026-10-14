@@ -56,10 +56,10 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Any, Callable, Optional
 
-from data_ingestion.dataset_integrity import validate_dataset
 from research.evidence.asymmetry_contract import (
     CORPUS,
-    CORPUS_SHA,
+    contract_corpus,
+    corpus_fingerprint_prefix,
     EMBARGO_BARS,
     HOLDOUT_START,
     HORIZON_BARS,
@@ -229,9 +229,10 @@ def load_snapshot(path: Path) -> dict:
     if len(run_ids) != 1:
         raise ValueError(f"snapshot mixes {len(run_ids)} runs: {sorted(run_ids)}")
     sha = corpus_shas.pop()
-    if sha != CORPUS_SHA:
+    ssot_sha = contract_corpus().sha256   # CH-corpus-ssot: compare to the SSOT, not a constant
+    if sha != ssot_sha:
         raise ValueError(
-            f"snapshot corpus_sha256 {sha} != contract corpus {CORPUS_SHA}. The join is legal "
+            f"snapshot corpus_sha256 {sha} != contract corpus {ssot_sha}. The join is legal "
             "only within one corpus; refusing rather than silently attributing."
         )
     return by_bar
@@ -600,8 +601,9 @@ def measure(rows: list, *, y_key: str = "y_R_net", seed: int = 20260829) -> dict
     }
 
 
-def fingerprint(rows: list) -> dict:
-    h = hashlib.sha256()
+def fingerprint(rows: list, corpus=None) -> dict:
+    corpus = corpus or contract_corpus()
+    h = hashlib.sha256(corpus_fingerprint_prefix(corpus) + f"{CONTRACT_ID}|".encode())
     for r in rows:
         h.update(f"{r['bar_index']}|{r['decision_ts']}|{r['side']}|{r['stratum']}|"
                  f"{r['y_R_net']:.10f}".encode())
@@ -609,12 +611,13 @@ def fingerprint(rows: list) -> dict:
         "contract_id": CONTRACT_ID,
         "n": len(rows),
         "sha256": h.hexdigest(),
-        "corpus_path": str(CORPUS),
-        "corpus_sha256": CORPUS_SHA,
+        "dataset_id": corpus.dataset_id,
+        "corpus_path": Path(corpus.path).as_posix(),
+        "corpus_sha256": corpus.sha256,
         "primary_arm": {"sl_geom": PRIMARY_SL_GEOM, "tie_break": PRIMARY_TIE_BREAK},
         "population_hash_inputs": [
             "instrument", "timestamp", "direction", "bar_index", "crt_state_after",
-            "sl_geom", "tie_break", "corpus_path", "corpus_sha256",
+            "sl_geom", "tie_break", "dataset_id", "corpus_sha256",
             "snapshot_schema_version", "contract_id",
         ],
     }
@@ -625,7 +628,7 @@ def run(out_dir: Optional[Path] = None, *, labels: Optional[Path] = None,
     out_dir = out_dir or OUT_DEFAULT
     labels = labels or LABELS_DEFAULT
     snapshot = snapshot or SNAPSHOT_DEFAULT
-    validate_dataset(str(CORPUS))
+    corpus = contract_corpus()   # CH-corpus-ssot: the SSOT corpus
 
     snap = load_snapshot(snapshot)
     rows = unit_rows(labels, snap)
@@ -634,7 +637,7 @@ def run(out_dir: Optional[Path] = None, *, labels: Optional[Path] = None,
 
     report = measure(rows, y_key=y_key)
     out_dir.mkdir(parents=True, exist_ok=True)
-    fp = fingerprint(rows)
+    fp = fingerprint(rows, corpus)
     (out_dir / "population_fingerprint.json").write_text(
         json.dumps(fp, indent=2), encoding="utf-8")
     (out_dir / "split_manifest.json").write_text(

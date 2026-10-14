@@ -11,6 +11,7 @@ from research.secondlow_v1.detector import (
     LOOKBACK_TRADING_DAYS,
     compute_true_range_atr,
     compute_trading_day_second_low,
+    daily_low,
 )
 
 
@@ -29,15 +30,13 @@ class DepthMetricRow:
 
 
 def compute_lowest_low_20d(df: pd.DataFrame) -> pd.Series:
-    daily = df.groupby(df.index.normalize()).agg(Low=("low", "min"))
-    daily.index = pd.DatetimeIndex(daily.index)
+    daily = daily_low(df)
     lowest = daily["Low"].rolling(LOOKBACK_TRADING_DAYS, min_periods=LOOKBACK_TRADING_DAYS).min().shift(1)
     return lowest.reindex(df.index, method="ffill")
 
 
 def compute_rolling_min_zscore(df: pd.DataFrame, window: int = 50) -> pd.Series:
-    daily = df.groupby(df.index.normalize()).agg(Low=("low", "min"))
-    daily.index = pd.DatetimeIndex(daily.index)
+    daily = daily_low(df)
     rolling_min = daily["Low"].rolling(window, min_periods=window).min()
     rolling_std = daily["Low"].rolling(window, min_periods=window).std()
     z = (daily["Low"] - rolling_min) / rolling_std

@@ -55,8 +55,14 @@ class WeeklySweepEvent:
     bar_index: int
 
 
-def _iso_week(bar: "Candle") -> tuple[int, int]:
-    iso = bar.timestamp.isocalendar()
+def _wall(bar: "Candle", calendar=None):
+    """Bar timestamp in the CALENDAR frame (CH-corpus-clock-contract-v1): bars are canonical UTC,
+    the market week/day follow `calendar` (features.market_calendar). None = UTC grid."""
+    return calendar.wall(bar.timestamp) if calendar is not None else bar.timestamp
+
+
+def _iso_week(bar: "Candle", calendar=None) -> tuple[int, int]:
+    iso = _wall(bar, calendar).isocalendar()
     return (iso[0], iso[1])
 
 
@@ -84,6 +90,7 @@ def current_week_range(
     *,
     min_accumulation_bars: int,
     max_intraweek_gap_minutes: float | None = None,
+    calendar=None,
 ) -> WeeklyRange | None:
     """Build the current ISO week's Mon+Tue accumulation range, or None if not (yet) valid.
 
@@ -101,15 +108,15 @@ def current_week_range(
     bars = list(window)
     if not bars:
         return None
-    year, week = _iso_week(bars[-1])
+    year, week = _iso_week(bars[-1], calendar)
 
     acc_bars = [
         b for b in bars
-        if _iso_week(b) == (year, week) and b.timestamp.weekday() in ACCUMULATION_WEEKDAYS
+        if _iso_week(b, calendar) == (year, week) and _wall(b, calendar).weekday() in ACCUMULATION_WEEKDAYS
     ]
     if not acc_bars:
         return None
-    if not any(b.timestamp.weekday() == 1 for b in acc_bars):
+    if not any(_wall(b, calendar).weekday() == 1 for b in acc_bars):
         return None   # Tuesday hasn't closed yet this week — range not locked
     if len(acc_bars) < min_accumulation_bars:
         return None   # holiday-shortened / degenerate week
@@ -126,7 +133,7 @@ def current_week_range(
     )
 
 
-def is_week_structurally_valid(window: Sequence["Candle"], weekly_mask, holidays) -> bool:
+def is_week_structurally_valid(window: Sequence["Candle"], weekly_mask, holidays, calendar=None) -> bool:
     """Veto a degenerate week (e.g. the whole Mon+Tue span is a broker holiday closure)
     using the already-derived per-instrument tradability mask
     (`data_ingestion.session_autoderive.derive_weekly_mask` / `is_tradable_by_mask`, computed
@@ -140,17 +147,18 @@ def is_week_structurally_valid(window: Sequence["Candle"], weekly_mask, holidays
     bars = list(window)
     if not bars:
         return False
-    year, week = _iso_week(bars[-1])
+    year, week = _iso_week(bars[-1], calendar)
     acc_bars = [
         b for b in bars
-        if _iso_week(b) == (year, week) and b.timestamp.weekday() in ACCUMULATION_WEEKDAYS
+        if _iso_week(b, calendar) == (year, week) and _wall(b, calendar).weekday() in ACCUMULATION_WEEKDAYS
     ]
     if not acc_bars:
         return False
     return any(is_tradable_by_mask(b.timestamp, weekly_mask, holidays) for b in acc_bars)
 
 
-def _first_sweep_this_week(window: Sequence["Candle"], weekly_range: WeeklyRange, boundary: str) -> bool:
+def _first_sweep_this_week(window: Sequence["Candle"], weekly_range: WeeklyRange, boundary: str,
+                           calendar=None) -> bool:
     """True iff no EARLIER Wed-Fri bar in `window` (excluding the current bar) already swept
     `boundary` against `weekly_range`. Re-derived from `window` alone on every call (no
     instance state) so the one-shot-per-boundary-per-week guard keeps the caller fully pure.
@@ -159,9 +167,9 @@ def _first_sweep_this_week(window: Sequence["Candle"], weekly_range: WeeklyRange
     if len(bars) < 2:
         return True
     for b in bars[:-1]:
-        if _iso_week(b) != (weekly_range.iso_year, weekly_range.iso_week):
+        if _iso_week(b, calendar) != (weekly_range.iso_year, weekly_range.iso_week):
             continue
-        if b.timestamp.weekday() not in SWEEP_WEEKDAYS:
+        if _wall(b, calendar).weekday() not in SWEEP_WEEKDAYS:
             continue
         if boundary == "HIGH":
             if _swept_high(float(b.high), float(b.close), weekly_range.h_ref):

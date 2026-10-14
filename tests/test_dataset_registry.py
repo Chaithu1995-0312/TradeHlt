@@ -241,6 +241,9 @@ def _fixture_second_record(
         "dataset_id": dataset_id,
         "symbol": "XAUUSD",
         "source_family": "mt5",
+        "provider": "mt5",                 # CH-corpus-clock-contract-v1: explicit clock identity
+        "broker": "ICMarkets",
+        "clock_id": "mt5_icmarkets_xau",
         "clock_basis": "broker_local",
         "volume_semantic": "TICK_VOLUME_APPROXIMATE",
         "decision_status": "UNRESOLVED",

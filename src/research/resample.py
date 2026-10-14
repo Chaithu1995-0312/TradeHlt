@@ -92,11 +92,18 @@ def _bucket_start_minutes(ts, minutes: int):
     return ts.replace(hour=floored // 60, minute=floored % 60, second=0, microsecond=0)
 
 
-def bucket_floor(ts, rule: str):
+def bucket_floor(ts, rule: str, calendar=None):
     """Bucket start of `ts` under `rule` — the one public floor for all supported rules.
 
     Hour rules dispatch to the original `_bucket_start` (identical values by
-    construction); minute rules to `_bucket_start_minutes`."""
+    construction); minute rules to `_bucket_start_minutes`.
+
+    `calendar` (CH-corpus-clock-contract-v1, a `features.market_calendar.CalendarSpec`): `ts` is
+    canonical UTC and the floor is taken on the calendar WALL time (the market day starts at wall
+    00:00); the returned bucket start is a wall-frame key — map it back with `calendar.to_utc`
+    (as `resample` does for labels). `None` = floor `ts` as given."""
+    if calendar is not None:
+        ts = calendar.wall(ts)
     if rule in _RULE_HOURS:
         return _bucket_start(ts, _RULE_HOURS[rule])
     if rule in _RULE_MINUTES:
@@ -124,7 +131,7 @@ def _emit(children: list[Candle], start, index: int) -> Candle:
     )
 
 
-def resample(candles: list[Candle], rule: str) -> list[Candle]:
+def resample(candles: list[Candle], rule: str, calendar=None) -> list[Candle]:
     """Aggregate chronologically-ordered `candles` into `rule` ({"M15","H1","H4"}) candles.
 
     Input MUST be time-ordered (the `CandleLoader` guarantees this and raises on
@@ -142,12 +149,13 @@ def resample(candles: list[Candle], rule: str) -> list[Candle]:
     cur_children: list[Candle] = []
 
     for c in candles:
-        start = bucket_floor(c.timestamp, rule)
+        start = bucket_floor(c.timestamp, rule, calendar)
         if cur_start is None:
             cur_start = start
         elif start != cur_start:
             # First child of a later bucket has arrived -> the previous bucket is closed.
-            out.append(_emit(cur_children, cur_start, len(out)))
+            out.append(_emit(cur_children, calendar.to_utc(cur_start) if calendar is not None else cur_start,
+                             len(out)))
             cur_start = start
             cur_children = []
         cur_children.append(c)

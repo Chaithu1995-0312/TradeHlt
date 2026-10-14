@@ -421,9 +421,11 @@ def main(argv: Optional[list[str]] = None) -> int:
     frozen_by_ts: dict[str, int] = {}
     admitted_path = Path(args.admitted_csv)
     if admitted_path.is_file():
-        with admitted_path.open(newline="", encoding="utf-8") as fh:
-            for row in _csv.DictReader(fh):
-                frozen_by_ts[row["timestamp"]] = int(float(row["volume"]))
+        # CH-corpus-ssot (2026-10-08): rows from the corpus SSOT, not a separate CSV open.
+        from data_ingestion.corpus_store import load as _corpus_load
+
+        for row in _corpus_load(admitted_path, "XAUUSD").records():
+            frozen_by_ts[row["timestamp"]] = int(float(row["volume"]))
     for s in snap.payload["test2_samples"]:
         # snap.payload's test2_samples T is still the raw ISO string here
         # (_payload_bars_from_iso deliberately leaves it, per its own docstring).

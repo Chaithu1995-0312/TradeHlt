@@ -1,5 +1,42 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "2.0.0",
+  "clocks": {
+    "mt5_icmarkets_xau": {
+      "provider": "mt5",
+      "broker": "ICMarkets",
+      "server": "ICMarketsSC-Demo",
+      "timezone": "America/New_York",
+      "server_midnight_local": "17:00",
+      "evidence": [
+        "F-066",
+        "F-098",
+        "docs/governance/clock_evidence/XAUUSD_M15_clock_evidence.md"
+      ],
+      "observed_utc_offsets": [
+        "+02:00",
+        "+03:00"
+      ],
+      "note": "MT5 server whose 00:00 is 17:00 New York (FX/metals day close). Conversion = server wall - 7h -> America/New_York localize -> UTC; DST from the IANA rules only."
+    },
+    "binance_utc": {
+      "provider": "binance",
+      "broker": "Binance",
+      "timezone": "UTC",
+      "server_midnight_local": "00:00",
+      "evidence": [
+        "Binance spot klines are UTC epoch by API contract"
+      ]
+    },
+    "constructed_utc": {
+      "provider": "synthetic",
+      "broker": "none",
+      "timezone": "UTC",
+      "server_midnight_local": "00:00",
+      "evidence": [
+        "test/generator-constructed data stamps the clock it writes (in-process only)"
+      ]
+    }
+  },
   "records": [
     {
       "path": "data/AUDUSD_M15.csv",
@@ -1174,7 +1211,10 @@
           }
         }
       },
-      "notes": "User-authorized same-session: data/XAUUSD_M15.csv is now the one-month MT5 terminal export from data/XAUUSD_M15_20260807_200204.xlsx (ICMarketsSC-Demo, 2026-07-07 01:00 to 2026-08-06 23:45, 2116 M15 bars). Same T3 day boundary 01:00-23:45 as reviewed data/mt5/XAUUSD_M15.csv. Clock is MT5 broker-server tracking US DST (F-066), not UTC. Phase-1 two-year binding at data/mt5/XAUUSD_M15.csv is unchanged."
+      "notes": "User-authorized same-session: data/XAUUSD_M15.csv is now the one-month MT5 terminal export from data/XAUUSD_M15_20260807_200204.xlsx (ICMarketsSC-Demo, 2026-07-07 01:00 to 2026-08-06 23:45, 2116 M15 bars). Same T3 day boundary 01:00-23:45 as reviewed data/mt5/XAUUSD_M15.csv. Clock is MT5 broker-server tracking US DST (F-066), not UTC. Phase-1 two-year binding at data/mt5/XAUUSD_M15.csv is unchanged.",
+      "provider": "mt5",
+      "broker": "ICMarkets",
+      "clock_id": "mt5_icmarkets_xau"
     },
     {
       "path": "data/XAUUSD_M15_1year.xlsx",
@@ -1708,7 +1748,10 @@
           }
         }
       },
-      "notes": "Byte-identical copy (sha256 478b075150935c950ccc749925709db783e337c55c886d6dda1e3ee8b9692c5b) of the already-reviewed data/XAUUSD_M15.csv; renamed solely to clear the is_xauusd_m15_request corpus guard so the one-month window can be run. Clock inherited from that record (MT5 broker-server tracking US DST, F-066), not re-derived. Same T3 day boundary 01:00-23:45."
+      "notes": "Byte-identical copy (sha256 478b075150935c950ccc749925709db783e337c55c886d6dda1e3ee8b9692c5b) of the already-reviewed data/XAUUSD_M15.csv; renamed solely to clear the is_xauusd_m15_request corpus guard so the one-month window can be run. Clock inherited from that record (MT5 broker-server tracking US DST, F-066), not re-derived. Same T3 day boundary 01:00-23:45.",
+      "provider": "mt5",
+      "broker": "ICMarkets",
+      "clock_id": "mt5_icmarkets_xau"
     },
     {
       "path": "data/XAUUSD_mt5_1month.csv",
@@ -1749,7 +1792,10 @@
           }
         }
       },
-      "notes": "User-authorized same-session: one-month MT5 terminal export converted from data/XAUUSD_M15_20260807_200204.xlsx (ICMarketsSC-Demo, 2026-07-07 01:00 to 2026-08-06 23:45, 2116 M15 bars). Same T3 day boundary 01:00-23:45 as reviewed data/mt5/XAUUSD_M15.csv. Clock is MT5 broker-server tracking US DST (F-066), not UTC."
+      "notes": "User-authorized same-session: one-month MT5 terminal export converted from data/XAUUSD_M15_20260807_200204.xlsx (ICMarketsSC-Demo, 2026-07-07 01:00 to 2026-08-06 23:45, 2116 M15 bars). Same T3 day boundary 01:00-23:45 as reviewed data/mt5/XAUUSD_M15.csv. Clock is MT5 broker-server tracking US DST (F-066), not UTC.",
+      "provider": "mt5",
+      "broker": "ICMarkets",
+      "clock_id": "mt5_icmarkets_xau"
     },
     {
       "path": "data/XAUUSD_mt5_1month_latest.csv",
@@ -2764,7 +2810,10 @@
           }
         }
       },
-      "notes": "Binance spot klines are UTC epoch by API contract (review_ohlcv_clocks.py bootstrap). T3: day opens 00:00 / closes 23:55. F-066: Binance corpora UNAFFECTED. Program-9 H-016 measurement prerequisite."
+      "notes": "Binance spot klines are UTC epoch by API contract (review_ohlcv_clocks.py bootstrap). T3: day opens 00:00 / closes 23:55. F-066: Binance corpora UNAFFECTED. Program-9 H-016 measurement prerequisite.",
+      "provider": "binance",
+      "broker": "Binance",
+      "clock_id": "binance_utc"
     },
     {
       "path": "data/binance/BTCUSDT_H1.csv",
@@ -2974,7 +3023,10 @@
           }
         }
       },
-      "notes": "Binance spot klines are UTC epoch by API contract (review_ohlcv_clocks.py bootstrap). T3: day opens 00:00 / closes 23:55. F-066: Binance corpora UNAFFECTED. Program-9 H-016 measurement prerequisite."
+      "notes": "Binance spot klines are UTC epoch by API contract (review_ohlcv_clocks.py bootstrap). T3: day opens 00:00 / closes 23:55. F-066: Binance corpora UNAFFECTED. Program-9 H-016 measurement prerequisite.",
+      "provider": "binance",
+      "broker": "Binance",
+      "clock_id": "binance_utc"
     },
     {
       "path": "data/binance/DOGEUSDT_H1.csv",
@@ -3142,7 +3194,10 @@
           }
         }
       },
-      "notes": "Binance spot klines are UTC epoch by API contract (review_ohlcv_clocks.py bootstrap). T3: day opens 00:00 / closes 23:55. F-066: Binance corpora UNAFFECTED. Program-9 H-016 measurement prerequisite."
+      "notes": "Binance spot klines are UTC epoch by API contract (review_ohlcv_clocks.py bootstrap). T3: day opens 00:00 / closes 23:55. F-066: Binance corpora UNAFFECTED. Program-9 H-016 measurement prerequisite.",
+      "provider": "binance",
+      "broker": "Binance",
+      "clock_id": "binance_utc"
     },
     {
       "path": "data/binance/ETHUSDT_H1.csv",
@@ -3310,7 +3365,10 @@
           }
         }
       },
-      "notes": "Binance spot klines are UTC epoch by API contract (review_ohlcv_clocks.py bootstrap). T3: day opens 00:00 / closes 23:55. F-066: Binance corpora UNAFFECTED. Program-9 H-016 measurement prerequisite."
+      "notes": "Binance spot klines are UTC epoch by API contract (review_ohlcv_clocks.py bootstrap). T3: day opens 00:00 / closes 23:55. F-066: Binance corpora UNAFFECTED. Program-9 H-016 measurement prerequisite.",
+      "provider": "binance",
+      "broker": "Binance",
+      "clock_id": "binance_utc"
     },
     {
       "path": "data/binance/SOLUSDT_H1.csv",
@@ -3478,7 +3536,10 @@
           }
         }
       },
-      "notes": "Binance spot klines are UTC epoch by API contract (review_ohlcv_clocks.py bootstrap). T3: day opens 00:00 / closes 23:55. F-066: Binance corpora UNAFFECTED. Program-9 H-016 measurement prerequisite."
+      "notes": "Binance spot klines are UTC epoch by API contract (review_ohlcv_clocks.py bootstrap). T3: day opens 00:00 / closes 23:55. F-066: Binance corpora UNAFFECTED. Program-9 H-016 measurement prerequisite.",
+      "provider": "binance",
+      "broker": "Binance",
+      "clock_id": "binance_utc"
     },
     {
       "path": "data/binance/XRPUSDT_H1.csv",
@@ -3646,7 +3707,75 @@
           }
         }
       },
-      "notes": "Binance spot klines are UTC epoch by API contract (review_ohlcv_clocks.py bootstrap). T3: day opens 00:00 / closes 23:55. F-066: Binance corpora UNAFFECTED. Program-9 H-016 measurement prerequisite."
+      "notes": "Binance spot klines are UTC epoch by API contract (review_ohlcv_clocks.py bootstrap). T3: day opens 00:00 / closes 23:55. F-066: Binance corpora UNAFFECTED. Program-9 H-016 measurement prerequisite.",
+      "provider": "binance",
+      "broker": "Binance",
+      "clock_id": "binance_utc"
+    },
+    {
+      "path": "data/binance/btcusdt_2020_2026/BTCUSDT_D1.csv",
+      "sha256": "be707d9f4815c9a0e7e50240ae764b8301e7e2897bc76c95feffbe6879c5024e",
+      "timezone": "",
+      "user_reviewed": true,
+      "reviewed_by": "Chaithu1995-0312 (user-authorized 2026-10-09, executed by Claude)",
+      "reviewed_at": "2026-10-09T04:49:14Z",
+      "detector": null,
+      "notes": "fetched 2026-10-09 by fetch_and_verify_binance.py (Binance spot klines are UTC epoch by API contract); declaration explicitly authorized via --declare-clock",
+      "provider": "binance",
+      "broker": "Binance",
+      "clock_id": "binance_utc"
+    },
+    {
+      "path": "data/binance/btcusdt_2020_2026/BTCUSDT_H1.csv",
+      "sha256": "2a8cf74ed71f80488112cfe1260640512fb232953369435b072d6ab4c5f821df",
+      "timezone": "",
+      "user_reviewed": true,
+      "reviewed_by": "Chaithu1995-0312 (user-authorized 2026-10-09, executed by Claude)",
+      "reviewed_at": "2026-10-09T05:00:46Z",
+      "detector": null,
+      "notes": "fetched 2026-10-09 by fetch_and_verify_binance.py (Binance spot klines are UTC epoch by API contract); 15 reviewed BTCUSDT outage windows added to known_gaps; declaration explicitly authorized",
+      "provider": "binance",
+      "broker": "Binance",
+      "clock_id": "binance_utc"
+    },
+    {
+      "path": "data/binance/btcusdt_2020_2026/BTCUSDT_H4.csv",
+      "sha256": "ea3ef9af495fd81536f205b5ccd8bf9814c1b005f2ea1dd273bcde84507a61d7",
+      "timezone": "",
+      "user_reviewed": true,
+      "reviewed_by": "Chaithu1995-0312 (user-authorized 2026-10-09, executed by Claude)",
+      "reviewed_at": "2026-10-09T05:00:47Z",
+      "detector": null,
+      "notes": "fetched 2026-10-09 by fetch_and_verify_binance.py (Binance spot klines are UTC epoch by API contract); 15 reviewed BTCUSDT outage windows added to known_gaps; declaration explicitly authorized",
+      "provider": "binance",
+      "broker": "Binance",
+      "clock_id": "binance_utc"
+    },
+    {
+      "path": "data/binance/btcusdt_2020_2026/BTCUSDT_M15.csv",
+      "sha256": "73777a93936cb63da844e029d0ecc0b0a81359749496908c3641f0bea5d8127b",
+      "timezone": "",
+      "user_reviewed": true,
+      "reviewed_by": "Chaithu1995-0312 (user-authorized 2026-10-09, executed by Claude)",
+      "reviewed_at": "2026-10-09T05:00:40Z",
+      "detector": null,
+      "notes": "fetched 2026-10-09 by fetch_and_verify_binance.py (Binance spot klines are UTC epoch by API contract); 15 reviewed BTCUSDT outage windows added to known_gaps; declaration explicitly authorized",
+      "provider": "binance",
+      "broker": "Binance",
+      "clock_id": "binance_utc"
+    },
+    {
+      "path": "data/binance/btcusdt_2020_2026/BTCUSDT_M5.csv",
+      "sha256": "3754d47c6e4096a98721d633cec01489d897fab6ba2722f88abb249d84d8e43d",
+      "timezone": "",
+      "user_reviewed": true,
+      "reviewed_by": "Chaithu1995-0312 (user-authorized 2026-10-09, executed by Claude)",
+      "reviewed_at": "2026-10-09T05:00:20Z",
+      "detector": null,
+      "notes": "fetched 2026-10-09 by fetch_and_verify_binance.py (Binance spot klines are UTC epoch by API contract); 15 reviewed BTCUSDT outage windows added to known_gaps; declaration explicitly authorized",
+      "provider": "binance",
+      "broker": "Binance",
+      "clock_id": "binance_utc"
     },
     {
       "path": "data/mt5/AUDUSD_H1.csv",
@@ -4536,7 +4665,10 @@
           }
         }
       },
-      "notes": "Same ICMarketsSC-Demo MT5 server as the standing XAUUSD corpus (F-066); 2022 H1 for down-market check"
+      "notes": "Same ICMarketsSC-Demo MT5 server as the standing XAUUSD corpus (F-066); 2022 H1 for down-market check",
+      "provider": "mt5",
+      "broker": "ICMarkets",
+      "clock_id": "mt5_icmarkets_xau"
     },
     {
       "path": "data/mt5/W2026-08-03_to_2026-09-23/XAUUSD_M15.csv",
@@ -4586,7 +4718,10 @@
           }
         }
       },
-      "notes": "Refetch of the user-approved recent window after MT5 history sync, ending 2026-09-23 23:45 (avoids broker-vs-UTC future-timestamp check). ICMarketsSC-Demo, 01:00 day boundary, same as reviewed data/mt5/XAUUSD_M15.csv"
+      "notes": "Refetch of the user-approved recent window after MT5 history sync, ending 2026-09-23 23:45 (avoids broker-vs-UTC future-timestamp check). ICMarketsSC-Demo, 01:00 day boundary, same as reviewed data/mt5/XAUUSD_M15.csv",
+      "provider": "mt5",
+      "broker": "ICMarkets",
+      "clock_id": "mt5_icmarkets_xau"
     },
     {
       "path": "data/mt5/W2026-08-03_to_2026-09-24/XAUUSD_M15.csv",
@@ -4636,7 +4771,10 @@
           }
         }
       },
-      "notes": "Refetch of the user-approved recent_2026_09 window after MT5 history sync (fills Sep 17-24, excludes the forming bar). Same server ICMarketsSC-Demo, same 01:00 day boundary as reviewed data/mt5/XAUUSD_M15.csv"
+      "notes": "Refetch of the user-approved recent_2026_09 window after MT5 history sync (fills Sep 17-24, excludes the forming bar). Same server ICMarketsSC-Demo, same 01:00 day boundary as reviewed data/mt5/XAUUSD_M15.csv",
+      "provider": "mt5",
+      "broker": "ICMarkets",
+      "clock_id": "mt5_icmarkets_xau"
     },
     {
       "path": "data/mt5/XAUUSD_H1.csv",
@@ -4682,10 +4820,10 @@
     {
       "path": "data/mt5/XAUUSD_H4.csv",
       "sha256": "2edaa2b69294a5cc126fb55d9f98cf4a4fae9c7423fc5d7e56383e7b328f299a",
-      "timezone": "",
-      "user_reviewed": false,
-      "reviewed_by": null,
-      "reviewed_at": null,
+      "timezone": "MT5_SERVER_NY_DST",
+      "user_reviewed": true,
+      "reviewed_by": "user-authorized-2026-10-14 (chat: 'Record')",
+      "reviewed_at": "2026-10-13T21:12:44Z",
       "detector": {
         "verdict": "LOOKS_UTC",
         "confidence": "low",
@@ -4719,7 +4857,10 @@
           }
         }
       },
-      "notes": ""
+      "notes": "H4 OHLC equals 4h buckets of data/mt5/XAUUSD_M15.csv (declared mt5_icmarkets_xau, user-reviewed) on 2,561/2,561 complete bars with no shift; at most 1 bar matches at +-2h/+-3h. Evidence: divergence report claude.ai/artifact/AZnzfViBRctbrFARiCdBrt (session group), assistant_project.md 2026-10-14.",
+      "provider": "mt5",
+      "broker": "ICMarkets",
+      "clock_id": "mt5_icmarkets_xau"
     },
     {
       "path": "data/mt5/XAUUSD_M15.csv",
@@ -4760,7 +4901,78 @@
           }
         }
       },
-      "notes": "Sense B walk. Clock is MT5 broker-server tracking US DST (F-066). Not UTC. Matches MC-CRT-SB-XAUUSD-M15-V1 session_timestamp_basis=broker_local."
+      "notes": "Sense B walk. Clock is MT5 broker-server tracking US DST (F-066). Not UTC. Matches MC-CRT-SB-XAUUSD-M15-V1 session_timestamp_basis=broker_local.",
+      "provider": "mt5",
+      "broker": "ICMarkets",
+      "clock_id": "mt5_icmarkets_xau"
+    },
+    {
+      "path": "data/mt5/XAUUSD_M15_2026-04-20_to_2026-10-06.csv",
+      "sha256": "494e045b700aac88b0a538789549418ebf1014fa7e1f64d6c7cbe420c297c7b6",
+      "timezone": "",
+      "user_reviewed": true,
+      "reviewed_by": "user-authorized-2026-10-09 (chat)",
+      "reviewed_at": "2026-10-08T19:53:11Z",
+      "detector": {
+        "verdict": "LOOKS_FIXED_OFFSET_NON_UTC",
+        "confidence": "low",
+        "authority": "ADVISORY_ONLY - a human declares the clock; this never sets user_reviewed",
+        "reasoning": [
+          "T2: +3.00h vs the declared-UTC reference (r=0.7447, 24d)",
+          "T1 INSUFFICIENT: one or both DST regimes lack enough overlapping data"
+        ],
+        "rows_inspected": 11148,
+        "first_timestamp": "2026-04-20 01:00:00",
+        "last_timestamp": "2026-10-06 19:45:00",
+        "tests": {
+          "t1_seasonal_step": {
+            "status": "INSUFFICIENT",
+            "dst_on": {
+              "status": "OK",
+              "days": 24,
+              "overlap_start": "2026-04-20 01:00:00",
+              "overlap_end": "2026-05-21 23:55:00",
+              "shift_hours": 3.0,
+              "correlation": 0.7447,
+              "on_the_hour": true,
+              "filled_bins_candidate": 4,
+              "filled_bins_reference": 0
+            },
+            "dst_off": {
+              "status": "INSUFFICIENT",
+              "days": 0,
+              "note": "needs >= 20 days in the overlap, have 0"
+            },
+            "note": "one or both DST regimes lack enough overlapping data"
+          },
+          "t2_reference_xcorr": {
+            "status": "OK",
+            "days": 24,
+            "overlap_start": "2026-04-20 01:00:00",
+            "overlap_end": "2026-05-21 23:55:00",
+            "shift_hours": 3.0,
+            "correlation": 0.7447,
+            "on_the_hour": true,
+            "filled_bins_candidate": 4,
+            "filled_bins_reference": 0
+          },
+          "t3_daily_boundary": {
+            "modal_day_open": "01:00",
+            "modal_day_close": "23:45",
+            "days_observed": 122,
+            "opens_at_utc_midnight": false,
+            "note": "consistent-with only - the day boundary is expressed in the FILE's own clock, so it cannot distinguish a fixed offset from a DST-observing server"
+          },
+          "t4_ny_vs_eu": {
+            "status": "NOT_APPLICABLE",
+            "note": "only meaningful once T1 shows the feed observes DST"
+          }
+        }
+      },
+      "notes": "Same feed as reviewed data/mt5/XAUUSD_M15.csv (mt5_icmarkets_xau): 2,208 overlapping M15 bars 2026-04-20..2026-05-21 identical on open/high/low/close (max abs diff 0.0).",
+      "provider": "mt5",
+      "broker": "ICMarkets",
+      "clock_id": "mt5_icmarkets_xau"
     },
     {
       "path": "data/mt5/XAUUSD_M15_second_low_scan.csv",
@@ -4907,7 +5119,10 @@
           }
         }
       },
-      "notes": "R1-C Semantic OS integration slice, grid-aligned re-cut of XAUUSD_W2024-11-13-to-2025-02-25.csv (start moved 8 rows earlier so the count-based HTF grid matches the full corpus). Rows are a byte-verbatim sub-range of data/mt5/XAUUSD_M15.csv (data rows 11536..18094, header identical); clock inherited from the parent, whose re-detection gives LOOKS_MT5_SERVER_NY_DST high confidence (T2 +2.00h winter / T1 +3.00h summer, r=0.81 over 516d). The slice's own low-confidence detector reading is not relied on."
+      "notes": "R1-C Semantic OS integration slice, grid-aligned re-cut of XAUUSD_W2024-11-13-to-2025-02-25.csv (start moved 8 rows earlier so the count-based HTF grid matches the full corpus). Rows are a byte-verbatim sub-range of data/mt5/XAUUSD_M15.csv (data rows 11536..18094, header identical); clock inherited from the parent, whose re-detection gives LOOKS_MT5_SERVER_NY_DST high confidence (T2 +2.00h winter / T1 +3.00h summer, r=0.81 over 516d). The slice's own low-confidence detector reading is not relied on.",
+      "provider": "mt5",
+      "broker": "ICMarkets",
+      "clock_id": "mt5_icmarkets_xau"
     },
     {
       "path": "data/mt5/XAUUSD_W2024-11-13-to-2025-02-25.csv",
@@ -4972,7 +5187,10 @@
           }
         }
       },
-      "notes": "R1-C Semantic OS integration slice. Rows are a byte-verbatim sub-range of data/mt5/XAUUSD_M15.csv (rows 11545..18095, header identical), so the clock is inherited from the parent, whose re-detection gives LOOKS_MT5_SERVER_NY_DST high confidence (T2 +2.00h winter / T1 +3.00h summer, r=0.81 over 516d, T4 America/New_York calendar). The slice's own detector reading (T2 +1.00h, r=0.69, 73d, low confidence, T1 insufficient: winter only) is recorded and not relied on. Selected by scripts/governance/semantic_os_trade_window.py from engine output only (selection.json)."
+      "notes": "R1-C Semantic OS integration slice. Rows are a byte-verbatim sub-range of data/mt5/XAUUSD_M15.csv (rows 11545..18095, header identical), so the clock is inherited from the parent, whose re-detection gives LOOKS_MT5_SERVER_NY_DST high confidence (T2 +2.00h winter / T1 +3.00h summer, r=0.81 over 516d, T4 America/New_York calendar). The slice's own detector reading (T2 +1.00h, r=0.69, 73d, low confidence, T1 insufficient: winter only) is recorded and not relied on. Selected by scripts/governance/semantic_os_trade_window.py from engine output only (selection.json).",
+      "provider": "mt5",
+      "broker": "ICMarkets",
+      "clock_id": "mt5_icmarkets_xau"
     },
     {
       "path": "data/mt5/XAUUSD_W2026-07-06-to-2026-08-07.csv",
@@ -5013,7 +5231,10 @@
           }
         }
       },
-      "notes": "Fresh MT5 fetch for the TV-forensic comparison window (2026-07-06..2026-08-07, padded for F-066 broker/UTC skew). Same terminal/session as the F-098/F-099 BC-2/BC-4 live probes (ICMarketsSC-Demo build 6140). Named per the export_xauusd_window.py::_out_name precedent (W<first>-to-<last>) so it avoids is_xauusd_m15_request and satisfies the L2 last-underscore symbol parser. Clock inherited by terminal-identity precedent (2026-08-30), not re-derived from a single series."
+      "notes": "Fresh MT5 fetch for the TV-forensic comparison window (2026-07-06..2026-08-07, padded for F-066 broker/UTC skew). Same terminal/session as the F-098/F-099 BC-2/BC-4 live probes (ICMarketsSC-Demo build 6140). Named per the export_xauusd_window.py::_out_name precedent (W<first>-to-<last>) so it avoids is_xauusd_m15_request and satisfies the L2 last-underscore symbol parser. Clock inherited by terminal-identity precedent (2026-08-30), not re-derived from a single series.",
+      "provider": "mt5",
+      "broker": "ICMarkets",
+      "clock_id": "mt5_icmarkets_xau"
     },
     {
       "path": "data/mt5/_rejected/ADAUSD_H1.csv",
@@ -7952,15 +8173,18 @@
           }
         }
       },
-      "notes": "Same server ICMarketsSC-Demo and 01:00 day boundary as reviewed data/mt5/XAUUSD_M15.csv"
+      "notes": "Same server ICMarketsSC-Demo and 01:00 day boundary as reviewed data/mt5/XAUUSD_M15.csv",
+      "provider": "mt5",
+      "broker": "ICMarkets",
+      "clock_id": "mt5_icmarkets_xau"
     },
     {
       "path": "data/resampled/BNBUSDT_H1.csv",
       "sha256": "18949dc5645366bc245fd21601738ee3bf20f44930d99ae81c26c3b19fe204b5",
       "timezone": "",
-      "user_reviewed": false,
-      "reviewed_by": null,
-      "reviewed_at": null,
+      "user_reviewed": true,
+      "reviewed_by": "user-authorized-2026-10-10 (chat)",
+      "reviewed_at": "2026-10-09T21:20:22Z",
       "detector": {
         "verdict": "LOOKS_UTC",
         "confidence": "low",
@@ -7994,15 +8218,18 @@
           }
         }
       },
-      "notes": ""
+      "notes": "Derived file: identical on every row and every OHLC price to resample(resample(data/binance/BNBUSDT_M5.csv M5->M15)->H1); that M5 corpus is declared binance_utc. Verified 2026-10-10 for all 8 resampled files.",
+      "provider": "binance",
+      "broker": "Binance",
+      "clock_id": "binance_utc"
     },
     {
       "path": "data/resampled/BNBUSDT_H4.csv",
       "sha256": "75ccd8fa0e464c573408908747f08fcbf9d60b407b348affa3bd4e578310123c",
       "timezone": "",
-      "user_reviewed": false,
-      "reviewed_by": null,
-      "reviewed_at": null,
+      "user_reviewed": true,
+      "reviewed_by": "user-authorized-2026-10-10 (chat)",
+      "reviewed_at": "2026-10-09T21:20:23Z",
       "detector": {
         "verdict": "LOOKS_UTC",
         "confidence": "low",
@@ -8036,15 +8263,18 @@
           }
         }
       },
-      "notes": ""
+      "notes": "Derived file: identical on every row and every OHLC price to resample(resample(data/binance/BNBUSDT_M5.csv M5->M15)->H4); that M5 corpus is declared binance_utc. Verified 2026-10-10 for all 8 resampled files.",
+      "provider": "binance",
+      "broker": "Binance",
+      "clock_id": "binance_utc"
     },
     {
       "path": "data/resampled/BTCUSDT_H1.csv",
       "sha256": "a3dbdb13a7fc6a81a974f7e61bc30fc7df59c86e2e46574aa8066b83dbbf3ffe",
       "timezone": "",
-      "user_reviewed": false,
-      "reviewed_by": null,
-      "reviewed_at": null,
+      "user_reviewed": true,
+      "reviewed_by": "user-authorized-2026-10-10 (chat)",
+      "reviewed_at": "2026-10-09T21:20:26Z",
       "detector": {
         "verdict": "LOOKS_UTC",
         "confidence": "low",
@@ -8078,15 +8308,18 @@
           }
         }
       },
-      "notes": ""
+      "notes": "Derived file: identical on every row and every OHLC price to resample(resample(data/binance/BTCUSDT_M5.csv M5->M15)->H1); that M5 corpus is declared binance_utc. Verified 2026-10-10 for all 8 resampled files.",
+      "provider": "binance",
+      "broker": "Binance",
+      "clock_id": "binance_utc"
     },
     {
       "path": "data/resampled/BTCUSDT_H4.csv",
       "sha256": "ecacc1b46bef00518c0b096323abde42123e1ac255ad257394b7a7f3d764c633",
       "timezone": "",
-      "user_reviewed": false,
-      "reviewed_by": null,
-      "reviewed_at": null,
+      "user_reviewed": true,
+      "reviewed_by": "user-authorized-2026-10-10 (chat)",
+      "reviewed_at": "2026-10-09T21:20:27Z",
       "detector": {
         "verdict": "LOOKS_UTC",
         "confidence": "low",
@@ -8120,15 +8353,18 @@
           }
         }
       },
-      "notes": ""
+      "notes": "Derived file: identical on every row and every OHLC price to resample(resample(data/binance/BTCUSDT_M5.csv M5->M15)->H4); that M5 corpus is declared binance_utc. Verified 2026-10-10 for all 8 resampled files.",
+      "provider": "binance",
+      "broker": "Binance",
+      "clock_id": "binance_utc"
     },
     {
       "path": "data/resampled/ETHUSDT_H1.csv",
       "sha256": "c0b54aaef9a0a96dfc3e0aef968f79d7dc21819d1e124042ede4fd7cf365be65",
       "timezone": "",
-      "user_reviewed": false,
-      "reviewed_by": null,
-      "reviewed_at": null,
+      "user_reviewed": true,
+      "reviewed_by": "user-authorized-2026-10-10 (chat)",
+      "reviewed_at": "2026-10-09T21:20:24Z",
       "detector": {
         "verdict": "LOOKS_UTC",
         "confidence": "low",
@@ -8162,15 +8398,18 @@
           }
         }
       },
-      "notes": ""
+      "notes": "Derived file: identical on every row and every OHLC price to resample(resample(data/binance/ETHUSDT_M5.csv M5->M15)->H1); that M5 corpus is declared binance_utc. Verified 2026-10-10 for all 8 resampled files.",
+      "provider": "binance",
+      "broker": "Binance",
+      "clock_id": "binance_utc"
     },
     {
       "path": "data/resampled/ETHUSDT_H4.csv",
       "sha256": "833148f8432fe93da6f2b2188ffad734f51270a93acd8b271b86ee100cdfccc6",
       "timezone": "",
-      "user_reviewed": false,
-      "reviewed_by": null,
-      "reviewed_at": null,
+      "user_reviewed": true,
+      "reviewed_by": "user-authorized-2026-10-10 (chat)",
+      "reviewed_at": "2026-10-09T21:20:25Z",
       "detector": {
         "verdict": "LOOKS_UTC",
         "confidence": "low",
@@ -8204,15 +8443,18 @@
           }
         }
       },
-      "notes": ""
+      "notes": "Derived file: identical on every row and every OHLC price to resample(resample(data/binance/ETHUSDT_M5.csv M5->M15)->H4); that M5 corpus is declared binance_utc. Verified 2026-10-10 for all 8 resampled files.",
+      "provider": "binance",
+      "broker": "Binance",
+      "clock_id": "binance_utc"
     },
     {
       "path": "data/resampled/SOLUSDT_H1.csv",
       "sha256": "7e942f542866a78f15b3b02d4883c192237bed7cd247df6c3805c6c40742824f",
       "timezone": "",
-      "user_reviewed": false,
-      "reviewed_by": null,
-      "reviewed_at": null,
+      "user_reviewed": true,
+      "reviewed_by": "user-authorized-2026-10-10 (chat)",
+      "reviewed_at": "2026-10-09T21:20:28Z",
       "detector": {
         "verdict": "LOOKS_UTC",
         "confidence": "low",
@@ -8246,15 +8488,18 @@
           }
         }
       },
-      "notes": ""
+      "notes": "Derived file: identical on every row and every OHLC price to resample(resample(data/binance/SOLUSDT_M5.csv M5->M15)->H1); that M5 corpus is declared binance_utc. Verified 2026-10-10 for all 8 resampled files.",
+      "provider": "binance",
+      "broker": "Binance",
+      "clock_id": "binance_utc"
     },
     {
       "path": "data/resampled/SOLUSDT_H4.csv",
       "sha256": "64d042480dadc01c9c464156ebfd2115e10ebfd1909c907b3efc0963428388db",
       "timezone": "",
-      "user_reviewed": false,
-      "reviewed_by": null,
-      "reviewed_at": null,
+      "user_reviewed": true,
+      "reviewed_by": "user-authorized-2026-10-10 (chat)",
+      "reviewed_at": "2026-10-09T21:20:29Z",
       "detector": {
         "verdict": "LOOKS_UTC",
         "confidence": "low",
@@ -8288,7 +8533,10 @@
           }
         }
       },
-      "notes": ""
+      "notes": "Derived file: identical on every row and every OHLC price to resample(resample(data/binance/SOLUSDT_M5.csv M5->M15)->H4); that M5 corpus is declared binance_utc. Verified 2026-10-10 for all 8 resampled files.",
+      "provider": "binance",
+      "broker": "Binance",
+      "clock_id": "binance_utc"
     },
     {
       "path": "data/synthetic/erp_4h_m15/SYNTH_4H_M15.csv",

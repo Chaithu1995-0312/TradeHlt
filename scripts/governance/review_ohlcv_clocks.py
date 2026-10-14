@@ -176,33 +176,43 @@ def cmd_review(args) -> int:
     if args.verbose:
         safe_print(json.dumps(detection["tests"], indent=2, default=str))
 
-    if not args.timezone:
+    from data_ingestion.clock_registry import load_clocks
+    if not args.clock_id:
         sugg = suggested_timezone(detection)
         safe_print("")
-        safe_print("NOT RECORDED - this was an inspection. To declare the clock, re-run with:")
-        safe_print(f"    --timezone {sugg or '<UTC|MT5_SERVER_NY_DST|IANA zone>'} "
-                   f"--reviewed-by \"<you>\"")
-        if sugg is None:
-            safe_print("  (the detector does not point at a named kind here; declare explicitly)")
+        safe_print("NOT RECORDED - this was an inspection. The detector has ZERO admission "
+                   "authority (CH-corpus-clock-contract-v1).")
+        safe_print(f"configured clocks: {sorted(load_clocks())}")
+        safe_print("To declare which configured clock this corpus is on, re-run with:")
+        safe_print("    --clock-id <configured id> --reviewed-by <you>")
+        if sugg:
+            safe_print(f"  (advisory only: the detector's legacy label for this file is {sugg})")
         return 0
-
-    try:
-        validate_timezone_value(args.timezone)
-    except ValueError as exc:
-        safe_print(f"ERROR: {exc}")
+    if args.timezone:
+        try:
+            validate_timezone_value(args.timezone)
+        except ValueError as exc:
+            safe_print(f"ERROR: {exc}")
+            return 2
+    clocks = load_clocks()
+    if args.clock_id not in clocks:
+        safe_print(f"ERROR: clock_id {args.clock_id!r} is not configured (configured: {sorted(clocks)}). "
+                   f"Add the clock definition to the registry 'clocks' table first.")
         return 2
+    chosen = clocks[args.clock_id]
     if not args.reviewed_by:
         safe_print("ERROR: --reviewed-by is required to declare a clock. "
                    "An unattributable review is not a review.")
         return 2
 
     records[key] = ClockRecord(
-        path=key, sha256=sha, timezone=args.timezone, user_reviewed=True,
+        path=key, sha256=sha, timezone=args.timezone or "", user_reviewed=True,
         reviewed_by=args.reviewed_by, reviewed_at=utcnow_iso(),
         detector=detection, notes=args.notes or "",
+        provider=chosen.provider, broker=chosen.broker, clock_id=chosen.clock_id,
     )
     save_registry(records)
-    safe_print(f"\nRECORDED: {key} declared {args.timezone} by {args.reviewed_by}")
+    safe_print(f"\nRECORDED: {key} declared on clock {chosen.clock_id} ({chosen.provider}/{chosen.broker}) by {args.reviewed_by}")
     safe_print(f"  registry: {registry_path()}")
     return 0
 
@@ -221,7 +231,8 @@ def main(argv=None) -> int:
                    help="inspect one corpus; add --timezone to declare it")
     ap.add_argument("--data-dir", default="data", help="scan root (default: data)")
     ap.add_argument("--unreviewed", action="store_true", help="--list: only pending records")
-    ap.add_argument("--timezone", help="declare: UTC | MT5_SERVER_NY_DST | an IANA zone")
+    ap.add_argument("--clock-id", help="declare: the CONFIGURED clock this corpus is on (registry 'clocks')")
+    ap.add_argument("--timezone", help="legacy free label, history only (never read by conversion)")
     ap.add_argument("--reviewed-by", help="declare: who reviewed it (required to declare)")
     ap.add_argument("--notes", help="declare: why you concluded this")
     ap.add_argument("--reference", help="path to a UTC corpus to measure against (bootstrap)")

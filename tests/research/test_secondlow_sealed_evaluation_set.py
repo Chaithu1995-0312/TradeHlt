@@ -52,7 +52,14 @@ def test_manifest_matches_live_detector(manifest: dict) -> None:
     df = load_ohlcv(corpus)
     _, events = detect_independent_events(df)
     parts = partition_event_times([e.purge_time for e in events])
-    pre_times = sorted(parts["pre_discovery"])
+    # The sealed manifest was written in the corpus's SOURCE (broker) clock; the detector now runs
+    # on canonical UTC (CH-corpus-clock-contract-v1). Compare in the manifest's own clock via the
+    # corpus's declared clock - the sealed file is not rewritten.
+    from data_ingestion.clock_contract import from_utc_scalar
+    from data_ingestion.clock_registry import resolve_clock
+    clock = resolve_clock(corpus).clock
+    pre_times = sorted(pd.Timestamp(from_utc_scalar(t.to_pydatetime(), clock))
+                       for t in parts["pre_discovery"])
     manifest_times = sorted(pd.to_datetime(manifest["purge_times"]))
     assert pre_times == manifest_times
 

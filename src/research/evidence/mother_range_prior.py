@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
-from data_ingestion.dataset_integrity import validate_dataset
+from research.evidence.asymmetry_contract import contract_corpus, corpus_fingerprint_prefix
 from research.evidence.run_close_out import finalize_run
 from research.evidence.asymmetry_contract import (
     CORPUS,
@@ -49,7 +49,7 @@ def _ts(ts: Any) -> str:
     return str(ts)
 
 
-def unit_rows(cols: dict[str, list], bars: list[Any]) -> list[dict[str, Any]]:
+def unit_rows(cols: dict[str, list], bars: list[Any], calendar=None) -> list[dict[str, Any]]:
     ts_col = _col(cols, "decision_ts", "timestamp") or []
     side_col = [str(s or "").lower() for s in (_col(cols, "side", "direction") or [])]
     mfe = _as_float_y(_col(cols, "y_mfe_r", "path_mfe_r") or [])
@@ -74,7 +74,7 @@ def unit_rows(cols: dict[str, list], bars: list[Any]) -> list[dict[str, Any]]:
             "decision_ts": str(ts_col[i]),
         }
 
-    detected = detect_inside_close_entries(bars)
+    detected = detect_inside_close_entries(bars, calendar=calendar)
     rows: list[dict[str, Any]] = []
     for ev in detected:
         key = (_ts(ev.timestamp), str(ev.direction).lower())
@@ -129,8 +129,8 @@ def verdict(train_c: dict, hold_c: dict) -> str:
     return "DIAGNOSTIC_FAIL"
 
 
-def fingerprint(rows: list[dict]) -> dict[str, Any]:
-    h = hashlib.sha256()
+def fingerprint(rows: list[dict], corpus) -> dict[str, Any]:
+    h = hashlib.sha256(corpus_fingerprint_prefix(corpus) + f"{CONTRACT_ID}|".encode())
     for r in rows:
         c = r["y_mfe_r"]
         v = f"{r['instrument']}|{r['decision_ts']}|{r['side']}|" + (
@@ -141,15 +141,17 @@ def fingerprint(rows: list[dict]) -> dict[str, Any]:
         "contract_id": CONTRACT_ID,
         "n": len(rows),
         "sha256": h.hexdigest(),
+        "dataset_id": corpus.dataset_id,
+        "corpus_sha256": corpus.sha256,
         "population_hash_inputs": [
+            "dataset_id", "corpus_sha256", "contract_id",
             "instrument", "entry_ts", "side", "y_mfe_r",
-            "corpus_path", "corpus_sha256", "contract_id",
         ],
     }
 
 
-def measure(cols: dict[str, list], bars: list[Any]) -> dict[str, Any]:
-    rows = unit_rows(cols, bars)
+def measure(cols: dict[str, list], bars: list[Any], calendar=None) -> dict[str, Any]:
+    rows = unit_rows(cols, bars, calendar)
     train, hold, split = split_rows(rows)
     tr_s = _arm_cells(train, "y_mfe_r")
     ho_s = _arm_cells(hold, "y_mfe_r")
@@ -196,13 +198,13 @@ def measure(cols: dict[str, list], bars: list[Any]) -> dict[str, Any]:
 
 def run(out_dir: Path | None = None) -> dict[str, Any]:
     out_dir = out_dir or OUT_DEFAULT
-    validate_dataset(str(CORPUS))
+    corpus = contract_corpus()   # CH-corpus-ssot: the SSOT corpus
     cols = _load_cols(SURFACES["clean_labels"], None)
-    bars = load_bars(CORPUS)
-    report = measure(cols, bars)
-    rows = unit_rows(cols, bars)
+    bars = load_bars(corpus)
+    report = measure(cols, bars, corpus.calendar)
+    rows = unit_rows(cols, bars, corpus.calendar)
     out_dir.mkdir(parents=True, exist_ok=True)
-    fp = fingerprint(rows)
+    fp = fingerprint(rows, corpus)
     (out_dir / "population_fingerprint.json").write_text(
         json.dumps(fp, indent=2), encoding="utf-8"
     )

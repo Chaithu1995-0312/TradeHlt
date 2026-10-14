@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
-from data_ingestion.dataset_integrity import validate_dataset
+from data_ingestion.corpus_store import AdmittedCorpus, load as corpus_load
 from research.evidence.run_close_out import finalize_run
 from research.evidence.catalog import SURFACES
 from research.evidence.driver import _load_cols
@@ -23,7 +23,19 @@ HORIZON_BARS = 40
 EMBARGO_BARS = 96
 HOLDOUT_START = datetime(2025, 12, 24, 19, 15, 0)
 CORPUS = Path("data/mt5/XAUUSD_M15.csv")
-CORPUS_SHA = "4d73f5cebe33ec91c5312340337eb62c2cf1f49060c91c42761bf631b26aba56"
+
+
+def contract_corpus() -> AdmittedCorpus:
+    """The contract's corpus, from the SSOT (CH-corpus-ssot 2026-10-08). Replaces the former
+    hard-coded CORPUS_SHA: identity is what corpus_store.load admitted and hashed, never a
+    constant. Shared by every evidence driver bound to this corpus."""
+    return corpus_load(CORPUS, "XAUUSD")
+
+
+def corpus_fingerprint_prefix(corpus: AdmittedCorpus) -> bytes:
+    """The corpus identity every population fingerprint hashes FIRST, so the declared
+    `population_hash_inputs` (corpus_sha256, dataset_id, contract_id) are actually hashed."""
+    return f"{corpus.dataset_id}|{corpus.sha256}|".encode()
 OUT_DEFAULT = Path("docs/research-readiness/asymmetry/mc_asym_xauusd_m15_v1")
 
 _BAR_MINUTES = 15
@@ -126,17 +138,19 @@ def verdict(train_c: dict, hold_c: dict, n_hold: int) -> str:
     return "DIAGNOSTIC_FAIL"
 
 
-def fingerprint(pairs: list[dict]) -> dict[str, Any]:
-    h = hashlib.sha256()
+def fingerprint(pairs: list[dict], corpus: AdmittedCorpus) -> dict[str, Any]:
+    h = hashlib.sha256(corpus_fingerprint_prefix(corpus) + f"{CONTRACT_ID}|".encode())
     for p in pairs:
         h.update(f"{p['instrument']}|{p['decision_ts']}|{p['delta_mfe']:.10f}".encode())
     return {
         "contract_id": CONTRACT_ID,
         "n": len(pairs),
         "sha256": h.hexdigest(),
+        "dataset_id": corpus.dataset_id,
+        "corpus_sha256": corpus.sha256,
         "population_hash_inputs": [
+            "dataset_id", "corpus_sha256", "contract_id",
             "instrument", "decision_ts", "delta_mfe",
-            "corpus_path", "corpus_sha256", "contract_id",
         ],
     }
 
@@ -188,12 +202,13 @@ def measure(cols: dict[str, list]) -> dict[str, Any]:
 
 def run(out_dir: Path | None = None) -> dict[str, Any]:
     out_dir = out_dir or OUT_DEFAULT
-    validate_dataset(str(CORPUS))
+    corpus = contract_corpus()
     cols = _load_cols(SURFACES["clean_labels"], None)
     report = measure(cols)
+    report["corpus_provenance"] = corpus.provenance()
     pairs = pair_rows(cols)
     out_dir.mkdir(parents=True, exist_ok=True)
-    fp = fingerprint(pairs)
+    fp = fingerprint(pairs, corpus)
     (out_dir / "population_fingerprint.json").write_text(
         json.dumps(fp, indent=2), encoding="utf-8"
     )

@@ -77,6 +77,7 @@ def detect_funnel_entries(
     bars: Sequence[Bar],
     params: VetoParams,
     atr: Sequence[float],
+    calendar=None,
 ) -> list[SujanCandidate]:
     """Nested rungs R0..R4. SEM-023 score is diagnostic and never a rung."""
     if len(atr) != len(bars):
@@ -84,7 +85,7 @@ def detect_funnel_entries(
     if not bars:
         return []
 
-    by_rule = {rule: closed_parents(bars, rule) for rule in MEASURABLE_PARENTS}
+    by_rule = {rule: closed_parents(bars, rule, calendar) for rule in MEASURABLE_PARENTS}
     candidates: list[SujanCandidate] = []
     seen_entries: set[int] = set()
 
@@ -198,6 +199,7 @@ def detect_veto_chain_entries(
     bars: Sequence[Bar],
     params: VetoParams,
     atr: Sequence[float],
+    calendar=None,
 ) -> list[SujanCandidate]:
     """SEM-031 method = R4 only (full nested conjunction)."""
-    return [c for c in detect_funnel_entries(bars, params, atr) if c.max_rung == "R4"]
+    return [c for c in detect_funnel_entries(bars, params, atr, calendar) if c.max_rung == "R4"]

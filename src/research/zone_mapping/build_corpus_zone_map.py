@@ -57,7 +57,8 @@ def map_corpus_frame(
     cfg = zone_config or ZoneMapConfig.from_prod_engine_runner()
     mapper = HistoricalZoneMapper(cfg)
 
-    raw = pd.read_csv(csv_path)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    raw = _corpus_load(csv_path, sequence_check=False).frame()
     raw.columns = [c.strip().lower() for c in raw.columns]
     if "timestamp" not in raw.columns:
         if "date" in raw.columns and "time" in raw.columns:

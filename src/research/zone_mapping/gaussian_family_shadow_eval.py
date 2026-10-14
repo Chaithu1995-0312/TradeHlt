@@ -170,7 +170,8 @@ def collect_gaussian_shadow_bars(
       delta = ml - h
       agreement = (ml>=0.5) == (h>=0.5)
     """
-    raw = pd.read_csv(csv_path)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    raw = _corpus_load(csv_path, sequence_check=False).frame()
     raw.columns = [c.strip().lower() for c in raw.columns]
     if "timestamp" not in raw.columns:
         if "date" in raw.columns and "time" in raw.columns:
@@ -241,6 +242,7 @@ def collect_gaussian_shadow_bars(
         else:
             htf_remaining = max(0, htf_remaining - 1)
         engine.state.htf_remaining_candles = htf_remaining
+        engine.state.htf_window_candles = htf_candles_per_range   # CH-timeframe-ssot-v2
 
         if candle_idx < warmup_candles:
             continue
@@ -673,7 +675,8 @@ class _BarView:
 
 
 def _load_candles(csv_path: str) -> list[Candle]:
-    raw = pd.read_csv(csv_path)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    raw = _corpus_load(csv_path, sequence_check=False).frame()
     raw.columns = [c.strip().lower() for c in raw.columns]
     if "timestamp" not in raw.columns:
         if "date" in raw.columns and "time" in raw.columns:

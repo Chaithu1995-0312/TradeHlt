@@ -52,18 +52,23 @@ class _Block:
     last_ts: datetime
 
 
-def _floor_4h(ts: datetime) -> datetime:
+def _floor_4h(ts: datetime, calendar=None) -> datetime:
+    """4h block start. Bars are canonical UTC; `calendar` (features.market_calendar) cuts the
+    block on the instrument's market-day wall time (key stays in the wall frame — blocks are
+    only grouped and ordered, never compared to a UTC label). None = UTC grid."""
+    if calendar is not None:
+        ts = calendar.wall(ts)
     hour = (ts.hour // 4) * 4
     return ts.replace(hour=hour, minute=0, second=0, microsecond=0)
 
 
-def build_calendar_blocks(bars: Sequence[Bar]) -> list[_Block]:
+def build_calendar_blocks(bars: Sequence[Bar], calendar=None) -> list[_Block]:
     if not bars:
         return []
     groups: dict[datetime, list[Bar]] = {}
     order: list[datetime] = []
     for b in bars:
-        key = _floor_4h(b.timestamp)
+        key = _floor_4h(b.timestamp, calendar)
         if key not in groups:
             groups[key] = []
             order.append(key)
@@ -89,9 +94,10 @@ def detect_inside_close_entries(
     *,
     lookback: int = LOOKBACK,
     atr_mult: float = ATR_MULT,
+    calendar=None,
 ) -> list[InsideCloseEntry]:
     """Causal entries. Decision uses only bars at or before C2."""
-    blocks = build_calendar_blocks(bars)
+    blocks = build_calendar_blocks(bars, calendar)
     if len(blocks) < lookback + 2:
         return []
     entries: list[InsideCloseEntry] = []

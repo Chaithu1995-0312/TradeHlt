@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0.0",
+  "_doc": "CH-corpus-clock-contract-v1 (2026-10-08): the MARKET calendar contract — which wall clock defines a trading DAY / WEEK / higher-timeframe grid for an asset class. This is a fact about the MARKET, declared once; it is NOT derived from any broker or corpus clock (broker timestamp timezone and calendar timezone are separate concepts). Canonical timestamps are UTC; a calendar maps UTC to the wall time whose 00:00 starts the market day: wall = local(timezone) + ((24h - day_start) mod 24h). fx_metals: the FX/metals trading day closes at 17:00 America/New_York (D1/H4/W1 grids, PDH/PDL, weekly range, day-of-week all follow it). crypto: the UTC day. The asset class of an instrument comes from the existing classifier dataset_integrity.classify_market (crypto_quote_suffixes); no second list is kept here.",
+  "calendars": {
+    "fx_metals": {
+      "timezone": "America/New_York",
+      "day_start": "17:00",
+      "evidence": ["FX/metals market day closes 17:00 New York", "F-080 TradingView H4 grid == this grid", "docs/governance/clock_evidence/XAUUSD_M15_clock_evidence.md"]
+    },
+    "crypto": {
+      "timezone": "UTC",
+      "day_start": "00:00",
+      "evidence": ["Binance klines: UTC day"]
+    }
+  }
+}

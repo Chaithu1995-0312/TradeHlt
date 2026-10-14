@@ -7,10 +7,14 @@ from datetime import datetime
 from pathlib import Path
 
 
-def load_corpus(path: Path) -> list[dict]:
+def load_corpus(source) -> list[dict]:
+    """Probe bars from the authoritative corpus (CH-corpus-ssot, 2026-10-08): an AdmittedCorpus
+    passes through, a path resolves via `corpus_store.load` (process-cached). Never opens the CSV."""
+    from research.mc_kit.bars import as_corpus
+
     rows = []
-    with path.open(encoding="utf-8", newline="") as fh:
-        for i, r in enumerate(csv.DictReader(fh)):
+    if True:
+        for i, r in enumerate(as_corpus(source).records()):
             rows.append({
                 "index": i,
                 "ts": datetime.strptime(r["timestamp"], "%Y-%m-%d %H:%M:%S"),

@@ -92,10 +92,14 @@ def _sha256_file(p: Path) -> str:
 
 def build_populations(corpus: str | Path, instrument: str = "XAUUSD") -> Populations:
     """Rebuild VIOLATING and CONTINUATION exactly as §3 declares."""
-    corpus = Path(corpus)
-    corpus_sha = _sha256_file(corpus)
+    # CH-corpus-ssot (2026-10-08): bytes, identity and hash from the corpus SSOT.
+    from data_ingestion.corpus_store import load as corpus_load
 
-    df = pd.read_csv(corpus)
+    admitted = corpus_load(corpus, instrument)
+    corpus = Path(admitted.path)
+    corpus_sha = admitted.sha256
+
+    df = admitted.frame()
     df["timestamp"] = pd.to_datetime(df["timestamp"])
     n_raw = len(df)
 

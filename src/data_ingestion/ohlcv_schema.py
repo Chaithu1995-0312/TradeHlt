@@ -192,19 +192,17 @@ def parse_ohlcv_timestamp(raw: str) -> datetime:
 
 
 # ── Phase 3: clock provenance (file-backed reads) ──────────────────────────────
-def require_reviewed_clock(path, *, basis: Optional[str] = None):
-    """Phase-3 gate — raise `ClockProvenanceError` unless `path` has a reviewed clock record.
+def require_reviewed_clock(path, *, dataset: Optional[dict] = None):
+    """Phase-3 gate — raise `ClockProvenanceError` unless `path` has a reviewed clock record that
+    names a configured clock (provider/broker/clock_id exactly matching its definition).
 
     Thin façade over ``data_ingestion.clock_registry`` so every ingestion path can reach all three
     enforcement phases through this one module. The import is function-local because
     ``clock_registry`` imports ``ClockProvenanceError`` from here — a module-level import would
-    make that a cycle.
-
-    `basis` — pass the active ``feature_pipeline.session_timestamp_basis`` when the caller resolves
-    one, to also run the double-conversion guard.
+    make that a cycle. Returns the `ResolvedClock` (CH-corpus-clock-contract-v1).
     """
     from data_ingestion.clock_registry import require_reviewed_clock as _gate
-    return _gate(path, basis=basis)
+    return _gate(path, dataset=dataset)
 
 
 def require_unique_ohlcv_headers(

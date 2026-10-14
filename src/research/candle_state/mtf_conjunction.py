@@ -51,7 +51,11 @@ class MultiTFConjunctionBuilder:
         rules: Sequence[str] = ("H1", "H4"),
         htf_window: int = 60,
         base_label: str = "M15",
+        calendar=None,
     ):
+        # CH-corpus-clock-contract-v1: bars are canonical UTC; `calendar` (the instrument's
+        # features.market_calendar) cuts the H1/H4 grid. None = UTC grid (constructed data).
+        self.calendar = calendar
         self.encoder = encoder or CandleStateEncoder()
         self.rules = tuple(rules)
         self.htf_window = htf_window
@@ -60,7 +64,7 @@ class MultiTFConjunctionBuilder:
         self.base_label = base_label
 
     def _htf_state(self, m15_window: list, rule: str) -> CandleState | None:
-        htf = resample(m15_window, rule)        # CLOSED buckets only (trailing dropped)
+        htf = resample(m15_window, rule, self.calendar)        # CLOSED buckets only (trailing dropped)
         if not htf:
             return None
         return self.encoder.encode(htf[-self.htf_window:])
@@ -114,13 +118,15 @@ class MultiTFConjunctionBuilder:
         # M15 bar pick the last HTF bucket whose start < floor(current bar, rule).
         htf_tokens: dict[str, list[str]] = {}
         for rule in self.rules:
-            htf = resample(bars, rule)
+            htf = resample(bars, rule, self.calendar)
             starts = [c.timestamp for c in htf]
             states = [self.encoder.encode(htf[max(0, i - self.htf_window + 1):i + 1]).token()
                       for i in range(len(htf))]
             col: list[str] = []
             for t in range(n):
-                floor_t = bucket_floor(bars[t].timestamp, rule)
+                floor_t = bucket_floor(bars[t].timestamp, rule, self.calendar)
+                if self.calendar is not None:        # bucket labels (`starts`) are UTC
+                    floor_t = self.calendar.to_utc(floor_t)
                 j = bisect.bisect_left(starts, floor_t) - 1   # last start strictly < floor_t
                 col.append(states[j] if j >= 0 else _MISSING)
             htf_tokens[rule] = col

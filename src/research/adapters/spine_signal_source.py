@@ -198,6 +198,17 @@ class ProductionSpineSource:
             cfg.scorer_mode = require(
                 spine_block, "scorer_mode", section_name="spine", consumer=_CONSUMER,
             )
+            # CH-timeframe-ssot-v2: a spine run on non-M15 data must DECLARE its timeframe and a gap-reset limit
+            # longer than one bar (FeaturePipeline and the backtest refuse the production file's M15 declaration on
+            # an H1/H4 stream). Optional pair: absent = the production file's own timeframe and gap (M15 runs unchanged).
+            _tf = spine_block.get("timeframe")
+            if _tf is not None:
+                from features.calendar_periods import BAR_MINUTES
+                if _tf not in BAR_MINUTES:
+                    raise ValueError(f"ProductionSpineSource: spine.timeframe={_tf!r} is not one of {sorted(BAR_MINUTES)}")
+                _gap_bars = int(require(spine_block, "gap_reset_bars", section_name="spine", consumer=_CONSUMER))
+                cfg.timeframe = _tf
+                cfg.gap_reset_minutes = _gap_bars * BAR_MINUTES[_tf]   # bars held constant (Program 3A BAR_COUNT_CONSTANT)
             loader = _bt.CandleLoader(csv_path, instrument)
             runner = _bt.BacktestRunner(cfg, csv_path=csv_path, overrides={"_spine_adapter": "1"})
             runner.run(loader.stream(), loader.count(), str(out_dir))

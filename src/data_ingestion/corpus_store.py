@@ -72,7 +72,9 @@ except Exception as _exc:  # noqa: BLE001 - absence is a supported state, not an
     _PARQUET_AVAILABLE = False
     _PARQUET_IMPORT_ERROR = _exc
 
-MANIFEST_VERSION = "1.0"
+# 2.0 (CH-corpus-clock-contract-v1): cached timestamps are canonical UTC (1.0 caches held the
+# SOURCE clock) - a 1.0 manifest is STALE by version, never served.
+MANIFEST_VERSION = "2.0"
 _HASH_CHUNK = 4 << 20
 
 # Freshness states — same vocabulary as utils.parquet_store, applied to this store's own
@@ -174,6 +176,8 @@ def status(instrument: str, timeframe: str = "M15", *, csv_path: Optional[str] =
         manifest = json.loads(mpath.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return STALE
+    if manifest.get("manifest_version") != MANIFEST_VERSION:
+        return STALE
     recorded = manifest.get("source", {})
     current = _fingerprint(csv, with_hash=strict)
     if recorded.get("size") != current["size"] or recorded.get("mtime_ns") != current["mtime_ns"]:
@@ -219,6 +223,15 @@ def build(
     n = len(rows["timestamp"])
     if n == 0:
         raise CorpusStoreError(f"{admitted}: zero rows parsed — refusing to write an empty cache")
+    # Clock contract: the cache serves CANONICAL UTC, normalized once from the file's declared
+    # (configured) clock - the parsed stamps above are SOURCE-clock wall times.
+    import pandas as _pd
+    from data_ingestion.clock_contract import to_utc_series as _to_utc
+    from data_ingestion.clock_registry import resolve_clock as _resolve_clock
+    _resolved = _resolve_clock(admitted)
+    if not _resolved.clock.is_identity:
+        rows["timestamp"] = [t.to_pydatetime() for t in
+                             _to_utc(_pd.Series(_pd.to_datetime(rows["timestamp"])), _resolved.clock)]
 
     table = pa.table({
         "symbol": pa.array(rows["symbol"], type=pa.string()),
@@ -243,6 +256,8 @@ def build(
     source_fp = _fingerprint(admitted, with_hash=True)
     manifest = {
         "manifest_version": MANIFEST_VERSION,
+        "timestamp_clock": "UTC",
+        "clock_id": _resolved.clock.clock_id,
         "instrument": instrument.upper(),
         "timeframe": timeframe,
         "symbol": symbol_col,
@@ -345,6 +360,10 @@ def read(
         raise CorpusStoreError(f"admitted source CSV missing: {csv} — cache cannot be trusted")
 
     manifest = json.loads(mpath.read_text(encoding="utf-8"))
+    if manifest.get("manifest_version") != MANIFEST_VERSION:
+        raise CorpusStoreError(
+            f"corpus cache {ppath} has manifest_version {manifest.get('manifest_version')!r} != "
+            f"{MANIFEST_VERSION!r}: it holds SOURCE-clock timestamps; rebuild it with build().")
     recorded = manifest.get("source", {})
     current = _fingerprint(csv, with_hash=strict)
     if recorded.get("size") != current["size"] or recorded.get("mtime_ns") != current["mtime_ns"]:
@@ -434,3 +453,389 @@ def read(
         dataset_id=manifest.get("dataset_id"),
         parquet_path=str(ppath),
     )
+
+
+# ─────────────────────────────────────────────────────────────────────────────────────────────
+# CORPUS SSOT — the single authoritative in-memory corpus for an execution
+# (CH-corpus-ssot, 2026-10-08).
+#
+# One admitted corpus, read ONCE: `load()` admits the requested path (dataset identity via
+# `dataset_registry.admit_csv_path`, optional sequence validation via `corpus_gate.admit_corpus`),
+# reads the admitted file's bytes into memory a single time, hashes THOSE bytes, checks them
+# against the bound record (sha256, rows, time range), and returns an immutable `AdmittedCorpus`.
+# Every consumer parses that same object (`records()`, `frame()`, `text`) — no consumer reopens
+# the CSV, and every artifact takes `dataset_id` / `sha256` from the object, so the identity a
+# run reports is by construction the identity of the exact bytes it consumed.
+#
+# Process cache: the same admitted file (same size + mtime) returns the SAME object, so all
+# consumers inside one execution share one corpus.
+#
+# ONE SSOT, MANY IDENTIFIED CORPORA: the SSOT owns every corpus that can be identified — each
+# registered dataset (dataset_id from docs/governance/dataset_identity_registry.json) and any
+# other existing file (content-addressed identity `sha256:<hex>`, bound=False). An execution
+# SELECTS one corpus and every consumer of that execution shares the same object.
+#
+# No silent substitution: the registry's legacy rule rewrites ANY `XAUUSD_M15*` request to the
+# Phase-1 corpus. The SSOT honours that only for a missing file, the same file, or a path the
+# record DECLARES as an alias (`forensic_paths`). Any other existing file (e.g. a newer fetch
+# XAUUSD_M15_<range>.csv) resolves to ITS OWN identity — never to the older corpus.
+# ─────────────────────────────────────────────────────────────────────────────────────────────
+
+import csv as _csv
+import io as _io
+from functools import cached_property as _cached_property
+
+from data_ingestion.clock_contract import (
+    CANONICAL_TIMEZONE, CLOCK_STATE_CANONICAL, CLOCK_STATE_SOURCE, ClockDef,
+    DoubleNormalizationError, normalize_view,
+)
+from data_ingestion.ohlcv_schema import ClockProvenanceError, OHLCV_TIMESTAMP_SINGLE_ALIASES
+
+
+def _timestamp_column(columns: list) -> str:
+    """The single timestamp column of a corpus header (fail-closed on split date/time files)."""
+    low = {str(c).strip().lower(): c for c in columns}
+    for alias in OHLCV_TIMESTAMP_SINGLE_ALIASES:
+        if alias in low:
+            return low[alias]
+    raise CorpusStoreError(
+        f"corpus has no single timestamp column (looked for {OHLCV_TIMESTAMP_SINGLE_ALIASES}); "
+        f"split date+time files cannot be normalized to UTC by the clock contract")
+
+
+@dataclass(frozen=True, eq=False)
+class AdmittedCorpus:
+    """The authoritative corpus of one execution: identity + the exact bytes consumed."""
+
+    dataset_id: Optional[str]
+    bound: bool
+    sha256: str
+    path: str               # admitted physical file the bytes came from
+    requested_path: str     # what the caller asked for
+    rewritten: bool         # registry resolved the request to a different (declared) path
+    instrument: str
+    timeframe: str
+    n_rows: int
+    start: str              # first timestamp cell, as written in the file
+    end: str                # last timestamp cell, as written in the file
+    sequence_checked: bool  # True when corpus_gate.admit_corpus validated sequence/integrity
+    data: bytes = field(repr=False)   # the SOURCE bytes exactly as read (identity = sha256 of these)
+    admission_decision: str = "IDENTITY_ONLY"   # corpus_gate decision (APPROVE/WARN) when sequence-checked
+    # CH-corpus-clock-contract-v1: the configured clock this corpus's SOURCE timestamps are on.
+    # `start`/`end` above are canonical UTC (what consumers receive); `source_start`/`source_end`
+    # are the cells as written in the file (what the file and its registry records say).
+    clock: Optional[ClockDef] = None
+    clock_origin: str = ""           # registry | in_process | inherited_parent
+    source_start: str = ""
+    source_end: str = ""
+
+    @property
+    def identity(self) -> str:
+        """The corpus identity an artifact records: the registered dataset_id, else the
+        content address `sha256:<hex>` (an identified, unregistered corpus)."""
+        return self.dataset_id or f"sha256:{self.sha256}"
+
+    #: every view this object hands out (text / records / frame) is on this clock
+    clock_state = CLOCK_STATE_CANONICAL
+
+    @_cached_property
+    def canonical_data(self) -> bytes:
+        """The corpus as consumers see it: `timestamp` = canonical UTC, `source_timestamp` = the
+        cell as written in the file (audit / broker-time comparison only). Built ONCE from the
+        source bytes by the one normalizer (`clock_contract.normalize_view`).
+
+        The rebuild is LINE-PRESERVING: blank lines, malformed rows and unparseable timestamp
+        cells pass through untouched, so every integrity defect the source has is still visible
+        to the downstream readers' own fail-closed checks (a pandas round-trip would silently
+        drop a mid-file blank line or normalize away a short row)."""
+        import pandas as pd
+
+        if self.clock is None:
+            raise ClockProvenanceError(
+                f"{self.path}: corpus was admitted without a clock; refusing to expose timestamps")
+        text = self.data.decode("utf-8-sig").replace("\r\n", "\n")
+        lines = text.split("\n")
+        hdr_i = next((i for i, ln in enumerate(lines) if ln.strip()), None)
+        if hdr_i is None:
+            raise CorpusStoreError(f"{self.path}: corpus has no header")
+
+        def _fields(ln: str) -> list:
+            return next(_csv.reader([ln]))
+
+        def _join(fs: list) -> str:
+            if any('"' in f or "," in f for f in fs):
+                buf = _io.StringIO()
+                _csv.writer(buf, lineterminator="").writerow(fs)
+                return buf.getvalue()
+            return ",".join(fs)
+
+        header = _fields(lines[hdr_i])
+        tcol = _timestamp_column(header)
+        tidx = header.index(tcol)
+        rows: list = []          # (line index, fields) for well-shaped data rows
+        for i in range(hdr_i + 1, len(lines)):
+            if not lines[i].strip():
+                continue
+            fs = _fields(lines[i])
+            if len(fs) == len(header):
+                rows.append((i, fs))
+        out_lines = list(lines)
+        out_lines[hdr_i] = _join(header + ["source_timestamp"])
+        cells = pd.Series([fs[tidx] for _, fs in rows], dtype=str)
+        if self.clock.is_identity or cells.empty:
+            canon = list(cells)                   # identity clock: values unchanged, never re-parsed
+        else:
+            parsed = pd.to_datetime(cells.str.strip(), errors="coerce")
+            good = parsed.notna()
+            conv = normalize_view(CLOCK_STATE_SOURCE, self.clock, parsed[good]).dt.strftime("%Y-%m-%d %H:%M:%S")
+            canon_s = cells.copy()
+            canon_s[good] = conv                  # unparseable cells stay as written -> downstream raises
+            canon = list(canon_s)
+        for (i, fs), c in zip(rows, canon):
+            out_lines[i] = _join(fs[:tidx] + [c] + fs[tidx + 1:] + [fs[tidx]])
+        return "\n".join(out_lines).encode("utf-8")
+
+    @_cached_property
+    def text(self) -> str:
+        return self.canonical_data.decode("utf-8")
+
+    @_cached_property
+    def source_text(self) -> str:
+        """The file exactly as written (SOURCE clock). Audit / integrity-on-the-artifact only."""
+        return self.data.decode("utf-8-sig")
+
+    @_cached_property
+    def _records(self) -> tuple:
+        return tuple(_csv.DictReader(_io.StringIO(self.text, newline="")))
+
+    def records(self) -> list:
+        """Rows as csv.DictReader dicts (string cells). `timestamp` is canonical UTC;
+        `source_timestamp` is the cell as written in the file."""
+        return list(self._records)
+
+    def frame(self, **read_csv_kwargs):
+        """A fresh pandas DataFrame parsed from the canonical bytes (kwargs -> pd.read_csv).
+        Carries `attrs`: timestamp_clock='UTC', clock_id, corpus identity."""
+        import pandas as pd
+
+        df = pd.read_csv(_io.BytesIO(self.canonical_data), **read_csv_kwargs)
+        df.attrs["timestamp_clock"] = CANONICAL_TIMEZONE
+        df.attrs["clock_id"] = self.clock.clock_id if self.clock else None
+        df.attrs["corpus_identity"] = self.identity
+        df.attrs["instrument"] = self.instrument
+        return df
+
+    def to_source_rows(self, df):
+        """Re-express a (possibly filtered) canonical frame in SOURCE representation: the
+        `timestamp` column becomes the original cells and `source_timestamp` is dropped. This is
+        how a derived window is written so its bytes stay a true sub-range of the parent
+        (lineage, contract §13). Refuses frames that are not this corpus's canonical frame."""
+        if df.attrs.get("timestamp_clock") != CANONICAL_TIMEZONE or "source_timestamp" not in df.columns:
+            raise DoubleNormalizationError(
+                "to_source_rows expects a canonical frame produced by AdmittedCorpus.frame()")
+        tcol = _timestamp_column([c for c in df.columns if c != "source_timestamp"])
+        out = df.drop(columns=[tcol]).rename(columns={"source_timestamp": tcol})
+        cols = [tcol] + [c for c in out.columns if c != tcol]
+        return out[cols]
+
+    def normalize_source_frame(self, df):
+        """The once-only guard, made reachable: a frame that is already canonical UTC cannot be
+        pushed through source-clock normalization again."""
+        if df.attrs.get("timestamp_clock") == CANONICAL_TIMEZONE:
+            raise DoubleNormalizationError(
+                "frame is already canonical UTC; it cannot be normalized from the source clock again")
+        tcol = _timestamp_column(list(df.columns))
+        import pandas as pd
+
+        out = df.copy()
+        out[tcol] = normalize_view(CLOCK_STATE_SOURCE, self.clock, pd.to_datetime(out[tcol]))
+        out.attrs["timestamp_clock"] = CANONICAL_TIMEZONE
+        return out
+
+    @property
+    def calendar(self):
+        """The market calendar for this corpus's INSTRUMENT (not its broker): day/week/HTF grid."""
+        from features.market_calendar import calendar_for_instrument
+        return calendar_for_instrument(self.instrument)
+
+    def provenance(self) -> dict:
+        """The identity block every artifact derived from this corpus should carry."""
+        return {
+            "corpus_identity": self.identity,
+            "dataset_id": self.dataset_id,
+            "corpus_sha256": self.sha256,
+            "corpus_path": Path(self.path).as_posix(),
+            "requested_path": Path(self.requested_path).as_posix(),
+            "rewritten": self.rewritten,
+            "bound": self.bound,
+            "instrument": self.instrument,
+            "timeframe": self.timeframe,
+            "n_rows": self.n_rows,
+            "start": self.start,
+            "end": self.end,
+            "source_start": self.source_start,
+            "source_end": self.source_end,
+            "timestamp_clock": CANONICAL_TIMEZONE,
+            "clock": ({**self.clock.describe(), "origin": self.clock_origin}
+                      if self.clock else None),
+            "sequence_checked": self.sequence_checked,
+            "admission_decision": self.admission_decision,
+            "authority": "data_ingestion.corpus_store.load",
+        }
+
+
+_SSOT_CACHE: dict = {}
+
+
+def _norm_ts(s: str) -> str:
+    return s.strip().replace("T", " ")
+
+
+def _declared_aliases(dataset_id: str) -> set:
+    from data_ingestion.dataset_registry import _REPO_ROOT, load_bound_datasets
+
+    rec = load_bound_datasets(repo_root=_REPO_ROOT).get(dataset_id) or {}
+    return {str((_REPO_ROOT / p).resolve()) for p in (rec.get("forensic_paths") or [])}
+
+
+def _bound_record(dataset_id: str) -> dict:
+    from data_ingestion.dataset_registry import _REPO_ROOT, load_bound_datasets
+
+    return load_bound_datasets(repo_root=_REPO_ROOT).get(dataset_id) or {}
+
+
+def load(
+    path: "str | Path",
+    instrument: str = "",
+    timeframe: str = "M15",
+    *,
+    sequence_check: bool = True,
+    plausibility: bool = False,
+) -> AdmittedCorpus:
+    """Return THE authoritative corpus for `path` (see the block comment above).
+
+    sequence_check=True runs corpus_gate.admit_corpus (identity + sequence/integrity, REJECT
+    raises); False admits identity only (dataset_registry.admit_csv_path), the level the
+    backtest CandleLoader has always used — its run-level preflight does the sequence check.
+    """
+    from data_ingestion.dataset_registry import admit_csv_path
+
+    requested = str(path)
+    if not instrument:
+        # No caller hint: take the symbol from the filename (`{SYMBOL}_{TF}...csv`). An empty
+        # instrument makes the registry judge every file against the XAUUSD record (it would
+        # treat EURUSD_M15.csv as a native-HTF forensic request).
+        instrument = Path(requested).stem.split("_")[0].upper()
+    try:
+        adm = admit_csv_path(requested, instrument)
+    except Phase1CandidateError as exc:
+        raise DatasetAdmissionError(str(exc)) from exc
+    admitted = Path(adm.filepath)
+    req = Path(requested)
+    dataset_id, bound, rewritten = adm.dataset_id, adm.bound, bool(adm.rewritten)
+    own_identity = (
+        rewritten and req.exists() and req.resolve() != admitted.resolve()
+        and (adm.dataset_id is None or str(req.resolve()) not in _declared_aliases(adm.dataset_id))
+    )
+    if own_identity:
+        # An existing, different, undeclared file is its OWN corpus — not the rewrite target.
+        logger.warning("corpus SSOT: %s is its own corpus (not rewritten to %s)", requested, admitted)
+        admitted, dataset_id, bound, rewritten = req, None, False, False
+    elif rewritten:
+        logger.warning("corpus SSOT: %s resolved to declared %s (%s)", requested, admitted, dataset_id)
+
+    from dataclasses import replace as _replace
+
+    def _view(c: AdmittedCorpus) -> AdmittedCorpus:
+        """Same bytes/identity; per-request fields reflect THIS request."""
+        if c.requested_path == requested and c.rewritten == rewritten:
+            return c
+        return _replace(c, requested_path=requested, rewritten=rewritten)
+
+    st = admitted.stat()
+    key = (str(admitted.resolve()), st.st_size, st.st_mtime_ns)
+    hit = _SSOT_CACHE.get(key)
+    if hit is not None and (hit.sequence_checked or not sequence_check) and not plausibility:
+        return _view(hit)
+
+    decision = "IDENTITY_ONLY"
+    if sequence_check or plausibility:
+        if own_identity:
+            # admit_corpus would follow the legacy rewrite; validate THIS file's own contract.
+            from data_ingestion.dataset_integrity import validate_dataset
+            from data_ingestion.ohlcv_schema import DatasetIntegrityError
+
+            rep = validate_dataset(str(admitted), instrument=instrument or None,
+                                   raise_on_fail=False, write_report=False)
+            decision = rep.get("decision", "UNKNOWN")
+            if decision == "REJECT":
+                raise DatasetIntegrityError(
+                    f"{admitted}: own-identity corpus REJECTED by validate_dataset: "
+                    f"{rep.get('hard_failures')}"
+                )
+        else:
+            decision = admit_corpus(
+                requested, instrument, write_report=False, check_plausibility=plausibility
+            ).decision
+        sequence_check = True
+        if hit is not None:   # same bytes already in memory: only the check level is upgraded
+            if not hit.sequence_checked:
+                hit = _replace(hit, sequence_checked=True, admission_decision=decision)
+                _SSOT_CACHE[key] = hit
+            return _view(hit)
+
+    data = admitted.read_bytes()
+    sha = hashlib.sha256(data).hexdigest()
+    text = data.decode("utf-8-sig")
+    lines = [ln for ln in text.splitlines() if ln.strip()]
+    if not lines:
+        raise CorpusStoreError(f"admitted corpus is empty: {admitted}")
+    header = [h.strip().strip('"').lower() for h in lines[0].split(",")]
+    ts_col = header.index("timestamp") if "timestamp" in header else 0
+    n_rows = len(lines) - 1
+    start = lines[1].split(",")[ts_col].strip() if n_rows else ""
+    end = lines[-1].split(",")[ts_col].strip() if n_rows else ""
+
+    if bound and dataset_id:
+        art = _bound_record(dataset_id).get("canonical_artifact") or {}
+        if art.get("sha256") and art["sha256"] != sha:
+            raise CorpusStoreError(
+                f"{dataset_id}: bytes read hash {sha[:16]}.. != registered {art['sha256'][:16]}.."
+            )
+        if art.get("rows") is not None and int(art["rows"]) != n_rows:
+            raise CorpusStoreError(f"{dataset_id}: {n_rows} rows read != registered {art['rows']}")
+        for k, v in (("start", start), ("end", end)):
+            if art.get(k) and _norm_ts(art[k]) != _norm_ts(v):
+                raise CorpusStoreError(f"{dataset_id}: {k} {v!r} != registered {art[k]!r}")
+
+    # CH-corpus-clock-contract-v1: a corpus without an explicit, configured clock identity cannot
+    # enter the research system. The registry record (and, for a bound dataset, the dataset
+    # record) must name the same provider/broker/clock_id as the configured clock.
+    from data_ingestion.clock_registry import resolve_clock
+    from data_ingestion.clock_contract import to_utc_scalar
+    from data_ingestion.ohlcv_schema import parse_ohlcv_timestamp
+
+    resolved = resolve_clock(admitted, dataset=_bound_record(dataset_id) if (bound and dataset_id) else None)
+
+    def _utc_cell(cell: str) -> str:
+        if not cell or resolved.clock.is_identity:
+            return cell
+        return to_utc_scalar(parse_ohlcv_timestamp(cell), resolved.clock).strftime("%Y-%m-%d %H:%M:%S")
+
+    corpus = AdmittedCorpus(
+        dataset_id=dataset_id, bound=bound, sha256=sha, path=str(admitted),
+        requested_path=requested, rewritten=rewritten,
+        instrument=instrument or (dataset_id or ""), timeframe=timeframe,
+        n_rows=n_rows, start=_utc_cell(start), end=_utc_cell(end),
+        sequence_checked=sequence_check, data=data,
+        admission_decision=decision,
+        clock=resolved.clock, clock_origin=resolved.origin,
+        source_start=start, source_end=end,
+    )
+    _SSOT_CACHE[key] = corpus
+    return corpus
+
+
+def corpus_sha256(path: "str | Path", instrument: str = "") -> str:
+    """sha256 of the authoritative corpus for `path` (SSOT; never a separate file read)."""
+    return load(path, instrument, sequence_check=False).sha256

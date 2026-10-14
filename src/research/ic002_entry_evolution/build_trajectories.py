@@ -28,8 +28,11 @@ from research.ic002_entry_evolution.schema import (
 logger = logging.getLogger("ic002.build")
 
 
-def _load_ohlcv_df(path: Path) -> pd.DataFrame:
-    df = pd.read_csv(path)
+def _load_ohlcv_df(source) -> pd.DataFrame:
+    # CH-corpus-ssot (2026-10-08): frame parsed from the corpus SSOT's bytes, no separate read.
+    from research.mc_kit.bars import as_corpus
+
+    df = as_corpus(source, "XAUUSD").frame()
     # normalize column names
     cols = {c.lower(): c for c in df.columns}
     rename = {}
@@ -166,12 +169,16 @@ def build_all(
     n_grid: tuple[int, ...] = N_GRID,
 ) -> dict[str, Any]:
     prereg = load_prereg()
-    ohlcv = ohlcv_path or resolve_ohlcv(prereg["population"].get("ohlcv_candidates"))
+    from research.mc_kit.bars import as_corpus
+
+    corpus = as_corpus(ohlcv_path, "XAUUSD") if ohlcv_path else resolve_ohlcv(
+        prereg["population"].get("ohlcv_candidates"))
+    ohlcv = Path(corpus.path)
     out_dir = out_dir or DEFAULT_OUT
     entries = load_entries(entries_path)
 
-    logger.info("OHLCV=%s entries=%s", ohlcv, len(entries))
-    enriched = run_feature_matrix(ohlcv)
+    logger.info("OHLCV=%s (%s) entries=%s", ohlcv, corpus.dataset_id, len(entries))
+    enriched = run_feature_matrix(corpus)
     src_to_row = {
         int(s): i for i, s in enumerate(enriched["_src_idx"].astype(int).tolist())
     }
@@ -185,7 +192,8 @@ def build_all(
     manifest: dict[str, Any] = {
         "program": "H-IC002-001",
         "ohlcv_path": str(ohlcv),
-        "ohlcv_sha256": sha256_file(ohlcv),
+        "ohlcv_sha256": corpus.sha256,
+        "dataset_id": corpus.dataset_id,
         "n_entries_source": len(entries),
         "entry_id_list_sha256": sha256_text("\n".join(entry_ids)),
         "feature_ids": list(TRAJECTORY_FEATURE_IDS),

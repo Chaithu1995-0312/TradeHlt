@@ -49,24 +49,25 @@ from pathlib import Path
 from typing import Any, Optional
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+from data_ingestion.clock_contract import ClockDef, parse_clock_defs, require_exact_identity
 from data_ingestion.ohlcv_schema import ClockProvenanceError
 
 # Repo root: src/data_ingestion/clock_registry.py -> parents[2]
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 
 REGISTRY_RELPATH = "configs/data_provenance/ohlcv_clock_registry.json"
-REGISTRY_SCHEMA_VERSION = "1.0.0"
+# 2.0.0 (CH-corpus-clock-contract-v1): adds the top-level `clocks` table (configured clock
+# definitions) and record-level provider/broker/clock_id. 1.0.0 files still load (no clocks).
+REGISTRY_SCHEMA_VERSION = "2.0.0"
 
-# ── Legal declared clocks ──────────────────────────────────────────────────────
-# Two named kinds plus any IANA zone. `UNKNOWN` is deliberately NOT legal for a REVIEWED record:
-# "reviewed" means a human declared which clock this is. An undecided corpus stays unreviewed.
+# ── Legacy declared-clock LABELS ───────────────────────────────────────────────
+# Pre-2.0 records carry a free `timezone` label. It is HISTORY: conversion never reads it (the
+# mapping comes from the configured clock named by `clock_id`). Kept so old records still load and
+# so the review CLI can still show what a reviewer once wrote. `UNKNOWN` is not legal for a
+# REVIEWED legacy record.
 TZ_UTC = "UTC"
 TZ_MT5_SERVER_NY_DST = "MT5_SERVER_NY_DST"
 _NAMED_TIMEZONE_KINDS = (TZ_UTC, TZ_MT5_SERVER_NY_DST)
-
-# Basis values from `feature_pipeline.session_timestamp_basis`.
-BASIS_BROKER_LOCAL = "broker_local"
-BASIS_UTC_CORRECTED = "utc_corrected"
 
 _SHA_CHUNK = 1 << 20  # 1 MiB
 
@@ -120,7 +121,9 @@ def validate_timezone_value(tz: str) -> None:
 
 @dataclass(frozen=True)
 class ClockRecord:
-    """One corpus's declared clock. `user_reviewed` is set ONLY by a human via the review CLI."""
+    """One corpus artifact's declared clock identity. `user_reviewed` is set ONLY by a human via
+    the review CLI. `provider`/`broker`/`clock_id` name the configured clock (the `clocks` table);
+    `timezone` is the legacy free label (history only, never read by conversion)."""
     path: str
     sha256: str
     timezone: str
@@ -129,11 +132,16 @@ class ClockRecord:
     reviewed_at: Optional[str] = None
     detector: Optional[dict] = None
     notes: str = ""
+    provider: Optional[str] = None
+    broker: Optional[str] = None
+    clock_id: Optional[str] = None
 
     def __post_init__(self) -> None:
         if self.user_reviewed:
-            # A reviewed record must carry a legal declaration and an attributable reviewer.
-            validate_timezone_value(self.timezone)
+            # A reviewed record must carry an attributable reviewer and either a configured clock
+            # identity (2.0) or a legal legacy label (1.0 history).
+            if not self.clock_id:
+                validate_timezone_value(self.timezone)
             if not self.reviewed_by:
                 raise ValueError(
                     f"{self.path}: user_reviewed=true requires a non-empty 'reviewed_by'. "
@@ -141,7 +149,11 @@ class ClockRecord:
                 )
 
     def to_json(self) -> dict:
-        return asdict(self)
+        d = asdict(self)
+        for k in ("provider", "broker", "clock_id"):
+            if d.get(k) is None:
+                d.pop(k)
+        return d
 
     @staticmethod
     def from_json(obj: dict) -> "ClockRecord":
@@ -165,7 +177,23 @@ class ClockRecord:
             reviewed_at=obj.get("reviewed_at"),
             detector=obj.get("detector"),
             notes=str(obj.get("notes", "")),
+            provider=obj.get("provider"),
+            broker=obj.get("broker"),
+            clock_id=obj.get("clock_id"),
         )
+
+
+def _read_raw(reg_path: Path) -> dict:
+    try:
+        raw = json.loads(reg_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise ClockProvenanceError(f"{reg_path} is not valid JSON: {exc}") from exc
+    if not isinstance(raw, dict) or "records" not in raw:
+        raise ClockProvenanceError(
+            f"{reg_path} must be an object with a 'records' array (schema_version "
+            f"{REGISTRY_SCHEMA_VERSION})."
+        )
+    return raw
 
 
 def load_registry(registry: Optional[Path] = None) -> dict[str, ClockRecord]:
@@ -178,17 +206,7 @@ def load_registry(registry: Optional[Path] = None) -> dict[str, ClockRecord]:
     reg_path = registry or registry_path()
     if not reg_path.exists():
         return {}
-    try:
-        raw = json.loads(reg_path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as exc:
-        raise ClockProvenanceError(f"{reg_path} is not valid JSON: {exc}") from exc
-
-    if not isinstance(raw, dict) or "records" not in raw:
-        raise ClockProvenanceError(
-            f"{reg_path} must be an object with a 'records' array (schema_version "
-            f"{REGISTRY_SCHEMA_VERSION})."
-        )
-
+    raw = _read_raw(reg_path)
     out: dict[str, ClockRecord] = {}
     for obj in raw["records"]:
         rec = ClockRecord.from_json(obj)
@@ -201,12 +219,24 @@ def load_registry(registry: Optional[Path] = None) -> dict[str, ClockRecord]:
     return out
 
 
+def load_clocks(registry: Optional[Path] = None) -> dict[str, ClockDef]:
+    """The configured clock definitions (`clocks` table). Missing table -> no clocks (all corpora
+    are then refused at admission). Offset-valued fields are refused by `parse_clock_defs`."""
+    reg_path = registry or registry_path()
+    if not reg_path.exists():
+        return {}
+    return parse_clock_defs(_read_raw(reg_path).get("clocks", {}))
+
+
 def save_registry(records: dict[str, ClockRecord], registry: Optional[Path] = None) -> Path:
-    """Atomic write, records sorted by path so diffs stay reviewable."""
+    """Atomic write, records sorted by path so diffs stay reviewable. The `clocks` table is
+    preserved verbatim (this function never edits clock definitions)."""
     reg_path = registry or registry_path()
     reg_path.parent.mkdir(parents=True, exist_ok=True)
+    clocks = _read_raw(reg_path).get("clocks", {}) if reg_path.exists() else {}
     payload = {
         "schema_version": REGISTRY_SCHEMA_VERSION,
+        "clocks": clocks,
         "records": [records[k].to_json() for k in sorted(records)],
     }
     tmp = reg_path.with_suffix(reg_path.suffix + ".tmp")
@@ -233,20 +263,18 @@ def utcnow_iso() -> str:
 # in source, in review, and in grep. `tests/test_ohlcv_clock_provenance.py` pins the rule that no
 # module under `src/` may invoke it — production code has no constructed corpora, so a call there
 # would be a bypass, and the floor test fails the build if one appears.
-_IN_PROCESS: dict[str, tuple[str, str]] = {}      # key -> (timezone, reason)
+_IN_PROCESS: dict[str, tuple[str, str]] = {}      # key -> (clock_id, reason)
 _IN_PROCESS_TREES: list[tuple[Path, str, str]] = []
 
 
-def declare_in_process(path: str | os.PathLike, timezone: str, *, reason: str) -> None:
-    """Declare one process-local file's clock. Never persisted to the registry."""
-    validate_timezone_value(timezone)
-    _IN_PROCESS[normalize_key(path)] = (timezone, reason)
+def declare_in_process(path: str | os.PathLike, clock_id: str, *, reason: str) -> None:
+    """Declare one process-local file's configured clock. Never persisted to the registry."""
+    _IN_PROCESS[normalize_key(path)] = (clock_id, reason)
 
 
-def declare_tree_in_process(root: str | os.PathLike, timezone: str, *, reason: str) -> None:
+def declare_tree_in_process(root: str | os.PathLike, clock_id: str, *, reason: str) -> None:
     """Declare every file under `root` (e.g. a pytest tmp factory). Never persisted."""
-    validate_timezone_value(timezone)
-    _IN_PROCESS_TREES.append((Path(root).resolve(), timezone, reason))
+    _IN_PROCESS_TREES.append((Path(root).resolve(), clock_id, reason))
 
 
 def clear_in_process_declarations() -> None:
@@ -254,51 +282,112 @@ def clear_in_process_declarations() -> None:
     _IN_PROCESS_TREES.clear()
 
 
-def _in_process_record(path: str | os.PathLike, key: str) -> Optional[ClockRecord]:
+def _in_process_decl(path: str | os.PathLike, key: str) -> Optional[tuple[str, str]]:
     hit = _IN_PROCESS.get(key)
     if hit is None:
         try:
             resolved = Path(path).resolve()
         except OSError:
             resolved = Path(path).absolute()
-        for root, tz, reason in _IN_PROCESS_TREES:
+        for root, cid, reason in _IN_PROCESS_TREES:
             if resolved == root or root in resolved.parents:
-                hit = (tz, reason)
+                hit = (cid, reason)
                 break
-    if hit is None:
+    return hit
+
+
+# ── Admission: the clock identity of a corpus ──────────────────────────────────
+@dataclass(frozen=True)
+class ResolvedClock:
+    """The admitted clock identity of one corpus file: the configured definition plus the
+    declaration that selected it. `origin` is where the declaration came from."""
+    clock: ClockDef
+    record: ClockRecord
+    origin: str                      # registry | in_process | inherited_parent
+
+
+def _sidecar_path(path: str | os.PathLike) -> Path:
+    return Path(path).with_suffix(".parent.json")
+
+
+def _inherit_from_parent(path: str | os.PathLike, registry: Optional[Path],
+                         _depth: int = 0) -> Optional[ResolvedClock]:
+    """Derived-window lineage (contract §13): a window written by the replay harness names its
+    parent in a `.parent.json` sidecar bound to THIS file's sha. The window inherits the parent's
+    DECLARED clock through that explicit lineage — nothing is inferred from the bytes."""
+    sc = _sidecar_path(path)
+    if _depth > 4 or not sc.exists():
         return None
-    tz, reason = hit
-    return ClockRecord(path=key, sha256="<in-process>", timezone=tz, user_reviewed=True,
-                       reviewed_by="in-process declaration", reviewed_at=utcnow_iso(),
-                       notes=reason)
+    try:
+        meta = json.loads(sc.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    src = meta.get("derived_from") or {}
+    bound = meta.get("derived_corpus_sha256")
+    parent_path, parent_sha = src.get("corpus_path"), src.get("corpus_sha256")
+    if not (bound and parent_path and parent_sha):
+        return None
+    if bound != sha256_file(path):
+        raise ClockProvenanceError(
+            f"{path}: derived-window sidecar {sc.name} is bound to a different file sha "
+            f"({str(bound)[:12]}.. != actual); a window must be re-derived, its clock is not inherited.")
+    pp = Path(parent_path)
+    pp = pp if pp.is_absolute() else _REPO_ROOT / pp
+    if not pp.exists() or sha256_file(pp) != parent_sha:
+        raise ClockProvenanceError(
+            f"{path}: parent corpus {parent_path} is missing or its sha changed; the window's "
+            f"clock lineage is broken.")
+    parent = resolve_clock(pp, registry=registry, _depth=_depth + 1)
+    rec = ClockRecord(path=normalize_key(path), sha256=bound, timezone="", user_reviewed=True,
+                      reviewed_by=f"inherited from {parent.record.path}", reviewed_at=utcnow_iso(),
+                      notes=f"derived window of {parent_path} ({parent_sha[:12]}..)",
+                      provider=parent.clock.provider, broker=parent.clock.broker,
+                      clock_id=parent.clock.clock_id)
+    return ResolvedClock(parent.clock, rec, "inherited_parent")
 
 
-# ── Phase 3 gate ───────────────────────────────────────────────────────────────
-def require_reviewed_clock(
+def resolve_clock(
     path: str | os.PathLike,
     *,
-    basis: Optional[str] = None,
     registry: Optional[Path] = None,
-) -> ClockRecord:
-    """Raise `ClockProvenanceError` unless this corpus has a reviewed, SHA-matching clock record.
+    dataset: Optional[dict] = None,
+    _depth: int = 0,
+) -> ResolvedClock:
+    """Resolve the configured clock a corpus file is declared on, or raise `ClockProvenanceError`.
 
-    `basis` — when the caller knows the active `feature_pipeline.session_timestamp_basis`, pass it
-    and the double-conversion guard runs (a corpus already on true UTC must never be pushed through
-    the MT5->UTC conversion again). Callers that do not resolve a basis omit it; the review gate
-    itself still applies.
+    A dataset without an explicit, configured clock identity cannot enter the research system, and
+    the declared provider/broker/clock_id must EXACTLY match the configured definition. Nothing is
+    guessed: no detector verdict, no filename, no "same broker, probably same clock".
+
+    `dataset` — the bound dataset-identity record when the file is a registered corpus; its own
+    (provider, broker, clock_id) declaration must equal the artifact record's.
     """
     key = normalize_key(path)
     if not Path(path).exists():
         raise FileNotFoundError(f"OHLCV corpus not found: {path}")
+    clocks = load_clocks(registry)
 
-    in_proc = _in_process_record(path, key)
-    if in_proc is not None:
-        if basis is not None:
-            require_basis_compatible(in_proc, basis)
-        return in_proc
+    def _def(cid: str, where: str) -> ClockDef:
+        if cid not in clocks:
+            raise ClockProvenanceError(
+                f"{where}: clock_id {cid!r} is not a configured clock "
+                f"(configured: {sorted(clocks)}). Add it to {REGISTRY_RELPATH} 'clocks' first.")
+        return clocks[cid]
+
+    decl = _in_process_decl(path, key)
+    if decl is not None:
+        cid, reason = decl
+        cd = _def(cid, f"in-process declaration for {key}")
+        rec = ClockRecord(path=key, sha256="<in-process>", timezone="", user_reviewed=True,
+                          reviewed_by="in-process declaration", reviewed_at=utcnow_iso(),
+                          notes=reason, provider=cd.provider, broker=cd.broker, clock_id=cd.clock_id)
+        return ResolvedClock(cd, rec, "in_process")
 
     rec = load_registry(registry).get(key)
     if rec is None:
+        inh = _inherit_from_parent(path, registry, _depth)
+        if inh is not None:
+            return inh
         raise ClockProvenanceError(_unreviewed_message(key, path, reason="no record"))
 
     actual_sha = sha256_file(path)
@@ -316,33 +405,34 @@ def require_reviewed_clock(
         raise ClockProvenanceError(_unreviewed_message(key, path, reason="user_reviewed=false",
                                                       detector=rec.detector))
 
-    if basis is not None:
-        require_basis_compatible(rec, basis)
-    return rec
-
-
-def require_basis_compatible(rec: ClockRecord, basis: str) -> None:
-    """Double-conversion guard.
-
-    `utc_corrected` routes timestamps through `broker_clock.mt5_server_to_utc*`, which subtracts the
-    broker's 2h/3h seasonal offset. Applying that to a corpus whose stamps are ALREADY true UTC
-    silently shifts it into a wrong clock — the same class of defect this registry exists to catch,
-    arriving from the opposite direction.
-    """
-    if basis not in (BASIS_BROKER_LOCAL, BASIS_UTC_CORRECTED):
+    if not rec.clock_id:
         raise ClockProvenanceError(
-            f"feature_pipeline.session_timestamp_basis={basis!r} is not one of "
-            f"({BASIS_BROKER_LOCAL!r}, {BASIS_UTC_CORRECTED!r})."
-        )
-    if basis == BASIS_UTC_CORRECTED and rec.timezone == TZ_UTC:
-        raise ClockProvenanceError(
-            f"DOUBLE CONVERSION refused for {rec.path}.\n"
-            f"  declared clock : {TZ_UTC} (already true UTC)\n"
-            f"  active basis   : {BASIS_UTC_CORRECTED} (applies the MT5 server->UTC offset)\n"
-            f"broker_clock.py's SCOPE section: Binance-sourced corpora use genuinely UTC epoch\n"
-            f"timestamps and must NEVER be passed through this conversion. Either read this corpus\n"
-            f"under basis '{BASIS_BROKER_LOCAL}', or correct the declaration if it is not UTC."
-        )
+            f"Clock identity MISSING for {key}: the record is reviewed (legacy label "
+            f"{rec.timezone!r}) but declares no clock_id/provider/broker. A dataset without an "
+            f"explicit, configured clock identity cannot enter the research system.\n"
+            f"Declare it:\n"
+            f"  python scripts/governance/review_ohlcv_clocks.py --review {key} --clock-id <id> "
+            f"--reviewed-by <you>")
+    cd = _def(rec.clock_id, key)
+    require_exact_identity(cd, provider=rec.provider, broker=rec.broker, clock_id=rec.clock_id,
+                           where=f"{key} (clock registry record)")
+    if dataset is not None:
+        require_exact_identity(cd, provider=dataset.get("provider"), broker=dataset.get("broker"),
+                               clock_id=dataset.get("clock_id"),
+                               where=f"dataset {dataset.get('dataset_id')} (dataset identity record)")
+    return ResolvedClock(cd, rec, "registry")
+
+
+def require_reviewed_clock(
+    path: str | os.PathLike,
+    *,
+    registry: Optional[Path] = None,
+    dataset: Optional[dict] = None,
+) -> ResolvedClock:
+    """Raise `ClockProvenanceError` unless this corpus has a reviewed, SHA-matching record naming
+    a configured clock. (The former `basis=` double-conversion guard is retired: nothing downstream
+    converts any more, so there is no second conversion to guard.)"""
+    return resolve_clock(path, registry=registry, dataset=dataset)
 
 
 def _unreviewed_message(key: str, path: Any, *, reason: str,

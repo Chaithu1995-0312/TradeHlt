@@ -77,7 +77,8 @@ def collect_crt_zone_joint_labels(
     """
     Align CRT post-candle state with mapper best_zone_id on every post-init bar.
     """
-    raw = pd.read_csv(csv_path)
+    from data_ingestion.corpus_store import load as _corpus_load  # CH-corpus-ssot: the corpus SSOT
+    raw = _corpus_load(csv_path, sequence_check=False).frame()
     raw.columns = [c.strip().lower() for c in raw.columns]
     if "timestamp" not in raw.columns:
         if "date" in raw.columns and "time" in raw.columns:
@@ -138,6 +139,7 @@ def collect_crt_zone_joint_labels(
         else:
             htf_remaining = max(0, htf_remaining - 1)
         engine.state.htf_remaining_candles = htf_remaining
+        engine.state.htf_window_candles = htf_candles_per_range   # CH-timeframe-ssot-v2
 
         if candle_idx < warmup_candles:
             continue

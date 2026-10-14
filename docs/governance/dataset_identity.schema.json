@@ -10,6 +10,9 @@
     "dataset_id",
     "symbol",
     "source_family",
+    "provider",
+    "broker",
+    "clock_id",
     "clock_basis",
     "volume_semantic",
     "decision_status",
@@ -26,6 +29,18 @@
     },
     "symbol": { "type": "string" },
     "source_family": { "type": "string" },
+    "provider": {
+      "type": "string",
+      "description": "CH-corpus-clock-contract-v1 (2026-10-08): data provider; must EXACTLY match the configured clock named by clock_id (configs/data_provenance/ohlcv_clock_registry.json 'clocks')."
+    },
+    "broker": {
+      "type": "string",
+      "description": "Broker/venue that produced the timestamps; must exactly match the configured clock."
+    },
+    "clock_id": {
+      "type": "string",
+      "description": "Configured clock identity. The mapping to canonical UTC lives in the clocks table, never in the dataset record. A dataset without a configured clock cannot enter the research system."
+    },
     "clock_basis": {
       "type": "string",
       "enum": ["broker_local", "utc_corrected", "UNKNOWN"]

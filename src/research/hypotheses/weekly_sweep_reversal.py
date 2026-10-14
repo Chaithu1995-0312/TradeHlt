@@ -69,6 +69,7 @@ class WeeklySweepReversal:
         holidays=None,
         encoder: CandleStateEncoder | None = None,
         regime_labeler: RegimeLabeler | None = None,
+        calendar=None,
     ):
         # Defaults mirror configs/research/research_config_weekly_sweep.json's `weekly_sweep`
         # block, purely so @register_hypothesis's zero-arg registry instantiation succeeds
@@ -82,6 +83,7 @@ class WeeklySweepReversal:
         self.max_intraweek_gap_minutes = max_intraweek_gap_minutes
         self.check_week_validity = check_week_validity
         self.weekly_mask = weekly_mask
+        self.calendar = calendar   # market calendar (bars are canonical UTC); None = UTC grid
         self.holidays = holidays or set()
         self.encoder = encoder or CandleStateEncoder(atr_period=atr_period)
         self.regime_labeler = regime_labeler or RegimeLabeler(
@@ -93,26 +95,28 @@ class WeeklySweepReversal:
         if not bars:
             return []
         bar = bars[-1]
-        if bar.timestamp.weekday() not in SWEEP_WEEKDAYS:
+        _wallts = self.calendar.wall(bar.timestamp) if self.calendar is not None else bar.timestamp
+        if _wallts.weekday() not in SWEEP_WEEKDAYS:
             return []
 
         wr = current_week_range(
             bars,
             min_accumulation_bars=self.min_accumulation_bars,
             max_intraweek_gap_minutes=self.max_intraweek_gap_minutes,
+            calendar=self.calendar,
         )
         if wr is None:
             return []
 
         if self.check_week_validity and self.weekly_mask is not None:
-            if not is_week_structurally_valid(bars, self.weekly_mask, self.holidays):
+            if not is_week_structurally_valid(bars, self.weekly_mask, self.holidays, self.calendar):
                 return []
 
         ev = detect_weekly_sweep(bars, wr)
         if ev is None:
             return []
 
-        if not _first_sweep_this_week(bars, wr, ev.boundary):
+        if not _first_sweep_this_week(bars, wr, ev.boundary, self.calendar):
             return []
 
         a = atr(bars, self.atr_period)
