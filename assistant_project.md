@@ -2071,3 +2071,77 @@ Belief Update / ROI / Goal: none (pure mechanics).
 Open Questions: the 13 pre-existing floor reds (script registry coverage, geometry census freshness, model-path literals, schema-version census, aggregation authority, corpus-read lint, session-log count, CRT predicate contract) remain.
 Next Step: separate task to clear the 13 floor reds; push only if asked.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-05
+Topic: CRT state-transition entry study (MC-STATEENTRY-XAUUSD-M15-V1) — instrument built, real run pending
+Decision/Output: User asked which CRT state entry points show positive multi_tp_walk R, ignoring intrabar, with N future candles. Source: the engine opens trades at ONE place (RETEST -> soft confirmation -> EXECUTION, crt_engine_v2.py:4299-4333; entry = retest close, approved one bar later, F-110). Built src/research/state_entry/{extract,walk,evaluate}.py + scripts/research/state_entry_walk.py (SITS SCR-499) + sealed contract MC-STATEENTRY-XAUUSD-M15-V1 + tests/research/test_state_entry_walk.py (16 green). Entry kinds: ENTER_SWEEP/SHADOW_PENDING/DISPLACEMENT/EXPANSION/RETEST, EXECUTION_LEGACY (backtest parity), EXECUTION_AT_APPROVAL, REJECTED_AT_CONFIRMATION. Arms: close_only PRIMARY (user decision; bars collapsed to close, stop fills at the close beyond it), sl_first REFERENCE. Horizons 4..480. 70/30 chrono split + 96-bar embargo, BH-FDR q=0.10, long_only (short cells) + 100-seed hour-matched random_entry controls. Contract AMENDED before any real-corpus R: long_only clause vacuous for long cells (forcing a long unit long reproduces it) — caught writing the floor. Synthetic smoke only (corpus not in cloud clone): parity holds — EXECUTION_LEGACY sl_first = STOPPED/4 bars/-1.0R vs ledger STOPPED/4 candles; close_only books -1.62R on the same trade. Synthetic funnel SWEEP 860 -> DISP 95 -> EXP 40 -> RETEST 5 -> TRADE 1. Paper-rail plan DROPPED for now (user). Pre-existing reds reported, not fixed: test_measurement_contract (MC-VCRT V1/V2/VCRTPRIOR schema violations), test_script_registry grandfather x2.
+Belief Update / ROI / Goal: Goal: find an entry the CRT spine can actually monetise. Belief: unchanged until the real run — prior is null (F-086/F-106/F-081/F-084); RETEST/EXECUTION cells will almost surely be INSUFFICIENT on 47k bars (F-110: 3 trades), so the powered test is on SWEEP/DISPLACEMENT/EXPANSION events. Knowledge ROI: medium (first test of engine transition EVENTS vs occupancy). Action: run on the Windows corpus.
+Open Questions: none blocking. Swap unmeasured (long-horizon net optimistic).
+Next Step: venv\Scripts\python.exe scripts\research\state_entry_walk.py --csv data\mt5\XAUUSD_M15.csv ; register F-114 with the result (positive or null).
+---
+
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-05
+Topic: Review of user-pasted "CRT Model Master Specification" against recorded Sujan identity
+Decision/Output: Review only, no code/ontology change. Checked against SUJAN_CRT_IDENTITY_EXTRACTION_SYSTEM.md, SEM-033 (docs/research/sujan_manipulation_object.md, frozen 2026-08-28: manipulation = later candle purges range high/low AND closes back inside; range = parent wick-to-wick; no thresholds) and sujan_identity_drift_log.md. Flagged: source identity unknown (target = opposite range side and black/blue lines / NAS100 OB not in Sujan sources -> either drift or a new object); Type A may contradict SEM-033 close-inside rule; "thick" undefined (needs supplied candles or approved proxy); OB definition only covers the bullish case; "middle" location rule ambiguous vs extreme sweep; trigger lacks max-wait/invalidation/Type-B self-trigger; multiple-sweeps note is hypothesis not rule; 1M vs 1Mo naming; Rejection Block UNKNOWN. Proposed UNVALIDATED defaults: SL beyond manipulation extreme + spread; trigger = close above manipulation candle HIGH; FVG = standard 3-candle wick gap. Execution note: fill at trigger close, first exit check next bar (F-110).
+Belief Update / ROI / Goal: Goal: freeze one CRT object before coding. Belief: summary is not yet codeable; identity source must be settled first. Knowledge ROI: medium (prevents another SEM-031-style mutation). Action: wait for user answers.
+Open Questions: source (Sujan vs other); Type A close location; middle-location rule; approve/reject 3 defaults.
+Next Step: on answers, record drift-log entry / new frozen object, then MC contract, then detector.
+---
+
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-05
+Topic: User approved 3 CRT-spec rulings (SL, trigger, FVG)
+Decision/Output: APPROVED by user (human bridge): (1) SL = manipulation candle extreme -/+ one spread (XAUUSD measured spread 0.09 USD/oz, F-082); (2) trigger = close beyond manipulation candle HIGH (long) / LOW (short), entry at that close, first exit check next bar; (3) FVG = standard 3-candle wick gap, an FVG traded into at all (partial fill) is invalid (reading pending user confirmation). Not yet written to any identity doc: source of the spec (Sujan vs other teacher) unresolved, so not recorded in sujan_identity_drift_log.md.
+Belief Update / ROI / Goal: Goal: freeze one codeable CRT object. Belief: 3 of ~8 blanks closed. Knowledge ROI: medium. Action: wait for source, Type A close location, middle rule, trigger expiry/invalidation, "thick".
+Open Questions: source; Type A close inside vs below; HTF level at extreme vs anywhere in range; trigger max wait + invalidation; thick = hand-marked or proxy.
+Next Step: on answers, write the frozen object + MC contract, then detector.
+---
+
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-05
+Topic: Sujan Theory 2 rule extract recorded (drift log Record 8), not frozen
+Decision/Output: Bridge instruction: "Consider as Sujan 2nd theory" (overrides the relayed text saying "not Sujan's"; conflict recorded, not resolved). Added Record 8 to docs/research/sujan_identity_drift_log.md: 11-rule table with per-rule status. APPROVED: FVG 3-candle wick gap + partial fill invalidates; trigger = close beyond manipulation candle high/low, exit checks from next bar; SL = manipulation extreme -/+ one spread (0.09 USD/oz XAUUSD). Open: middle rule codeable form (AMBIGUOUS), trigger timing next-candle vs first close (MULTIPLE), invalidation (INFERRED by the relaying LLM), "thick" (UNKNOWN), OB mirror/zone, Rejection Block. Theory 2 kept separate from Theory 1 (SEM-031/033, Record 7; Type A closes below range vs Theory 1 C2 closes inside). tests/research/test_sujan_manipulation.py + test_doc_citations green.
+Belief Update / ROI / Goal: Goal: a codeable, frozen Theory 2. Belief: 3 rules approved, 4 blockers left. Knowledge ROI: medium. Action: get the 4 decisions.
+Open Questions: middle rule (zone inside range vs manipulation touches zone); trigger next-candle-only vs first close; confirm invalidation; thick proxy.
+Next Step: on answers, freeze (bridge), SEM node + MC contract, then detector.
+---
+
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-05
+Topic: Sujan Theory 2 design extracted from relayed teaching transcript (drift log Record 9)
+Decision/Output: Kept only bridge-confirmed items / bridge's own words; excluded the other LLM's chart reads (AUDCHF/USDJPY/USDCHF level picks). CONFIRMED: no HTF level => no CRT; location TF > execution TF; CRT range = high/low of ONE candle (NAS100: the 4H OB candle, executed on 15M), not LTF swings; OB = thick bearish candle sweeping low of >=1 immediately preceding adjacent candle(s), more = quality not requirement; Type A = shakeout, must fully close, entry only after; Type B = thick lower wick takes prior low, closes back inside; trigger = CLOSE above manipulation candle ("any bullish candle closed above"), with Record 8's HIGH ruling; target = opposite range side; chart C2 labels excluded. OPEN: which candle/TF is the range candle in general, middle rule, Type A close location, OB key-line price, bearish OB, thick, Rejection Block, Model #1 FVG role, invalidation. Hypotheses: more sweeps => higher target odds; OB magnet/retest.
+Belief Update / ROI / Goal: Goal: freeze Theory 2. Belief: core skeleton now confirmed; range-candle selection is the main blocker for code. Knowledge ROI: high (removed ~half the ambiguity). Action: ask the remaining open items.
+Open Questions: see Record 9 "Still open".
+Next Step: bridge answers -> freeze -> SEM node + MC contract -> detector.
+---
+
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-06
+Topic: Sujan Theory 2 — Records 10+11 committed (bridge's own words, chart rulings, audit adopted)
+Decision/Output: Record 10 = bridge's own words from the teaching chat (14 quotes). Record 11 = GBPCHF/AUDCHF rulings ("key level inside CRT range, e.g. middle"; "big bearish bar takes recent low or range low"; blue line dropped) + bridge audit adopted: trigger = close beyond manipulation candle HIGH/LOW (close-back-inside = control); manipulation must touch key zone (inside-only = control); any later candle w/ cancel on new extreme or target-first (next-only = control); TF pairs 1W->4H, 1D->1H, 4H->15M (15M->1M NOT confirmed — bridge's words for that chart were 1D/1H); range forms (a) one location-TF candle, (b) execution-chart range. Proxies approved for measurement only: swing-enclosed range (k=2), recent low N=20 (10/40), thick body>=X*ATR14 X in {0.5,1.0,1.5}, OB zone wick|body, bearish OB mirror. Name kept "Sujan Theory 2" per bridge ("sujan is fine keep as designed by you").
+Belief Update / ROI / Goal: Goal: a sealed test of Theory 2. Belief: object now measurable; visual identity still not frozen. Knowledge ROI: high. Action: seal MC-SUJANT2-XAUUSD-V1, then build src/research/sujan_t2/.
+Open Questions: Rejection Block; bearish walk-through; 15M->1M; exact GBPCHF line assignment.
+Next Step: seal contract, build detector + tests.
+---
+
+📝 SESSION LOG ENTRY
+Date: 2026-10-14
+Topic: Merge origin/semanticos_impl (6 parallel-session commits) before push
+Decision/Output: Push rejected; origin had 6 commits (c6fc8c6..3de7530: MC-STATEENTRY state-entry study + Sujan Theory 2 drift-log records). 4 conflicts resolved: session log = union (remote entries appended); SCR-499 collision -> remote state_entry_walk.py renumbered SCR-511 (stubs + matrix, Records 511); drift log: local Records 8-9 kept (Record 8 cited by sha256-frozen userinvestigation files), remote Records 8-11 renumbered 10-13 with cross-refs updated and a numbering note (user decision). Session-log history and commit messages keep the old remote numbers.
+Belief Update / ROI / Goal: none (pure mechanics).
+Open Questions: 13 pre-existing governance-floor reds remain.
+Next Step: push semanticos_impl.
+---

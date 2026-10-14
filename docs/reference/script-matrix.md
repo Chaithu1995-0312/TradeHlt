@@ -12,7 +12,7 @@ python scripts/analysis/generate_script_matrix.py
 Authority: **inventory only** (no promote power). Thin-wrapper purity is **not**
 CI-enforced in v1 — rows track `logic_in_script` / `implementation_status` only.
 
-**Records:** 510
+**Records:** 511
 
 | ID | Category | Lifecycle | Impl status | Path | Purpose |
 |---|---|---|---|---|---|
@@ -526,6 +526,7 @@ CI-enforced in v1 — rows track `logic_in_script` / `implementation_status` onl
 | `SCR-508` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/xau_1009_prereg_vol_sizing.py` | Pre-registered: long gold in 4h blocks, constant vs forecast-range vs 1/ATR s... |
 | `SCR-509` | DIAGNOSTIC | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/sujan_trade_decode.py` | Read-only: candidate levels for Sujan's 2026-09-25 XAU chart (red lines vs we... |
 | `SCR-510` | RESEARCH_RUNNER | ACTIVE | LOGIC_IN_SCRIPT | `scripts/research/xau_1009_winner_feature_repeat.py` | Descriptive: do the 67 feature values of winning H4 lower-wick 3R trades repe... |
+| `SCR-511` | RESEARCH_RUNNER | ACTIVE | EXTRACTED_TO_SRC | `scripts/research/state_entry_walk.py` | Measures every CRT ENGINE state-transition event (SWEEP, SHADOW_PENDING, DISP... |
 
 ---
 

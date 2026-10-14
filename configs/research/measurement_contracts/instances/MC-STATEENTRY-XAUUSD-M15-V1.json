@@ -1,0 +1,271 @@
+{
+  "schema_version": "1.0.0",
+  "contract_id": "MC-STATEENTRY-XAUUSD-M15-V1",
+  "experiment_id": "E-STATEENTRY-XAUUSD-M15",
+  "created_utc": "2026-10-05T00:00:00Z",
+  "authority": {
+    "economic_admissible": false,
+    "requires_mt00_pass": true,
+    "note": "Sealed 2026-10-05 BEFORE any R was computed on the XAUUSD measurement corpus (the corpus is not present in the cloud clone that wrote this contract and the code; only synthetic bars were walked while building it, and synthetic numbers are never evidence). QUESTION (user, 2026-10-05): at which CRT ENGINE state-transition events does a hypothetical entry carry positive multi_tp_walk R over N future candles, ignoring intrabar ordering? OBJECT: engine transition EVENTS (the bar a state is entered), not state OCCUPANCY. F-086 tested resolver occupancy (0 of 84 cells) and F-106 tested engine SWEEP occupancy (= random); neither measured the transition event, and F-069 shows the resolver is not the engine. The production entry is the RETEST close confirmed one bar later (F-110); every earlier transition is an entry the engine never trades. PRIMARY ARM = close_only (user decision 2026-10-05: 'ignore intrabar'): stops and targets trigger only on a bar CLOSE. The production SL-first high/low walk (F-088) runs beside it as a REFERENCE arm that spends no alpha. A POSITIVE verdict is information (Authority Ladder rung 1): it grants no fusion weight, no ExecutionPlanner/Ultron change, no ACTIVE_VERSION change and no G001. economic_claims_allowed stays false while mt00/mt01 are UNRUN (repo-wide 0/27 probes)."
+  },
+  "population": {
+    "unit_of_analysis": "signal_event",
+    "instruments": [
+      "XAUUSD"
+    ],
+    "timeframe": "M15",
+    "calendar_window": {
+      "start": "2024-05-22 01:00:00",
+      "end": "2026-05-21 23:45:00",
+      "timezone": "broker_server_labeled_UTC"
+    },
+    "inclusion_rule": "MEASUREMENT CORPUS = data/mt5/XAUUSD_M15.csv (the standing probe corpus; sha256 and row count are recorded in population_fingerprint.json at run time, never assumed). EVENT SOURCE = the <instrument>_events.jsonl of ONE BacktestRunner run of the ACTIVE config (configs/production/ACTIVE_VERSION) over that corpus, run unmodified; the run's config_hash is recorded. One unit = (setup, entry_kind, direction). A SETUP starts at an engine SWEEP event (its direction is the setup direction, state.direction = sweep.direction, crt_engine_v2.try_range_to_sweep) and ends at the next SWEEP event. ENTRY KINDS (sealed): ENTER_SWEEP (STATE_TRANSITION state_to=SWEEP), ENTER_SHADOW_PENDING, ENTER_DISPLACEMENT, ENTER_EXPANSION, ENTER_RETEST (= the retest close, resting_order semantics), EXECUTION_LEGACY (TRADE_OPENED: entry = the event price = retest close, levels = the event's own sl/tp1/tp2, walked from the bar AFTER the approval bar: reproduces the backtest ledger object), EXECUTION_AT_APPROVAL (TRADE_OPENED: entry = the approval bar close, same SL level, TP1/TP2 re-anchored at the same R multiples), REJECTED_AT_CONFIRMATION (FILTER_REJECTED, SHADOW_ADVISORY_BLOCK, TRADE_BUILD_REJECTED, TRADE_UNCONFIRMED events: the setups the engine refused, measured as a counterfactual). At most ONE unit per (setup, entry_kind). Events are joined to bars by TIMESTAMP, never by candle_index (the engine's candle_index is its own counter and does not equal the corpus row).",
+    "exclusion_rule": "Excluded: events with no setup direction (no SWEEP seen yet); units whose entry bar lacks the full horizon of forward bars (counted per horizon as insufficient_forward); units whose SL is on the wrong side of entry (the engine's inverted-SL guard; counted); units with non-positive ATR. Excluded objects: opportunities.jsonl detections (F-022), resolver occupancy (F-069/F-086), every-bar labels (F-086 owns those), the F-086 236-bar stride holdout (stays unspent), the 1-month visual-audit corpus data/XAUUSD_M15.csv.",
+    "n_declared_min": 30,
+    "detection_vs_trade": "hybrid_explicit",
+    "population_hash_inputs": [
+      "instrument",
+      "entry_kind",
+      "direction",
+      "entry_ts",
+      "setup_sweep_ts",
+      "corpus_path",
+      "corpus_sha256",
+      "events_sha256",
+      "config_hash",
+      "contract_id"
+    ]
+  },
+  "features": {
+    "feature_set_id": "FS-STATEENTRY-XAUUSD-M15-V1",
+    "feature_ids": [
+      "FM-074"
+    ],
+    "formula_authority": "market_ontology",
+    "point_in_time_rule": "Decision time t = the close of the event bar. The engine emits the event from bars <= t (process_candle is causal), so entering at the event-bar close uses no future information. EXECUTION_LEGACY deliberately reproduces the backtest's stale fill (entry = retest close while the decision is made one bar later, F-110); it is a PARITY arm, and EXECUTION_AT_APPROVAL is its honest counterpart. The forward walk receives only bars strictly after the entry bar (multi_tp_walk entry_index guard). The engine's own feature path carries F-051 (centered swings) and F-061/F-064 (momentum_score scale) exactly as the active config runs it; this contract measures the engine AS RUN and does not claim those defects are absent.",
+    "name_binding": {
+      "atr_abs": {
+        "fm_id": "FM-074",
+        "formula_ref": "price-unit ATR: the engine's own STATE_TRANSITION metadata.atr when the event carries it, else research.indicators.atr (simple mean of 14 true ranges over bars <= t)",
+        "units": "price",
+        "not_equal_to": [
+          "FM-041 atr (close-relative)"
+        ]
+      },
+      "structural_stop": {
+        "fm_id": "SEM-017",
+        "formula_ref": "ENTER_SWEEP: sweep candle low/high -/+ sl_atr_buffer*atr_abs (the engine's sl_anchor='sweep_extreme' arithmetic). Every later kind: displacement candle (the bar of SWEEP->DISPLACEMENT) low/high -/+ sl_atr_buffer*atr_abs (the engine's active sl_anchor='displacement' arithmetic, ExecutionEngine.stop_price). sl_atr_buffer read from crt_engine at run time.",
+        "units": "price",
+        "not_equal_to": [
+          "active_range h_ref/l_ref",
+          "opportunities sl"
+        ]
+      }
+    },
+    "forbidden_aliases": [
+      "resolver crt_state_resolved as the engine state",
+      "state occupancy as a transition event",
+      "candle_index as the corpus row"
+    ]
+  },
+  "labels": {
+    "label_family": "forward_walk_economic",
+    "y_definition": "y = R of the SEM-017 two-target trade from research.oracle.multi_tp_walk: partial_fraction = execution_planner.partial_tp_fraction, trail_fraction 0.5 (the production half-way trail), runner_stop_pricing ledger_blend, timeout_pricing mark_to_close at the horizon. GEOMETRY ARMS: structural (stop per features.name_binding.structural_stop) and fixed_atr (stop = entry -/+ sl_tp_comparison.legacy_sl_atr_mult*atr_abs, the oracle labeler's fixed_atr arm). TP1 = crt_engine.tp1_atr_multiplier * risk, TP2 = crt_engine.tp2_atr_multiplier * risk (intent-specific TP1 needs RETEST-cached features that earlier events do not have, so the base multiplier is used for every kind except EXECUTION_LEGACY, which keeps the engine's own levels). y_gross = rr_gross; y_net = y_gross - ComponentCostModel.cost_r(entry, risk, exit_kind, direction).",
+    "derivation_authority": "forward_walk.other",
+    "stream_fields_banned_for_economic_claims": [
+      "opportunities.outcome",
+      "opportunities.rr_achieved",
+      "trade.rr_achieved",
+      "trade.outcome"
+    ],
+    "rederive_protocol": {
+      "enabled": false,
+      "matcher": "not_applicable_no_prior_stream",
+      "min_agreement": 1.0,
+      "on_fail": "BLOCK_EXPERIMENT"
+    },
+    "horizon_bars": 480,
+    "sign_convention": "LONG positive when price rises; SHORT positive when price falls; R = pnl / initial_risk. HORIZONS (sealed): 4, 8, 16, 40, 96, 192, 480 M15 bars; 480 is the maximum and the value of horizon_bars above."
+  },
+  "costs": {
+    "cost_model_id": "CM-XAUUSD-COMPONENT-MEASURED-V1",
+    "components": [
+      {
+        "name": "ontology_and_provenance",
+        "bps_or_formula": "SEM-015 via src/research/costs.py::xau_measured_cost_model() (F-082 measured broker calibration). entry_leg = half_spread + commission + entry_slippage; exit_leg = half_spread + commission (+ stop_slippage only on a stop exit). Swap NOT charged (nights_held=0): horizons up to 480 bars span nights, so net at long horizons is OPTIMISTIC by the unmeasured swap; declared, not hidden. Net is DIAGNOSTIC.",
+        "applied_on": "round_trip"
+      },
+      {
+        "name": "half_spread",
+        "bps_or_formula": "MEASURED 0.0450 USD/oz per leg",
+        "applied_on": "round_trip"
+      },
+      {
+        "name": "commission",
+        "bps_or_formula": "MEASURED 0.0400 USD/oz per leg",
+        "applied_on": "round_trip"
+      },
+      {
+        "name": "entry_slippage",
+        "bps_or_formula": "PROXY_FROM_STOP 0.0900 USD/oz",
+        "applied_on": "entry"
+      },
+      {
+        "name": "stop_slippage",
+        "bps_or_formula": "MEASURED 0.0900 USD/oz median (n=7), stop exits only",
+        "applied_on": "exit"
+      }
+    ],
+    "gross_vs_net": {
+      "report_gross": true,
+      "report_net": true,
+      "promotable": "net_only"
+    },
+    "success_gate_uses": "net",
+    "code_entrypoint": "src/research/costs.py::xau_measured_cost_model"
+  },
+  "exits": {
+    "exit_model_id": "EX-STATEENTRY-CLOSEONLY-V1",
+    "exit_family": "time_stop",
+    "parameters": {
+      "kernel": "research.oracle.multi_tp_walk (SEM-017 two-target object)",
+      "primary_arm": "close_only: every forward bar is fed to the kernel with open=high=low=close, and AdverseFill(stop_slippage=0.0, model_gaps=True). A stop therefore triggers only when a bar CLOSES at/through it and fills AT THAT CLOSE (beyond the level, so losses can exceed -1R: honest for a close-triggered stop). A target triggers only on a close at/through it and fills AT THE LEVEL (conservative: a close-triggered exit would get the close). No intrabar ordering is assumed anywhere.",
+      "reference_arm": "sl_first: real high/low bars, tie_break='production' (SL-first, F-088), AdverseFill(stop_slippage=0.0, model_gaps=True). Reported beside the primary arm; spends no alpha.",
+      "horizons_bars": [4, 8, 16, 40, 96, 192, 480],
+      "timeout": "mark_to_close at the horizon (TP1 partial already realised; runner marks to the last close)"
+    },
+    "intrabar_rule": "PRIMARY: close_only (no intrabar information is used). REFERENCE: SL-first over high/low. F-087: close-triggered arms have a ~0.0005R same-bar ambiguity band; extreme-reading arms 0.261R, so only the primary arm is rankable.",
+    "not_equal_to": [
+      "opportunities.outcome",
+      "forward_walk single-TP object",
+      "optimistic target-first tie-break"
+    ],
+    "code_entrypoint": "src/research/state_entry/walk.py::walk_unit"
+  },
+  "splits": {
+    "scheme": "single_holdout_chronologic",
+    "embargo": "96 M15 bars between the cut and the first holdout entry",
+    "purge": "a train unit is kept only if entry_row + horizon < cut_row (its exit window cannot reach the holdout); evaluated per horizon",
+    "n_folds_or_windows": 1,
+    "overlap_policy": "allow_with_block_bootstrap",
+    "seed": 20261005,
+    "oos_fraction_or_dates": "cut_row = floor(0.70 * corpus_rows); holdout = units with entry_row >= cut_row + 96. The cut timestamp is written to split_manifest.json at run time. The holdout is touched exactly once."
+  },
+  "metrics": {
+    "information_metrics": [
+      "n_units_per_cell",
+      "n_overlapping_units_per_cell",
+      "exit_mix",
+      "funnel_counts_per_entry_kind",
+      "reference_arm_minus_primary_arm"
+    ],
+    "economic_metrics": [
+      "mean_net_R",
+      "mean_gross_R",
+      "profit_factor",
+      "ci95_mean_net_R"
+    ],
+    "success_gate": "DIAGNOSTIC ONLY, promotes nothing. CELL = entry_kind x direction x geometry x horizon on the PRIMARY (close_only) arm. FAMILY = every cell with train n >= 30 (the family size is fixed before p-values are read and recorded in metrics.json). TRAIN: one-sided p for mean_net_R > 0 from a normal approximation on the cell's units (t = mean / (sd/sqrt(n))). BH-FDR at q = 0.10 over the family. A cell is POSITIVE only if ALL hold: (1) survives BH on train; (2) holdout n >= 30; (3) holdout mean_net_R > 0; (4) SHORT cells only: holdout mean_net_R > the long_only control's holdout mean on the same units (direction forced long, same stop distance and R multiples; the binding control on a corpus where gold trended up). For LONG cells forcing the unit long reproduces it exactly, so this clause is vacuous; their passive-drift control is clause (5), whose random draws are LONG entries matched by hour and stop distance, i.e. passive long exposure. [AMENDED 2026-10-05 before any real-corpus R was computed: the sealed wording applied clause (4) to long cells, where it can never be satisfied. Caught while writing the floor, not after seeing results.]; (5) holdout mean_net_R exceeds the random_entry control mean in >= 95 of 100 seeded draws (each draw: same n, same direction, same hour-of-day, same stop distance in ATR units, entry bars drawn from the holdout window). Otherwise: NEGATIVE (train or holdout mean_net <= 0), NOT_SIGNIFICANT, FAILS_CONTROL, or INSUFFICIENT (n < 30). Long-horizon results are additionally reported against passive drift because the uptrend inflates long cells (F-086/F-087).",
+    "kill_criteria": "NON-NEGOTIABLE. Any outcome is a RESULT TO REGISTER, not an invitation to retune. Changing entry kinds, geometry, horizons, arms, cost model, split, controls or the BH q after seeing outcomes requires a NEW MC-* id. Choosing the best-looking cell and reporting it without the family correction is forbidden. A POSITIVE on the reference (sl_first) arm alone is not a POSITIVE. The EXECUTION_LEGACY arm is a parity check against the backtest ledger and can never be the headline (its fill is stale by construction, F-110).",
+    "multiplicity": {
+      "n_variants_preregistered": 224,
+      "control": "bh_fdr"
+    },
+    "authority_ladder": {
+      "info_not_value": true,
+      "value_not_authority": true,
+      "insufficient_not_harmful": true
+    },
+    "forbidden_metric_substitutions": [
+      "gross_as_success",
+      "in_sample_as_oos",
+      "best_cell_without_family_correction",
+      "reference_arm_as_primary",
+      "diagnostic_expectancy_as_economic_validation",
+      "n_ge_30_as_proof_of_validity"
+    ]
+  },
+  "pipeline_identity": {
+    "config_version_source": "configs/production/ACTIVE_VERSION, read at run time and recorded; the backtest that emits the events runs the active config unmodified",
+    "active_version_file": "configs/production/ACTIVE_VERSION",
+    "engine_gate_mode": "research_custom",
+    "expected_engines": [
+      "crt"
+    ],
+    "modules_in_path": [
+      "src/runtime/backtest_v2.py",
+      "src/config_layer/crt_engine_v2.py",
+      "src/research/state_entry/extract.py",
+      "src/research/state_entry/walk.py",
+      "src/research/state_entry/evaluate.py",
+      "src/research/oracle/multi_tp_walk.py",
+      "src/research/costs.py",
+      "src/research/indicators.py"
+    ],
+    "modules_explicitly_out_of_path": [
+      "src/runtime/live_engine_hook.py",
+      "src/config_layer/execution_planner.py",
+      "src/core/ultron_risk_gate.py",
+      "src/research/oracle/labeler.py (geometry mirrored, not imported; the every-bar label set is F-086's object)"
+    ],
+    "dataset_integrity_level": "L1_L2_L3"
+  },
+  "prohibited_substitutions": [
+    {
+      "surface": "population",
+      "forbidden": "Use resolver occupancy, every-bar labels or opportunities detections as units, or join events to bars by candle_index",
+      "historical_class": "FC-POP-DETECTION-AS-TRADE"
+    },
+    {
+      "surface": "labels",
+      "forbidden": "Use opportunities.outcome / rr_achieved or the trade ledger's rr as y",
+      "historical_class": "FC-LABEL-STREAM-INCONSISTENT"
+    },
+    {
+      "surface": "exits",
+      "forbidden": "Report the sl_first reference arm, or an optimistic target-first tie-break, as the primary result",
+      "historical_class": "FC-EXIT-PROXY-NOT-GOVERNING"
+    },
+    {
+      "surface": "metrics",
+      "forbidden": "Select a cell after seeing outcomes, or report any cell without the BH-FDR family correction and both controls",
+      "historical_class": "FC-METRIC-VARIANT-SELECTION"
+    },
+    {
+      "surface": "metrics",
+      "forbidden": "Present diagnostic expectancy as economic validation while economic_claims_allowed is false",
+      "historical_class": "FC-DIAGNOSTIC-AS-ECONOMIC"
+    },
+    {
+      "surface": "pipeline",
+      "forbidden": "Run the event-emitting backtest on a config other than ACTIVE_VERSION, or with BACKTEST_ENGINE_GATE overriding the config, without recording it as a different object",
+      "historical_class": "FC-PIPELINE-SUBSTITUTION-LAUNDERED-AS-CANON"
+    }
+  ],
+  "evidence_artifacts": {
+    "contract_path": "configs/research/measurement_contracts/instances/MC-STATEENTRY-XAUUSD-M15-V1.json",
+    "population_fingerprint_path": "results/research/state_entry/mc_stateentry_xauusd_m15_v1/population_fingerprint.json",
+    "feature_parity_path": null,
+    "label_rederive_path": null,
+    "cost_exit_fixture_path": null,
+    "split_manifest_path": "results/research/state_entry/mc_stateentry_xauusd_m15_v1/split_manifest.json",
+    "metric_compute_path": "results/research/state_entry/mc_stateentry_xauusd_m15_v1/metrics.json",
+    "mt00_report_path": "results/research/state_entry/mc_stateentry_xauusd_m15_v1/mt00.json",
+    "mt01_mutation_coverage_path": "results/research/state_entry/mc_stateentry_xauusd_m15_v1/mt01.json",
+    "code_commit": null
+  },
+  "trust_status": {
+    "mt00": "UNRUN",
+    "mt01_matrix_coverage": "UNRUN",
+    "economic_claims_allowed": false,
+    "failing_probes": [],
+    "open_risks_non_blocking": [
+      "UNRUN on the real corpus at sealing time: data/mt5/XAUUSD_M15.csv was not present in the clone that wrote this contract",
+      "Prior is unfavourable: F-019...F-097 and F-106 are all null on related objects",
+      "Units from different entry kinds of the same setup overlap in time; cells are tested separately but are not independent of each other",
+      "Swap is not charged; net at 192/480-bar horizons is optimistic by the unmeasured overnight financing",
+      "Stop slippage rests on n=7 demo fills",
+      "The engine's feature path carries F-051 and F-061/F-064 as run; this measures the engine as configured, not a corrected engine"
+    ]
+  }
+}
