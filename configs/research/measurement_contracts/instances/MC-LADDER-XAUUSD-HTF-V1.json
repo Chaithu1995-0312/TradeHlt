@@ -1,0 +1,282 @@
+{
+  "schema_version": "1.0.0",
+  "contract_id": "MC-LADDER-XAUUSD-HTF-V1",
+  "experiment_id": "PROGRAM-12-SLICE-2",
+  "created_utc": "2026-10-06T00:00:00Z",
+  "authority": {
+    "economic_admissible": false,
+    "requires_mt00_pass": true,
+    "note": "Info-stage ladder on the one-month XAUUSD slice. Historical F-ids are not economic closure. economic_claims_allowed stays false while mt00 and mt01 are UNRUN. Pre-registration content sha256 1397c993341a4ac3794f76c4367e5473768677d8a2d5fd542054e96ee4767206 (amended §17, uncommitted). Git HEAD at freeze eb35db1fc75ba79c1321860e5764d819f3a0f016 does not contain that amendment; the content hash is the freeze identity. Sealed before any Step 2 result was read."
+  },
+  "population": {
+    "unit_of_analysis": "trade_decision",
+    "instruments": ["XAUUSD"],
+    "timeframe": "H1+H4",
+    "calendar_window": {
+      "start": "2026-07-07 01:00:00",
+      "end": "2026-08-06 23:45:00",
+      "timezone": "MT5_SERVER_NY_DST"
+    },
+    "inclusion_rule": "Parent data/XAUUSD_M15.csv loaded by explicit path outside admit_csv_path and CandleLoader. n=2116. first=2026-07-07 01:00:00. last=2026-08-06 23:45:00. sha256=478b075150935c950ccc749925709db783e337c55c886d6dda1e3ee8b9692c5b. Project H1 and H4 with research.resample.resample (ParentCandleBuilder calendar rules). Feed each projected series to BacktestRunner under the research clone. Cluster = one sweep-to-displacement episode keyed by the sweep bar; overlapping holding windows share a cluster (union-find). Power floor is n_clusters >= 30 (pre-registration §14.1), not raw trades.",
+    "exclusion_rule": "Not the 47275-row Phase-1 artifact. Not the 2300-bar parity window. Not native H4 or D1 from 1998 (F-080 parity only). Not D1 as a ladder clock (Step 4). Path A long M15 fetch is deferred. XAUUSD component cost is not applied to any other instrument. Journal pnl_rr is not y.",
+    "n_declared_min": 0,
+    "detection_vs_trade": "hybrid_explicit",
+    "population_hash_inputs": [
+      "instrument",
+      "parent_sha256",
+      "timeframe",
+      "entry_ts",
+      "direction",
+      "sweep_idx"
+    ]
+  },
+  "features": {
+    "feature_set_id": "ladder-htf-ohlcv-fm074",
+    "feature_ids": ["FM-074"],
+    "formula_authority": "market_ontology",
+    "point_in_time_rule": "Bare projected OHLCV plus the engine atr_abs on the entry bar only (FM-074, price units). No future bars. No full-sample rank. The one-month file is the population for this contract (pre-registration §17) and is still only the projector corpus for the §16 parity check.",
+    "name_binding": {
+      "atr_abs": {
+        "fm_id": "FM-074",
+        "formula_ref": "market_ontology.yaml atr_absolute SMA(atr_period) of true_range in price units",
+        "units": "price_absolute",
+        "not_equal_to": ["FM-041", "close-relative atr"]
+      }
+    },
+    "forbidden_aliases": ["atr", "FM-041"],
+    "builder_entrypoints": [
+      "research.timeframe_ladder.parity:project",
+      "research.resample:resample"
+    ]
+  },
+  "labels": {
+    "label_family": "forward_walk_economic",
+    "y_definition": "Primary arm: if abs(entry-SL) < 1.5 * atr_abs, widen SL to entry ∓ 1.5 * atr_abs and recompute TP1/TP2 from the structural trade's own distance multipliers; else keep the engine prices. y_gross = multi_tp_walk rr_gross (partial 0.5, trail 0.5, tie_break production, timeout at bar close, entry_index required). y_net = y_gross - ComponentCostModel.cost_r (nights_held 0; overnight swap is unmeasured and is not charged). Diagnostic arm keeps the engine SL and is never a verdict.",
+    "derivation_authority": "forward_walk.other",
+    "stream_fields_banned_for_economic_claims": [
+      "opportunities.outcome",
+      "opportunities.rr_achieved",
+      "journal.pnl_rr_net",
+      "journal.pnl_rr_raw"
+    ],
+    "rederive_protocol": {
+      "enabled": true,
+      "matcher": "instrument+timeframe+entry_ts+direction",
+      "min_agreement": 1.0,
+      "on_fail": "DIAGNOSTIC_ONLY"
+    },
+    "horizon_bars": null,
+    "sign_convention": "positive R is profit in units of the walked risk distance"
+  },
+  "costs": {
+    "cost_model_id": "component_measured.v1",
+    "components": [
+      {
+        "name": "half_spread",
+        "bps_or_formula": "0.045 USD per side (F-082 measured)",
+        "applied_on": "round_trip"
+      },
+      {
+        "name": "commission",
+        "bps_or_formula": "0.040 USD per side (F-082 measured)",
+        "applied_on": "round_trip"
+      },
+      {
+        "name": "entry_slippage",
+        "bps_or_formula": "0.090 USD PROXY_FROM_STOP",
+        "applied_on": "entry"
+      },
+      {
+        "name": "stop_slippage",
+        "bps_or_formula": "0.090 USD on SL_HIT only",
+        "applied_on": "exit"
+      }
+    ],
+    "gross_vs_net": {
+      "report_gross": true,
+      "report_net": true,
+      "promotable": "none_info_stage"
+    },
+    "success_gate_uses": "none_info_stage",
+    "code_entrypoint": "research.costs:xau_measured_cost_model"
+  },
+  "exits": {
+    "exit_model_id": "SEM-017-multi-tp-walk",
+    "exit_family": "trailing",
+    "parameters": {
+      "partial_fraction": 0.5,
+      "trail_fraction": 0.5,
+      "tie_break": "production",
+      "stop_floor_atr_mult": 1.5,
+      "trade_ttl_h1": 240,
+      "trade_ttl_h4": 60,
+      "adverse_stop_slippage": 0.09,
+      "model_gaps": true,
+      "n_clusters_min": 30,
+      "bootstrap_resamples": 10000,
+      "bootstrap_seed": 20261005,
+      "ci": "percentile_95",
+      "random_seed_0": 20261005,
+      "random_seeds": 100,
+      "nights_held": 0
+    },
+    "intrabar_rule": "multi_tp_walk tie_break production (SL-first). SEM-016 adverse stop fill: gap-through fills at the bar open, otherwise stop slippage 0.090. TTL marks to the bar close.",
+    "not_equal_to": [
+      "forward_walk.intrabar_fixed",
+      "journal pnl_rr backtest_g1g2_v2",
+      "flat 12bps CostModel"
+    ],
+    "code_entrypoint": "research.oracle.multi_tp_walk:multi_tp_walk"
+  },
+  "splits": {
+    "scheme": "none_full_sample_info",
+    "embargo": "none — full-sample info stage on the one-month window",
+    "purge": "overlapping holding windows are one cluster; no purged holdout is claimed",
+    "n_folds_or_windows": 1,
+    "overlap_policy": "allow_with_block_bootstrap",
+    "seed": 20261005,
+    "oos_fraction_or_dates": "none — cluster bootstrap inside the declared window; seed 20261005; 10000 resamples; percentile 95 percent CI; random-entry seeds 20261005+i for i=0..99"
+  },
+  "metrics": {
+    "information_metrics": [
+      "funnel_counts",
+      "n_trades",
+      "n_clusters",
+      "median_atr",
+      "pct_stops_floored"
+    ],
+    "economic_metrics": [
+      "E[R] net is computed only when n_clusters >= 30 and is still not a promotable claim"
+    ],
+    "success_gate": "CONTINUE only if n_clusters >= 30 AND the cluster-bootstrap 95% CI lower bound of E[R] net minus passive drift is > 0 AND the CRT mean is above the 95th percentile of 100 random-entry seeds AND long and short each clear their own passive-drift CI. Otherwise not CONTINUE.",
+    "kill_criteria": "n_clusters < 30 -> INSUFFICIENT: report raw n and cluster n, publish no E[R] and no control percentile as a gate. 0 trades -> controls not applicable, verdict INSUFFICIENT. A positive point estimate below the cluster floor is not a verdict.",
+    "multiplicity": {
+      "n_variants_preregistered": 2,
+      "control": "none_single_test"
+    },
+    "authority_ladder": {
+      "info_not_value": true,
+      "value_not_authority": true,
+      "insufficient_not_harmful": true
+    },
+    "forbidden_metric_substitutions": [
+      "raw_trade_n_as_cluster_n",
+      "point_estimate_as_verdict_below_power_floor",
+      "gross_as_success",
+      "detection_count_as_n_trades",
+      "journal_pnl_rr_as_y"
+    ]
+  },
+  "pipeline_identity": {
+    "config_version_source": "configs/research/ladder_h1.json and configs/research/ladder_h4.json cloned from configs/production/v2_htfcrt_2026_08.json; params block unchanged so config_hash still verifies",
+    "active_version_file": "configs/production/ACTIVE_VERSION",
+    "engine_gate_mode": "gate_off_crt_only",
+    "expected_engines": ["crt"],
+    "modules_in_path": [
+      "runtime.backtest_v2.BacktestRunner",
+      "config_layer.crt_engine_v2.CRTEngine",
+      "research.oracle.multi_tp_walk",
+      "research.costs.xau_measured_cost_model",
+      "research.timeframe_ladder"
+    ],
+    "modules_explicitly_out_of_path": [
+      "EngineRunner fusion gate (engine_gate_enabled false on the clone)",
+      "UltronRiskGate",
+      "ExecutionPlannerV1_2",
+      "native H4/D1 CandleLoader admission"
+    ],
+    "dataset_integrity_level": "custom",
+    "feature_flags": {
+      "engine_gate_enabled": false,
+      "entry_semantics": "resting_order",
+      "htf_clock_basis": "calendar",
+      "parent_crt_h1": "H4",
+      "parent_crt_h4": "D1",
+      "use_bitnet": false,
+      "rr_fusion_enabled": false
+    }
+  },
+  "prohibited_substitutions": [
+    {
+      "surface": "population",
+      "forbidden": "Counting STATE_TRANSITION or TRADE_OPENED rows as the power-floor n, or swapping in the Phase-1 M15 artifact or the 28-year native H4 file",
+      "historical_class": "FC-POP-DETECTION-AS-TRADE"
+    },
+    {
+      "surface": "features",
+      "forbidden": "Using close-relative FM-041 atr as the 1.5 ATR stop denominator",
+      "historical_class": "FC-FEATURE-NAME-COLLISION"
+    },
+    {
+      "surface": "features",
+      "forbidden": "Centered swings or any bar after the entry in the stop or the label",
+      "historical_class": "FC-FEATURE-LOOKAHEAD-CENTER"
+    },
+    {
+      "surface": "labels",
+      "forbidden": "Reading opportunities.outcome, opportunities.rr_achieved, or journal pnl_rr as y",
+      "historical_class": "FC-LABEL-STREAM-INCONSISTENT"
+    },
+    {
+      "surface": "costs",
+      "forbidden": "Replacing component_measured.v1 with flat 12bps, or applying the XAUUSD components to another instrument",
+      "historical_class": "FC-COST-MODEL-SUBSTITUTION"
+    },
+    {
+      "surface": "exits",
+      "forbidden": "Using single-target forward_walk or the engine ledger exit in place of multi_tp_walk",
+      "historical_class": "FC-EXIT-PROXY-NOT-GOVERNING"
+    },
+    {
+      "surface": "splits",
+      "forbidden": "Treating overlapping holds as independent trades for the CI",
+      "historical_class": "FC-SPLIT-OVERLAP-LEAKAGE"
+    },
+    {
+      "surface": "metrics",
+      "forbidden": "Publishing a positive E[R] point estimate as a verdict when n_clusters < 30",
+      "historical_class": "FC-METRIC-OVERCLAIM-INSUFFICIENT"
+    },
+    {
+      "surface": "metrics",
+      "forbidden": "Treating a funnel count or a p-value as an economic claim",
+      "historical_class": "FC-METRIC-STAT-AS-ECON"
+    },
+    {
+      "surface": "pipeline",
+      "forbidden": "Claiming the 4-engine fusion gate was on, or loading the parent through admit_csv_path",
+      "historical_class": "FC-ENGINE-GATE-OFF-SUBSTITUTION"
+    },
+    {
+      "surface": "pipeline",
+      "forbidden": "Counting an unwired sidecar (TradeNet, BitNet, rr_fusion) as part of this measurement",
+      "historical_class": "FC-ENGINE-ORPHAN-SIDECAR"
+    }
+  ],
+  "evidence_artifacts": {
+    "contract_path": "configs/research/measurement_contracts/instances/MC-LADDER-XAUUSD-HTF-V1.json",
+    "population_fingerprint_path": "docs/research/program12-slice2-funnel.md",
+    "feature_parity_path": null,
+    "label_rederive_path": null,
+    "cost_exit_fixture_path": null,
+    "split_manifest_path": null,
+    "metric_compute_path": "src/research/timeframe_ladder/controls.py",
+    "mt00_report_path": "UNRUN",
+    "mt01_mutation_coverage_path": "UNRUN",
+    "code_commit": "eb35db1fc75ba79c1321860e5764d819f3a0f016",
+    "data_snapshot_ids": [
+      "sha256:478b075150935c950ccc749925709db783e337c55c886d6dda1e3ee8b9692c5b"
+    ]
+  },
+  "trust_status": {
+    "mt00": "UNRUN",
+    "mt01_matrix_coverage": "UNRUN",
+    "economic_claims_allowed": false,
+    "failing_probes": [],
+    "open_risks_non_blocking": [
+      "One-month depth is below the cluster floor by construction; the run is a funnel check.",
+      "Overnight swap is unmeasured; nights_held is 0 so no carry is charged and no carry is credited.",
+      "mt00 and mt01 are UNRUN."
+    ]
+  }
+}

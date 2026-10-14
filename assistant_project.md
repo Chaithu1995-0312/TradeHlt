@@ -651,3 +651,44 @@ Belief Update / ROI / Goal: Goal: decide if the H4 program is runnable. Belief: 
 Open Questions: Broker history depth per symbol/TF; UTC vs broker-time storage.
 Next Step: User runs scripts\data\mt5_history_probe.py and posts the table; then decide symbols and depth, fetch, seal the contract, build the ladder.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-06
+Topic: Program 12 Slice 1 — one-month projector parity PASS; MT5 probe H4/D1 28.46y
+Decision/Output: Worktree D:\Tradelatest-program12 branch grok/program12-slice1 off origin/claude/new-session-30eght (eb35db1). CH-program12-step2a IMPACT APPROVED. Built src/research/timeframe_ladder/parity.py + thin CLI scripts/research/program12_parity_one_month.py (no CandleLoader / admit_csv_path). 11/11 unit tests green. Parent data/XAUUSD_M15.csv n=2116 2026-07-07 01:00 → 2026-08-06 23:45 matches declared window. Projected H1 n=528, H4 n=137. Native H1/H4 fetched for the same dates via MT5CandleFetcher. Compare F-080 method: H1 528/528 PASS, H4 137/137 PASS, 0 daily-open mismatches. Probe (ICMarketsSC-Demo, maxbars=100000, server-utc=3.0h): XAUUSD H4 21318 bars 28.46y 1998-04-22→2026-10-06 cap=no; D1 7515 bars 28.46y cap=no; M15 and H1 from 1990 start returned Invalid params (range too large — bounded one-month M15/H1 fetch succeeded). SITS overlay SCR-500 RESEARCH_RUNNER. test_script_registry 2 grandfather failures are pre-existing on this branch (same as the 2026-10-05 probe log). semanticos_impl untouched. No ACTIVE_VERSION edit. No G001.
+Belief Update / ROI / Goal: Goal: know whether an H4 CRT ladder is runnable. Belief: H4/D1 history depth clears §15.2 (28y > 5y/10y); the projector matches native HTF exactly on the one-month window; Path A still needs a bounded long M15 fetch because a 1990-start M15 request fails. Knowledge ROI: high. Action: bounded long M15/H1 fetch, then freeze MC and build the ladder (Slice 2) if user proceeds.
+Open Questions: How many years of M15/H1 copy_rates_range accepts under maxbars=100000; Path A vs native-H4 research loader given 28y native H4 now exists.
+Next Step: Bounded M15/H1 depth probe (e.g. 2y/5y windows); user decides Path A vs Path B; Slice 2 freeze + ladder package.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-06
+Topic: Program 12 Slice 2 — H1/H4 ladder walked; verdict INSUFFICIENT (0 clusters)
+Decision/Output: Worktree D:\Tradelatest-program12, branch grok/program12-slice1, HEAD eb35db1. §17 amendment and MC-LADDER-XAUUSD-HTF-V1 were already sealed before this walk. Research clones ladder_h1.json / ladder_h4.json written; production v2_htfcrt_2026_08 untouched. Package src/research/timeframe_ladder plus scripts/research/timeframe_ladder.py; unit tests 13 passed; SITS SCR-501. Parent echo matched the seal: data/XAUUSD_M15.csv n=2116 first=2026-07-07 01:00:00 last=2026-08-06 23:45:00 sha256=478b075150935c950ccc749925709db783e337c55c886d6dda1e3ee8b9692c5b. First invocation PLUMBING_FAILURE (bound canonical CSVs missing; no bars walked). After those registry files were on disk, the rerun exited 0. Admitted name stayed ladder_bars.csv. H1 projected 528, parent feed H4, SWEEP 40, DISPLACEMENT 3, EXPANSION 0, RETEST 0, TRADE_OPENED 0, n_clusters 0, INSUFFICIENT. H4 projected 137, parent feed D1, feature rows 59 after warmup, SWEEP 6, DISPLACEMENT 0, TRADE_OPENED 0, n_clusters 0, INSUFFICIENT. expectancy_published false on both. F-114 bound to RF-HTF L5 claims only; cell status stays UNVERIFIED_HISTORICAL. economic_claims_allowed false. No G001. No D1 ladder. Path A still deferred.
+Belief Update / ROI / Goal: Goal: know whether an H1/H4 CRT ladder can be measured on real XAUUSD. Belief: the ladder runs end to end on the one-month slice and the pre-registered floor fires; this corpus cannot support an E[R] verdict (0 clusters, floor 30). Knowledge ROI: high. Action: keep Path A deferred until a longer parent is authorized; do not loosen the cluster floor and do not read the empty book as a point estimate.
+Open Questions: Whether a longer M15 parent would push either clock to n_clusters >= 30; H4 warmup (78 of 137 bars) shrinks the decision window further.
+Next Step: Completion manifest written (repo_state_hash PENDING). validate-completion BLOCKED on the two pre-existing script-registry grandfather failures (84 passed beside them). Do not commit. Do not treat 0 clusters as CONTINUE or as a negative expectancy.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-06
+Topic: Program 12 Slice 2 zero-trade trace — SELECTIVE, HTF-changed resets
+Decision/Output: Read-only. One new file docs/research/program12-slice2-zero-trade-trace.md. No src/, config, sealed MC, or run-artifact edit. H1 events: 37 SWEEP exits and all 3 DISPLACEMENT exits are RESET reason HTF changed; CAND-310 would_expand true (0.8 vs 0.55) and still HTF-changed. H4 events: 4 HTF changed, 1 Session gap detected (3120min > 600min), 1 SWEEP left open (telemetry RUN_END). Snapshot phase WARMUP 78 / LIVE 450 (H1) and 59 (H4). parent_crt_state set on every live bar (H4 parent_bias NONE for the whole live window, 0 DISTRIBUTION_C3). Verdict SELECTIVE. No expectancy printed.
+Belief Update / ROI / Goal: Goal: know why this month's ladder opened 0 trades. Belief: the run reached a real decision window and the parent feed emitted state; the recorded stage exits are HTF calendar resets (plus one H4 gap and one H4 run-end). Knowledge ROI: high. Action: leave the cluster floor and the sealed contract alone; a longer parent is a separate authorization.
+Open Questions: none inside this run's artifacts.
+Next Step: none until the user asks. Do not commit. Do not treat the trace as an E[R] result.
+---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-06
+Topic: Slice 2 parent-state cadence and the HTF-changed predicate
+Decision/Output: Read-only. H1 live window 450 bars: parent_crt_state transitions 75, mean gap 441/74 bars (5.96). Pairs C1→C2 32, C2→C1 20, C2→C3 12, C3→C1 11. H4 live window 59 bars: 8 transitions, mean gap 48/7 bars (6.86). Pairs C1→C2 4, C2→C1 4. CAND-310 entered at engine index 310 (2026-07-29T17:00) in parent RANGE_C1 / bias NONE; displacement at 312; reset at engine 313 / bar_index 387 (2026-07-29T20:00), 3 bars after entry, parent flipped to MANIPULATION_C2, clock id 12:00→16:00. Predicate is current_htf_id != active_range.clock_id at crt_engine_v2.py lines 2881-2894. Any calendar bucket change. EXPANSION and RETEST are skipped before that return. This run has htf_reset_exempt_sweep false. Parent CRT labels are not an input.
+Belief Update / ROI / Goal: Goal: know what actually cut CAND-310. Belief: the reset string is a parent-clock bucket roll, and on this bar the 3-candle parent label also moved C1→C2. Knowledge ROI: high. Action: keep the two clocks distinct when reading the reason string.
+Open Questions: none.
+Next Step: none until the user asks.
+---
+

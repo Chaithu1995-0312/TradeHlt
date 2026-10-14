@@ -1747,6 +1747,21 @@ invariants (no-lookahead, causal backtest) are design law and live in `goal.md`,
   - FM-089's semantics stay `TICK_VOLUME_APPROXIMATE` with BC-4 open (F-099/F-100), so S2 conclusions are conditional on reading tick volume as participation.
 ---
 
+### F-114 · One-month XAUUSD H1/H4 ladder walked end to end and is INSUFFICIENT (0 clusters on both clocks)
+- Type:          ECONOMIC
+- Family:        RF-HTF
+- Contract:      MC-LADDER-XAUUSD-HTF-V1
+- Status:        VALIDATED
+- Confidence:    Certain
+- Validated:     2026-10-06
+- Revalidate-by: 2027-04-04
+- Evidence:      Sealed `MC-LADDER-XAUUSD-HTF-V1` (`configs/research/measurement_contracts/instances/MC-LADDER-XAUUSD-HTF-V1.json`) before the walk. Population amendment is pre-registration §17 in `docs/research/preregistration-program-12-timeframe-ladder.md`. Parent `data/XAUUSD_M15.csv` n=2116 first=2026-07-07 01:00:00 last=2026-08-06 23:45:00 sha256 `478b075150935c950ccc749925709db783e337c55c886d6dda1e3ee8b9692c5b`. Runner `src/research/timeframe_ladder/run.py`. CLI `scripts/research/timeframe_ladder.py`. Floor `tests/research/test_timeframe_ladder.py`. Published funnel `docs/research/program12-slice2-funnel.md`. H1 projected 528: SWEEP 40, DISPLACEMENT 3, EXPANSION 0, RETEST 0, TRADE_OPENED 0, journal 0, n_clusters 0. H4 projected 137: SWEEP 6, DISPLACEMENT 0, EXPANSION 0, RETEST 0, TRADE_OPENED 0, journal 0, n_clusters 0. Both verdicts INSUFFICIENT, failing condition n_clusters < 30, expectancy_published false, controls_applicable false.
+- Supersedes:    —
+- Reversal:      — Does not reverse F-027 or F-089. A zero cluster count on this slice does not answer a longer book.
+- Owner:         grok (user 2026-10-06: one-month slice is the Slice 2/3 corpus; run Step 2 on H1 and H4)
+- Note:          **INSUFFICIENT, not an E[R] claim.** The CONTINUE rule needs n_clusters >= 30. Both clocks returned 0. No mean, CI, or random-entry percentile was serialized. `economic_claims_allowed` stays false (mt00 UNRUN, mt01 UNRUN). No G001. Depth caveat stands: one month of M15 is the corpus; Path A long fetch stays deferred. Same-run log (2026-10-06 13:59, exit 0): H1 loaded 528 candles, feature rows 450 after warmup drop 78, engine init at candle 78, parent feed H4; H4 loaded 137 candles, feature rows 59, engine init at candle 78, parent feed D1. Admitted filename stayed ladder_bars.csv. An earlier invocation the same day returned PLUMBING_FAILURE before any bar walked (bound canonical CSVs absent from the worktree); that attempt is not this verdict. The rerun is the funnel above.
+---
+
 
 ## Funding Ledger (initiative-level capital allocation)
 

@@ -12,7 +12,7 @@ python scripts/analysis/generate_script_matrix.py
 Authority: **inventory only** (no promote power). Thin-wrapper purity is **not**
 CI-enforced in v1 — rows track `logic_in_script` / `implementation_status` only.
 
-**Records:** 499
+**Records:** 501
 
 | ID | Category | Lifecycle | Impl status | Path | Purpose |
 |---|---|---|---|---|---|
@@ -515,6 +515,8 @@ CI-enforced in v1 — rows track `logic_in_script` / `implementation_status` onl
 | `SCR-497` | GOVERNANCE | ACTIVE | EXTRACTED_TO_SRC | `scripts/governance/semantic_os_integration.py` | Semantic OS integration run: runs the real backtest twice on one XAUUSD corpu... |
 | `SCR-498` | GOVERNANCE | ACTIVE | EXTRACTED_TO_SRC | `scripts/governance/semantic_os_trade_window.py` | R1-C: from a plain full-corpus XAUUSD backtest (engine trades CSV + events.js... |
 | `SCR-499` | DATA | ACTIVE | LOGIC_IN_SCRIPT | `scripts/data/mt5_history_probe.py` | Program 12 Step 2a: read-only MT5 history-availability probe. Per symbol x ti... |
+| `SCR-500` | RESEARCH_RUNNER | ACTIVE | EXTRACTED_TO_SRC | `scripts/research/program12_parity_one_month.py` | Program 12 Slice 1: one-month XAUUSD projector parity. Loads data/XAUUSD_M15.... |
+| `SCR-501` | RESEARCH_RUNNER | ACTIVE | EXTRACTED_TO_SRC | `scripts/research/timeframe_ladder.py` | Program 12 Slice 2: H1/H4 ladder on the sealed one-month XAUUSD parent. Loads... |
 
 ---
 

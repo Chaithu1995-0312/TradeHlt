@@ -475,7 +475,7 @@
         "L2": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": [] },
         "L3": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": [] },
         "L4": { "evidence_mass": "high", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-027"] },
-        "L5": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-089"] }
+        "L5": { "evidence_mass": "low", "status": "UNVERIFIED_HISTORICAL", "claims": ["F-089", "F-114"] }
       },
       "script_evidence": ["qualify_htf"],
       "notes": "UNPARTITIONED — inherits the bundled atlas matrix row. Timeframe is arguably a scope dimension like instrument rather than an object; flagged for reconsideration in Phase B when contract profiles are defined."

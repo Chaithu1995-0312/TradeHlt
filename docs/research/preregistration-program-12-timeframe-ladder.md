@@ -290,3 +290,31 @@ The order asks for UTC timestamps. The existing corpus and the existing fetcher 
 - No non-weekend gap longer than 4 bars inside a session, other than listed holidays.
 - Row count equals the probe count for the same range.
 - The first/last timestamp and row count are echoed at load (CLAUDE.md §1.5).
+
+---
+
+## 16. Amendment — one-month parity corpus (user, 2026-10-06)
+
+Projector vs native HTF agreement (F-080 method) uses the **one-month** XAUUSD M15 slice, not the 2-year overlap.
+
+| Field | Value |
+|---|---|
+| Parent | `data/XAUUSD_M15.csv` |
+| n | 2,116 |
+| First | 2026-07-07 01:00:00 |
+| Last | 2026-08-06 23:45:00 |
+| Load | explicit path, **outside** `admit_csv_path` / `CandleLoader` (an XAUUSD-M15 admission rewrites this file to the 47,275-row Phase-1 artifact) |
+| Projector | `research.resample.resample` → H1 and H4 |
+| Native | H1/H4 fetched for the same dates. `data/mt5/XAUUSD_H4.csv` ends 2026-05-21 and is **not** an input |
+| Method | F-080: exact OHLC on overlap; daily-open slot (H4 00:00) classified; do not widen tolerance |
+| Role | Certifies the projector. **Not** the ladder measurement population |
+
+Code: `src/research/timeframe_ladder/parity.py` · CLI `scripts/research/program12_parity_one_month.py`.
+
+---
+
+## 17. Amendment — ladder corpus for Slice 2/3 (user, 2026-10-06)
+
+ladder corpus = one-month slice for Slice 2/3; depth caveat noted; Path A long fetch deferred.
+
+§16 Role is unchanged: that section still certifies the projector only. This line is the Slice 2/3 measurement population. Native H4/D1 from 1998 stay on disk for F-080 parity and are not the ladder population. D1 is not in this slice.
