@@ -2968,3 +2968,13 @@ Belief Update / ROI / Goal: Goal: decide whether the resolver should match the e
 Open Questions: none.
 Next Step: push semanticos_impl.
 ---
+
+---
+📝 SESSION LOG ENTRY
+Date: 2026-10-21
+Topic: BitNet sequential-vector design discussion (follow-up, positions taken)
+Decision/Output: Verified at source: CANONICAL_FEATURES is 79-dim (schema v9.0, feature_schema.py:340) and BitNetModel.predict(x: ndarray) (bitnet_inference.py:182) scores one vector. Proposed defaults: fixed window flattened, shadow score only, label fixed before architecture, window must beat single-bar on the same label/holdout. No code or docs changed.
+Belief Update / ROI / Goal: Goal: put the BitNet-on-sequence idea on a sound footing. Belief: label/population, not architecture, is the binding constraint (R2.5, F-055, F-019..F-097). Knowledge ROI: medium. Action: wait for user answers, then a design note.
+Open Questions: window vs stateful and N; BitNet role; label; slot subset.
+Next Step: user confirms or overrides the proposed defaults.
+---
